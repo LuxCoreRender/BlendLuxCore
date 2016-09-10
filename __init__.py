@@ -2,7 +2,7 @@ import bpy
 from .bin import pyluxcore
 
 bl_info = {
-    "name": "BlendLuxCore",
+    "name": "LuxCore",
     "author": "Simon Wendsche (B.Y.O.B.)",
     "version": (1, 7),
     "blender": (2, 77, 0),
@@ -16,7 +16,7 @@ bl_info = {
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
-    bl_idname = "LUXCORE_RENDER"
+    bl_idname = "LUXCORE"
     bl_label = "LuxCore"
     bl_use_preview = False  # TODO: disabled for now
     bl_use_shading_nodes_custom = True
@@ -48,31 +48,13 @@ def register():
     pyluxcore.Init()
     print("pyluxcore version", pyluxcore.Version())
 
+    from . import ui
+    ui.register()
     bpy.utils.register_class(LuxCoreRenderEngine)
-
-    # RenderEngines also need to tell UI Panels that they are compatible
-    # Otherwise most of the UI will be empty when the engine is selected.
-    # In this example, we need to see the main render image button and
-    # the material preview panel.
-    from bl_ui import (
-            properties_render,
-            properties_material,
-            )
-    properties_render.RENDER_PT_render.COMPAT_ENGINES.add(LuxCoreRenderEngine.bl_idname)
-    properties_material.MATERIAL_PT_preview.COMPAT_ENGINES.add(LuxCoreRenderEngine.bl_idname)
 
 
 def unregister():
     print("unregister")
+    from . import ui
+    ui.unregister()
     bpy.utils.unregister_class(LuxCoreRenderEngine)
-
-    from bl_ui import (
-            properties_render,
-            properties_material,
-            )
-    properties_render.RENDER_PT_render.COMPAT_ENGINES.remove(LuxCoreRenderEngine.bl_idname)
-    properties_material.MATERIAL_PT_preview.COMPAT_ENGINES.remove(LuxCoreRenderEngine.bl_idname)
-
-
-if __name__ == "__main__":
-    register()
