@@ -14,58 +14,37 @@ bl_info = {
 }
 
 
-class CustomRenderEngine(bpy.types.RenderEngine):
-    # These three members are used by blender to set up the
-    # RenderEngine; define its internal name, visible name and capabilities.
-    bl_idname = "custom_renderer"
-    bl_label = "Flat Color Renderer"
-    bl_use_preview = True
+class LuxCoreRenderEngine(bpy.types.RenderEngine):
+    bl_idname = "LUXCORE_RENDER"
+    bl_label = "LuxCore"
+    bl_use_preview = False  # TODO: disabled for now
+    bl_use_shading_nodes_custom = True
 
-    # This is the only method called by blender, in this example
-    # we use it to detect preview rendering and call the implementation
-    # in another method.
+    def __init__(self):
+        print("init")
+
+    def __del__(self):
+        # Note: this method is also called when unregister() is called
+        print("del")
+
+    def update(self, data, scene):
+        """Export scene data for render"""
+        print("update")
+
     def render(self, scene):
-        scale = scene.render.resolution_percentage / 100.0
-        self.size_x = int(scene.render.resolution_x * scale)
-        self.size_y = int(scene.render.resolution_y * scale)
+        print("render")
 
-        if self.is_preview:
-            self.render_preview(scene)
-        else:
-            self.render_scene(scene)
+    def view_update(self, context):
+        print("view_update")
 
-    # In this example, we fill the preview renders with a flat green color.
-    def render_preview(self, scene):
-        pixel_count = self.size_x * self.size_y
-
-        # The framebuffer is defined as a list of pixels, each pixel
-        # itself being a list of R,G,B,A values
-        green_rect = [[0.0, 1.0, 0.0, 1.0]] * pixel_count
-
-        # Here we write the pixel values to the RenderResult
-        result = self.begin_result(0, 0, self.size_x, self.size_y)
-        layer = result.layers[0].passes["Combined"]
-        layer.rect = green_rect
-        self.end_result(result)
-
-    # In this example, we fill the full renders with a flat blue color.
-    def render_scene(self, scene):
-        pixel_count = self.size_x * self.size_y
-
-        # The framebuffer is defined as a list of pixels, each pixel
-        # itself being a list of R,G,B,A values
-        blue_rect = [[0.0, 0.0, 1.0, 1.0]] * pixel_count
-
-        # Here we write the pixel values to the RenderResult
-        result = self.begin_result(0, 0, self.size_x, self.size_y)
-        layer = result.layers[0].passes["Combined"]
-        layer.rect = blue_rect
-        self.end_result(result)
+    def view_draw(self, context):
+        print("view_draw")
 
 
 def register():
+    print("register")
     # Register the RenderEngine
-    bpy.utils.register_class(CustomRenderEngine)
+    bpy.utils.register_class(LuxCoreRenderEngine)
 
     # RenderEngines also need to tell UI Panels that they are compatible
     # Otherwise most of the UI will be empty when the engine is selected.
@@ -75,19 +54,20 @@ def register():
             properties_render,
             properties_material,
             )
-    properties_render.RENDER_PT_render.COMPAT_ENGINES.add(CustomRenderEngine.bl_idname)
-    properties_material.MATERIAL_PT_preview.COMPAT_ENGINES.add(CustomRenderEngine.bl_idname)
+    properties_render.RENDER_PT_render.COMPAT_ENGINES.add(LuxCoreRenderEngine.bl_idname)
+    properties_material.MATERIAL_PT_preview.COMPAT_ENGINES.add(LuxCoreRenderEngine.bl_idname)
 
 
 def unregister():
-    bpy.utils.unregister_class(CustomRenderEngine)
+    print("unregister")
+    bpy.utils.unregister_class(LuxCoreRenderEngine)
 
     from bl_ui import (
             properties_render,
             properties_material,
             )
-    properties_render.RENDER_PT_render.COMPAT_ENGINES.remove(CustomRenderEngine.bl_idname)
-    properties_material.MATERIAL_PT_preview.COMPAT_ENGINES.remove(CustomRenderEngine.bl_idname)
+    properties_render.RENDER_PT_render.COMPAT_ENGINES.remove(LuxCoreRenderEngine.bl_idname)
+    properties_material.MATERIAL_PT_preview.COMPAT_ENGINES.remove(LuxCoreRenderEngine.bl_idname)
 
 
 if __name__ == "__main__":
