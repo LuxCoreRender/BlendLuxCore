@@ -1,4 +1,5 @@
 import bpy
+from .bin import pyluxcore
 
 bl_info = {
     "name": "BlendLuxCore",
@@ -43,7 +44,10 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
 def register():
     print("register")
-    # Register the RenderEngine
+
+    pyluxcore.Init()
+    print("pyluxcore version", pyluxcore.Version())
+
     bpy.utils.register_class(LuxCoreRenderEngine)
 
     # RenderEngines also need to tell UI Panels that they are compatible
