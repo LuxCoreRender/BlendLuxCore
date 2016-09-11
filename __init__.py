@@ -1,5 +1,6 @@
 import bpy
 from .bin import pyluxcore
+from .export import Cache
 
 bl_info = {
     "name": "LuxCore",
@@ -25,7 +26,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         print("init")
 
     def __del__(self):
-        # Note: this method is also called when unregister() is called
+        # Note: this method is also called when unregister() is called (for some reason I don't understand)
         print("del")
 
     def update(self, data, scene):
@@ -37,6 +38,14 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def view_update(self, context):
         print("view_update")
+        print("###")
+        for obj in context.scene.objects:
+            entry = Cache.get_entry(obj)
+            print("luxcore_names:", entry.luxcore_names)
+            print("props:", entry.props)
+            print("is_udpated:", entry.is_updated)
+            print("---")
+        print("###\n")
 
     def view_draw(self, context):
         print("view_draw")
