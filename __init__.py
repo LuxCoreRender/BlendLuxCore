@@ -1,6 +1,6 @@
 import bpy
 from .bin import pyluxcore
-from .export import Cache
+from .export.cache import Cache
 
 bl_info = {
     "name": "LuxCore",
