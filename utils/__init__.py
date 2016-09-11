@@ -3,6 +3,7 @@ import re
 def to_luxcore_name(string):
     return re.sub('[^_0-9a-zA-Z]+', '__', string)
 
+
 def matrix_to_list(matrix, apply_worldscale=False, invert=False):
     """
     Flatten a 4x4 matrix into a list
@@ -27,3 +28,16 @@ def matrix_to_list(matrix, apply_worldscale=False, invert=False):
          matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
 
     return [float(i) for i in l]
+
+
+def calc_filmsize(scene, context=None):
+    if context:
+        width = context.region.width
+        height = context.region.height
+    else:
+        scale = scene.render.resolution_percentage / 100
+        width = int(scene.render.resolution_x * scale)
+        height = int(scene.render.resolution_y * scale)
+
+    # TODO: account for border render
+    return width, height
