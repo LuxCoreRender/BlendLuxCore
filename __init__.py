@@ -3,6 +3,7 @@ import bgl
 from .bin import pyluxcore
 from .export.cache import Cache
 from .export import config, camera
+from . import export
 from . import utils
 
 bl_info = {
@@ -59,11 +60,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         print("init")
         self._framebuffer = None
         self._session = None
+        self._exporter = export.Exporter()
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
         print("del")
-        # TODO: stop luxcore_session here
         if hasattr(self, "_session") and self._session:
             print("del: stopping session")
             self._session.Stop()
@@ -86,59 +87,19 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         print("view_update")
 
         if self._session is None:
-            # Scene
-            luxcore_scene = pyluxcore.Scene()
-            scene_props = pyluxcore.Properties()
-
-            # Camera (needs to be parsed first because it is needed for hair tesselation)
-            camera_props = camera.convert(context.scene, context)
-            luxcore_scene.Parse(camera_props)
-
-            for obj in context.scene.objects:
-                entry = Cache.get_entry(obj)
-                if entry:
-                    scene_props.Set(entry.props)
-
-            # Testlight
-            scene_props.Set(pyluxcore.Property("scene.lights.test.type", "sky"))
-            scene_props.Set(pyluxcore.Property("scene.lights.test.dir", [-0.5, -0.5, 0.5]))
-            scene_props.Set(pyluxcore.Property("scene.lights.test.turbidity", [2.2]))
-            scene_props.Set(pyluxcore.Property("scene.lights.test.gain", [1.0, 1.0, 1.0]))
-
-            luxcore_scene.Parse(scene_props)
-
-            # Config
-            config_props = config.convert(context.scene, context)
-            luxcore_config = pyluxcore.RenderConfig(config_props, luxcore_scene)
-
-            # Session
-            self._session = pyluxcore.RenderSession(luxcore_config)
+            self._session = self._exporter.create_session(context.scene, context)
             self._session.Start()
             return
 
-        print("###")
-
-        updated_props = pyluxcore.Properties()
-
-        for obj in context.scene.objects:
-            entry = Cache.get_entry(obj)
-            if entry.is_updated:
-                updated_props.Set(entry.props)
-
-            print("luxcore_names:", entry.luxcore_names)
-            print("props:", entry.props)
-            print("is_udpated:", entry.is_updated)
-            print("---")
-        print("###\n")
-
-        # begin scene edit
-        # parse updated_props
-        # delete objects/lights etc.
-        # end scene edit
+        self._exporter.needs_update(context)
+        self._exporter.execute_update(context, self._session)
 
     def view_draw(self, context):
-        print("view_draw")
+        #print("view_draw")
         # TODO: camera update, film update
+        self._exporter.needs_draw_update(context)
+        self._exporter.execute_update(context, self._session)
+
         if self._framebuffer is None:
             self._init_framebuffer(context)
 
@@ -147,13 +108,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self._session.WaitNewFrame()
             self._framebuffer.update(self._session)
 
-            import code
-            code.interact(local=locals())
-
         self._framebuffer.draw()
         self.tag_redraw()
 
     def _init_framebuffer(self, context):
+        # TODO: maybe move all of this to FrameBuffer constructor
         transparent = False  # TODO
         width, height = utils.calc_filmsize(context.scene, context)
         self._framebuffer = FrameBuffer(transparent, width, height)

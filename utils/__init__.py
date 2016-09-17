@@ -1,7 +1,24 @@
 import re
+from ..bin import pyluxcore
+
 
 def to_luxcore_name(string):
     return re.sub('[^_0-9a-zA-Z]+', '__', string)
+
+
+def create_props(prefix, definitions):
+    """
+    :param prefix: string, will be prepended to each key part of the definitions.
+                   Example: "scene.camera." (note the trailing dot)
+    :param definitions: dictionary of definition pairs. Example: {"fieldofview", 45}
+    :return: pyluxcore.Properties() object, initialized with the given definitions.
+    """
+    props = pyluxcore.Properties()
+
+    for k, v in definitions.items():
+        props.Set(pyluxcore.Property(prefix + k, v))
+
+    return props
 
 
 def matrix_to_list(matrix, apply_worldscale=False, invert=False):
