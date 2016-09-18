@@ -16,45 +16,61 @@ def convert(scene, context=None):
         # Viewport render
         view_cam_type = context.region_data.view_perspective
 
-        width = context.region.width
-        height = context.region.height
-
-        if view_cam_type == 'ORTHO':
-            type = "orthographic"
-        elif view_cam_type == 'PERSP':
-            type = "perspective"
+        if view_cam_type in ('ORTHO', 'PERSP'):
             cam_matrix = Matrix(context.region_data.view_matrix).inverted()
-            fieldofview = math.degrees(2 * math.atan(16 / context.space_data.lens))
+            lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
 
-            zoom = 2
-            offset_x = 0
-            offset_y = 0
-            screenwindow = utils.calc_screenwindow(zoom, offset_x, offset_y, scene, context)
-        elif view_cam_type == 'CAMERA':
+            if view_cam_type == 'ORTHO':
+                type = "orthographic"
+                zoom = context.space_data.region_3d.view_distance
+
+                # Move the camera origin away from the viewport center to avoid clipping
+                origin = Vector(lookat_orig)
+                target = Vector(lookat_target)
+                origin += (origin - target) * 50
+                lookat_orig = list(origin)
+            else:
+                # view_cam_type == 'PERSP'
+                type = "perspective"
+                zoom = 2
+                fieldofview = math.degrees(2 * math.atan(16 / context.space_data.lens))
+
+            screenwindow = utils.calc_screenwindow(zoom, 0, 0, 0, 0, scene, context)
+        else:
+            # view_cam_type == 'CAMERA'
             camera = scene.camera
             cam_matrix = camera.matrix_world
+            lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
+            # magic zoom formula for camera viewport zoom from blender source
+            zoom = 2 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2) * 2
 
             if camera.data.type == 'ORTHO':
                 type = "orthographic"
+                zoom *= camera.data.ortho_scale / 2
             elif camera.data.type == 'PANO':
                 type = "environment"
             else:
+                # camera.data.type == 'PERSP'
                 type = "perspective"
                 fieldofview = math.degrees(camera.data.angle)
+
+            xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
+            view_camera_offset = list(context.region_data.view_camera_offset)
+            offset_x = 2 * (camera.data.shift_x + view_camera_offset[0] * xaspect * 2)
+            offset_y = 2 * (camera.data.shift_y + view_camera_offset[1] * yaspect * 2)
+            screenwindow = utils.calc_screenwindow(zoom, 0, 0, offset_x, offset_y, scene, context)
     else:
         # Final render
         pass
 
     # Lookat
-    lookat_target = list(cam_matrix * Vector((0, 0, -1)))
-    lookat_orig = list(cam_matrix.to_translation())
-    up_vector = list(cam_matrix.to_3x3() * Vector((0, 1, 0)))
+
 
     prefix = "scene.camera."
     definitions = {
         "type": type,
-        "lookat.target": lookat_target,
         "lookat.orig": lookat_orig,
+        "lookat.target": lookat_target,
         "up": up_vector,
         #"lensradius": lensradius,
         #"focaldistance": focaldistance,
@@ -82,3 +98,24 @@ def convert(scene, context=None):
     # TODO: motion blur (only for final camera)
 
     return utils.create_props(prefix, definitions)
+
+
+def _calc_lookat(cam_matrix):
+    lookat_orig = list(cam_matrix.to_translation())
+    lookat_target = list(cam_matrix * Vector((0, 0, -1)))
+    up_vector = list(cam_matrix.to_3x3() * Vector((0, 1, 0)))
+    return lookat_orig, lookat_target, up_vector
+
+
+def _convert_ortho(definitions, cam_matrix):
+    lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
+
+    # Move the camera origin away from the viewport center to avoid clipping
+    origin = Vector(lookat_orig)
+    target = Vector(lookat_target)
+    origin += (origin - target) * 50
+    lookat_orig = list(origin)
+
+    definitions["lookat.orig"] = lookat_orig
+    definitions["lookat.target"] = lookat_target
+    definitions["up"] = up_vector
