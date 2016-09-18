@@ -27,9 +27,9 @@ def convert(scene, context=None):
             fieldofview = math.degrees(2 * math.atan(16 / context.space_data.lens))
 
             zoom = 2
-            dx = 0
-            dy = 0
-            screenwindow = calc_screenwindow(dx, dy, width, height, zoom)
+            offset_x = 0
+            offset_y = 0
+            screenwindow = utils.calc_screenwindow(zoom, offset_x, offset_y, scene, context)
         elif view_cam_type == 'CAMERA':
             camera = scene.camera
             cam_matrix = camera.matrix_world
@@ -58,7 +58,7 @@ def convert(scene, context=None):
         "up": up_vector,
         #"lensradius": lensradius,
         #"focaldistance": focaldistance,
-        #"screenwindow": screenwindow,
+        "screenwindow": screenwindow,
         #"cliphither": clip_hither,
         #"clipyon": clip_yon,
         #"shutteropen": shutter_open,
@@ -69,7 +69,7 @@ def convert(scene, context=None):
         definitions["fieldofview"] = fieldofview
 
     if type != "environment":
-        #definitions["autofocus.enable"] = use_autofocus
+        #definitions["autofocus.enable"] = use_autofocus  # TODO
 
         use_clippingplane = False  # TODO
         if use_clippingplane:
@@ -82,22 +82,3 @@ def convert(scene, context=None):
     # TODO: motion blur (only for final camera)
 
     return utils.create_props(prefix, definitions)
-
-
-def calc_screenwindow(dx, dy, width, height, zoom):
-    xaspect, yaspect = calc_aspect(width, height)
-    left = -xaspect * zoom
-    right = xaspect * zoom
-    bottom = -yaspect * zoom
-    top = yaspect * zoom
-
-    return [left + dx, right + dx, bottom + dy, top + dy]
-
-def calc_aspect(width, height):
-    if width > height:
-        xaspect = 1
-        yaspect = height / width
-    else:
-        xaspect = width / height
-        yaspect = 1
-    return xaspect, yaspect

@@ -21,7 +21,7 @@ bl_info = {
 
 
 class FrameBuffer(object):
-    def __init__(self, transparent, width, height):
+    def __init__(self, transparent, width, height, offset_x, offset_y):
         if transparent:
             bufferdepth = 4
             self._buffertype = bgl.GL_RGBA
@@ -35,6 +35,8 @@ class FrameBuffer(object):
         self._width = width
         self._height = height
         self._transparent = transparent
+        self._offset_x = offset_x
+        self._offset_y = offset_y
 
     def update(self, luxcore_session):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
@@ -43,7 +45,7 @@ class FrameBuffer(object):
         if self._transparent:
             bgl.glEnable(bgl.GL_BLEND)
 
-        bgl.glRasterPos2i(0, 0)
+        bgl.glRasterPos2i(self._offset_x, self._offset_y)
         bgl.glDrawPixels(self._width, self._height, self._buffertype, bgl.GL_FLOAT, self.buffer)
 
         if self._transparent:
@@ -115,7 +117,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         # TODO: maybe move all of this to FrameBuffer constructor
         transparent = False  # TODO
         width, height = utils.calc_filmsize(context.scene, context)
-        self._framebuffer = FrameBuffer(transparent, width, height)
+        offset_x, offset_y = utils.calc_draw_offset(context.scene, context)
+        self._framebuffer = FrameBuffer(transparent, width, height, offset_x, offset_y)
 
 
 def register():
