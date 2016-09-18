@@ -39,6 +39,10 @@ class Exporter(object):
         #     if entry:
         #         scene_props.Set(entry.props)
 
+        for obj in context.visible_objects:
+            if obj.type == 'MESH':
+                scene_props.Set(blender_object.convert(obj))
+
         # Testlight
         # scene_props.Set(pyluxcore.Property("scene.lights.test.type", "sky"))
         # scene_props.Set(pyluxcore.Property("scene.lights.test.dir", [-0.5, -0.5, 0.5]))
@@ -52,27 +56,40 @@ class Exporter(object):
 
         # Config
         config_props = config.convert(context.scene, context)
-        luxcore_config = pyluxcore.RenderConfig(config_props, luxcore_scene)
+        renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
         # Session
-        return pyluxcore.RenderSession(luxcore_config)
+        return pyluxcore.RenderSession(renderconfig)
 
     def needs_draw_update(self, context):
         """Special method for view_draw() call, only checks camera and config updates"""
         self.settings.check_camera_update(camera.convert(context.scene, context))
+        self.settings.check_config_update(config.convert(context.scene, context))
 
     def needs_update(self, context):
         print("needs_update")
 
         # Check which scene elements need an update
-        self.settings.check_camera_update(camera.convert(context.scene, context))
+        # self.settings.check_camera_update(camera.convert(context.scene, context))
+        # self.settings.check_config_update(config.convert(context.scene, context))
+        self.needs_draw_update(context)
 
     def execute_update(self, context, session):
         print("execute_update")
 
         if self.settings.needs_config_update():
-            pass
-            # TODO
+            # print("1")
+            # renderconfig = session.GetRenderConfig()
+            # print("2")
+            # session.Stop()
+            # print("3")
+            # config_props = config.convert(context.scene, context)
+            # print("4")
+            # renderconfig.Parse(config_props)
+            # print("new session")
+            # session = pyluxcore.RenderSession(renderconfig)
+            # session.Start()
+            pass # TODO: hangs blender...
 
         if self.settings.needs_scene_update():
             luxcore_scene = session.GetRenderConfig().GetScene()
@@ -118,9 +135,27 @@ class SettingsCache(object):
     def clear_update_flags(self):
         # TODO: improve this
         self.update_camera = False
+        self.update_config = False
 
+    # TODO de-duplicate code
     def check_camera_update(self, props):
         str_props = str(props)
+
+        if self.camera == "":
+            self.camera = str_props
+            return
+
         self.update_camera = self.camera != str_props
         if self.update_camera:
             self.camera = str_props
+
+    def check_config_update(self, props):
+        str_props = str(props)
+
+        if self.config == "":
+            self.config = str_props
+            return
+
+        self.update_config = self.config != str_props
+        if self.update_config:
+            self.config = str_props

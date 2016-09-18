@@ -47,14 +47,120 @@ def matrix_to_list(matrix, apply_worldscale=False, invert=False):
     return [float(i) for i in l]
 
 
-def calc_filmsize(scene, context=None):
+def calc_filmsize_raw(scene, context=None):
     if context:
+        # Viewport render
         width = context.region.width
         height = context.region.height
     else:
+        # Final render
         scale = scene.render.resolution_percentage / 100
         width = int(scene.render.resolution_x * scale)
         height = int(scene.render.resolution_y * scale)
 
+    return width, height
+
+
+def calc_filmsize(scene, context=None):
+    border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
+    width, height = calc_filmsize_raw(scene, context)
+
+    # offset_x = int(width * border_min_x)
+    # offset_y = int(height * border_min_y)
+    # TODO: check if rounding etc. is correct
+    width = int(width * (border_max_x - border_min_x))
+    height = int(height * (border_max_y - border_min_y))
+
     # TODO: account for border render
     return width, height
+
+
+def calc_blender_border(scene, context=None):
+    if context:
+        # Viewport render
+        border_max_x = context.space_data.render_border_max_x
+        border_max_y = context.space_data.render_border_max_y
+        border_min_x = context.space_data.render_border_min_x
+        border_min_y = context.space_data.render_border_min_y
+    else:
+        # Final render
+        border_max_x = scene.render.border_max_x
+        border_max_y = scene.render.border_max_y
+        border_min_x = scene.render.border_min_x
+        border_min_y = scene.render.border_min_y
+
+    use_border = (context and context.space_data.use_render_border) or scene.render.use_border
+    if use_border:
+        blender_border = [border_min_x, border_max_x, border_min_y, border_max_y]
+    else:
+        blender_border = [0, 1, 0, 1]
+
+    return blender_border
+
+
+def calc_draw_offset(scene, context=None):
+    width, height = calc_filmsize_raw(scene, context)
+    border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
+    offset_x = int(width * border_min_x)
+    offset_y = int(height * border_min_y)
+    # offset_x, offset_y are in pixels
+    return offset_x, offset_y
+
+
+def map_to_lux_border(blender_border_value):
+    #return blender_border_value * 2 - 1
+    return blender_border_value
+
+
+def calc_screenwindow(zoom, offset_x, offset_y, scene, context=None):
+    # offset_x, offset_y are in range -1..1
+
+    width_raw, height_raw = calc_filmsize_raw(scene, context)
+    border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
+
+    # TODO: delete after testing other cameras
+    # left = -xaspect * zoom * map_to_lux_border(border_min_x)
+    # right = xaspect * zoom * map_to_lux_border(border_max_x)
+    # bottom = -yaspect * zoom * map_to_lux_border(border_min_y)
+    # top = yaspect * zoom * map_to_lux_border(border_max_y)
+    #
+    # return [left + offset_x, right + offset_x, bottom + offset_y, top + offset_y]
+
+    # Following: Black Magic
+
+    aspect = width_raw / height_raw
+    invaspect = 1 / aspect
+
+    if aspect > 1:
+        screenwindow = [
+            ((2 * offset_x) - 1) * zoom,
+            ((2 * offset_x) + 1) * zoom,
+            ((2 * offset_y) - invaspect) * zoom,
+            ((2 * offset_y) + invaspect) * zoom
+        ]
+    else:
+        screenwindow = [
+            ((2 * offset_x) - aspect) * zoom,
+            ((2 * offset_x) + aspect) * zoom,
+            ((2 * offset_y) - 1) * zoom,
+            ((2 * offset_y) + 1) * zoom
+        ]
+
+    screenwindow = [
+        screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x,
+        screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x,
+        screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y,
+        screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y
+    ]
+
+    return screenwindow
+
+
+def calc_aspect(width, height):
+    if width > height:
+        xaspect = 1
+        yaspect = height / width
+    else:
+        xaspect = width / height
+        yaspect = 1
+    return xaspect, yaspect
