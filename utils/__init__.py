@@ -76,14 +76,14 @@ def calc_filmsize(scene, context=None):
 
 
 def calc_blender_border(scene, context=None):
-    if context:
-        # Viewport render
+    if context and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+        # Viewport camera
         border_max_x = context.space_data.render_border_max_x
         border_max_y = context.space_data.render_border_max_y
         border_min_x = context.space_data.render_border_min_x
         border_min_y = context.space_data.render_border_min_y
     else:
-        # Final render
+        # Final camera
         border_max_x = scene.render.border_max_x
         border_max_y = scene.render.border_max_y
         border_min_x = scene.render.border_min_x
@@ -101,6 +101,9 @@ def calc_blender_border(scene, context=None):
 def calc_draw_offset(scene, context=None):
     width, height = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
+
+
+
     offset_x = int(width * border_min_x)
     offset_y = int(height * border_min_y)
     # offset_x, offset_y are in pixels
@@ -112,7 +115,7 @@ def map_to_lux_border(blender_border_value):
     return blender_border_value
 
 
-def calc_screenwindow(zoom, offset_x, offset_y, scene, context=None):
+def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context=None):
     # offset_x, offset_y are in range -1..1
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
@@ -133,24 +136,24 @@ def calc_screenwindow(zoom, offset_x, offset_y, scene, context=None):
 
     if aspect > 1:
         screenwindow = [
-            ((2 * offset_x) - 1) * zoom,
-            ((2 * offset_x) + 1) * zoom,
-            ((2 * offset_y) - invaspect) * zoom,
-            ((2 * offset_y) + invaspect) * zoom
+            ((2 * shift_x) - 1) * zoom,
+            ((2 * shift_x) + 1) * zoom,
+            ((2 * shift_y) - invaspect) * zoom,
+            ((2 * shift_y) + invaspect) * zoom
         ]
     else:
         screenwindow = [
-            ((2 * offset_x) - aspect) * zoom,
-            ((2 * offset_x) + aspect) * zoom,
-            ((2 * offset_y) - 1) * zoom,
-            ((2 * offset_y) + 1) * zoom
+            ((2 * shift_x) - aspect) * zoom,
+            ((2 * shift_x) + aspect) * zoom,
+            ((2 * shift_y) - 1) * zoom,
+            ((2 * shift_y) + 1) * zoom
         ]
 
     screenwindow = [
-        screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x,
-        screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x,
-        screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y,
-        screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y
+        screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + offset_x,
+        screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + offset_x,
+        screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + offset_y,
+        screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + offset_y
     ]
 
     return screenwindow
