@@ -89,7 +89,11 @@ def calc_blender_border(scene, context=None):
         border_min_x = scene.render.border_min_x
         border_min_y = scene.render.border_min_y
 
-    use_border = (context and context.space_data.use_render_border) or scene.render.use_border
+    if context and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+        use_border = context.space_data.use_render_border
+    else:
+        use_border = scene.render.use_border
+
     if use_border:
         blender_border = [border_min_x, border_max_x, border_min_y, border_max_y]
     else:
@@ -98,36 +102,11 @@ def calc_blender_border(scene, context=None):
     return blender_border
 
 
-def calc_draw_offset(scene, context=None):
-    width, height = calc_filmsize_raw(scene, context)
-    border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
-
-
-
-    offset_x = int(width * border_min_x)
-    offset_y = int(height * border_min_y)
-    # offset_x, offset_y are in pixels
-    return offset_x, offset_y
-
-
-def map_to_lux_border(blender_border_value):
-    #return blender_border_value * 2 - 1
-    return blender_border_value
-
-
 def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context=None):
-    # offset_x, offset_y are in range -1..1
+    # offset and shift are in range -1..1 ( I think)
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
-
-    # TODO: delete after testing other cameras
-    # left = -xaspect * zoom * map_to_lux_border(border_min_x)
-    # right = xaspect * zoom * map_to_lux_border(border_max_x)
-    # bottom = -yaspect * zoom * map_to_lux_border(border_min_y)
-    # top = yaspect * zoom * map_to_lux_border(border_max_y)
-    #
-    # return [left + offset_x, right + offset_x, bottom + offset_y, top + offset_y]
 
     # Following: Black Magic
 

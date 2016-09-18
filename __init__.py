@@ -21,7 +21,11 @@ bl_info = {
 
 
 class FrameBuffer(object):
-    def __init__(self, transparent, width, height, offset_x, offset_y):
+    def __init__(self, transparent, filmsize, border):
+        self._width = filmsize[0]
+        self._height = filmsize[1]
+        self._border = border
+
         if transparent:
             bufferdepth = 4
             self._buffertype = bgl.GL_RGBA
@@ -31,25 +35,54 @@ class FrameBuffer(object):
             self._buffertype = bgl.GL_RGB
             self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
-        self.buffer = bgl.Buffer(bgl.GL_FLOAT, [width * height * bufferdepth])
-        self._width = width
-        self._height = height
+        self.buffer = bgl.Buffer(bgl.GL_FLOAT, [self._width * self._height * bufferdepth])
         self._transparent = transparent
-        self._offset_x = offset_x
-        self._offset_y = offset_y
 
     def update(self, luxcore_session):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
 
-    def draw(self):
+    def draw(self, region_size, view_camera_offset):
         if self._transparent:
             bgl.glEnable(bgl.GL_BLEND)
 
-        bgl.glRasterPos2i(self._offset_x, self._offset_y)
+        offset_x, offset_y = self._calc_offset(region_size, view_camera_offset)
+
+        bgl.glRasterPos2i(offset_x, offset_y)
         bgl.glDrawPixels(self._width, self._height, self._buffertype, bgl.GL_FLOAT, self.buffer)
 
         if self._transparent:
             bgl.glDisable(bgl.GL_BLEND)
+
+    def _calc_offset(self, region_size, view_camera_offset):
+        # TODO: view_camera_offset, to get correct draw position in camera viewport mode
+        width_raw, height_raw = region_size
+        border_min_x, border_max_x, border_min_y, border_max_y = self._border
+
+        # TODO: not sure about the +1, needs further testing to see if rounding is better
+        offset_x = width_raw * border_min_x + 1
+        offset_y = height_raw * border_min_y + 1
+
+        #view_camera_offset = [(v + 1) / 2 for v in view_camera_offset]
+        # view_cam_shift_x = width_raw * view_camera_offset[0]
+        # view_cam_shift_y = height_raw * view_camera_offset[1]
+
+        # xaspect, yaspect = utils.calc_aspect(width_raw, height_raw)
+        # offset_x = (view_camera_offset[0] * xaspect * 2) * width_raw
+        # offset_y = (view_camera_offset[1] * yaspect * 2) * height_raw
+        #print("offsets:", offset_x, offset_y)
+
+
+        # view_camera_offset is completely weird (range -1..1, mirrored axis),
+        # bring it into 0..1 range with 0,0 in lower left corner and 1,1 in upper right corner
+        # view_camera_offset[0] = 1 - (view_camera_offset[0] + 1) / 2
+        # view_camera_offset[1] = 1 - (view_camera_offset[1] + 1) / 2
+        # offset_x = view_camera_offset[0] * width_raw
+        # offset_y = view_camera_offset[1] * height_raw
+        # print("offsets:", offset_x, offset_y)
+
+
+        # offset_x, offset_y are in pixels
+        return int(offset_x), int(offset_y)
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -110,15 +143,17 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self._session.WaitNewFrame()
             self._framebuffer.update(self._session)
 
-        self._framebuffer.draw()
+        region_size = context.region.width, context.region.height
+        view_camera_offset = list(context.region_data.view_camera_offset)
+        self._framebuffer.draw(region_size, view_camera_offset)
         self.tag_redraw()
 
     def _init_framebuffer(self, context):
         # TODO: maybe move all of this to FrameBuffer constructor
         transparent = False  # TODO
-        width, height = utils.calc_filmsize(context.scene, context)
-        offset_x, offset_y = utils.calc_draw_offset(context.scene, context)
-        self._framebuffer = FrameBuffer(transparent, width, height, offset_x, offset_y)
+        filmsize = utils.calc_filmsize(context.scene, context)
+        border = utils.calc_blender_border(context.scene, context)
+        self._framebuffer = FrameBuffer(transparent, filmsize, border)
 
 
 def register():

@@ -33,6 +33,8 @@ def convert(scene, context=None):
                 # view_cam_type == 'PERSP'
                 type = "perspective"
                 zoom = 2
+                # Magic stuff, found in Cycles export code
+                # TODO: non-standard sensor (is that where the 0.5 * 32 came from?)
                 fieldofview = math.degrees(2 * math.atan(16 / context.space_data.lens))
 
             screenwindow = utils.calc_screenwindow(zoom, 0, 0, 0, 0, scene, context)
@@ -41,7 +43,7 @@ def convert(scene, context=None):
             camera = scene.camera
             cam_matrix = camera.matrix_world
             lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
-            # magic zoom formula for camera viewport zoom from blender source
+            # Magic zoom formula for camera viewport zoom from Cycles export code
             zoom = 2 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2) * 2
 
             if camera.data.type == 'ORTHO':
@@ -105,17 +107,3 @@ def _calc_lookat(cam_matrix):
     lookat_target = list(cam_matrix * Vector((0, 0, -1)))
     up_vector = list(cam_matrix.to_3x3() * Vector((0, 1, 0)))
     return lookat_orig, lookat_target, up_vector
-
-
-def _convert_ortho(definitions, cam_matrix):
-    lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
-
-    # Move the camera origin away from the viewport center to avoid clipping
-    origin = Vector(lookat_orig)
-    target = Vector(lookat_target)
-    origin += (origin - target) * 50
-    lookat_orig = list(origin)
-
-    definitions["lookat.orig"] = lookat_orig
-    definitions["lookat.target"] = lookat_target
-    definitions["up"] = up_vector
