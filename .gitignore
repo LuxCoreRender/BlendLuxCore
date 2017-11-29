@@ -1,0 +1,6 @@
+.idea
+__pycache__
+
+# Ignore binaries/libraries
+bin/*.so*
+bin/*.dll
