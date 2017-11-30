@@ -40,17 +40,18 @@ class Exporter(object):
         #         scene_props.Set(entry.props)
 
         for obj in context.visible_objects:
-            if obj.type == 'MESH':
-                scene_props.Set(blender_object.convert(obj))
+            if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT"):
+                scene_props.Set(blender_object.convert(obj, scene, context, luxcore_scene))
 
         # Testlight
-        # scene_props.Set(pyluxcore.Property("scene.lights.test.type", "sky"))
-        # scene_props.Set(pyluxcore.Property("scene.lights.test.dir", [-0.5, -0.5, 0.5]))
-        # scene_props.Set(pyluxcore.Property("scene.lights.test.turbidity", [2.2]))
-        # scene_props.Set(pyluxcore.Property("scene.lights.test.gain", [1.0, 1.0, 1.0]))
+        scene_props.Set(pyluxcore.Property("scene.lights.test.type", "sky"))
+        scene_props.Set(pyluxcore.Property("scene.lights.test.dir", [-0.5, -0.5, 0.5]))
+        scene_props.Set(pyluxcore.Property("scene.lights.test.turbidity", [2.2]))
+        scene_props.Set(pyluxcore.Property("scene.lights.test.gain", [1.0, 1.0, 1.0]))
+        # Another testlight
+        # scene_props.Set(pyluxcore.Property('scene.lights.' + 'test' + '.type', 'infinite'))
+        # scene_props.Set(pyluxcore.Property('scene.lights.' + 'test' + '.file', "F:\\Users\\Simon_2\\Projekte\\Blender\\00_Resources\HDRIs\\03-Ueno-Shrine_3k.hdr"))
 
-        scene_props.Set(pyluxcore.Property('scene.lights.' + 'test' + '.type', 'infinite'))
-        scene_props.Set(pyluxcore.Property('scene.lights.' + 'test' + '.file', "F:\\Users\\Simon_2\\Projekte\\Blender\\00_Resources\HDRIs\\03-Ueno-Shrine_3k.hdr"))
 
         luxcore_scene.Parse(scene_props)
 
