@@ -3,7 +3,6 @@ Files that need to be copied from the binary SDK into this directory for release
 ## Linux
 
 * libembree.so.2
-* libluxcore.so
 * libtbb.so.2
 * pyluxcore.so
 
