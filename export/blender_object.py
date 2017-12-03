@@ -1,7 +1,7 @@
 import bpy
 from ..bin import pyluxcore
 from .. import utils
-from . import CacheEntry
+
 
 def convert(blender_obj, scene, context, luxcore_scene):
     """
