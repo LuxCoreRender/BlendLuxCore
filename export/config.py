@@ -3,7 +3,6 @@ from .. import utils
 
 
 def convert(scene, context=None):
-    print("converting config")
     props = pyluxcore.Properties()
     width, height = utils.calc_filmsize(scene, context)
 

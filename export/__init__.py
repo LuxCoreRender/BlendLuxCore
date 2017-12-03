@@ -49,18 +49,35 @@ class StringCache(object):
 
 class ObjectCache(object):
     def __init__(self):
-        self.objects = []
+        self._reset()
+
+    def _reset(self):
+        self.changed_transform = []
+        self.changed_mesh = []
+        self.lamps = []
 
     def diff(self, scene):
-        self.objects = []
-        for obj in scene.objects:
-            if obj.is_updated:
-                self.objects.append(obj)
-        return self.objects
+        self._reset()
 
-class MeshCache(object):
-    # TODO
-    pass
+        if bpy.data.objects.is_updated:
+            for obj in scene.objects:
+                if obj.is_updated_data:
+                    if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT"]:
+                        self.changed_mesh.append(obj)
+                    elif obj.type in ["LAMP"]:
+                        self.lamps.append(obj)
+
+                if obj.is_updated:
+                    if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"]:
+                        # check if a new material was assigned
+                        if obj.data is not None and obj.data.is_updated:
+                            self.changed_mesh.append(obj)
+                        else:
+                            self.changed_transform.append(obj)
+                    elif obj.type == "LAMP":
+                        self.lamps.append(obj)
+
+        return self.changed_transform or self.changed_mesh or self.lamps
 
 
 class Exporter(object):
@@ -125,11 +142,13 @@ class Exporter(object):
 
     def _update_config(self, session, config_props):
         print("NOT UPDATING CONFIG")
-        return
-        # TODO: hangs blender...
+        # TODO: hangs/crashes blender...
         # renderconfig = session.GetRenderConfig()
         # session.Stop()
         # renderconfig.Parse(config_props)
+        # if renderconfig is None:
+        #     print("ERROR: not a valid luxcore config")
+        #     return
         # session = pyluxcore.RenderSession(renderconfig)
         # session.Start()
 
@@ -144,15 +163,23 @@ class Exporter(object):
             props = pyluxcore.Properties()
 
             if changes & Change.CAMERA:
-                print("cam change")
                 # We already converted the new camera settings during get_changes(), re-use them
                 props.Set(self.camera_cache.props)
 
             if changes & Change.OBJECT:
-                print("object edit")
-                for obj in self.object_cache.objects:
-                    if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT"):
-                        props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
+                for obj in self.object_cache.changed_transform:
+                    # TODO only update transform
+                    print("transformed:", obj.name)
+                    props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
+
+                for obj in self.object_cache.changed_mesh:
+                    print("mesh changed:", obj.name)
+                    props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
+
+                for obj in self.object_cache.lamps:
+                    print("lamp changed:", obj.name)
+                    # TODO update lamps
+                    props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
 
             luxcore_scene.Parse(props)
             session.EndSceneEdit()

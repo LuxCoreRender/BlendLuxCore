@@ -61,7 +61,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self._session.Start()
             return
 
-        # new
         if changes is None:
             changes = self._exporter.get_changes(context)
         self._exporter.update(context, self._session, changes)
@@ -72,6 +71,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         changes = self._exporter.get_changes(context)
 
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
+            if changes & export.Change.CONFIG:
+                # Film resize requires a new framebuffer
+                self._framebuffer = FrameBuffer(context)
             self.view_update_lux(context, changes)
             return
         elif changes & export.Change.CAMERA:

@@ -10,8 +10,6 @@ def needs_update():
 
 
 def convert(scene, context=None):
-    print("converting camera")
-
     if context:
         # Viewport render
         view_cam_type = context.region_data.view_perspective
