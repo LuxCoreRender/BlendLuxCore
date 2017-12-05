@@ -87,9 +87,6 @@ class Exporter(object):
         self.camera_cache = StringCache()
         self.object_cache = ObjectCache()
 
-    def __del__(self):
-        print("exporter del")
-
     def create_session(self, scene, context=None):
         print("create_session")
         # Scene
@@ -101,7 +98,9 @@ class Exporter(object):
         self.camera_cache.diff(camera_props)  # Init camera cache
         luxcore_scene.Parse(camera_props)
 
-        for obj in context.visible_objects:
+        objs = context.visible_objects if context else bpy.data.objects
+
+        for obj in objs:
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT"):
                 scene_props.Set(blender_object.convert(obj, scene, context, luxcore_scene))
 
@@ -117,7 +116,7 @@ class Exporter(object):
         luxcore_scene.Parse(scene_props)
 
         # Config
-        config_props = config.convert(context.scene, context)
+        config_props = config.convert(scene, context)
         self.config_cache.diff(config_props)  # Init config cache
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 

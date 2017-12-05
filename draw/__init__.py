@@ -1,9 +1,12 @@
 import bgl
+import array
 from ..bin import pyluxcore
 from .. import utils
 
 
 class FrameBuffer(object):
+    """ FrameBuffer used for viewport render """
+
     def __init__(self, context):
         filmsize = utils.calc_filmsize(context.scene, context)
         self._width = filmsize[0]
@@ -68,3 +71,38 @@ class FrameBuffer(object):
 
         # offset_x, offset_y are in pixels
         return int(offset_x), int(offset_y)
+
+
+class FrameBufferFinal(object):
+    """ FrameBuffer for final render """
+    def __init__(self, scene):
+        filmsize = utils.calc_filmsize(scene)
+        self._width = filmsize[0]
+        self._height = filmsize[1]
+        self._border = utils.calc_blender_border(scene)
+
+        transparent = False  # TODO
+        if transparent:
+            bufferdepth = 4
+            self._output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
+            self._convert_func = pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList
+        else:
+            bufferdepth = 3
+            self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+            self._convert_func = pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList
+
+        self.buffer = array.array("f", [0.0] * (self._width * self._height * bufferdepth))
+        self._transparent = transparent
+
+    def draw(self, render_engine, session):
+        session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
+        result = render_engine.begin_result(0, 0, self._width, self._height)
+        layer = result.layers[0].passes[0]
+
+        if self._transparent:
+            # Need the extra "False" because this function has an additional "normalize" argument
+            layer.rect = self._convert_func(self._width, self._height, self.buffer, False)
+        else:
+            layer.rect = self._convert_func(self._width, self._height, self.buffer)
+
+        render_engine.end_result(result)

@@ -1,6 +1,7 @@
 import bpy
+from time import time
 from .bin import pyluxcore
-from .draw import FrameBuffer
+from .draw import FrameBuffer, FrameBufferFinal
 from . import export
 
 bl_info = {
@@ -39,16 +40,25 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def update(self, data, scene):
         """Export scene data for render"""
-        print("update")
-        import time
+        assert self._session is None
         self.update_stats("Export", "exporting...")
-        time.sleep(1)
+
+        self._session = self._exporter.create_session(scene)
 
     def render(self, scene):
-        print("render")
-        import time
+        assert self._session is not None
         self.update_stats("Render", "rendering...")
-        time.sleep(2)
+        self._framebuffer = FrameBufferFinal(scene)
+        self._session.Start()
+        self._framebuffer.draw(self, self._session)
+
+        start = time()
+        interval = 3
+        while not self.test_break():
+            if time() - start > interval:
+                self._framebuffer.draw(self, self._session)
+
+        self._framebuffer.draw(self, self._session)
 
     def view_update(self, context):
         self.view_update_lux(context)

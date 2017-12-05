@@ -61,10 +61,33 @@ def convert(scene, context=None):
             screenwindow = utils.calc_screenwindow(zoom, 0, 0, offset_x, offset_y, scene, context)
     else:
         # Final render
-        pass
+        # TODO: needs testing
+        camera = scene.camera
+        cam_matrix = camera.matrix_world
+        lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
 
-    # Lookat
+        if camera.data.type == 'ORTHO':
+            type = "orthographic"
+        elif camera.data.type == 'PANO':
+            type = "environment"
+        else:
+            type = "perspective"
 
+        # Field of view
+        # Correction for vertical fit sensor, must truncate the float to .1f precision and round down
+        width, height = utils.calc_filmsize_raw(scene)
+
+        if camera.data.sensor_fit == 'VERTICAL' and width > height:
+            aspect_fix = round(width / height - 0.05, 1)  # make sure it rounds down
+        else:
+            aspect_fix = 1.0
+
+        if type == "perspective":
+            fieldofview = math.degrees(camera.data.angle * aspect_fix)
+
+        # screenwindow (for border rendering and camera shift)
+        zoom = 1
+        screenwindow = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, 0, 0, scene)
 
     prefix = "scene.camera."
     definitions = {
