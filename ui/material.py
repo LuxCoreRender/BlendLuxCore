@@ -59,10 +59,4 @@ class ui_luxcore_material_header(bl_ui.properties_material.MaterialButtonsPanel,
 
         if mat:
             # LuxCore stuff
-            if ob:
-                mat = ob  # test
             layout.prop(mat.luxcore, "node_tree")
-            layout.prop(mat.luxcore, "test")
-            layout.prop(mat.luxcore, "test_str")
-            layout.separator()
-            layout.prop(mat.test, "test")
