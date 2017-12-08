@@ -5,6 +5,7 @@ from . import camera
 from . import make_key
 
 
+# TODO probably remove all this stuff
 class Cache(object):
     _cache = {}
     # _luxcore_session = None

@@ -1,23 +1,61 @@
 import bpy
-from time import time
+from time import time, sleep
 from .bin import pyluxcore
 from .draw import FrameBuffer, FrameBufferFinal
 from . import export
 
+# Have to import everything with classes which need to be registered
+from . import nodes, operators, properties, ui
+from .nodes import materials
+
 bl_info = {
     "name": "LuxCore",
     "author": "Simon Wendsche (B.Y.O.B.)",
-    "version": (1, 7),
+    "version": (2, 0),
     "blender": (2, 77, 0),
     "category": "Render",
     "location": "Info header, render engine menu",
     "description": "LuxCore integration for Blender",
-    "warning": "",
-    "wiki_url": "",
-    "tracker_url": "",
+    "warning": "Alpha Version, incomplete",
+    "wiki_url": "https://wiki.luxcorerender.org/",
+    "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
 
+########################
+# def init():
+#     bpy.types.Object.luxcore = bpy.props.PointerProperty(type=LuxCoreMaterialProps)
+#     bpy.types.Mesh.test = bpy.props.PointerProperty(type=TestPropGroup)
+#
+# class LuxCoreMaterialProps(bpy.types.PropertyGroup):
+#     node_tree = bpy.props.PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
+#     test = bpy.props.PointerProperty(name="test", type=bpy.types.Object)
+#     test_str = bpy.props.StringProperty(name="teststr")
+#
+# class TestPropGroup(bpy.types.PropertyGroup):
+#     test = bpy.props.PointerProperty(name="test", type=bpy.types.Object)
+########################
+
+def register():
+    ui.register()
+    nodes.materials.register()
+    bpy.utils.register_module(__name__, verbose=True)
+
+    properties.init()
+
+    # bpy.types.Material.luxcore = bpy.props.PointerProperty(type=properties.material.LuxCoreMaterialProps)
+    # bpy.types.Material.test = bpy.props.PointerProperty(type=bpy.types.Object)
+    #
+    # bpy.types.Object.testgroup = bpy.props.PointerProperty(type=TestPropGroup)
+
+
+def unregister():
+    ui.unregister()
+    nodes.materials.unregister()
+    bpy.utils.unregister_module(__name__)
+
+
+# TODO move to engine module
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_idname = "LUXCORE"
     bl_label = "LuxCore"
@@ -55,6 +93,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         start = time()
         interval = 3
         while not self.test_break():
+            sleep(1 / 50)
             if time() - start > interval:
                 self._framebuffer.draw(self, self._session)
 
@@ -102,21 +141,3 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         view_camera_offset = list(context.region_data.view_camera_offset)
         self._framebuffer.draw(region_size, view_camera_offset)
         self.tag_redraw()
-
-
-def register():
-    print("register BlendLuxCore")
-
-    pyluxcore.Init()
-    print("pyluxcore version", pyluxcore.Version())
-
-    from . import ui
-    ui.register()
-    bpy.utils.register_class(LuxCoreRenderEngine)
-
-
-def unregister():
-    print("unregister BlendLuxCore")
-    from . import ui
-    ui.unregister()
-    bpy.utils.unregister_class(LuxCoreRenderEngine)

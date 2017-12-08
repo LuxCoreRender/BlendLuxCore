@@ -1,4 +1,5 @@
 import bpy
+from . import material
 
 def compatible_panels():
     panels = [
@@ -14,9 +15,9 @@ def compatible_panels():
 
 def register():
     for panel in compatible_panels():
-        panel.COMPAT_ENGINES.add('LUXCORE')
+        panel.COMPAT_ENGINES.add("LUXCORE")
 
 
 def unregister():
     for panel in compatible_panels():
-        panel.COMPAT_ENGINES.remove('LUXCORE')
+        panel.COMPAT_ENGINES.remove("LUXCORE")
