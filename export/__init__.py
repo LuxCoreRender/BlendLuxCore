@@ -110,8 +110,8 @@ class Exporter(object):
         scene_props.Set(pyluxcore.Property("scene.lights.test.turbidity", [2.2]))
         scene_props.Set(pyluxcore.Property("scene.lights.test.gain", [1.0, 1.0, 1.0]))
         # Another testlight
-        # scene_props.Set(pyluxcore.Property('scene.lights.' + 'test' + '.type', 'infinite'))
-        # scene_props.Set(pyluxcore.Property('scene.lights.' + 'test' + '.file', "F:\\Users\\Simon_2\\Projekte\\Blender\\00_Resources\HDRIs\\03-Ueno-Shrine_3k.hdr"))
+        # scene_props.Set(pyluxcore.Property("scene.lights." + "test" + ".type", "infinite"))
+        # scene_props.Set(pyluxcore.Property("scene.lights." + "test" + ".file", "F:\\Users\\Simon_2\\Projekte\\Blender\\00_Resources\HDRIs\\03-Ueno-Shrine_3k.hdr"))
 
         luxcore_scene.Parse(scene_props)
 

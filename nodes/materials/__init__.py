@@ -4,6 +4,7 @@ import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 
 from .matte import luxcore_material_matte
+from .output import luxcore_material_output
 
 
 class LuxCoreMaterialEditor(NodeTree):
@@ -37,11 +38,12 @@ class LuxCoreMaterialEditor(NodeTree):
 class luxcore_node_category_material(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == 'luxcore_material_nodes'
+        return context.space_data.tree_type == "luxcore_material_nodes"
 
 luxcore_node_categories_material = [
     luxcore_node_category_material("LUX_MATERIAL", "Material", items=[
         NodeItem("luxcore_material_matte", label="Matte"),
+        NodeItem("luxcore_material_output", label="Output"),
     ]),
 ]
 

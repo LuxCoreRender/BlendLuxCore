@@ -3,7 +3,7 @@ from ..bin import pyluxcore
 
 
 def to_luxcore_name(string):
-    return re.sub('[^_0-9a-zA-Z]+', '__', string)
+    return re.sub("[^_0-9a-zA-Z]+", "__", string)
 
 
 def create_props(prefix, definitions):
@@ -76,7 +76,7 @@ def calc_filmsize(scene, context=None):
 
 
 def calc_blender_border(scene, context=None):
-    if context and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+    if context and context.region_data.view_perspective in ("ORTHO", "PERSP"):
         # Viewport camera
         border_max_x = context.space_data.render_border_max_x
         border_max_y = context.space_data.render_border_max_y
@@ -89,7 +89,7 @@ def calc_blender_border(scene, context=None):
         border_min_x = scene.render.border_min_x
         border_min_y = scene.render.border_min_y
 
-    if context and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+    if context and context.region_data.view_perspective in ("ORTHO", "PERSP"):
         use_border = context.space_data.use_render_border
     else:
         use_border = scene.render.use_border

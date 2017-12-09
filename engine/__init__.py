@@ -19,7 +19,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self.error = None
 
     def __del__(self):
-        # Note: this method is also called when unregister() is called (for some reason I don't understand)
+        # Note: this method is also called when unregister() is called (for some reason I don"t understand)
         print("LuxCoreRenderEngine del")
         if hasattr(self, "_session") and self._session:
             print("del: stopping session")
@@ -61,7 +61,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self._session.Stop()
             self._framebuffer.draw(self, self._session)
         except Exception as error:
-            self.report({'ERROR'}, str(error))
+            self.report({"ERROR"}, str(error))
             import traceback
             traceback.print_exc()
             scene.luxcore.errorlog.set(error)

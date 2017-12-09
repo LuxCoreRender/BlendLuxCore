@@ -1,18 +1,17 @@
-
+import bpy
 from .. import LuxCoreNode
 
 
 class luxcore_material_matte(LuxCoreNode):
-    """Matte material node"""
-    bl_idname = "luxcore_material_matte"
-    bl_label = 'Matte Material'
-    bl_icon = 'MATERIAL'
+    """(Rough) matte material node"""
+    bl_label = "Matte Material"
     bl_width_min = 160
 
     def init(self, context):
-        pass
-        # self.inputs.new('luxrender_TC_Kd_socket', 'Diffuse Color')
-        # self.inputs.new('luxrender_TF_sigma_socket', 'Sigma')
+        self.add_input("LuxCoreSocketColorTex", "Diffuse Color", (0.7, 0.7, 0.7))
+        self.add_input("LuxCoreSocketFloatTex", "Sigma", 0)
+
+        self.outputs.new("LuxCoreSocketMaterial", "Material")
 
     def export(self, properties):
         pass

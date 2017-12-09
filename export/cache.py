@@ -14,12 +14,12 @@ class Cache(object):
     @classmethod
     def get_entry(cls, datablock):
         if type(datablock) == bpy.types.Object:
-            if datablock.type in ('MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'EMPTY'):
+            if datablock.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"):
                 convert = blender_object.convert
-            elif datablock.type == 'LAMP':
+            elif datablock.type == "LAMP":
                 convert = convert_light  # TODO
-            elif datablock.type == 'CAMERA':
-                # TODO: I don't think we need to handle cameras here. After all, there's only one active camera at a time
+            elif datablock.type == "CAMERA":
+                # TODO: I don"t think we need to handle cameras here. After all, there"s only one active camera at a time
                 # better have explicit camera update outside of the cache
                 #convert = camera.convert
                 return None

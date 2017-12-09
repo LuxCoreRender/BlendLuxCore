@@ -12,7 +12,7 @@ Code Design:
 - idea for image tex nodes: create blender image tex for each, use its id block
 
 Features:
-- find out how to use the same viewport color stuff as Cycles (and/or, if that's not possible, code something that works... in all possible editors etc.)
+- find out how to use the same viewport color stuff as Cycles (and/or, if that"s not possible, code something that works... in all possible editors etc.)
 - Texture tab behaviour similar to Cycles (Brush textures, particle textures, modifier textures)
 - help buttons in every Lux panel header (expand to an info text explaining the feature)
 - idea: for lightgroups and every other "fake ID" implemented as strings, 

@@ -1,6 +1,6 @@
 When one property of a key is set, all other (previously defined) properties of the key will be deleted.
 Example:
-Let's say we have set the following properties:
+Let"s say we have set the following properties:
 ```
 props.Set(pyluxcore.Property("scene.materials.test.type", "matte"))
 props.Set(pyluxcore.Property("scene.materials.test.kd", [0.7, 0.7, 0.7]))

@@ -14,11 +14,11 @@ def convert(scene, context=None):
         # Viewport render
         view_cam_type = context.region_data.view_perspective
 
-        if view_cam_type in ('ORTHO', 'PERSP'):
+        if view_cam_type in ("ORTHO", "PERSP"):
             cam_matrix = Matrix(context.region_data.view_matrix).inverted()
             lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
 
-            if view_cam_type == 'ORTHO':
+            if view_cam_type == "ORTHO":
                 type = "orthographic"
                 zoom = context.space_data.region_3d.view_distance
 
@@ -28,7 +28,7 @@ def convert(scene, context=None):
                 origin += (origin - target) * 50
                 lookat_orig = list(origin)
             else:
-                # view_cam_type == 'PERSP'
+                # view_cam_type == "PERSP"
                 type = "perspective"
                 zoom = 2
                 # Magic stuff, found in Cycles export code
@@ -37,20 +37,20 @@ def convert(scene, context=None):
 
             screenwindow = utils.calc_screenwindow(zoom, 0, 0, 0, 0, scene, context)
         else:
-            # view_cam_type == 'CAMERA'
+            # view_cam_type == "CAMERA"
             camera = scene.camera
             cam_matrix = camera.matrix_world
             lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
             # Magic zoom formula for camera viewport zoom from Cycles export code
             zoom = 2 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2) * 2
 
-            if camera.data.type == 'ORTHO':
+            if camera.data.type == "ORTHO":
                 type = "orthographic"
                 zoom *= camera.data.ortho_scale / 2
-            elif camera.data.type == 'PANO':
+            elif camera.data.type == "PANO":
                 type = "environment"
             else:
-                # camera.data.type == 'PERSP'
+                # camera.data.type == "PERSP"
                 type = "perspective"
                 fieldofview = math.degrees(camera.data.angle)
 
@@ -66,9 +66,9 @@ def convert(scene, context=None):
         cam_matrix = camera.matrix_world
         lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
 
-        if camera.data.type == 'ORTHO':
+        if camera.data.type == "ORTHO":
             type = "orthographic"
-        elif camera.data.type == 'PANO':
+        elif camera.data.type == "PANO":
             type = "environment"
         else:
             type = "perspective"
@@ -77,7 +77,7 @@ def convert(scene, context=None):
         # Correction for vertical fit sensor, must truncate the float to .1f precision and round down
         width, height = utils.calc_filmsize_raw(scene)
 
-        if camera.data.sensor_fit == 'VERTICAL' and width > height:
+        if camera.data.sensor_fit == "VERTICAL" and width > height:
             aspect_fix = round(width / height - 0.05, 1)  # make sure it rounds down
         else:
             aspect_fix = 1.0
