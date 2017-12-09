@@ -15,3 +15,4 @@ class LuxCoreConfig(bl_ui.properties_render.RenderButtonsPanel, bpy.types.Panel)
         config = context.scene.luxcore
 
         layout.prop(config, "engine")
+        layout.prop(config, "sampler")
