@@ -2,7 +2,7 @@ import bl_ui
 import bpy
 
 
-class ui_luxcore_material_header(bl_ui.properties_material.MaterialButtonsPanel, bpy.types.Panel):
+class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.types.Panel):
     """
     Material Editor UI Panel
     """

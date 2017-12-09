@@ -3,12 +3,24 @@ from .. import utils
 
 
 def convert(scene, context=None):
-    props = pyluxcore.Properties()
+    config = scene.luxcore
     width, height = utils.calc_filmsize(scene, context)
 
-    props.Set(pyluxcore.Property("renderengine.type", "RTPATHCPU"))
-    props.Set(pyluxcore.Property("sampler.type", "RTPATHCPUSAMPLER"))
-    props.Set(pyluxcore.Property("film.width", width))
-    props.Set(pyluxcore.Property("film.height", height))
+    if context:
+        # Viewport render
+        engine = "RTPATHCPU"
+        sampler = "RTPATHCPUSAMPLER"
+    else:
+        # Final render
+        engine = config.engine
+        sampler = "SOBOL"
 
-    return props
+    prefix = ""
+    definitions = {
+        "renderengine.type": engine,
+        "sampler.type": sampler,
+        "film.width": width,
+        "film.height": height,
+    }
+
+    return utils.create_props(prefix, definitions)

@@ -1,5 +1,4 @@
 import bpy
-from . import material
 
 def compatible_panels():
     panels = [

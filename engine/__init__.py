@@ -39,13 +39,17 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self._session.Start()
         self._framebuffer.draw(self, self._session)
 
-        start = time()
+        last_refresh = time()
         interval = 3
         while not self.test_break():
             sleep(1 / 50)
-            if time() - start > interval:
+            now = time()
+            if now - last_refresh > interval:
+                self._session.UpdateStats()
                 self._framebuffer.draw(self, self._session)
+                last_refresh = now
 
+        self._session.Stop()
         self._framebuffer.draw(self, self._session)
 
     def view_update(self, context):
