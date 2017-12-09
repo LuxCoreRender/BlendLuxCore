@@ -36,10 +36,10 @@ class LuxCoreNodeSocket(NodeSocket):
     def draw_color(self, context, node):
         return self.color
 
-    def export(self, properties):
+    def export(self, props):
         if self.is_linked:
             linked_node = self.links[0].from_node
-            return linked_node.export(properties)
+            return linked_node.export(props)
         elif hasattr(self, "default_value"):
             return self.default_value
         else:

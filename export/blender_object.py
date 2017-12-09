@@ -2,6 +2,8 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 
+from . import material
+
 
 def convert(blender_obj, scene, context, luxcore_scene):
     """
@@ -24,7 +26,7 @@ def convert(blender_obj, scene, context, luxcore_scene):
         print("No mesh data after to_mesh()")
         return props
 
-    mesh_definitions = __convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
+    mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
     bpy.data.meshes.remove(mesh, do_unlink=False)
 
     # TODO: Remove test material
@@ -32,14 +34,18 @@ def convert(blender_obj, scene, context, luxcore_scene):
     props.Set(pyluxcore.Property("scene.materials.test.kd", [0.0, 0.7, 0.7]))
 
     for lux_object_name, material_index in mesh_definitions:
+        mat = blender_obj.material_slots[material_index].material
+        # TODO material cache
+        lux_mat_name, mat_props = material.convert(mat)
+        props.Set(mat_props)
+
         transformation = utils.matrix_to_list(blender_obj.matrix_world)
-        material_name = "test"
-        __define_luxcore_object(props, lux_object_name, material_name, transformation)
+        _define_luxcore_object(props, lux_object_name, lux_mat_name, transformation)
 
     return props
 
 
-def __define_luxcore_object(props, lux_object_name, lux_material_name, transformation=None):
+def _define_luxcore_object(props, lux_object_name, lux_material_name, transformation=None):
     # This prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
     luxcore_shape_name = "Mesh-" + lux_object_name
     prefix = "scene.objects." + lux_object_name + "."
@@ -49,7 +55,7 @@ def __define_luxcore_object(props, lux_object_name, lux_material_name, transform
         props.Set(pyluxcore.Property(prefix + "transformation", transformation))
 
 
-def __convert_mesh_to_shapes(name, mesh, luxcore_scene):
+def _convert_mesh_to_shapes(name, mesh, luxcore_scene):
     faces = mesh.tessfaces[0].as_pointer()
     vertices = mesh.vertices[0].as_pointer()
 

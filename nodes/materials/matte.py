@@ -13,5 +13,5 @@ class luxcore_material_matte(LuxCoreNode):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def export(self, properties):
+    def export(self, props):
         pass
