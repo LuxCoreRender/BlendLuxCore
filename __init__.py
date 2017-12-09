@@ -3,7 +3,7 @@ import bpy
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
 from .nodes import materials
-from .ui import config, material
+from .ui import config, material, errorlog
 
 bl_info = {
     "name": "LuxCore",

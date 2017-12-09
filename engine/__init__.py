@@ -16,6 +16,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self._framebuffer = None
         self._session = None
         self._exporter = export.Exporter()
+        self.error = None
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
@@ -27,30 +28,43 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def update(self, data, scene):
         """Export scene data for render"""
-        assert self._session is None
-        self.update_stats("Export", "exporting...")
+        try:
+            assert self._session is None
+            self.update_stats("Export", "exporting...")
 
-        self._session = self._exporter.create_session(scene)
+            self._session = self._exporter.create_session(scene)
+        except Exception as error:
+            # Will be reported in self.render() below
+            self.error = error
 
     def render(self, scene):
-        assert self._session is not None
-        self.update_stats("Render", "rendering...")
-        self._framebuffer = FrameBufferFinal(scene)
-        self._session.Start()
-        self._framebuffer.draw(self, self._session)
+        try:
+            if self.error:
+                raise self.error
 
-        last_refresh = time()
-        interval = 3
-        while not self.test_break():
-            sleep(1 / 50)
-            now = time()
-            if now - last_refresh > interval:
-                self._session.UpdateStats()
-                self._framebuffer.draw(self, self._session)
-                last_refresh = now
+            assert self._session is not None
+            self.update_stats("Render", "rendering...")
+            self._framebuffer = FrameBufferFinal(scene)
+            self._session.Start()
+            self._framebuffer.draw(self, self._session)
 
-        self._session.Stop()
-        self._framebuffer.draw(self, self._session)
+            last_refresh = time()
+            interval = 3
+            while not self.test_break():
+                sleep(1 / 50)
+                now = time()
+                if now - last_refresh > interval:
+                    self._session.UpdateStats()
+                    self._framebuffer.draw(self, self._session)
+                    last_refresh = now
+
+            self._session.Stop()
+            self._framebuffer.draw(self, self._session)
+        except Exception as error:
+            self.report({'ERROR'}, str(error))
+            import traceback
+            traceback.print_exc()
+            scene.luxcore.errorlog.set(error)
 
     def view_update(self, context):
         self.view_update_lux(context)

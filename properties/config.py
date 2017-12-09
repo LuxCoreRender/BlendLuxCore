@@ -1,12 +1,8 @@
 import bpy
-from bpy.props import PointerProperty, EnumProperty
+from bpy.props import EnumProperty, StringProperty
 
 
-def init():
-    bpy.types.Scene.luxcore = PointerProperty(type=LuxCoreSceneProps)
-
-
-class LuxCoreSceneProps(bpy.types.PropertyGroup):
+class LuxCoreConfig(bpy.types.PropertyGroup):
     engines = [
         ("PATHCPU", "Path CPU", "Path tracer", 0),
         ("TILEPATHCPU", "Tile Path CPU", "Path tracer rendering in tiles", 1),

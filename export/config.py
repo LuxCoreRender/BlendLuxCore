@@ -3,7 +3,7 @@ from .. import utils
 
 
 def convert(scene, context=None):
-    config = scene.luxcore
+    config = scene.luxcore.config
     width, height = utils.calc_filmsize(scene, context)
 
     if context:
