@@ -5,6 +5,7 @@ from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 
 from .matte import luxcore_material_matte
 from .output import luxcore_material_output
+from .. import LuxCoreNode
 
 
 class LuxCoreMaterialEditor(NodeTree):

@@ -1,8 +1,7 @@
 import bpy
-from .. import LuxCoreNode
+from .. import LuxCoreNodeMaterial
 
-
-class luxcore_material_matte(LuxCoreNode):
+class luxcore_material_matte(LuxCoreNodeMaterial):
     """(Rough) matte material node"""
     bl_label = "Matte Material"
     bl_width_min = 160
@@ -14,4 +13,13 @@ class luxcore_material_matte(LuxCoreNode):
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
     def export(self, props):
-        pass
+        kd = self.inputs["Diffuse Color"].export(props)
+        sigma = self.inputs["Sigma"].export(props)
+
+        definitions = {
+            "type": "roughmatte",
+            "kd": kd,
+            "sigma": sigma,
+        }
+
+        return self.base_export(props, definitions)

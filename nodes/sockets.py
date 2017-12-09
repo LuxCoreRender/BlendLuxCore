@@ -18,7 +18,13 @@ class LuxCoreSocketColorTex(LuxCoreNodeSocket):
     color = Color.color_texture
     default_value = FloatVectorProperty(subtype="COLOR")
 
+    def export_default(self):
+        return list(self.default_value)
+
 
 class LuxCoreSocketFloatTex(LuxCoreNodeSocket):
     color = Color.float_texture
     default_value = FloatProperty()
+
+    def export_default(self):
+        return self.default_value

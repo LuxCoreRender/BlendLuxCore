@@ -1,9 +1,11 @@
 import bpy
 from bpy.types import Node, NodeSocket
 import mathutils
+from .. import utils
 
 
 class LuxCoreNode(Node):
+    """Base class for LuxCore nodes (material, volume and texture)"""
     bl_label = ""
 
     @classmethod
@@ -13,6 +15,27 @@ class LuxCoreNode(Node):
     def add_input(self, type, name, default):
         self.inputs.new(type, name)
         self.inputs[name].default_value = default
+
+    def make_name(self):
+        node_tree = self.id_data
+        name_parts = [self.name, node_tree.name, self.suffix]
+
+        if node_tree.library:
+            name_parts.append(node_tree.library.name)
+
+        return utils.to_luxcore_name("_".join(name_parts))
+
+    def base_export(self, props, definitions):
+        luxcore_name = self.make_name()
+        prefix = self.prefix + luxcore_name + "."
+        props.Set(utils.create_props(prefix, definitions))
+        return luxcore_name
+
+
+class LuxCoreNodeMaterial(LuxCoreNode):
+    """Base class for material nodes"""
+    suffix = "mat"
+    prefix = "scene.materials."
 
 
 class LuxCoreNodeSocket(NodeSocket):
@@ -36,11 +59,19 @@ class LuxCoreNodeSocket(NodeSocket):
     def draw_color(self, context, node):
         return self.color
 
+    def export_default(self):
+        """
+        Subclasses have to implement this method.
+        It should return the default value in a form ready for the scene properties
+        e.g. convert colors to a list
+        """
+        return None
+
     def export(self, props):
         if self.is_linked:
             linked_node = self.links[0].from_node
             return linked_node.export(props)
         elif hasattr(self, "default_value"):
-            return self.default_value
+            return self.export_default()
         else:
             return None

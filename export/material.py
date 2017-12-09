@@ -3,7 +3,6 @@ from .. import utils
 
 def convert(material):
     print("converting object:", material.name)
-    luxcore_name = utils.to_luxcore_name(material.name)
     props = pyluxcore.Properties()
 
     node_tree = material.luxcore.node_tree
@@ -23,7 +22,7 @@ def convert(material):
         print("ERROR: No active output node found in nodetree", node_tree.name)
         return _fallback()
 
-    active_output.export(props, luxcore_name)
+    luxcore_name = active_output.export(props)
     return luxcore_name, props
 
 def _fallback():
