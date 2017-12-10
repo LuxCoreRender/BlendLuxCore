@@ -2,7 +2,7 @@ from ..bin import pyluxcore
 from .. import utils
 
 def convert(material):
-    print("converting object:", material.name)
+    print("converting material:", material.name)
     props = pyluxcore.Properties()
     luxcore_name = utils.get_unique_luxcore_name(material)
 
