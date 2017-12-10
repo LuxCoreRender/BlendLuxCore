@@ -13,7 +13,11 @@ def convert(scene, context=None):
     else:
         # Final render
         engine = config.engine
-        sampler = "SOBOL"
+
+        if engine == "TILEPATHCPU":
+            sampler = "TILEPATHSAMPLER"
+        else:
+            sampler = config.sampler
 
     prefix = ""
     definitions = {

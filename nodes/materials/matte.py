@@ -1,5 +1,11 @@
 import bpy
+from bpy.props import FloatProperty
 from .. import LuxCoreNodeMaterial
+from ..sockets import LuxCoreSocketFloat
+
+
+class LuxCoreSocketSigma(LuxCoreSocketFloat):
+    default_value = FloatProperty(min=0, max=45)
 
 
 class luxcore_material_matte(LuxCoreNodeMaterial):
@@ -8,8 +14,8 @@ class luxcore_material_matte(LuxCoreNodeMaterial):
     bl_width_min = 160
 
     def init(self, context):
-        self.add_input("LuxCoreSocketColorTex", "Diffuse Color", (0.7, 0.7, 0.7))
-        self.add_input("LuxCoreSocketFloatTex", "Sigma", 0)
+        self.add_input("LuxCoreSocketColor", "Diffuse Color", (0.7, 0.7, 0.7))
+        self.add_input("LuxCoreSocketSigma", "Sigma", 0)
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 

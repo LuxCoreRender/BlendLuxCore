@@ -11,10 +11,10 @@ class luxcore_material_glossy2(LuxCoreNodeMaterial):
     multibounce = BoolProperty(name="Multibounce", default=False)
 
     def init(self, context):
-        self.add_input("LuxCoreSocketColorTex", "Diffuse Color", [0.7] * 3)
-        self.add_input("LuxCoreSocketColorTex", "Specular Color", [0.05] * 3)
-        self.add_input("LuxCoreSocketColorTex", "Absorption Color", [0] * 3)
-        self.add_input("LuxCoreSocketFloatTex", "Absorption Depth", 0)
+        self.add_input("LuxCoreSocketColor", "Diffuse Color", [0.7] * 3)
+        self.add_input("LuxCoreSocketColor", "Specular Color", [0.05] * 3)
+        self.add_input("LuxCoreSocketColor", "Absorption Color", [0] * 3)
+        self.add_input("LuxCoreSocketFloatPositive", "Absorption Depth", 0)
         # TODO: roughness
         # TODO: IOR (index)
 
