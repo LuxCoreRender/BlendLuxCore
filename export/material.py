@@ -8,7 +8,7 @@ def convert(material):
 
     node_tree = material.luxcore.node_tree
     if node_tree is None:
-        print("ERROR: No node tree found in material", material.name)
+        print('ERROR: No node tree found in material "%s"' % material.name)
         return _fallback(luxcore_name)
 
     active_output = None
@@ -20,7 +20,7 @@ def convert(material):
             break
 
     if active_output is None:
-        print("ERROR: No active output node found in nodetree", node_tree.name)
+        print('ERROR: No active output node found in nodetree "%s"' % node_tree.name)
         return _fallback(luxcore_name)
 
     active_output.export(props, luxcore_name)

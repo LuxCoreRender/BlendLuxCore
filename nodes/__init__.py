@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import Node, NodeSocket
+from bpy.props import BoolProperty
 import mathutils
 from .. import utils
 
@@ -37,6 +38,55 @@ class LuxCoreNodeMaterial(LuxCoreNode):
     """Base class for material nodes"""
     suffix = "mat"
     prefix = "scene.materials."
+
+
+class Roughness:
+    """
+    How to use this class:
+    Declare a use_anisotropy property like this:
+    use_anisotropy = BoolProperty(name=Roughness.aniso_name,
+                                  default=False,
+                                  description=Roughness.aniso_desc,
+                                  update=Roughness.update_anisotropy)
+
+    Call Roughness.init(self, default=0.1) in the init method of the material node
+
+    Draw the use_anisotropy property in the draw_buttons method:
+    layout.prop(self, "use_anisotropy")
+
+    For an example, see the glossy2 node
+    """
+
+    @staticmethod
+    def update_anisotropy(node, context):
+        try:
+            u_roughness = node.inputs["Roughness"]
+        except KeyError:
+            u_roughness = node.inputs["U-Roughness"]
+        u_roughness.name = "U-Roughness" if node.use_anisotropy else "Roughness"
+        node.inputs["V-Roughness"].enabled = node.use_anisotropy
+
+    aniso_name = "Anisotropic Roughness"
+    aniso_desc = ("Use different roughness values for "
+                 "U- and V-directions (needs UV mapping)")
+
+    @staticmethod
+    def init(node, default=0.1):
+        node.add_input("LuxCoreSocketRoughness", "Roughness", default)
+        node.add_input("LuxCoreSocketRoughness", "V-Roughness", default)
+        node.inputs["V-Roughness"].enabled = False
+
+    @staticmethod
+    def export(node, props, definitions):
+        if node.use_anisotropy:
+            uroughness = node.inputs["U-Roughness"].export(props)
+            vroughness = node.inputs["V-Roughness"].export(props)
+        else:
+            uroughness = node.inputs["Roughness"].export(props)
+            vroughness = uroughness
+
+        definitions["uroughness"] = uroughness
+        definitions["vroughness"] = vroughness
 
 
 class LuxCoreNodeSocket(NodeSocket):

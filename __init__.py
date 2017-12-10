@@ -22,7 +22,7 @@ bl_info = {
 def register():
     ui.register()
     nodes.materials.register()
-    bpy.utils.register_module(__name__, verbose=True)
+    bpy.utils.register_module(__name__)
 
     properties.init()
 
