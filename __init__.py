@@ -1,4 +1,5 @@
 import bpy
+from .bin import pyluxcore
 
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
@@ -25,6 +26,9 @@ def register():
     bpy.utils.register_module(__name__)
 
     properties.init()
+
+    pyluxcore.Init()
+    print("pyluxcore version:", pyluxcore.Version())
 
 
 def unregister():
