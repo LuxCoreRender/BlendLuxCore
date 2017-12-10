@@ -5,7 +5,8 @@ from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 
 from .matte import luxcore_material_matte
 from .output import luxcore_material_output
-from .. import LuxCoreNode
+from .glossy2 import luxcore_material_glossy2
+
 
 
 class LuxCoreMaterialEditor(NodeTree):
@@ -43,8 +44,9 @@ class luxcore_node_category_material(NodeCategory):
 
 luxcore_node_categories_material = [
     luxcore_node_category_material("LUX_MATERIAL", "Material", items=[
-        NodeItem("luxcore_material_matte", label="Matte"),
         NodeItem("luxcore_material_output", label="Output"),
+        NodeItem("luxcore_material_matte", label="Matte"),
+        NodeItem("luxcore_material_glossy2", label="Glossy2"),
     ]),
 ]
 
