@@ -25,8 +25,9 @@ class LuxCoreNode(Node):
 
         return utils.to_luxcore_name("_".join(name_parts))
 
-    def base_export(self, props, definitions):
-        luxcore_name = self.make_name()
+    def base_export(self, props, definitions, luxcore_name=None):
+        if luxcore_name is None:
+            luxcore_name = self.make_name()
         prefix = self.prefix + luxcore_name + "."
         props.Set(utils.create_props(prefix, definitions))
         return luxcore_name
@@ -67,10 +68,13 @@ class LuxCoreNodeSocket(NodeSocket):
         """
         return None
 
-    def export(self, props):
+    def export(self, props, luxcore_name=None):
         if self.is_linked:
             linked_node = self.links[0].from_node
-            return linked_node.export(props)
+            if luxcore_name:
+                return linked_node.export(props, luxcore_name)
+            else:
+                return linked_node.export(props)
         elif hasattr(self, "default_value"):
             return self.export_default()
         else:

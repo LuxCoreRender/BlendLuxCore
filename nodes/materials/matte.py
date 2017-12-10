@@ -12,7 +12,7 @@ class luxcore_material_matte(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def export(self, props):
+    def export(self, props, luxcore_name=None):
         kd = self.inputs["Diffuse Color"].export(props)
         sigma = self.inputs["Sigma"].export(props)
 
@@ -22,4 +22,4 @@ class luxcore_material_matte(LuxCoreNodeMaterial):
             "sigma": sigma,
         }
 
-        return self.base_export(props, definitions)
+        return self.base_export(props, definitions, luxcore_name)

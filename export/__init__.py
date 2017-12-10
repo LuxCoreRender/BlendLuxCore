@@ -1,6 +1,6 @@
 import bpy
 from ..bin import pyluxcore
-from . import camera, config, blender_object
+from . import camera, config, blender_object, material
 
 # TODO do I need this?
 class CacheEntry(object):
@@ -10,24 +10,15 @@ class CacheEntry(object):
         self.is_updated = True  # new entries are flagged as updated
 
 
-# TODO maybe move to utils?
-def make_key(datablock):
-    key = datablock.name
-    if hasattr(datablock, "type"):
-        key += datablock.type
-    if datablock.library:
-        key += datablock.library.name
-    return key
-
-
 class Change:
     NONE = 0
 
     CONFIG = 1 << 0
     CAMERA = 1 << 1
     OBJECT = 1 << 2
+    MATERIAL = 1 << 3
 
-    REQUIRES_SCENE_EDIT = CAMERA | OBJECT
+    REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL
     REQUIRES_VIEW_UPDATE = CONFIG
 
 class StringCache(object):
@@ -80,12 +71,40 @@ class ObjectCache(object):
         return self.changed_transform or self.changed_mesh or self.lamps
 
 
+class MaterialCache(object):
+    def __init__(self):
+        self._reset()
+
+    def _reset(self):
+        self.changed_materials = []
+        self.node_cache = StringCache()
+
+    def diff(self):
+        if bpy.data.materials.is_updated:
+            for mat in bpy.data.materials:
+                node_tree = mat.luxcore.node_tree
+                mat_updated = False
+
+                if node_tree and (node_tree.is_updated or node_tree.is_updated_data):
+                    luxcore_name, props = material.convert(mat)
+                    if self.node_cache.diff(props):
+                        mat_updated = True
+                else:
+                    mat_updated = mat.is_updated
+
+                if mat_updated:
+                    self.changed_materials.append(mat)
+
+        return self.changed_materials
+
+
 class Exporter(object):
     def __init__(self):
         print("exporter init")
         self.config_cache = StringCache()
         self.camera_cache = StringCache()
         self.object_cache = ObjectCache()
+        self.material_cache = MaterialCache()
 
     def create_session(self, scene, context=None):
         print("create_session")
@@ -137,6 +156,9 @@ class Exporter(object):
         if self.object_cache.diff(context.scene):
             changes |= Change.OBJECT
 
+        if self.material_cache.diff():
+            changes |= Change.MATERIAL
+
         return changes
 
     def _update_config(self, session, config_props):
@@ -179,6 +201,11 @@ class Exporter(object):
                     print("lamp changed:", obj.name)
                     # TODO update lamps
                     props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
+
+            if changes & Change.MATERIAL:
+                for mat in self.material_cache.changed_materials:
+                    luxcore_name, mat_props = material.convert(mat)
+                    props.Set(mat_props)
 
             luxcore_scene.Parse(props)
             session.EndSceneEdit()

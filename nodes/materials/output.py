@@ -25,6 +25,5 @@ class luxcore_material_output(LuxCoreNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "active")
 
-    def export(self, props):
-        luxcore_name = self.inputs["Material"].export(props)
-        return luxcore_name
+    def export(self, props, luxcore_name):
+        self.inputs["Material"].export(props, luxcore_name)

@@ -6,6 +6,19 @@ def to_luxcore_name(string):
     return re.sub("[^_0-9a-zA-Z]+", "__", string)
 
 
+def make_key(datablock):
+    key = datablock.name
+    if hasattr(datablock, "type"):
+        key += datablock.type
+    if datablock.library:
+        key += datablock.library.name
+    return key
+
+
+def get_unique_luxcore_name(datablock):
+    return to_luxcore_name(make_key(datablock))
+
+
 def create_props(prefix, definitions):
     """
     :param prefix: string, will be prepended to each key part of the definitions.
