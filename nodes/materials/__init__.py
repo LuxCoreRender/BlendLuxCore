@@ -10,8 +10,6 @@ from .glossy2 import luxcore_material_glossy2
 
 
 class LuxCoreMaterialEditor(NodeTree):
-    """LuxCore Material Nodes"""
-
     bl_idname = "luxcore_material_nodes"
     bl_label = "LuxCore Material Nodes"
     bl_icon = "MATERIAL"
@@ -35,6 +33,19 @@ class LuxCoreMaterialEditor(NodeTree):
                     return node_tree, mat, mat
 
         return None, None, None
+
+    # This block updates the preview, when socket links change
+    def update(self):
+        self.refresh = True
+
+    def acknowledge_connection(self, context):
+        while self.refresh:
+            self.refresh = False
+            break
+
+    refresh = bpy.props.BoolProperty(name='Links Changed',
+                                     default=False,
+                                     update=acknowledge_connection)
 
 
 class luxcore_node_category_material(NodeCategory):

@@ -1,6 +1,19 @@
 import bpy
 
 
+def init_node_tree(node_tree):
+    nodes = node_tree.nodes
+
+    output = nodes.new("luxcore_material_output")
+    output.location = 300, 200
+    output.select = False
+
+    matte = nodes.new("luxcore_material_matte")
+    matte.location = 50, 200
+
+    node_tree.links.new(matte.outputs[0], output.inputs[0])
+
+
 class LUXCORE_OT_material_new(bpy.types.Operator):
     bl_idname = "luxcore.material_new"
     bl_label = "New"
@@ -9,6 +22,7 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
     def execute(self, context):
         mat = bpy.data.materials.new(name="Material")
         node_tree = bpy.data.node_groups.new(name=mat.name, type="luxcore_material_nodes")
+        init_node_tree(node_tree)
         mat.luxcore.node_tree = node_tree
 
         obj = context.active_object
