@@ -3,7 +3,7 @@ from bpy.props import BoolProperty
 from .. import LuxCoreNodeMaterial, Roughness
 
 
-class luxcore_material_glossy2(LuxCoreNodeMaterial):
+class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
     """Glossy2 material node"""
     bl_label = "Glossy Material"
     bl_width_min = 160

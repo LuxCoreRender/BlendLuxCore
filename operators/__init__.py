@@ -4,11 +4,11 @@ import bpy
 def init_node_tree(node_tree):
     nodes = node_tree.nodes
 
-    output = nodes.new("luxcore_material_output")
+    output = nodes.new("LuxCoreNodeMatOutput")
     output.location = 300, 200
     output.select = False
 
-    matte = nodes.new("luxcore_material_matte")
+    matte = nodes.new("LuxCoreNodeMatMatte")
     matte.location = 50, 200
 
     node_tree.links.new(matte.outputs[0], output.inputs[0])

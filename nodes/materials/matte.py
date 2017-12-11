@@ -8,7 +8,7 @@ class LuxCoreSocketSigma(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=45)
 
 
-class luxcore_material_matte(LuxCoreNodeMaterial):
+class LuxCoreNodeMatMatte(LuxCoreNodeMaterial):
     """(Rough) matte material node"""
     bl_label = "Matte Material"
     bl_width_min = 160

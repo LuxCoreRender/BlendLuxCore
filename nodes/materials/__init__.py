@@ -3,13 +3,12 @@ from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 
-from .matte import luxcore_material_matte
-from .output import luxcore_material_output
-from .glossy2 import luxcore_material_glossy2
+from .matte import LuxCoreNodeMatMatte
+from .output import LuxCoreNodeMatOutput
+from .glossy2 import LuxCoreNodeMatGlossy2
 
 
-
-class LuxCoreMaterialEditor(NodeTree):
+class LuxCoreMaterialNodeTree(NodeTree):
     bl_idname = "luxcore_material_nodes"
     bl_label = "LuxCore Material Nodes"
     bl_icon = "MATERIAL"
@@ -48,22 +47,26 @@ class LuxCoreMaterialEditor(NodeTree):
                                      update=acknowledge_connection)
 
 
-class luxcore_node_category_material(NodeCategory):
+class LuxCoreNodeCategoryMaterial(NodeCategory):
     @classmethod
     def poll(cls, context):
         return context.space_data.tree_type == "luxcore_material_nodes"
 
+
 luxcore_node_categories_material = [
-    luxcore_node_category_material("LUX_MATERIAL", "Material", items=[
-        NodeItem("luxcore_material_output", label="Output"),
-        NodeItem("luxcore_material_matte", label="Matte"),
-        NodeItem("luxcore_material_glossy2", label="Glossy"),
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
+        NodeItem("LuxCoreNodeMatMatte", label="Matte"),
+        NodeItem("LuxCoreNodeMatGlossy2", label="Glossy"),
+    ]),
+
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_OUTPUT", "Output", items=[
+        NodeItem("LuxCoreNodeMatOutput", label="Output"),
     ]),
 ]
 
 def register():
-    nodeitems_utils.register_node_categories("LUXCORE_MATERIAL", luxcore_node_categories_material)
+    nodeitems_utils.register_node_categories("LUXCORE_MATERIAL_TREE", luxcore_node_categories_material)
 
 
 def unregister():
-    nodeitems_utils.unregister_node_categories("LUXCORE_MATERIAL")
+    nodeitems_utils.unregister_node_categories("LUXCORE_MATERIAL_TREE")

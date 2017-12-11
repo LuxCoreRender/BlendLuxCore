@@ -10,7 +10,7 @@ def get_output_nodes(node_tree):
 
     for node in node_tree.nodes:
         node_type = getattr(node, "bl_idname", None)
-        if node_type == "luxcore_material_output":
+        if node_type == "LuxCoreNodeMatOutput":
             nodes.append(node)
     return nodes
 
@@ -24,7 +24,7 @@ def update_active(output_node, context):
     output_node.disable_other_outputs()
 
 
-class luxcore_material_output(LuxCoreNode):
+class LuxCoreNodeMatOutput(LuxCoreNode):
     """
     This is where the export starts (if the output is active).
     Only one output node should be active at any time.

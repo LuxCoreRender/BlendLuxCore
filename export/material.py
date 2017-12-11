@@ -19,7 +19,7 @@ def convert(material):
     for node in node_tree.nodes:
         node_type = getattr(node, "bl_idname", None)
 
-        if node_type == "luxcore_material_output" and node.active:
+        if node_type == "LuxCoreNodeMatOutput" and node.active:
             active_output = node
             break
 
