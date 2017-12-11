@@ -75,13 +75,15 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         print("view_update")
 
         if self._session is None:
+            print("new session")
             self._session = self._exporter.create_session(context.scene, context)
             self._session.Start()
             return
 
         if changes is None:
             changes = self._exporter.get_changes(context)
-        self._exporter.update(context, self._session, changes)
+        # We have to re-assign the session because it might have been replaced due to filmsize change
+        self._session = self._exporter.update(context, self._session, changes)
 
     def view_draw(self, context):
         # TODO: film resize update
@@ -92,11 +94,13 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             if changes & export.Change.CONFIG:
                 # Film resize requires a new framebuffer
                 self._framebuffer = FrameBuffer(context)
+            self.tag_redraw()
             self.view_update_lux(context, changes)
             return
         elif changes & export.Change.CAMERA:
             # Only update allowed in view_draw is a camera update, for everything else we call view_update_lux()
-            self._exporter.update(context, self._session, export.Change.CAMERA)
+            # We have to re-assign the session because it might have been replaced due to filmsize change
+            self._session = self._exporter.update(context, self._session, export.Change.CAMERA)
 
         if self._framebuffer is None:
             self._framebuffer = FrameBuffer(context)

@@ -162,21 +162,22 @@ class Exporter(object):
         return changes
 
     def _update_config(self, session, config_props):
-        print("NOT UPDATING CONFIG")
-        # TODO: hangs/crashes blender...
-        # renderconfig = session.GetRenderConfig()
-        # session.Stop()
-        # renderconfig.Parse(config_props)
-        # if renderconfig is None:
-        #     print("ERROR: not a valid luxcore config")
-        #     return
-        # session = pyluxcore.RenderSession(renderconfig)
-        # session.Start()
+        renderconfig = session.GetRenderConfig()
+        session.Stop()
+        del session
+
+        renderconfig.Parse(config_props)
+        if renderconfig is None:
+            print("ERROR: not a valid luxcore config")
+            return
+        session = pyluxcore.RenderSession(renderconfig)
+        session.Start()
+        return session
 
     def update(self, context, session, changes):
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
-            self._update_config(session, self.config_cache.props)
+            session = self._update_config(session, self.config_cache.props)
 
         if changes & Change.REQUIRES_SCENE_EDIT:
             luxcore_scene = session.GetRenderConfig().GetScene()
@@ -209,3 +210,7 @@ class Exporter(object):
 
             luxcore_scene.Parse(props)
             session.EndSceneEdit()
+
+        # We have to return and re-assign the session in the RenderEngine,
+        # because it might have been replaced in _update_config()
+        return session
