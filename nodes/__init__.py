@@ -40,6 +40,18 @@ class LuxCoreNodeMaterial(LuxCoreNode):
     prefix = "scene.materials."
 
 
+class LuxCoreNodeTexture(LuxCoreNode):
+    """Base class for material nodes"""
+    suffix = "tex"
+    prefix = "scene.textures."
+
+
+class LuxCoreNodeVolume(LuxCoreNode):
+    """Base class for material nodes"""
+    suffix = "vol"
+    prefix = "scene.volumes."
+
+
 class Roughness:
     """
     How to use this class:

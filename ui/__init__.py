@@ -1,5 +1,9 @@
 import bpy
 
+
+ICON_VOLUMES = "MOD_FLUIDSIM"
+
+
 def compatible_panels():
     panels = [
         "RENDER_PT_render",

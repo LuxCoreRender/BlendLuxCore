@@ -1,5 +1,6 @@
 import bl_ui
 import bpy
+from . import ICON_VOLUMES
 
 
 class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.types.Panel):
@@ -60,3 +61,8 @@ class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.
         if mat:
             # LuxCore stuff
             layout.prop(mat.luxcore, "node_tree")
+            # TODO maybe there's a way to restrict the dropdown to volume node trees?
+            layout.prop(mat.luxcore, "interior_volume", icon=ICON_VOLUMES)
+            layout.prop(mat.luxcore, "exterior_volume", icon=ICON_VOLUMES)
+            # layout.prop_search(mat.luxcore, "interior_volume",
+            #                    bpy.data, "node_groups", icon=ICON_VOLUMES)

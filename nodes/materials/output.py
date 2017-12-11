@@ -18,6 +18,7 @@ def get_output_nodes(node_tree):
 def update_active(output_node, context):
     if not output_node.active:
         # enabled -> disabled is not allowed
+        # TODO: allow it, but make it toggle back to the last active output
         output_node["active"] = True
         return
 
