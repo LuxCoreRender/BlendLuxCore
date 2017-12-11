@@ -29,14 +29,15 @@ def convert(blender_obj, scene, context, luxcore_scene):
     mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
     bpy.data.meshes.remove(mesh, do_unlink=False)
 
-    # TODO: Remove test material
-    props.Set(pyluxcore.Property("scene.materials.test.type", "matte"))
-    props.Set(pyluxcore.Property("scene.materials.test.kd", [0.0, 0.7, 0.7]))
-
     for lux_object_name, material_index in mesh_definitions:
-        mat = blender_obj.material_slots[material_index].material
-        # TODO material cache
-        lux_mat_name, mat_props = material.convert(mat)
+        if material_index < len(blender_obj.material_slots):
+            mat = blender_obj.material_slots[material_index].material
+            # TODO material cache
+            lux_mat_name, mat_props = material.convert(mat)
+        else:
+            # The object has no material slots
+            lux_mat_name, mat_props = material.fallback()
+
         props.Set(mat_props)
 
         transformation = utils.matrix_to_list(blender_obj.matrix_world)

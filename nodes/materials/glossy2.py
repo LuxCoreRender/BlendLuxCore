@@ -5,7 +5,7 @@ from .. import LuxCoreNodeMaterial, Roughness
 
 class luxcore_material_glossy2(LuxCoreNodeMaterial):
     """Glossy2 material node"""
-    bl_label = "Glossy2 Material"
+    bl_label = "Glossy Material"
     bl_width_min = 160
 
     multibounce = BoolProperty(name="Multibounce", default=False)

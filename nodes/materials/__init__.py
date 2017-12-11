@@ -57,7 +57,7 @@ luxcore_node_categories_material = [
     luxcore_node_category_material("LUX_MATERIAL", "Material", items=[
         NodeItem("luxcore_material_output", label="Output"),
         NodeItem("luxcore_material_matte", label="Matte"),
-        NodeItem("luxcore_material_glossy2", label="Glossy2"),
+        NodeItem("luxcore_material_glossy2", label="Glossy"),
     ]),
 ]
 

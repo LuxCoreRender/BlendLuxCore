@@ -86,8 +86,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self._session = self._exporter.update(context, self._session, changes)
 
     def view_draw(self, context):
-        # TODO: film resize update
-
         changes = self._exporter.get_changes(context)
 
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
