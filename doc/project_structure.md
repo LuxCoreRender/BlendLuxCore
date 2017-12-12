@@ -60,6 +60,10 @@ Custom operators, e.g. wrappers.
 
 All custom properties are registered and attached here.
 
+### tests
+
+Automated tests. See https://github.com/LuxCoreRender/BlendLuxCore/blob/master/tests/readme.md
+
 ### ui
 
 This module contains the UI drawing code for the custom properties.
