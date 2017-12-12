@@ -1,6 +1,6 @@
 import bpy
 from ..bin import pyluxcore
-from . import camera, config, blender_object, material
+from . import blender_object, camera, config, light, material
 
 # TODO do I need this?
 class CacheEntry(object):
@@ -21,6 +21,7 @@ class Change:
     REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL
     REQUIRES_VIEW_UPDATE = CONFIG
 
+
 class StringCache(object):
     def __init__(self):
         self.props = None
@@ -37,6 +38,7 @@ class StringCache(object):
         has_changes = props_str != new_props_str
         self.props = new_props
         return has_changes
+
 
 class ObjectCache(object):
     def __init__(self):
@@ -120,17 +122,8 @@ class Exporter(object):
         objs = context.visible_objects if context else bpy.data.objects
 
         for obj in objs:
-            if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT"):
+            if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
                 scene_props.Set(blender_object.convert(obj, scene, context, luxcore_scene))
-
-        # Testlight
-        scene_props.Set(pyluxcore.Property("scene.lights.test.type", "sky"))
-        scene_props.Set(pyluxcore.Property("scene.lights.test.dir", [-0.5, -0.5, 0.5]))
-        scene_props.Set(pyluxcore.Property("scene.lights.test.turbidity", [2.2]))
-        scene_props.Set(pyluxcore.Property("scene.lights.test.gain", [1.0, 1.0, 1.0]))
-        # Another testlight
-        # scene_props.Set(pyluxcore.Property("scene.lights." + "test" + ".type", "infinite"))
-        # scene_props.Set(pyluxcore.Property("scene.lights." + "test" + ".file", "F:\\Users\\Simon_2\\Projekte\\Blender\\00_Resources\HDRIs\\03-Ueno-Shrine_3k.hdr"))
 
         luxcore_scene.Parse(scene_props)
 

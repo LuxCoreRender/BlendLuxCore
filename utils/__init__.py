@@ -1,3 +1,4 @@
+import mathutils
 import re
 from ..bin import pyluxcore
 
@@ -34,7 +35,23 @@ def create_props(prefix, definitions):
     return props
 
 
-def matrix_to_list(matrix, apply_worldscale=False, invert=False):
+def get_worldscale(scene, as_scalematrix=True):
+    unit_settings = scene.unit_settings
+
+    if unit_settings.system in ['METRIC', 'IMPERIAL']:
+        # The units used in modelling are for display only. behind
+        # the scenes everything is in meters
+        ws = unit_settings.scale_length
+    else:
+        ws = 1
+
+    if as_scalematrix:
+        return mathutils.Matrix.Scale(ws, 4)
+    else:
+        return ws
+
+
+def matrix_to_list(matrix, scene, apply_worldscale=False, invert=False):
     """
     Flatten a 4x4 matrix into a list
     Returns list[16]
@@ -42,9 +59,9 @@ def matrix_to_list(matrix, apply_worldscale=False, invert=False):
 
     if apply_worldscale:
         matrix = matrix.copy()
-        sm = get_worldscale()  # TODO
+        sm = get_worldscale(scene)
         matrix *= sm
-        ws = get_worldscale(as_scalematrix=False)
+        ws = get_worldscale(scene, as_scalematrix=False)
         matrix[0][3] *= ws
         matrix[1][3] *= ws
         matrix[2][3] *= ws

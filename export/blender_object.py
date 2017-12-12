@@ -2,13 +2,12 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 
-from . import material
+from . import material, light
 
 
 def convert(blender_obj, scene, context, luxcore_scene):
-    """
-    datablock is of type bpy.types.Object
-    """
+    if blender_obj.type == "LAMP":
+        return light.convert(blender_obj, scene)
 
     print("converting object:", blender_obj.name)
     luxcore_name = utils.to_luxcore_name(blender_obj.name)
@@ -40,7 +39,7 @@ def convert(blender_obj, scene, context, luxcore_scene):
 
         props.Set(mat_props)
 
-        transformation = utils.matrix_to_list(blender_obj.matrix_world)
+        transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
         _define_luxcore_object(props, lux_object_name, lux_mat_name, transformation)
 
     return props

@@ -1,10 +1,11 @@
 import bpy
-from . import material, config, errorlog
+from . import config, errorlog, light, material
 from bpy.props import PointerProperty
 
 
 def init():
     material.init()
+    light.init()
 
     bpy.types.Scene.luxcore = PointerProperty(type=LuxCoreScene)
 

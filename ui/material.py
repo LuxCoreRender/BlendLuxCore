@@ -5,7 +5,7 @@ from . import ICON_VOLUMES
 
 class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.types.Panel):
     """
-    Material Editor UI Panel
+    Material UI Panel
     """
     COMPAT_ENGINES = "LUXCORE"
     bl_label = ""

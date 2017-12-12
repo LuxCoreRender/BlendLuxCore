@@ -4,7 +4,7 @@ from .bin import pyluxcore
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
-from .ui import config, material, errorlog
+from .ui import config, errorlog, light, material
 
 bl_info = {
     "name": "LuxCore",
