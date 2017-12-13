@@ -1,5 +1,13 @@
 import bpy
-from bpy.props import PointerProperty, EnumProperty, FloatProperty
+from bpy.props import PointerProperty, EnumProperty, FloatProperty, IntProperty, FloatVectorProperty, BoolProperty, StringProperty
+
+
+SAMPLES_DESCRIPTION = (
+    "The number of shadow ray to trace to compute direct light "
+    "for this light source.\n"
+    "This property is a hint and the render engine can ignore this information.\n"
+    "-1 means use the default global value."
+)
 
 
 def init():
@@ -7,36 +15,79 @@ def init():
 
 
 class LuxCoreLightProps(bpy.types.PropertyGroup):
-    # TODO have to find out if this is really the way to go
-    # or if have to use the Blender type
-    def update_type(self, context):
-        lamp = context.lamp
+    def update_image(self, context):
+        if context.lamp:
+            # For spot lamp
+            context.lamp.show_cone = self.image is not None
 
-        if self.type == "area":
-            lamp.type = "AREA"
-        elif self.type in ("sun", "distant"):
-            lamp.type = "SUN"
-        elif self.type in ("sky2", "infinite"):
-            lamp.type = "HEMI"
-        elif self.type == "point":
-            lamp.type = "POINT"
-        elif self.type in ("spot", "laser"):
-            lamp.type = "SPOT"
-
-    types = [
-        ("area", "Area", "Mesh light", 0),
-        ("sun", "Sun", "Simulates the sun, best used with a sky light", 1),
-        ("sky2", "Sky", "Simulates the sky, can be used with a sun light", 2),
-        # infinite and constantinfinite
-        ("infinite", "HDRI", "Emitting light from all directions, used for environment lighting", 3),
-        # point and mappoint
-        ("point", "Point", "Emitting light from a point", 4),
-        # spot and projector
-        ("spot", "Spot", "Emitting light in a cone", 5),
-        # distant and sharpdistant
-        ("distant", "Distant", "Emitting parallel light rays from infinitely far away", 6),
-        ("laser", "Laser", "Emitting parallel light rays", 7),
+    ##############################################
+    # BlendLuxCore specific properties needed to translate LuxCore light concepts to Blender
+    sun_types = [
+        ("sun", "Sun", "Sun", 0),
+        ("distant", "Distant", "Distant star without atmosphere simulation (emits parallel light)", 1),
     ]
-    type = EnumProperty(name="Type", items=types, update=update_type, default="area")
+    sun_type = EnumProperty(name="Sun Type", items=sun_types, default="sun")
 
-    gain = FloatProperty(name="Gain", description="Brightness multiplier", default=1, min=0)
+    spot_types = [
+        ("spot", "Spot", "Emits light in a cone", 0),
+        ("laser", "Laser", "Emits parallel light rays", 1),
+    ]
+    spot_type = EnumProperty(name="Spot Type", items=spot_types, default="spot")
+
+    ##############################################
+    # Generic properties shared by all light types
+    gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
+    rgb_gain = FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR")
+    samples = IntProperty(name="Samples", default=-1, min=-1, description=SAMPLES_DESCRIPTION)
+    # TODO: id
+
+    ##############################################
+    # Light type specific properties (some are shared by multiple lights, noted in comments)
+    # TODO: check min/max, add descriptions
+
+    # sun, sky2
+    turbidity = FloatProperty(name="Turbidity", default=2.2, min=0, max=30)
+
+    # sun
+    relsize = FloatProperty(name="Relative Size", default=1, min=0.000001, soft_min=0.05)
+
+    # sky2
+    groundalbedo = FloatVectorProperty(name="Ground Albedo", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
+    ground_enable = BoolProperty(name="Use Ground Color", default=True)
+    ground_color = FloatVectorProperty(name="Ground Color", default=(0.5, 0.5, 0.5), min=0, max=1)
+
+    # The image property has different names on different lights:
+    # infinite: file
+    # mappoint: emission.mapfile
+    # projection: mapfile
+    image = PointerProperty(name="Image", type=bpy.types.Image)
+    gamma = FloatProperty(name="Gamma", default=1)
+    # Note: shift parameter not exposed (we use transformation instead)
+
+    # infinite
+    blacklowerhemisphere = BoolProperty(name="Black Lower Hemisphere", default=False)
+
+    # point, mappoint, spot
+    power = FloatProperty(name="Power (W)", default=0, min=0)
+
+    # point, mappoint
+    # TODO how the heck is this called? I see efficency, efficacy, efficiency and others...
+    efficency = FloatProperty(name="Efficency", default=0, min=0)
+
+    # mappoint
+    iesfile = StringProperty(name="IES File")
+    flipz = BoolProperty(name="Flip IES Z Axis", default=False)
+    # not exposed: emission.map.width, emission.map.height - do we need them?
+
+    # spot
+    # Note: coneangle and conedeltaangle are set with default Blender properties
+    # (spot_size and spot_blend)
+
+    # projection
+    # Note: fov is set with default Blender properties
+
+    # distant
+    theta = FloatProperty(name="Size", default=10, min=0, soft_min=0.05)
+
+    # laser
+    # Note: radius is set with default Blender properties (spot_size)
