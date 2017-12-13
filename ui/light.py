@@ -73,7 +73,7 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
 
         elif lamp.type == "HEMI":
             self.draw_image_controls(context)
-            layout.prop(lamp.luxcore, "blacklowerhemisphere")
+            layout.prop(lamp.luxcore, "sampleupperhemisphereonly")
 
         elif lamp.type == "AREA":
             if lamp.luxcore.is_laser:

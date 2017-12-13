@@ -52,7 +52,7 @@ def convert(blender_obj, scene):
                 definitions["dir"] = dir
                 definitions["turbidity"] = lamp.luxcore.turbidity
                 definitions["relsize"] = lamp.luxcore.relsize
-            elif lamp.luxcore.theta == 0:
+            elif lamp.luxcore.theta < 0.05:
                 # sharpdistant
                 definitions["type"] = "sharpdistant"
                 definitions["direction"] = distant_dir
@@ -95,6 +95,7 @@ def convert(blender_obj, scene):
                 definitions["gamma"] = lamp.luxcore.gamma
                 transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
                 definitions["transformation"] = transformation
+                definitions["sampleupperhemisphereonly"] = lamp.luxcore.sampleupperhemisphereonly
             else:
                 # Fallback
                 definitions["type"] = "constantinfinite"

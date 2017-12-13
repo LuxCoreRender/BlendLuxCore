@@ -69,7 +69,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # Note: shift parameter not exposed (we use transformation instead)
 
     # infinite
-    blacklowerhemisphere = BoolProperty(name="Black Lower Hemisphere", default=False)
+    sampleupperhemisphereonly = BoolProperty(name="Sample Upper Hemisphere Only", default=False,
+                                             description="Used to avoid shadows cast from below when using shadow catcher")
 
     # point, mappoint, spot
     power = FloatProperty(name="Power (W)", default=0, min=0,
