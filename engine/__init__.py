@@ -76,9 +76,16 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
         if self._session is None:
             print("new session")
-            self._session = self._exporter.create_session(context.scene, context)
-            self._session.Start()
-            return
+            try:
+                self.update_stats("Creating Render Session...", "")
+                self._session = self._exporter.create_session(context.scene, context)
+                self._session.Start()
+                self.update_stats("Viewport Render", "")
+                return
+            except Exception as error:
+                self.update_stats("Error: ", str(error))
+                import traceback
+                traceback.print_exc()
 
         if changes is None:
             changes = self._exporter.get_changes(context)
@@ -86,6 +93,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self._session = self._exporter.update(context, self._session, changes)
 
     def view_draw(self, context):
+        if self._session is None:
+            return
+
         changes = self._exporter.get_changes(context)
 
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
