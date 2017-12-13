@@ -49,7 +49,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     turbidity = FloatProperty(name="Turbidity", default=2.2, min=0, max=30)
 
     # sun
-    relsize = FloatProperty(name="Relative Size", default=1, min=0.000001, soft_min=0.05)
+    relsize = FloatProperty(name="Relative Size", default=1, min=0.05)
 
     # sky2
     groundalbedo = FloatVectorProperty(name="Ground Albedo", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
