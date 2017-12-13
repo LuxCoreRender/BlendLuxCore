@@ -9,40 +9,46 @@ def convert(blender_obj, scene, context, luxcore_scene):
     if blender_obj.type == "LAMP":
         return light.convert(blender_obj, scene)
 
-    print("converting object:", blender_obj.name)
-    luxcore_name = utils.to_luxcore_name(blender_obj.name)
-    props = pyluxcore.Properties()
+    try:
+        print("converting object:", blender_obj.name)
+        luxcore_name = utils.to_luxcore_name(blender_obj.name)
+        props = pyluxcore.Properties()
 
-    if blender_obj.data is None:
-        print("No mesh data")
+        if blender_obj.data is None:
+            print("No mesh data")
+            return props
+
+        modifier_mode = "PREVIEW" if context else "RENDER"
+        apply_modifiers = True
+        mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
+
+        if mesh is None or len(mesh.tessfaces) == 0:
+            print("No mesh data after to_mesh()")
+            return props
+
+        mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
+        bpy.data.meshes.remove(mesh, do_unlink=False)
+
+        for lux_object_name, material_index in mesh_definitions:
+            if material_index < len(blender_obj.material_slots):
+                mat = blender_obj.material_slots[material_index].material
+                # TODO material cache
+                lux_mat_name, mat_props = material.convert(mat)
+            else:
+                # The object has no material slots
+                lux_mat_name, mat_props = material.fallback()
+
+            props.Set(mat_props)
+
+            transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
+            _define_luxcore_object(props, lux_object_name, lux_mat_name, transformation)
+
         return props
-
-    modifier_mode = "PREVIEW" if context else "RENDER"
-    apply_modifiers = True
-    mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
-
-    if mesh is None or len(mesh.tessfaces) == 0:
-        print("No mesh data after to_mesh()")
-        return props
-
-    mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
-    bpy.data.meshes.remove(mesh, do_unlink=False)
-
-    for lux_object_name, material_index in mesh_definitions:
-        if material_index < len(blender_obj.material_slots):
-            mat = blender_obj.material_slots[material_index].material
-            # TODO material cache
-            lux_mat_name, mat_props = material.convert(mat)
-        else:
-            # The object has no material slots
-            lux_mat_name, mat_props = material.fallback()
-
-        props.Set(mat_props)
-
-        transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
-        _define_luxcore_object(props, lux_object_name, lux_mat_name, transformation)
-
-    return props
+    except Exception as error:
+        # TODO: collect exporter errors
+        print("ERROR in object", blender_obj.name)
+        print(error)
+        return pyluxcore.Properties()
 
 
 def _define_luxcore_object(props, lux_object_name, lux_material_name, transformation=None):

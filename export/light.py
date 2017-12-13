@@ -6,80 +6,102 @@ from .. import utils
 # TODO support all parameters for all possible light types
 
 def convert(blender_obj, scene):
-    assert blender_obj.type == "LAMP"
-    print("converting lamp:", blender_obj.name)
+    try:
+        assert blender_obj.type == "LAMP"
+        print("converting lamp:", blender_obj.name)
 
-    luxcore_name = utils.get_unique_luxcore_name(blender_obj)
-    prefix = "scene.lights." + luxcore_name + "."
-    definitions = {}
+        luxcore_name = utils.get_unique_luxcore_name(blender_obj)
+        prefix = "scene.lights." + luxcore_name + "."
+        definitions = {}
 
-    lamp = blender_obj.data
+        lamp = blender_obj.data
 
-    matrix = blender_obj.matrix_world
-    matrix_inv = matrix.inverted()
-    dir = [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
+        matrix = blender_obj.matrix_world
+        matrix_inv = matrix.inverted()
+        dir = [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
 
-    type = lamp.luxcore.type
-    if type == "area":
-        # Special case because it's really a mesh light
-        definitions["type"] = "point"  # TODO
+        if lamp.type == "POINT":
+            if lamp.luxcore.image or lamp.luxcore.iesfile:
+                # mappoint
+                definitions["type"] = "mappoint"
+            else:
+                # point
+                definitions["type"] = "point"
 
-    elif type == "sun":
-        definitions["type"] = "sun"
-        definitions["dir"] = dir
+                # Position is set by transformationation property
+            definitions["position"] = [0, 0, 0]
+            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
+            definitions["transformation"] = transformation
 
-    elif type == "sky2":
-        definitions["type"] = "sky2"
-        definitions["dir"] = dir
+        elif lamp.type == "SUN":
+            distant_dir = [-dir[0], -dir[1], -dir[2]]
 
-    # infinite and constantinfinite
-    elif type == "infinite":
-        definitions["type"] = "infinite"
-        definitions["file"] = "/home/simon/Bilder/hdris/Ditch_River/Ditch-River_2k.hdr"
+            if lamp.luxcore.sun_type == "sun":
+                # sun
+                definitions["type"] = "sun"
+                definitions["dir"] = dir
+                definitions["turbidity"] = lamp.luxcore.turbidity
+                definitions["relsize"] = lamp.luxcore.relsize
+            elif lamp.luxcore.theta == 0:
+                # sharpdistant
+                definitions["type"] = "sharpdistant"
+                definitions["direction"] = distant_dir
+            else:
+                # distant
+                definitions["type"] = "distant"
+                definitions["direction"] = distant_dir
+                definitions["theta"] = lamp.luxcore.theta
 
-        transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
-        definitions["transformation"] = transformation
+        elif lamp.type == "SPOT":
+            if lamp.luxcore.spot_type == "spot":
+                if lamp.luxcore.image:
+                    # projector
+                    definitions["type"] = "projector"
+                    # TODO image
+                else:
+                    # spot
+                    definitions["type"] = "spot"
+            else:
+                # laser
+                definitions["type"] = "laser"
+                # TODO: radius
 
-    # point and mappoint
-    elif type == "point":
-        definitions["type"] = "point"
-        # Position is set by transformationation property
-        definitions["position"] = [0, 0, 0]
+            # Position and direction is set by transformation property
+            definitions["position"] = [0, 0, 0]
+            definitions["target"] = [0, 0, -1]
 
-        transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
-        definitions["transformation"] = transformation
+            spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
+            transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
+            definitions["transformation"] = transformation
 
-    # spot and projector
-    elif type == "spot":
-        definitions["type"] = "spot"
-        # Position is set by transformationation property
-        definitions["position"] = [0, 0, 0]
-        definitions["target"] = [0, 0, -1]
+        elif lamp.type == "HEMI":
+            if lamp.luxcore.image:
+                definitions["type"] = "infinite"
+                # TODO image file
+                definitions["file"] = "/home/simon/Bilder/hdris/Ditch_River/Ditch-River_2k.hdr"
+                transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
+                definitions["transformation"] = transformation
+            else:
+                # Fallback
+                definitions["type"] = "constantinfinite"
 
-        spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
-        transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
-        definitions["transformation"] = transformation
+        elif lamp.type == "AREA":
+            # TODO
+            raise NotImplementedError("Area light not implemented yet")
 
-    # distant and sharpdistant
-    elif type == "distant":
-        definitions["type"] = "distant"
-        distant_dir = [-dir[0], -dir[1], -dir[2]]
-        definitions["direction"] = distant_dir
+        else:
+            # Can only happen if Blender changes its lamp types
+            raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % blender_obj.name)
 
-    elif type == "laser":
-        definitions["type"] = "laser"
-        definitions["position"] = [0, 0, 0]
-        definitions["target"] = [0, 0, -1]
+        # Common light settings
+        # TODO rgb gain
+        gain = [x * lamp.luxcore.gain for x in lamp.luxcore.rgb_gain]
+        definitions["gain"] = gain
+        definitions["samples"] = lamp.luxcore.samples
 
-        spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
-        transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
-        definitions["transformation"] = transformation
-
-    else:
-        raise Exception("Unkown light type:", type, 'in lamp "%s"' % blender_obj.name)
-
-    # Common light settings
-    # TODO rgb gain
-    definitions["gain"] = [lamp.luxcore.gain] * 3
-
-    return utils.create_props(prefix, definitions)
+        return utils.create_props(prefix, definitions)
+    except Exception as error:
+        # TODO: collect exporter errors
+        print("ERROR in light", blender_obj.name)
+        print(error)
+        return pyluxcore.Properties()

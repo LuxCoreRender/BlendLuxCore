@@ -18,7 +18,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     def update_image(self, context):
         if context.lamp:
             # For spot lamp
-            context.lamp.show_cone = self.image is not None
+            context.lamp.use_square = self.image is not None
 
     ##############################################
     # BlendLuxCore specific properties needed to translate LuxCore light concepts to Blender
@@ -60,7 +60,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # infinite: file
     # mappoint: emission.mapfile
     # projection: mapfile
-    image = PointerProperty(name="Image", type=bpy.types.Image)
+    image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
     gamma = FloatProperty(name="Gamma", default=1)
     # Note: shift parameter not exposed (we use transformation instead)
 
