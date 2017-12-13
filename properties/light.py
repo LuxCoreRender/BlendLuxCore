@@ -17,8 +17,14 @@ def init():
 class LuxCoreLightProps(bpy.types.PropertyGroup):
     def update_image(self, context):
         if context.lamp:
-            # For spot lamp
+            # For spot lamp (toggle projection mode)
             context.lamp.use_square = self.image is not None
+
+    def update_is_laser(self, context):
+        if context.lamp:
+            # For area lamp (laser can't be rectangular)
+            if self.is_laser:
+                context.lamp.shape = "SQUARE"
 
     ##############################################
     # BlendLuxCore specific properties needed to translate LuxCore light concepts to Blender
@@ -28,11 +34,9 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     ]
     sun_type = EnumProperty(name="Sun Type", items=sun_types, default="sun")
 
-    spot_types = [
-        ("spot", "Spot", "Emits light in a cone", 0),
-        ("laser", "Laser", "Emits parallel light rays", 1),
-    ]
-    spot_type = EnumProperty(name="Spot Type", items=spot_types, default="spot")
+    is_laser = BoolProperty(name="Laser", default=False,
+                            description="Switch to laser light emitting parallel light rays",
+                            update=update_is_laser)
 
     ##############################################
     # Generic properties shared by all light types
@@ -68,14 +72,17 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     blacklowerhemisphere = BoolProperty(name="Black Lower Hemisphere", default=False)
 
     # point, mappoint, spot
-    power = FloatProperty(name="Power (W)", default=0, min=0)
+    power = FloatProperty(name="Power (W)", default=0, min=0,
+                          description="Power in watt; setting 0 for both power and efficacy bypasses "
+                                      "this feature and uses only the lamp gain")
 
     # point, mappoint
-    # TODO how the heck is this called? I see efficency, efficacy, efficiency and others...
-    efficency = FloatProperty(name="Efficency", default=0, min=0)
+    efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0,
+                             description="Luminous efficacy in lumens per watt; setting 0 for both power "
+                                         "and efficacy bypasses this feature and uses only the lamp gain")
 
     # mappoint
-    iesfile = StringProperty(name="IES File")
+    iesfile = StringProperty(name="IES File", subtype="FILE_PATH")
     flipz = BoolProperty(name="Flip IES Z Axis", default=False)
     # not exposed: emission.map.width, emission.map.height - do we need them?
 

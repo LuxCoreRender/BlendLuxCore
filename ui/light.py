@@ -29,14 +29,19 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
 
         layout.prop(lamp, "type", expand=True)
 
-        layout.prop(lamp.luxcore, "rgb_gain")
-        layout.prop(lamp.luxcore, "gain")
+        row = layout.row()
+        row.prop(lamp.luxcore, "rgb_gain")
+        row.prop(lamp.luxcore, "gain")
+
         layout.prop(lamp.luxcore, "samples")
         # TODO: id
+        layout.separator()
 
         if lamp.type == "POINT":
-            layout.prop(lamp.luxcore, "power")
-            layout.prop(lamp.luxcore, "efficency")
+            row = layout.row(align=True)
+            row.prop(lamp.luxcore, "power")
+            row.prop(lamp.luxcore, "efficacy")
+
             layout.prop(lamp.luxcore, "iesfile")
 
             if lamp.luxcore.iesfile:
@@ -54,13 +59,15 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
                 layout.prop(lamp.luxcore, "theta")
 
         elif lamp.type == "SPOT":
-            layout.prop(lamp.luxcore, "spot_type", expand=True)
-            layout.prop(lamp, "spot_size")
+            row = layout.row(align=True)
+            row.prop(lamp.luxcore, "power")
+            row.prop(lamp.luxcore, "efficacy")
 
-            if lamp.luxcore.spot_type == "spot":
-                layout.prop(lamp, "spot_blend")
-                layout.prop(lamp.luxcore, "power")
-                self.draw_image_controls(context)
+            row = layout.row(align=True)
+            row.prop(lamp, "spot_size")
+            row.prop(lamp, "spot_blend")
+
+            self.draw_image_controls(context)
 
             layout.prop(lamp, "show_cone")
 
@@ -69,8 +76,23 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
             layout.prop(lamp.luxcore, "blacklowerhemisphere")
 
         elif lamp.type == "AREA":
-            layout.prop(lamp, "shape", expand=True)
-            row = layout.row()
-            row.prop(lamp, "size", text="Size X")
-            row.prop(lamp, "size_y")
+            if lamp.luxcore.is_laser:
+                layout.prop(lamp, "size", text="Size")
+            else:
+                col = layout.column(align=True)
+                # the shape controls should be two horizontal buttons
+                sub = col.row(align=True)
+                sub.prop(lamp, "shape", expand=True)
+                # put the size controls horizontal, too
+                row = col.row(align=True)
+
+                if lamp.shape == "SQUARE":
+                    row.prop(lamp, "size", text="Size")
+                else:
+                    row.prop(lamp, "size", text="Size X")
+                    row.prop(lamp, "size_y")
+
+            layout.prop(lamp.luxcore, "is_laser")
+
+
 
