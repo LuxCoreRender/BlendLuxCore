@@ -65,7 +65,9 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
 
             row = layout.row(align=True)
             row.prop(lamp, "spot_size")
-            row.prop(lamp, "spot_blend")
+            if lamp.luxcore.image is None:
+                # projection does not have this property
+                row.prop(lamp, "spot_blend")
 
             self.draw_image_controls(context)
 
@@ -76,6 +78,10 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
             layout.prop(lamp.luxcore, "sampleupperhemisphereonly")
 
         elif lamp.type == "AREA":
+            row = layout.row(align=True)
+            row.prop(lamp.luxcore, "power")
+            row.prop(lamp.luxcore, "efficacy")
+
             if lamp.luxcore.is_laser:
                 layout.prop(lamp, "size", text="Size")
             else:

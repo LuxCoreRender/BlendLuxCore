@@ -79,6 +79,8 @@ def convert(blender_obj, scene):
                 definitions["coneangle"] = coneangle
                 definitions["conedeltaangle"] = conedeltaangle
 
+            definitions["efficency"] = lamp.luxcore.efficacy
+            definitions["power"] = lamp.luxcore.power
             # Position and direction are set by transformation property
             definitions["position"] = [0, 0, 0]
             definitions["target"] = [0, 0, -1]
@@ -106,6 +108,8 @@ def convert(blender_obj, scene):
                 definitions["type"] = "laser"
                 definitions["radius"] = lamp.size / 2 * utils.get_worldscale(scene, as_scalematrix=False)
 
+                definitions["efficency"] = lamp.luxcore.efficacy
+                definitions["power"] = lamp.luxcore.power
                 # Position and direction are set by transformation property
                 definitions["position"] = [0, 0, 0]
                 definitions["target"] = [0, 0, -1]

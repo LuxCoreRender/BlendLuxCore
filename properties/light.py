@@ -72,12 +72,12 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     sampleupperhemisphereonly = BoolProperty(name="Sample Upper Hemisphere Only", default=False,
                                              description="Used to avoid shadows cast from below when using shadow catcher")
 
-    # point, mappoint, spot
+    # point, mappoint, spot, laser
     power = FloatProperty(name="Power (W)", default=0, min=0,
                           description="Power in watt; setting 0 for both power and efficacy bypasses "
                                       "this feature and uses only the lamp gain")
 
-    # point, mappoint
+    # point, mappoint, spot, laser
     efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0,
                              description="Luminous efficacy in lumens per watt; setting 0 for both power "
                                          "and efficacy bypasses this feature and uses only the lamp gain")
