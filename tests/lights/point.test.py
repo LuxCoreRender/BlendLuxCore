@@ -1,9 +1,9 @@
 import unittest
 
-# import the already loaded addon
 import BlendLuxCore
 from BlendLuxCore.export import light
 import bpy
+
 
 class TestPointLight(unittest.TestCase):
     def test_prop_export(self):

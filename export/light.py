@@ -4,7 +4,6 @@ from ..bin import pyluxcore
 from .. import utils
 from .image import ImageExporter
 
-# TODO support all parameters for all possible light types
 
 def convert(blender_obj, scene):
     try:

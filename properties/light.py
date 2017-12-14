@@ -1,5 +1,8 @@
 import bpy
-from bpy.props import PointerProperty, EnumProperty, FloatProperty, IntProperty, FloatVectorProperty, BoolProperty, StringProperty
+from bpy.props import (
+    PointerProperty, EnumProperty, FloatProperty, IntProperty,
+    FloatVectorProperty, BoolProperty, StringProperty
+)
 
 
 SAMPLES_DESCRIPTION = (
@@ -8,14 +11,17 @@ SAMPLES_DESCRIPTION = (
     "This property is a hint and the render engine can ignore this information.\n"
     "-1 means use the default global value."
 )
+
 IMPORTANCE_DESCRIPTION = (
     "A hint how much processing power to spend on this "
     "light compared to other lights"
 )
+
 POWER_DESCRIPTION = (
     "Power in watt; setting 0 for both power and efficacy bypasses "
     "this feature and uses only the lamp gain"
 )
+
 EFFICACY_DESCRIPTION = (
     "Luminous efficacy in lumens per watt; setting 0 for both power "
     "and efficacy bypasses this feature and uses only the lamp gain"

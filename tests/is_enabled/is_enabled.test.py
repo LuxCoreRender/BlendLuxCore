@@ -3,6 +3,7 @@ import unittest
 # import the already loaded addon
 import BlendLuxCore
 
+
 class TestAddon(unittest.TestCase):
     def test_addon_enabled(self):
         # test if addon got loaded correctly

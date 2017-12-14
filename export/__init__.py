@@ -2,13 +2,6 @@ import bpy
 from ..bin import pyluxcore
 from . import blender_object, camera, config, light, material
 
-# TODO do I need this?
-class CacheEntry(object):
-    def __init__(self, luxcore_names, props):
-        self.luxcore_names = luxcore_names
-        self.props = props
-        self.is_updated = True  # new entries are flagged as updated
-
 
 class Change:
     NONE = 0

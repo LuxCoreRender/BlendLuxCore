@@ -101,7 +101,6 @@ def calc_filmsize(scene, context=None):
     width = int(width * (border_max_x - border_min_x))
     height = int(height * (border_max_y - border_min_y))
 
-    # TODO: account for border render
     return width, height
 
 

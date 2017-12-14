@@ -68,6 +68,7 @@ luxcore_node_categories_material = [
     ]),
 ]
 
+
 def register():
     nodeitems_utils.register_node_categories("LUXCORE_MATERIAL_TREE", luxcore_node_categories_material)
 
