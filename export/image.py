@@ -1,19 +1,27 @@
 import bpy
 import tempfile
 import os
+from .. import utils
 
 
 class ImageExporter(object):
     """
-    This is a singleton
+    This class is a singleton
     """
-    temp_images = []
+    temp_images = {}
 
     @classmethod
     def _save_to_temp_file(cls, image, scene):
-        temp_image = tempfile.NamedTemporaryFile(delete=False)
-        cls.temp_images.append(temp_image)
-        image.save_render(temp_image.name, scene)
+        key = utils.make_key(image)
+
+        if key in cls.temp_images:
+            # Image was already exported
+            temp_image = cls.temp_images[key]
+        else:
+            temp_image = tempfile.NamedTemporaryFile(delete=False)
+            cls.temp_images[key] = temp_image
+            image.save_render(temp_image.name, scene)
+
         return temp_image.name
 
     @classmethod
@@ -33,7 +41,7 @@ class ImageExporter(object):
 
     @classmethod
     def cleanup(cls):
-        for temp_image in cls.temp_images:
+        for temp_image in cls.temp_images.values():
             print("Deleting temporary image:", temp_image.name)
             os.remove(temp_image.name)
 
