@@ -45,3 +45,5 @@ class ImageExporter(object):
             print("Deleting temporary image:", temp_image.name)
             os.remove(temp_image.name)
 
+        cls.temp_images = {}
+
