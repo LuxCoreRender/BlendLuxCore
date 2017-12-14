@@ -10,19 +10,19 @@ class ImageExporter(object):
     temp_images = []
 
     @classmethod
-    def save_to_temp_file(cls, image, scene):
+    def _save_to_temp_file(cls, image, scene):
         temp_image = tempfile.NamedTemporaryFile(delete=False)
         cls.temp_images.append(temp_image)
         image.save_render(temp_image.name, scene)
         return temp_image.name
 
     @classmethod
-    def export(cls, image, scene):
+    def export(cls, image, scene=None):
         if image.source == "GENERATED":
-            return cls.save_to_temp_file(image, scene)
+            return cls._save_to_temp_file(image, scene)
         elif image.source == "FILE":
             if image.packed_file:
-                return cls.save_to_temp_file(image, scene)
+                return cls._save_to_temp_file(image, scene)
             else:
                 return bpy.path.abspath(image.filepath, library=image.library)
         elif image.source == "SEQUENCE":

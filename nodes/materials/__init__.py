@@ -59,6 +59,10 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatGlossy2", label="Glossy"),
     ]),
 
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
+        NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
+    ]),
+
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_OUTPUT", "Output", items=[
         NodeItem("LuxCoreNodeMatOutput", label="Output"),
     ]),
