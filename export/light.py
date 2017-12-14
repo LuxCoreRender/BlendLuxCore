@@ -2,6 +2,7 @@ import mathutils
 import math
 from ..bin import pyluxcore
 from .. import utils
+from .image import ImageExporter
 
 # TODO support all parameters for all possible light types
 
@@ -26,8 +27,7 @@ def convert(blender_obj, scene):
                 definitions["type"] = "mappoint"
 
                 if lamp.luxcore.image:
-                    # TODO unified Blender image handler
-                    definitions["emission.mapfile"] = lamp.luxcore.image.filepath
+                    definitions["emission.mapfile"] = ImageExporter.export(lamp.luxcore.image, scene)
                     definitions["emission.gamma"] = lamp.luxcore.gamma
                 if lamp.luxcore.iesfile:
                     definitions["emission.iesfile"] = lamp.luxcore.iesfile
@@ -70,8 +70,7 @@ def convert(blender_obj, scene):
                 # projection
                 definitions["type"] = "projection"
                 definitions["fov"] = coneangle * 2
-                # TODO unified Blender image handler
-                definitions["mapfile"] = lamp.luxcore.image.filepath
+                definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image, scene)
                 definitions["gamma"] = lamp.luxcore.gamma
             else:
                 # spot
@@ -92,8 +91,7 @@ def convert(blender_obj, scene):
         elif lamp.type == "HEMI":
             if lamp.luxcore.image:
                 definitions["type"] = "infinite"
-                # TODO unified Blender image handler
-                definitions["file"] = lamp.luxcore.image.filepath
+                definitions["file"] = ImageExporter.export(lamp.luxcore.image, scene)
                 definitions["gamma"] = lamp.luxcore.gamma
                 transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
                 definitions["transformation"] = transformation

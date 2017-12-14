@@ -1,5 +1,6 @@
 import bpy
 from .bin import pyluxcore
+from .export.image import ImageExporter
 
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
@@ -20,7 +21,16 @@ bl_info = {
 }
 
 
+def blendluxcore_exit():
+    ImageExporter.cleanup()
+
+
 def register():
+    import atexit
+    # Make sure we only registered the callback once.
+    atexit.unregister(blendluxcore_exit)
+    atexit.register(blendluxcore_exit)
+
     ui.register()
     nodes.materials.register()
     bpy.utils.register_module(__name__)
