@@ -3,10 +3,22 @@ from bpy.props import PointerProperty, EnumProperty, FloatProperty, IntProperty,
 
 
 SAMPLES_DESCRIPTION = (
-    "The number of shadow ray to trace to compute direct light "
+    "The number of shadow rays to trace to compute direct light "
     "for this light source.\n"
     "This property is a hint and the render engine can ignore this information.\n"
     "-1 means use the default global value."
+)
+IMPORTANCE_DESCRIPTION = (
+    "A hint how much processing power to spend on this "
+    "light compared to other lights"
+)
+POWER_DESCRIPTION = (
+    "Power in watt; setting 0 for both power and efficacy bypasses "
+    "this feature and uses only the lamp gain"
+)
+EFFICACY_DESCRIPTION = (
+    "Luminous efficacy in lumens per watt; setting 0 for both power "
+    "and efficacy bypasses this feature and uses only the lamp gain"
 )
 
 
@@ -34,15 +46,15 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     ]
     sun_type = EnumProperty(name="Sun Type", items=sun_types, default="sun")
 
-    is_laser = BoolProperty(name="Laser", default=False,
-                            description="Switch to laser light emitting parallel light rays",
-                            update=update_is_laser)
+    is_laser = BoolProperty(name="Laser", default=False, update=update_is_laser,
+                            description="Laser light emitting parallel light rays")
 
     ##############################################
     # Generic properties shared by all light types
     gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
     rgb_gain = FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR")
     samples = IntProperty(name="Samples", default=-1, min=-1, description=SAMPLES_DESCRIPTION)
+    importance = FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     # TODO: id
 
     ##############################################
@@ -66,21 +78,14 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # projection: mapfile
     image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
     gamma = FloatProperty(name="Gamma", default=1)
-    # Note: shift parameter not exposed (we use transformation instead)
 
     # infinite
     sampleupperhemisphereonly = BoolProperty(name="Sample Upper Hemisphere Only", default=False,
                                              description="Used to avoid shadows cast from below when using shadow catcher")
 
     # point, mappoint, spot, laser
-    power = FloatProperty(name="Power (W)", default=0, min=0,
-                          description="Power in watt; setting 0 for both power and efficacy bypasses "
-                                      "this feature and uses only the lamp gain")
-
-    # point, mappoint, spot, laser
-    efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0,
-                             description="Luminous efficacy in lumens per watt; setting 0 for both power "
-                                         "and efficacy bypasses this feature and uses only the lamp gain")
+    power = FloatProperty(name="Power (W)", default=0, min=0, description=POWER_DESCRIPTION)
+    efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0, description=EFFICACY_DESCRIPTION)
 
     # mappoint
     iesfile = StringProperty(name="IES File", subtype="FILE_PATH")

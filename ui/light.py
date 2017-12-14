@@ -32,9 +32,8 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
         row = layout.row()
         row.prop(lamp.luxcore, "rgb_gain")
         row.prop(lamp.luxcore, "gain")
-
-        layout.prop(lamp.luxcore, "samples")
         # TODO: id
+
         layout.separator()
 
         if lamp.type == "POINT":
@@ -101,4 +100,22 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
             layout.prop(lamp.luxcore, "is_laser")
 
 
+class LuxCoreLampPerformance(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.Panel):
+    """
+    Lamp UI Panel, shows stuff that affects the performance of the render
+    """
+    COMPAT_ENGINES = "LUXCORE"
+    bl_label = "Performance"
+    bl_options = {"DEFAULT_CLOSED"}
 
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return context.lamp and engine == "LUXCORE"
+
+    def draw(self, context):
+        layout = self.layout
+        lamp = context.lamp
+
+        layout.prop(lamp.luxcore, "samples")
+        layout.prop(lamp.luxcore, "importance")

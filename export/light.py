@@ -130,6 +130,7 @@ def convert(blender_obj, scene):
         gain = [x * lamp.luxcore.gain for x in lamp.luxcore.rgb_gain]
         definitions["gain"] = gain
         definitions["samples"] = lamp.luxcore.samples
+        definitions["importance"] = lamp.luxcore.importance
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
