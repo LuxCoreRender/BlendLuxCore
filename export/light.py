@@ -28,11 +28,11 @@ def convert(blender_obj, scene):
                 definitions["type"] = "mappoint"
 
                 if lamp.luxcore.image:
-                    definitions["emission.mapfile"] = ImageExporter.export(lamp.luxcore.image, scene)
-                    definitions["emission.gamma"] = lamp.luxcore.gamma
+                    definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image, scene)
+                    definitions["gamma"] = lamp.luxcore.gamma
                 if lamp.luxcore.iesfile:
-                    definitions["emission.iesfile"] = lamp.luxcore.iesfile
-                    definitions["emission.flipz"] = lamp.luxcore.flipz
+                    definitions["iesfile"] = lamp.luxcore.iesfile
+                    definitions["flipz"] = lamp.luxcore.flipz
             else:
                 # point
                 definitions["type"] = "point"
@@ -135,6 +135,7 @@ def convert(blender_obj, scene):
         definitions["importance"] = lamp.luxcore.importance
 
         props = utils.create_props(prefix, definitions)
+        print(props)
         return props, exported_light
     except Exception as error:
         # TODO: collect exporter errors
