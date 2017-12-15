@@ -34,6 +34,12 @@ class TestPointLight(unittest.TestCase):
         for i in range(len(gain)):
             self.assertAlmostEqual(gain[i], expected_gain[i], places=3)
 
+    def test_not_a_lamp(self):
+        obj = bpy.data.objects["Plane"]
+        props, exported_light = light.convert(obj, bpy.context.scene)
+        # Export should fail
+        self.assertIsNone(exported_light)
+
 
 # we have to manually invoke the test runner here, as we cannot use the CLI
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPointLight)
