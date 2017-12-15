@@ -29,8 +29,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     sun = PointerProperty(name="Sun", type=bpy.types.Object, description="Used to specify the sun direction")
     turbidity = FloatProperty(name="Turbidity", default=2.2, min=0, max=30)
     groundalbedo = FloatVectorProperty(name="Ground Albedo", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
-    ground_enable = BoolProperty(name="Use Ground Color", default=True)
-    ground_color = FloatVectorProperty(name="Ground Color", default=(0.5, 0.5, 0.5), min=0, max=1)
+    ground_enable = BoolProperty(name="Use Ground Color", default=False)
+    ground_color = FloatVectorProperty(name="Ground Color", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
 
     # infinite
     image = PointerProperty(name="Image", type=bpy.types.Image)

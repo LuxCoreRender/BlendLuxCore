@@ -76,8 +76,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
 
     # sky2 (is in world propertys, not sure if it's necessary to have a sky2 light)
     # groundalbedo = FloatVectorProperty(name="Ground Albedo", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
-    # ground_enable = BoolProperty(name="Use Ground Color", default=True)
-    # ground_color = FloatVectorProperty(name="Ground Color", default=(0.5, 0.5, 0.5), min=0, max=1)
+    # ground_enable = BoolProperty(name="Use Ground Color", default=False)
+    # ground_color = FloatVectorProperty(name="Ground Color", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
 
     # The image property has different names on different lights:
     # infinite: file

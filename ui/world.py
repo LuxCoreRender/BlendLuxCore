@@ -45,7 +45,13 @@ class LuxCoreWorldSky2(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Panel
         world = context.world
 
         layout.prop(world.luxcore, "sun")
-        layout.prop(world.luxcore, "turbidity")
+        sun_obj = world.luxcore.sun
+        if sun_obj and sun_obj.data and sun_obj.data.type == "SUN":
+            layout.label("Using turbidity of sun light:", icon="INFO")
+            layout.prop(sun_obj.data.luxcore, "turbidity")
+        else:
+            layout.prop(world.luxcore, "turbidity")
+
         layout.prop(world.luxcore, "ground_enable")
 
         if world.luxcore.ground_enable:

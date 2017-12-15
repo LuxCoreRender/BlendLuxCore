@@ -4,12 +4,12 @@ from .. import utils
 from ..utils import ExportedObject
 
 from . import material
-from .light import convert as convert_light
+from .light import convert_lamp
 
 
 def convert(blender_obj, scene, context, luxcore_scene):
     if blender_obj.type == "LAMP":
-        return convert_light(blender_obj, scene, context, luxcore_scene)
+        return convert_lamp(blender_obj, scene, context, luxcore_scene)
 
     try:
         print("converting object:", blender_obj.name)

@@ -12,8 +12,9 @@ class Change:
     OBJECT = 1 << 2
     MATERIAL = 1 << 3
     OBJECTS_REMOVED = 1 << 4
+    WORLD = 1 << 5
 
-    REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | OBJECTS_REMOVED
+    REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | OBJECTS_REMOVED | WORLD
     REQUIRES_VIEW_UPDATE = CONFIG
 
 
@@ -58,7 +59,7 @@ class ObjectCache(object):
                 if obj.is_updated:
                     if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"]:
                         # check if a new material was assigned
-                        if obj.data is not None and obj.data.is_updated:
+                        if obj.data and obj.data.is_updated:
                             self.changed_mesh.append(obj)
                         else:
                             self.changed_transform.append(obj)
@@ -117,6 +118,23 @@ class VisibilityCache(object):
         return set(as_keylist)
 
 
+class WorldCache(object):
+    def diff(self, context):
+        world = context.scene.world
+        if world:
+            world_updated = world.is_updated or world.is_updated_data
+
+            # The sun influcences the world, e.g. through direction and turbidity if sky2 is used
+            sun = world.luxcore.sun
+            if sun:
+                sun_updated = sun.is_updated or sun.is_updated_data or (sun.data and sun.data.is_updated)
+            else:
+                sun_updated = False
+
+            return world_updated or sun_updated
+        return False
+
+
 class Exporter(object):
     def __init__(self):
         print("exporter init")
@@ -125,6 +143,7 @@ class Exporter(object):
         self.object_cache = ObjectCache()
         self.material_cache = MaterialCache()
         self.visibility_cache = VisibilityCache()
+        self.world_cache = WorldCache()
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
 
@@ -139,6 +158,7 @@ class Exporter(object):
         self.camera_cache.diff(camera_props)  # Init camera cache
         luxcore_scene.Parse(camera_props)
 
+        # Objects and lamps
         objs = context.visible_objects if context else bpy.data.objects
 
         for obj in objs:
@@ -146,6 +166,11 @@ class Exporter(object):
                 props, exported_thing = blender_object.convert(obj, scene, context, luxcore_scene)
                 scene_props.Set(props)
                 self.exported_objects[utils.make_key(obj)] = exported_thing
+
+        # World
+        if scene.world:
+            props = light.convert_world(scene.world, scene)
+            scene_props.Set(props)
 
         luxcore_scene.Parse(scene_props)
 
@@ -176,6 +201,9 @@ class Exporter(object):
 
         if self.visibility_cache.diff(context):
             changes |= Change.OBJECTS_REMOVED
+
+        if self.world_cache.diff(context):
+            changes |= Change.WORLD
 
         return changes
 
@@ -248,6 +276,10 @@ class Exporter(object):
 
                     for luxcore_name in exported_thing.luxcore_names:
                         remove_func(luxcore_name)
+
+            if changes & Change.WORLD:
+                world_props = light.convert_world(context.scene.world, context.scene)
+                props.Set(world_props)
 
             luxcore_scene.Parse(props)
             session.EndSceneEdit()
