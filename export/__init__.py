@@ -2,6 +2,7 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 from . import blender_object, camera, config, light, material
+from .light import WORLD_BACKGROUND_LIGHT_NAME
 
 
 class Change:
@@ -168,7 +169,7 @@ class Exporter(object):
                 self.exported_objects[utils.make_key(obj)] = exported_thing
 
         # World
-        if scene.world:
+        if scene.world and scene.world.luxcore.light != "none":
             props = light.convert_world(scene.world, scene)
             scene_props.Set(props)
 
@@ -278,8 +279,11 @@ class Exporter(object):
                         remove_func(luxcore_name)
 
             if changes & Change.WORLD:
-                world_props = light.convert_world(context.scene.world, context.scene)
-                props.Set(world_props)
+                if context.scene.world.luxcore.light == "none":
+                    luxcore_scene.DeleteLight(WORLD_BACKGROUND_LIGHT_NAME)
+                else:
+                    world_props = light.convert_world(context.scene.world, context.scene)
+                    props.Set(world_props)
 
             luxcore_scene.Parse(props)
             session.EndSceneEdit()

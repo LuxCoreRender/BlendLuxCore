@@ -7,6 +7,9 @@ from ..utils import ExportedObject, ExportedLight
 from .image import ImageExporter
 
 
+WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
+
+
 def convert_lamp(blender_obj, scene, context, luxcore_scene):
     try:
         print("converting lamp:", blender_obj.name)
@@ -141,7 +144,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
 def convert_world(world, scene):
     try:
         assert isinstance(world, bpy.types.World)
-        luxcore_name = "__WORLD_BACKGROUND_LIGHT__"
+        luxcore_name = WORLD_BACKGROUND_LIGHT_NAME
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
 

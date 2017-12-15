@@ -15,6 +15,7 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
         ("sky2", "Sky", "Hosek and Wilkie sky model", 0),
         ("infinite", "HDRI", "High dynamic range image", 1),
         ("constantinfinite", "Flat Color", "Flat background color", 2),
+        ("none", "None", "No background light", 3),
     ]
     light = EnumProperty(name="Background", items=lights, default="sky2")
 

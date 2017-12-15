@@ -21,10 +21,11 @@ class LuxCoreWorldHeader(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Pan
         world = context.world
         layout.prop(world.luxcore, "light", expand=True)
 
-        row = layout.row()
-        row.prop(world.luxcore, "rgb_gain")
-        row.prop(world.luxcore, "gain")
-        # TODO: id
+        if world.luxcore.light != "none":
+            row = layout.row()
+            row.prop(world.luxcore, "rgb_gain")
+            row.prop(world.luxcore, "gain")
+            # TODO: id
 
 
 class LuxCoreWorldSky2(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Panel):
@@ -92,7 +93,7 @@ class LuxCoreWorldPerformance(bl_ui.properties_world.WorldButtonsPanel, bpy.type
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.world and engine == "LUXCORE"
+        return context.world and engine == "LUXCORE" and context.world.luxcore.light != "none"
 
     def draw(self, context):
         layout = self.layout
