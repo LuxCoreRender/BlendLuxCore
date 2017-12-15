@@ -233,6 +233,11 @@ class Exporter(object):
 
             if changes & Change.OBJECTS_REMOVED:
                 for key in self.visibility_cache.objects_to_remove:
+                    if key not in self.exported_objects:
+                        print('WARNING: Can not delete key "%s" from luxcore_scene' % key)
+                        print("The object was probably renamed")
+                        continue
+
                     exported_thing = self.exported_objects[key]
 
                     # exported_objects contains instances of ExportedObject and ExportedLight

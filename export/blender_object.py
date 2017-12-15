@@ -19,7 +19,7 @@ def convert(blender_obj, scene, context, luxcore_scene):
 
         if blender_obj.data is None:
             print("No mesh data")
-            return props
+            return props, None
 
         modifier_mode = "PREVIEW" if context else "RENDER"
         apply_modifiers = True
@@ -27,7 +27,7 @@ def convert(blender_obj, scene, context, luxcore_scene):
 
         if mesh is None or len(mesh.tessfaces) == 0:
             print("No mesh data after to_mesh()")
-            return props
+            return props, None
 
         mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
         bpy.data.meshes.remove(mesh, do_unlink=False)
@@ -52,7 +52,7 @@ def convert(blender_obj, scene, context, luxcore_scene):
         # TODO: collect exporter errors
         print("ERROR in object", blender_obj.name)
         print(error)
-        return pyluxcore.Properties()
+        return pyluxcore.Properties(), None
 
 
 def _define_luxcore_object(props, lux_object_name, lux_material_name, transformation=None):
