@@ -1,16 +1,19 @@
 import bpy
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import ExportedObject
 
-from . import material, light
+from . import material
+from .light import convert as convert_light
 
 
 def convert(blender_obj, scene, context, luxcore_scene):
     if blender_obj.type == "LAMP":
-        return light.convert(blender_obj, scene)
+        return convert_light(blender_obj, scene)
 
     try:
         print("converting object:", blender_obj.name)
+        # Note that his is not the final luxcore_name, as the object may be split by DefineBlenderMesh()
         luxcore_name = utils.to_luxcore_name(blender_obj.name)
         props = pyluxcore.Properties()
 
@@ -43,7 +46,8 @@ def convert(blender_obj, scene, context, luxcore_scene):
             transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
             _define_luxcore_object(props, lux_object_name, lux_mat_name, transformation)
 
-        return props
+        luxcore_names = [lux_obj_name for lux_obj_name, material_index in mesh_definitions]
+        return props, ExportedObject(luxcore_names)
     except Exception as error:
         # TODO: collect exporter errors
         print("ERROR in object", blender_obj.name)

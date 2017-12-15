@@ -2,6 +2,7 @@ import mathutils
 import math
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import ExportedObject, ExportedLight
 from .image import ImageExporter
 
 
@@ -13,12 +14,13 @@ def convert(blender_obj, scene):
         luxcore_name = utils.get_unique_luxcore_name(blender_obj)
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
+        exported_light = ExportedLight(luxcore_name)
 
         lamp = blender_obj.data
 
         matrix = blender_obj.matrix_world
         matrix_inv = matrix.inverted()
-        dir = [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
+        sun_dir = [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
 
         if lamp.type == "POINT":
             if lamp.luxcore.image or lamp.luxcore.iesfile:
@@ -43,12 +45,12 @@ def convert(blender_obj, scene):
             definitions["transformation"] = transformation
 
         elif lamp.type == "SUN":
-            distant_dir = [-dir[0], -dir[1], -dir[2]]
+            distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
 
             if lamp.luxcore.sun_type == "sun":
                 # sun
                 definitions["type"] = "sun"
-                definitions["dir"] = dir
+                definitions["dir"] = sun_dir
                 definitions["turbidity"] = lamp.luxcore.turbidity
                 definitions["relsize"] = lamp.luxcore.relsize
             elif lamp.luxcore.theta < 0.05:
@@ -116,6 +118,9 @@ def convert(blender_obj, scene):
                 definitions["transformation"] = transformation
             else:
                 # area (mesh light)
+                luxcore_name = "test" # TODO
+                # A mesh light is an object with emissive material in LuxCore
+                exported_light = ExportedObject([luxcore_name])
                 # TODO
                 raise NotImplementedError("Area light not implemented yet")
 
@@ -129,11 +134,12 @@ def convert(blender_obj, scene):
         definitions["samples"] = lamp.luxcore.samples
         definitions["importance"] = lamp.luxcore.importance
 
-        return utils.create_props(prefix, definitions)
+        props = utils.create_props(prefix, definitions)
+        return props, exported_light
     except Exception as error:
         # TODO: collect exporter errors
         print("ERROR in light", blender_obj.name)
         print(error)
         import traceback
         traceback.print_exc()
-        return pyluxcore.Properties()
+        return pyluxcore.Properties(), None

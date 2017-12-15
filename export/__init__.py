@@ -1,5 +1,6 @@
 import bpy
 from ..bin import pyluxcore
+from .. import utils
 from . import blender_object, camera, config, light, material
 
 
@@ -10,8 +11,9 @@ class Change:
     CAMERA = 1 << 1
     OBJECT = 1 << 2
     MATERIAL = 1 << 3
+    OBJECTS_REMOVED = 1 << 4
 
-    REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL
+    REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | OBJECTS_REMOVED
     REQUIRES_VIEW_UPDATE = CONFIG
 
 
@@ -93,6 +95,28 @@ class MaterialCache(object):
         return self.changed_materials
 
 
+class VisibilityCache(object):
+    def __init__(self):
+        # sets containing keys
+        self.last_visible_objects = None
+        self.objects_to_remove = None
+
+    def diff(self, context):
+        visible_objs = self._get_visible_objects(context)
+        if self.last_visible_objects is None:
+            # Not initialized yet
+            self.last_visible_objects = visible_objs
+            return False
+
+        self.objects_to_remove = self.last_visible_objects - visible_objs
+        self.last_visible_objects = visible_objs
+        return self.objects_to_remove
+
+    def _get_visible_objects(self, context):
+        as_keylist = [utils.make_key(obj) for obj in context.visible_objects]
+        return set(as_keylist)
+
+
 class Exporter(object):
     def __init__(self):
         print("exporter init")
@@ -100,6 +124,9 @@ class Exporter(object):
         self.camera_cache = StringCache()
         self.object_cache = ObjectCache()
         self.material_cache = MaterialCache()
+        self.visibility_cache = VisibilityCache()
+        # This dict contains ExportedObject and ExportedLight instances
+        self.exported_objects = {}
 
     def create_session(self, scene, context=None):
         print("create_session")
@@ -116,7 +143,9 @@ class Exporter(object):
 
         for obj in objs:
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
-                scene_props.Set(blender_object.convert(obj, scene, context, luxcore_scene))
+                props, exported_thing = blender_object.convert(obj, scene, context, luxcore_scene)
+                scene_props.Set(props)
+                self.exported_objects[utils.make_key(obj)] = exported_thing
 
         luxcore_scene.Parse(scene_props)
 
@@ -144,6 +173,9 @@ class Exporter(object):
 
         if self.material_cache.diff():
             changes |= Change.MATERIAL
+
+        if self.visibility_cache.diff(context):
+            changes |= Change.OBJECTS_REMOVED
 
         return changes
 
@@ -186,13 +218,25 @@ class Exporter(object):
 
                 for obj in self.object_cache.lamps:
                     print("lamp changed:", obj.name)
-                    # TODO update lamps
                     props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
 
             if changes & Change.MATERIAL:
                 for mat in self.material_cache.changed_materials:
                     luxcore_name, mat_props = material.convert(mat)
                     props.Set(mat_props)
+
+            if changes & Change.OBJECTS_REMOVED:
+                for key in self.visibility_cache.objects_to_remove:
+                    exported_thing = self.exported_objects[key]
+
+                    # exported_objects contains instances of ExportedObject and ExportedLight
+                    if isinstance(exported_thing, blender_object.ExportedObject):
+                        remove_func = luxcore_scene.DeleteObject
+                    else:
+                        remove_func = luxcore_scene.DeleteLight
+
+                    for luxcore_name in exported_thing.luxcore_names:
+                        remove_func(luxcore_name)
 
             luxcore_scene.Parse(props)
             session.EndSceneEdit()

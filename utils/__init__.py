@@ -175,3 +175,16 @@ def calc_aspect(width, height):
         xaspect = width / height
         yaspect = 1
     return xaspect, yaspect
+
+
+class ExportedObject(object):
+    def __init__(self, luxcore_names):
+        # Note that luxcore_names is a list of names (because an object in Blender can have multiple materials,
+        # while in LuxCore it can have only one material, so we have to split it into multiple LuxCore objects)
+        self.luxcore_names = luxcore_names
+
+
+class ExportedLight(object):
+    def __init__(self, luxcore_name):
+        # this is a list to make it compatible with ExportedObject
+        self.luxcore_names = [luxcore_name]
