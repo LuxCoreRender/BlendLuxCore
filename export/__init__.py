@@ -210,15 +210,21 @@ class Exporter(object):
                 for obj in self.object_cache.changed_transform:
                     # TODO only update transform
                     print("transformed:", obj.name)
-                    props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
+                    obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
+                    props.Set(obj_props)
+                    self.exported_objects[utils.make_key(obj)] = exported_obj
 
                 for obj in self.object_cache.changed_mesh:
                     print("mesh changed:", obj.name)
-                    props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
+                    obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
+                    props.Set(obj_props)
+                    self.exported_objects[utils.make_key(obj)] = exported_obj
 
                 for obj in self.object_cache.lamps:
                     print("lamp changed:", obj.name)
-                    props.Set(blender_object.convert(obj, context.scene, context, luxcore_scene))
+                    light_props, exported_light = blender_object.convert(obj, context.scene, context, luxcore_scene)
+                    props.Set(light_props)
+                    self.exported_objects[utils.make_key(obj)] = exported_light
 
             if changes & Change.MATERIAL:
                 for mat in self.material_cache.changed_materials:
