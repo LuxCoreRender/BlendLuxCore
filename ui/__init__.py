@@ -30,6 +30,10 @@ def compatible_panels():
         "DATA_PT_distance",
         "DATA_PT_cone",
         "DATA_PT_custom_props_speaker",
+
+        # World properties
+        "WORLD_PT_context_world",
+        "WORLD_PT_custom_props",
     ]
     types = bpy.types
     return [getattr(types, p) for p in panels if hasattr(types, p)]

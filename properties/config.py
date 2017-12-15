@@ -10,10 +10,10 @@ class LuxCoreConfig(bpy.types.PropertyGroup):
         ("PATHOCL", "Path OpenCL", "OpenCL version of Path CPU", 3),
         ("TILEPATHOCL", "Tile Path OpenCL", "OpenCL version of Tile Path CPU", 4),
     ]
-    engine = EnumProperty(name="Engine", items=engines)
+    engine = EnumProperty(name="Engine", items=engines, default="PATHCPU")
 
     samplers = [
         ("SOBOL", "Sobol", "Recommended for scenes with simple lighting (outdoors, studio setups)", 0),
         ("METROPOLIS", "Metropolis", "Recommended for scenes with difficult lighting (caustics, indoors)", 1),
     ]
-    sampler = EnumProperty(name="Sampler", items=samplers)
+    sampler = EnumProperty(name="Sampler", items=samplers, default="METROPOLIS")

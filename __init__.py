@@ -5,7 +5,7 @@ from .export.image import ImageExporter
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
-from .ui import config, errorlog, light, material
+from .ui import config, errorlog, light, material, world
 
 bl_info = {
     "name": "LuxCore",
@@ -31,9 +31,9 @@ def register():
     atexit.unregister(blendluxcore_exit)
     atexit.register(blendluxcore_exit)
 
-    ui.register()
     nodes.materials.register()
     bpy.utils.register_module(__name__)
+    ui.register()
 
     properties.init()
 

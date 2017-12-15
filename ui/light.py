@@ -36,6 +36,7 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
 
         layout.separator()
 
+        # TODO: split this stuff into separate panels for each light type?
         if lamp.type == "POINT":
             row = layout.row(align=True)
             row.prop(lamp.luxcore, "power")
