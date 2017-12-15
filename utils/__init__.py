@@ -177,6 +177,13 @@ def calc_aspect(width, height):
     return xaspect, yaspect
 
 
+def find_active_uv(uv_textures):
+    for uv in uv_textures:
+        if uv.active_render:
+            return uv
+    return None
+
+
 class ExportedObject(object):
     def __init__(self, luxcore_names):
         # Note that luxcore_names is a list of names (because an object in Blender can have multiple materials,

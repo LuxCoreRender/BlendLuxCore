@@ -70,8 +70,9 @@ def _convert_mesh_to_shapes(name, mesh, luxcore_scene):
     vertices = mesh.vertices[0].as_pointer()
 
     uv_textures = mesh.tessface_uv_textures
-    if len(uv_textures) > 0 and mesh.uv_textures.active and uv_textures.active.data:
-        texCoords = uv_textures.active.data[0].as_pointer()
+    active_uv = utils.find_active_uv(uv_textures)
+    if active_uv and active_uv.data:
+        texCoords = active_uv.data[0].as_pointer()
     else:
         texCoords = 0
 
