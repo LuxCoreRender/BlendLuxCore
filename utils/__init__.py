@@ -11,6 +11,8 @@ def make_key(datablock):
     key = datablock.name
     if hasattr(datablock, "type"):
         key += datablock.type
+    if hasattr(datablock, "data") and hasattr(datablock.data, "type"):
+        key += datablock.data.type
     if datablock.library:
         key += datablock.library.name
     return key

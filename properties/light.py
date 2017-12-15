@@ -36,7 +36,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     def update_image(self, context):
         if context.lamp:
             # For spot lamp (toggle projection mode)
-            context.lamp.use_square = self.image is not None
+            if context.lamp.type == "AREA":
+                context.lamp.use_square = self.image is not None
 
     def update_is_laser(self, context):
         if context.lamp:

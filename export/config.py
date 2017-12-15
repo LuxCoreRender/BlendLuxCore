@@ -26,6 +26,8 @@ def convert(scene, context=None):
             "sampler.type": sampler,
             "film.width": width,
             "film.height": height,
+            "rtpathcpu.zoomphase.size": 4,
+            "rtpathcpu.zoomphase.weight": 0,
         }
 
         return utils.create_props(prefix, definitions)
