@@ -6,7 +6,7 @@ from ..utils import ExportedObject, ExportedLight
 from .image import ImageExporter
 
 
-def convert(blender_obj, scene):
+def convert(blender_obj, scene, context, luxcore_scene):
     try:
         assert blender_obj.type == "LAMP"
         print("converting lamp:", blender_obj.name)
@@ -22,6 +22,16 @@ def convert(blender_obj, scene):
         matrix_inv = matrix.inverted()
         sun_dir = [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
 
+        # Common light settings shared by all light types
+        # Note: these variables are also passed to the area light export function
+        gain = [x * lamp.luxcore.gain for x in lamp.luxcore.rgb_gain]
+        samples = lamp.luxcore.samples
+        importance = lamp.luxcore.importance
+
+        definitions["gain"] = gain
+        definitions["samples"] = samples
+        definitions["importance"] = importance
+
         if lamp.type == "POINT":
             if lamp.luxcore.image or lamp.luxcore.iesfile:
                 # mappoint
@@ -31,6 +41,7 @@ def convert(blender_obj, scene):
                     definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image, scene)
                     definitions["gamma"] = lamp.luxcore.gamma
                 if lamp.luxcore.iesfile:
+                    # TODO: error if iesfile does not exist
                     definitions["iesfile"] = lamp.luxcore.iesfile
                     definitions["flipz"] = lamp.luxcore.flipz
             else:
@@ -118,24 +129,13 @@ def convert(blender_obj, scene):
                 definitions["transformation"] = transformation
             else:
                 # area (mesh light)
-                luxcore_name = "test" # TODO
-                # A mesh light is an object with emissive material in LuxCore
-                exported_light = ExportedObject([luxcore_name])
-                # TODO
-                raise NotImplementedError("Area light not implemented yet")
+                return _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples, importance)
 
         else:
             # Can only happen if Blender changes its lamp types
             raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % blender_obj.name)
 
-        # Common light settings
-        gain = [x * lamp.luxcore.gain for x in lamp.luxcore.rgb_gain]
-        definitions["gain"] = gain
-        definitions["samples"] = lamp.luxcore.samples
-        definitions["importance"] = lamp.luxcore.importance
-
         props = utils.create_props(prefix, definitions)
-        print(props)
         return props, exported_light
     except Exception as error:
         # TODO: collect exporter errors
@@ -144,3 +144,82 @@ def convert(blender_obj, scene):
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None
+
+
+def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples, importance):
+    """
+    An area light is a plane object with emissive material in LuxCore
+    # TODO: check if we need to scale gain with area?
+    """
+    lamp = blender_obj.data
+    luxcore_name = utils.get_unique_luxcore_name(blender_obj)
+    props = pyluxcore.Properties()
+
+    # Light emitting material
+    mat_name = luxcore_name + "_AREA_LIGHT_MAT"
+    mat_prefix = "scene.materials." + mat_name + "."
+    mat_definitions = {
+        "type": "matte",
+        # Black base material to avoid any bounce light from the mesh
+        "kd": [0, 0, 0],
+        # Color is controlled by gain
+        "emission": [1, 1, 1],
+        "emission.gain": gain,
+        "emission.power": lamp.luxcore.power,
+        "emission.efficency": lamp.luxcore.efficacy,
+        "emission.samples": samples,
+        # "emission.theta": TODO,
+        # Note: not "emission.importance"
+        "importance": importance,
+        # TODO: id, iesfile, maybe transparency (hacky)
+    }
+    mat_props = utils.create_props(mat_prefix, mat_definitions)
+    props.Set(mat_props)
+
+    # LuxCore object
+
+    # Copy transformation of area lamp object
+    transform_matrix = blender_obj.matrix_world.copy()
+    scale_x = mathutils.Matrix.Scale(lamp.size / 2, 4, (1, 0, 0))
+    if lamp.shape == "RECTANGLE":
+        scale_y = mathutils.Matrix.Scale(lamp.size_y / 2, 4, (0, 1, 0))
+    else:
+        # basically scale_x, but for the y axis (note the last tuple argument)
+        scale_y = mathutils.Matrix.Scale(lamp.size / 2, 4, (0, 1, 0))
+
+    transform_matrix *= scale_x
+    transform_matrix *= scale_y
+
+    transform = utils.matrix_to_list(transform_matrix, scene, apply_worldscale=True)
+    # Only bake the transform into the mesh for final renders (disables instancing which
+    # is needed for viewport render so we can move the light object)
+    shape_transform = None if context else transform
+
+    shape_name = "Mesh-" + luxcore_name
+    if not luxcore_scene.IsMeshDefined(shape_name):
+        vertices = [
+            (1, 1, 0),
+            (1, -1, 0),
+            (-1, -1, 0),
+            (-1, 1, 0)
+        ]
+        faces = [
+            (0, 1, 2),
+            (2, 3, 0)
+        ]
+        luxcore_scene.DefineMesh(shape_name, vertices, faces, None, None, None, None, shape_transform)
+
+    obj_prefix = "scene.objects." + luxcore_name + "."
+    obj_definitions = {
+        "material": mat_name,
+        "shape": shape_name,
+    }
+    if context:
+        # Use instancing for viewport render so we can interactively move the light
+        obj_definitions["transformation"] = transform
+
+    obj_props = utils.create_props(obj_prefix, obj_definitions)
+    props.Set(obj_props)
+
+    exported_obj = ExportedObject([luxcore_name])
+    return props, exported_obj

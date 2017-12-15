@@ -9,7 +9,7 @@ from .light import convert as convert_light
 
 def convert(blender_obj, scene, context, luxcore_scene):
     if blender_obj.type == "LAMP":
-        return convert_light(blender_obj, scene)
+        return convert_light(blender_obj, scene, context, luxcore_scene)
 
     try:
         print("converting object:", blender_obj.name)

@@ -32,6 +32,11 @@ It handles the conversion of Blender objects, materials etc. into
 the [LuxCore SDL](https://wiki.luxcorerender.org/LuxCore_SDL_Reference_Manual_v2.0) 
 and the definition of shapes (meshes), strands etc.
 
+It's also responsible for scene and session updates during viewport render sessions.
+
+Note: If we have a context (i.e. context is not None) then we are in viewport render mode.
+This is not explained/commented all the time in the code because it's such a fundamental concept.
+
 ### nodes
 
 Contains everything node-related. 
