@@ -2,6 +2,7 @@ import bpy
 from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
+from ...ui import ICON_MATERIAL
 
 from .matte import LuxCoreNodeMatMatte
 from .output import LuxCoreNodeMatOutput
@@ -12,7 +13,7 @@ from .glass import LuxCoreNodeMatGlass
 class LuxCoreMaterialNodeTree(NodeTree):
     bl_idname = "luxcore_material_nodes"
     bl_label = "LuxCore Material Nodes"
-    bl_icon = "MATERIAL"
+    bl_icon = ICON_MATERIAL
 
     @classmethod
     def poll(cls, context):

@@ -19,7 +19,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "image")
+        layout.template_ID(self, "image", open="image.open")
 
         # Info about UV mapping
         # TODO: We might want to move this to the 2D mapping node later

@@ -18,10 +18,9 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
     def draw_image_controls(self, context):
         layout = self.layout
         lamp = context.lamp
-        layout.prop(lamp.luxcore, "image")
+        layout.template_ID(lamp.luxcore, "image", open="image.open")
         if lamp.luxcore.image:
             layout.prop(lamp.luxcore, "gamma")
-        # TODO: load image button
 
     def draw(self, context):
         layout = self.layout

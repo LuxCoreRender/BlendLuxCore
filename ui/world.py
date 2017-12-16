@@ -1,6 +1,6 @@
 import bl_ui
 import bpy
-from . import ICON_VOLUMES
+from . import ICON_VOLUME
 
 
 class LuxCoreWorldHeader(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Panel):
