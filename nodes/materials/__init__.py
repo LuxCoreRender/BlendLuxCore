@@ -6,6 +6,7 @@ from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from .matte import LuxCoreNodeMatMatte
 from .output import LuxCoreNodeMatOutput
 from .glossy2 import LuxCoreNodeMatGlossy2
+from .glass import LuxCoreNodeMatGlass
 
 
 class LuxCoreMaterialNodeTree(NodeTree):
@@ -57,6 +58,7 @@ luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
         NodeItem("LuxCoreNodeMatMatte", label="Matte"),
         NodeItem("LuxCoreNodeMatGlossy2", label="Glossy"),
+        NodeItem("LuxCoreNodeMatGlass", label="Glass")
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[

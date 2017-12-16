@@ -70,10 +70,19 @@ class Roughness:
     """
 
     @staticmethod
+    def toggle_roughness(node, context):
+        """ Enable/disable all roughness inputs """
+        if node.use_anisotropy:
+            node.inputs['U-Roughness'].enabled = node.rough
+            node.inputs['V-Roughness'].enabled = node.rough
+        else:
+            node.inputs['Roughness'].enabled = node.rough
+
+    @staticmethod
     def update_anisotropy(node, context):
-        try:
+        if "Roughness" in node.inputs:
             u_roughness = node.inputs["Roughness"]
-        except KeyError:
+        else:
             u_roughness = node.inputs["U-Roughness"]
         u_roughness.name = "U-Roughness" if node.use_anisotropy else "Roughness"
         node.inputs["V-Roughness"].enabled = node.use_anisotropy
