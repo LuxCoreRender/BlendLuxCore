@@ -77,7 +77,7 @@ class LuxCoreWorldInfinite(bl_ui.properties_world.WorldButtonsPanel, bpy.types.P
         layout = self.layout
         world = context.world
 
-        layout.prop(world.luxcore, "image")
+        layout.template_ID(world.luxcore, "image", open="image.open")
         layout.prop(world.luxcore, "gamma")
         layout.prop(world.luxcore, "sampleupperhemisphereonly")
 
