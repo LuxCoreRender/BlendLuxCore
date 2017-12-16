@@ -8,6 +8,9 @@ from .light import convert_lamp
 
 
 def convert(blender_obj, scene, context, luxcore_scene):
+    if not utils.is_obj_visible(blender_obj, scene, context):
+        return pyluxcore.Properties(), None
+
     if blender_obj.type == "LAMP":
         return convert_lamp(blender_obj, scene, context, luxcore_scene)
 

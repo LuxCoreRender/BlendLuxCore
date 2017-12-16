@@ -12,10 +12,10 @@ class Change:
     CAMERA = 1 << 1
     OBJECT = 1 << 2
     MATERIAL = 1 << 3
-    OBJECTS_REMOVED = 1 << 4
+    VISIBILITY = 1 << 4
     WORLD = 1 << 5
 
-    REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | OBJECTS_REMOVED | WORLD
+    REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | VISIBILITY | WORLD
     REQUIRES_VIEW_UPDATE = CONFIG
 
 
@@ -102,6 +102,7 @@ class VisibilityCache(object):
         # sets containing keys
         self.last_visible_objects = None
         self.objects_to_remove = None
+        self.objects_to_add = None
 
     def diff(self, context):
         visible_objs = self._get_visible_objects(context)
@@ -111,8 +112,9 @@ class VisibilityCache(object):
             return False
 
         self.objects_to_remove = self.last_visible_objects - visible_objs
+        self.objects_to_add = visible_objs - self.last_visible_objects
         self.last_visible_objects = visible_objs
-        return self.objects_to_remove
+        return self.objects_to_remove or self.objects_to_add
 
     def _get_visible_objects(self, context):
         as_keylist = [utils.make_key(obj) for obj in context.visible_objects]
@@ -201,7 +203,7 @@ class Exporter(object):
             changes |= Change.MATERIAL
 
         if self.visibility_cache.diff(context):
-            changes |= Change.OBJECTS_REMOVED
+            changes |= Change.VISIBILITY
 
         if self.world_cache.diff(context):
             changes |= Change.WORLD
@@ -260,7 +262,7 @@ class Exporter(object):
                     luxcore_name, mat_props = material.convert(mat)
                     props.Set(mat_props)
 
-            if changes & Change.OBJECTS_REMOVED:
+            if changes & Change.VISIBILITY:
                 for key in self.visibility_cache.objects_to_remove:
                     if key not in self.exported_objects:
                         print('WARNING: Can not delete key "%s" from luxcore_scene' % key)
@@ -277,6 +279,13 @@ class Exporter(object):
 
                     for luxcore_name in exported_thing.luxcore_names:
                         remove_func(luxcore_name)
+
+                for key in self.visibility_cache.objects_to_add:
+                    obj = utils.obj_from_key(key, context.visible_objects)
+
+                    obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
+                    props.Set(obj_props)
+                    self.exported_objects[utils.make_key(obj)] = exported_obj
 
             if changes & Change.WORLD:
                 if context.scene.world.luxcore.light == "none":

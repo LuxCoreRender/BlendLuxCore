@@ -3,6 +3,19 @@ import re
 from ..bin import pyluxcore
 
 
+class ExportedObject(object):
+    def __init__(self, luxcore_names):
+        # Note that luxcore_names is a list of names (because an object in Blender can have multiple materials,
+        # while in LuxCore it can have only one material, so we have to split it into multiple LuxCore objects)
+        self.luxcore_names = luxcore_names
+
+
+class ExportedLight(object):
+    def __init__(self, luxcore_name):
+        # this is a list to make it compatible with ExportedObject
+        self.luxcore_names = [luxcore_name]
+
+
 def to_luxcore_name(string):
     return re.sub("[^_0-9a-zA-Z]+", "__", string)
 
@@ -20,6 +33,13 @@ def make_key(datablock):
 
 def get_unique_luxcore_name(datablock):
     return to_luxcore_name(make_key(datablock))
+
+
+def obj_from_key(key, objects):
+    for obj in objects:
+        if key == make_key(obj):
+            return obj
+    return None
 
 
 def create_props(prefix, definitions):
@@ -186,14 +206,11 @@ def find_active_uv(uv_textures):
     return None
 
 
-class ExportedObject(object):
-    def __init__(self, luxcore_names):
-        # Note that luxcore_names is a list of names (because an object in Blender can have multiple materials,
-        # while in LuxCore it can have only one material, so we have to split it into multiple LuxCore objects)
-        self.luxcore_names = luxcore_names
+def is_obj_visible(obj, scene, context=None, is_dupli=False):
+    hidden = obj.hide if context else obj.hide_render
 
-
-class ExportedLight(object):
-    def __init__(self, luxcore_name):
-        # this is a list to make it compatible with ExportedObject
-        self.luxcore_names = [luxcore_name]
+    renderlayer = scene.render.layers.active.layers
+    visible = False
+    for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, renderlayer)]:
+        visible |= lv
+    return (visible or is_dupli) and not hidden
