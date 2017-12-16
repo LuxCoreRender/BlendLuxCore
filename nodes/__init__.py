@@ -92,8 +92,9 @@ class Roughness:
                  "U- and V-directions (needs UV mapping)")
 
     @staticmethod
-    def init(node, default=0.1):
+    def init(node, default=0.1, init_enabled=True):
         node.add_input("LuxCoreSocketRoughness", "Roughness", default)
+        node.inputs["Roughness"].enabled = init_enabled
         node.add_input("LuxCoreSocketRoughness", "V-Roughness", default)
         node.inputs["V-Roughness"].enabled = False
 

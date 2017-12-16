@@ -11,6 +11,10 @@ from . import LuxCoreNodeSocket
 # to overwrite the default_value property of the socket.
 
 
+ROUGHNESS_DESCRIPTION = "Microfacet roughness; higher values lead to more blurry reflections"
+IOR_DESCRIPTION = "Index of refraction; typical values: 1.0 (air), 1.3 (water), 1.5 (glass)"
+
+
 class Color:
     material = (0.39, 0.78, 0.39, 1.0)
     color_texture = (0.78, 0.78, 0.16, 1.0)
@@ -49,8 +53,8 @@ class LuxCoreSocketFloat0to1(LuxCoreSocketFloat):
 
 class LuxCoreSocketRoughness(LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
-    default_value = FloatProperty(min=0.001, max=1)
+    default_value = FloatProperty(min=0.001, max=1, description=ROUGHNESS_DESCRIPTION)
 
 
 class LuxCoreSocketIOR(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, max=25)
+    default_value = FloatProperty(min=0, max=25, description=IOR_DESCRIPTION)

@@ -26,7 +26,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (1, 1, 1))
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
 
-        Roughness.init(self, 0.1)
+        Roughness.init(self, default=0.1, init_enabled=False)
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
