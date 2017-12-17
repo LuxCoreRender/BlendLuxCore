@@ -166,9 +166,7 @@ class Exporter(object):
 
         for obj in objs:
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
-                props, exported_thing = blender_object.convert(obj, scene, context, luxcore_scene)
-                scene_props.Set(props)
-                self.exported_objects[utils.make_key(obj)] = exported_thing
+                self._convert_object(scene_props, obj, context.scene, context, luxcore_scene)
 
         # World
         if scene.world and scene.world.luxcore.light != "none":
@@ -233,6 +231,18 @@ class Exporter(object):
         # because it might have been replaced in _update_config()
         return session
 
+    def _convert_object(self, props, obj, scene, context, luxcore_scene):
+        # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
+        obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
+
+        if exported_obj is None:
+            # Error during conversion
+            print('Could not convert object "%s"' % obj.name)
+            return
+
+        props.Set(obj_props)
+        self.exported_objects[utils.make_key(obj)] = exported_obj
+
     def _update_config(self, session, config_props):
         renderconfig = session.GetRenderConfig()
         session.Stop()
@@ -257,21 +267,15 @@ class Exporter(object):
             for obj in self.object_cache.changed_transform:
                 # TODO only update transform
                 print("transformed:", obj.name)
-                obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
-                props.Set(obj_props)
-                self.exported_objects[utils.make_key(obj)] = exported_obj
+                self._convert_object(props, obj, context.scene, context, luxcore_scene)
 
             for obj in self.object_cache.changed_mesh:
                 print("mesh changed:", obj.name)
-                obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
-                props.Set(obj_props)
-                self.exported_objects[utils.make_key(obj)] = exported_obj
+                self._convert_object(props, obj, context.scene, context, luxcore_scene)
 
             for obj in self.object_cache.lamps:
                 print("lamp changed:", obj.name)
-                light_props, exported_light = blender_object.convert(obj, context.scene, context, luxcore_scene)
-                props.Set(light_props)
-                self.exported_objects[utils.make_key(obj)] = exported_light
+                self._convert_object(props, obj, context.scene, context, luxcore_scene)
 
         if changes & Change.MATERIAL:
             for mat in self.material_cache.changed_materials:
@@ -287,6 +291,10 @@ class Exporter(object):
 
                 exported_thing = self.exported_objects[key]
 
+                if exported_thing is None:
+                    print('Value for key "%s" is None!' % key)
+                    continue
+
                 # exported_objects contains instances of ExportedObject and ExportedLight
                 if isinstance(exported_thing, blender_object.ExportedObject):
                     remove_func = luxcore_scene.DeleteObject
@@ -300,10 +308,7 @@ class Exporter(object):
 
             for key in self.visibility_cache.objects_to_add:
                 obj = utils.obj_from_key(key, context.visible_objects)
-
-                obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
-                props.Set(obj_props)
-                self.exported_objects[utils.make_key(obj)] = exported_obj
+                self._convert_object(props, obj, context.scene, context, luxcore_scene)
 
         if changes & Change.WORLD:
             if context.scene.world.luxcore.light == "none":
