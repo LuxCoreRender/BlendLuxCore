@@ -42,6 +42,9 @@ if __name__ == "__main__":
                     copy2(src, dst)
                 else:
                     print("Skipping file", file)
+            else:
+                print("Copying", file, "from", root)
+                copy2(src, dst)
 
             found_files.append(file)
 
