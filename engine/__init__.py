@@ -63,6 +63,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self._framebuffer.draw(self, self._session)
             del self._session
         except Exception as error:
+            del self._session
+            self._session = None
+
             self.report({"ERROR"}, str(error))
             import traceback
             traceback.print_exc()
@@ -83,9 +86,13 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 self.update_stats("Viewport Render", "")
                 return
             except Exception as error:
+                del self._session
+                self._session = None
+
                 self.update_stats("Error: ", str(error))
                 import traceback
                 traceback.print_exc()
+                return
 
         if changes is None:
             changes = self._exporter.get_changes(context)

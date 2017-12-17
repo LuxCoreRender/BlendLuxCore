@@ -210,19 +210,6 @@ class Exporter(object):
 
         return changes
 
-    def _update_config(self, session, config_props):
-        renderconfig = session.GetRenderConfig()
-        session.Stop()
-        del session
-
-        renderconfig.Parse(config_props)
-        if renderconfig is None:
-            print("ERROR: not a valid luxcore config")
-            return
-        session = pyluxcore.RenderSession(renderconfig)
-        session.Start()
-        return session
-
     def update(self, context, session, changes):
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
@@ -244,6 +231,19 @@ class Exporter(object):
 
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()
+        return session
+
+    def _update_config(self, session, config_props):
+        renderconfig = session.GetRenderConfig()
+        session.Stop()
+        del session
+
+        renderconfig.Parse(config_props)
+        if renderconfig is None:
+            print("ERROR: not a valid luxcore config")
+            return
+        session = pyluxcore.RenderSession(renderconfig)
+        session.Start()
         return session
 
     def _scene_edit(self, context, changes, luxcore_scene):
@@ -312,5 +312,4 @@ class Exporter(object):
                 world_props = light.convert_world(context.scene.world, context.scene)
                 props.Set(world_props)
 
-        print(self.exported_objects)
         return props
