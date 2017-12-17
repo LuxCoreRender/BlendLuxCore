@@ -231,72 +231,86 @@ class Exporter(object):
         if changes & Change.REQUIRES_SCENE_EDIT:
             luxcore_scene = session.GetRenderConfig().GetScene()
             session.BeginSceneEdit()
-            props = pyluxcore.Properties()
 
-            if changes & Change.CAMERA:
-                # We already converted the new camera settings during get_changes(), re-use them
-                props.Set(self.camera_cache.props)
-
-            if changes & Change.OBJECT:
-                for obj in self.object_cache.changed_transform:
-                    # TODO only update transform
-                    print("transformed:", obj.name)
-                    obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
-                    props.Set(obj_props)
-                    self.exported_objects[utils.make_key(obj)] = exported_obj
-
-                for obj in self.object_cache.changed_mesh:
-                    print("mesh changed:", obj.name)
-                    obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
-                    props.Set(obj_props)
-                    self.exported_objects[utils.make_key(obj)] = exported_obj
-
-                for obj in self.object_cache.lamps:
-                    print("lamp changed:", obj.name)
-                    light_props, exported_light = blender_object.convert(obj, context.scene, context, luxcore_scene)
-                    props.Set(light_props)
-                    self.exported_objects[utils.make_key(obj)] = exported_light
-
-            if changes & Change.MATERIAL:
-                for mat in self.material_cache.changed_materials:
-                    luxcore_name, mat_props = material.convert(mat)
-                    props.Set(mat_props)
-
-            if changes & Change.VISIBILITY:
-                for key in self.visibility_cache.objects_to_remove:
-                    if key not in self.exported_objects:
-                        print('WARNING: Can not delete key "%s" from luxcore_scene' % key)
-                        print("The object was probably renamed")
-                        continue
-
-                    exported_thing = self.exported_objects[key]
-
-                    # exported_objects contains instances of ExportedObject and ExportedLight
-                    if isinstance(exported_thing, blender_object.ExportedObject):
-                        remove_func = luxcore_scene.DeleteObject
-                    else:
-                        remove_func = luxcore_scene.DeleteLight
-
-                    for luxcore_name in exported_thing.luxcore_names:
-                        remove_func(luxcore_name)
-
-                for key in self.visibility_cache.objects_to_add:
-                    obj = utils.obj_from_key(key, context.visible_objects)
-
-                    obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
-                    props.Set(obj_props)
-                    self.exported_objects[utils.make_key(obj)] = exported_obj
-
-            if changes & Change.WORLD:
-                if context.scene.world.luxcore.light == "none":
-                    luxcore_scene.DeleteLight(WORLD_BACKGROUND_LIGHT_NAME)
-                else:
-                    world_props = light.convert_world(context.scene.world, context.scene)
-                    props.Set(world_props)
-
-            luxcore_scene.Parse(props)
-            session.EndSceneEdit()
+            try:
+                props = self._scene_edit(context, changes, luxcore_scene)
+                luxcore_scene.Parse(props)
+            except Exception as error:
+                print("Error in update():", error)
+                import traceback
+                traceback.print_exc()
+            finally:
+                session.EndSceneEdit()
 
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()
         return session
+
+    def _scene_edit(self, context, changes, luxcore_scene):
+        props = pyluxcore.Properties()
+
+        if changes & Change.CAMERA:
+            # We already converted the new camera settings during get_changes(), re-use them
+            props.Set(self.camera_cache.props)
+
+        if changes & Change.OBJECT:
+            for obj in self.object_cache.changed_transform:
+                # TODO only update transform
+                print("transformed:", obj.name)
+                obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
+                props.Set(obj_props)
+                self.exported_objects[utils.make_key(obj)] = exported_obj
+
+            for obj in self.object_cache.changed_mesh:
+                print("mesh changed:", obj.name)
+                obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
+                props.Set(obj_props)
+                self.exported_objects[utils.make_key(obj)] = exported_obj
+
+            for obj in self.object_cache.lamps:
+                print("lamp changed:", obj.name)
+                light_props, exported_light = blender_object.convert(obj, context.scene, context, luxcore_scene)
+                props.Set(light_props)
+                self.exported_objects[utils.make_key(obj)] = exported_light
+
+        if changes & Change.MATERIAL:
+            for mat in self.material_cache.changed_materials:
+                luxcore_name, mat_props = material.convert(mat)
+                props.Set(mat_props)
+
+        if changes & Change.VISIBILITY:
+            for key in self.visibility_cache.objects_to_remove:
+                if key not in self.exported_objects:
+                    print('WARNING: Can not delete key "%s" from luxcore_scene' % key)
+                    print("The object was probably renamed")
+                    continue
+
+                exported_thing = self.exported_objects[key]
+
+                # exported_objects contains instances of ExportedObject and ExportedLight
+                if isinstance(exported_thing, blender_object.ExportedObject):
+                    remove_func = luxcore_scene.DeleteObject
+                else:
+                    remove_func = luxcore_scene.DeleteLight
+
+                for luxcore_name in exported_thing.luxcore_names:
+                    remove_func(luxcore_name)
+
+                del self.exported_objects[key]
+
+            for key in self.visibility_cache.objects_to_add:
+                obj = utils.obj_from_key(key, context.visible_objects)
+
+                obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
+                props.Set(obj_props)
+                self.exported_objects[utils.make_key(obj)] = exported_obj
+
+        if changes & Change.WORLD:
+            if context.scene.world.luxcore.light == "none":
+                luxcore_scene.DeleteLight(WORLD_BACKGROUND_LIGHT_NAME)
+            else:
+                world_props = light.convert_world(context.scene.world, context.scene)
+                props.Set(world_props)
+
+        print(self.exported_objects)
+        return props
