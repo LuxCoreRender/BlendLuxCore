@@ -28,9 +28,9 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
 
         layout.prop(lamp, "type", expand=True)
 
-        row = layout.row()
-        row.prop(lamp.luxcore, "rgb_gain")
-        row.prop(lamp.luxcore, "gain")
+        split = layout.split(percentage=0.33)
+        split.prop(lamp.luxcore, "rgb_gain", text="")
+        split.prop(lamp.luxcore, "gain")
         # TODO: id
 
         layout.separator()

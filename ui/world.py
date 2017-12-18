@@ -1,9 +1,11 @@
 import bl_ui
+from bl_ui.properties_world import WorldButtonsPanel
 import bpy
+from bpy.types import Panel
 from . import ICON_VOLUME
 
 
-class LuxCoreWorldHeader(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Panel):
+class LuxCoreWorldHeader(WorldButtonsPanel, Panel):
     """
     World UI Panel
     """
@@ -22,13 +24,13 @@ class LuxCoreWorldHeader(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Pan
         layout.prop(world.luxcore, "light", expand=True)
 
         if world.luxcore.light != "none":
-            row = layout.row()
-            row.prop(world.luxcore, "rgb_gain")
-            row.prop(world.luxcore, "gain")
+            split = layout.split(percentage=0.33)
+            split.prop(world.luxcore, "rgb_gain", text="")
+            split.prop(world.luxcore, "gain")
             # TODO: id
 
 
-class LuxCoreWorldSky2(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Panel):
+class LuxCoreWorldSky2(WorldButtonsPanel, Panel):
     """
     Sky2 UI Panel
     """
@@ -53,14 +55,15 @@ class LuxCoreWorldSky2(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Panel
         else:
             layout.prop(world.luxcore, "turbidity")
 
+        # Note: ground albedo can be used without ground color
+        layout.prop(world.luxcore, "groundalbedo")
         layout.prop(world.luxcore, "ground_enable")
 
         if world.luxcore.ground_enable:
-            layout.prop(world.luxcore, "groundalbedo")
             layout.prop(world.luxcore, "ground_color")
 
 
-class LuxCoreWorldInfinite(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Panel):
+class LuxCoreWorldInfinite(WorldButtonsPanel, Panel):
     """
     Infinite UI Panel
     """
@@ -78,11 +81,16 @@ class LuxCoreWorldInfinite(bl_ui.properties_world.WorldButtonsPanel, bpy.types.P
         world = context.world
 
         layout.template_ID(world.luxcore, "image", open="image.open")
-        layout.prop(world.luxcore, "gamma")
-        layout.prop(world.luxcore, "sampleupperhemisphereonly")
+
+        sub = layout.column()
+        sub.enabled = world.luxcore.image is not None
+        sub.prop(world.luxcore, "gamma")
+        sub.prop(world.luxcore, "rotation")
+        sub.label("For free transformation use a hemi lamp", icon="INFO")
+        sub.prop(world.luxcore, "sampleupperhemisphereonly")
 
 
-class LuxCoreWorldPerformance(bl_ui.properties_world.WorldButtonsPanel, bpy.types.Panel):
+class LuxCoreWorldPerformance(WorldButtonsPanel, Panel):
     """
     World UI Panel, shows stuff that affects the performance of the render
     """

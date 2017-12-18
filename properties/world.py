@@ -1,9 +1,13 @@
 import bpy
+import math
 from bpy.props import (
     PointerProperty, EnumProperty, FloatProperty,
     FloatVectorProperty, IntProperty, BoolProperty
 )
-from .light import SAMPLES_DESCRIPTION, IMPORTANCE_DESCRIPTION
+from .light import (
+    SAMPLES_DESCRIPTION, IMPORTANCE_DESCRIPTION,
+    GAMMA_DESCRIPTION, SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION
+)
 
 
 def init():
@@ -35,7 +39,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
 
     # infinite
     image = PointerProperty(name="Image", type=bpy.types.Image)
-    gamma = FloatProperty(name="Gamma", default=1)
+    gamma = FloatProperty(name="Gamma", default=1, min=0, description=GAMMA_DESCRIPTION)
     sampleupperhemisphereonly = BoolProperty(name="Sample Upper Hemisphere Only", default=False,
-                                             description="Used to avoid shadows cast from below when using shadow catcher")
+                                             description=SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION)
+    rotation = FloatProperty(name="Z Axis Rotation", default=0, min=0, max=(math.pi * 2), subtype="ANGLE", unit="ROTATION")
 

@@ -27,6 +27,15 @@ EFFICACY_DESCRIPTION = (
     "and efficacy bypasses this feature and uses only the lamp gain"
 )
 
+GAMMA_DESCRIPTION = (
+    "Gamma value of the image. Most HDR/EXR images use 1.0, while "
+    "most JPG/PNG images use 2.2"
+)
+
+SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION = (
+    "Used to avoid shadows cast from below when using shadow catcher"
+)
+
 
 def init():
     bpy.types.Lamp.luxcore = PointerProperty(type=LuxCoreLightProps)
@@ -84,11 +93,11 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # mappoint: mapfile
     # projection: mapfile
     image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
-    gamma = FloatProperty(name="Gamma", default=1)
+    gamma = FloatProperty(name="Gamma", default=1, min=0, description=GAMMA_DESCRIPTION)
 
     # infinite
     sampleupperhemisphereonly = BoolProperty(name="Sample Upper Hemisphere Only", default=False,
-                                             description="Used to avoid shadows cast from below when using shadow catcher")
+                                             description=SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION)
 
     # point, mappoint, spot, laser
     power = FloatProperty(name="Power (W)", default=0, min=0, description=POWER_DESCRIPTION)

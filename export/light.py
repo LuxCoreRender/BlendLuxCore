@@ -95,7 +95,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
             definitions["position"] = [0, 0, 0]
             definitions["target"] = [0, 0, -1]
 
-            spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
+            spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, "Z")
             transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
             definitions["transformation"] = transformation
 
@@ -119,7 +119,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                 definitions["position"] = [0, 0, 0]
                 definitions["target"] = [0, 0, -1]
 
-                spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'Z')
+                spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, "Z")
                 transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
                 definitions["transformation"] = transformation
             else:
@@ -173,7 +173,10 @@ def convert_world(world, scene):
         elif light_type == "infinite":
             if world.luxcore.image:
                 # TODO: transformation?
-                _convert_infinite(definitions, world, scene)
+                transformation = mathutils.Matrix.Rotation(world.luxcore.rotation, 4, "Z").inverted()
+                transformation = utils.matrix_to_list(transformation, scene)
+
+                _convert_infinite(definitions, world, scene, transformation)
             else:
                 # Fallback if no image is set
                 definitions["type"] = "constantinfinite"

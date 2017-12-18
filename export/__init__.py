@@ -225,6 +225,8 @@ class Exporter(object):
                 import traceback
                 traceback.print_exc()
             finally:
+                # TODO: Might fail if e.g. scene does not contain any light sources after the SceneEdit
+                # TODO: -> leads to crash
                 session.EndSceneEdit()
 
         # We have to return and re-assign the session in the RenderEngine,
