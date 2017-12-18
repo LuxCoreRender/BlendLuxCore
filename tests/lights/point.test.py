@@ -11,7 +11,9 @@ class TestPointLight(unittest.TestCase):
     def test_prop_export(self):
         # Test the property export
         obj = bpy.data.objects["Point"]
-        props, exported_light = light.convert(obj, bpy.context.scene)
+        luxcore_scene = pyluxcore.Scene()
+        context = bpy.context
+        props, exported_light = light.convert_lamp(obj, context.scene, context, luxcore_scene)
 
         # Check if export succeeded
         self.assertIsNotNone(exported_light)
@@ -36,7 +38,10 @@ class TestPointLight(unittest.TestCase):
 
     def test_not_a_lamp(self):
         obj = bpy.data.objects["Plane"]
-        props, exported_light = light.convert(obj, bpy.context.scene)
+        luxcore_scene = pyluxcore.Scene()
+        context = bpy.context
+        print("=== Note: this test prints a stacktrace even if it succeeds ===")
+        props, exported_light = light.convert_lamp(obj, context.scene, context, luxcore_scene)
         # Export should fail
         self.assertIsNone(exported_light)
 

@@ -12,6 +12,8 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 
 def convert_lamp(blender_obj, scene, context, luxcore_scene):
     try:
+        assert isinstance(blender_obj, bpy.types.Object)
+        assert blender_obj.type == "LAMP"
         print("converting lamp:", blender_obj.name)
 
         luxcore_name = utils.get_unique_luxcore_name(blender_obj)
