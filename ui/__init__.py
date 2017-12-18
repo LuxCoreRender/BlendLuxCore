@@ -9,13 +9,14 @@ ICON_TEXTURE = "TEXTURE_SHADED"
 
 def compatible_panels():
     panels = [
+        # Render panels
         "RENDER_PT_render",
         "RENDER_PT_output",
         "RENDER_PT_encoding",
         "RENDER_PT_dimensions",
         "RENDER_PT_stamp",
 
-        # Data properties
+        # Data panels
         # Lamp
         "DATA_PT_context_lamp",
         # Mesh
@@ -34,9 +35,11 @@ def compatible_panels():
         "DATA_PT_cone",
         "DATA_PT_custom_props_speaker",
 
-        # World properties
+        # World panels
         "WORLD_PT_context_world",
         "WORLD_PT_custom_props",
+
+
     ]
     types = bpy.types
     return [getattr(types, p) for p in panels if hasattr(types, p)]

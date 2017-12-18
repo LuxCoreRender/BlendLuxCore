@@ -101,8 +101,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
 
         elif lamp.type == "HEMI":
             if lamp.luxcore.image:
-                transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
-                _convert_infinite(definitions, lamp, scene, transformation)
+                _convert_infinite(definitions, lamp, scene, matrix)
             else:
                 # Fallback
                 definitions["type"] = "constantinfinite"
@@ -172,10 +171,7 @@ def convert_world(world, scene):
 
         elif light_type == "infinite":
             if world.luxcore.image:
-                # TODO: transformation?
-                transformation = mathutils.Matrix.Rotation(world.luxcore.rotation, 4, "Z").inverted()
-                transformation = utils.matrix_to_list(transformation, scene)
-
+                transformation = mathutils.Matrix.Rotation(world.luxcore.rotation, 4, "Z")
                 _convert_infinite(definitions, world, scene, transformation)
             else:
                 # Fallback if no image is set
@@ -215,6 +211,9 @@ def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
     definitions["sampleupperhemisphereonly"] = lamp_or_world.luxcore.sampleupperhemisphereonly
 
     if transformation:
+        infinite_fix = mathutils.Matrix.Scale(1.0, 4)
+        infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
+        transformation = utils.matrix_to_list(infinite_fix * transformation.inverted(), scene)
         definitions["transformation"] = transformation
 
 

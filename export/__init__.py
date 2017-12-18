@@ -166,7 +166,7 @@ class Exporter(object):
 
         for obj in objs:
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
-                self._convert_object(scene_props, obj, context.scene, context, luxcore_scene)
+                self._convert_object(scene_props, obj, scene, context, luxcore_scene)
 
         # World
         if scene.world and scene.world.luxcore.light != "none":
@@ -235,7 +235,7 @@ class Exporter(object):
 
     def _convert_object(self, props, obj, scene, context, luxcore_scene):
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
-        obj_props, exported_obj = blender_object.convert(obj, context.scene, context, luxcore_scene)
+        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene)
 
         if exported_obj is None:
             # Error during conversion

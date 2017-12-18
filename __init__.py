@@ -27,7 +27,7 @@ def blendluxcore_exit():
 
 def register():
     import atexit
-    # Make sure we only registered the callback once.
+    # Make sure we only register the callback once
     atexit.unregister(blendluxcore_exit)
     atexit.register(blendluxcore_exit)
 
@@ -37,6 +37,7 @@ def register():
 
     properties.init()
 
+    # Has to be called at least once, can be called multiple times
     pyluxcore.Init()
     print("pyluxcore version:", pyluxcore.Version())
 

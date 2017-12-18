@@ -56,6 +56,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 now = time()
                 if now - last_refresh > interval:
                     self._session.UpdateStats()
+                    self.update_stats("Render", "rendering...")
                     self._framebuffer.draw(self, self._session)
                     last_refresh = now
 
