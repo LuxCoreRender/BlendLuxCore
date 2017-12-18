@@ -1,4 +1,7 @@
 .idea
 __pycache__
 
+# Test output
+tests/full_export/log.txt
+
 # For ignored files in bin/ subdirectory, see the .gitignore file in bin/
