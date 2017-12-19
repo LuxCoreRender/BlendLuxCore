@@ -12,44 +12,6 @@ SIMPLE_DESC = "Recommended for scenes with simple lighting (outdoors, studio set
 COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoors with small windows)"
 
 
-class LuxCoreConfig(PropertyGroup):
-    # TODO: thread count (maybe use the controls from Blender, like Cycles does?)
-
-    engines = [
-        ("PATH", "Path", "Unidirectional path tracer; " + SIMPLE_DESC, 0),
-        ("BIDIR", "Bidir", "Bidirectional path tracer; " + COMPLEX_DESC, 1),
-    ]
-    engine = EnumProperty(name="Engine", items=engines, default="PATH")
-
-    # Only available when tiled rendering is off
-    samplers = [
-        ("SOBOL", "Sobol", SIMPLE_DESC, 0),
-        ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
-    ]
-    sampler = EnumProperty(name="Sampler", items=samplers, default="SOBOL")
-    # A trick so we can show the user that bidir should only be used with Metropolis
-    bidir_sampler = EnumProperty(name="Sampler", items=samplers, default="METROPOLIS",
-                                 description="Only Metropolis makes sense for Bidir")
-
-    # Only available when engine is PATH (not BIDIR)
-    devices = [
-        ("CPU", "CPU", "Use the arithmetic logic units in your central processing unit", 0),
-        ("OCL", "OpenCL", "Use the good ol' pixel cruncher", 1),
-    ]
-    device = EnumProperty(name="Device", items=devices, default="CPU")
-    # A trick so we can show the user that bidir can only be used on the CPU (see UI code)
-    bidir_device = EnumProperty(name="Device", items=devices, default="CPU", description="Bidir only available on CPU")
-
-    tiled = BoolProperty(name="Tiled", default=False, description=TILED_DESCRIPTION)
-
-    # Special properties of the various engines
-    path = PointerProperty(type=LuxCoreConfigPath)
-    tile = PointerProperty(type=LuxCoreConfigTile)
-    opencl = PointerProperty(type=LuxCoreConfigOpenCL)
-    # I'm not creating a class for only one property
-    light_maxdepth = IntProperty(name="Light Depth", default=5, min=1, soft_max=16)
-
-
 class LuxCoreConfigPath(PropertyGroup):
     """ path.* """
     # TODO: helpful descriptions
@@ -96,3 +58,42 @@ class LuxCoreConfigOpenCL(PropertyGroup):
     # We probably don't need to expose these properties
     # opencl.cpu.workgroup.size
     # opencl.gpu.workgroup.size
+
+
+class LuxCoreConfig(PropertyGroup):
+    """ Main config storage class """
+    # TODO: thread count (maybe use the controls from Blender, like Cycles does?)
+
+    engines = [
+        ("PATH", "Path", "Unidirectional path tracer; " + SIMPLE_DESC, 0),
+        ("BIDIR", "Bidir", "Bidirectional path tracer; " + COMPLEX_DESC, 1),
+    ]
+    engine = EnumProperty(name="Engine", items=engines, default="PATH")
+
+    # Only available when tiled rendering is off
+    samplers = [
+        ("SOBOL", "Sobol", SIMPLE_DESC, 0),
+        ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
+    ]
+    sampler = EnumProperty(name="Sampler", items=samplers, default="SOBOL")
+    # A trick so we can show the user that bidir should only be used with Metropolis
+    bidir_sampler = EnumProperty(name="Sampler", items=samplers, default="METROPOLIS",
+                                 description="Only Metropolis makes sense for Bidir")
+
+    # Only available when engine is PATH (not BIDIR)
+    devices = [
+        ("CPU", "CPU", "Use the arithmetic logic units in your central processing unit", 0),
+        ("OCL", "OpenCL", "Use the good ol' pixel cruncher", 1),
+    ]
+    device = EnumProperty(name="Device", items=devices, default="CPU")
+    # A trick so we can show the user that bidir can only be used on the CPU (see UI code)
+    bidir_device = EnumProperty(name="Device", items=devices, default="CPU", description="Bidir only available on CPU")
+
+    use_tiles = BoolProperty(name="Tiled", default=False, description=TILED_DESCRIPTION)
+
+    # Special properties of the various engines
+    path = PointerProperty(type=LuxCoreConfigPath)
+    tile = PointerProperty(type=LuxCoreConfigTile)
+    opencl = PointerProperty(type=LuxCoreConfigOpenCL)
+    # I'm not creating a class for only one property
+    light_maxdepth = IntProperty(name="Light Depth", default=5, min=1, soft_max=16)

@@ -33,9 +33,9 @@ class LuxCoreConfig(RenderButtonsPanel, Panel):
 
         if config.engine == "PATH":
             # Path options
-            layout.prop(config, "tiled")
+            layout.prop(config, "use_tiles")
 
-            if config.tiled:
+            if config.use_tiles:
                 layout.label("Tiled path uses special sampler", icon="INFO")
             else:
                 row_sampler = layout.row()
