@@ -7,8 +7,8 @@ from . import LuxCoreNodeSocket
 # - If it is only used by one node, put it in the file of that node
 #   (e.g. the sigma socket of the matte material)
 # Unfortunately we have to create dozens of socket types because there's no other
-# way to have different min/max values. However, most of the time you only have
-# to overwrite the default_value property of the socket.
+# way to have different min/max values or different descriptions. However, most of
+# the time you only have to overwrite the default_value property of the socket.
 
 
 ROUGHNESS_DESCRIPTION = "Microfacet roughness; higher values lead to more blurry reflections"
@@ -53,7 +53,7 @@ class LuxCoreSocketFloat0to1(LuxCoreSocketFloat):
 
 class LuxCoreSocketRoughness(LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
-    default_value = FloatProperty(min=0.001, max=1, description=ROUGHNESS_DESCRIPTION)
+    default_value = FloatProperty(min=0.001, soft_max=0.8, max=1, description=ROUGHNESS_DESCRIPTION)
 
 
 class LuxCoreSocketIOR(LuxCoreSocketFloat):

@@ -21,6 +21,9 @@ class LuxCoreMaterialNodeTree(NodeTree):
 
     @classmethod
     def get_from_context(cls, context):
+        """
+        Switches the displayed node tree when user selects object/material
+        """
         obj = context.active_object
 
         if obj and obj.type not in {"LAMP", "CAMERA"}:
@@ -55,6 +58,8 @@ class LuxCoreNodeCategoryMaterial(NodeCategory):
         return context.space_data.tree_type == "luxcore_material_nodes"
 
 
+# Here we define the menu structure the user sees when he
+# presses Shift+A in the node editor to add a new node
 luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
         NodeItem("LuxCoreNodeMatMatte", label="Matte"),

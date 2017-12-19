@@ -14,6 +14,8 @@ class LuxCoreVolumeNodeTree(NodeTree):
     def poll(cls, context):
         return context.scene.render.engine == "LUXCORE"
 
+    # TODO figure out if we even can choose the volume node tree for the user
+    # TODO because materials have interior and exterior nodetree (need to open two trees)
     # @classmethod
     # def get_from_context(cls, context):
     #     obj = context.active_object
@@ -50,6 +52,8 @@ class LuxCoreNodeCategoryVolume(NodeCategory):
         return context.space_data.tree_type == "luxcore_material_nodes"
 
 
+# Here we define the menu structure the user sees when he
+# presses Shift+A in the node editor to add a new node
 luxcore_node_categories_volume = [
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_VOLUME", "Volume", items=[
     ]),
