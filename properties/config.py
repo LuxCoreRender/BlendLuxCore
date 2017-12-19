@@ -1,5 +1,6 @@
 import bpy
-from bpy.props import EnumProperty, BoolProperty
+from bpy.types import PropertyGroup
+from bpy.props import EnumProperty, BoolProperty, IntProperty, FloatProperty, PointerProperty
 
 
 TILED_DESCRIPTION = (
@@ -11,15 +12,8 @@ SIMPLE_DESC = "Recommended for scenes with simple lighting (outdoors, studio set
 COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoors with small windows)"
 
 
-class LuxCoreConfig(bpy.types.PropertyGroup):
-    # engines = [
-    #     ("PATHCPU", "Path CPU", "Path tracer", 0),
-    #     ("TILEPATHCPU", "Tile Path CPU", "Path tracer rendering in tiles", 1),
-    #     ("BIDIRCPU", "Bidir CPU", "Bidirectional path tracer", 2),
-    #     ("PATHOCL", "Path OpenCL", "OpenCL version of Path CPU", 3),
-    #     ("TILEPATHOCL", "Tile Path OpenCL", "OpenCL version of Tile Path CPU", 4),
-    # ]
-    # engine = EnumProperty(name="Engine", items=engines, default="PATHCPU")
+class LuxCoreConfig(PropertyGroup):
+    # TODO: thread count (maybe use the controls from Blender, like Cycles does?)
 
     engines = [
         ("PATH", "Path", "Unidirectional path tracer; " + SIMPLE_DESC, 0),
@@ -48,4 +42,43 @@ class LuxCoreConfig(bpy.types.PropertyGroup):
 
     tiled = BoolProperty(name="Tiled", default=False, description=TILED_DESCRIPTION)
 
+    # Special properties of the various engines
+    path = PointerProperty(type=LuxCoreConfigPath)
+    tile = PointerProperty(type=LuxCoreConfigTile)
+    # I'm not creating a class for only one property
+    light_maxdepth = IntProperty(name="Light Depth", default=5, min=1, soft_max=16)
+
+
+class LuxCoreConfigPath(PropertyGroup):
+    """ path.* """
+    # TODO: helpful descriptions
+    depth_total = IntProperty(name="Path Depth", default=6, min=1, soft_max=16)
+    depth_diffuse = IntProperty(name="Diffuse Depth", default=4, min=1, soft_max=16)
+    depth_glossy = IntProperty(name="Glossy Depth", default=4, min=1, soft_max=16)
+    depth_specular = IntProperty(name="Specular Depth", default=6, min=1, soft_max=16)
+
+    # TODO: can we estimate a good clamp value automatically?
+    # TODO: if not, add a warning/info label
+    use_clamping = BoolProperty(name="Clamp Output", default=False)
+    clamping = FloatProperty(name="Max Brightness", default=0, min=0)
+
+    # We probably don't need to expose these properties
+    # path.russianroulette.depth
+    # path.russianroulette.cap
+
+    # This will be set automatically on export when transparent film is used
+    # path.forceblackbackground.enable
+
+
+class LuxCoreConfigTile(PropertyGroup):
+    """ tile.* """
+    path_sampling_aa_size = IntProperty(name="AA Samples", default=3, min=1, soft_max=13)
+    size = IntProperty(name="Tile Size", default=32, min=8, soft_max=256)
+    multipass_enable = BoolProperty(name="Multipass", default=True)
+    # TODO: min/max correct?
+    multipass_convtest_threshold = FloatProperty(name="Convergence Threshold", default=(6 / 256),
+                                                 min=0.0000001, soft_max=(6 / 256))
+    # TODO min/max/default
+    multipass_convtest_threshold_reduction = FloatProperty(name="Threshold Reduction")
+    multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0, soft_max=128)
 

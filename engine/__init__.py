@@ -116,7 +116,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 self.view_update_lux(context, changes)
                 return
             elif changes & export.Change.CAMERA:
-                # Only update allowed in view_draw is a camera update, for everything else we call view_update_lux()
+                # Only update allowed in view_draw if it is a camera update, for everything else we call view_update_lux()
                 # We have to re-assign the session because it might have been replaced due to filmsize change
                 self._session = self._exporter.update(context, self._session, export.Change.CAMERA)
 

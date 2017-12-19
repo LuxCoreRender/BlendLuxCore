@@ -1,6 +1,8 @@
 import bl_ui
 import bpy
 
+# TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
+
 
 class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.Panel):
     """
