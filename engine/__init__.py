@@ -68,6 +68,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self._session = None
 
             self.report({"ERROR"}, str(error))
+            self.error_set(str(error))
             import traceback
             traceback.print_exc()
             scene.luxcore.errorlog.set(error)
@@ -104,29 +105,45 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         if self._session is None:
             return
 
-        changes = self._exporter.get_changes(context)
+        try:
+            changes = self._exporter.get_changes(context)
 
-        if changes & export.Change.REQUIRES_VIEW_UPDATE:
-            if changes & export.Change.CONFIG:
-                # Film resize requires a new framebuffer
+            if changes & export.Change.REQUIRES_VIEW_UPDATE:
+                if changes & export.Change.CONFIG:
+                    # Film resize requires a new framebuffer
+                    self._framebuffer = FrameBuffer(context)
+                self.tag_redraw()
+                self.view_update_lux(context, changes)
+                return
+            elif changes & export.Change.CAMERA:
+                # Only update allowed in view_draw is a camera update, for everything else we call view_update_lux()
+                # We have to re-assign the session because it might have been replaced due to filmsize change
+                self._session = self._exporter.update(context, self._session, export.Change.CAMERA)
+
+            if self._framebuffer is None:
                 self._framebuffer = FrameBuffer(context)
+
+            if self._session:
+                self._session.UpdateStats()
+                self._session.WaitNewFrame()
+                self._framebuffer.update(self._session)
+
+            region_size = context.region.width, context.region.height
+            view_camera_offset = list(context.region_data.view_camera_offset)
+
+            # if self.support_display_space_shader(context.scene):
+            #     print("binding")
+            #     self.bind_display_space_shader(context.scene)
+            self._framebuffer.draw(region_size, view_camera_offset)
+            # if self.support_display_space_shader(context.scene):
+            #     print("unbinding")
+            #     self.unbind_display_space_shader()
+
             self.tag_redraw()
-            self.view_update_lux(context, changes)
-            return
-        elif changes & export.Change.CAMERA:
-            # Only update allowed in view_draw is a camera update, for everything else we call view_update_lux()
-            # We have to re-assign the session because it might have been replaced due to filmsize change
-            self._session = self._exporter.update(context, self._session, export.Change.CAMERA)
+        except Exception as error:
+            del self._session
+            self._session = None
 
-        if self._framebuffer is None:
-            self._framebuffer = FrameBuffer(context)
-
-        if self._session:
-            self._session.UpdateStats()
-            self._session.WaitNewFrame()
-            self._framebuffer.update(self._session)
-
-        region_size = context.region.width, context.region.height
-        view_camera_offset = list(context.region_data.view_camera_offset)
-        self._framebuffer.draw(region_size, view_camera_offset)
-        self.tag_redraw()
+            self.update_stats("Error: ", str(error))
+            import traceback
+            traceback.print_exc()
