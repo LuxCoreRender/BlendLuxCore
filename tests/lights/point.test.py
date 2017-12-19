@@ -40,9 +40,9 @@ class TestPointLight(unittest.TestCase):
         obj = bpy.data.objects["Plane"]
         luxcore_scene = pyluxcore.Scene()
         context = bpy.context
-        print("=== Note: this test prints a stacktrace even if it succeeds ===")
+        print("\n=== Note: this test prints a traceback even if it succeeds ===\n")
         props, exported_light = light.convert_lamp(obj, context.scene, context, luxcore_scene)
-        # Export should fail
+        # Export should fail, exported_light should be None
         self.assertIsNone(exported_light)
 
 
