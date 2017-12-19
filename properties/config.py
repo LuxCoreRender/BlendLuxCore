@@ -13,19 +13,27 @@ COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoor
 
 
 class LuxCoreConfigPath(PropertyGroup):
-    """ path.* """
+    """
+    path.*
+    Stored in LuxCoreConfig, accesss with scene.luxcore.config.path
+    """
     # TODO: helpful descriptions
+    # path.pathdepth.total
     depth_total = IntProperty(name="Path Depth", default=6, min=1, soft_max=16)
+    # path.pathdepth.diffuse
     depth_diffuse = IntProperty(name="Diffuse Depth", default=4, min=1, soft_max=16)
+    # path.pathdepth.glossy
     depth_glossy = IntProperty(name="Glossy Depth", default=4, min=1, soft_max=16)
+    # path.pathdepth.specular
     depth_specular = IntProperty(name="Specular Depth", default=6, min=1, soft_max=16)
 
     # TODO: can we estimate a good clamp value automatically?
     # TODO: if not, add a warning/info label
     use_clamping = BoolProperty(name="Clamp Output", default=False)
-    clamping = FloatProperty(name="Max Brightness", default=0, min=0)
+    # path.clamping.variance.maxvalue
+    clamping = FloatProperty(name="Max Brightness", default=1000, min=0)
 
-    # This will be set automatically on export when transparent film is used
+    # TODO This will be set automatically on export when transparent film is used
     # path.forceblackbackground.enable
 
     # We probably don't need to expose these properties
@@ -34,25 +42,39 @@ class LuxCoreConfigPath(PropertyGroup):
 
 
 class LuxCoreConfigTile(PropertyGroup):
-    """ tile.* """
+    """
+    tile.*
+    Stored in LuxCoreConfig, accesss with scene.luxcore.config.tile
+    """
+    # tilepath.sampling.aa.size
     path_sampling_aa_size = IntProperty(name="AA Samples", default=3, min=1, soft_max=13)
+    # tile.size
     size = IntProperty(name="Tile Size", default=32, min=8, soft_max=256)
+    # tile.multipass.enable
     multipass_enable = BoolProperty(name="Multipass", default=True)
     # TODO: min/max correct?
+    # tile.multipass.convergencetest.threshold
     multipass_convtest_threshold = FloatProperty(name="Convergence Threshold", default=(6 / 256),
                                                  min=0.0000001, soft_max=(6 / 256))
     # TODO min/max/default
+    # tile.multipass.convergencetest.threshold.reduction
     multipass_convtest_threshold_reduction = FloatProperty(name="Threshold Reduction")
+    # tile.multipass.convergencetest.warmup.count
     multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0, soft_max=128)
 
 
 class LuxCoreConfigOpenCL(PropertyGroup):
-    """ opencl.* """
+    """
+    opencl.*
+    Stored in LuxCoreConfig, accesss with scene.luxcore.config.opencl
+    """
     # TODO: opencl.platform.index - do we expose this?
+    # opencl.cpu.use
     use_cpu = BoolProperty(name="Use CPUs", default=False)
+    # opencl.gpu.use
     use_gpu = BoolProperty(name="Use GPUs", default=True)
 
-    # This will be set automatically on export when custom device selection is enabled
+    # TODO This will be set automatically on export when custom device selection is enabled
     # opencl.devices.select
 
     # We probably don't need to expose these properties
@@ -61,9 +83,14 @@ class LuxCoreConfigOpenCL(PropertyGroup):
 
 
 class LuxCoreConfig(PropertyGroup):
-    """ Main config storage class """
+    """
+    Main config storage class.
+    Access (in ui or export) with scene.luxcore.config
+    """
     # TODO: thread count (maybe use the controls from Blender, like Cycles does?)
 
+    # These settings are mostly not directly transferrable to LuxCore properties
+    # They need some if/else decisions and aggregation, e.g. to build the engine name from parts
     engines = [
         ("PATH", "Path", "Unidirectional path tracer; " + SIMPLE_DESC, 0),
         ("BIDIR", "Bidir", "Bidirectional path tracer; " + COMPLEX_DESC, 1),
@@ -95,5 +122,8 @@ class LuxCoreConfig(PropertyGroup):
     path = PointerProperty(type=LuxCoreConfigPath)
     tile = PointerProperty(type=LuxCoreConfigTile)
     opencl = PointerProperty(type=LuxCoreConfigOpenCL)
-    # I'm not creating a class for only one property
+    # I'm not creating a container class for only two properties (these are for BIDIR)
+    # light.maxdepth
     light_maxdepth = IntProperty(name="Light Depth", default=5, min=1, soft_max=16)
+    # path.maxdepth
+    bidir_path_maxdepth = IntProperty(name="Path Depth", default=5, min=1, soft_max=16)

@@ -5,10 +5,10 @@ from .. import utils
 def convert(scene, context=None):
     try:
         prefix = ""
-        # We collect the properties in this dictionary
-        # Common props are set at the end of the function
-        # Very specific props that are not needed every time are set in the if/else
-        # The dictionary is converted to pyluxcore.Properties() in the return statement
+        # We collect the properties in this dictionary.
+        # Common props are set at the end of the function.
+        # Very specific props that are not needed every time are set in the if/else.
+        # The dictionary is converted to pyluxcore.Properties() in the return statement.
         definitions = {}
 
         # See properties/config.py
@@ -20,33 +20,59 @@ def convert(scene, context=None):
             # Viewport render
             engine = "RTPATHCPU"
             sampler = "RTPATHCPUSAMPLER"
-            # Size of the blocks
+            # Size of the blocks right after a scene edit (in pixels)
             definitions["rtpathcpu.zoomphase.size"] = 4
-            # How to blend new samples over old ones
-            # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time
+            # How to blend new samples over old ones.
+            # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
             definitions["rtpathcpu.zoomphase.weight"] = 0
         else:
             # Final render
             if config.engine == "PATH":
+                # Specific settings for PATH and TILEPATH
+                path = config.path
+                definitions["path.pathdepth.total"] = path.depth_total
+                definitions["path.pathdepth.diffuse"] = path.depth_diffuse
+                definitions["path.pathdepth.glossy"] = path.depth_glossy
+                definitions["path.pathdepth.specular"] = path.depth_specular
+                # TODO path.forceblackbackground.enable (if film is transparent)
+                if path.use_clamping:
+                    definitions["path.clamping.variance.maxvalue"] = path.clamping
+
                 if config.use_tiles:
                     engine = "TILEPATH"
                     # TILEPATH needs exactly this sampler
                     sampler = "TILEPATHSAMPLER"
+                    # Tile specific settings
+                    tile = config.tile
+                    definitions["tilepath.sampling.aa.size"] = tile.path_sampling_aa_size
+                    definitions["tile.size"] = tile.size
+                    definitions["tile.multipass.enable"] = tile.multipass_enable
+                    definitions["tile.multipass.convergencetest.threshold"] = tile.multipass_convtest_threshold
+                    definitions["tile.multipass.convergencetest.threshold.reduction"] = tile.multipass_convtest_threshold_reduction
+                    definitions["tile.multipass.convergencetest.warmup.count"] = tile.multipass_convtest_warmup
                 else:
                     engine = "PATH"
                     sampler = config.sampler
 
                 # Add CPU/OCL suffix
                 engine += config.device
+
+                if config.device == "OCL":
+                    # OpenCL specific settings
+                    definitions["opencl.cpu.use"] = config.opencl.use_cpu
+                    definitions["opencl.gpu.use"] = config.opencl.use_gpu
+                    # TODO opencl.devices.select
             else:
                 # config.engine == BIDIR
                 engine = "BIDIRCPU"
                 # SOBOL or RANDOM would be possible, but make little sense for BIDIR
                 sampler = "METROPOLIS"
+                definitions["light.maxdepth"] = config.light_maxdepth
+                definitions["path.maxdepth"] = config.bidir_path_maxdepth
 
-        # Common properties that should be set regardless of engine configuration
-        # We create them as variable and set them here because then the IDE can warn us
-        # if we forget some in the if/else construct above
+        # Common properties that should be set regardless of engine configuration.
+        # We create them as variables and set them here because then the IDE can warn us
+        # if we forget some in the if/else construct above.
         definitions.update({
             "renderengine.type": engine,
             "sampler.type": sampler,

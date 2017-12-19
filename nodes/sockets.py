@@ -40,7 +40,7 @@ class LuxCoreNodeSocket(NodeSocket):
     def export_default(self):
         """
         Subclasses have to implement this method.
-        It should return the default value in a form ready for the scene properties
+        It should return the default value in a form ready for a pyluxcore.Property()
         e.g. convert colors to a list
         """
         return None
