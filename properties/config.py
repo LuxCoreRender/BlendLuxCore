@@ -45,6 +45,7 @@ class LuxCoreConfig(PropertyGroup):
     # Special properties of the various engines
     path = PointerProperty(type=LuxCoreConfigPath)
     tile = PointerProperty(type=LuxCoreConfigTile)
+    opencl = PointerProperty(type=LuxCoreConfigOpenCL)
     # I'm not creating a class for only one property
     light_maxdepth = IntProperty(name="Light Depth", default=5, min=1, soft_max=16)
 
@@ -62,12 +63,12 @@ class LuxCoreConfigPath(PropertyGroup):
     use_clamping = BoolProperty(name="Clamp Output", default=False)
     clamping = FloatProperty(name="Max Brightness", default=0, min=0)
 
+    # This will be set automatically on export when transparent film is used
+    # path.forceblackbackground.enable
+
     # We probably don't need to expose these properties
     # path.russianroulette.depth
     # path.russianroulette.cap
-
-    # This will be set automatically on export when transparent film is used
-    # path.forceblackbackground.enable
 
 
 class LuxCoreConfigTile(PropertyGroup):
@@ -82,3 +83,16 @@ class LuxCoreConfigTile(PropertyGroup):
     multipass_convtest_threshold_reduction = FloatProperty(name="Threshold Reduction")
     multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0, soft_max=128)
 
+
+class LuxCoreConfigOpenCL(PropertyGroup):
+    """ opencl.* """
+    # TODO: opencl.platform.index - do we expose this?
+    use_cpu = BoolProperty(name="Use CPUs", default=False)
+    use_gpu = BoolProperty(name="Use GPUs", default=True)
+
+    # This will be set automatically on export when custom device selection is enabled
+    # opencl.devices.select
+
+    # We probably don't need to expose these properties
+    # opencl.cpu.workgroup.size
+    # opencl.gpu.workgroup.size
