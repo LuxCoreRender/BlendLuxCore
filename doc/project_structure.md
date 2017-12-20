@@ -17,7 +17,8 @@ Implementation of Blenders RenderEngine API.
 
 It is important to know that the instances of the RenderEngine class are not persistent or a singleton.
 A new instance of `LuxCoreRenderEngine` is created in these cases:
-* Viewport render: created when shading mode is set to RENDERED, destroyed when shading mode is changed to something else
+* Viewport render: created when shading mode is set to RENDERED, destroyed when shading mode is changed to something else.
+  Also destroyed and re-created when changing frame!
 * Final render: created when final render is started (e.g. by F12), destroyed when the render ends 
   (when leaving the `render(scene)` function)
 * Material preview: same as final render (we can check if we are in preview mode with self.is_preview, 
