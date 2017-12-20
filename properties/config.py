@@ -19,13 +19,13 @@ class LuxCoreConfigPath(PropertyGroup):
     """
     # TODO: helpful descriptions
     # path.pathdepth.total
-    depth_total = IntProperty(name="Path Depth", default=6, min=1, soft_max=16)
+    depth_total = IntProperty(name="Total Path Depth", default=6, min=1, soft_max=16)
     # path.pathdepth.diffuse
-    depth_diffuse = IntProperty(name="Diffuse Depth", default=4, min=1, soft_max=16)
+    depth_diffuse = IntProperty(name="Diffuse", default=4, min=1, soft_max=16)
     # path.pathdepth.glossy
-    depth_glossy = IntProperty(name="Glossy Depth", default=4, min=1, soft_max=16)
+    depth_glossy = IntProperty(name="Glossy", default=4, min=1, soft_max=16)
     # path.pathdepth.specular
-    depth_specular = IntProperty(name="Specular Depth", default=6, min=1, soft_max=16)
+    depth_specular = IntProperty(name="Specular", default=6, min=1, soft_max=16)
 
     # TODO: can we estimate a good clamp value automatically?
     # TODO: if not, add a warning/info label
@@ -58,9 +58,11 @@ class LuxCoreConfigTile(PropertyGroup):
                                                  min=0.0000001, soft_max=(6 / 256))
     # TODO min/max/default
     # tile.multipass.convergencetest.threshold.reduction
-    multipass_convtest_threshold_reduction = FloatProperty(name="Threshold Reduction")
+    multipass_convtest_threshold_reduction = FloatProperty(name="Threshold Reduction", default=0.5, min=0.001,
+                                                           soft_min=0.1, max=0.99, soft_max=0.9)
+    # TODO do we need to expose this? In LuxBlend we didn't
     # tile.multipass.convergencetest.warmup.count
-    multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0, soft_max=128)
+    # multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0, soft_max=128)
 
 
 class LuxCoreConfigOpenCL(PropertyGroup):
@@ -114,7 +116,8 @@ class LuxCoreConfig(PropertyGroup):
     ]
     device = EnumProperty(name="Device", items=devices, default="CPU")
     # A trick so we can show the user that bidir can only be used on the CPU (see UI code)
-    bidir_device = EnumProperty(name="Device", items=devices, default="CPU", description="Bidir only available on CPU")
+    bidir_device = EnumProperty(name="Device", items=devices, default="CPU",
+                                description="Bidir only available on CPU")
 
     use_tiles = BoolProperty(name="Tiled", default=False, description=TILED_DESCRIPTION)
 
@@ -122,8 +125,8 @@ class LuxCoreConfig(PropertyGroup):
     path = PointerProperty(type=LuxCoreConfigPath)
     tile = PointerProperty(type=LuxCoreConfigTile)
     opencl = PointerProperty(type=LuxCoreConfigOpenCL)
-    # I'm not creating a container class for only two properties (these are for BIDIR)
+    # BIDIR properties
     # light.maxdepth
-    light_maxdepth = IntProperty(name="Light Depth", default=5, min=1, soft_max=16)
+    bidir_light_maxdepth = IntProperty(name="Light Depth", default=5, min=1, soft_max=16)
     # path.maxdepth
-    bidir_path_maxdepth = IntProperty(name="Path Depth", default=5, min=1, soft_max=16)
+    bidir_path_maxdepth = IntProperty(name="Eye Depth", default=5, min=1, soft_max=16)

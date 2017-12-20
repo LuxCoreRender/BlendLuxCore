@@ -175,7 +175,7 @@ class Exporter(object):
 
         luxcore_scene.Parse(scene_props)
 
-        # Config
+        # Convert config at last because all lightgroups and passes have to be already defined
         config_props = config.convert(scene, context)
         self.config_cache.diff(config_props)  # Init config cache
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
