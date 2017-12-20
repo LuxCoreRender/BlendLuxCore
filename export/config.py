@@ -86,16 +86,6 @@ def convert(scene, context=None):
         definitions["film.outputs.1.type"] = "RGB_IMAGEPIPELINE"
         definitions["film.outputs.1.filename"] = "RGB_IMAGEPIPELINE.png"
         definitions["film.imagepipeline.0.type"] = "TONEMAP_AUTOLINEAR"
-        if context:
-            # Viewport render needs gamma correction
-            definitions["film.imagepipeline.1.type"] = "GAMMA_CORRECTION"
-            definitions["film.imagepipeline.1.value"] = 2.2
-        else:
-            # Final render needs to be made darker so it matches viewport
-            # TODO this is hopefully no longer necessary once we can use
-            # the Blender colorspace fragment shader in viewport drawing
-            definitions["film.imagepipeline.1.type"] = "TONEMAP_LINEAR"
-            definitions["film.imagepipeline.1.scale"] = 1 / 2.25
 
 
         return utils.create_props(prefix, definitions)

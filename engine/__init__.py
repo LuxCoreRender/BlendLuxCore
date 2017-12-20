@@ -131,13 +131,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             region_size = context.region.width, context.region.height
             view_camera_offset = list(context.region_data.view_camera_offset)
 
-            # if self.support_display_space_shader(context.scene):
-            #     print("binding")
-            #     self.bind_display_space_shader(context.scene)
-            self._framebuffer.draw(region_size, view_camera_offset)
-            # if self.support_display_space_shader(context.scene):
-            #     print("unbinding")
-            #     self.unbind_display_space_shader()
+            self._framebuffer.draw(region_size, view_camera_offset, self, context)
 
             self.tag_redraw()
         except Exception as error:

@@ -1,7 +1,30 @@
 import bgl
+from bgl import *  # Nah I'm not typing them all out
 import array
 from ..bin import pyluxcore
 from .. import utils
+
+
+def draw_quad(offset_x, offset_y, width, height):
+    glBegin(GL_QUADS)
+
+    # 0, 0 (top left)
+    glTexCoord2f(0, 0)
+    glVertex2f(offset_x, offset_y)
+
+    # 1, 0 (top right)
+    glTexCoord2f(1, 0)
+    glVertex2f(offset_x + width, offset_y)
+
+    # 1, 1 (bottom right)
+    glTexCoord2f(1, 1)
+    glVertex2f(offset_x + width, offset_y + height)
+
+    # 0, 1 (bottom left)
+    glTexCoord2f(0, 1)
+    glVertex2f(offset_x, offset_y + height)
+
+    glEnd()
 
 
 class FrameBuffer(object):
@@ -16,30 +39,60 @@ class FrameBuffer(object):
         transparent = False  # TODO
         if transparent:
             bufferdepth = 4
-            self._buffertype = bgl.GL_RGBA
+            self._buffertype = GL_RGBA
             self._output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
         else:
             bufferdepth = 3
-            self._buffertype = bgl.GL_RGB
+            self._buffertype = GL_RGB
             self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
-        self.buffer = bgl.Buffer(bgl.GL_FLOAT, [self._width * self._height * bufferdepth])
+        self.buffer = Buffer(GL_FLOAT, [self._width * self._height * bufferdepth])
         self._transparent = transparent
+
+        # Create texture
+        self.texture = Buffer(GL_INT, 1)
+        glGenTextures(1, self.texture)
+        self.texture_id = self.texture[0]
 
     def update(self, luxcore_session):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
 
-    def draw(self, region_size, view_camera_offset):
+        # update texture
+        glBindTexture(GL_TEXTURE_2D, self.texture_id)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self._width, self._height, 0, GL_RGB,
+                     GL_FLOAT, self.buffer)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+    def draw(self, region_size, view_camera_offset, engine, context):
         if self._transparent:
-            bgl.glEnable(bgl.GL_BLEND)
+            glEnable(GL_BLEND)
 
         offset_x, offset_y = self._calc_offset(region_size, view_camera_offset)
 
-        bgl.glRasterPos2i(offset_x, offset_y)
-        bgl.glDrawPixels(self._width, self._height, self._buffertype, bgl.GL_FLOAT, self.buffer)
+        glEnable(GL_TEXTURE_2D)
+        glEnable(GL_COLOR_MATERIAL)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id)
+
+        if engine.support_display_space_shader(context.scene):
+            engine.bind_display_space_shader(context.scene)
+
+        draw_quad(offset_x, offset_y, self._width, self._height)
+
+        if engine.support_display_space_shader(context.scene):
+            engine.unbind_display_space_shader()
+
+        glDisable(GL_COLOR_MATERIAL)
+        glDisable(GL_TEXTURE_2D)
+
+        err = glGetError()
+        if err != GL_NO_ERROR:
+            print("GL Error: %s\n" % (gluErrorString(err)))
 
         if self._transparent:
-            bgl.glDisable(bgl.GL_BLEND)
+            glDisable(GL_BLEND)
 
     def _calc_offset(self, region_size, view_camera_offset):
         # TODO: view_camera_offset, to get correct draw position in camera viewport mode
