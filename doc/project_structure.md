@@ -35,7 +35,8 @@ and the definition of shapes (meshes), strands etc.
 
 It's also responsible for scene and session updates during viewport render sessions.
 
-Note: If we have a context (i.e. context is not None) then we are in viewport render mode.
+Note: If we have a context (i.e. `context is not None`) then we are in viewport render mode. 
+If we have no context (`context is None`) then we are in final render or material preview mode.
 This is not explained/commented all the time in the code because it's such a fundamental concept.
 
 ### nodes
