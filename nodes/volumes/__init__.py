@@ -4,6 +4,8 @@ import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_VOLUME
 
+from .output import LuxCoreNodeVolOutput
+
 
 class LuxCoreVolumeNodeTree(NodeTree):
     bl_idname = "luxcore_volume_nodes"
@@ -49,7 +51,7 @@ class LuxCoreVolumeNodeTree(NodeTree):
 class LuxCoreNodeCategoryVolume(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == "luxcore_material_nodes"
+        return context.space_data.tree_type == "luxcore_volume_nodes"
 
 
 # Here we define the menu structure the user sees when he
@@ -59,7 +61,7 @@ luxcore_node_categories_volume = [
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_OUTPUT", "Output", items=[
-        # NodeItem("LuxCoreNodeVolOutput", label="Output"),
+        NodeItem("LuxCoreNodeVolOutput", label="Output"),
     ]),
 ]
 

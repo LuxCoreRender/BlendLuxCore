@@ -70,7 +70,7 @@ class LuxCoreConfig(RenderButtonsPanel, Panel):
             row_depths = layout.row(align=True)
             row_depths.prop(config, "bidir_path_maxdepth")
             row_depths.prop(config, "bidir_light_maxdepth")
-            
+
             row_sampler = layout.row()
             row_sampler.enabled = False
             row_sampler.label("Sampler:")

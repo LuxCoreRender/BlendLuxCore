@@ -62,12 +62,16 @@ class Color:
     material = (0.39, 0.78, 0.39, 1.0)
     color_texture = (0.78, 0.78, 0.16, 1.0)
     float_texture = (0.63, 0.63, 0.63, 1.0)
-    # This is a nice color. I like it.
-    # (1.0, 0.4, 0.216, 1)
+    volume = (1.0, 0.4, 0.216, 1.0)
 
 
 class LuxCoreSocketMaterial(LuxCoreNodeSocket):
     color = Color.material
+
+
+
+class LuxCoreSocketVolume(LuxCoreNodeSocket):
+    color = Color.volume
 
 
 class LuxCoreSocketColor(LuxCoreNodeSocket):

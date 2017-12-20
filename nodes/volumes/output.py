@@ -3,19 +3,19 @@ from bpy.props import BoolProperty
 from ..output import LuxCoreNodeOutput, update_active
 
 
-class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
+class LuxCoreNodeVolOutput(LuxCoreNodeOutput):
     """
-    Material output node.
+    Volume output node.
     This is where the export starts (if the output is active).
     """
-    bl_label = "Material Output"
+    bl_label = "Volume Output"
     bl_width_min = 160
 
     active = BoolProperty(name="Active", default=True, update=update_active)
 
     def init(self, context):
-        self.inputs.new("LuxCoreSocketMaterial", "Material")
+        self.inputs.new("LuxCoreSocketVolume", "Volume")
         super().init(context)
 
     def export(self, props, luxcore_name):
-        self.inputs["Material"].export(props, luxcore_name)
+        self.inputs["Volume"].export(props, luxcore_name)

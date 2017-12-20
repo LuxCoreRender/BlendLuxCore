@@ -32,6 +32,7 @@ def register():
     atexit.register(blendluxcore_exit)
 
     nodes.materials.register()
+    nodes.volumes.register()
     bpy.utils.register_module(__name__)
     ui.register()
 
@@ -45,4 +46,5 @@ def register():
 def unregister():
     ui.unregister()
     nodes.materials.unregister()
+    nodes.volumes.unregister()
     bpy.utils.unregister_module(__name__)

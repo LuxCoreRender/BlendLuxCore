@@ -73,6 +73,9 @@ def convert(scene, context=None):
         # if we forget some in the if/else construct above.
         definitions.update({
             "renderengine.type": engine,
+            # "renderengine.type": "FILESAVER",
+            # "filesaver.directory": "./",
+            # "filesaver.renderengine.type": engine,
             "sampler.type": sampler,
             "film.width": width,
             "film.height": height,

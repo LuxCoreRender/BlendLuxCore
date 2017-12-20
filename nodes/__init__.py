@@ -10,7 +10,12 @@ class LuxCoreNode(Node):
 
     @classmethod
     def poll(cls, tree):
-        return tree.bl_idname in ["luxcore_material_nodes"]
+        tree_types = [
+            "luxcore_material_nodes",
+            "luxcore_texture_nodes",
+            "luxcore_volume_nodes",
+        ]
+        return tree.bl_idname in tree_types
 
     def add_input(self, type, name, default):
         self.inputs.new(type, name)
