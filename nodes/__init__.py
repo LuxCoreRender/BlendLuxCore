@@ -1,7 +1,12 @@
 import bpy
 from bpy.types import Node
-from bpy.props import BoolProperty
 from .. import utils
+
+TREE_TYPES = (
+    "luxcore_material_nodes",
+    "luxcore_texture_nodes",
+    "luxcore_volume_nodes",
+)
 
 
 class LuxCoreNode(Node):
@@ -10,16 +15,13 @@ class LuxCoreNode(Node):
 
     @classmethod
     def poll(cls, tree):
-        tree_types = [
-            "luxcore_material_nodes",
-            "luxcore_texture_nodes",
-            "luxcore_volume_nodes",
-        ]
-        return tree.bl_idname in tree_types
+        return tree.bl_idname in TREE_TYPES
 
-    def add_input(self, type, name, default):
+    def add_input(self, type, name, default=None):
         self.inputs.new(type, name)
-        self.inputs[name].default_value = default
+
+        if hasattr(self.inputs[name], "default_value"):
+            self.inputs[name].default_value = default
 
     def make_name(self):
         node_tree = self.id_data
@@ -33,6 +35,7 @@ class LuxCoreNode(Node):
     def base_export(self, props, definitions, luxcore_name=None):
         if luxcore_name is None:
             luxcore_name = self.make_name()
+
         prefix = self.prefix + luxcore_name + "."
         props.Set(utils.create_props(prefix, definitions))
         return luxcore_name
@@ -42,6 +45,22 @@ class LuxCoreNodeMaterial(LuxCoreNode):
     """Base class for material nodes"""
     suffix = "mat"
     prefix = "scene.materials."
+
+    def add_common_inputs(self):
+        """ Call from derived classes (in init method) """
+        self.add_input("LuxCoreSocketFloat0to1", "Opacity", 1)
+        self.add_input("LuxCoreSocketBump", "Bump")
+        # TODO: emission
+
+    def export_common_inputs(self, props, definitions):
+        """ Call from derived classes (in export method) """
+        transparency = self.inputs["Opacity"].export(props)
+        if transparency != 1.0:
+            definitions["transparency"] = transparency
+
+        bump = self.inputs["Bump"].export(props)
+        if bump:
+            definitions["bumptex"] = bump
 
 
 class LuxCoreNodeTexture(LuxCoreNode):

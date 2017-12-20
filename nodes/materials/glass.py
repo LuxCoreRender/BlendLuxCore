@@ -27,6 +27,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
 
         Roughness.init(self, default=0.1, init_enabled=False)
+        self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
@@ -59,4 +60,5 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         }
         if self.rough:
             Roughness.export(self, props, definitions)
+        self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)

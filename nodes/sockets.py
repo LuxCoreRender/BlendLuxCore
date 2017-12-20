@@ -74,6 +74,11 @@ class LuxCoreSocketVolume(LuxCoreNodeSocket):
     color = Color.volume
 
 
+class LuxCoreSocketBump(LuxCoreNodeSocket):
+    color = Color.float_texture
+    # no default value
+
+
 class LuxCoreSocketColor(LuxCoreNodeSocket):
     color = Color.color_texture
     default_value = FloatVectorProperty(subtype="COLOR")

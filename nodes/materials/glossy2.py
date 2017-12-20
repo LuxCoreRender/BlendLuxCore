@@ -21,6 +21,7 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
         self.add_input("LuxCoreSocketFloatPositive", "Absorption Depth", 0)
         Roughness.init(self, 0.1)
         # TODO: IOR (index)
+        self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
@@ -39,4 +40,5 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
             "multibounce": self.multibounce,
         }
         Roughness.export(self, props, definitions)
+        self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)

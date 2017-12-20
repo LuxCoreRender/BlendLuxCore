@@ -59,6 +59,7 @@ class FrameBuffer(object):
 
         # update texture
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
+        # TODO: when we support transparent film we need to choose between GL_RGB and GL_RGBA
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self._width, self._height, 0, GL_RGB,
                      GL_FLOAT, self.buffer)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
