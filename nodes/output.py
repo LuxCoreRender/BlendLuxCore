@@ -4,6 +4,16 @@ from . import LuxCoreNode
 from ..bin import pyluxcore
 
 
+def get_active_output(node_tree, output_type):
+    assert output_type in ("LuxCoreNodeMatOutput", "LuxCoreNodeTexOutput", "LuxCoreNodeVolOutput")
+
+    for node in node_tree.nodes:
+        node_type = getattr(node, "bl_idname", None)
+
+        if node_type == output_type and node.active:
+            return node
+
+
 def get_output_nodes(node_tree):
     if node_tree.bl_idname == "luxcore_material_nodes":
         output_type = "LuxCoreNodeMatOutput"

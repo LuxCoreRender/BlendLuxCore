@@ -5,6 +5,7 @@ from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_VOLUME
 
 from .output import LuxCoreNodeVolOutput
+from .clear import LuxCoreNodeVolClear
 
 
 class LuxCoreVolumeNodeTree(NodeTree):
@@ -58,6 +59,7 @@ class LuxCoreNodeCategoryVolume(NodeCategory):
 # presses Shift+A in the node editor to add a new node
 luxcore_node_categories_volume = [
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_VOLUME", "Volume", items=[
+        NodeItem("LuxCoreNodeVolClear", label="Clear"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_OUTPUT", "Output", items=[

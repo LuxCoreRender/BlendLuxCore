@@ -74,6 +74,26 @@ class LuxCoreNodeVolume(LuxCoreNode):
     suffix = "vol"
     prefix = "scene.volumes."
 
+    # Common properties that every derived class needs to add
+    # priority (IntProperty)
+    # emission_id (IntProperty) (or maybe PointerProperty to light group later)
+
+    def draw_common_buttons(self, context, layout):
+        layout.prop(self, "priority")
+        layout.prop(self, "emission_id")
+
+    def add_common_inputs(self):
+        """ Call from derived classes (in init method) """
+        self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
+        self.add_input("LuxCoreSocketColor", "Absorption", (0, 0, 0))
+        self.add_input("LuxCoreSocketColor", "Emission", (0, 0, 0))
+
+    def export_common_inputs(self, props, definitions):
+        """ Call from derived classes (in export method) """
+        definitions["ior"] = self.inputs["IOR"].export(props)
+        definitions["absorption"] = self.inputs["Absorption"].export(props)
+        definitions["emission"] = self.inputs["Emission"].export(props)
+
 
 class Roughness:
     """
