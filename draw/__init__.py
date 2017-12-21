@@ -100,9 +100,14 @@ class FrameBuffer(object):
         width_raw, height_raw = region_size
         border_min_x, border_max_x, border_min_y, border_max_y = self._border
 
+        # neo2068: workaround for border rendering in viewport: render whole region and image is cropped by blender
+        # => offset is 0
+        offset_x = 0
+        offset_y = 0
+        
         # TODO: not sure about the +1, needs further testing to see if rounding is better
-        offset_x = width_raw * border_min_x + 1
-        offset_y = height_raw * border_min_y + 1
+        #offset_x = width_raw * border_min_x + 1
+        #offset_y = height_raw * border_min_y + 1
 
         #view_camera_offset = [(v + 1) / 2 for v in view_camera_offset]
         # view_cam_shift_x = width_raw * view_camera_offset[0]
