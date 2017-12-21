@@ -70,7 +70,11 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         self._convert_volume(self.interior_volume, props, prefix + "volume.interior")
         self._convert_volume(self.exterior_volume, props, prefix + "volume.exterior")
 
-        self.inputs["Material"].export(props, luxcore_name)
+        exported_name = self.inputs["Material"].export(props, luxcore_name)
+        if exported_name is None or exported_name != luxcore_name:
+            # Export failed, e.g. because no node is linked or it's not a material node
+            # Define a black material that signals an unconnected material socket
+            self._convert_fallback(props, luxcore_name)
 
     def _convert_volume(self, node_tree, props, property_str):
         """
@@ -90,3 +94,8 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             # TODO: collect exporter errors
             print("ERROR in volume", node_tree.name)
             print(error)
+    
+    def _convert_fallback(self, props, luxcore_name):
+        prefix = "scene.materials." + luxcore_name + "."
+        props.Set(pyluxcore.Property(prefix + "type", "matte"))
+        props.Set(pyluxcore.Property(prefix + "kd", [0, 0, 0]))
