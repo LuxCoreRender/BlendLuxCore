@@ -3,6 +3,7 @@ from time import time, sleep
 from ..bin import pyluxcore
 from ..draw import FrameBuffer, FrameBufferFinal
 from .. import export
+from ..utils import render as utils_render
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -40,6 +41,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def render(self, scene):
         try:
+            # Clear error log
+            scene.luxcore.errorlog.set("")
+
             if self.error:
                 raise self.error
 
@@ -51,12 +55,16 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
             last_refresh = time()
             interval = 3
-            while not self.test_break():
+            done = False
+            while not self.test_break() and not done:
                 sleep(1 / 50)
                 now = time()
                 if now - last_refresh > interval:
                     self._session.UpdateStats()
+                    stats = self._session.GetStats()
+                    done = utils_render.halt_condition_met(scene, stats)
                     self.update_stats("Render", "rendering...")
+
                     self._framebuffer.draw(self, self._session)
                     last_refresh = now
 
