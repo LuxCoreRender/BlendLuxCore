@@ -63,15 +63,32 @@ class Color:
     color_texture = (0.78, 0.78, 0.16, 1.0)
     float_texture = (0.63, 0.63, 0.63, 1.0)
     volume = (1.0, 0.4, 0.216, 1.0)
+    mat_emission = (0.9, 0.9, 0.9, 1.0)
 
 
 class LuxCoreSocketMaterial(LuxCoreNodeSocket):
     color = Color.material
-
+    # no default value
 
 
 class LuxCoreSocketVolume(LuxCoreNodeSocket):
     color = Color.volume
+    # no default value
+
+
+class LuxCoreSocketMatEmission(LuxCoreNodeSocket):
+    """ Special socket for material emission """
+    color = Color.mat_emission
+    # no default value
+
+    def export_emission(self, props, definitions):
+        if self.is_linked:
+            linked_node = self.links[0].from_node
+
+            if linked_node.bl_idname == "LuxCoreNodeMatEmission":
+                linked_node.export(props, definitions)
+            else:
+                print("ERROR: can't export emission; not an emission node")
 
 
 class LuxCoreSocketBump(LuxCoreNodeSocket):

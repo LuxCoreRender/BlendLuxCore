@@ -4,10 +4,12 @@ import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_MATERIAL
 
+# Import all material nodes just so they get registered
+from .emission import LuxCoreNodeMatEmission
+from .glass import LuxCoreNodeMatGlass
+from .glossy2 import LuxCoreNodeMatGlossy2
 from .matte import LuxCoreNodeMatMatte
 from .output import LuxCoreNodeMatOutput
-from .glossy2 import LuxCoreNodeMatGlossy2
-from .glass import LuxCoreNodeMatGlass
 
 
 class LuxCoreMaterialNodeTree(NodeTree):
@@ -74,6 +76,10 @@ luxcore_node_categories_material = [
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
+    ]),
+
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[
+        NodeItem("LuxCoreNodeMatEmission", label="Light Emission"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_OUTPUT", "Output", items=[

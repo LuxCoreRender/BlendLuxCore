@@ -50,7 +50,7 @@ class LuxCoreNodeMaterial(LuxCoreNode):
         """ Call from derived classes (in init method) """
         self.add_input("LuxCoreSocketFloat0to1", "Opacity", 1)
         self.add_input("LuxCoreSocketBump", "Bump")
-        # TODO: emission
+        self.add_input("LuxCoreSocketMatEmission", "Emission")
 
     def export_common_inputs(self, props, definitions):
         """ Call from derived classes (in export method) """
@@ -61,6 +61,10 @@ class LuxCoreNodeMaterial(LuxCoreNode):
         bump = self.inputs["Bump"].export(props)
         if bump:
             definitions["bumptex"] = bump
+
+        # The emission socket and node are special cases
+        # with special export methods
+        self.inputs["Emission"].export_emission(props, definitions)
 
 
 class LuxCoreNodeTexture(LuxCoreNode):
