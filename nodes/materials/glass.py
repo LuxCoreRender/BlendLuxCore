@@ -61,6 +61,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
             "kr": self.inputs["Reflection Color"].export(props),
         }
 
+        # Use IOR socket only if there is no interior volume linked to the output
         if not self._has_interior_volume():
             definitions["interiorior"] = self.inputs["IOR"].export(props)
 

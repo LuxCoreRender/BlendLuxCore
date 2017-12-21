@@ -15,6 +15,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
     active = BoolProperty(name="Active", default=True, update=update_active)
 
+    # TODO: option to sync volume settings among output nodes (workflow improvement)
     interior_volume = PointerProperty(name="Interior Volume", type=bpy.types.NodeTree)
     exterior_volume = PointerProperty(name="Exterior Volume", type=bpy.types.NodeTree)
 

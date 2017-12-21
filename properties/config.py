@@ -49,7 +49,7 @@ class LuxCoreConfigTile(PropertyGroup):
     # tilepath.sampling.aa.size
     path_sampling_aa_size = IntProperty(name="AA Samples", default=3, min=1, soft_max=13)
     # tile.size
-    size = IntProperty(name="Tile Size", default=32, min=8, soft_max=256)
+    size = IntProperty(name="Tile Size", default=64, min=16, soft_min=32, soft_max=256)
     # tile.multipass.enable
     multipass_enable = BoolProperty(name="Multipass", default=True)
     # TODO: min/max correct?
