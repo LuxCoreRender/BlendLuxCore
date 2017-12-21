@@ -120,8 +120,10 @@ def calc_filmsize(scene, context=None):
     # offset_x = int(width * border_min_x)
     # offset_y = int(height * border_min_y)
     # TODO: check if rounding etc. is correct
-    width = int(width * (border_max_x - border_min_x))
-    height = int(height * (border_max_y - border_min_y))
+
+    # neo2068: workaround for border rendering in viewport: render whole region and image is cropped by blender
+    #width = int(width * (border_max_x - border_min_x))
+    #height = int(height * (border_max_y - border_min_y))
 
     return width, height
 
@@ -179,11 +181,19 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
             ((2 * shift_y) + 1) * zoom
         ]
 
+    #screenwindow = [
+    #    screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + offset_x,
+    #    screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + offset_x,
+    #    screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + offset_y,
+    #    screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + offset_y
+    #]
+
+    # neo2068: workaround for border rendering in viewport, if a proper way is implementated use upper code
     screenwindow = [
-        screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + offset_x,
-        screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + offset_x,
-        screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + offset_y,
-        screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + offset_y
+        screenwindow[0] + offset_x,
+        screenwindow[1] + offset_x,
+        screenwindow[2] + offset_y,
+        screenwindow[3] + offset_y
     ]
 
     return screenwindow
