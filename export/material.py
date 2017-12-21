@@ -14,8 +14,23 @@ def convert(material):
 
         node_tree = material.luxcore.node_tree
         if node_tree is None:
-            print('ERROR: No node tree found in material "%s"' % material.name)
-            return fallback(luxcore_name)
+            # Node tree is attached to object as fallback for now because of Blender bug.
+            # This only allows to have one material per object.
+            # TODO: waiting for a fix: https://developer.blender.org/T53509
+            import bpy
+            for obj in bpy.data.objects:
+                if len(obj.material_slots) > 0:
+                    mat = obj.material_slots[0].material
+                    if mat == material:
+                        # We found an object with this material - let's hope it has a link to the right node tree
+                        node_tree = obj.luxcore.node_tree
+                        print("Using fallback node tree on object", obj.name)
+                        break
+
+            # TODO remove "if node_tree is None" once code above is not needed anymore
+            if node_tree is None:
+                print('ERROR: No node tree found in material "%s"' % material.name)
+                return fallback(luxcore_name)
 
         active_output = get_active_output(node_tree, "LuxCoreNodeMatOutput")
 

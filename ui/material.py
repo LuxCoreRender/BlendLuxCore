@@ -59,6 +59,11 @@ class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.
             split.separator()
 
         if mat:
+            # Node tree is attached to object as fallback for now because of Blender bug.
+            # This only allows to have one material per object.
+            # TODO: waiting for a fix: https://developer.blender.org/T53509
+            mat = context.object
+
             # Material node tree
             layout.label("Material Nodes:")
             layout.template_ID(mat.luxcore, "node_tree", new="luxcore.mat_nodetree_new")

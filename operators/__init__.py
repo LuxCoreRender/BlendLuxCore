@@ -44,6 +44,12 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         if context.material:
             context.material.luxcore.node_tree = node_tree
 
+            # Node tree is attached to object as fallback for now because of Blender bug.
+            # This only allows to have one material per object.
+            # TODO: waiting for a fix: https://developer.blender.org/T53509
+            if context.object:
+                context.object.luxcore.node_tree = node_tree
+
         return {"FINISHED"}
 
 
