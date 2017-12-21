@@ -14,10 +14,17 @@ def init_mat_node_tree(node_tree):
     node_tree.links.new(matte.outputs[0], output.inputs[0])
 
 
-
 def init_vol_node_tree(node_tree):
-    # TODO
-    pass
+    nodes = node_tree.nodes
+
+    output = nodes.new("LuxCoreNodeVolOutput")
+    output.location = 300, 200
+    output.select = False
+
+    clear = nodes.new("LuxCoreNodeVolClear")
+    clear.location = 50, 200
+
+    node_tree.links.new(clear.outputs[0], output.inputs[0])
 
 
 class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
@@ -49,16 +56,12 @@ class LUXCORE_OT_vol_nodetree_new(bpy.types.Operator):
     target = bpy.props.StringProperty()
 
     def execute(self, context):
-        if context.material:
-            name = context.material.name + "_Vol_Nodes"
-        else:
-            name = "Volume Node Tree"
-
+        name = "Volume Node Tree"
         node_tree = bpy.data.node_groups.new(name=name, type="luxcore_volume_nodes")
         init_vol_node_tree(node_tree)
 
-        if context.material and hasattr(context.material.luxcore, self.target):
-            context.material.luxcore[self.target] = node_tree
+        if context.node and hasattr(context.node, self.target):
+            context.node[self.target] = node_tree
 
         return {"FINISHED"}
 

@@ -3,6 +3,7 @@ from ..bin import pyluxcore
 from .. import utils
 from . import blender_object, camera, config, light, material
 from .light import WORLD_BACKGROUND_LIGHT_NAME
+from ..nodes.output import get_active_output
 
 
 class Change:
@@ -76,7 +77,6 @@ class MaterialCache(object):
 
     def _reset(self):
         self.changed_materials = []
-        self.node_cache = StringCache()
 
     def diff(self):
         if bpy.data.materials.is_updated:
@@ -84,9 +84,17 @@ class MaterialCache(object):
                 node_tree = mat.luxcore.node_tree
                 mat_updated = False
 
-                if node_tree and (node_tree.is_updated or node_tree.is_updated_data):
-                    luxcore_name, props = material.convert(mat)
-                    if self.node_cache.diff(props):
+                if node_tree:
+                    if node_tree.is_updated or node_tree.is_updated_data:
+                        mat_updated = True
+
+                    # Check linked volumes for changes
+                    active_output = get_active_output(node_tree, "LuxCoreNodeMatOutput")
+                    interior_vol = active_output.interior_volume
+                    if interior_vol and (interior_vol.is_updated or interior_vol.is_updated_data):
+                        mat_updated = True
+                    exterior_vol = active_output.exterior_volume
+                    if exterior_vol and (exterior_vol.is_updated or exterior_vol.is_updated_data):
                         mat_updated = True
                 else:
                     mat_updated = mat.is_updated

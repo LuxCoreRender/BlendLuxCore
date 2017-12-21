@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import FloatProperty, BoolProperty
 from .. import LuxCoreNodeMaterial, Roughness
-from ..sockets import LuxCoreSocketFloat
+from ..output import get_active_output
 
 
 class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
@@ -44,6 +44,9 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         row.enabled = not self.rough
         row.prop(self, 'architectural')
 
+        if self._has_interior_volume():
+            layout.label("Using IOR of interior volume", icon="INFO")
+
     def export(self, props, luxcore_name=None):
         if self.rough:
             type = "roughglass"
@@ -56,9 +59,19 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
             "type": type,
             "kt": self.inputs["Transmission Color"].export(props),
             "kr": self.inputs["Reflection Color"].export(props),
-            "interiorior": self.inputs["IOR"].export(props),
         }
+
+        if not self._has_interior_volume():
+            definitions["interiorior"] = self.inputs["IOR"].export(props)
+
         if self.rough:
             Roughness.export(self, props, definitions)
         self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)
+
+    def _has_interior_volume(self):
+        node_tree = self.id_data
+        active_output = get_active_output(node_tree, "LuxCoreNodeMatOutput")
+        if active_output:
+            return active_output.interior_volume is not None
+        return False
