@@ -1,4 +1,5 @@
 import mathutils
+import math
 import re
 from ..bin import pyluxcore
 
@@ -115,15 +116,27 @@ def calc_filmsize_raw(scene, context=None):
 
 def calc_filmsize(scene, context=None):
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
-    width, height = calc_filmsize_raw(scene, context)
+    width_raw, height_raw = calc_filmsize_raw(scene, context)
+    
+    if context:
+        # Viewport render        
+        width = width_raw
+        height = height_raw
+        if context.region_data.view_perspective in ("ORTHO", "PERSP"):
+            width = int(width_raw * (border_max_x - border_min_x))
+            height = int(height_raw * (border_max_y - border_min_y))            
+        else:
+            # Camera viewport
+            if scene.render.use_border:
+                aspect_x, aspect_y = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+                zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
 
-    # offset_x = int(width * border_min_x)
-    # offset_y = int(height * border_min_y)
-    # TODO: check if rounding etc. is correct
-
-    # neo2068: workaround for border rendering in viewport: render whole region and image is cropped by blender
-    #width = int(width * (border_max_x - border_min_x))
-    #height = int(height * (border_max_y - border_min_y))
+                base = max(width_raw, height_raw)
+                width = int(zoom * base * aspect_x * (border_max_x - border_min_x))
+                height = int(zoom * base * aspect_y * (border_max_y - border_min_y))
+    else:
+        width = int(width * (border_max_x - border_min_x))
+        height = int(height * (border_max_y - border_min_y))
 
     return width, height
 
@@ -162,40 +175,59 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
 
     # Following: Black Magic
+    
+    if context:
+        # Viewport rendering            
+        if context.region_data.view_perspective == "CAMERA" and scene.render.use_border:
+            # Camera view
+            xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+                
+            screenwindow = [
+                (2*shift_x) - xaspect,
+                (2*shift_x) + xaspect,
+                (2*shift_y) - yaspect,
+                (2*shift_y) + yaspect
+            ]            
+            
+            screenwindow = [
+                screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x,
+                screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x,
+                screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y,
+                screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y
+            ]            
+        else:
+            # Normal viewport            
+            xaspect, yaspect = calc_aspect(width_raw, height_raw)
 
-    aspect = width_raw / height_raw
-    invaspect = 1 / aspect
+            screenwindow = [
+                (2*shift_x) - xaspect*zoom,
+                (2*shift_x) + xaspect*zoom,
+                (2*shift_y) - yaspect*zoom,
+                (2*shift_y) + yaspect*zoom
+            ]
 
-    if aspect > 1:
-        screenwindow = [
-            ((2 * shift_x) - 1) * zoom,
-            ((2 * shift_x) + 1) * zoom,
-            ((2 * shift_y) - invaspect) * zoom,
-            ((2 * shift_y) + invaspect) * zoom
-        ]
+            screenwindow = [
+                screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + offset_x,
+                screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + offset_x,
+                screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + offset_y,
+                screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + offset_y
+            ]
     else:
+        #Final rendering
+        xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
         screenwindow = [
-            ((2 * shift_x) - aspect) * zoom,
-            ((2 * shift_x) + aspect) * zoom,
-            ((2 * shift_y) - 1) * zoom,
-            ((2 * shift_y) + 1) * zoom
+            ((2 * shift_x) - xaspect),
+            ((2 * shift_x) + xaspect),
+            ((2 * shift_y) - yaspect),
+            ((2 * shift_y) + yaspect)
         ]
 
-    #screenwindow = [
-    #    screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + offset_x,
-    #    screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + offset_x,
-    #    screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + offset_y,
-    #    screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + offset_y
-    #]
-
-    # neo2068: workaround for border rendering in viewport, if a proper way is implementated use upper code
-    screenwindow = [
-        screenwindow[0] + offset_x,
-        screenwindow[1] + offset_x,
-        screenwindow[2] + offset_y,
-        screenwindow[3] + offset_y
-    ]
-
+        screenwindow = [
+            screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + offset_x,
+            screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + offset_x,
+            screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + offset_y,
+            screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + offset_y
+        ]
     return screenwindow
 
 

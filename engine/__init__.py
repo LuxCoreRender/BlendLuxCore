@@ -138,9 +138,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
             region_size = context.region.width, context.region.height
             view_camera_offset = list(context.region_data.view_camera_offset)
-
-            self._framebuffer.draw(region_size, view_camera_offset, self, context)
-
+            view_camera_zoom = context.region_data.view_camera_zoom
+            
+            self._framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, self, context)
             self.tag_redraw()
         except Exception as error:
             del self._session

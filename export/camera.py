@@ -21,7 +21,7 @@ def convert(scene, context=None):
 
                 if view_cam_type == "ORTHO":
                     type = "orthographic"
-                    zoom = context.space_data.region_3d.view_distance
+                    zoom = 0.915*context.space_data.region_3d.view_distance
 
                     # Move the camera origin away from the viewport center to avoid clipping
                     origin = Vector(lookat_orig)
@@ -43,7 +43,7 @@ def convert(scene, context=None):
                 cam_matrix = camera.matrix_world
                 lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
                 # Magic zoom formula for camera viewport zoom from Cycles export code
-                zoom = 2 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2) * 2
+                zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
 
                 if camera.data.type == "ORTHO":
                     type = "orthographic"
@@ -55,11 +55,17 @@ def convert(scene, context=None):
                     type = "perspective"
                     fieldofview = math.degrees(camera.data.angle)
 
-                xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
                 view_camera_offset = list(context.region_data.view_camera_offset)
-                offset_x = 2 * (camera.data.shift_x + view_camera_offset[0] * xaspect * 2)
-                offset_y = 2 * (camera.data.shift_y + view_camera_offset[1] * yaspect * 2)
-                screenwindow = utils.calc_screenwindow(zoom, 0, 0, offset_x, offset_y, scene, context)
+
+                if scene.render.use_border:
+                    xaspect, yaspect = utils.calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+                else:
+                    xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
+
+                offset_x = 2*(view_camera_offset[0] * xaspect * 2)
+                offset_y = 2*(view_camera_offset[1] * yaspect * 2)
+                
+                screenwindow = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, offset_x, offset_y, scene, context)
         else:
             # Final render
             # TODO: needs testing

@@ -1,5 +1,6 @@
 import bgl
 from bgl import *  # Nah I'm not typing them all out
+import math
 import array
 from ..bin import pyluxcore
 from .. import utils
@@ -67,11 +68,12 @@ class FrameBuffer(object):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-    def draw(self, region_size, view_camera_offset, engine, context):
+    def draw(self, region_size, view_camera_offset, view_camera_zoom, engine, context):
         if self._transparent:
             glEnable(GL_BLEND)
 
-        offset_x, offset_y = self._calc_offset(region_size, view_camera_offset)
+        zoom = 0.25 * ((math.sqrt(2) + view_camera_zoom / 50) ** 2)
+        offset_x, offset_y = self._calc_offset(context, region_size, view_camera_offset, zoom)
 
         glEnable(GL_TEXTURE_2D)
         glEnable(GL_COLOR_MATERIAL)
@@ -95,42 +97,25 @@ class FrameBuffer(object):
         if self._transparent:
             glDisable(GL_BLEND)
 
-    def _calc_offset(self, region_size, view_camera_offset):
-        # TODO: view_camera_offset, to get correct draw position in camera viewport mode
+    def _calc_offset(self, context, region_size, view_camera_offset, zoom):
         width_raw, height_raw = region_size
         border_min_x, border_max_x, border_min_y, border_max_y = self._border
 
-        # neo2068: workaround for border rendering in viewport: render whole region and image is cropped by blender
-        # => offset is 0
-        offset_x = 0
-        offset_y = 0
-        
-        # TODO: not sure about the +1, needs further testing to see if rounding is better
-        #offset_x = width_raw * border_min_x + 1
-        #offset_y = height_raw * border_min_y + 1
+        if context.region_data.view_perspective == "CAMERA" and context.scene.render.use_border:
+            # Offset is only needed if viewport is in camera mode and uses border rendering
+            aspect_x, aspect_y = utils.calc_aspect(context.scene.render.resolution_x, context.scene.render.resolution_y)
 
-        #view_camera_offset = [(v + 1) / 2 for v in view_camera_offset]
-        # view_cam_shift_x = width_raw * view_camera_offset[0]
-        # view_cam_shift_y = height_raw * view_camera_offset[1]
-
-        # xaspect, yaspect = utils.calc_aspect(width_raw, height_raw)
-        # offset_x = (view_camera_offset[0] * xaspect * 2) * width_raw
-        # offset_y = (view_camera_offset[1] * yaspect * 2) * height_raw
-        #print("offsets:", offset_x, offset_y)
-
-
-        # view_camera_offset is completely weird (range -1..1, mirrored axis),
-        # bring it into 0..1 range with 0,0 in lower left corner and 1,1 in upper right corner
-        # view_camera_offset[0] = 1 - (view_camera_offset[0] + 1) / 2
-        # view_camera_offset[1] = 1 - (view_camera_offset[1] + 1) / 2
-        # offset_x = view_camera_offset[0] * width_raw
-        # offset_y = view_camera_offset[1] * height_raw
-        # print("offsets:", offset_x, offset_y)
-
+            base = 0.5*zoom*max(width_raw, height_raw)
+           
+            offset_x = (0.5 - 2*zoom * view_camera_offset[0])*width_raw  - aspect_x*base + border_min_x*2*aspect_x*base
+            offset_y = (0.5 - 2*zoom * view_camera_offset[1])*height_raw - aspect_y*base + border_min_y*2*aspect_y*base
+            
+        else:
+            offset_x = width_raw * border_min_x + 1
+            offset_y = height_raw * border_min_y + 1
 
         # offset_x, offset_y are in pixels
         return int(offset_x), int(offset_y)
-
 
 class FrameBufferFinal(object):
     """ FrameBuffer for final render """
