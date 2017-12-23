@@ -36,15 +36,6 @@ class TestPointLight(unittest.TestCase):
         for i in range(len(gain)):
             self.assertAlmostEqual(gain[i], expected_gain[i], places=3)
 
-    def test_not_a_lamp(self):
-        obj = bpy.data.objects["Plane"]
-        luxcore_scene = pyluxcore.Scene()
-        context = bpy.context
-        print("\n=== Note: this test prints a traceback even if it succeeds ===\n")
-        props, exported_light = light.convert_lamp(obj, context.scene, context, luxcore_scene)
-        # Export should fail, exported_light should be None
-        self.assertIsNone(exported_light)
-
 
 # we have to manually invoke the test runner here, as we cannot use the CLI
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPointLight)

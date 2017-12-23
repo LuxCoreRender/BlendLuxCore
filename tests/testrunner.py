@@ -17,7 +17,12 @@ if not os.path.exists(blender_executable):
 
 # iterate over each *.test.blend file in the "tests" directory
 # and open up blender with the .test.blend file and the corresponding .test.py python script
-for file in glob.glob("./**/*.test.blend"):
-  subprocess.call([blender_executable, "--addons", "BlendLuxCore",
-                   "--factory-startup", "-noaudio", "-b", file, "--python",
-                   file.replace(".blend", ".py")])
+for blend_file in glob.glob("./**/*.test.blend"):
+    test_name = os.path.splitext(os.path.basename(blend_file))[0]
+    print("\n\n")
+    print("=" * 40)
+    print(test_name)
+    print("=" * 40)
+    subprocess.call([blender_executable, "--addons", "BlendLuxCore",
+                    "--factory-startup", "-noaudio", "-b", blend_file, "--python",
+                    blend_file.replace(".blend", ".py")])

@@ -74,7 +74,7 @@ def convert(scene, context=None):
         definitions.update({
             "renderengine.type": engine,
             # "renderengine.type": "FILESAVER",
-            # "filesaver.directory": "./",
+            # "filesaver.directory": "./testscene/",
             # "filesaver.renderengine.type": engine,
             "sampler.type": sampler,
             "film.width": width,
