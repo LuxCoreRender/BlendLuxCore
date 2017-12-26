@@ -37,6 +37,14 @@ def compatible_panels():
         "DATA_PT_distance",
         "DATA_PT_cone",
         "DATA_PT_custom_props_speaker",
+        # Camera
+        "DATA_PT_camera",
+        "DATA_PT_lens",
+        "DATA_PT_camera_display",
+        "DATA_PT_camera_dof",
+        "DATA_PT_camera_safe_areas",
+        "DATA_PT_camera_steroscopy",        
+        "DATA_PT_custom_props_camera",        
 
         # World panels
         "WORLD_PT_context_world",
