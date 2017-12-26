@@ -55,7 +55,6 @@ def compatible_panels():
         "SCENE_PT_unit",
         "SCENE_PT_keying_sets",
         "SCENE_PT_keying_set_paths",
-        # Changes here will cause mismatch with viewport render - TODO: add warning somewhere
         "SCENE_PT_color_management",
         "SCENE_PT_audio",
         "SCENE_PT_physics",

@@ -2,7 +2,7 @@ import bpy
 from bpy.props import PointerProperty
 from .. import LuxCoreNodeTexture
 from ...export.image import ImageExporter
-from ... import utils
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
@@ -23,14 +23,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
 
         # Info about UV mapping
         # TODO: We might want to move this to the 2D mapping node later
-        if context.object.data:
-            uv_textures = getattr(context.object.data, "uv_textures", [])
-            if len(uv_textures) > 1:
-                layout.label("LuxCore only supports one UV map", icon="INFO")
-                active_uv = utils.find_active_uv(context.object.data.uv_textures)
-                layout.label("UV Map: " + active_uv.name, icon="INFO")
-            elif len(uv_textures) == 0:
-                layout.label("No UV map", icon="ERROR")
+        utils_node.draw_uv_info(context, layout)
 
     def export(self, props, luxcore_name=None):
         definitions = {

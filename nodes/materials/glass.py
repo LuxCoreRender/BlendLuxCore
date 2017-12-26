@@ -37,7 +37,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         column.prop(self, 'rough')
 
         if self.rough:
-            column.prop(self, 'use_anisotropy')
+            Roughness.draw(self, context, layout)
 
         # Rough glass cannot be archglass
         row = layout.row()

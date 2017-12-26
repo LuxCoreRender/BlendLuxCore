@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import Node
 from .. import utils
+from ..utils import node as utils_node
 
 TREE_TYPES = (
     "luxcore_material_nodes",
@@ -144,6 +145,12 @@ class Roughness:
         node.inputs["Roughness"].enabled = init_enabled
         node.add_input("LuxCoreSocketRoughness", "V-Roughness", default)
         node.inputs["V-Roughness"].enabled = False
+
+    @staticmethod
+    def draw(node, context, layout):
+        layout.prop(node, "use_anisotropy")
+        if node.use_anisotropy:
+            utils_node.draw_uv_info(context, layout)
 
     @staticmethod
     def export(node, props, definitions):

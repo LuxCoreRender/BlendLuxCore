@@ -27,7 +27,7 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "multibounce")
-        layout.prop(self, "use_anisotropy")
+        Roughness.draw(self, context, layout)
 
     def export(self, props, luxcore_name=None):
         definitions = {
