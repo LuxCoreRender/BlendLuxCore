@@ -2,6 +2,11 @@ import bpy
 from bpy.props import BoolProperty
 from . import LuxCoreNode
 from ..bin import pyluxcore
+from .. import utils
+
+
+COL_ACTIVE = (0, 1, 0)
+COL_INACTIVE = [.2] * 3
 
 
 def get_active_output(node_tree, output_type):
@@ -34,10 +39,11 @@ def get_output_nodes(node_tree):
 
 
 def update_active(output_node, context):
+    output_node.set_active(output_node.active)
     if not output_node.active:
         # enabled -> disabled is not allowed
         # TODO: allow it, but make it toggle back to the last active output
-        output_node["active"] = True
+        output_node.set_active(True)
         return
 
     output_node.disable_other_outputs()
@@ -50,17 +56,17 @@ class LuxCoreNodeOutput(LuxCoreNode):
     """
     bl_width_min = 160
 
-    # active = BoolProperty(name="Active", default=True, update=update_active)
-
     def init(self, context):
         self.disable_other_outputs()
+        self.set_active(True)
+        self.use_custom_color = True
 
     # Additional buttons displayed on the node.
     def draw_buttons(self, context, layout):
         layout.prop(self, "active")
 
     def copy(self, orig_node):
-        orig_node["active"] = False
+        orig_node.set_active(False)
 
     def free(self):
         if not self.active:
@@ -72,13 +78,35 @@ class LuxCoreNodeOutput(LuxCoreNode):
         for node in get_output_nodes(node_tree):
             if node == self:
                 continue
-            node["active"] = True
+            node.set_active(True)
             # There can only be one active output at a time, so
             # we don't need to check the others
             break
 
     def export(self, props, luxcore_name):
         raise NotImplementedError("Derived classes have to override this method!")
+
+    def set_active(self, active):
+        self["active"] = active
+
+        # Update color
+        theme = utils.get_theme(bpy.context)
+        # We can only set a tuple with 3 elements, not 4
+        color = theme.node_editor.node_backdrop[:3]
+
+        if self["active"]:
+            # Like the theme color, but a bit lighter and greener
+            self.color = [color[0] * 0.8, color[1] * 1.5, color[2] * 0.8]
+        else:
+            # Like the theme color, but a bit darker
+            self.color = [x * 0.6 for x in color]
+
+        # active_color = [default_color[0], 1, default_color[2]]
+        # inactive_color = [x * 0.5 for x in default_color]
+        # print("inactive:", inactive_color)
+        # print("active:", active_color)
+        # self.color = active_color if self["active"] else inactive_color
+        # print("set", self.name, "to", self.color)
 
     def disable_other_outputs(self):
         node_tree = self.id_data
@@ -89,7 +117,7 @@ class LuxCoreNodeOutput(LuxCoreNode):
                 continue
 
             if node.active:
-                node["active"] = False
+                node.set_active(False)
                 # There can only be one active output at a time, so
                 # we don't need to check the others
                 break

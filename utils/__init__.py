@@ -256,3 +256,7 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
     for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, renderlayer)]:
         visible |= lv
     return (visible or is_dupli) and not hidden
+
+def get_theme(context):
+    current_theme_name = context.user_preferences.themes.items()[0][0]
+    return context.user_preferences.themes[current_theme_name]
