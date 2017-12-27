@@ -4,7 +4,6 @@ from .. import LuxCoreNodeVolume
 
 
 class LuxCoreNodeVolClear(LuxCoreNodeVolume):
-    """ Clear volume node"""
     bl_label = "Clear Volume"
     bl_width_min = 160
 

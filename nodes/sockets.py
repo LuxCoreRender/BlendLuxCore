@@ -23,7 +23,8 @@ class LuxCoreNodeSocket(NodeSocket):
     color = (1, 1, 1, 1)
 
     def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked or not hasattr(self, "default_value"):
+        has_default = hasattr(self, "default_value") and self.default_value is not None
+        if self.is_output or self.is_linked or not has_default:
             layout.label(text)
         else:
             if type(self.default_value) == mathutils.Color:
@@ -65,6 +66,8 @@ class Color:
     float_texture = (0.63, 0.63, 0.63, 1.0)
     volume = (1.0, 0.4, 0.216, 1.0)
     mat_emission = (0.9, 0.9, 0.9, 1.0)
+    mapping_2d = (0.65, 0.55, 0.75, 1.0)
+    mapping_3d = (0.50, 0.25, 0.60, 1.0)
 
 
 class LuxCoreSocketMaterial(LuxCoreNodeSocket):
@@ -128,3 +131,16 @@ class LuxCoreSocketRoughness(LuxCoreSocketFloat):
 
 class LuxCoreSocketIOR(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=25, description=IOR_DESCRIPTION)
+
+class LuxCoreSocketMapping2D(LuxCoreNodeSocket):
+    color = Color.mapping_2d
+    # We have to set the default_value to something
+    # so export_default() is called by LuxCoreNodeSocket.export()
+    default_value = None
+
+    def export_default(self):
+        # These are not the LuxCore API default values because
+        # we have to compensate Blender stuff (mirrored V axis)
+        uvscale = [1, -1]
+        uvdelta = [0, 1]
+        return [uvscale, uvdelta]

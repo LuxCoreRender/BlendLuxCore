@@ -78,6 +78,10 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
     ]),
 
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
+        NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
+    ]),
+
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[
         NodeItem("LuxCoreNodeMatEmission", label="Light Emission"),
     ]),

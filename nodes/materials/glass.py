@@ -5,7 +5,6 @@ from ..output import get_active_output
 
 
 class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
-    """Glass material node"""
     bl_label = "Glass Material"
     bl_width_min = 160
 

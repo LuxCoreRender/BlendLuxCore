@@ -6,7 +6,6 @@ from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
-    """Imagemap texture node"""
     bl_label = "Imagemap"
     bl_width_min = 160
 
@@ -15,6 +14,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     def init(self, context):
         self.add_input("LuxCoreSocketFloatPositive", "Gamma", 2.2)
         self.add_input("LuxCoreSocketFloatPositive", "Gain", 1)
+        self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
@@ -26,10 +26,16 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         utils_node.draw_uv_info(context, layout)
 
     def export(self, props, luxcore_name=None):
+        uvscale, uvdelta = self.inputs["2D Mapping"].export(props)
+
         definitions = {
             "type": "imagemap",
             "file": ImageExporter.export(self.image),
             "gamma": self.inputs["Gamma"].export(props),
             "gain": self.inputs["Gain"].export(props),
+            # Mapping
+            "mapping.type": "uvmapping2d",
+            "mapping.uvscale": uvscale,
+            "mapping.uvdelta": uvdelta,
         }
         return self.base_export(props, definitions, luxcore_name)

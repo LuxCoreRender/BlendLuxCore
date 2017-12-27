@@ -4,7 +4,6 @@ from .. import LuxCoreNodeMaterial, Roughness
 
 
 class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
-    """Glossy2 material node"""
     bl_label = "Glossy Material"
     bl_width_min = 160
 
