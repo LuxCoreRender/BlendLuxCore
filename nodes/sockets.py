@@ -140,7 +140,7 @@ class LuxCoreSocketMapping2D(LuxCoreNodeSocket):
 
     def export_default(self):
         # These are not the LuxCore API default values because
-        # we have to compensate Blender stuff (mirrored V axis)
+        # we have to compensate Blenders mirrored V axis
         uvscale = [1, -1]
         uvdelta = [0, 1]
         return [uvscale, uvdelta]

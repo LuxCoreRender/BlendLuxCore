@@ -54,8 +54,6 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
             uvscale = [self.uniform_scale, self.uniform_scale]
         else:
             uvscale = [self.uscale, self.vscale]
-        # V axis is mirrored in Blender (compared to LuxCore)
-        uvscale[1] *= -1
         output_uvscale = [a * b for a, b in zip(input_uvscale, uvscale)]
 
         if self.center_map:

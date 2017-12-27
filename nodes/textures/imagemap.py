@@ -21,9 +21,10 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.template_ID(self, "image", open="image.open")
 
-        # Info about UV mapping
-        # TODO: We might want to move this to the 2D mapping node later
-        utils_node.draw_uv_info(context, layout)
+        # Info about UV mapping (only show if default is used,
+        # when no mapping node is linked)
+        if not self.inputs["2D Mapping"].is_linked:
+            utils_node.draw_uv_info(context, layout)
 
     def export(self, props, luxcore_name=None):
         uvscale, uvdelta = self.inputs["2D Mapping"].export(props)
