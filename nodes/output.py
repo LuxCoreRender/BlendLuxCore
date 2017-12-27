@@ -101,13 +101,6 @@ class LuxCoreNodeOutput(LuxCoreNode):
             # Like the theme color, but a bit darker
             self.color = [x * 0.6 for x in color]
 
-        # active_color = [default_color[0], 1, default_color[2]]
-        # inactive_color = [x * 0.5 for x in default_color]
-        # print("inactive:", inactive_color)
-        # print("active:", active_color)
-        # self.color = active_color if self["active"] else inactive_color
-        # print("set", self.name, "to", self.color)
-
     def disable_other_outputs(self):
         node_tree = self.id_data
         if node_tree is None:
