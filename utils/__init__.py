@@ -74,13 +74,15 @@ def get_worldscale(scene, as_scalematrix=True):
         return ws
 
 
-def matrix_to_list(matrix, scene, apply_worldscale=False, invert=False):
+def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
     """
     Flatten a 4x4 matrix into a list
     Returns list[16]
+    You only have to pass a valid scene if apply_worldscale is True
     """
 
     if apply_worldscale:
+        assert scene is not None
         matrix = matrix.copy()
         sm = get_worldscale(scene)
         matrix *= sm

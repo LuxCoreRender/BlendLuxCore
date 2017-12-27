@@ -143,4 +143,16 @@ class LuxCoreSocketMapping2D(LuxCoreNodeSocket):
         # we have to compensate Blenders mirrored V axis
         uvscale = [1, -1]
         uvdelta = [0, 1]
-        return [uvscale, uvdelta]
+        return uvscale, uvdelta
+
+
+class LuxCoreSocketMapping3D(LuxCoreNodeSocket):
+    color = Color.mapping_3d
+    # We have to set the default_value to something
+    # so export_default() is called by LuxCoreNodeSocket.export()
+    default_value = None
+
+    def export_default(self):
+        mapping_type = "globalmapping3d"
+        transformation = mathutils.Matrix()
+        return mapping_type, transformation

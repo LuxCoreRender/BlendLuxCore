@@ -76,10 +76,12 @@ luxcore_node_categories_material = [
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
+        NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
+        NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[

@@ -24,9 +24,9 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
     def init(self, context):
         # Instead of creating a new mapping, the user can also
         # manipulate an existing mapping
-        self.add_input("LuxCoreSocketMapping2D", "UV Mapping (optional)")
+        self.add_input("LuxCoreSocketMapping2D", "2D Mapping (optional)")
 
-        self.outputs.new("LuxCoreSocketMapping2D", "UV Mapping")
+        self.outputs.new("LuxCoreSocketMapping2D", "2D Mapping")
 
     def draw_buttons(self, context, layout):
         # Info about UV mapping so the user can react if no UV map etc.
@@ -48,7 +48,7 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
         row.prop(self, "vdelta")
 
     def export(self, props):
-        input_uvscale, input_uvdelta = self.inputs["UV Mapping (optional)"].export(props)
+        input_uvscale, input_uvdelta = self.inputs["2D Mapping (optional)"].export(props)
 
         if self.use_uniform_scale:
             uvscale = [self.uniform_scale, self.uniform_scale]
@@ -65,4 +65,4 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
 
         output_uvdelta = [a + b for a, b in zip(input_uvdelta, uvdelta)]
 
-        return [output_uvscale, output_uvdelta]
+        return output_uvscale, output_uvdelta
