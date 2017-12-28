@@ -1,3 +1,4 @@
+from time import time
 import bpy
 from ..bin import pyluxcore
 from .. import utils
@@ -160,6 +161,7 @@ class Exporter(object):
 
     def create_session(self, scene, context=None):
         print("create_session")
+        start = time()
         # Scene
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
@@ -189,7 +191,9 @@ class Exporter(object):
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
         # Session
-        return pyluxcore.RenderSession(renderconfig)
+        session = pyluxcore.RenderSession(renderconfig)
+        print("Session created in %.1fs" % (time() - start))
+        return session
 
     def get_changes(self, context):
         changes = Change.NONE

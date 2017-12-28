@@ -32,9 +32,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             assert self._session is None
             self.update_stats("Export", "exporting...")
-            start = time()
             self._session = self._exporter.create_session(scene)
-            print("Export took %.1fs" % (time() - start))
         except Exception as error:
             # Will be reported in self.render() below
             self.error = error

@@ -12,8 +12,11 @@ import bpy
 
 
 def check_resolution(testclass, props, expected_x, expected_y):
-    testclass.assertEqual(props.Get("film.width").Get(), [expected_x])
-    testclass.assertEqual(props.Get("film.height").Get(), [expected_y])
+    # Get() returns a list with one value, unpack it
+    x = props.Get("film.width").Get()[0]
+    y = props.Get("film.height").Get()[0]
+    testclass.assertEqual(x, expected_x)
+    testclass.assertEqual(y, expected_y)
 
 
 class TestBorder(unittest.TestCase):
@@ -28,6 +31,22 @@ class TestBorder(unittest.TestCase):
         props = config.convert(bpy.context.scene)
         check_resolution(self, props, 30, 10)
 
+    def test_different_resolution(self):
+        scene = bpy.context.scene
+
+        backup_x = scene.render.resolution_x
+        backup_y = scene.render.resolution_y
+
+        scene.render.resolution_x = 543
+        scene.render.resolution_y = 789
+        bpy.context.scene.render.use_crop_to_border = False
+        props = config.convert(bpy.context.scene)
+
+        # Restore original resolution
+        scene.render.resolution_x = backup_x
+        scene.render.resolution_y = backup_y
+
+        check_resolution(self, props, 163, 79)
 
 # we have to manually invoke the test runner here, as we cannot use the CLI
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestBorder)
