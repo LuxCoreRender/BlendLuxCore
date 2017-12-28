@@ -1,7 +1,8 @@
 import bpy
+from time import time
 from ..bin import pyluxcore
 from .. import utils
-from . import blender_object, camera, config, light, material
+from . import blender_object, camera, config, light, material, meshcache
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from ..nodes.output import get_active_output
 
@@ -53,6 +54,7 @@ class ObjectCache(object):
         if bpy.data.objects.is_updated:
             for obj in scene.objects:
                 if obj.is_updated_data:
+                    print(">>> is_updated_data")
                     if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT"]:
                         self.changed_mesh.append(obj)
                     elif obj.type in ["LAMP"]:
@@ -62,8 +64,10 @@ class ObjectCache(object):
                     if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"]:
                         # check if a new material was assigned
                         if obj.data and obj.data.is_updated:
+                            print(">>> data.is_updated")
                             self.changed_mesh.append(obj)
                         else:
+                            print(">>> only transform")
                             self.changed_transform.append(obj)
                     elif obj.type == "LAMP":
                         self.lamps.append(obj)
@@ -158,8 +162,13 @@ class Exporter(object):
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
 
+    def save_meshes(self, session):
+        luxcore_scene = session.GetRenderConfig().GetScene()
+        meshcache.MeshCache.save_meshes(luxcore_scene, self.exported_objects.values())
+
     def create_session(self, scene, context=None):
         print("create_session")
+        start = time()
         # Scene
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
@@ -189,7 +198,9 @@ class Exporter(object):
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
         # Session
-        return pyluxcore.RenderSession(renderconfig)
+        session = pyluxcore.RenderSession(renderconfig)
+        print("Session created in %.1fs" % (time() - start))
+        return session
 
     def get_changes(self, context):
         changes = Change.NONE

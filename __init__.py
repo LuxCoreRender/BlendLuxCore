@@ -1,6 +1,7 @@
 import bpy
 from .bin import pyluxcore
 from .export.image import ImageExporter
+from .export.meshcache import MeshCache
 
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
@@ -23,6 +24,7 @@ bl_info = {
 
 def blendluxcore_exit():
     ImageExporter.cleanup()
+    MeshCache.cleanup()
 
 
 def register():
