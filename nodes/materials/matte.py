@@ -7,6 +7,7 @@ SIGMA_DESCRIPTION = "Surface roughness, 0 for pure Lambertian reflection"
 
 class LuxCoreSocketSigma(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=45, description=SIGMA_DESCRIPTION)
+    slider = True
 
 
 class LuxCoreNodeMatMatte(LuxCoreNodeMaterial):

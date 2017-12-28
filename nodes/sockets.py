@@ -21,6 +21,7 @@ class LuxCoreNodeSocket(NodeSocket):
     bl_label = ""
 
     color = (1, 1, 1, 1)
+    slider = False
 
     def draw(self, context, layout, node, text):
         has_default = hasattr(self, "default_value") and self.default_value is not None
@@ -33,7 +34,7 @@ class LuxCoreNodeSocket(NodeSocket):
                 row.prop(self, "default_value", text="")
                 row.label(text=text)
             else:
-                layout.prop(self, "default_value", text=text)
+                layout.prop(self, "default_value", text=text, slider=self.slider)
 
     # Socket color
     def draw_color(self, context, node):
@@ -122,11 +123,13 @@ class LuxCoreSocketFloatPositive(LuxCoreSocketFloat):
 
 class LuxCoreSocketFloat0to1(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=1)
+    slider = True
 
 
 class LuxCoreSocketRoughness(LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
     default_value = FloatProperty(min=0.001, soft_max=0.8, max=1, description=ROUGHNESS_DESCRIPTION)
+    slider = True
 
 
 class LuxCoreSocketIOR(LuxCoreSocketFloat):
