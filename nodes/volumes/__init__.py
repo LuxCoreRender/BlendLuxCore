@@ -6,6 +6,7 @@ from ...ui import ICON_VOLUME
 
 from .output import LuxCoreNodeVolOutput
 from .clear import LuxCoreNodeVolClear
+from .homogeneous import LuxCoreNodeVolHomogeneous
 
 
 class LuxCoreVolumeNodeTree(NodeTree):
@@ -60,6 +61,16 @@ class LuxCoreNodeCategoryVolume(NodeCategory):
 luxcore_node_categories_volume = [
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_VOLUME", "Volume", items=[
         NodeItem("LuxCoreNodeVolClear", label="Clear"),
+        NodeItem("LuxCoreNodeVolHomogeneous", label="Homogeneous"),
+    ]),
+
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_TEXTURE", "Texture", items=[
+        NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
+    ]),
+
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MAPPING", "Mapping", items=[
+        # Note: 2D mapping and 2D textures makes no sense for volumes
+        NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_OUTPUT", "Output", items=[

@@ -133,6 +133,13 @@ class LuxCoreSocketIOR(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=25, description=IOR_DESCRIPTION)
 
 
+class LuxCoreSocketFloatVector(LuxCoreSocketFloat):
+    default_value = FloatVectorProperty()
+
+    def export_default(self):
+        return list(self.default_value)
+
+
 class LuxCoreSocketMapping2D(LuxCoreNodeSocket):
     color = Color.mapping_2d
     # We have to set the default_value to something
