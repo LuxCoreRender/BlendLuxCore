@@ -21,7 +21,7 @@ def convert(scene, context=None):
 
                 if view_cam_type == "ORTHO":
                     type = "orthographic"
-                    zoom = 0.915*context.space_data.region_3d.view_distance
+                    zoom = 0.915 * context.space_data.region_3d.view_distance
 
                     # Move the camera origin away from the viewport center to avoid clipping
                     origin = Vector(lookat_orig)

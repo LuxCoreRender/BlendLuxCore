@@ -294,5 +294,7 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
     obj_props = utils.create_props(obj_prefix, obj_definitions)
     props.Set(obj_props)
 
-    exported_obj = ExportedObject([luxcore_name])
+    fake_material_index = 0
+    mesh_definition = [luxcore_name, fake_material_index]
+    exported_obj = ExportedObject([mesh_definition])
     return props, exported_obj

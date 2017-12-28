@@ -5,10 +5,12 @@ from ..bin import pyluxcore
 
 
 class ExportedObject(object):
-    def __init__(self, luxcore_names):
+    def __init__(self, mesh_definitions):
         # Note that luxcore_names is a list of names (because an object in Blender can have multiple materials,
         # while in LuxCore it can have only one material, so we have to split it into multiple LuxCore objects)
-        self.luxcore_names = luxcore_names
+        self.luxcore_names = [lux_obj_name for lux_obj_name, material_index in mesh_definitions]
+        # list of lists of the form [lux_obj_name, material_index]
+        self.mesh_definitions = mesh_definitions
 
 
 class ExportedLight(object):

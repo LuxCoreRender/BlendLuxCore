@@ -241,9 +241,20 @@ class Exporter(object):
         # because it might have been replaced in _update_config()
         return session
 
-    def _convert_object(self, props, obj, scene, context, luxcore_scene):
+    def _convert_object(self, props, obj, scene, context, luxcore_scene, update_mesh=False):
+        key = utils.make_key(obj)
+        old_exported_obj = None
+
+        if key not in self.exported_objects:
+            # We have to update the mesh because the object was not yet exported
+            update_mesh = True
+
+        if not update_mesh:
+            # We need the previously exported mesh defintions
+            old_exported_obj = self.exported_objects[key]
+
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
-        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene)
+        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj, update_mesh)
 
         if exported_obj is None:
             # Error during conversion
@@ -251,7 +262,7 @@ class Exporter(object):
             return
 
         props.Set(obj_props)
-        self.exported_objects[utils.make_key(obj)] = exported_obj
+        self.exported_objects[key] = exported_obj
 
     def _update_config(self, session, config_props):
         renderconfig = session.GetRenderConfig()
@@ -277,11 +288,11 @@ class Exporter(object):
             for obj in self.object_cache.changed_transform:
                 # TODO only update transform
                 print("transformed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene)
+                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False)
 
             for obj in self.object_cache.changed_mesh:
                 print("mesh changed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene)
+                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True)
 
             for obj in self.object_cache.lamps:
                 print("lamp changed:", obj.name)
@@ -312,6 +323,7 @@ class Exporter(object):
                     remove_func = luxcore_scene.DeleteLight
 
                 for luxcore_name in exported_thing.luxcore_names:
+                    print("Deleting", luxcore_name)
                     remove_func(luxcore_name)
 
                 del self.exported_objects[key]

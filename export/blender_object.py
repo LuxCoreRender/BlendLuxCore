@@ -7,7 +7,7 @@ from . import material
 from .light import convert_lamp
 
 
-def convert(blender_obj, scene, context, luxcore_scene):
+def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, update_mesh=False):
     if not utils.is_obj_visible(blender_obj, scene, context):
         return pyluxcore.Properties(), None
 
@@ -24,17 +24,24 @@ def convert(blender_obj, scene, context, luxcore_scene):
             print("No mesh data")
             return props, None
 
-        modifier_mode = "PREVIEW" if context else "RENDER"
-        apply_modifiers = True
-        mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
+        if update_mesh:
+            print("converting mesh:", blender_obj.data.name)
+            modifier_mode = "PREVIEW" if context else "RENDER"
+            apply_modifiers = True
+            mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
 
-        if mesh is None or len(mesh.tessfaces) == 0:
-            print("No mesh data after to_mesh()")
-            return props, None
+            if mesh is None or len(mesh.tessfaces) == 0:
+                print("No mesh data after to_mesh()")
+                return props, None
 
-        mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
-        bpy.data.meshes.remove(mesh, do_unlink=False)
+            mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
+            bpy.data.meshes.remove(mesh, do_unlink=False)
+        else:
+            assert exported_object is not None
+            print("Using cached mesh")
+            mesh_definitions = exported_object.mesh_definitions
 
+        transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
         for lux_object_name, material_index in mesh_definitions:
             if material_index < len(blender_obj.material_slots):
                 mat = blender_obj.material_slots[material_index].material
@@ -45,21 +52,20 @@ def convert(blender_obj, scene, context, luxcore_scene):
                 lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)
-
-            transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
             _define_luxcore_object(props, lux_object_name, lux_mat_name, transformation)
 
-        luxcore_names = [lux_obj_name for lux_obj_name, material_index in mesh_definitions]
-        return props, ExportedObject(luxcore_names)
+        return props, ExportedObject(mesh_definitions)
     except Exception as error:
         # TODO: collect exporter errors
         print("ERROR in object", blender_obj.name)
         print(error)
+        import traceback
+        traceback.print_exc()
         return pyluxcore.Properties(), None
 
 
 def _define_luxcore_object(props, lux_object_name, lux_material_name, transformation=None):
-    # This prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
+    # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
     luxcore_shape_name = "Mesh-" + lux_object_name
     prefix = "scene.objects." + lux_object_name + "."
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
