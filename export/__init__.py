@@ -241,6 +241,9 @@ class Exporter(object):
                 # TODO: -> leads to crash
                 session.EndSceneEdit()
 
+                if session.IsInPause():
+                    session.Resume()
+
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()
         return session

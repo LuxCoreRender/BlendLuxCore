@@ -125,7 +125,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 self.update_stats("Creating Render Session...", "")
                 self._session = self._exporter.create_session(context.scene, context)
                 self._session.Start()
-                self.update_stats("Viewport Render", "")
                 return
             except Exception as error:
                 del self._session
@@ -163,17 +162,33 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             if self._framebuffer is None:
                 self._framebuffer = FrameBuffer(context)
 
-            if self._session:
-                self._session.UpdateStats()
-                self._session.WaitNewFrame()
-                self._framebuffer.update(self._session)
+            self._session.UpdateStats()
+            self._session.WaitNewFrame()
+            self._framebuffer.update(self._session)
 
             region_size = context.region.width, context.region.height
             view_camera_offset = list(context.region_data.view_camera_offset)
             view_camera_zoom = context.region_data.view_camera_zoom
             
             self._framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, self, context)
-            self.tag_redraw()
+
+            stats = self._session.GetStats()
+            rendered_time = stats.Get("stats.renderengine.time").GetFloat()
+            rendered_samples = stats.Get("stats.renderengine.pass").GetInt()
+            print("rendered_time:", rendered_time, "rendered_samples:", rendered_samples)
+            halt_time = context.scene.luxcore.display.viewport_halt_time
+            status_message = "%d/%ds" % (rendered_time, halt_time)
+            if rendered_time > halt_time:
+                if not self._session.IsInPause():
+                    print("Pausing session")
+                    self._session.Pause()
+                status_message += " (Paused)"
+            else:
+                self.tag_redraw()
+
+            config = self._session.GetRenderConfig()
+            pretty_stats = utils_render.get_pretty_stats(config, stats)
+            self.update_stats(pretty_stats, status_message)
         except Exception as error:
             del self._session
             self._session = None
