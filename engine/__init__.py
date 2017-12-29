@@ -174,8 +174,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
             stats = self._session.GetStats()
             rendered_time = stats.Get("stats.renderengine.time").GetFloat()
-            rendered_samples = stats.Get("stats.renderengine.pass").GetInt()
-            print("rendered_time:", rendered_time, "rendered_samples:", rendered_samples)
             halt_time = context.scene.luxcore.display.viewport_halt_time
             status_message = "%d/%ds" % (rendered_time, halt_time)
             if rendered_time > halt_time:
@@ -187,7 +185,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 self.tag_redraw()
 
             config = self._session.GetRenderConfig()
-            pretty_stats = utils_render.get_pretty_stats(config, stats)
+            pretty_stats = utils_render.get_pretty_stats(config, stats, context.scene.luxcore.halt)
             self.update_stats(pretty_stats, status_message)
         except Exception as error:
             del self._session

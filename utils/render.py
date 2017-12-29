@@ -26,7 +26,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
     stats = engine._session.GetStats()
 
     # Show stats string in UI
-    pretty_stats = get_pretty_stats(config, stats)
+    pretty_stats = get_pretty_stats(config, stats, scene.luxcore.halt)
     if draw_film:
         refresh_message = "Refreshing film..."
     else:
@@ -58,13 +58,21 @@ def halt_condition_met(scene, stats):
     return False
 
 
-def get_pretty_stats(config, stats):
+def get_pretty_stats(config, stats, halt):
     pretty = []
 
-    # Engine + Sampler
-    engine = config.GetProperties().Get("renderengine.type").GetString()
-    sampler = config.GetProperties().Get("sampler.type").GetString()
-    pretty.append(engine_to_str[engine] + " + " + sampler_to_str[sampler])
+    # Time
+    if halt.enable and halt.use_time:
+        rendered_time = stats.Get("stats.renderengine.time").GetFloat()
+        pretty.append("Time: %ds/%ds" % (rendered_time, halt.time))
+
+    # Samples (aka passes)
+    samples = stats.Get("stats.renderengine.pass").GetInt()
+
+    if halt.enable and halt.use_samples:
+        pretty.append("%d/%d Samples" % (samples, halt.samples))
+    else:
+        pretty.append("%d Samples" % samples)
 
     # Samples/Sec
     samples_per_sec = stats.Get("stats.renderengine.total.samplesec").GetFloat()
@@ -75,6 +83,15 @@ def get_pretty_stats(config, stats):
     else:
         # Use kilosamples as unit
         pretty.append("Samples/Sec %d k" % (samples_per_sec / 10 ** 3))
+
+    # Engine + Sampler
+    engine = config.GetProperties().Get("renderengine.type").GetString()
+    sampler = config.GetProperties().Get("sampler.type").GetString()
+    pretty.append(engine_to_str[engine] + " + " + sampler_to_str[sampler])
+
+    # Triangle count
+    triangle_count = stats.Get("stats.dataset.trianglecount").GetInt()
+    pretty.append('{:,} Tris'.format(triangle_count))
 
     return " | ".join(pretty)
 
