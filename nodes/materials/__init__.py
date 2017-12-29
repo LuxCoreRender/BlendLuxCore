@@ -8,6 +8,7 @@ from ...ui import ICON_MATERIAL
 from .emission import LuxCoreNodeMatEmission
 from .glass import LuxCoreNodeMatGlass
 from .glossy2 import LuxCoreNodeMatGlossy2
+from .carpaint import LuxCoreNodeMatCarpaint
 from .matte import LuxCoreNodeMatMatte
 from .mirror import LuxCoreNodeMatMirror
 from .mix import LuxCoreNodeMatMix
@@ -72,6 +73,7 @@ class LuxCoreNodeCategoryMaterial(NodeCategory):
 # presses Shift+A in the node editor to add a new node
 luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
+        NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),
         NodeItem("LuxCoreNodeMatMatte", label="Matte"),
         NodeItem("LuxCoreNodeMatMix", label="Mix"),
         NodeItem("LuxCoreNodeMatMirror", label="Mirror"),
