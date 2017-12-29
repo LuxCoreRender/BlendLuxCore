@@ -21,7 +21,7 @@ A new instance of `LuxCoreRenderEngine` is created in these cases:
   Also destroyed and re-created when changing frame!
 * Final render: created when final render is started (e.g. by F12), destroyed when the render ends 
   (when leaving the `render(scene)` function)
-* Material preview: same as final render (we can check if we are in preview mode with self.is_preview, 
+* Material preview: same as final render (we can check if we are in preview mode with `self.is_preview`,
   the rest is exactly the same)
 
 The cleanup when the RenderEngine is destroyed happens in its `__del__()` method (stopping and deleting of the running luxcore session).
@@ -74,7 +74,18 @@ Automated tests. See https://github.com/LuxCoreRender/BlendLuxCore/blob/master/t
 ### ui
 
 This module contains the UI drawing code for the custom properties.
+The `__init__.py` file contains the list of Blender UI panels that are compatible with BlendLuxCore.
+
+The other files contain the UI code for our custom panels.
+In these panels we display the properties defined in the **properties/** folder.
 
 ### utils
 
 Utility functions that can be used in many different places.
+
+Some functions are grouped, e.g. node related utility functions in `utils/node.py`. It is recommended to import them like this:
+```
+from .utils import node as utils_node
+# Now use one of the functions
+utils_node.draw_uv_info(context, layout)
+```
