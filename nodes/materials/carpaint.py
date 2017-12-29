@@ -1,45 +1,73 @@
-import bpy
-from bpy.props import FloatProperty
+from bpy.props import FloatProperty, EnumProperty
 from .. import LuxCoreNodeMaterial
-from ..sockets import LuxCoreSocketFloat, LuxCoreSocketRoughness
+from ..sockets import LuxCoreSocketFloat
 
-DEPTH_DESCRIPTION = "Absortion depth (nm) value"
 REFLECTION_DESCRIPTION = "Glossy layer reflection value"
 
 
-class LuxCoreSocketDepth(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0.0, description=DEPTH_DESCRIPTION)
-    slider = True
-
 class LuxCoreSocketReflection(LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
-    default_value = FloatProperty(min=0.0, description=REFLECTION_DESCRIPTION)
+    default_value = FloatProperty(min=0.00001, max=1, description=REFLECTION_DESCRIPTION)
     slider = True
 
 
 class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
-    """carpaint material node"""
-    bl_label = "Carpaint Material"
-    bl_width_min = 160
+    """
+    carpaint material node
 
-    depth = FloatProperty(name="Absorption depth (nm)", default=0, min=0, description=DEPTH_DESCRIPTION)
-    
+    Note about the parameters:
+    R1, R2, R3 seem to be "reflection" values, whatever that means.
+    M1, M2, M3 seem to be roughness values for the reflection values.
+    """
+    bl_label = "Carpaint Material"
+    bl_width_min = 200
+
+    def update_preset(self, context):
+        enabled = self.preset == "manual"
+
+        self.inputs['Diffuse Color'].enabled = enabled
+        self.inputs['Specular Color 1'].enabled = enabled
+        self.inputs['Specular Color 2'].enabled = enabled
+        self.inputs['Specular Color 3'].enabled = enabled
+        self.inputs['M1'].enabled = enabled
+        self.inputs['M2'].enabled = enabled
+        self.inputs['M3'].enabled = enabled
+        self.inputs['R1'].enabled = enabled
+        self.inputs['R2'].enabled = enabled
+        self.inputs['R3'].enabled = enabled
+
+    preset_items = [
+        ("manual", "Manual settings", "Try your luck"),
+        ("2k acrylack", "2k Acrylack", "2k acrylack"),
+        ("blue", "Blue", "blue"),
+        ("blue matte", "Blue Matte", "blue matte"),
+        ("bmw339", "BMW 339", "bmw339"),
+        ("ford f8", "Ford F8", "ford f8"),
+        ("opel titan", "Opel Titan", "opel titan"),
+        ("polaris silber", "Polaris Silber", "polaris silber"),
+        ("white", "White", "white"),
+    ]
+    preset = EnumProperty(name="Preset", items=preset_items, default="manual", update=update_preset)
+
     def init(self, context):
-        self.add_input("LuxCoreSocketColor", "Diffuse Color", (1, 1, 1))
+        self.add_input("LuxCoreSocketColor", "Diffuse Color", (0.3, 0.3, 0.3))
         self.add_input("LuxCoreSocketColor", "Specular Color 1", (1, 1, 1))
-        self.add_input("LuxCoreSocketRoughness", "R1", 1)
-        self.add_input("LuxCoreSocketReflection", "M1", 0)
+        self.add_input("LuxCoreSocketReflection", "R1", 0.95)
+        self.add_input("LuxCoreSocketRoughness", "M1", 0.25)
         self.add_input("LuxCoreSocketColor", "Specular Color 2", (1, 1, 1))
-        self.add_input("LuxCoreSocketRoughness", "R2", 1)
-        self.add_input("LuxCoreSocketReflection", "M2", 0)
+        self.add_input("LuxCoreSocketReflection", "R2", 0.9)
+        self.add_input("LuxCoreSocketRoughness", "M2", 0.1)
         self.add_input("LuxCoreSocketColor", "Specular Color 3", (1, 1, 1))
-        self.add_input("LuxCoreSocketRoughness", "R3", 1)
-        self.add_input("LuxCoreSocketReflection", "M3", 0)
+        self.add_input("LuxCoreSocketReflection", "R3", 0.7)
+        self.add_input("LuxCoreSocketRoughness", "M3", 0.015)
         self.add_input("LuxCoreSocketColor", "Absorption Color", (0, 0, 0))
-        self.add_input("LuxCoreSocketDepth", "Absorption Depth (nm)", 0)
+        self.add_input("LuxCoreSocketFloatPositive", "Absorption Depth (nm)", 0)
         self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "preset")
 
     def export(self, props, luxcore_name=None):
         definitions = {
@@ -57,5 +85,9 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
             "r2": self.inputs["R2"].export(props),
             "r3": self.inputs["R3"].export(props),
         }
+
+        if self.preset != "manual":
+            definitions["preset"] = self.preset
+
         self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)

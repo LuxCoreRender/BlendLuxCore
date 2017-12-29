@@ -17,7 +17,7 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
         self.add_input("LuxCoreSocketColor", "Diffuse Color", [0.7] * 3)
         self.add_input("LuxCoreSocketColor", "Specular Color", [0.05] * 3)
         self.add_input("LuxCoreSocketColor", "Absorption Color", [0] * 3)
-        self.add_input("LuxCoreSocketFloatPositive", "Absorption Depth", 0)
+        self.add_input("LuxCoreSocketFloatPositive", "Absorption Depth (nm)", 0)
         Roughness.init(self, 0.05)
         # TODO: IOR (index)
         self.add_common_inputs()

@@ -70,16 +70,17 @@ class LuxCoreNodeCategoryMaterial(NodeCategory):
 
 
 # Here we define the menu structure the user sees when he
-# presses Shift+A in the node editor to add a new node
+# presses Shift+A in the node editor to add a new node.
+# In general it is a good idea to put often used nodes near the top.
 luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
-        NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),
-        NodeItem("LuxCoreNodeMatMatte", label="Matte"),
         NodeItem("LuxCoreNodeMatMix", label="Mix"),
+        NodeItem("LuxCoreNodeMatMatte", label="Matte"),
         NodeItem("LuxCoreNodeMatMirror", label="Mirror"),
         NodeItem("LuxCoreNodeMatGlossy2", label="Glossy"),
         NodeItem("LuxCoreNodeMatGlass", label="Glass"),
         NodeItem("LuxCoreNodeMatNull", label="Null (Transparent)"),
+        NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
