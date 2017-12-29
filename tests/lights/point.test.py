@@ -19,7 +19,7 @@ class TestPointLight(unittest.TestCase):
         self.assertIsNotNone(exported_light)
 
         # Check properties for correctness
-        all_exported_light_prefixes = props.GetAllUniqueSubNames('scene.lights')
+        all_exported_light_prefixes = props.GetAllUniqueSubNames("scene.lights")
         prefix = all_exported_light_prefixes[0]
 
         self.assertEqual(props.Get(prefix + ".type").Get(), ["point"])

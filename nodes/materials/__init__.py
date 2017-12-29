@@ -56,7 +56,7 @@ class LuxCoreMaterialNodeTree(NodeTree):
             self.refresh = False
             break
 
-    refresh = bpy.props.BoolProperty(name='Links Changed',
+    refresh = bpy.props.BoolProperty(name="Links Changed",
                                      default=False,
                                      update=acknowledge_connection)
 

@@ -23,6 +23,7 @@ def export_material_input(input, props):
     if material_name:
         return material_name
     else:
+        print("WARNING: No material linked on input", input.name, "of node", input.node.name)
         luxcore_name = "__BLACK__"
         props.Set(pyluxcore.Property("scene.materials.%s.type" % luxcore_name, "matte"))
         props.Set(pyluxcore.Property("scene.materials.%s.kd" % luxcore_name, [0, 0, 0]))

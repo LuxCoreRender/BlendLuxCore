@@ -18,7 +18,7 @@ class LuxCoreNodeMatNull(LuxCoreNodeMaterial):
         # This is a neat trick to get a colored transparent material:
         # Use a color or texture on the transparency property.
         # We only use it when we need it.
-        transparency = self.inputs['Transmission Color'].export(props)
+        transparency = self.inputs["Transmission Color"].export(props)
         if transparency != 1.0 and transparency != [1.0, 1.0, 1.0]:
             definitions["transparency"] = transparency
 

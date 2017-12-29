@@ -2,8 +2,8 @@
 def halt_condition_met(scene, stats):
     halt = scene.luxcore.halt
 
-    rendered_samples = stats.Get('stats.renderengine.pass').GetInt()
-    rendered_time = stats.Get('stats.renderengine.time').GetFloat()
+    rendered_samples = stats.Get("stats.renderengine.pass").GetInt()
+    rendered_time = stats.Get("stats.renderengine.time").GetFloat()
 
     if halt.use_time and (rendered_time > halt.time):
         print("Reached halt time: %d seconds" % halt.time)

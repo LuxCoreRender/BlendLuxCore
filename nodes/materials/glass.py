@@ -12,12 +12,12 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
                                   default=False,
                                   description=Roughness.aniso_desc,
                                   update=Roughness.update_anisotropy)
-    rough = bpy.props.BoolProperty(name='Rough',
-                                   description='Rough glass surface instead of a smooth one',
+    rough = bpy.props.BoolProperty(name="Rough",
+                                   description="Rough glass surface instead of a smooth one",
                                    default=False,
                                    update=Roughness.toggle_roughness)
-    architectural = bpy.props.BoolProperty(name='Architectural',
-                                           description='Skips refraction during transmission, propagates alpha and shadow rays',
+    architectural = bpy.props.BoolProperty(name="Architectural",
+                                           description="Skips refraction during transmission, propagates alpha and shadow rays",
                                            default=False)
 
     def init(self, context):
@@ -33,7 +33,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
     def draw_buttons(self, context, layout):
         column = layout.row()
         column.enabled = not self.architectural
-        column.prop(self, 'rough')
+        column.prop(self, "rough")
 
         if self.rough:
             Roughness.draw(self, context, layout)
@@ -41,7 +41,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         # Rough glass cannot be archglass
         row = layout.row()
         row.enabled = not self.rough
-        row.prop(self, 'architectural')
+        row.prop(self, "architectural")
 
         if self._has_interior_volume():
             layout.label("Using IOR of interior volume", icon="INFO")

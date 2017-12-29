@@ -14,15 +14,15 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
         ("localmapping3d", "Local", "Object coordinate system", 1),
     ]
     mapping_type = EnumProperty(name="Mapping", items=mapping_types, default="globalmapping3d")
-    translate = FloatVectorProperty(name='Translate', subtype='TRANSLATION', description='Moves the texture')
-    rotate = FloatVectorProperty(name='Rotate', unit='ROTATION', default=(0, 0, 0), subtype='EULER',
-                                 description='Rotates the texture')
-    scale = FloatVectorProperty(name='Scale', default=(1.0, 1.0, 1.0), subtype='XYZ',
-                                description='Scales the texture')
-    uniform_scale = FloatProperty(name='', default=1.0,
-                                  description='Scales the texture uniformly along all axis')
-    use_uniform_scale = BoolProperty(name='Uniform', default=False,
-                                     description='Use the same scale value for all axis')
+    translate = FloatVectorProperty(name="Translate", subtype="TRANSLATION", description="Moves the texture")
+    rotate = FloatVectorProperty(name="Rotate", unit="ROTATION", default=(0, 0, 0), subtype="EULER",
+                                 description="Rotates the texture")
+    scale = FloatVectorProperty(name="Scale", default=(1.0, 1.0, 1.0), subtype="XYZ",
+                                description="Scales the texture")
+    uniform_scale = FloatProperty(name="", default=1.0,
+                                  description="Scales the texture uniformly along all axis")
+    use_uniform_scale = BoolProperty(name="Uniform", default=False,
+                                     description="Use the same scale value for all axis")
 
     def init(self, context):
         # Instead of creating a new mapping, the user can also
@@ -39,17 +39,17 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
 
         row = layout.row()
 
-        row.column().prop(self, 'translate')
-        row.column().prop(self, 'rotate')
+        row.column().prop(self, "translate")
+        row.column().prop(self, "rotate")
 
         scale_column = row.column()
         if self.use_uniform_scale:
-            scale_column.label(text='Scale:')
-            scale_column.prop(self, 'uniform_scale')
+            scale_column.label(text="Scale:")
+            scale_column.prop(self, "uniform_scale")
         else:
-            scale_column.prop(self, 'scale')
+            scale_column.prop(self, "scale")
 
-        scale_column.prop(self, 'use_uniform_scale')
+        scale_column.prop(self, "use_uniform_scale")
 
     def export(self, props):
         mapping_type, input_mapping = self.inputs["3D Mapping (optional)"].export(props)
@@ -73,9 +73,9 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
                 tex_sca[i][i] = 0.0000000001
 
         # create a rotation matrix
-        tex_rot0 = Matrix.Rotation(radians(self.rotate[0]), 4, 'X')
-        tex_rot1 = Matrix.Rotation(radians(self.rotate[1]), 4, 'Y')
-        tex_rot2 = Matrix.Rotation(radians(self.rotate[2]), 4, 'Z')
+        tex_rot0 = Matrix.Rotation(radians(self.rotate[0]), 4, "X")
+        tex_rot1 = Matrix.Rotation(radians(self.rotate[1]), 4, "Y")
+        tex_rot2 = Matrix.Rotation(radians(self.rotate[2]), 4, "Z")
         tex_rot = tex_rot0 * tex_rot1 * tex_rot2
 
         # combine transformations
