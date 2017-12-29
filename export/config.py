@@ -98,9 +98,11 @@ def convert(scene, context=None):
 
 def _convert_path(config, definitions):
     path = config.path
-    definitions["path.pathdepth.total"] = path.depth_total
-    definitions["path.pathdepth.diffuse"] = path.depth_diffuse
-    definitions["path.pathdepth.glossy"] = path.depth_glossy
+    # Note that for non-specular paths +1 is added to the path depth.
+    # For details see http://www.luxrender.net/forum/viewtopic.php?f=11&t=11101&start=390#p114959
+    definitions["path.pathdepth.total"] = path.depth_total + 1
+    definitions["path.pathdepth.diffuse"] = path.depth_diffuse + 1
+    definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
     definitions["path.pathdepth.specular"] = path.depth_specular
     # TODO path.forceblackbackground.enable (if film is transparent)
 

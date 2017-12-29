@@ -127,6 +127,6 @@ class LuxCoreConfig(PropertyGroup):
     opencl = PointerProperty(type=LuxCoreConfigOpenCL)
     # BIDIR properties
     # light.maxdepth
-    bidir_light_maxdepth = IntProperty(name="Light Depth", default=5, min=1, soft_max=16)
+    bidir_light_maxdepth = IntProperty(name="Light Depth", default=10, min=1, soft_max=16)
     # path.maxdepth
-    bidir_path_maxdepth = IntProperty(name="Eye Depth", default=5, min=1, soft_max=16)
+    bidir_path_maxdepth = IntProperty(name="Eye Depth", default=10, min=1, soft_max=16)

@@ -1,5 +1,5 @@
 import bpy
-from . import config, errorlog, halt, light, material, world
+from . import config, display, errorlog, halt, light, material, world
 from bpy.props import PointerProperty
 
 
@@ -15,3 +15,4 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     config = PointerProperty(type=config.LuxCoreConfig)
     errorlog = PointerProperty(type=errorlog.LuxCoreErrorLog)
     halt = PointerProperty(type=halt.LuxCoreHaltConditions)
+    display = PointerProperty(type=display.LuxCoreDisplaySettings)

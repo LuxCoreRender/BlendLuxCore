@@ -46,29 +46,63 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 raise self.error
 
             assert self._session is not None
-            self.update_stats("Render", "rendering...")
+            self.update_stats("Render", "Starting...")
             self._framebuffer = FrameBufferFinal(scene)
             self._session.Start()
             self._framebuffer.draw(self, self._session)
 
-            last_refresh = time()
-            interval = 3
-            done = False
-            while not self.test_break() and not done:
-                sleep(1 / 50)
-                now = time()
-                if now - last_refresh > interval:
-                    self._session.UpdateStats()
-                    stats = self._session.GetStats()
-                    done = utils_render.halt_condition_met(scene, stats)
-                    self.update_stats("Render", "rendering...")
+            config = self._session.GetRenderConfig()
 
-                    self._framebuffer.draw(self, self._session)
-                    last_refresh = now
+            # Fast refresh on startup so the user quickly sees an image forming.
+            # Not used during animation render to enhance performance.
+            if not self.is_animation:
+                FAST_REFRESH_DURATION = 5
+                refresh_interval = utils_render.shortest_display_interval(scene)
+                last_refresh = 0
+                done = False
+                start = time()
+
+                while not self.test_break() and not done:
+                    # Don't use up too much CPU time
+                    sleep(1 / 60)
+                    now = time()
+
+                    if now - last_refresh > refresh_interval:
+                        stats = utils_render.refresh(self, scene, config, draw_film=True)
+                        done = utils_render.halt_condition_met(scene, stats)
+
+                    if now - start > FAST_REFRESH_DURATION:
+                        # It's time to switch to the loop with slow refresh below
+                        break
+
+            # Main loop where we refresh according to user-specified interval
+            last_film_refresh = time()
+            stat_refresh_interval = 1
+            last_stat_refresh = time()
+            done = False
+
+            while not self.test_break() and not done:
+                # Don't use up too much CPU time
+                sleep(1 / 60)
+                now = time()
+
+                if now - last_stat_refresh > stat_refresh_interval:
+                    # We have to check the stats often to see if a halt condition is met
+                    # But film drawing is expensive, so we don't do it every time we check stats
+                    time_until_film_refresh = scene.luxcore.display.interval - (now - last_film_refresh)
+                    draw_film = time_until_film_refresh <= 0
+
+                    stats = utils_render.refresh(self, scene, config, draw_film, time_until_film_refresh)
+                    done = utils_render.halt_condition_met(scene, stats)
+
+                    last_stat_refresh = now
+                    if draw_film:
+                        last_film_refresh = now
 
             self._session.Stop()
             self._framebuffer.draw(self, self._session)
             del self._session
+            self._session = None
         except Exception as error:
             del self._session
             self._session = None
