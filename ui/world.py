@@ -73,8 +73,7 @@ class LuxCoreWorldInfinite(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        correct_light = context.world.luxcore.light == "infinite"
-        return context.world and engine == "LUXCORE" and correct_light
+        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "infinite"
 
     def draw(self, context):
         layout = self.layout

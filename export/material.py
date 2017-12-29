@@ -52,5 +52,5 @@ def convert(material):
 def fallback(luxcore_name=GLOBAL_FALLBACK_MAT):
     props = pyluxcore.Properties()
     props.Set(pyluxcore.Property("scene.materials.%s.type" % luxcore_name, "matte"))
-    props.Set(pyluxcore.Property("scene.materials.%s.kd" % luxcore_name, [0.7, 0.7, 0.7]))
+    props.Set(pyluxcore.Property("scene.materials.%s.kd" % luxcore_name, [0.5] * 3))
     return luxcore_name, props

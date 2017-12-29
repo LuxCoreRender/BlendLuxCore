@@ -34,7 +34,7 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
             "kd": self.inputs["Diffuse Color"].export(props),
             "ks": self.inputs["Specular Color"].export(props),
             "ka": self.inputs["Absorption Color"].export(props),
-            "d": self.inputs["Absorption Depth"].export(props),
+            "d": self.inputs["Absorption Depth (nm)"].export(props),
             # "index":
             "multibounce": self.multibounce,
         }
