@@ -49,7 +49,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.update_stats("Render", "Starting...")
             self._framebuffer = FrameBufferFinal(scene)
             self._session.Start()
-            self._framebuffer.draw(self, self._session)
 
             config = self._session.GetRenderConfig()
 
@@ -99,8 +98,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                     if draw_film:
                         last_film_refresh = now
 
+            # User wants to stop or halt condition is reached
             self._session.Stop()
+            # Update stats to refresh film and draw the final result
+            self._session.UpdateStats()
             self._framebuffer.draw(self, self._session)
+            # Clean up
             del self._session
             self._session = None
         except Exception as error:
@@ -111,9 +114,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.error_set(str(error))
             import traceback
             traceback.print_exc()
+            # Add error to error log so the user can inspect and copy/paste it
             scene.luxcore.errorlog.set(error)
 
     def view_update(self, context):
+        # We use a custom function because sometimes we need to pass
+        # some changes from view_draw() to view_update()
         self.view_update_lux(context)
 
     def view_update_lux(self, context, changes=None):
@@ -145,6 +151,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             return
 
         try:
+            # Check for changes because some actions in Blender (e.g. moving the viewport camera)
+            # do not trigger a view_update() call, but only a view_draw() call.
             changes = self._exporter.get_changes(context)
 
             if changes & export.Change.REQUIRES_VIEW_UPDATE:
@@ -159,9 +167,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 # We have to re-assign the session because it might have been replaced due to filmsize change
                 self._session = self._exporter.update(context, self._session, export.Change.CAMERA)
 
+            # On startup we don't have a framebuffer yet
             if self._framebuffer is None:
                 self._framebuffer = FrameBuffer(context)
 
+            # Update and draw the framebuffer.
             self._session.UpdateStats()
             self._session.WaitNewFrame()
             self._framebuffer.update(self._session)
@@ -169,21 +179,24 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             region_size = context.region.width, context.region.height
             view_camera_offset = list(context.region_data.view_camera_offset)
             view_camera_zoom = context.region_data.view_camera_zoom
-            
             self._framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, self, context)
 
+            # Check if we need to pause the viewport render
             stats = self._session.GetStats()
             rendered_time = stats.Get("stats.renderengine.time").GetFloat()
             halt_time = context.scene.luxcore.display.viewport_halt_time
             status_message = "%d/%ds" % (rendered_time, halt_time)
+
             if rendered_time > halt_time:
                 if not self._session.IsInPause():
                     print("Pausing session")
                     self._session.Pause()
                 status_message += " (Paused)"
             else:
+                # Not in pause yet, keep drawing
                 self.tag_redraw()
 
+            # Show formatted statistics in Blender UI
             config = self._session.GetRenderConfig()
             pretty_stats = utils_render.get_pretty_stats(config, stats, context.scene.luxcore.halt)
             self.update_stats(pretty_stats, status_message)
