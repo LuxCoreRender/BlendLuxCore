@@ -3,7 +3,7 @@ import bpy
 
 
 class LuxCoreErrorLog(bl_ui.properties_render.RenderButtonsPanel, bpy.types.Panel):
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Error Log"
 
     @classmethod

@@ -5,7 +5,7 @@ from bpy.types import Panel
 
 
 class LuxCoreConfig(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Config"
 
     @classmethod

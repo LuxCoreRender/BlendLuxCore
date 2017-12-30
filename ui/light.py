@@ -8,7 +8,7 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
     """
     Lamp UI Panel
     """
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = ""
     bl_options = {"HIDE_HEADER"}
 
@@ -106,7 +106,7 @@ class LuxCoreLampPerformance(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.ty
     """
     Lamp UI Panel, shows stuff that affects the performance of the render
     """
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
     bl_options = {"DEFAULT_CLOSED"}
 

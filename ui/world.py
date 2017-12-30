@@ -9,7 +9,7 @@ class LuxCoreWorldHeader(WorldButtonsPanel, Panel):
     """
     World UI Panel
     """
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = ""
     bl_options = {"HIDE_HEADER"}
 
@@ -34,7 +34,7 @@ class LuxCoreWorldSky2(WorldButtonsPanel, Panel):
     """
     Sky2 UI Panel
     """
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Sky Settings"
 
     @classmethod
@@ -67,7 +67,7 @@ class LuxCoreWorldInfinite(WorldButtonsPanel, Panel):
     """
     Infinite UI Panel
     """
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "HDRI Settings"
 
     @classmethod
@@ -93,7 +93,7 @@ class LuxCoreWorldPerformance(WorldButtonsPanel, Panel):
     """
     World UI Panel, shows stuff that affects the performance of the render
     """
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
     bl_options = {"DEFAULT_CLOSED"}
 

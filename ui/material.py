@@ -7,7 +7,7 @@ class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.
     """
     Material UI Panel
     """
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = ""
     bl_options = {"HIDE_HEADER"}
 

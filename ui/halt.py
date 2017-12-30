@@ -7,7 +7,7 @@ from bpy.types import Panel
 
 
 class LuxCoreHaltConditions(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = "LUXCORE"
+    COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Halt Conditions"
 
     @classmethod
