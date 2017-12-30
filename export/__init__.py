@@ -173,11 +173,14 @@ class Exporter(object):
 
         # Objects and lamps
         objs = context.visible_objects if context else bpy.data.objects
+        len_objs = len(objs)
 
-        for obj in objs:
+        for index, obj in enumerate(objs, start=1):
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
-                engine.update_stats("Export", "Object: " + obj.name)
+                engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
                 self._convert_object(scene_props, obj, scene, context, luxcore_scene)
+                # Objects are the most expensive to export, so they dictate the progress
+                engine.update_progress(index / len_objs)
             # Regularly check if we should abort the export (important in heavy scenes)
             if engine.test_break():
                 return None

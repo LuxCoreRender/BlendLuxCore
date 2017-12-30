@@ -26,6 +26,9 @@ class RenderEngineMockup:
     def update_stats(self, arg1, arg2):
         pass
 
+    def update_progress(self, value):
+        pass
+
     def test_break(self):
         return self.abort_immediately
 

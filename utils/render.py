@@ -37,6 +37,25 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
         # Show updated film
         engine._framebuffer.draw(engine, engine._session)
 
+    # Update progress bar if we have halt conditions
+    halt = scene.luxcore.halt
+    if halt.enable and (halt.use_time or halt.use_samples):
+        rendered_samples = stats.Get("stats.renderengine.pass").GetInt()
+        rendered_time = stats.Get("stats.renderengine.time").GetFloat()
+        percent = 0
+
+        if halt.use_time:
+            percent = rendered_time / halt.time
+
+        if halt.use_samples:
+            percent_samples = rendered_samples / halt.samples
+            percent = max(percent, percent_samples)
+
+        engine.update_progress(percent)
+    else:
+        # Reset to 0 in case the user disables the halt conditions during render
+        engine.update_progress(0)
+
     return stats
 
 
