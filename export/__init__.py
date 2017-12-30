@@ -159,7 +159,7 @@ class Exporter(object):
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
 
-    def create_session(self, scene, context=None):
+    def create_session(self, engine, scene, context=None):
         print("create_session")
         start = time()
         # Scene
@@ -176,23 +176,41 @@ class Exporter(object):
 
         for obj in objs:
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
+                engine.update_stats("Export", "Object: " + obj.name)
                 self._convert_object(scene_props, obj, scene, context, luxcore_scene)
+            # Regularly check if we should abort the export (important in heavy scenes)
+            if engine.test_break():
+                return None
 
         # World
         if scene.world and scene.world.luxcore.light != "none":
+            engine.update_stats("Export", "World")
             props = light.convert_world(scene.world, scene)
             scene_props.Set(props)
 
         luxcore_scene.Parse(scene_props)
+
+        # Regularly check if we should abort the export (important in heavy scenes)
+        if engine.test_break():
+            return None
 
         # Convert config at last because all lightgroups and passes have to be already defined
         config_props = config.convert(scene, context)
         self.config_cache.diff(config_props)  # Init config cache
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
+        # Regularly check if we should abort the export (important in heavy scenes)
+        if engine.test_break():
+            return None
+
         # Session
+        engine.update_stats("Export", "Creating session")
         session = pyluxcore.RenderSession(renderconfig)
-        print("Session created in %.1fs" % (time() - start))
+
+        elapsed_msg = "Session created in %.1fs" % (time() - start)
+        print(elapsed_msg)
+        engine.update_stats("Export", elapsed_msg)
+
         return session
 
     def get_changes(self, context):

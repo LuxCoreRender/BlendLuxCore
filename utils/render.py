@@ -33,7 +33,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
         refresh_message = "Film refresh in %ds" % time_until_film_refresh
     engine.update_stats(pretty_stats, refresh_message)
 
-    if draw_film:
+    if draw_film and not engine.test_break():
         # Show updated film
         engine._framebuffer.draw(engine, engine._session)
 

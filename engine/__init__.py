@@ -32,7 +32,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             assert self._session is None
             self.update_stats("Export", "exporting...")
-            self._session = self._exporter.create_session(scene)
+            self._session = self._exporter.create_session(self, scene)
         except Exception as error:
             # Will be reported in self.render() below
             self.error = error
@@ -45,12 +45,16 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             if self.error:
                 raise self.error
 
-            assert self._session is not None
-            self.update_stats("Render", "Starting...")
+            if self._session is None:
+                print("Export cancelled by user.")
+                return
+
+            self.update_stats("Render", "Starting session...")
             self._framebuffer = FrameBufferFinal(scene)
             self._session.Start()
 
             config = self._session.GetRenderConfig()
+            done = False
 
             # Fast refresh on startup so the user quickly sees an image forming.
             # Not used during animation render to enhance performance.
@@ -58,31 +62,33 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 FAST_REFRESH_DURATION = 5
                 refresh_interval = utils_render.shortest_display_interval(scene)
                 last_refresh = 0
-                done = False
                 start = time()
 
-                while not self.test_break() and not done:
-                    # Don't use up too much CPU time
-                    sleep(1 / 60)
+                while not done:
                     now = time()
 
                     if now - last_refresh > refresh_interval:
                         stats = utils_render.refresh(self, scene, config, draw_film=True)
-                        done = utils_render.halt_condition_met(scene, stats)
+                        done = utils_render.halt_condition_met(scene, stats) or self.test_break()
 
                     if now - start > FAST_REFRESH_DURATION:
                         # It's time to switch to the loop with slow refresh below
                         break
 
+                    # This is a measure to make cancelling more responsive in this phase
+                    checks = 10
+                    for i in range(checks):
+                        if self.test_break():
+                            done = True
+                            break
+                        sleep(1/60 / checks)
+
             # Main loop where we refresh according to user-specified interval
             last_film_refresh = time()
             stat_refresh_interval = 1
             last_stat_refresh = time()
-            done = False
 
             while not self.test_break() and not done:
-                # Don't use up too much CPU time
-                sleep(1 / 60)
                 now = time()
 
                 if now - last_stat_refresh > stat_refresh_interval:
@@ -92,13 +98,17 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                     draw_film = time_until_film_refresh <= 0
 
                     stats = utils_render.refresh(self, scene, config, draw_film, time_until_film_refresh)
-                    done = utils_render.halt_condition_met(scene, stats)
+                    done = utils_render.halt_condition_met(scene, stats) or self.test_break()
 
                     last_stat_refresh = now
                     if draw_film:
                         last_film_refresh = now
 
+                # Don't use up too much CPU time
+                sleep(1 / 60)
+
             # User wants to stop or halt condition is reached
+            self.update_stats("Render", "Stopping session...")
             self._session.Stop()
             # Update stats to refresh film and draw the final result
             self._session.UpdateStats()
@@ -129,7 +139,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             print("new session")
             try:
                 self.update_stats("Creating Render Session...", "")
-                self._session = self._exporter.create_session(context.scene, context)
+                # Note: in viewport render, the user can't cancel the export (Blender limitation)
+                self._session = self._exporter.create_session(self, context.scene, context)
                 self._session.Start()
                 return
             except Exception as error:

@@ -18,6 +18,16 @@ def luxcore_logger(message):
     pass
 
 
+class RenderEngineMockup:
+    """ Simulates a bpy.types.RenderEngine class """
+
+    def update_stats(self, arg1, arg2):
+        pass
+
+    def test_break(self):
+        return False
+
+
 class TestFullExport(unittest.TestCase):
     def test_final_export(self):
         start = time()
@@ -27,7 +37,7 @@ class TestFullExport(unittest.TestCase):
                 pyluxcore.Init(luxcore_logger)
                 # Test final render export from the engine's point of view
                 _exporter = export.Exporter()
-                _session = _exporter.create_session(bpy.context.scene)
+                _session = _exporter.create_session(RenderEngineMockup(), bpy.context.scene)
 
         print("test_final_export(): Export took %.1fs" % (time() - start))
 
