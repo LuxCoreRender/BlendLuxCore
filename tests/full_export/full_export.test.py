@@ -19,13 +19,15 @@ def luxcore_logger(message):
 
 
 class RenderEngineMockup:
-    """ Simulates a bpy.types.RenderEngine class """
+    """ Simulates a bpy.types.RenderEngine class """    
+    def __init__(self, abort_immediately=False):
+        self.abort_immediately = abort_immediately
 
     def update_stats(self, arg1, arg2):
         pass
 
     def test_break(self):
-        return False
+        return self.abort_immediately
 
 
 class TestFullExport(unittest.TestCase):
@@ -37,12 +39,28 @@ class TestFullExport(unittest.TestCase):
                 pyluxcore.Init(luxcore_logger)
                 # Test final render export from the engine's point of view
                 _exporter = export.Exporter()
-                _session = _exporter.create_session(RenderEngineMockup(), bpy.context.scene)
+                engine = RenderEngineMockup()
+                _session = _exporter.create_session(engine, bpy.context.scene)
 
         print("test_final_export(): Export took %.1fs" % (time() - start))
 
         # TODO: We could check a lot more here
         self.assertIsNotNone(_session)
+    
+    def test_user_abort(self):
+        start = time()
+
+        with open("./full_export/log.txt", "w") as log:
+            with redirect_stdout(log):
+                pyluxcore.Init(luxcore_logger)
+                # Test user aborting the export process
+                _exporter = export.Exporter()
+                engine = RenderEngineMockup(abort_immediately=True)
+                _session = _exporter.create_session(engine, bpy.context.scene)
+
+        print("test_user_abort(): Export took %.1fs" % (time() - start))
+
+        self.assertIsNone(_session)
 
 
 # we have to manually invoke the test runner here, as we cannot use the CLI
