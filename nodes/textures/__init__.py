@@ -1,5 +1,6 @@
 from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .imagemap import LuxCoreNodeTexImagemap
+from .fresnel import LuxCoreNodeTexFresnel
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
 

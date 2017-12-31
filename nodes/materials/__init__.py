@@ -10,6 +10,7 @@ from .glass import LuxCoreNodeMatGlass
 from .glossy2 import LuxCoreNodeMatGlossy2
 from .carpaint import LuxCoreNodeMatCarpaint
 from .matte import LuxCoreNodeMatMatte
+from .metal import LuxCoreNodeMatMetal
 from .mirror import LuxCoreNodeMatMirror
 from .mix import LuxCoreNodeMatMix
 from .null import LuxCoreNodeMatNull
@@ -76,6 +77,7 @@ luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
         NodeItem("LuxCoreNodeMatMix", label="Mix"),
         NodeItem("LuxCoreNodeMatMatte", label="Matte"),
+        NodeItem("LuxCoreNodeMatMetal", label="Metal"),
         NodeItem("LuxCoreNodeMatMirror", label="Mirror"),
         NodeItem("LuxCoreNodeMatGlossy2", label="Glossy"),
         NodeItem("LuxCoreNodeMatGlass", label="Glass"),
@@ -85,6 +87,7 @@ luxcore_node_categories_material = [
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
+        NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
     ]),
 

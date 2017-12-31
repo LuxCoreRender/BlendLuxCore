@@ -65,6 +65,7 @@ class Color:
     material = (0.39, 0.78, 0.39, 1.0)
     color_texture = (0.78, 0.78, 0.16, 1.0)
     float_texture = (0.63, 0.63, 0.63, 1.0)
+    fresnel_texture = (0.33, 0.6, 0.85, 1.0)
     volume = (1.0, 0.4, 0.216, 1.0)
     mat_emission = (0.9, 0.9, 0.9, 1.0)
     mapping_2d = (0.65, 0.55, 0.75, 1.0)
@@ -78,6 +79,10 @@ class LuxCoreSocketMaterial(LuxCoreNodeSocket):
 
 class LuxCoreSocketVolume(LuxCoreNodeSocket):
     color = Color.volume
+    # no default value
+
+class LuxCoreSocketFresnel(LuxCoreNodeSocket):
+    color = Color.fresnel_texture
     # no default value
 
 
