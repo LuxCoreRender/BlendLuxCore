@@ -43,32 +43,29 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
 
     def export(self, props, luxcore_name=None):
         if self.input_type == 'fresnel':
-            print("Fresnel")
             definitions = {
                 "type": "metal2",
                 "fresnel": self.inputs["Fresnel"].export(props),
             }
 
-        else:
-            print("Color")
+        else:            
             # Implicitly create a fresnelcolor texture
-            FCsuffix = "tex"
-            FCprefix = "scene.textures." + luxcore_name + "."
-
             node_tree = self.id_data
-            name_parts = [FCprefix, self.name, node_tree.name, FCsuffix,"_fresnelcolor"]
+            name_parts = ["Fresnel", node_tree.name, "tex"]
+            tex_name = utils.to_luxcore_name("_".join(name_parts))
+
+            FCprefix = "scene.textures." + tex_name + "."
 
             fresnelcolor_defs = {
                 "type": "fresnelcolor",
                 "kr": self.inputs["Color"].export(props),
             }
 
-            tex_name = utils.to_luxcore_name("_".join(name_parts))
-            props.Set(utils.create_props(tex_name, fresnelcolor_defs))
+            props.Set(utils.create_props(FCprefix, fresnelcolor_defs))
 
             definitions = {
                 "type": "metal2",
-                "fresnel": tex_name,
+                "fresnel": utils.to_luxcore_name("_".join(name_parts)),
             }
             
         Roughness.export(self, props, definitions)

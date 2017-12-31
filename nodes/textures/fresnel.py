@@ -12,7 +12,6 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
     
     def change_input_type(self, context):
         self.inputs['Reflection Color'].enabled = self.input_type == 'color'
-        #self.inputs['preset'].enabled = self.input_type == 'preset'
 
     input_type_items = [
         ('color', 'Color', 'Use custom color as input'),
@@ -41,11 +40,6 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketColor", "Reflection Color")
-
-        #frname_preset = bpy.props.EnumProperty(name='Preset', description='NK data presets', items=frname_presets,
-        #                                   default='aluminium')
-        #frname_nkfile = bpy.props.StringProperty(name='Nk File', description='Nk file path', subtype='FILE_PATH')
-
         self.outputs.new("LuxCoreSocketFresnel", "Fresnel")
 
         
