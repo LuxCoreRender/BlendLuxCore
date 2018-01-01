@@ -8,14 +8,17 @@ from ...ui import ICON_MATERIAL
 from .emission import LuxCoreNodeMatEmission
 from .cloth import LuxCoreNodeMatCloth
 from .glass import LuxCoreNodeMatGlass
+from .glossytranslucent import LuxCoreNodeMatGlossyTranslucent
 from .glossy2 import LuxCoreNodeMatGlossy2
 from .carpaint import LuxCoreNodeMatCarpaint
 from .matte import LuxCoreNodeMatMatte
+from .mattetranslucent import LuxCoreNodeMatMatteTranslucent
 from .metal import LuxCoreNodeMatMetal
 from .mirror import LuxCoreNodeMatMirror
 from .mix import LuxCoreNodeMatMix
 from .null import LuxCoreNodeMatNull
 from .output import LuxCoreNodeMatOutput
+
 
 
 class LuxCoreMaterialNodeTree(NodeTree):
@@ -78,9 +81,11 @@ luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
         NodeItem("LuxCoreNodeMatMix", label="Mix"),
         NodeItem("LuxCoreNodeMatMatte", label="Matte"),
+        NodeItem("LuxCoreNodeMatMatteTranslucent", label="Matte Translucent"),
         NodeItem("LuxCoreNodeMatMetal", label="Metal"),
         NodeItem("LuxCoreNodeMatMirror", label="Mirror"),
         NodeItem("LuxCoreNodeMatGlossy2", label="Glossy"),
+        NodeItem("LuxCoreNodeMatGlossyTranslucent", label="Glossy Translucent"),
         NodeItem("LuxCoreNodeMatGlass", label="Glass"),
         NodeItem("LuxCoreNodeMatNull", label="Null (Transparent)"),
         NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),

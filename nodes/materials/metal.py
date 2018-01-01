@@ -26,7 +26,7 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
                                   update=Roughness.update_anisotropy)
 
     def init(self, context):
-        self.inputs.new('LuxCoreSocketColor', 'Color', (0.7, 0.7, 0.7))
+        self.add_input('LuxCoreSocketColor', 'Color', (0.7, 0.7, 0.7))
         self.inputs.new('LuxCoreSocketFresnel', 'Fresnel')
         self.inputs['Fresnel'].needs_link = True  # suppress inappropiate chooser
         self.inputs['Fresnel'].enabled = False        

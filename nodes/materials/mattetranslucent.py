@@ -1,0 +1,23 @@
+import bpy
+from bpy.props import FloatProperty
+from .. import LuxCoreNodeMaterial
+
+class LuxCoreNodeMatMatteTranslucent(LuxCoreNodeMaterial):
+    bl_label = "Matte Translucent Material"
+    bl_width_min = 160
+
+    def init(self, context):
+        self.add_input("LuxCoreSocketColor", "Reflection Color", (0.5, 0.5, 0.5))
+        self.add_input("LuxCoreSocketColor", "Transmission Color", (0.5, 0.5, 0.5))
+        self.add_common_inputs()
+
+        self.outputs.new("LuxCoreSocketMaterial", "Material")
+
+    def export(self, props, luxcore_name=None):
+        definitions = {
+            "type": "mattetranslucent",
+            "kr": self.inputs["Reflection Color"].export(props),
+            "kt": self.inputs["Transmission Color"].export(props),
+        }
+        self.export_common_inputs(props, definitions)
+        return self.base_export(props, definitions, luxcore_name)
