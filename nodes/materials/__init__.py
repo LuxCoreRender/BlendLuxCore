@@ -6,6 +6,7 @@ from ...ui import ICON_MATERIAL
 
 # Import all material nodes just so they get registered
 from .emission import LuxCoreNodeMatEmission
+from .cloth import LuxCoreNodeMatCloth
 from .glass import LuxCoreNodeMatGlass
 from .glossy2 import LuxCoreNodeMatGlossy2
 from .carpaint import LuxCoreNodeMatCarpaint
@@ -83,6 +84,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatGlass", label="Glass"),
         NodeItem("LuxCoreNodeMatNull", label="Null (Transparent)"),
         NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),
+        NodeItem("LuxCoreNodeMatCloth", label="Cloth"),        
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[

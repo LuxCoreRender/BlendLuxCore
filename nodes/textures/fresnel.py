@@ -39,7 +39,7 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
 
 
     def init(self, context):
-        self.inputs.new("LuxCoreSocketColor", "Reflection Color")
+        self.inputs.new("LuxCoreSocketColor", "Reflection Color", (0.7, 0.7, 0.7))
         self.outputs.new("LuxCoreSocketFresnel", "Fresnel")
 
         
