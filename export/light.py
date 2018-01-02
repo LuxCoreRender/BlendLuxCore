@@ -39,7 +39,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                 definitions["type"] = "mappoint"
 
                 if lamp.luxcore.image:
-                    definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image, scene)
+                    definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image)
                     definitions["gamma"] = lamp.luxcore.gamma
                 if lamp.luxcore.iesfile:
                     # TODO: error if iesfile does not exist
@@ -83,7 +83,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                 # projection
                 definitions["type"] = "projection"
                 definitions["fov"] = coneangle * 2
-                definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image, scene)
+                definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image)
                 definitions["gamma"] = lamp.luxcore.gamma
             else:
                 # spot
@@ -208,7 +208,7 @@ def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
     assert lamp_or_world.luxcore.image is not None
 
     definitions["type"] = "infinite"
-    definitions["file"] = ImageExporter.export(lamp_or_world.luxcore.image, scene)
+    definitions["file"] = ImageExporter.export(lamp_or_world.luxcore.image)
     definitions["gamma"] = lamp_or_world.luxcore.gamma
     definitions["sampleupperhemisphereonly"] = lamp_or_world.luxcore.sampleupperhemisphereonly
 

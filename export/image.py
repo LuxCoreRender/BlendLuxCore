@@ -11,7 +11,7 @@ class ImageExporter(object):
     temp_images = {}
 
     @classmethod
-    def _save_to_temp_file(cls, image, scene):
+    def _save_to_temp_file(cls, image):
         key = utils.make_key(image)
 
         if key in cls.temp_images:
@@ -20,17 +20,25 @@ class ImageExporter(object):
         else:
             temp_image = tempfile.NamedTemporaryFile(delete=False)
             cls.temp_images[key] = temp_image
-            image.save_render(temp_image.name, scene)
+
+            # Save image to disk (we temporarily need a fresh scene because if we don't
+            # specify it, Blender applies the current scene's exposure settings etc.
+            # to the saved image (we don't want this))
+            tmp_scene = bpy.data.scenes.new("__LUXCORE_IMAGE_EXPORT__")
+            image.save_render(temp_image.name, tmp_scene)
+            bpy.data.scenes.remove(tmp_scene)
+
+            print("Created temp image:", temp_image.name)
 
         return temp_image.name
 
     @classmethod
-    def export(cls, image, scene=None):
+    def export(cls, image):
         if image.source == "GENERATED":
-            return cls._save_to_temp_file(image, scene)
+            return cls._save_to_temp_file(image)
         elif image.source == "FILE":
             if image.packed_file:
-                return cls._save_to_temp_file(image, scene)
+                return cls._save_to_temp_file(image)
             else:
                 return bpy.path.abspath(image.filepath, library=image.library)
         elif image.source == "SEQUENCE":
