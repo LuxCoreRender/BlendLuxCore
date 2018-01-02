@@ -1,3 +1,4 @@
+import math
 from . import calc_filmsize
 
 engine_to_str = {
@@ -95,13 +96,14 @@ def get_pretty_stats(config, stats, halt):
 
     # Samples/Sec
     samples_per_sec = stats.Get("stats.renderengine.total.samplesec").GetFloat()
-
-    if samples_per_sec > 10 ** 6 - 1:
-        # Use megasamples as unit
-        pretty.append("Samples/Sec %.1f M" % (samples_per_sec / 10 ** 6))
-    else:
-        # Use kilosamples as unit
-        pretty.append("Samples/Sec %d k" % (samples_per_sec / 10 ** 3))
+    # Sometimes when moving the camera during viewport render, samples_per_sec becomes nan
+    if not math.isnan(samples_per_sec):
+        if samples_per_sec > 10 ** 6 - 1:
+            # Use megasamples as unit
+            pretty.append("Samples/Sec %.1f M" % (samples_per_sec / 10 ** 6))
+        else:
+            # Use kilosamples as unit
+            pretty.append("Samples/Sec %d k" % (samples_per_sec / 10 ** 3))
 
     # Engine + Sampler
     engine = config.GetProperties().Get("renderengine.type").GetString()
