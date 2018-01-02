@@ -12,18 +12,21 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
                                   default=False,
                                   description=Roughness.aniso_desc,
                                   update=Roughness.update_anisotropy)
-    rough = bpy.props.BoolProperty(name="Rough",
-                                   description="Rough glass surface instead of a smooth one",
-                                   default=False,
-                                   update=Roughness.toggle_roughness)
-    architectural = bpy.props.BoolProperty(name="Architectural",
-                                           description="Skips refraction during transmission, propagates alpha and shadow rays",
-                                           default=False)
+    rough = BoolProperty(name="Rough",
+                         description="Rough glass surface instead of a smooth one",
+                         default=False,
+                         update=Roughness.toggle_roughness)
+    architectural = BoolProperty(name="Architectural",
+                                 description="Skips refraction during transmission, propagates alpha and shadow rays",
+                                 default=False)
+    ior = FloatProperty(name="IOR", default=1.5, min=1, soft_max=6, description="Index of refraction")
+    dispersion = FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.1, step=0.1, precision=3)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Transmission Color", (1, 1, 1))
         self.add_input("LuxCoreSocketColor", "Reflection Color", (1, 1, 1))
-        self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
+        # We use a property instead to disallow textured IOR for now
+        # self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
 
         Roughness.init(self, default=0.05, init_enabled=False)
         self.add_common_inputs()
@@ -45,6 +48,10 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
 
         if self._has_interior_volume():
             layout.label("Using IOR of interior volume", icon="INFO")
+        else:
+            col = layout.column(align=True)
+            col.prop(self, "ior")
+            col.prop(self, "dispersion")
 
     def export(self, props, luxcore_name=None):
         if self.rough:
@@ -58,11 +65,23 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
             "type": type,
             "kt": self.inputs["Transmission Color"].export(props),
             "kr": self.inputs["Reflection Color"].export(props),
+            "dispersion": self.dispersion,
         }
 
-        # Use IOR socket only if there is no interior volume linked to the output
+        # Use IOR and dispersion only if there is no interior volume linked to the output
         if not self._has_interior_volume():
-            definitions["interiorior"] = self.inputs["IOR"].export(props)
+            if self.dispersion > 0:
+                # Use an RGB IOR: three different refractive indices for red, green and blue
+                # Prevent IOR below 1 (would lead to weird results)
+                # TODO: maybe we should scale the spread with IOR? (higher IOR, higher spread - and at IOR 1 a spread of 0)
+                red = max(self.ior - self.dispersion, 1.000001)
+                green = self.ior
+                blue = self.ior + self.dispersion
+                definitions["interiorior"] = [red, green, blue]
+                definitions["dispersion"] = True
+            else:
+                definitions["interiorior"] = self.ior
+                definitions["dispersion"] = False
 
         if self.rough:
             Roughness.export(self, props, definitions)
