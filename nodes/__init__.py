@@ -91,7 +91,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
     def add_common_inputs(self):
         """ Call from derived classes (in init method) """
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
-        self.add_input("LuxCoreSocketColor", "Absorption", (0, 0, 0))
+        self.add_input("LuxCoreSocketColor", "Absorption", (1, 1, 1))
         self.add_input("LuxCoreSocketFloatPositive", "Absorption at depth (nm)", 1.0)
         self.add_input("LuxCoreSocketFloatPositive", "Absorption scale", 1.0)
         self.add_input("LuxCoreSocketColor", "Emission", (0, 0, 0))
