@@ -92,10 +92,10 @@ class LuxCoreNodeVolume(LuxCoreNode):
         """ Call from derived classes (in init method) """
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
         self.add_input("LuxCoreSocketColor", "Absorption", (1, 1, 1))
-        self.add_input("LuxCoreSocketFloatPositive", "Absorption at depth (nm)", 1.0)
+        self.add_input("LuxCoreSocketValueAtDepth", "Absorption at depth", 1.0)
         self.add_input("LuxCoreSocketFloatPositive", "Absorption scale", 1.0)
         self.add_input("LuxCoreSocketColor", "Emission", (0, 0, 0))
-
+        
     def export_common_inputs(self, props, definitions):
         """ Call from derived classes (in export method) """
         definitions["ior"] = self.inputs["IOR"].export(props)
@@ -104,12 +104,9 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
         for i in range(len(abs_col)):
             v = float(abs_col[i])
-            depth = self.inputs["Absorption at depth (nm)"].export(props)
+            depth = self.inputs["Absorption at depth"].export(props)
             scale = self.inputs["Absorption scale"].export(props)
             abs_col[i] = (-math.log(max([v, 1e-30])) / depth) * scale * (v == 1.0 and -1 or 1)
-
-        print("Absorption: ", abs_col)
-
 
         definitions["absorption"] = abs_col
         definitions["emission"] = self.inputs["Emission"].export(props)

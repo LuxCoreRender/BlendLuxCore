@@ -125,6 +125,8 @@ class LuxCoreSocketFloat(LuxCoreNodeSocket):
 class LuxCoreSocketFloatPositive(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0)
 
+class LuxCoreSocketValueAtDepth(LuxCoreSocketFloat):
+    default_value = FloatProperty(min=0,subtype='DISTANCE',unit='LENGTH',precision=5)
 
 class LuxCoreSocketFloat0to1(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=1)
@@ -133,7 +135,7 @@ class LuxCoreSocketFloat0to1(LuxCoreSocketFloat):
 
 class LuxCoreSocketRoughness(LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
-    default_value = FloatProperty(min=0.001, soft_max=0.8, max=1, description=ROUGHNESS_DESCRIPTION)
+    default_value = FloatProperty(min=0.001, soft_max=0.8, max=1.0, precision=4, description=ROUGHNESS_DESCRIPTION)
     slider = True
 
 
