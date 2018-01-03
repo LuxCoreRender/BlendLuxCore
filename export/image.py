@@ -20,7 +20,12 @@ class ImageExporter(object):
         else:
             temp_image = tempfile.NamedTemporaryFile(delete=False)
             cls.temp_images[key] = temp_image
-            image.save_render(temp_image.name, scene)
+
+            print('Unpacking image "%s" to temp file "%s"' % (image.name, temp_image.name))
+            orig_filepath = image.filepath_raw
+            image.filepath_raw = temp_image.name
+            image.save()
+            image.filepath_raw = orig_filepath
 
         return temp_image.name
 
