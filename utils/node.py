@@ -28,3 +28,9 @@ def export_material_input(input, props):
         props.Set(pyluxcore.Property("scene.materials.%s.type" % luxcore_name, "matte"))
         props.Set(pyluxcore.Property("scene.materials.%s.kd" % luxcore_name, [0, 0, 0]))
         return luxcore_name
+
+
+def get_linked_node(socket):
+    if not socket.is_linked:
+        return None
+    return socket.links[0].from_node

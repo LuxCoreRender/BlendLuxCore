@@ -106,7 +106,8 @@ def get_pretty_stats(config, stats, halt):
     # Engine + Sampler
     engine = config.GetProperties().Get("renderengine.type").GetString()
     sampler = config.GetProperties().Get("sampler.type").GetString()
-    pretty.append(engine_to_str[engine] + " + " + sampler_to_str[sampler])
+    if engine in engine_to_str and sampler in sampler_to_str:
+        pretty.append(engine_to_str[engine] + " + " + sampler_to_str[sampler])
 
     # Triangle count
     triangle_count = stats.Get("stats.dataset.trianglecount").GetInt()

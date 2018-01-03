@@ -81,6 +81,7 @@ class LuxCoreSocketVolume(LuxCoreNodeSocket):
     color = Color.volume
     # no default value
 
+
 class LuxCoreSocketFresnel(LuxCoreNodeSocket):
     color = Color.fresnel_texture
     # no default value
@@ -125,8 +126,10 @@ class LuxCoreSocketFloat(LuxCoreNodeSocket):
 class LuxCoreSocketFloatPositive(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0)
 
+
 class LuxCoreSocketValueAtDepth(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0,subtype='DISTANCE',unit='LENGTH',precision=5)
+    default_value = FloatProperty(min=0, subtype='DISTANCE', unit='LENGTH', precision=5)
+
 
 class LuxCoreSocketFloat0to1(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=1)
@@ -141,6 +144,14 @@ class LuxCoreSocketRoughness(LuxCoreSocketFloat):
 
 class LuxCoreSocketIOR(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=25, description=IOR_DESCRIPTION)
+
+    def draw(self, context, layout, node, text):
+        if hasattr(node, "has_interior_volume") and node.has_interior_volume():
+            # This socket is used on a glass node and is not exported because
+            # the settings of the attached interior volume are used instead.
+            layout.active = False
+
+        super().draw(context, layout, node, text)
 
 
 class LuxCoreSocketFloatVector(LuxCoreSocketFloat):
