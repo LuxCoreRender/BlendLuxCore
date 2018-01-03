@@ -16,8 +16,8 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
     bl_label = "Emission"
     bl_width_min = 160
 
-    power = FloatProperty(name="Power (W)", default=0, min=0, description=POWER_DESCRIPTION)
-    efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0, description=EFFICACY_DESCRIPTION)
+    power = FloatProperty(name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
+    efficacy = FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
     iesfile = StringProperty(name="IES File", subtype="FILE_PATH")
     flipz = BoolProperty(name="Flip IES Z Axis", default=False)
     samples = IntProperty(name="Samples", default=-1, min=-1, description=SAMPLES_DESCRIPTION)

@@ -20,7 +20,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
     architectural = BoolProperty(name="Architectural",
                                  description="Skips refraction during transmission, propagates alpha and shadow rays",
                                  default=False)
-    dispersion = FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.1, step=0.1, precision=3)
+    dispersion = FloatProperty(name="Dispersion",description="Dispersion of medium, i.e. cauchy C coefficient)", default=0, min=0, soft_max=0.1, step=0.1, precision=5)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Transmission Color", (1, 1, 1))
@@ -44,7 +44,6 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         row = layout.row()
         row.enabled = not self.rough
         row.prop(self, "architectural")
-
         layout.prop(self, "dispersion")
 
         if self.get_interior_volume():
@@ -89,20 +88,28 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
                 helper_name = utils.to_luxcore_name("_".join(name_parts))
 
                 helper_prefix = "scene.textures." + helper_name + "."
+
+                # Info for calculations:
+                # cauchy_b = ior-self.dispersion/0.589**2
+                # IOR_Red = cauchy_b+self.dispersion/0.645**2
+                # IOR_Green = cauchy_b+self.dispersion/0.510**2
+                # IOR_Blue = cauchy_b+self.dispersion/0.440**2
                 helper_defs = {
                     "type": "add",
                     "texture1": ior,
-                    "texture2": [-self.dispersion, 0, self.dispersion]
+                    "texture2": [-self.dispersion/0.589**2+self.dispersion/0.645**2, -self.dispersion/0.589**2+self.dispersion/0.510**2, -self.dispersion/0.589**2+self.dispersion/0.440**2]
                 }
                 props.Set(utils.create_props(helper_prefix, helper_defs))
 
                 definitions["interiorior"] = helper_name
             else:
+                cauchy_b = ior - self.dispersion/0.589**2
+
                 # IOR is not textured, just a simple value
                 # Prevent IOR below 1 (would lead to weird results)
-                red = max(ior - self.dispersion, 1.000001)
-                green = ior
-                blue = ior + self.dispersion
+                red = cauchy_b + self.dispersion/0.645**2
+                green = cauchy_b + self.dispersion/0.510**2
+                blue = cauchy_b + self.dispersion/0.440**2
                 definitions["interiorior"] = [red, green, blue]
         else:
             definitions["interiorior"] = ior
@@ -110,6 +117,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         if self.rough:
             Roughness.export(self, props, definitions)
         self.export_common_inputs(props, definitions)
+
         return self.base_export(props, definitions, luxcore_name)
 
     def get_interior_volume(self):
