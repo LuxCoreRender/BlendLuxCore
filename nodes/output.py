@@ -1,7 +1,5 @@
 import bpy
-from bpy.props import BoolProperty
 from . import LuxCoreNode
-from ..bin import pyluxcore
 from .. import utils
 
 

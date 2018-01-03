@@ -1,6 +1,4 @@
-from ..bin import pyluxcore
 import mathutils
-import bpy
 from bpy.types import NodeSocket
 from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty
 

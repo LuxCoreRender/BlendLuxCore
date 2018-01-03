@@ -1,4 +1,3 @@
-import bpy
 from bpy.props import FloatProperty, BoolProperty
 from .. import LuxCoreNodeMaterial, Roughness
 from ..output import get_active_output
