@@ -146,7 +146,7 @@ class LuxCoreSocketIOR(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, max=25, description=IOR_DESCRIPTION)
 
     def draw(self, context, layout, node, text):
-        if hasattr(node, "has_interior_volume") and node.has_interior_volume():
+        if hasattr(node, "get_interior_volume") and node.get_interior_volume():
             # This socket is used on a glass node and is not exported because
             # the settings of the attached interior volume are used instead.
             layout.active = False

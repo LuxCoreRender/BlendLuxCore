@@ -48,7 +48,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
 
         layout.prop(self, "dispersion")
 
-        if self.has_interior_volume():
+        if self.get_interior_volume():
             layout.label("Using IOR of interior volume", icon="INFO")
 
     def export(self, props, luxcore_name=None):
@@ -66,8 +66,8 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
             "dispersion": self.dispersion > 0,
         }
 
-        # Use IOR and dispersion only if there is no interior volume linked to the output
-        interior_vol = self.has_interior_volume()
+        # If we have an interior volume, we use its IOR instead of the glass IOR
+        interior_vol = self.get_interior_volume()
 
         if interior_vol:
             out = get_active_output(interior_vol, "LuxCoreNodeVolOutput")
@@ -113,7 +113,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)
 
-    def has_interior_volume(self):
+    def get_interior_volume(self):
         node_tree = self.id_data
         active_output = get_active_output(node_tree, "LuxCoreNodeMatOutput")
         if active_output:
