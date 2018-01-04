@@ -73,6 +73,10 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
     ]),
 
+    LuxCoreNodeCategoryVolume("LUXCORE_TEXTURE_POINTER", "Pointer", items=[
+        NodeItem("LuxCoreNodeTreePointer", label="Pointer"),
+    ]),
+
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_OUTPUT", "Output", items=[
         NodeItem("LuxCoreNodeVolOutput", label="Output"),
     ]),

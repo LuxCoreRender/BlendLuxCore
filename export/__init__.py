@@ -2,6 +2,7 @@ from time import time
 import bpy
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import node as utils_node
 from . import blender_object, camera, config, light, material
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from ..nodes.output import get_active_output
@@ -97,6 +98,13 @@ class MaterialCache(object):
                     exterior_vol = active_output.exterior_volume
                     if exterior_vol and (exterior_vol.is_updated or exterior_vol.is_updated_data):
                         mat_updated = True
+
+                    # Check pointer nodes for changes
+                    pointer_nodes = utils_node.find_nodes(node_tree, "LuxCoreNodeTreePointer")
+                    for node in pointer_nodes:
+                        pointer_tree = node.node_tree
+                        if pointer_tree and (pointer_tree.is_updated or pointer_tree.is_updated_data):
+                            mat_updated = True
                 else:
                     mat_updated = mat.is_updated
 

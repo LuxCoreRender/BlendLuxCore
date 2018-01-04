@@ -14,6 +14,14 @@ def init_mat_node_tree(node_tree):
     node_tree.links.new(matte.outputs[0], output.inputs[0])
 
 
+def init_tex_node_tree(node_tree):
+    nodes = node_tree.nodes
+
+    output = nodes.new("LuxCoreNodeTexOutput")
+    output.location = 300, 200
+    output.select = False
+
+
 def init_vol_node_tree(node_tree):
     nodes = node_tree.nodes
 
@@ -33,7 +41,7 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
     bl_description = "Create a material node tree"
 
     def execute(self, context):
-        if context.material:
+        if getattr(context, "material", None):
             name = context.material.name + "_Mat_Nodes"
         else:
             name = "Material Node Tree"
@@ -41,7 +49,7 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         node_tree = bpy.data.node_groups.new(name=name, type="luxcore_material_nodes")
         init_mat_node_tree(node_tree)
 
-        if context.material:
+        if getattr(context, "material", None):
             context.material.luxcore.node_tree = node_tree
 
             # Node tree is attached to object as fallback for now because of Blender bug.
@@ -68,6 +76,19 @@ class LUXCORE_OT_vol_nodetree_new(bpy.types.Operator):
 
         if context.node and hasattr(context.node, self.target):
             context.node[self.target] = node_tree
+
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_tex_nodetree_new(bpy.types.Operator):
+    bl_idname = "luxcore.tex_nodetree_new"
+    bl_label = "New"
+    bl_description = "Create a texture node tree"
+
+    def execute(self, context):
+        name = "Texture Node Tree"
+        node_tree = bpy.data.node_groups.new(name=name, type="luxcore_texture_nodes")
+        init_tex_node_tree(node_tree)
 
         return {"FINISHED"}
 

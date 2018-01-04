@@ -109,10 +109,10 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
             # User wants to stop or halt condition is reached
             self.update_stats("Render", "Stopping session...")
-            self._session.Stop()
             # Update stats to refresh film and draw the final result
             self._session.UpdateStats()
             self._framebuffer.draw(self, self._session)
+            self._session.Stop()
             # Clean up
             del self._session
             self._session = None
