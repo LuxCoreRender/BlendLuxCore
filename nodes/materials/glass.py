@@ -5,16 +5,36 @@ from ..output import get_active_output
 
 CAUCHYC_DESCRIPTION = (
     "Dispersion strength (cauchy C coefficient)\n"
-    "Realistic values range from 0.00354 to 0.01342"
+    "Realistic values range from 0.00354 to 0.01342\n"
+    "Not supported by architectural and rough glass"
+)
+
+ARCHGLASS_DESCRIPTION = (
+    "Use for thin sheets of glass like window panes, where refraction does not matter\n"
+    "(skips refraction during transmission, propagates alpha and shadow rays)"
 )
 
 
 class LuxCoreSocketCauchyC(LuxCoreSocketFloat):
-    default_value = FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.1, step=0.1, precision=5,
-                                  description=CAUCHYC_DESCRIPTION)
+    default_value = FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.1,
+                                  step=0.1, precision=5, description=CAUCHYC_DESCRIPTION)
+
+    def draw(self, context, layout, node, text):
+        if getattr(node, "architectural", False):
+            # This socket is used on a glass node and is not exported because
+            # archglass does not support dispersion
+            layout.active = False
+
+        if getattr(node, "rough", False):
+            # This socket is used on a glass node and is not exported because
+            # roughglass does not support dispersion
+            layout.active = False
+
+        super().draw(context, layout, node, text)
 
 
 class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
+    """ Node for the three LuxCore materials glass, roughglass and archglass """
     bl_label = "Glass Material"
     bl_width_min = 160
 
@@ -23,12 +43,12 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
                                   description=Roughness.aniso_desc,
                                   update=Roughness.update_anisotropy)
     rough = BoolProperty(name="Rough",
-                         description="Rough glass surface instead of a smooth one",
                          default=False,
+                         description="Rough glass surface instead of a smooth one",
                          update=Roughness.toggle_roughness)
     architectural = BoolProperty(name="Architectural",
-                                 description="Skips refraction during transmission, propagates alpha and shadow rays",
-                                 default=False)
+                                 default=False,
+                                 description=ARCHGLASS_DESCRIPTION)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Transmission Color", (1, 1, 1))
