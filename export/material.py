@@ -32,7 +32,7 @@ def convert(material):
                 print('ERROR: No node tree found in material "%s"' % material.name)
                 return fallback(luxcore_name)
 
-        active_output = get_active_output(node_tree, "LuxCoreNodeMatOutput")
+        active_output = get_active_output(node_tree)
 
         if active_output is None:
             print('ERROR: No active output node found in nodetree "%s"' % node_tree.name)
@@ -46,6 +46,8 @@ def convert(material):
         # TODO: collect exporter errors
         print("ERROR in material", material.name)
         print(error)
+        import traceback
+        traceback.print_exc()
         return fallback()
 
 

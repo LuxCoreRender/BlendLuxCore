@@ -107,6 +107,10 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatEmission", label="Light Emission"),
     ]),
 
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_POINTER", "Pointer", items=[
+        NodeItem("LuxCoreNodeTreePointer", label="Pointer"),
+    ]),
+
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_OUTPUT", "Output", items=[
         NodeItem("LuxCoreNodeMatOutput", label="Output"),
     ]),

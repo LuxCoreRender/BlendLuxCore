@@ -90,7 +90,7 @@ class MaterialCache(object):
                         mat_updated = True
 
                     # Check linked volumes for changes
-                    active_output = get_active_output(node_tree, "LuxCoreNodeMatOutput")
+                    active_output = get_active_output(node_tree)
                     interior_vol = active_output.interior_volume
                     if interior_vol and (interior_vol.is_updated or interior_vol.is_updated_data):
                         mat_updated = True

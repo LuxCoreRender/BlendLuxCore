@@ -85,7 +85,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             return
 
         try:
-            active_output = get_active_output(node_tree, "LuxCoreNodeVolOutput")
+            active_output = get_active_output(node_tree)
             luxcore_name = utils.get_unique_luxcore_name(node_tree)
             active_output.export(props, luxcore_name)
 

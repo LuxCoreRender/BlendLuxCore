@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import Node
+from bpy.props import PointerProperty
 from .. import utils
 import math
 from ..utils import node as utils_node
@@ -110,6 +111,45 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
         definitions["absorption"] = abs_col
         definitions["emission"] = self.inputs["Emission"].export(props)
+
+
+class LuxCoreNodeTreePointer(LuxCoreNode):
+    """ Pointer to a node tree """
+    bl_label = "Pointer"
+    bl_width_min = 160
+
+    suffix = "pointer"
+    node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
+
+    def init(self, context):
+        self.outputs.new("LuxCoreSocketMaterial", "Material")
+
+    def draw_buttons(self, context, layout):
+        if self.node_tree and self.node_tree.bl_idname == "luxcore_material_nodes":
+            layout.template_ID(self, "node_tree", new="luxcore.mat_nodetree_new")
+        else:
+            row = layout.row()
+            row.label("Node Tree:")
+            row.template_ID(self, "node_tree")
+
+    def export(self, props, luxcore_name=None):
+        if self.node_tree is None:
+            print(self.name + ": No node tree specified")
+            return None
+
+        # Import statement here to prevent circular imports
+        from .output import get_active_output
+        output = get_active_output(self.node_tree)
+
+        if output is None:
+            print("ERROR: no active output found in node tree", self.node_tree.name)
+            return None
+
+        if luxcore_name is None:
+            luxcore_name = self.make_name()
+
+        output.export(props, luxcore_name)
+        return luxcore_name
 
 
 class Roughness:

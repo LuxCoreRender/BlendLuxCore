@@ -2,13 +2,15 @@ import bpy
 from . import LuxCoreNode
 from .. import utils
 
+OUTPUT_MAP = {
+    "luxcore_material_nodes": "LuxCoreNodeMatOutput",
+    "luxcore_texture_nodes": "LuxCoreNodeTexOutput",
+    "luxcore_volume_nodes": "LuxCoreNodeVolOutput",
+}
 
-COL_ACTIVE = (0, 1, 0)
-COL_INACTIVE = [.2] * 3
 
-
-def get_active_output(node_tree, output_type):
-    assert output_type in ("LuxCoreNodeMatOutput", "LuxCoreNodeTexOutput", "LuxCoreNodeVolOutput")
+def get_active_output(node_tree):
+    output_type = OUTPUT_MAP[node_tree.bl_idname]
 
     for node in node_tree.nodes:
         node_type = getattr(node, "bl_idname", None)
@@ -18,15 +20,8 @@ def get_active_output(node_tree, output_type):
 
 
 def get_output_nodes(node_tree):
-    if node_tree.bl_idname == "luxcore_material_nodes":
-        output_type = "LuxCoreNodeMatOutput"
-    elif node_tree.bl_idname == "luxcore_texture_nodes":
-        output_type = "LuxCoreNodeTexOutput"
-    elif node_tree.bl_idname == "luxcore_volume_nodes":
-        output_type = "LuxCoreNodeVolOutput"
-    else:
-        raise NotImplementedError("Unkown node tree type %s" % node_tree.bl_idname)
-
+    """ Return a list with all output nodes in a node tree """
+    output_type = OUTPUT_MAP[node_tree.bl_idname]
     nodes = []
 
     for node in node_tree.nodes:
@@ -64,7 +59,10 @@ class LuxCoreNodeOutput(LuxCoreNode):
         layout.prop(self, "active")
 
     def copy(self, orig_node):
-        orig_node.set_active(False)
+        # Check if the copy happened inside the node tree
+        # This is e.g. not the case if a node tree was duplicated
+        if self.id_data == orig_node.id_data:
+            orig_node.set_active(False)
 
     def free(self):
         if not self.active:

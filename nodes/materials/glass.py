@@ -107,7 +107,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
 
     def get_interior_volume(self):
         node_tree = self.id_data
-        active_output = get_active_output(node_tree, "LuxCoreNodeMatOutput")
+        active_output = get_active_output(node_tree)
         if active_output:
             return active_output.interior_volume
         return False
