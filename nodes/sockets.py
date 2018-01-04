@@ -107,7 +107,7 @@ class LuxCoreSocketBump(LuxCoreNodeSocket):
 
 class LuxCoreSocketColor(LuxCoreNodeSocket):
     color = Color.color_texture
-    default_value = FloatVectorProperty(subtype="COLOR")
+    default_value = FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1)
 
     def export_default(self):
         return list(self.default_value)
