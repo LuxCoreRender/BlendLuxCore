@@ -117,26 +117,36 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
     """ Pointer to a node tree """
     bl_label = "Pointer"
     bl_width_min = 160
-
     suffix = "pointer"
-    node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
+
+    def update_node_tree(self, context):
+        if self.node_tree:
+            self.outputs["Material"].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
+            self.outputs["Color"].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
+        else:
+            self.outputs["Material"].enabled = False
+            self.outputs["Color"].enabled = False
+
+    node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree)
 
     def init(self, context):
         self.outputs.new("LuxCoreSocketMaterial", "Material")
+        self.outputs["Material"].enabled = False
+        self.outputs.new("LuxCoreSocketColor", "Color")
+        self.outputs["Color"].enabled = False
 
     def draw_buttons(self, context, layout):
+        # TODO the new operators don't link the created node tree to self.node_tree
         if self.node_tree and self.node_tree.bl_idname == "luxcore_material_nodes":
             layout.template_ID(self, "node_tree", new="luxcore.mat_nodetree_new")
+        elif self.node_tree and self.node_tree.bl_idname == "luxcore_texture_nodes":
+            layout.template_ID(self, "node_tree", new="luxcore.tex_nodetree_new")
         else:
             row = layout.row()
             row.label("Node Tree:")
             row.template_ID(self, "node_tree")
 
     def export(self, props, luxcore_name=None):
-        if self.node_tree is None:
-            print(self.name + ": No node tree specified")
-            return None
-
         # Import statement here to prevent circular imports
         from .output import get_active_output
         output = get_active_output(self.node_tree)

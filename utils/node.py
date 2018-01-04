@@ -17,6 +17,7 @@ def draw_uv_info(context, layout):
         elif len(uv_textures) == 0:
             layout.label("No UV map", icon="ERROR")
 
+
 def export_material_input(input, props):
     material_name = input.export(props)
 
@@ -34,3 +35,12 @@ def get_linked_node(socket):
     if not socket.is_linked:
         return None
     return socket.links[0].from_node
+
+
+def find_nodes(node_tree, bl_idname):
+    nodes = []
+    for node in node_tree.nodes:
+        if node.bl_idname == bl_idname:
+            nodes.append(node)
+
+    return nodes
