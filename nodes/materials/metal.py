@@ -48,16 +48,13 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
             definitions["fresnel"] = self.inputs["Fresnel"].export(props),
         else:            
             # Implicitly create a fresnelcolor texture with unique name
-            node_tree = self.id_data
-            name_parts = ["Fresnel", node_tree.name, self.name]
-            tex_name = utils.to_luxcore_name("_".join(name_parts))
-
-            FCprefix = "scene.textures." + tex_name + "."
-            fresnelcolor_defs = {
+            tex_name = self.make_name() + "fresnel_helper"
+            helper_prefix = "scene.textures." + tex_name + "."
+            helper_defs = {
                 "type": "fresnelcolor",
                 "kr": self.inputs["Color"].export(props),
             }
-            props.Set(utils.create_props(FCprefix, fresnelcolor_defs))
+            props.Set(utils.create_props(helper_prefix, helper_defs))
 
             definitions["fresnel"] = tex_name
             
