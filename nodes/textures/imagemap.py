@@ -12,16 +12,24 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     image = PointerProperty(name="Image", type=bpy.types.Image)
 
     channel_items = [
-        ("default", "Default", "Do not convert the image cannels"),
-        ("rgb", "RGB", "Use RGB color channels"),
-        ("red", "Red", "Use only the red color channel"),
-        ("green", "Green", "Use only the green color channel"),
-        ("blue", "Blue", "Use only the blue color channel"),
-        ("alpha", "Alpha", "Use only the alpha channel"),
-        ("mean", "Mean", "Greyscale"),
-        ("colored_mean", "Colored Mean", "Greyscale"),
+        ("default", "Default", "Do not convert the image cannels", 0),
+        ("rgb", "RGB", "Use RGB color channels", 1),
+        ("red", "Red", "Use only the red color channel", 2),
+        ("green", "Green", "Use only the green color channel", 3),
+        ("blue", "Blue", "Use only the blue color channel", 4),
+        ("alpha", "Alpha", "Use only the alpha channel", 5),
+        ("mean", "Mean", "Greyscale", 6),
+        ("colored_mean", "Colored Mean", "Greyscale", 7),
     ]
     channel = EnumProperty(name="Channel", items=channel_items, default="default")
+
+    wrap_items = [
+        ("repeat", "Repeat", "", 0),
+        ("clamp", "Clamp", "", 3),
+        ("black", "Black", "", 1),
+        ("white", "White", "", 2),
+    ]
+    wrap = EnumProperty(name="Wrap", items=wrap_items, default="repeat")
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloatPositive", "Gamma", 2.2)
@@ -35,6 +43,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
 
         if self.image:
             layout.prop(self, "channel")
+            layout.prop(self, "wrap")
 
         # Info about UV mapping (only show if default is used,
         # when no mapping node is linked)
@@ -50,6 +59,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             "gamma": self.inputs["Gamma"].export(props),
             "gain": self.inputs["Gain"].export(props),
             "channel": self.channel,
+            "wrap": self.wrap,
             # Mapping
             "mapping.type": "uvmapping2d",
             "mapping.uvscale": uvscale,
