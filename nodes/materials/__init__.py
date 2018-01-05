@@ -10,6 +10,7 @@ from .cloth import LuxCoreNodeMatCloth
 from .glass import LuxCoreNodeMatGlass
 from .glossytranslucent import LuxCoreNodeMatGlossyTranslucent
 from .glossy2 import LuxCoreNodeMatGlossy2
+from .glossycoating import LuxCoreNodeMatGlossyCoating
 from .carpaint import LuxCoreNodeMatCarpaint
 from .matte import LuxCoreNodeMatMatte
 from .mattetranslucent import LuxCoreNodeMatMatteTranslucent
@@ -86,10 +87,11 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatMirror", label="Mirror"),
         NodeItem("LuxCoreNodeMatGlossy2", label="Glossy"),
         NodeItem("LuxCoreNodeMatGlossyTranslucent", label="Glossy Translucent"),
+        NodeItem("LuxCoreNodeMatGlossyCoating", label="Glossy Coating"),
         NodeItem("LuxCoreNodeMatGlass", label="Glass"),
         NodeItem("LuxCoreNodeMatNull", label="Null (Transparent)"),
         NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),
-        NodeItem("LuxCoreNodeMatCloth", label="Cloth"),        
+        NodeItem("LuxCoreNodeMatCloth", label="Cloth"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[

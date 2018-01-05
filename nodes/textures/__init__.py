@@ -64,7 +64,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
     ]),
 
-    LuxCoreNodeCategoryTexture("LUXCORE_MATERIAL_POINTER", "Pointer", items=[
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_POINTER", "Pointer", items=[
         NodeItem("LuxCoreNodeTreePointer", label="Pointer"),
     ]),
 
