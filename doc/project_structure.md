@@ -39,6 +39,9 @@ Note: If we have a context (i.e. `context is not None`) then we are in viewport 
 If we have no context (`context is None`) then we are in final render or material preview mode.
 This is not explained/commented all the time in the code because it's such a fundamental concept.
 
+Note also that nodes are not exported here, they have their own 
+export methods in their classes (in the **nodes** directory, see below).
+
 ### nodes
 
 Contains everything node-related. 
