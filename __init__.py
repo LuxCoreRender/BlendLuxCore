@@ -9,7 +9,7 @@ from .ui import config, display, errorlog, halt, light, material, postpro, world
 
 bl_info = {
     "name": "LuxCore",
-    "author": "Simon Wendsche (B.Y.O.B.)",
+    "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068)",
     "version": (2, 0),
     "blender": (2, 77, 0),
     "category": "Render",
