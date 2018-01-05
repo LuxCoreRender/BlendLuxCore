@@ -1,9 +1,7 @@
 import bpy
+import os
 from bpy.props import PointerProperty, EnumProperty
 from .. import LuxCoreNodeTexture
-from ..sockets import LuxCoreSocketColor, LuxCoreSocketFresnel
-from ...utils import node as utils_node
-
 
 
 class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
@@ -27,7 +25,6 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
                 ("aluminium", "Aluminium", "aluminium")
     ]
 
-    
     input_type = EnumProperty(name="Type", description="Input Type", items=input_type_items, default="color",
                                         update=change_input_type)
 
@@ -42,8 +39,6 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (0.7, 0.7, 0.7))
         self.outputs.new("LuxCoreSocketFresnel", "Fresnel")
 
-        
-
     def draw_buttons(self, context, layout):
         layout.prop(self, "input_type", expand=True)
         
@@ -52,7 +47,6 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
 
         if self.input_type == "nk":
             layout.prop(self, "filepath")
-
 
     def export(self, props, luxcore_name=None):
         if self.input_type == "color":
@@ -67,9 +61,19 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
             }
         else:
             #Fresnel data file
-            definitions = {
-                "type": "fresnelsopra",
-                "file": bpy.path.abspath(self.filepath),
-            }
+            filepath = bpy.path.abspath(self.filepath)
+
+            if os.path.isfile(filepath):
+                definitions = {
+                    "type": "fresnelsopra",
+                    "file": filepath,
+                }
+            else:
+                # Fallback, file not found
+                print(self.name + ": ERROR: Could not find .nk file at path", filepath)
+                definitions = {
+                    "type": "fresnelcolor",
+                    "kr": [0, 0, 0],
+                }
         
         return self.base_export(props, definitions, luxcore_name)
