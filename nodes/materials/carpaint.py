@@ -37,15 +37,15 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
         self.inputs['R3'].enabled = enabled
 
     preset_items = [
-        ("manual", "Manual settings", "Try your luck"),
-        ("2k acrylack", "2k Acrylack", "2k acrylack"),
-        ("blue", "Blue", "blue"),
-        ("blue matte", "Blue Matte", "blue matte"),
-        ("bmw339", "BMW 339", "bmw339"),
-        ("ford f8", "Ford F8", "ford f8"),
-        ("opel titan", "Opel Titan", "opel titan"),
-        ("polaris silber", "Polaris Silber", "polaris silber"),
-        ("white", "White", "white"),
+        ("manual", "Manual settings", "Try your luck", 0),
+        ("2k acrylack", "2k Acrylack", "2k acrylack", 1),
+        ("blue", "Blue", "blue", 2),
+        ("blue matte", "Blue Matte", "blue matte", 3),
+        ("bmw339", "BMW 339", "bmw339", 4),
+        ("ford f8", "Ford F8", "ford f8", 5),
+        ("opel titan", "Opel Titan", "opel titan", 6),
+        ("polaris silber", "Polaris Silber", "polaris silber", 7),
+        ("white", "White", "white", 8),
     ]
     preset = EnumProperty(name="Preset", items=preset_items, default="manual", update=update_preset)
 

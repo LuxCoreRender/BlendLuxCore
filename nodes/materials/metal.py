@@ -14,8 +14,8 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
         self.inputs["Color"].enabled = self.input_type == "color"
 
     input_type_items = [
-        ("color", "Color", "Use custom color as input"),
-        ("fresnel", "Fresnel Texture", "Use a fresnel texture as input")
+        ("color", "Color", "Use custom color as input", 0),
+        ("fresnel", "Fresnel Texture", "Use a fresnel texture as input", 1)
     ]
     input_type = EnumProperty(name="Type", description="Input Type", items=input_type_items, default="color",
                                         update=change_input_type)

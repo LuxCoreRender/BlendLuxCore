@@ -7,12 +7,12 @@ REPEATV_DESCRIPTION = "Repetition count of pattern in V direction"
 
 
 class LuxCoreSocketRepeatU(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, description=REPEATU_DESCRIPTION)
+    default_value = FloatProperty(min=0, soft_max=10000, description=REPEATU_DESCRIPTION)
     slider = True
 
 
 class LuxCoreSocketRepeatV(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, description=REPEATV_DESCRIPTION)
+    default_value = FloatProperty(min=0, soft_max=10000, description=REPEATV_DESCRIPTION)
     slider = True
 
 
@@ -22,12 +22,12 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
     bl_width_min = 160
 
     preset_items = [
-                ("denim", "Denim", "Denim"),
-                ("silk_charmeuse", "Silk Charmeuse", "Silk charmeuse"),
-                ("cotton_twill", "Cotton Twill", "Cotton twill"),
-                ("wool_gabardine", "Wool Gabardine", "Wool Gabardine"),
-                ("polyester_lining_cloth", "Polyester Lining Cloth", "Polyester lining cloth"),
-                ("silk_shantung", "Silk Shantung", "Silk shantung"),
+        ("denim", "Denim", "Denim", 0),
+        ("silk_charmeuse", "Silk Charmeuse", "Silk charmeuse", 1),
+        ("cotton_twill", "Cotton Twill", "Cotton twill", 2),
+        ("wool_gabardine", "Wool Gabardine", "Wool Gabardine", 3),
+        ("polyester_lining_cloth", "Polyester Lining Cloth", "Polyester lining cloth", 4),
+        ("silk_shantung", "Silk Shantung", "Silk shantung", 5),
     ]
 
     preset = EnumProperty(name="Preset", description="Cloth presets", items=preset_items,
