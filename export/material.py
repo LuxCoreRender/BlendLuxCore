@@ -8,6 +8,9 @@ GLOBAL_FALLBACK_MAT = "__CLAY__"
 
 def convert(material, scene):
     try:
+        if material is None:
+            return fallback()
+
         # print("converting material:", material.name)
         props = pyluxcore.Properties()
         luxcore_name = utils.get_unique_luxcore_name(material)
