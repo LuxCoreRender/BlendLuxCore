@@ -1,9 +1,39 @@
 import bpy
-from bpy.props import StringProperty
+from bpy.props import StringProperty, CollectionProperty
+from bpy.types import PropertyGroup
 
 
-class LuxCoreErrorLog(bpy.types.PropertyGroup):
-    errors = StringProperty(name="")
+def read_only(string_property, value):
+    print("tried to access")
+    pass
 
-    def set(self, error):
-        self.errors = str(error)
+
+class LuxCoreError(PropertyGroup):
+    message = StringProperty()
+
+
+class LuxCoreWarning(PropertyGroup):
+    message = StringProperty()
+
+
+class LuxCoreErrorLog(PropertyGroup):
+    errors = CollectionProperty(type=LuxCoreError)
+    warnings = CollectionProperty(type=LuxCoreWarning)
+
+    def add_error(self, message):
+        self._add("ERROR:", self.errors, message)
+
+    def add_warning(self, message):
+        self._add("WARNING:", self.warnings, message)
+
+    def clear(self):
+        self.errors.clear()
+        self.warnings.clear()
+
+    def _add(self, prefix, collection, message):
+        print(prefix, message)
+        collection.add()
+        new = collection[-1]
+        # Access message property without using the setter
+        # (because it's read only for the user)
+        new["message"] = str(message)

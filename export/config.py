@@ -92,9 +92,8 @@ def convert(scene, context=None):
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
-        # TODO: collect exporter errors
-        print("ERROR in config export")
-        print(error)
+        msg = 'Config: %s' % error
+        scene.luxcore.errorlog.add_warning(msg)
         return pyluxcore.Properties()
 
 

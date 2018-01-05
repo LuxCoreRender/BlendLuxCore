@@ -30,6 +30,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def update(self, data, scene):
         """Export scene data for render"""
         try:
+            # Clear error log
+            scene.luxcore.errorlog.clear()
+
             assert self._session is None
             self.update_stats("Export", "exporting...")
             self._session = self._exporter.create_session(self, scene)
@@ -39,9 +42,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def render(self, scene):
         try:
-            # Clear error log
-            scene.luxcore.errorlog.set("")
-
             if self.error:
                 raise self.error
 
@@ -125,7 +125,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             import traceback
             traceback.print_exc()
             # Add error to error log so the user can inspect and copy/paste it
-            scene.luxcore.errorlog.set(error)
+            scene.luxcore.errorlog.add_error(error)
 
     def view_update(self, context):
         # We use a custom function because sometimes we need to pass

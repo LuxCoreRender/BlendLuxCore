@@ -21,7 +21,8 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
         props = pyluxcore.Properties()
 
         if blender_obj.data is None:
-            print("No mesh data")
+            # This is not worth a warning in the errorlog
+            print(blender_obj.name + ": No mesh data")
             return props, None
 
         if update_mesh:
@@ -31,14 +32,15 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
             mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
 
             if mesh is None or len(mesh.tessfaces) == 0:
-                print("No mesh data after to_mesh()")
+                # This is not worth a warning in the errorlog
+                print(blender_obj.name + ": No mesh data after to_mesh()")
                 return props, None
 
             mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
             bpy.data.meshes.remove(mesh, do_unlink=False)
         else:
             assert exported_object is not None
-            print("Using cached mesh")
+            print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
 
         transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
@@ -46,7 +48,7 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
             if material_index < len(blender_obj.material_slots):
                 mat = blender_obj.material_slots[material_index].material
                 # TODO material cache
-                lux_mat_name, mat_props = material.convert(mat)
+                lux_mat_name, mat_props = material.convert(mat, scene)
             else:
                 # The object has no material slots
                 lux_mat_name, mat_props = material.fallback()
@@ -56,9 +58,8 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
 
         return props, ExportedObject(mesh_definitions)
     except Exception as error:
-        # TODO: collect exporter errors
-        print("ERROR in object", blender_obj.name)
-        print(error)
+        msg = 'Object "%s": %s' % (blender_obj.name, error)
+        scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None

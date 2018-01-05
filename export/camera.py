@@ -129,9 +129,8 @@ def convert(scene, context=None):
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
-        # TODO: collect exporter errors
-        print("ERROR in camera export")
-        print(error)
+        msg = 'Camera: %s' % error
+        scene.luxcore.errorlog.add_warning(msg)
         return pyluxcore.Properties()
 
 

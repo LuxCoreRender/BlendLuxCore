@@ -6,7 +6,7 @@ from ..nodes.output import get_active_output
 GLOBAL_FALLBACK_MAT = "__CLAY__"
 
 
-def convert(material):
+def convert(material, scene):
     try:
         # print("converting material:", material.name)
         props = pyluxcore.Properties()
@@ -29,13 +29,15 @@ def convert(material):
 
             # TODO remove "if node_tree is None" once code above is not needed anymore
             if node_tree is None:
-                print('ERROR: No node tree found in material "%s"' % material.name)
+                msg = 'Material "%s": Missing node tree' % material.name
+                scene.luxcore.errorlog.add_warning(msg)
                 return fallback(luxcore_name)
 
         active_output = get_active_output(node_tree)
 
         if active_output is None:
-            print('ERROR: No active output node found in nodetree "%s"' % node_tree.name)
+            msg = 'Node tree "%s": Missing active output node' % node_tree.name
+            scene.luxcore.errorlog.add_warning(msg)
             return fallback(luxcore_name)
 
         # Now export the material node tree, starting at the output node
@@ -43,9 +45,8 @@ def convert(material):
 
         return luxcore_name, props
     except Exception as error:
-        # TODO: collect exporter errors
-        print("ERROR in material", material.name)
-        print(error)
+        msg = 'Material "%s": %s' % (material.name, error)
+        scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
         return fallback()

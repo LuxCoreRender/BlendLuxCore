@@ -336,7 +336,7 @@ class Exporter(object):
 
         if changes & Change.MATERIAL:
             for mat in self.material_cache.changed_materials:
-                luxcore_name, mat_props = material.convert(mat)
+                luxcore_name, mat_props = material.convert(mat, context.scene)
                 props.Set(mat_props)
 
         if changes & Change.VISIBILITY:

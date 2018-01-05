@@ -134,9 +134,8 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
         props = utils.create_props(prefix, definitions)
         return props, exported_light
     except Exception as error:
-        # TODO: collect exporter errors
-        print("ERROR in light", blender_obj.name)
-        print(error)
+        msg = 'Light "%s": %s' % (blender_obj.name, error)
+        scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None
@@ -184,9 +183,8 @@ def convert_world(world, scene):
         props = utils.create_props(prefix, definitions)
         return props
     except Exception as error:
-        # TODO: collect exporter errors
-        print("ERROR in world", world.name)
-        print(error)
+        msg = 'World "%s": %s' % (world.name, error)
+        scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties()
