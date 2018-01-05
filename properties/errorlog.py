@@ -17,6 +17,14 @@ class LuxCoreWarning(PropertyGroup):
 
 
 class LuxCoreErrorLog(PropertyGroup):
+    """
+    Errors here are serious exceptions that caused the render to abort
+
+    Warnings include everything that failed where the user might want to fix it,
+    report: missing textures, IES files, materials, node trees etc.
+    But not every small export warning that can happen in normal Blender scenes,
+    do not report: object without mesh data (aka Empty) or mesh without faces (e.g. curves used in modifiers)
+    """
     errors = CollectionProperty(type=LuxCoreError)
     warnings = CollectionProperty(type=LuxCoreWarning)
 

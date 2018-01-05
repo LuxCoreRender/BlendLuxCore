@@ -8,6 +8,7 @@ from .image import ImageExporter
 
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
+MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
 def convert_lamp(blender_obj, scene, context, luxcore_scene):
@@ -39,12 +40,25 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                 definitions["type"] = "mappoint"
 
                 if lamp.luxcore.image:
-                    definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image)
-                    definitions["gamma"] = lamp.luxcore.gamma
+                    try:
+                        filepath = ImageExporter.export(lamp.luxcore.image)
+                        definitions["mapfile"] = filepath
+                        definitions["gamma"] = lamp.luxcore.gamma
+                    except OSError as error:
+                        msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+                        scene.luxcore.errorlog.add_warning(msg)
+                        # Fallback
+                        definitions["type"] = "point"
+                        # Signal that the image is missing
+                        definitions["gain"] = [x * lamp.luxcore.gain for x in MISSING_IMAGE_COLOR]
+                    
                 if lamp.luxcore.iesfile:
-                    # TODO: error if iesfile does not exist
-                    definitions["iesfile"] = lamp.luxcore.iesfile
-                    definitions["flipz"] = lamp.luxcore.flipz
+                    filepath = utils.get_abspath(lamp.luxcore.iesfile, must_exist=True, must_be_file=True)
+                    if filepath:
+                        definitions["iesfile"] = lamp.luxcore.iesfile
+                        definitions["flipz"] = lamp.luxcore.flipz
+                    else:
+                        _report_missing_iesfile(blender_obj, scene, lamp.luxcore.iesfile)
             else:
                 # point
                 definitions["type"] = "point"
@@ -81,10 +95,18 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
 
             if lamp.luxcore.image:
                 # projection
-                definitions["type"] = "projection"
-                definitions["fov"] = coneangle * 2
-                definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image)
-                definitions["gamma"] = lamp.luxcore.gamma
+                try:
+                    definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image)
+                    definitions["type"] = "projection"
+                    definitions["fov"] = coneangle * 2
+                    definitions["gamma"] = lamp.luxcore.gamma
+                except OSError as error:
+                    msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+                    scene.luxcore.errorlog.add_warning(msg)
+                    # Fallback
+                    definitions["type"] = "spot"
+                    # Signal that the image is missing
+                    definitions["gain"] = [x * lamp.luxcore.gain for x in MISSING_IMAGE_COLOR]
             else:
                 # spot
                 definitions["type"] = "spot"
@@ -205,8 +227,20 @@ def _convert_common_props(lamp_or_world):
 def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
     assert lamp_or_world.luxcore.image is not None
 
+    try:
+        filepath = ImageExporter.export(lamp_or_world.luxcore.image)
+    except OSError as error:
+        type = "Lamp" if isinstance(lamp_or_world, bpy.types.Lamp) else "World"
+        msg = '%s "%s": %s' % (type, lamp_or_world.name, error)
+        scene.luxcore.errorlog.add_warning(msg)
+        # Fallback
+        definitions["type"] = "constantinfinite"
+        # Signal that the image is missing
+        definitions["gain"] = [x * lamp_or_world.luxcore.gain for x in MISSING_IMAGE_COLOR]
+        return
+
     definitions["type"] = "infinite"
-    definitions["file"] = ImageExporter.export(lamp_or_world.luxcore.image)
+    definitions["file"] = filepath
     definitions["gamma"] = lamp_or_world.luxcore.gamma
     definitions["sampleupperhemisphereonly"] = lamp_or_world.luxcore.sampleupperhemisphereonly
 
@@ -296,3 +330,13 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
     mesh_definition = [luxcore_name, fake_material_index]
     exported_obj = ExportedObject([mesh_definition])
     return props, exported_obj
+
+
+def _report_missing_iesfile(blender_obj, scene, filepath):
+    """
+    Note: pass in the original filepath - the one returned by
+    utils.get_abspath() is None if the file is not found
+    """
+    error = 'Could not find .ies file at path "%s"' % filepath
+    msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+    scene.luxcore.errorlog.add_warning(msg)

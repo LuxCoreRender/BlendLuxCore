@@ -51,11 +51,21 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             utils_node.draw_uv_info(context, layout)
 
     def export(self, props, luxcore_name=None):
+        if self.image is None:
+            return [0, 0, 0]
+
+        try:
+            filepath = ImageExporter.export(self.image)
+        except OSError as error:
+            msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
+            bpy.context.scene.luxcore.errorlog.add_warning(msg)
+            return [1, 0, 1]
+
         uvscale, uvdelta = self.inputs["2D Mapping"].export(props)
 
         definitions = {
             "type": "imagemap",
-            "file": ImageExporter.export(self.image),
+            "file": filepath,
             "gamma": self.inputs["Gamma"].export(props),
             "gain": self.inputs["Gain"].export(props),
             "channel": self.channel,

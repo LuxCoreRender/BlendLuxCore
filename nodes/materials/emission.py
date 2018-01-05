@@ -2,6 +2,7 @@ import bpy
 from bpy.props import FloatProperty, BoolProperty, StringProperty, IntProperty
 from .. import LuxCoreNode
 from ...properties.light import POWER_DESCRIPTION, EFFICACY_DESCRIPTION, SAMPLES_DESCRIPTION
+from ... import utils
 
 
 class LuxCoreNodeMatEmission(LuxCoreNode):
@@ -52,7 +53,13 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         definitions["emission.power"] = self.power
         definitions["emission.efficency"] = self.efficacy
         definitions["emission.samples"] = self.samples
+
         if self.iesfile:
-            # TODO: error if iesfile does not exist (also resolve relative paths etc.)
-            definitions["emission.iesfile"] = self.iesfile
-            definitions["emission.flipz"] = self.flipz
+            filepath = utils.get_abspath(self.iesfile, must_exist=True, must_be_file=True)
+            if filepath:
+                definitions["emission.iesfile"] = filepath
+                definitions["emission.flipz"] = self.flipz
+            else:
+                error = 'Could not find .ies file at path "%s"' % self.iesfile
+                msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
+                bpy.context.scene.luxcore.errorlog.add_warning(msg)

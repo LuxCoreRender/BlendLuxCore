@@ -37,7 +37,11 @@ class ImageExporter(object):
             if image.packed_file:
                 return cls._save_to_temp_file(image, scene)
             else:
-                return bpy.path.abspath(image.filepath, library=image.library)
+                filepath = utils.get_abspath(image.filepath, library=image.library, must_exist=True, must_be_file=True)
+                if filepath:
+                    return filepath
+                else:
+                    raise OSError('Could not find image "%s" at path "%s"' % (image.name, image.filepath))
         elif image.source == "SEQUENCE":
             # TODO
             raise NotImplementedError("Sequence not supported yet")

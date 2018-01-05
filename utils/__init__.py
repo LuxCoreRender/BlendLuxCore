@@ -267,7 +267,8 @@ def get_theme(context):
     current_theme_name = context.user_preferences.themes.items()[0][0]
     return context.user_preferences.themes[current_theme_name]
 
-def get_abspath(path, must_exist=False, must_be_file=False):
+def get_abspath(path, library=None, must_exist=False, must_be_file=False):
+    """ library: The library this path is from. """
     abspath = bpy.path.abspath(path)
 
     if must_exist and not os.path.exists(abspath):
