@@ -52,7 +52,7 @@ Contains everything node-related.
   
   #### textures
   
-  Contains the texture node tree definitions, corresponding categories and all material nodes.
+  Contains the texture node tree definitions, corresponding categories and all texture nodes.
   
   Note that texture nodes can also be created "inline" in material or volume node trees. 
   The texture node tree is made for re-usable texture setups, for example when you want to use the same
@@ -60,7 +60,7 @@ Contains everything node-related.
   
   #### volumes
   
-  Contains the volume node tree definitions, corresponding categories and all material nodes.
+  Contains the volume node tree definitions, corresponding categories and all volume nodes.
   
 ### operators
 
