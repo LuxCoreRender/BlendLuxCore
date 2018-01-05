@@ -40,6 +40,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def render(self, scene):
         try:
             if self.error:
+                # We have to re-raise the error from update() here because
+                # we can only use  self.error_set() in this function
                 raise self.error
 
             if self._session is None:
@@ -143,8 +145,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             except Exception as error:
                 del self._session
                 self._session = None
+                # Reset the exporter to invalidate all caches
+                self._exporter = export.Exporter()
 
                 self.update_stats("Error: ", str(error))
+                context.scene.luxcore.errorlog.add_error(error)
+
                 import traceback
                 traceback.print_exc()
                 return
