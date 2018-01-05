@@ -22,9 +22,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if platform.system() == "Linux":
-        files = ["libembree.so.2", "libtbb.so.2", "pyluxcore.so"]
+        files = ["libembree.so.2", "libtbb.so.2", "pyluxcore.so", "luxcoreui"]
+    elif platform.system() == "Windows":
+        files = ["embree.dll", "tbb.dll", "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe"]
     else:
-        files = []
+        print("Unsupported system:", platform.system())
 
     for root, dirnames, filenames in os.walk(args.source_path):
         files_in_dir = set(filenames).intersection(files)
