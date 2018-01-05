@@ -206,7 +206,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
             # Show formatted statistics in Blender UI
             config = self._session.GetRenderConfig()
-            pretty_stats = utils_render.get_pretty_stats(config, stats, context.scene.luxcore.halt)
+            pretty_stats = utils_render.get_pretty_stats(config, stats, context.scene)
             self.update_stats(pretty_stats, status_message)
         except Exception as error:
             del self._session

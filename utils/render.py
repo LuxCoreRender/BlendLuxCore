@@ -26,7 +26,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
     stats = engine._session.GetStats()
 
     # Show stats string in UI
-    pretty_stats = get_pretty_stats(config, stats, scene.luxcore.halt)
+    pretty_stats = get_pretty_stats(config, stats, scene)
     if draw_film:
         refresh_message = "Refreshing film..."
     else:
@@ -77,7 +77,12 @@ def halt_condition_met(scene, stats):
     return False
 
 
-def get_pretty_stats(config, stats, halt):
+def get_pretty_stats(config, stats, scene):
+    halt = scene.luxcore.halt
+    errorlog = scene.luxcore.errorlog
+
+    # Here we collect strings in a list and later join them
+    # so the result will look like: "message 1 | message 2 | ..."
     pretty = []
 
     # Time
@@ -112,6 +117,21 @@ def get_pretty_stats(config, stats, halt):
     # Triangle count
     triangle_count = stats.Get("stats.dataset.trianglecount").GetInt()
     pretty.append('{:,} Tris'.format(triangle_count))
+
+    # Errors and warnings
+    error_str = ""
+
+    if errorlog.errors:
+        error_str += "%d errors" % len(errorlog.errors)
+
+    if errorlog.warnings:
+        if error_str:
+            error_str += ", "
+        error_str += "%d warnings" % len(errorlog.warnings)
+
+    if error_str:
+        error_str += " (check error log in render properties)"
+        pretty.append(error_str)
 
     return " | ".join(pretty)
 
