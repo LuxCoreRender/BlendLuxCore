@@ -62,9 +62,15 @@ class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.
             # Node tree is attached to object as fallback for now because of Blender bug.
             # This only allows to have one material per object.
             # TODO: waiting for a fix: https://developer.blender.org/T53509
-            layout.label("If something does not work, make sure that", icon="ERROR")
-            layout.label("both pointers below point to the same node tree")
+
+            col = layout.column(align=True)
+            col.label("Node tree is attached to object as fallback for now because of Blender bug")
+            col.label("-> Only one persistent material possible per object!")
+            col.operator("luxcore.show_the_f_bug", icon="URL")
+            col.label("If something does not work, make sure that", icon="ERROR")
+            col.label("both pointers below point to the same node tree")
             layout.separator()
+
             layout.label("Material Nodes (buggy):")
             layout.template_ID(mat.luxcore, "node_tree", new="luxcore.mat_nodetree_new")
             mat = context.object

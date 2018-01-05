@@ -4,7 +4,6 @@ from .. import utils
 from ..utils import ExportedObject
 
 from . import material
-from .material import GLOBAL_FALLBACK_MAT
 from .light import convert_lamp
 
 
@@ -50,7 +49,9 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
                 mat = blender_obj.material_slots[material_index].material
                 # TODO material cache
                 lux_mat_name, mat_props = material.convert(mat, scene)
+
                 if mat is None:
+                    # Note: material.convert returned the fallback material in this case
                     msg = 'Object "%s": No material attached to slot %d' % (blender_obj.name, material_index)
                     scene.luxcore.errorlog.add_warning(msg)
             else:

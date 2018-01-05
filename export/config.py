@@ -88,7 +88,8 @@ def convert(scene, context=None):
         definitions["film.outputs.1.type"] = "RGB_IMAGEPIPELINE"
         definitions["film.outputs.1.filename"] = "RGB_IMAGEPIPELINE.png"
         definitions["film.imagepipeline.0.type"] = "TONEMAP_AUTOLINEAR"
-
+        definitions["film.imagepipeline.1.type"] = "TONEMAP_LINEAR"
+        definitions["film.imagepipeline.1.scale"] = 1 / 2.25
 
         return utils.create_props(prefix, definitions)
     except Exception as error:

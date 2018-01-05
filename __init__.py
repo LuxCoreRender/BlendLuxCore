@@ -25,7 +25,24 @@ def blendluxcore_exit():
     ImageExporter.cleanup()
 
 
+from bpy.app.handlers import persistent
+@persistent
+def blendluxcore_load_post(dummy):
+    # Workaround for blender bug: relink pointers that were not saved
+    # See https://developer.blender.org/T53509 and https://github.com/LuxCoreRender/BlendLuxCore/issues/12
+    print("Applying workaround for Blender bug...")
+    for obj in bpy.data.objects:
+        # The workaround can only support one material slot
+        if obj.material_slots and obj.luxcore.node_tree:
+            mat = obj.material_slots[0].material
+            if mat:
+                mat.luxcore.node_tree = obj.luxcore.node_tree
+                print("Reassigned node tree of material", mat.name, "to point to", mat.luxcore.node_tree)
+
+
 def register():
+    bpy.app.handlers.load_post.append(blendluxcore_load_post)
+
     import atexit
     # Make sure we only register the callback once
     atexit.unregister(blendluxcore_exit)

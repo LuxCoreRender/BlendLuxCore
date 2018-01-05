@@ -121,3 +121,14 @@ class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
     def execute(self, context):
         context.scene.luxcore.errorlog.clear()
         return {"FINISHED"}
+
+
+class LUXCORE_OT_show_the_f_bug(bpy.types.Operator):
+    """:dedede"""
+    bl_idname = "luxcore.show_the_f_bug"
+    bl_label = "Open the bug report in your favourite web browser"
+
+    def execute(self, context):
+        import webbrowser
+        webbrowser.open("https://developer.blender.org/T53509")
+        return {"FINISHED"}
