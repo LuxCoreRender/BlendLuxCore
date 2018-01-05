@@ -1,14 +1,15 @@
-import bpy
 from bpy.props import FloatProperty, EnumProperty
 from .. import LuxCoreNodeMaterial
-from ..sockets import LuxCoreSocketFloat, LuxCoreSocketColor
+from ..sockets import LuxCoreSocketFloat
 
 REPEATU_DESCRIPTION = "Repetition count of pattern in U direction"
 REPEATV_DESCRIPTION = "Repetition count of pattern in V direction"
 
+
 class LuxCoreSocketRepeatU(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, description=REPEATU_DESCRIPTION)
     slider = True
+
 
 class LuxCoreSocketRepeatV(LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, description=REPEATV_DESCRIPTION)
@@ -21,17 +22,16 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
     bl_width_min = 160
 
     preset_items = [
-                ('denim', 'Denim', 'Denim'),
-                ('silk_charmeuse', 'Silk Charmeuse', 'Silk charmeuse'),
-                ('cotton_twill', 'Cotton Twill', 'Cotton twill'),
-                ('wool_gabardine', 'Wool Gabardine', 'Wool Gabardine'),
-                ('polyester_lining_cloth', 'Polyester Lining Cloth', 'Polyester lining cloth'),
-                ('silk_shantung', 'Silk Shantung', 'Silk shantung'),
+                ("denim", "Denim", "Denim"),
+                ("silk_charmeuse", "Silk Charmeuse", "Silk charmeuse"),
+                ("cotton_twill", "Cotton Twill", "Cotton twill"),
+                ("wool_gabardine", "Wool Gabardine", "Wool Gabardine"),
+                ("polyester_lining_cloth", "Polyester Lining Cloth", "Polyester lining cloth"),
+                ("silk_shantung", "Silk Shantung", "Silk shantung"),
     ]
 
-    preset = EnumProperty(name='Preset', description='Cloth presets', items=preset_items,
-                                           default='denim')
-
+    preset = EnumProperty(name="Preset", description="Cloth presets", items=preset_items,
+                          default="denim")
     
     def init(self, context):
         self.add_input("LuxCoreSocketRepeatU", "Repeat U", 100)
@@ -44,9 +44,8 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'preset')
+        layout.prop(self, "preset")
 
     def export(self, props, luxcore_name=None):
         definitions = {
