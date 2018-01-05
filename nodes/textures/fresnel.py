@@ -2,6 +2,7 @@ import bpy
 import os
 from bpy.props import PointerProperty, EnumProperty
 from .. import LuxCoreNodeTexture
+from ... import utils
 
 
 class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
@@ -61,16 +62,19 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
             }
         else:
             #Fresnel data file
-            filepath = bpy.path.abspath(self.filepath)
+            filepath = utils.get_abspath(self.filepath, must_exist=True, must_be_file=True)
 
-            if os.path.isfile(filepath):
+            if filepath:
                 definitions = {
                     "type": "fresnelsopra",
                     "file": filepath,
                 }
             else:
                 # Fallback, file not found
-                print(self.name + ": ERROR: Could not find .nk file at path", filepath)
+                error = 'Could not find .nk file at path "%s"' % self.filepath
+                msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
+                bpy.context.scene.luxcore.errorlog.add_warning(msg)
+
                 definitions = {
                     "type": "fresnelcolor",
                     "kr": [0, 0, 0],

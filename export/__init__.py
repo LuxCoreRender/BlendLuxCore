@@ -169,6 +169,7 @@ class Exporter(object):
 
     def create_session(self, engine, scene, context=None):
         print("create_session")
+        scene.luxcore.errorlog.clear()
         start = time()
         # Scene
         luxcore_scene = pyluxcore.Scene()

@@ -27,6 +27,10 @@ class LuxCoreErrorLog(bl_ui.properties_render.RenderButtonsPanel, bpy.types.Pane
 
     def draw(self, context):
         errorlog = context.scene.luxcore.errorlog
+
+        if errorlog.errors or errorlog.warnings:
+            self.layout.operator("luxcore.errorlog_clear", icon="X")
+
         self._draw(errorlog.errors, "Errors:", ICON_ERROR)
         self._draw(errorlog.warnings, "Warnings:", ICON_WARNING)
 

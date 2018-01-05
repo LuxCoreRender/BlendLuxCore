@@ -1,6 +1,8 @@
+import bpy
 import mathutils
 import math
 import re
+import os
 from ..bin import pyluxcore
 
 
@@ -264,3 +266,16 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
 def get_theme(context):
     current_theme_name = context.user_preferences.themes.items()[0][0]
     return context.user_preferences.themes[current_theme_name]
+
+def get_abspath(path, must_exist=False, must_be_file=False):
+    abspath = bpy.path.abspath(path)
+
+    if must_exist and not os.path.exists(abspath):
+        print('Path does not exist: "%s"' % abspath)
+        return None
+
+    if must_be_file and not os.path.isfile(abspath):
+        print('Not a file: "%s"' % abspath)
+        return None
+
+    return abspath

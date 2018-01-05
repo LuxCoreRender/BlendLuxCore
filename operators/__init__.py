@@ -111,3 +111,13 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
             obj.data.materials.append(mat)
 
         return {"FINISHED"}
+
+
+class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
+    bl_idname = "luxcore.errorlog_clear"
+    bl_label = "Clear Error Log"
+    bl_description = "(Log is automatically cleared when a final or viewport render is started)"
+
+    def execute(self, context):
+        context.scene.luxcore.errorlog.clear()
+        return {"FINISHED"}
