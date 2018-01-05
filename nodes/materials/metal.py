@@ -45,7 +45,7 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
         }
 
         if self.input_type == "fresnel":
-            definitions["fresnel"] = self.inputs["Fresnel"].export(props),
+            definitions["fresnel"] = self.inputs["Fresnel"].export(props)
         else:            
             # Implicitly create a fresnelcolor texture with unique name
             tex_name = self.make_name() + "fresnel_helper"
