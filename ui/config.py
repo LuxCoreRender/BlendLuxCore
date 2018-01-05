@@ -76,6 +76,13 @@ class LuxCoreConfig(RenderButtonsPanel, Panel):
             row_sampler.label("Sampler:")
             row_sampler.prop(config, "bidir_sampler", expand=True)
 
+        # Filter settings
+        row = layout.row()
+        row.prop(config, "use_filter")
+        split = row.split()
+        split.active = config.use_filter
+        split.prop(config, "filter_width")
+
         if config.engine == "PATH" and config.device == "OCL":
             layout.label("OpenCL Options:")
             layout.prop(config.opencl, "use_cpu")

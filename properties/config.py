@@ -11,6 +11,13 @@ TILED_DESCRIPTION = (
 SIMPLE_DESC = "Recommended for scenes with simple lighting (outdoors, studio setups, indoors with large windows)"
 COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoors with small windows)"
 
+FILTER_DESC = (
+    "Pixel filtering slightly blurs the image, which reduces noise and \n"
+    "fireflies and leads to a more realistic image impression;\n"
+    "When using OpenCL, disabling this option can increase rendering speed"
+)
+FILTER_WIDTH_DESC = "Filter width in pixels; lower values result in a sharper image, higher values smooth out noise"
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -130,3 +137,7 @@ class LuxCoreConfig(PropertyGroup):
     bidir_light_maxdepth = IntProperty(name="Light Depth", default=10, min=1, soft_max=16)
     # path.maxdepth
     bidir_path_maxdepth = IntProperty(name="Eye Depth", default=10, min=1, soft_max=16)
+
+    # Pixel filter
+    use_filter = BoolProperty(name="Use Pixel Filter", default=True, description=FILTER_DESC)
+    filter_width = FloatProperty(name="Width", default=1.5, min=0.5, soft_max=3, description=FILTER_WIDTH_DESC)

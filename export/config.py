@@ -79,6 +79,8 @@ def convert(scene, context=None):
             "sampler.type": sampler,
             "film.width": width,
             "film.height": height,
+            "film.filter.type": "BLACKMANHARRIS" if config.use_filter else "NONE",
+            "film.filter.width": config.filter_width,
         })
 
         # TODO: remove this once we properly implement the imagepipeline
