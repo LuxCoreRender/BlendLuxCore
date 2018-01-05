@@ -263,16 +263,24 @@ class Exporter(object):
                 props = self._scene_edit(context, changes, luxcore_scene)
                 luxcore_scene.Parse(props)
             except Exception as error:
-                print("Error in update():", error)
+                context.scene.luxcore.errorlog.add_error(error)
                 import traceback
                 traceback.print_exc()
-            finally:
-                # TODO: Might fail if e.g. scene does not contain any light sources after the SceneEdit
-                # TODO: -> leads to crash
+
+            try:
+                session.EndSceneEdit()
+            except RuntimeError as error:
+                context.scene.luxcore.errorlog.add_error(error)
+                # Probably no light source, save ourselves by adding one (otherwise a crash happens)
+                props = pyluxcore.Properties()
+                props.Set(pyluxcore.Property("scene.lights.__SAVIOR__.type", "constantinfinite"))
+                props.Set(pyluxcore.Property("scene.lights.__SAVIOR__.color", [0, 0, 0]))
+                luxcore_scene.Parse(props)
+                # Try again
                 session.EndSceneEdit()
 
-                if session.IsInPause():
-                    session.Resume()
+            if session.IsInPause():
+                session.Resume()
 
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()
