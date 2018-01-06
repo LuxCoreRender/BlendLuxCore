@@ -110,6 +110,9 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
         else:
             obj.data.materials.append(mat)
 
+        # Workaround for blender bug https://developer.blender.org/T53509
+        obj.luxcore.node_tree = node_tree
+
         return {"FINISHED"}
 
 
