@@ -20,6 +20,7 @@ Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addon
 
 ### Working Features
 
+* Viewport and final render
 * Basic object export
 * Most materials and volumes
 * Glass dispersion
@@ -27,6 +28,7 @@ Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addon
 * All light types (sun, sky, point, mappoint, distant, spot, projection, infinite (HDRI environment), constantinfinite, meshlights)
 * IES lighting
 * Render settings for all engines
+* Cameras (perspective, ortographic, panoramic)
 
 ### Missing Features
 
@@ -36,9 +38,12 @@ Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addon
 * Almost all textures
 * Light groups
 * AOVs
+* Tonemapping settings
 * FILESAVER engine (scene export to LuxCore scn/cfg files)
 * Motion blur
 * Smoke/Fire
+* Depth of field
+* Arbitrary clipping plane
 * And more...
 
 ### Great new features
@@ -56,7 +61,8 @@ The reason why we are rewriting this addon. This are features that were not avai
 ### Developer Documentation
 
 The doc folder contains the documentation.
-* [Description of the project structure](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/doc/project_structure.md)
+
+[Description of the project structure](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/doc/project_structure.md)
 
 To create a working BlendLuxCore that can be loaded into Blender, 
 you first have to copy the LuxCore binaries into the bin folder.
