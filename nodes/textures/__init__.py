@@ -9,7 +9,16 @@ from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .imagemap import LuxCoreNodeTexImagemap
 from .fresnel import LuxCoreNodeTexFresnel
 from .colormix import LuxCoreNodeTexColorMix
+from .blenderblend import LuxCoreNodeTexBlenderBlend
+from .blenderclouds import LuxCoreNodeTexBlenderClouds
+from .blenderdistortednoise import LuxCoreNodeTexBlenderDistortedNoise
+from .blendermagic import LuxCoreNodeTexBlenderMagic
+from .blendermarble import LuxCoreNodeTexBlenderMarble
+from .blendermusgrave import LuxCoreNodeTexBlenderMusgrave
+from .blenderstucci import LuxCoreNodeTexBlenderStucci
 from .blenderwood import LuxCoreNodeTexBlenderWood
+from .blendervoronoi import LuxCoreNodeTexBlenderVoronoi
+from .wrinkled import LuxCoreNodeTexWrinkled
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
 from .output import LuxCoreNodeTexOutput
@@ -60,7 +69,16 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
-        NodeItem("LuxCoreNodeTexWood", label="Wood"),
+        NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
+        NodeItem("LuxCoreNodeTexBlenderClouds", label="Clouds"),
+        NodeItem("LuxCoreNodeTexBlenderDistortedNoise", label="Distorted Noise"),
+        NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),
+        NodeItem("LuxCoreNodeTexBlenderMarble", label="Marble"),
+        NodeItem("LuxCoreNodeTexBlenderMusgrave", label="Musgrave"),
+        NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
+        NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
+        NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
+        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[

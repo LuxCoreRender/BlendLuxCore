@@ -98,7 +98,16 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
+        NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
+        NodeItem("LuxCoreNodeTexBlenderClouds", label="Clouds"),
+        NodeItem("LuxCoreNodeTexBlenderDistortedNoise", label="Distorted Noise"),
+        NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),
+        NodeItem("LuxCoreNodeTexBlenderMarble", label="Marble"),
+        NodeItem("LuxCoreNodeTexBlenderMusgrave", label="Musgrave"),
+        NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
+        NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
+        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),        
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[

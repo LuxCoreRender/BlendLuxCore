@@ -1,0 +1,72 @@
+import bpy
+from bpy.props import EnumProperty, FloatProperty
+from .. import LuxCoreNodeTexture
+
+from .. import sockets
+from ... import utils
+
+class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
+    bl_label = "Blender Voronoi"
+    bl_width_min = 200    
+
+    distance_items = [
+        ('actual_distance', 'Actual Distance', 'actual distance'),
+        ('distance_squared', 'Distance Squared', 'distance squared'),
+        ('manhattan', 'Manhattan', 'manhattan'),
+        ('chebychev', 'Chebychev', 'chebychev'),
+        ('minkovsky_half', 'Minkowsky 1/2', 'minkowsky half'),
+        ('minkovsky_four', 'Minkowsky 4', 'minkowsky four'),
+        ('minkovsky', 'Minkowsky', 'minkowsky'),
+    ]
+
+    distmetric = EnumProperty(name='Distance Metric', description='Algorithm used to calculate distance of sample points to feature points',
+                                        items=distance_items, default='actual_distance')
+    minkowsky_exp = FloatProperty(name='Exponent', default=1.0)
+    noisesize = FloatProperty(name='Noise Size', default=0.25, min=0)
+    nabla = FloatProperty(name='Nabla', default=0.025)
+    w1 = FloatProperty(name='Weight 1', default=1.0, min=0.0, max=1.0, subtype='FACTOR')
+    w2 = FloatProperty(name='Weight 2', default=0.0, min=0.0, max=1.0, subtype='FACTOR')
+    w3 = FloatProperty(name='Weight 3', default=0.0, min=0.0, max=1.0, subtype='FACTOR')
+    w4 = FloatProperty(name='Weight 4', default=0.0, min=0.0, max=1.0, subtype='FACTOR')
+    bright = FloatProperty(name='Brightness', default=1.0, min=0)
+    contrast = FloatProperty(name='Contrast', default=1.0, min=0)
+
+    def init(self, context):
+        self.add_input("LuxCoreSocketMapping3D", "3D Mapping")
+        self.outputs.new("LuxCoreSocketFloatPositive", "Float")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'distmetric')
+        layout.prop(self, 'minkowsky_exp')
+        layout.prop(self, 'noisesize')
+        layout.prop(self, 'nabla')
+        column = layout.column(align=True)
+        column.prop(self, 'w1')
+        column.prop(self, 'w2')
+        column.prop(self, 'w3')
+        column.prop(self, 'w4')
+        layout.separator()
+        column = layout.column(align=True)
+        column.prop(self, 'bright')
+        column.prop(self, 'contrast')
+
+    def export(self, props, luxcore_name=None):
+        mapping_type, transformation = self.inputs["3D Mapping"].export(props)
+       
+        definitions = {
+            "type": "blender_voronoi",
+            "distmetric": self.distmetric,
+            "exponent": self.minkowsky_exp,
+            "w1": self.w1,
+            "w2": self.w2,
+            "w3": self.w3,
+            "w4": self.w4,
+            "noisesize": self.noisesize,
+            "bright": self.bright,
+            "contrast": self.contrast,
+            # Mapping
+            "mapping.type": mapping_type,
+            "mapping.transformation": utils.matrix_to_list(transformation),
+        }
+        
+        return self.base_export(props, definitions, luxcore_name)
