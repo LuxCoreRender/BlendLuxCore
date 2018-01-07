@@ -11,127 +11,174 @@ def needs_update():
 
 def convert(scene, context=None):
     try:
+        prefix = "scene.camera."
+        definitions = {}
+
         if context:
             # Viewport render
             view_cam_type = context.region_data.view_perspective
 
-            if view_cam_type in ("ORTHO", "PERSP"):
-                cam_matrix = Matrix(context.region_data.view_matrix).inverted()
-                lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
-
-                if view_cam_type == "ORTHO":
-                    type = "orthographic"
-                    zoom = 0.915 * context.space_data.region_3d.view_distance
-
-                    # Move the camera origin away from the viewport center to avoid clipping
-                    origin = Vector(lookat_orig)
-                    target = Vector(lookat_target)
-                    origin += (origin - target) * 50
-                    lookat_orig = list(origin)
-                else:
-                    # view_cam_type == "PERSP"
-                    type = "perspective"
-                    zoom = 2
-                    # Magic stuff, found in Cycles export code
-                    # TODO: non-standard sensor (is that where the 0.5 * 32 came from?)
-                    fieldofview = math.degrees(2 * math.atan(16 / context.space_data.lens))
-
-                screenwindow = utils.calc_screenwindow(zoom, 0, 0, 0, 0, scene, context)
+            if view_cam_type == "ORTHO":
+                _view_ortho(scene, context, definitions)
+            elif view_cam_type == "PERSP":
+                _view_persp(scene, context, definitions)
+            elif view_cam_type == "CAMERA":
+                _view_camera(scene, context, definitions)
             else:
-                # view_cam_type == "CAMERA"
-                camera = scene.camera
-                cam_matrix = camera.matrix_world
-                lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
-                # Magic zoom formula for camera viewport zoom from Cycles export code
-                zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
-
-                if camera.data.type == "ORTHO":
-                    type = "orthographic"
-                    zoom *= camera.data.ortho_scale / 2
-                elif camera.data.type == "PANO":
-                    type = "environment"
-                else:
-                    # camera.data.type == "PERSP"
-                    type = "perspective"
-                    fieldofview = math.degrees(camera.data.angle)
-
-                view_camera_offset = list(context.region_data.view_camera_offset)
-
-                if scene.render.use_border:
-                    xaspect, yaspect = utils.calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
-                else:
-                    xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
-
-                offset_x = 2*(view_camera_offset[0] * xaspect * 2)
-                offset_y = 2*(view_camera_offset[1] * yaspect * 2)
-                
-                screenwindow = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, offset_x, offset_y, scene, context)
+                raise NotImplementedError("Unknown context.region_data.view_perspective")
         else:
             # Final render
-            # TODO: needs testing
-            camera = scene.camera
-            cam_matrix = camera.matrix_world
-            lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
-
-            if camera.data.type == "ORTHO":
-                type = "orthographic"
-            elif camera.data.type == "PANO":
-                type = "environment"
-            else:
-                type = "perspective"
-
-            # Field of view
-            # Correction for vertical fit sensor, must truncate the float to .1f precision and round down
-            width, height = utils.calc_filmsize_raw(scene)
-
-            if camera.data.sensor_fit == "VERTICAL" and width > height:
-                aspect_fix = round(width / height - 0.05, 1)  # make sure it rounds down
-            else:
-                aspect_fix = 1.0
-
-            if type == "perspective":
-                fieldofview = math.degrees(camera.data.angle * aspect_fix)
-
-            # screenwindow (for border rendering and camera shift)
-            zoom = 1
-            screenwindow = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, 0, 0, scene)
-
-        prefix = "scene.camera."
-        definitions = {
-            "type": type,
-            "lookat.orig": lookat_orig,
-            "lookat.target": lookat_target,
-            "up": up_vector,
-            #"lensradius": lensradius,
-            #"focaldistance": focaldistance,
-            "screenwindow": screenwindow,
-            #"cliphither": clip_hither,
-            #"clipyon": clip_yon,
-            #"shutteropen": shutter_open,
-            #"shutterclose": shutter_close,
-        }
-
-        if type == "perspective":
-            definitions["fieldofview"] = fieldofview
-
-        if type != "environment":
-            #definitions["autofocus.enable"] = use_autofocus  # TODO
-
-            use_clippingplane = False  # TODO
-            if use_clippingplane:
-                definitions.update({
-                    "clippingplane.enable": use_clippingplane,
-                    "clippingplane.center": clippingplane_center,
-                    "clippingplane.normal": clippingplane_normal,
-                })
-
-        # TODO: motion blur (only for final camera)
+            _final(scene, definitions)
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
         msg = 'Camera: %s' % error
         scene.luxcore.errorlog.add_warning(msg)
         return pyluxcore.Properties()
+
+
+def _view_ortho(scene, context, definitions):
+    cam_matrix = Matrix(context.region_data.view_matrix).inverted()
+    lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
+
+    definitions["type"] = "orthographic"
+    zoom = 0.915 * context.space_data.region_3d.view_distance
+
+    # Move the camera origin away from the viewport center to avoid clipping
+    origin = Vector(lookat_orig)
+    target = Vector(lookat_target)
+    origin += (origin - target) * 50
+    definitions["lookat.orig"] = list(origin)
+    definitions["lookat.target"] = lookat_target
+    definitions["up"] = up_vector
+
+    definitions["screenwindow"] = utils.calc_screenwindow(zoom, 0, 0, 0, 0, scene, context)
+
+
+def _view_persp(scene, context, definitions):
+    cam_matrix = Matrix(context.region_data.view_matrix).inverted()
+    lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
+    definitions["lookat.orig"] = lookat_orig
+    definitions["lookat.target"] = lookat_target
+    definitions["up"] = up_vector
+
+    definitions["type"] = "perspective"
+    zoom = 2
+    # Magic stuff, found in Cycles export code
+    # TODO: non-standard sensor (is that where the 0.5 * 32 came from?)
+    definitions["fieldofview"] = math.degrees(2 * math.atan(16 / context.space_data.lens))
+
+    definitions["screenwindow"] = utils.calc_screenwindow(zoom, 0, 0, 0, 0, scene, context)
+
+
+def _view_camera(scene, context, definitions):
+    camera = scene.camera
+    lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world)
+    definitions["lookat.orig"] = lookat_orig
+    definitions["lookat.target"] = lookat_target
+    definitions["up"] = up_vector
+
+    # Magic zoom formula for camera viewport zoom from Cycles export code
+    zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
+
+    if camera.data.type == "ORTHO":
+        definitions["type"] = "orthographic"
+        zoom *= camera.data.ortho_scale / 2
+    elif camera.data.type == "PANO":
+        definitions["type"] = "environment"
+    elif camera.data.type == "PERSP":
+        definitions["type"] = "perspective"
+        definitions["fieldofview"] = math.degrees(camera.data.angle)
+        # TODO: DOF
+    else:
+        raise NotImplementedError("Unknown camera.data.type")
+
+    # Screenwindow
+    view_camera_offset = list(context.region_data.view_camera_offset)
+
+    if scene.render.use_border:
+        xaspect, yaspect = utils.calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+    else:
+        xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
+
+    offset_x = 2 * (view_camera_offset[0] * xaspect * 2)
+    offset_y = 2 * (view_camera_offset[1] * yaspect * 2)
+
+    definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y,
+                                                          offset_x, offset_y, scene, context)
+
+
+def _final(scene, definitions):
+    camera = scene.camera
+    lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world)
+    definitions["lookat.orig"] = lookat_orig
+    definitions["lookat.target"] = lookat_target
+    definitions["up"] = up_vector
+
+    if camera.data.type == "ORTHO":
+        type = "orthographic"
+    elif camera.data.type == "PANO":
+        type = "environment"
+    else:
+        type = "perspective"
+    definitions["type"] = type
+
+    # Field of view
+    # Correction for vertical fit sensor, must truncate the float to .1f precision and round down
+    width, height = utils.calc_filmsize_raw(scene)
+
+    if camera.data.sensor_fit == "VERTICAL" and width > height:
+        aspect_fix = round(width / height - 0.05, 1)  # make sure it rounds down
+    else:
+        aspect_fix = 1.0
+
+    if type == "perspective":
+        definitions["fieldofview"] = math.degrees(camera.data.angle * aspect_fix)
+        # TODO
+        # _depth_of_field(scene, definitions)
+
+    # screenwindow (for border rendering and camera shift)
+    zoom = 1
+    definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, 0, 0, scene)
+
+
+def _depth_of_field(scene, definitions):
+    camera = scene.camera
+
+    # definitions["autofocus.enable"] = use_autofocus  # TODO
+
+    definitions["lensradius"] = (camera.data.lens / 1000.0) / (2.0 * camera.data.gpu_dof.fstop)
+
+    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+    dof_obj = camera.data.dof_object
+    if dof_obj:
+        definitions["focaldistance"] = (camera.location - dof_obj.location).length * worldscale
+    else:
+        definitions["focaldistance"] = camera.data.dof_distance * worldscale
+
+
+def _clipping(definitions):
+    pass # TODO
+    # "cliphither": clip_hither,
+    # "clipyon": clip_yon,
+
+
+def _clipping_plane(definitions):
+    assert definitions["type"] != "environment"
+
+    use_clippingplane = False  # TODO
+    if use_clippingplane:
+        definitions.update({
+            "clippingplane.enable": use_clippingplane,
+            "clippingplane.center": clippingplane_center,
+            "clippingplane.normal": clippingplane_normal,
+        })
+
+
+def _motion_blur(definitions):
+    pass # TODO
+    # "shutteropen": shutter_open,
+    # "shutterclose": shutter_close,
 
 
 def _calc_lookat(cam_matrix):
