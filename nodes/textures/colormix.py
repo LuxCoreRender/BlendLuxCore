@@ -81,7 +81,7 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
         luxcore_name = self.base_export(props, definitions, luxcore_name)
 
         if self.clamp_output and self.mode != "clamp":
-            # Implicitly create a fresnelcolor texture with unique name
+            # Implicitly create a clamp texture with unique name
             tex_name = luxcore_name + "_clamp"
             helper_prefix = "scene.textures." + tex_name + "."
             helper_defs = {
