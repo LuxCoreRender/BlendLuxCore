@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 from .. import LuxCoreNodeTexture
-from ...utils import node as utils_node
+from ... import utils
 
 
 class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
@@ -21,7 +21,7 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
         self.inputs["Min"].enabled = (self.mode == "clamp")
         self.inputs["Max"].enabled = (self.mode == "clamp")
 
-        if self.mode in ["mix", "add", "substract"]:
+        if self.mode in ["scale", "add", "subtract", "mix"]:
             self.inputs[3].name = "Color 1"
             self.inputs["Color 2"].enabled = True
         else:
@@ -71,7 +71,6 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
             definitions["texture"] = self.inputs["Color"].export(props)
             definitions["min"] = self.inputs["Min"].export(props)
             definitions["max"] = self.inputs["Max"].export(props)
-            
         else:
             definitions["texture1"] = self.inputs["Color 1"].export(props)
             definitions["texture2"] = self.inputs["Color 2"].export(props)
@@ -79,4 +78,21 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
             if self.mode == "mix":
                 definitions["amount"] = self.inputs["Fac"].export(props)
 
-        return self.base_export(props, definitions, luxcore_name)
+        luxcore_name = self.base_export(props, definitions, luxcore_name)
+
+        if self.clamp_output and self.mode != "clamp":
+            # Implicitly create a fresnelcolor texture with unique name
+            tex_name = luxcore_name + "_clamp"
+            helper_prefix = "scene.textures." + tex_name + "."
+            helper_defs = {
+                "type": "clamp",
+                "texture": luxcore_name,
+                "min": 0,
+                "max": 1,
+            }
+            props.Set(utils.create_props(helper_prefix, helper_defs))
+
+            # The helper texture gets linked in front of this node
+            return tex_name
+        else:
+            return luxcore_name
