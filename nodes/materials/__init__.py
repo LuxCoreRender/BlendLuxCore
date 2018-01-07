@@ -21,7 +21,6 @@ from .null import LuxCoreNodeMatNull
 from .output import LuxCoreNodeMatOutput
 
 
-
 class LuxCoreMaterialNodeTree(NodeTree):
     bl_idname = "luxcore_material_nodes"
     bl_label = "LuxCore Material Nodes"
@@ -95,9 +94,11 @@ luxcore_node_categories_material = [
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
+        NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
+        NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[

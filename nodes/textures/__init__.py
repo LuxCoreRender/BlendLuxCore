@@ -8,6 +8,8 @@ from ...ui import ICON_TEXTURE
 from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .imagemap import LuxCoreNodeTexImagemap
 from .fresnel import LuxCoreNodeTexFresnel
+from .colormix import LuxCoreNodeTexColorMix
+from .blenderwood import LuxCoreNodeTexBlenderWood
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
 from .output import LuxCoreNodeTexOutput
@@ -54,9 +56,11 @@ class LuxCoreNodeCategoryTexture(NodeCategory):
 # In general it is a good idea to put often used nodes near the top.
 luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_TEXTURE", "Texture", items=[
+        NodeItem("LuxCoreNodeTexColorMix", label="Color Mix"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
+        NodeItem("LuxCoreNodeTexWood", label="Wood"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
