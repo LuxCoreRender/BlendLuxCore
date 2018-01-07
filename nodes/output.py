@@ -59,10 +59,7 @@ class LuxCoreNodeOutput(LuxCoreNode):
         layout.prop(self, "active")
 
     def copy(self, orig_node):
-        # Check if the copy happened inside the node tree
-        # This is e.g. not the case if a node tree was duplicated
-        if self.id_data == orig_node.id_data:
-            orig_node.set_active(False)
+        self.disable_other_outputs()
 
     def free(self):
         if not self.active:
