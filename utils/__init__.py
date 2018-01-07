@@ -263,9 +263,11 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         visible |= lv
     return (visible or is_dupli) and not hidden
 
+
 def get_theme(context):
     current_theme_name = context.user_preferences.themes.items()[0][0]
     return context.user_preferences.themes[current_theme_name]
+
 
 def get_abspath(path, library=None, must_exist=False, must_be_file=False):
     """ library: The library this path is from. """
@@ -280,3 +282,15 @@ def get_abspath(path, library=None, must_exist=False, must_be_file=False):
         return None
 
     return abspath
+
+
+def absorption_at_depth_scaled(abs_col, depth, scale=1):
+    abs_col = list(abs_col)
+    assert len(abs_col) == 3
+
+    scaled = [0, 0, 0]
+    for i in range(len(abs_col)):
+        v = float(abs_col[i])
+        scaled[i] = (-math.log(max([v, 1e-30])) / depth) * scale * (v == 1.0 and -1 or 1)
+
+    return scaled

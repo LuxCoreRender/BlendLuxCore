@@ -1,5 +1,5 @@
-from bpy.props import IntProperty
-from .. import LuxCoreNodeVolume
+from bpy.props import IntProperty, FloatProperty
+from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
 
 
 class LuxCoreNodeVolClear(LuxCoreNodeVolume):
@@ -9,6 +9,8 @@ class LuxCoreNodeVolClear(LuxCoreNodeVolume):
     # TODO: get name, default, description etc. from super class or something
     priority = IntProperty(name="Priority", default=0, min=0)
     emission_id = IntProperty(name="Lightgroup ID", default=0, min=0)
+    colordepth = FloatProperty(name="Absorption Depth", default=1.0, subtype="DISTANCE", unit="LENGTH",
+                               description=COLORDEPTH_DESC)
 
     def init(self, context):
         self.add_common_inputs()

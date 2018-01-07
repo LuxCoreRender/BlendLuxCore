@@ -2,7 +2,6 @@ import bpy
 from bpy.types import Node
 from bpy.props import PointerProperty
 from .. import utils
-import math
 from ..utils import node as utils_node
 
 TREE_TYPES = (
@@ -28,6 +27,8 @@ NOISE_TYPE_ITEMS = [
     ("soft_noise", "Soft", ""),
     ("hard_noise", "Hard", "")
 ]
+
+COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color."
 
 
 class LuxCoreNode(Node):
@@ -89,30 +90,30 @@ class LuxCoreNodeMaterial(LuxCoreNode):
 
 
 class LuxCoreNodeTexture(LuxCoreNode):
-    """Base class for material nodes"""
+    """Base class for texture nodes"""
     suffix = "tex"
     prefix = "scene.textures."
 
 
 class LuxCoreNodeVolume(LuxCoreNode):
-    """Base class for material nodes"""
+    """Base class for volume nodes"""
     suffix = "vol"
     prefix = "scene.volumes."
 
     # Common properties that every derived class needs to add
     # priority (IntProperty)
     # emission_id (IntProperty) (or maybe PointerProperty to light group later)
+    # colordepth (FloatProperty) - for implicit colordepth texture
 
     def draw_common_buttons(self, context, layout):
         layout.prop(self, "priority")
         layout.prop(self, "emission_id")
+        layout.prop(self, "colordepth")
 
     def add_common_inputs(self):
         """ Call from derived classes (in init method) """
-        self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
         self.add_input("LuxCoreSocketColor", "Absorption", (1, 1, 1))
-        self.add_input("LuxCoreSocketValueAtDepth", "Absorption at depth", 1.0)
-        self.add_input("LuxCoreSocketFloatPositive", "Absorption scale", 1.0)
+        self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
         self.add_input("LuxCoreSocketColor", "Emission", (0, 0, 0))
         
     def export_common_inputs(self, props, definitions):
@@ -121,11 +122,20 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
         abs_col = self.inputs["Absorption"].export(props)
 
-        for i in range(len(abs_col)):
-            v = float(abs_col[i])
-            depth = self.inputs["Absorption at depth"].export(props)
-            scale = self.inputs["Absorption scale"].export(props)
-            abs_col[i] = (-math.log(max([v, 1e-30])) / depth) * scale * (v == 1.0 and -1 or 1)
+        if self.inputs["Absorption"].is_linked:
+            # Implicitly create a colordepth texture with unique name
+            tex_name = self.make_name() + "_colordepth"
+            helper_prefix = "scene.textures." + tex_name + "."
+            helper_defs = {
+                "type": "colordepth",
+                "kt": abs_col,
+                "depth": self.colordepth,
+            }
+            props.Set(utils.create_props(helper_prefix, helper_defs))
+            abs_col = tex_name
+        else:
+            # Do not occur the overhead of the colordepth texture
+            abs_col = utils.absorption_at_depth_scaled(abs_col, self.colordepth)
 
         definitions["absorption"] = abs_col
         definitions["emission"] = self.inputs["Emission"].export(props)
