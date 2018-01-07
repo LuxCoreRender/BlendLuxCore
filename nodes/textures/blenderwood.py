@@ -65,5 +65,5 @@ class LuxCoreNodeTexBlenderWood(LuxCoreNodeTexture):
             "mapping.type": mapping_type,
             "mapping.transformation": utils.matrix_to_list(transformation),
         }
-        print(definitions)
+        
         return self.base_export(props, definitions, luxcore_name)

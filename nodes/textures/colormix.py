@@ -21,13 +21,32 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
         self.inputs["Min"].enabled = (self.mode == "clamp")
         self.inputs["Max"].enabled = (self.mode == "clamp")
 
+        if self.mode in ["mix", "add", "substract"]:
+            self.inputs[3].name = "Color 1"
+            self.inputs["Color 2"].enabled = True
+        else:
+            self.inputs[3].name = "Color"
+            self.inputs["Color 2"].enabled = False
+        
+        if self.mode == "mix":
+            self.inputs["Fac"].enabled = True
+        else:
+            self.inputs["Fac"].enabled = False
+        
+
     mode = EnumProperty(name="Mode", items=mode_items, default="mix", update=change_mode)
     clamp_output = BoolProperty(name="Clamp", default=False, description="Limit the output value to 0..1 range")
 
+    def draw_label(self):
+        # Use the name of the selected operation as displayed node name
+        for elem in self.mode_items:
+            if self.mode in elem:
+                return elem[1]
+
     def init(self, context):
         self.add_input("LuxCoreSocketFloat0to1", "Fac", 1)
-        self.add_input("LuxCoreSocketFloat", "Min", 0.0)
-        self.add_input("LuxCoreSocketFloat", "Max", 1.0)
+        self.add_input("LuxCoreSocketFloatPositive", "Min", 0.0)
+        self.add_input("LuxCoreSocketFloatPositive", "Max", 1.0)
 
         self.add_input("LuxCoreSocketColor", "Color 1", (0.7, 0.7, 0.7))
         self.add_input("LuxCoreSocketColor", "Color 2", (0.04, 0.04, 0.04))
@@ -42,12 +61,22 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
         layout.prop(self, "clamp_output")
 
     def export(self, props, luxcore_name=None):
-        if self.mode == "mix":            
-            definitions = {
-                "type": "mix",
-                "amount": self.inputs["Fac"].export(props),
-                "texture1": self.inputs["Color 1"].export(props),
-                "texture2": self.inputs["Color 2"].export(props),
+        definitions = {
+            "type": self.mode,
         }
         
+        if self.mode == "abs":
+            definitions["texture"] = self.inputs["Color"].export(props)
+        elif self.mode == "clamp":
+            definitions["texture"] = self.inputs["Color"].export(props)
+            definitions["min"] = self.inputs["Min"].export(props)
+            definitions["max"] = self.inputs["Max"].export(props)
+            
+        else:
+            definitions["texture1"] = self.inputs["Color 1"].export(props)
+            definitions["texture2"] = self.inputs["Color 2"].export(props)
+
+            if self.mode == "mix":
+                definitions["amount"] = self.inputs["Fac"].export(props)
+
         return self.base_export(props, definitions, luxcore_name)
