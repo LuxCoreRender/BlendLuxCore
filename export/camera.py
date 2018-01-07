@@ -30,6 +30,8 @@ def convert(scene, context=None):
             # Final render
             _final(scene, definitions)
 
+        _clipping(scene, definitions)
+
         return utils.create_props(prefix, definitions)
     except Exception as error:
         msg = 'Camera: %s' % error
@@ -89,7 +91,7 @@ def _view_camera(scene, context, definitions):
     elif camera.data.type == "PERSP":
         definitions["type"] = "perspective"
         definitions["fieldofview"] = math.degrees(camera.data.angle)
-        # TODO: DOF
+        _depth_of_field(scene, definitions)
     else:
         raise NotImplementedError("Unknown camera.data.type")
 
@@ -134,8 +136,7 @@ def _final(scene, definitions):
 
     if type == "perspective":
         definitions["fieldofview"] = math.degrees(camera.data.angle * aspect_fix)
-        # TODO
-        # _depth_of_field(scene, definitions)
+        _depth_of_field(scene, definitions)
 
     # screenwindow (for border rendering and camera shift)
     zoom = 1
@@ -145,22 +146,29 @@ def _final(scene, definitions):
 def _depth_of_field(scene, definitions):
     camera = scene.camera
 
-    # definitions["autofocus.enable"] = use_autofocus  # TODO
+    if not camera.data.luxcore.use_dof:
+        return
 
-    definitions["lensradius"] = (camera.data.lens / 1000.0) / (2.0 * camera.data.gpu_dof.fstop)
+    definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.luxcore.fstop)
 
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-    dof_obj = camera.data.dof_object
-    if dof_obj:
-        definitions["focaldistance"] = (camera.location - dof_obj.location).length * worldscale
+    if camera.data.luxcore.use_autofocus:
+        definitions["autofocus.enable"] = True
     else:
-        definitions["focaldistance"] = camera.data.dof_distance * worldscale
+        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+        dof_obj = camera.data.dof_object
+
+        if dof_obj:
+            definitions["focaldistance"] = (camera.location - dof_obj.location).length * worldscale
+        else:
+            definitions["focaldistance"] = camera.data.dof_distance * worldscale
 
 
-def _clipping(definitions):
-    pass # TODO
-    # "cliphither": clip_hither,
-    # "clipyon": clip_yon,
+def _clipping(scene, definitions):
+    camera = scene.camera
+    if camera.data.luxcore.use_clipping:
+        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+        definitions["cliphither"] = camera.data.clip_start * worldscale
+        definitions["clipyon"] = camera.data.clip_end * worldscale
 
 
 def _clipping_plane(definitions):

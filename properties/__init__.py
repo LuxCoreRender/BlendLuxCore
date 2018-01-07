@@ -1,9 +1,10 @@
 import bpy
-from . import config, display, errorlog, halt, light, material, world
+from . import camera, config, display, errorlog, halt, light, material, world
 from bpy.props import PointerProperty
 
 
 def init():
+    camera.init()
     light.init()
     material.init()
     world.init()
