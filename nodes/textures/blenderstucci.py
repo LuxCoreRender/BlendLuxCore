@@ -18,14 +18,14 @@ class LuxCoreNodeTexBlenderStucci(LuxCoreNodeTexture):
         ("wall_out", "Wall Out", ""),
     ]
 
-    stuccitype = EnumProperty(name="Type", description="Type of noise used", items=stucci_type_items, default="plastic")
-    noisebasis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
+    stucci_type = EnumProperty(name="Type", description="Type of noise used", items=stucci_type_items, default="plastic")
+    noise_basis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
     noisetype = EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
                                        default="soft_noise")
-    noisesize = FloatProperty(name="Noise Size", default=0.25, min=0)
-    noisedepth = IntProperty(name="Noise Depth", default=2, min=0)
-    turbulence = FloatProperty(name="Turbulence", default=5.0)
+    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)
+    noise_depth = IntProperty(name="Noise Depth", default=2, min=0)
+    turbulence = FloatProperty(name="Turbulence", default=5.0, min=0)
     bright = FloatProperty(name="Brightness", default=1.0, min=0)
     contrast = FloatProperty(name="Contrast", default=1.0, min=0)
 
@@ -34,10 +34,10 @@ class LuxCoreNodeTexBlenderStucci(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "stuccitype", expand=True)
-        layout.prop(self, "noisebasis")
-        layout.prop(self, "noisetype", expand=True)
-        layout.prop(self, "noisesize")
+        layout.prop(self, "stucci_type", expand=True)
+        layout.prop(self, "noise_basis")
+        layout.prop(self, "noise_type", expand=True)
+        layout.prop(self, "noise_size")
         layout.prop(self, "turbulence")
         layout.separator()
         column = layout.column(align=True)
@@ -49,10 +49,10 @@ class LuxCoreNodeTexBlenderStucci(LuxCoreNodeTexture):
        
         definitions = {
             "type": "blender_stucci",
-            "stuccitype": self.stuccitype,
-            "noisebasis": self.noisebasis,
-            "noisetype": self.noisetype,
-            "noisesize": self.noisesize,
+            "stuccitype": self.stucci_type,
+            "noisebasis": self.noise_basis,
+            "noisetype": self.noise_type,
+            "noisesize": self.noise_size,
             "turbulence": self.turbulence,
             "bright": self.bright,
             "contrast": self.contrast,

@@ -12,7 +12,7 @@ class LuxCoreNodeTexBlenderMagic(LuxCoreNodeTexture):
     bl_label = "Blender Magic"
     bl_width_min = 200    
 
-    noisedepth = IntProperty(name="Noise Depth", default=2, min=0)
+    noise_depth = IntProperty(name="Noise Depth", default=2, min=0)
     turbulence = FloatProperty(name="Turbulence", default=5, min=0)
     bright = FloatProperty(name="Brightness", default=1.0, min=0)
     contrast = FloatProperty(name="Contrast", default=1.0, min=0)
@@ -22,7 +22,7 @@ class LuxCoreNodeTexBlenderMagic(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "noisedepth")
+        layout.prop(self, "noise_depth")
         layout.prop(self, "turbulence")
         layout.separator()
         column = layout.column(align=True)
@@ -34,7 +34,7 @@ class LuxCoreNodeTexBlenderMagic(LuxCoreNodeTexture):
        
         definitions = {
             "type": "blender_magic",
-            "noisedepth": self.noisedepth,
+            "noisedepth": self.noise_depth,
             "turbulence": self.turbulence,
             "bright": self.bright,
             "contrast": self.contrast,

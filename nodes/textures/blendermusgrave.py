@@ -20,13 +20,13 @@ class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
     ]
 
     musgrave_type = EnumProperty(name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
-    noisebasis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
-    noisesize = FloatProperty(name="Noise Size", default=0.25, min=0)
-    h =FloatProperty(name="Dimension", default=1.0)
+    noise_basis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
+    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)
+    h =FloatProperty(name="Dimension", default=1.0, min=0)
     lacu = FloatProperty(name="Lacunarity", default=2.0)
-    octs = FloatProperty(name="Octaves", default=2.0)
+    octs = FloatProperty(name="Octaves", default=2.0, min=0)
     offset = FloatProperty(name="Offset", default=1.0)
-    gain = FloatProperty(name="Gain", default=1.0)
+    gain = FloatProperty(name="Gain", default=1.0, min=0)
     iscale = FloatProperty(name="Intensity", default=1.0)
     bright = FloatProperty(name="Brightness", default=1.0, min=0)
     contrast = FloatProperty(name="Contrast", default=1.0, min=0)
@@ -37,8 +37,8 @@ class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "musgrave_type")
-        layout.prop(self, "noisebasis")
-        layout.prop(self, "noisesize")
+        layout.prop(self, "noise_basis")
+        layout.prop(self, "noise_size")
         layout.prop(self, "h")
         layout.prop(self, "lacu")
         layout.prop(self, "octs")
@@ -63,8 +63,8 @@ class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
         definitions = {
             "type": "blender_musgrave",
             "musgravetype": self.musgrave_type,
-            "noisebasis": self.noisebasis,
-            "noisesize": self.noisesize,
+            "noisebasis": self.noise_basis,
+            "noisesize": self.noise_size,
             "h": self.h,
             "lacu": self.lacu,
             "octs": self.octs,

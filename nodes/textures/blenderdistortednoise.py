@@ -11,13 +11,12 @@ class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
     bl_label = "Blender Distorted Noise"
     bl_width_min = 200    
 
-    noisebasis = EnumProperty(name="Noise Basis", description="Type of noise used", items=NOISE_BASIS_ITEMS,
+    noise_basis = EnumProperty(name="Noise Basis", description="Type of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
-    noisetype = EnumProperty(name="Type", description="Type of noise used", items=NOISE_BASIS_ITEMS,
+    noise_type = EnumProperty(name="Type", description="Type of noise used", items=NOISE_BASIS_ITEMS,
                                   default="blender_original")
-    distamount = FloatProperty(name="Distortion", default=1.00)
-    noisesize = FloatProperty(name="Noise Size", default=0.25, min=0)
-    nabla = FloatProperty(name="Nabla", default=0.025)
+    dist_amount = FloatProperty(name="Distortion", default=1.00)
+    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)    
     bright = FloatProperty(name="Brightness", default=1.0, min=0)
     contrast = FloatProperty(name="Contrast", default=1.0, min=0)
 
@@ -26,10 +25,10 @@ class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "noisebasis")
-        layout.prop(self, "noisetype")
-        layout.prop(self, "noisesize")
-        layout.prop(self, "distamount")        
+        layout.prop(self, "noise_basis")
+        layout.prop(self, "noise_type")
+        layout.prop(self, "noise_size")
+        layout.prop(self, "dist_amount")        
         layout.separator()
         column = layout.column(align=True)
         column.prop(self, "bright")
@@ -40,10 +39,10 @@ class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
        
         definitions = {
             "type": "blender_distortednoise",
-            "noise_distortion": self.noisetype,
-            "noisebasis": self.noisebasis,            
-            "noisesize": self.noisesize,
-            "distortion": self.distamount,
+            "noise_distortion": self.noise_type,
+            "noisebasis": self.noise_basis,            
+            "noisesize": self.noise_size,
+            "distortion": self.dist_amount,
             "bright": self.bright,
             "contrast": self.contrast,
             # Mapping

@@ -12,12 +12,12 @@ class LuxCoreNodeTexBlenderClouds(LuxCoreNodeTexture):
     bl_label = "Blender Clouds"
     bl_width_min = 200    
 
-    noisetype = bpy.props.EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
+    noise_type = EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
                                        default="soft_noise")
-    noisebasis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
+    noise_basis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
-    noisesize = FloatProperty(name="Noise Size", default=0.25, min=0)
-    noisedepth = IntProperty(name="Noise Depth", default=2, min=0)
+    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)
+    noise_depth = IntProperty(name="Noise Depth", default=2, min=0)
     bright = FloatProperty(name="Brightness", default=1.0, min=0)
     contrast = FloatProperty(name="Contrast", default=1.0, min=0)
 
@@ -26,10 +26,10 @@ class LuxCoreNodeTexBlenderClouds(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "noisetype", expand=True)
-        layout.prop(self, "noisebasis")
-        layout.prop(self, "noisesize")
-        layout.prop(self, "noisedepth")
+        layout.prop(self, "noise_type", expand=True)
+        layout.prop(self, "noise_basis")
+        layout.prop(self, "noise_size")
+        layout.prop(self, "noise_depth")
         layout.separator()
         column = layout.column(align=True)
         column.prop(self, "bright")
@@ -40,10 +40,10 @@ class LuxCoreNodeTexBlenderClouds(LuxCoreNodeTexture):
        
         definitions = {
             "type": "blender_clouds",
-            "noisetype": self.noisetype,
-            "noisebasis": self.noisebasis,
-            "noisesize": self.noisesize,
-            "noisedepth": self.noisedepth,
+            "noisetype": self.noise_type,
+            "noisebasis": self.noise_basis,
+            "noisesize": self.noise_size,
+            "noisedepth": self.noise_depth,
             "bright": self.bright,
             "contrast": self.contrast,
             # Mapping
