@@ -21,7 +21,7 @@ class LuxCoreNodeTexBlenderStucci(LuxCoreNodeTexture):
     stucci_type = EnumProperty(name="Type", description="Type of noise used", items=stucci_type_items, default="plastic")
     noise_basis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
-    noisetype = EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
+    noise_type = EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
                                        default="soft_noise")
     noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)
     noise_depth = IntProperty(name="Noise Depth", default=2, min=0)

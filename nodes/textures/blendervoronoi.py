@@ -36,7 +36,7 @@ class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "dist_metric")
-        if dist_metric == "minkovsky":
+        if self.dist_metric == "minkovsky":
             layout.prop(self, "minkowsky_exp")
         layout.prop(self, "noise_size")
         column = layout.column(align=True)
@@ -59,14 +59,14 @@ class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
             "w2": self.w2,
             "w3": self.w3,
             "w4": self.w4,
-            "noisesize": self.noisesize,
+            "noisesize": self.noise_size,
             "bright": self.bright,
             "contrast": self.contrast,
             # Mapping
             "mapping.type": mapping_type,
             "mapping.transformation": utils.matrix_to_list(transformation),
         }
-        if dist_metric == "minkovsky":
+        if self.dist_metric == "minkovsky":
             definitions["exponent"] = self.minkowsky_exp
 
         
