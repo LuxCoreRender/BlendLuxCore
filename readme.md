@@ -48,7 +48,7 @@ Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addon
 
 ### Great new features
 
-The reason why we are rewriting this addon. This are features that were not available in LuxBlend:
+The reason why we are rewriting this addon. These are features that were not available in LuxBlend:
 
 * We are now using Blender's updated PointerProperty (with ID links) for all links (node trees, images etc.) which means that if you append or link an object from another .blend file, all required node trees, image textures and so on will be appended or linked along with it.
 * Much better implementation of Blender's [RenderEngine API](https://docs.blender.org/api/2.79/bpy.types.RenderEngine.html). This means that old problems like a LuxCore session rendering in the background even if you stopped the viewport render should be gone.

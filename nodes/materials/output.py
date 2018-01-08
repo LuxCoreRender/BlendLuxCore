@@ -28,36 +28,31 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
         # TODO maybe there's a way to restrict the dropdowns to volume node trees?
 
-        # Interior volume
-
         layout.label("Interior Volume Nodes:")
-        row = layout.row(align=True)
-        row.template_ID(self, "interior_volume")
-
-        # Operator for new node tree
-        interior_volume = self.interior_volume
-        new_text = "" if interior_volume else "New"
-        new = row.operator("luxcore.vol_nodetree_new", text=new_text, icon="ZOOMIN")
-        new.target = "interior_volume"
-
-        # Warning if not the right node tree type
-        if interior_volume and interior_volume.bl_idname != "luxcore_volume_nodes":
-            layout.label("Not a volume node tree!", icon="ERROR")
-
-        # Exterior volume
+        self._draw_volume_controls(context, layout, "interior_volume")
 
         layout.label("Exterior Volume Nodes:")
+        self._draw_volume_controls(context, layout, "exterior_volume")
+
+    def _draw_volume_controls(self, context, layout, volume_str):
+        """ volume_str can be either "interior_volume" or "exterior_volume" """
+        assert hasattr(self, volume_str)
+        volume = getattr(self, volume_str)
+
         row = layout.row(align=True)
-        row.template_ID(self, "exterior_volume")
+        # We have to disable the new operator if node tree is linked from a library
+        # Because if it is enabled, the user can create and link a node tree that will not be saved
+        row.enabled = self.id_data.library is None
+        row.template_ID(self, volume_str)
 
         # Operator for new node tree
-        exterior_volume = self.exterior_volume
-        new_text = "" if exterior_volume else "New"
+        new_text = "" if volume else "New"
         new = row.operator("luxcore.vol_nodetree_new", text=new_text, icon="ZOOMIN")
-        new.target = "exterior_volume"
+        # We have to tell the operator where the new node tree should be linked to
+        new.target = volume_str
 
         # Warning if not the right node tree type
-        if exterior_volume and exterior_volume.bl_idname != "luxcore_volume_nodes":
+        if volume and volume.bl_idname != "luxcore_volume_nodes":
             layout.label("Not a volume node tree!", icon="ERROR")
 
     def export(self, props, luxcore_name):
