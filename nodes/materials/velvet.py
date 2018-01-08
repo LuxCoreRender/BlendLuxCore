@@ -37,12 +37,13 @@ class LuxCoreNodeMatVelvet(LuxCoreNodeMaterial):
             "kd": self.inputs["Diffuse Color"].export(props),
             "thickness": self.inputs["Thickness"].export(props),
         }
+
         if self.advanced:
             definitions.update({
-            "p1": self.inputs["p1"].export(props),
-            "p2": self.inputs["p2"].export(props),
-            "p3": self.inputs["p3"].export(props),
-        })
+                "p1": self.inputs["p1"].export(props),
+                "p2": self.inputs["p2"].export(props),
+                "p3": self.inputs["p3"].export(props),
+            })
 
         self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)

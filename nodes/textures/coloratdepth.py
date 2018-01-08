@@ -8,8 +8,9 @@ class LuxCoreNodeTexColorAtDepth(LuxCoreNodeTexture):
     bl_label = "Color at depth"
     bl_width_min = 200
     
-    color_depth = FloatProperty(name="Absorption Depth", default=1.0, subtype="DISTANCE", unit="LENGTH",
-                               description=COLORDEPTH_DESC)
+    color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
+                                subtype="DISTANCE", unit="LENGTH",
+                                description=COLORDEPTH_DESC)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Absorption", (1, 1, 1))

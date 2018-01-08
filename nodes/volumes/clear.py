@@ -9,8 +9,9 @@ class LuxCoreNodeVolClear(LuxCoreNodeVolume):
     # TODO: get name, default, description etc. from super class or something
     priority = IntProperty(name="Priority", default=0, min=0)
     emission_id = IntProperty(name="Lightgroup ID", default=0, min=0)
-    color_depth = FloatProperty(name="Absorption Depth", default=1.0, subtype="DISTANCE", unit="LENGTH",
-                               description=COLORDEPTH_DESC)
+    color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
+                                subtype="DISTANCE", unit="LENGTH",
+                                description=COLORDEPTH_DESC)
 
     def init(self, context):
         self.add_common_inputs()
