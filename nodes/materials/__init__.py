@@ -17,6 +17,7 @@ from .mattetranslucent import LuxCoreNodeMatMatteTranslucent
 from .metal import LuxCoreNodeMatMetal
 from .mirror import LuxCoreNodeMatMirror
 from .mix import LuxCoreNodeMatMix
+from .velvet import LuxCoreNodeMatVelvet
 from .null import LuxCoreNodeMatNull
 from .output import LuxCoreNodeMatOutput
 
@@ -91,6 +92,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatNull", label="Null (Transparent)"),
         NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),
         NodeItem("LuxCoreNodeMatCloth", label="Cloth"),
+        NodeItem("LuxCoreNodeMatVelvet", label="Velvet"),        
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
@@ -98,6 +100,10 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
+        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),        
+    ]),
+    
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_BLENDERTEXTURE", "Texture (Blender)", items=[
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
         NodeItem("LuxCoreNodeTexBlenderClouds", label="Clouds"),
         NodeItem("LuxCoreNodeTexBlenderDistortedNoise", label="Distorted Noise"),
@@ -107,9 +113,12 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
-        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),        
     ]),
-
+    
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
+        NodeItem("LuxCoreNodeTexColorAtDepth", label="Color at depth"),        
+    ]),
+    
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),

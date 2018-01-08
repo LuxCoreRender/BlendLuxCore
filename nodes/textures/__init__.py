@@ -19,6 +19,7 @@ from .blenderstucci import LuxCoreNodeTexBlenderStucci
 from .blenderwood import LuxCoreNodeTexBlenderWood
 from .blendervoronoi import LuxCoreNodeTexBlenderVoronoi
 from .wrinkled import LuxCoreNodeTexWrinkled
+from .coloratdepth import LuxCoreNodeTexColorAtDepth
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
 from .output import LuxCoreNodeTexOutput

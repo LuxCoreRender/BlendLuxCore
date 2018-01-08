@@ -103,12 +103,12 @@ class LuxCoreNodeVolume(LuxCoreNode):
     # Common properties that every derived class needs to add
     # priority (IntProperty)
     # emission_id (IntProperty) (or maybe PointerProperty to light group later)
-    # colordepth (FloatProperty) - for implicit colordepth texture
+    # color_depth (FloatProperty) - for implicit colordepth texture
 
     def draw_common_buttons(self, context, layout):
         layout.prop(self, "priority")
         layout.prop(self, "emission_id")
-        layout.prop(self, "colordepth")
+        layout.prop(self, "color_depth")
 
     def add_common_inputs(self):
         """ Call from derived classes (in init method) """
@@ -129,13 +129,13 @@ class LuxCoreNodeVolume(LuxCoreNode):
             helper_defs = {
                 "type": "colordepth",
                 "kt": abs_col,
-                "depth": self.colordepth,
+                "depth": self.color_depth,
             }
             props.Set(utils.create_props(helper_prefix, helper_defs))
             abs_col = tex_name
         else:
             # Do not occur the overhead of the colordepth texture
-            abs_col = utils.absorption_at_depth_scaled(abs_col, self.colordepth)
+            abs_col = utils.absorption_at_depth_scaled(abs_col, self.color_depth)
 
         definitions["absorption"] = abs_col
         definitions["emission"] = self.inputs["Emission"].export(props)
