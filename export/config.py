@@ -81,7 +81,14 @@ def convert(scene, context=None):
             "film.height": height,
             "film.filter.type": "BLACKMANHARRIS" if config.use_filter else "NONE",
             "film.filter.width": config.filter_width,
+            #     ub.enabled = context.scene.render.threads_mode == 'FIXED'
+            # sub.prop(context.scene.render, "threads")
+
         })
+
+        # CPU thread settings (we use the properties from Blender here)
+        if scene.render.threads_mode == "FIXED":
+            definitions["native.threads.count"] = scene.render.threads
 
         # TODO: remove this once we properly implement the imagepipeline
         # very crude imagepipeline, just for now so final matches viewport

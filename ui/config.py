@@ -83,7 +83,26 @@ class LuxCoreConfig(RenderButtonsPanel, Panel):
         split.active = config.use_filter
         split.prop(config, "filter_width")
 
+class LuxCoreDeviceSettings(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "LuxCore Device Settings"
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE"
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
         if config.engine == "PATH" and config.device == "OCL":
             layout.label("OpenCL Options:")
             layout.prop(config.opencl, "use_cpu")
             layout.prop(config.opencl, "use_gpu")
+        elif config.device == "CPU" or config.engine == "BIDIR":
+            layout.label(text="CPU Threads:")
+            row = layout.row(align=True)
+            row.prop(context.scene.render, "threads_mode", expand=True)
+            sub = row.row(align=True)
+            sub.enabled = context.scene.render.threads_mode == 'FIXED'
+            sub.prop(context.scene.render, "threads")
