@@ -302,8 +302,8 @@ class Exporter(object):
         obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj, update_mesh)
 
         if exported_obj is None:
-            # Error during conversion
-            print('Could not convert object "%s"' % obj.name)
+            # Object is not visible or an error happened.
+            # In case of an error, it was already reported by blender_object.convert()
             return
 
         props.Set(obj_props)

@@ -31,6 +31,7 @@ def convert(scene, context=None):
             _final(scene, definitions)
 
         _clipping(scene, definitions)
+        _clipping_plane(scene, definitions)
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
@@ -171,16 +172,20 @@ def _clipping(scene, definitions):
         definitions["clipyon"] = camera.data.clip_end * worldscale
 
 
-def _clipping_plane(definitions):
-    assert definitions["type"] != "environment"
+def _clipping_plane(scene, definitions):
+    cam_settings = scene.camera.data.luxcore
 
-    use_clippingplane = False  # TODO
-    if use_clippingplane:
+    if cam_settings.use_clipping_plane and cam_settings.clipping_plane:
+        plane = cam_settings.clipping_plane
+        normal = plane.rotation_euler.to_matrix() * Vector((0, 0, 1))
+
         definitions.update({
-            "clippingplane.enable": use_clippingplane,
-            "clippingplane.center": clippingplane_center,
-            "clippingplane.normal": clippingplane_normal,
+            "clippingplane.enable": cam_settings.use_clipping_plane,
+            "clippingplane.center": list(plane.location),
+            "clippingplane.normal": list(normal),
         })
+    else:
+        definitions["clippingplane.enable"] = False
 
 
 def _motion_blur(definitions):

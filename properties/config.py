@@ -43,7 +43,8 @@ class LuxCoreConfigPath(PropertyGroup):
     # TODO This will be set automatically on export when transparent film is used
     # path.forceblackbackground.enable
 
-    # We probably don't need to expose these properties
+    # We probably don't need to expose these properties because they have good
+    # default values that should very rarely (or never?) need adjustment
     # path.russianroulette.depth
     # path.russianroulette.cap
 
@@ -96,7 +97,6 @@ class LuxCoreConfig(PropertyGroup):
     Main config storage class.
     Access (in ui or export) with scene.luxcore.config
     """
-    # TODO: thread count (maybe use the controls from Blender, like Cycles does?)
 
     # These settings are mostly not directly transferrable to LuxCore properties
     # They need some if/else decisions and aggregation, e.g. to build the engine name from parts

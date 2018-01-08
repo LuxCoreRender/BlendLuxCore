@@ -72,6 +72,12 @@ class LuxCoreLens(CameraButtonsPanel, Panel):
         sub.prop(cam, "clip_start", text="Start")
         sub.prop(cam, "clip_end", text="End")
 
+        row = layout.row(align=True)
+        row.prop(cam.luxcore, "use_clipping_plane")
+        sub = row.row(align=True)
+        sub.active = cam.luxcore.use_clipping_plane
+        sub.prop(cam.luxcore, "clipping_plane", text="")
+
 
 class LuxCoreDepthOfField(CameraButtonsPanel, Panel):
     bl_label = "Depth of Field"

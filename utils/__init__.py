@@ -261,6 +261,13 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
     visible = False
     for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, renderlayer)]:
         visible |= lv
+
+    # Check if object is used as camera clipping plane
+    # (don't do this for duplis because they can never
+    # be selected as clipping plane)
+    if not is_dupli and scene.camera and obj == scene.camera.data.luxcore.clipping_plane:
+        return False
+
     return (visible or is_dupli) and not hidden
 
 
