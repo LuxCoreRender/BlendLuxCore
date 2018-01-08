@@ -62,14 +62,15 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         # TODO: default exterior/interior volume
         # TODO: cache volume export (can be slow in case of smoke. But maybe a smoke cache is enough or even better?)
         prefix = "scene.materials." + luxcore_name + "."
-        self._convert_volume(self.interior_volume, props, prefix + "volume.interior")
-        self._convert_volume(self.exterior_volume, props, prefix + "volume.exterior")
 
         exported_name = self.inputs["Material"].export(props, luxcore_name)
         if exported_name is None or exported_name != luxcore_name:
             # Export failed, e.g. because no node is linked or it's not a material node
             # Define a black material that signals an unconnected material socket
             self._convert_fallback(props, luxcore_name)
+
+        self._convert_volume(self.interior_volume, props, prefix + "volume.interior")
+        self._convert_volume(self.exterior_volume, props, prefix + "volume.exterior")
 
     def _convert_volume(self, node_tree, props, property_str):
         """
