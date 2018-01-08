@@ -18,6 +18,10 @@ It is still in early development, so expect bugs and missing features.
 BlendLuxCore releases are fully self-contained. 
 Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addons.html#header), enable the addon, switch to the "LuxCore" engine and you're done.
 
+### [Example Scenes](https://luxcorerender.org/download/#ExampleScenes)
+
+TODO: These do not contain .blend files yet.
+
 ### Features
 
 * [x] Viewport and final render
@@ -63,3 +67,5 @@ The [doc folder](https://github.com/LuxCoreRender/BlendLuxCore/tree/master/doc) 
 To create a working BlendLuxCore that can be loaded into Blender, 
 you first have to copy the LuxCore binaries into the bin folder.
 See [bin/readme](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/bin/readme.md) for more details.
+
+![Example Render](https://luxcorerender.org/wp-content/uploads/2017/12/wallpaper_lux_05_rend1b.jpg)

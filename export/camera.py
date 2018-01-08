@@ -166,6 +166,10 @@ def _depth_of_field(scene, definitions):
 
 def _clipping(scene, definitions):
     camera = scene.camera
+    if camera is None:
+        # Viewport render should work without camera
+        return
+
     if camera.data.luxcore.use_clipping:
         worldscale = utils.get_worldscale(scene, as_scalematrix=False)
         definitions["cliphither"] = camera.data.clip_start * worldscale
@@ -173,6 +177,9 @@ def _clipping(scene, definitions):
 
 
 def _clipping_plane(scene, definitions):
+    if scene.camera is None:
+        # Viewport render should work without camera
+        return
     cam_settings = scene.camera.data.luxcore
 
     if cam_settings.use_clipping_plane and cam_settings.clipping_plane:
@@ -188,7 +195,11 @@ def _clipping_plane(scene, definitions):
         definitions["clippingplane.enable"] = False
 
 
-def _motion_blur(definitions):
+def _motion_blur(scene, definitions):
+    if scene.camera is None:
+        # Viewport render should work without camera
+        return
+
     pass # TODO
     # "shutteropen": shutter_open,
     # "shutterclose": shutter_close,
