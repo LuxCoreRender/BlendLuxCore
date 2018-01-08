@@ -43,7 +43,7 @@ class LuxCoreNodeTexBlenderWood(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "noise_basis2", expand=True)
         layout.prop(self, "wood_type")
-        if self.woodtype.endswith("noise"):
+        if self.wood_type.endswith("noise"):
             layout.prop(self, "noise_type", expand=True)
         layout.prop(self, "noise_basis")
         layout.prop(self, "noise_size")
