@@ -13,6 +13,11 @@ It is still in early development, so expect bugs and missing features.
 
 **Note that BlendLuxCore only works with the latest Blender build from [builder.blender.org](https://builder.blender.org/download/) because of [a bug in Blender](https://developer.blender.org/T53509) that was just recently fixed.**
 
+NOTE for Windows users: Requires Blender 2.79a. A first testbuild of Blender 2.79a will be released on 2018-01-10.
+You can also use [official Blender 2.79](https://www.blender.org/download/Blender2.79/blender-2.79-windows64.zip/), but then [your materials won't be loaded correctly](https://developer.blender.org/T53509) from saved .blend files.
+
+On Linux, you can use the latest Blender build from [builder.blender.org](https://builder.blender.org/download/).
+
 ### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
 
 ### [Download](https://luxcorerender.org/download/)
