@@ -59,7 +59,7 @@ class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.
             split.separator()
 
         if mat:
-            layout.label("Material Nodes (buggy):")
+            layout.label("LuxCore Material Nodes:")
             layout.template_ID(mat.luxcore, "node_tree", new="luxcore.mat_nodetree_new")
 
             # Warning if not the right node tree type
