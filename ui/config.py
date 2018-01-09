@@ -16,6 +16,13 @@ class LuxCoreConfig(RenderButtonsPanel, Panel):
         layout = self.layout
         config = context.scene.luxcore.config
 
+        # Filesaver
+        # TODO: we might want to move this to a more appropriate place later
+        layout.prop(config, "use_filesaver")
+        if config.use_filesaver:
+            layout.prop(context.scene.render, "filepath")
+            layout.separator()
+
         # Device
         row_device = layout.row()
         row_device.enabled = config.engine == "PATH"

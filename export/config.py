@@ -1,3 +1,6 @@
+import os
+import errno
+import bpy
 from ..bin import pyluxcore
 from .. import utils
 
@@ -73,18 +76,40 @@ def convert(scene, context=None):
         # if we forget some in the if/else construct above.
         definitions.update({
             "renderengine.type": engine,
-            # "renderengine.type": "FILESAVER",
-            # "filesaver.directory": "./testscene/",
-            # "filesaver.renderengine.type": engine,
             "sampler.type": sampler,
             "film.width": width,
             "film.height": height,
             "film.filter.type": "BLACKMANHARRIS" if config.use_filter else "NONE",
             "film.filter.width": config.filter_width,
-            #     ub.enabled = context.scene.render.threads_mode == 'FIXED'
-            # sub.prop(context.scene.render, "threads")
-
         })
+
+        # FILESAVER engine (only in final render)
+        use_filesaver = context is None and config.use_filesaver
+        if use_filesaver:
+            output_path = utils.get_abspath(scene.render.filepath, must_exist=True)
+
+            if output_path is None:
+                raise OSError('Not a valid output path: "%s"' % scene.render.filepath)
+
+            blend_name = bpy.path.basename(bpy.context.blend_data.filepath)
+            blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"
+            if not blend_name:
+                blend_name = "Untitled"
+            dir_name = blend_name + "_LuxCore"
+            frame_name = "%05d" % scene.frame_current
+            output_path = os.path.join(output_path, dir_name, frame_name)
+
+            if not os.path.exists(output_path):
+                # https://stackoverflow.com/a/273227
+                try:
+                    os.makedirs(output_path)
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
+
+            definitions["renderengine.type"] = "FILESAVER"
+            definitions["filesaver.renderengine.type"] = engine
+            definitions["filesaver.directory"] = output_path
 
         # CPU thread settings (we use the properties from Blender here)
         if scene.render.threads_mode == "FIXED":
@@ -97,6 +122,10 @@ def convert(scene, context=None):
         definitions["film.imagepipeline.0.type"] = "TONEMAP_AUTOLINEAR"
         definitions["film.imagepipeline.1.type"] = "TONEMAP_LINEAR"
         definitions["film.imagepipeline.1.scale"] = 1 / 2.25
+        if use_filesaver:
+            # Needs gamma correction
+            definitions["film.imagepipeline.2.type"] = "GAMMA_CORRECTION"
+            definitions["film.imagepipeline.2.value"] = 2.2
 
         return utils.create_props(prefix, definitions)
     except Exception as error:

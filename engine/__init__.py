@@ -55,6 +55,17 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             config = self._session.GetRenderConfig()
             done = False
 
+            if scene.luxcore.config.use_filesaver:
+                self._session.Stop()
+
+                output_path = config.GetProperties().Get("filesaver.directory").GetString()
+                self.report({"INFO"}, 'Exported to "%s"' % output_path)
+
+                # Clean up
+                del self._session
+                self._session = None
+                return
+
             # Fast refresh on startup so the user quickly sees an image forming.
             # Not used during animation render to enhance performance.
             if not self.is_animation:
@@ -68,7 +79,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
                     if now - last_refresh > refresh_interval:
                         stats = utils_render.refresh(self, scene, config, draw_film=True)
-                        done = utils_render.halt_condition_met(scene, stats) or self.test_break()
+                        done = utils_render.halt_condition_met(scene, stats) or self.test_break() or self._session.HasDone()
 
                     if now - start > FAST_REFRESH_DURATION:
                         # It's time to switch to the loop with slow refresh below
@@ -97,13 +108,13 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                     draw_film = time_until_film_refresh <= 0
 
                     stats = utils_render.refresh(self, scene, config, draw_film, time_until_film_refresh)
-                    done = utils_render.halt_condition_met(scene, stats) or self.test_break()
+                    done = utils_render.halt_condition_met(scene, stats) or self.test_break() or self._session.HasDone()
 
                     last_stat_refresh = now
                     if draw_film:
                         last_film_refresh = now
 
-                # Don't use up too much CPU time
+                # Don't use up too much CPU time for this refresh loop, but stay responsive
                 sleep(1 / 60)
 
             # User wants to stop or halt condition is reached

@@ -141,3 +141,5 @@ class LuxCoreConfig(PropertyGroup):
     # Pixel filter
     use_filter = BoolProperty(name="Use Pixel Filter", default=True, description=FILTER_DESC)
     filter_width = FloatProperty(name="Width", default=1.5, min=0.5, soft_max=3, description=FILTER_WIDTH_DESC)
+
+    use_filesaver = BoolProperty(name="Only write LuxCore scene", default=False)

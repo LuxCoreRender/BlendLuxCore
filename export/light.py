@@ -172,7 +172,6 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
             raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % blender_obj.name)
 
         props = utils.create_props(prefix, definitions)
-        print(props)
         return props, exported_light
     except Exception as error:
         msg = 'Light "%s": %s' % (blender_obj.name, error)

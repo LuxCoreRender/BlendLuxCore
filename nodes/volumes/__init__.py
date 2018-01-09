@@ -3,6 +3,7 @@ from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_VOLUME
+from ..output import get_active_output
 
 from .output import LuxCoreNodeVolOutput
 from .clear import LuxCoreNodeVolClear
@@ -13,6 +14,8 @@ class LuxCoreVolumeNodeTree(NodeTree):
     bl_idname = "luxcore_volume_nodes"
     bl_label = "LuxCore Volume Nodes"
     bl_icon = ICON_VOLUME
+
+    # last_node_tree = None
 
     @classmethod
     def poll(cls, context):
@@ -28,13 +31,20 @@ class LuxCoreVolumeNodeTree(NodeTree):
     #         mat = obj.active_material
     #
     #         if mat:
-    #             # ID pointer
-    #             node_tree = mat.luxcore.node_tree
+    #             mat_node_tree = mat.luxcore.node_tree
+    #             if mat_node_tree is None:
+    #                 return cls.last_node_tree, mat, mat
     #
-    #             if node_tree:
-    #                 return node_tree, mat, mat
+    #             output = get_active_output(mat_node_tree)
+    #             interior = output.interior_volume
+    #             exterior = output.exterior_volume
     #
-    #     return None, None, None
+    #             if interior:
+    #                 cls.last_node_tree = interior
+    #             if exterior:
+    #                 cls.last_node_tree = exterior
+    #
+    #     return cls.last_node_tree, None, None
 
     # This block updates the preview, when socket links change
     def update(self):
