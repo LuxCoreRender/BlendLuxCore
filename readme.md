@@ -11,6 +11,8 @@ It is still in early development, so expect bugs and missing features.
 - You will experience crashes and other bugs. Please report them in the bug tracker!
 ```
 
+**Note that BlendLuxCore only works with the latest Blender build from [builder.blender.org](https://builder.blender.org/download/) because of [a bug in Blender](https://developer.blender.org/T53509) that was just recently fixed.**
+
 ### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
 
 ### [Download](https://luxcorerender.org/download/)
