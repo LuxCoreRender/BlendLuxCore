@@ -36,6 +36,15 @@ SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION = (
     "Used to avoid shadows cast from below when using shadow catcher"
 )
 
+IES_FILE_DESCRIPTION = "Specify path to IES file. Only portable if a relative path is used."
+IES_TEXT_DESCRIPTION = (
+    "Use Blender text block as IES file. Recommended if you plan to append/link this light later."
+)
+iesfile_type_items = [
+    ("PATH", "File", IES_FILE_DESCRIPTION, 0),
+    ("TEXT", "Text", IES_TEXT_DESCRIPTION, 1)
+]
+
 
 def init():
     bpy.types.Lamp.luxcore = PointerProperty(type=LuxCoreLightProps)
@@ -104,7 +113,9 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0, description=EFFICACY_DESCRIPTION)
 
     # mappoint
-    iesfile = StringProperty(name="IES File", subtype="FILE_PATH")
+    iesfile_type = EnumProperty(name="IES File Type", items=iesfile_type_items, default="TEXT")
+    iesfile_path = StringProperty(name="IES File", subtype="FILE_PATH", description=IES_FILE_DESCRIPTION)
+    iesfile_text = PointerProperty(name="IES Text", type=bpy.types.Text, description=IES_TEXT_DESCRIPTION)
     flipz = BoolProperty(name="Flip IES Z Axis", default=False)
     # not exposed: emission.map.width, emission.map.height - do we need them?
 

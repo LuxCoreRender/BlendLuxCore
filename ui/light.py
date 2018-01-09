@@ -20,9 +20,12 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
     def draw_image_controls(self, context):
         layout = self.layout
         lamp = context.lamp
-        layout.template_ID(lamp.luxcore, "image", open="image.open")
+
+        col = layout.column(align=True)
+        col.label("Image:")
+        col.template_ID(lamp.luxcore, "image", open="image.open")
         if lamp.luxcore.image:
-            layout.prop(lamp.luxcore, "gamma")
+            col.prop(lamp.luxcore, "gamma")
 
     def draw(self, context):
         layout = self.layout
@@ -43,10 +46,23 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
             row.prop(lamp.luxcore, "power")
             row.prop(lamp.luxcore, "efficacy")
 
-            layout.prop(lamp.luxcore, "iesfile")
+            # IES Data
+            col = layout.column()
+            row = col.row()
+            row.label("IES Data:")
+            row.prop(lamp.luxcore, "iesfile_type", expand=True)
 
-            if lamp.luxcore.iesfile:
-                layout.prop(lamp.luxcore, "flipz")
+            if lamp.luxcore.iesfile_type == "TEXT":
+                col.prop(lamp.luxcore, "iesfile_text")
+                iesfile = lamp.luxcore.iesfile_text
+            else:
+                # lamp.luxcore.iesfile_type == "PATH":
+                col.prop(lamp.luxcore, "iesfile_path")
+                iesfile = lamp.luxcore.iesfile_path
+
+            sub = col.column()
+            sub.active = bool(iesfile)
+            sub.prop(lamp.luxcore, "flipz")
 
             self.draw_image_controls(context)
 

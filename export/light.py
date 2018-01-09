@@ -35,9 +35,13 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
         definitions["importance"] = importance
 
         if lamp.type == "POINT":
-            if lamp.luxcore.image or lamp.luxcore.iesfile:
+            lc = lamp.luxcore
+            has_ies = (lc.iesfile_type == "TEXT" and lc.iesfile_text) or (lc.iesfile_type == "PATH" and lc.iesfile_path)
+
+            if lamp.luxcore.image or has_ies:
                 # mappoint
                 definitions["type"] = "mappoint"
+                definitions["flipz"] = lamp.luxcore.flipz
 
                 if lamp.luxcore.image:
                     try:
@@ -51,14 +55,28 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                         definitions["type"] = "point"
                         # Signal that the image is missing
                         definitions["gain"] = [x * lamp.luxcore.gain for x in MISSING_IMAGE_COLOR]
-                    
-                if lamp.luxcore.iesfile:
-                    filepath = utils.get_abspath(lamp.luxcore.iesfile, lamp.library, must_exist=True, must_be_file=True)
-                    if filepath:
-                        definitions["iesfile"] = filepath
-                        definitions["flipz"] = lamp.luxcore.flipz
-                    else:
-                        _report_missing_iesfile(blender_obj, scene, lamp.luxcore.iesfile)
+
+                # There are two ways to specify IES data: filepath or blob (ascii text)
+                if lamp.luxcore.iesfile_type == "TEXT":
+                    # Blender text block
+                    text = lamp.luxcore.iesfile_text
+
+                    if text:
+                        blob = text.as_string().encode("ascii")
+
+                        if blob:
+                            definitions["iesblob"] = [blob]
+                else:
+                    # File path
+                    iesfile = lamp.luxcore.iesfile_path
+
+                    if iesfile:
+                        filepath = utils.get_abspath(iesfile, lamp.library, must_exist=True, must_be_file=True)
+
+                        if filepath:
+                            definitions["iesfile"] = filepath
+                        else:
+                            _report_missing_iesfile(blender_obj, scene, iesfile)
             else:
                 # point
                 definitions["type"] = "point"
@@ -154,6 +172,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
             raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % blender_obj.name)
 
         props = utils.create_props(prefix, definitions)
+        print(props)
         return props, exported_light
     except Exception as error:
         msg = 'Light "%s": %s' % (blender_obj.name, error)
