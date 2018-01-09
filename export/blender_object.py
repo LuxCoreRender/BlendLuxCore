@@ -6,8 +6,9 @@ from ..utils import ExportedObject
 from . import material
 from .light import convert_lamp
 
-
-def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, update_mesh=False):
+def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, update_mesh=False, dupli_name_suffix='', matrix=None):
+    is_dupli = len(dupli_name_suffix) > 0
+    
     if not utils.is_obj_visible(blender_obj, scene, context):
         return pyluxcore.Properties(), None
 
@@ -17,7 +18,7 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
     try:
         print("converting object:", blender_obj.name)
         # Note that his is not the final luxcore_name, as the object may be split by DefineBlenderMesh()
-        luxcore_name = utils.make_key(blender_obj)
+        luxcore_name = utils.to_luxcore_name(blender_obj.name)+dupli_name_suffix
         props = pyluxcore.Properties()
 
         if blender_obj.data is None:
@@ -37,6 +38,7 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
                 return props, None
 
             mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene)
+            mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, matrix)
             bpy.data.meshes.remove(mesh, do_unlink=False)
         else:
             assert exported_object is not None
@@ -84,7 +86,7 @@ def _define_luxcore_object(props, lux_object_name, lux_material_name, transforma
         props.Set(pyluxcore.Property(prefix + "transformation", transformation))
 
 
-def _convert_mesh_to_shapes(name, mesh, luxcore_scene):
+def _convert_mesh_to_shapes(name, mesh, luxcore_scene, transformation = None):
     faces = mesh.tessfaces[0].as_pointer()
     vertices = mesh.vertices[0].as_pointer()
 
@@ -102,7 +104,7 @@ def _convert_mesh_to_shapes(name, mesh, luxcore_scene):
         vertexColors = 0
 
     # TODO
-    transformation = None # if self.use_instancing else self.transformation
+    #transformation = None # if self.use_instancing else self.transformation            
 
     return luxcore_scene.DefineBlenderMesh(name, len(mesh.tessfaces), faces, len(mesh.vertices),
                                            vertices, texCoords, vertexColors, transformation)
