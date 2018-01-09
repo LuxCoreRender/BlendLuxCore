@@ -2,6 +2,7 @@ from time import time
 import bpy
 from ..bin import pyluxcore
 from .. import utils
+from mathutils import Matrix
 from ..utils import node as utils_node
 from . import blender_object, camera, config, light, material
 from .light import WORLD_BACKGROUND_LIGHT_NAME
@@ -188,6 +189,21 @@ class Exporter(object):
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
                 engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
                 self._convert_object(scene_props, obj, scene, context, luxcore_scene)
+
+                if obj.is_duplicator:
+                    print("Duplicator")
+                    mode = 'VIEWPORT' if context else 'RENDER'
+                    obj.dupli_list_create(scene, settings=mode)
+                    for dupli in obj.dupli_list:                        
+                        dupli_name_suffix = '%s_%s_%3d' % (obj.name, dupli.object.name, dupli.index)                                                
+                        matrix = dupli.object.matrix_world.inverted()*dupli.matrix.copy()
+                        #matrix = Matrix.Scale(1/obj.scale[0], 4)*dupli.matrix.copy()
+                        self._convert_object(scene_props, dupli.object, scene, context, luxcore_scene, True, dupli_name_suffix, utils.matrix_to_list(matrix, scene, True))
+                        
+                    obj.dupli_list_clear()
+
+                    
+
                 # Objects are the most expensive to export, so they dictate the progress
                 engine.update_progress(index / len_objs)
             # Regularly check if we should abort the export (important in heavy scenes)
@@ -286,20 +302,20 @@ class Exporter(object):
         # because it might have been replaced in _update_config()
         return session
 
-    def _convert_object(self, props, obj, scene, context, luxcore_scene, update_mesh=False):
+    def _convert_object(self, props, obj, scene, context, luxcore_scene, update_mesh=False, dupli_name_suffix="", matrix=None):
         key = utils.make_key(obj)
         old_exported_obj = None
 
         if key not in self.exported_objects:
             # We have to update the mesh because the object was not yet exported
             update_mesh = True
-
+        
         if not update_mesh:
             # We need the previously exported mesh defintions
             old_exported_obj = self.exported_objects[key]
 
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
-        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj, update_mesh)
+        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj, update_mesh, dupli_name_suffix, matrix)
 
         if exported_obj is None:
             # Object is not visible or an error happened.
