@@ -37,6 +37,7 @@ TODO: These do not contain .blend files yet.
 * [x] Cameras (perspective, ortographic, panoramic)
 * [x] Depth of field
 * [x] Arbitrary clipping plane
+* [x] FILESAVER engine (scene export to LuxCore scn/cfg files)
 * [ ] Particles
 * [ ] Duplis
 * [ ] Some materials
@@ -45,7 +46,6 @@ TODO: These do not contain .blend files yet.
 * [ ] Light groups
 * [ ] AOVs
 * [ ] Tonemapping settings
-* [ ] FILESAVER engine (scene export to LuxCore scn/cfg files)
 * [ ] Motion blur
 * [ ] Smoke/Fire
 * [ ] Pointiness
