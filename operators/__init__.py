@@ -52,12 +52,6 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         if getattr(context, "material", None):
             context.material.luxcore.node_tree = node_tree
 
-            # Node tree is attached to object as fallback for now because of Blender bug.
-            # This only allows to have one material per object.
-            # TODO: waiting for a fix: https://developer.blender.org/T53509
-            if context.object:
-                context.object.luxcore.node_tree = node_tree
-
         return {"FINISHED"}
 
 
@@ -110,9 +104,6 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
         else:
             obj.data.materials.append(mat)
 
-        # Workaround for blender bug https://developer.blender.org/T53509
-        obj.luxcore.node_tree = node_tree
-
         return {"FINISHED"}
 
 
@@ -123,15 +114,4 @@ class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.luxcore.errorlog.clear()
-        return {"FINISHED"}
-
-
-class LUXCORE_OT_show_the_f_bug(bpy.types.Operator):
-    """:dedede"""
-    bl_idname = "luxcore.show_the_f_bug"
-    bl_label = "Open the bug report in your favourite web browser"
-
-    def execute(self, context):
-        import webbrowser
-        webbrowser.open("https://developer.blender.org/T53509")
         return {"FINISHED"}

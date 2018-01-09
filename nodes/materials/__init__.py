@@ -41,11 +41,6 @@ class LuxCoreMaterialNodeTree(NodeTree):
         if obj and obj.type not in {"LAMP", "CAMERA"}:
             mat = obj.active_material
 
-            # Node tree is attached to object as fallback for now because of Blender bug.
-            # This only allows to have one material per object.
-            # TODO: waiting for a fix: https://developer.blender.org/T53509
-            mat = obj
-
             if mat:
                 # ID pointer
                 node_tree = mat.luxcore.node_tree
