@@ -278,7 +278,7 @@ def get_theme(context):
 
 def get_abspath(path, library=None, must_exist=False, must_be_file=False):
     """ library: The library this path is from. """
-    abspath = bpy.path.abspath(path)
+    abspath = bpy.path.abspath(path, library=library)
 
     if must_exist and not os.path.exists(abspath):
         print('Path does not exist: "%s"' % abspath)

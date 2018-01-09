@@ -53,9 +53,9 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                         definitions["gain"] = [x * lamp.luxcore.gain for x in MISSING_IMAGE_COLOR]
                     
                 if lamp.luxcore.iesfile:
-                    filepath = utils.get_abspath(lamp.luxcore.iesfile, must_exist=True, must_be_file=True)
+                    filepath = utils.get_abspath(lamp.luxcore.iesfile, lamp.library, must_exist=True, must_be_file=True)
                     if filepath:
-                        definitions["iesfile"] = lamp.luxcore.iesfile
+                        definitions["iesfile"] = filepath
                         definitions["flipz"] = lamp.luxcore.flipz
                     else:
                         _report_missing_iesfile(blender_obj, scene, lamp.luxcore.iesfile)
