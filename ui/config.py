@@ -18,8 +18,10 @@ class LuxCoreConfig(RenderButtonsPanel, Panel):
 
         # Filesaver
         # TODO: we might want to move this to a more appropriate place later
-        layout.prop(config, "use_filesaver")
+        row = layout.row()
+        row.prop(config, "use_filesaver")
         if config.use_filesaver:
+            row.prop(config, "filesaver_format")
             layout.prop(context.scene.render, "filepath")
             layout.separator()
 

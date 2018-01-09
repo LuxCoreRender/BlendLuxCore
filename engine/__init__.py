@@ -58,7 +58,10 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             if scene.luxcore.config.use_filesaver:
                 self._session.Stop()
 
-                output_path = config.GetProperties().Get("filesaver.directory").GetString()
+                if scene.luxcore.config.filesaver_format == "BIN":
+                    output_path = config.GetProperties().Get("filesaver.filename").GetString()
+                else:
+                    output_path = config.GetProperties().Get("filesaver.directory").GetString()
                 self.report({"INFO"}, 'Exported to "%s"' % output_path)
 
                 # Clean up
