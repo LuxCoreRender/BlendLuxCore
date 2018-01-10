@@ -394,39 +394,3 @@ class Exporter(object):
                 props.Set(world_props)
 
         return props
-
-    # def _motion_blur(self, scene, scene_props, objs, step, time):
-    #     """
-    #     Create motion blur properties for all objs.
-    #     You have to call this function at least two times to get valid motion blur properties.
-    #     """
-    #     for obj in objs:
-    #         # TODO: check if object is even moved (compare matrices?)
-    #
-    #         if obj.type == "LAMP" and obj.data.type == "AREA":
-    #             # TODO: Area lights need special matrix calculation
-    #             continue
-    #
-    #         key = utils.make_key(obj)
-    #
-    #         try:
-    #             exported_thing = self.exported_objects[key]
-    #         except KeyError:
-    #             # This is not a problem, objects are skipped during epxort for various reasons
-    #             continue
-    #
-    #         for luxcore_name in exported_thing.luxcore_names:
-    #             # exported_objects contains instances of ExportedObject and ExportedLight
-    #             if isinstance(exported_thing, utils.ExportedObject):
-    #                 prefix = "scene.objects." + luxcore_name + "."
-    #             else:
-    #                 prefix = "scene.lights." + luxcore_name + "."
-    #
-    #             matrix_raw = obj.matrix_world.copy()
-    #             matrix = utils.matrix_to_list(matrix_raw, scene, apply_worldscale=True, invert=True)
-    #             definitions = {
-    #                 "motion.%d.time" % step: time,
-    #                 "motion.%d.transformation" % step: matrix,
-    #             }
-    #             print("definitions:", definitions)
-    #             scene_props.Set(utils.create_props(prefix, definitions))
