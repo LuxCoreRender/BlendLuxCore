@@ -3,7 +3,7 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
-from . import blender_object, camera, config, light, material
+from . import blender_object, camera, config, light, material, motion_blur
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from ..nodes.output import get_active_output
 
@@ -194,6 +194,15 @@ class Exporter(object):
             if engine.test_break():
                 return None
 
+        # Motion blur (TODO: camera blur)
+        if scene.camera:
+            blur_settings = scene.camera.data.luxcore.motion_blur
+
+            if blur_settings.enable and blur_settings.shutter > 0 and blur_settings.object_blur:
+                # Object motion blur
+                motion_blur_props = motion_blur.convert(scene, objs, self.exported_objects)
+                scene_props.Set(motion_blur_props)
+
         # World
         if scene.world and scene.world.luxcore.light != "none":
             engine.update_stats("Export", "World")
@@ -362,7 +371,7 @@ class Exporter(object):
                     continue
 
                 # exported_objects contains instances of ExportedObject and ExportedLight
-                if isinstance(exported_thing, blender_object.ExportedObject):
+                if isinstance(exported_thing, utils.ExportedObject):
                     remove_func = luxcore_scene.DeleteObject
                 else:
                     remove_func = luxcore_scene.DeleteLight
@@ -385,3 +394,39 @@ class Exporter(object):
                 props.Set(world_props)
 
         return props
+
+    # def _motion_blur(self, scene, scene_props, objs, step, time):
+    #     """
+    #     Create motion blur properties for all objs.
+    #     You have to call this function at least two times to get valid motion blur properties.
+    #     """
+    #     for obj in objs:
+    #         # TODO: check if object is even moved (compare matrices?)
+    #
+    #         if obj.type == "LAMP" and obj.data.type == "AREA":
+    #             # TODO: Area lights need special matrix calculation
+    #             continue
+    #
+    #         key = utils.make_key(obj)
+    #
+    #         try:
+    #             exported_thing = self.exported_objects[key]
+    #         except KeyError:
+    #             # This is not a problem, objects are skipped during epxort for various reasons
+    #             continue
+    #
+    #         for luxcore_name in exported_thing.luxcore_names:
+    #             # exported_objects contains instances of ExportedObject and ExportedLight
+    #             if isinstance(exported_thing, utils.ExportedObject):
+    #                 prefix = "scene.objects." + luxcore_name + "."
+    #             else:
+    #                 prefix = "scene.lights." + luxcore_name + "."
+    #
+    #             matrix_raw = obj.matrix_world.copy()
+    #             matrix = utils.matrix_to_list(matrix_raw, scene, apply_worldscale=True, invert=True)
+    #             definitions = {
+    #                 "motion.%d.time" % step: time,
+    #                 "motion.%d.transformation" % step: matrix,
+    #             }
+    #             print("definitions:", definitions)
+    #             scene_props.Set(utils.create_props(prefix, definitions))

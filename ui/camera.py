@@ -114,3 +114,29 @@ class LuxCoreDepthOfField(CameraButtonsPanel, Panel):
         col.prop(dof_options, "fstop")
         if dof_options.use_high_quality and hq_support:
             col.prop(dof_options, "blades")
+
+
+class LuxCoreMotionBlur(CameraButtonsPanel, Panel):
+    bl_label = "Motion Blur"
+    COMPAT_ENGINES = {"LUXCORE"}
+
+    def draw_header(self, context):
+        self.layout.prop(context.camera.luxcore.motion_blur, "enable", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        cam = context.camera
+        motion_blur = cam.luxcore.motion_blur
+        layout.active = motion_blur.enable
+
+        split = layout.split()
+
+        col = split.column(align=True)
+        col.prop(motion_blur, "object_blur")
+        col.prop(motion_blur, "camera_blur")
+
+        col = split.column(align=True)
+        col.prop(motion_blur, "shutter")
+        col.prop(motion_blur, "steps")
+
+        layout.label("Note: camera blur not implemented yet", icon="INFO")

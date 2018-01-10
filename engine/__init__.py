@@ -41,10 +41,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             if self.error:
                 # We have to re-raise the error from update() here because
-                # we can only use  self.error_set() in this function
+                # this function (render()) is the only one that can use self.error_set()
+                # to show a warning to the user after the render finished.
                 raise self.error
 
             if self._session is None:
+                # session is None, but self.error is not set -> User cancelled.
                 print("Export cancelled by user.")
                 return
 
