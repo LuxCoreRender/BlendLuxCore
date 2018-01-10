@@ -12,7 +12,6 @@ def convert(scene, objects, exported_objects):
 
     step_interval = motion_blur.shutter / (steps - 1)
     times = [step_interval * step - motion_blur.shutter * 0.5 for step in range(steps)]
-    print("times:", times)
 
     matrices = _get_matrices(scene, objects, exported_objects, steps, times)
 
@@ -38,7 +37,6 @@ def convert(scene, objects, exported_objects):
                 "motion.%d.time" % step: time,
                 "motion.%d.transformation" % step: transformation,
             }
-            print("time:", time)
             props.Set(utils.create_props(prefix, definitions))
 
     return props
@@ -49,14 +47,12 @@ def _get_matrices(scene, objects, exported_objects, steps, times):
 
     frame_center = scene.frame_current
     subframe_center = scene.frame_subframe
-    print("orig frame, subframe:", frame_center, subframe_center)
 
     for step in range(steps):
         offset = times[step]
         time = frame_center + subframe_center + offset
         frame = math.floor(time)
         subframe = time - frame
-        print("frame, subframe:", frame, subframe)
         scene.frame_set(frame, subframe)
 
         for obj in objects:
