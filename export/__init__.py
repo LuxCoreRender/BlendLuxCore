@@ -194,13 +194,15 @@ class Exporter(object):
             if engine.test_break():
                 return None
 
-        # Motion blur (TODO: camera blur)
+        # Motion blur
         if scene.camera:
             blur_settings = scene.camera.data.luxcore.motion_blur
+            # Don't export camera blur in viewport
+            camera_blur = blur_settings.camera_blur and not context
+            enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
 
-            if blur_settings.enable and blur_settings.shutter > 0 and blur_settings.object_blur:
-                # Object motion blur
-                motion_blur_props = motion_blur.convert(scene, objs, self.exported_objects)
+            if enabled and blur_settings.shutter > 0:
+                motion_blur_props = motion_blur.convert(context, scene, objs, self.exported_objects)
                 scene_props.Set(motion_blur_props)
 
         # World

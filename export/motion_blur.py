@@ -1,25 +1,36 @@
 import math
+from mathutils import Matrix
 from ..bin import pyluxcore
 from .. import utils
 
 
-def convert(scene, objects, exported_objects):
+def is_camera_moving(context, scene):
+    motion_blur = scene.camera.data.luxcore.motion_blur
+    steps = motion_blur.steps
+    times = _calc_times(motion_blur.shutter, steps)
+    # Step through time and collect camera matrices
+    matrices = _get_matrices(context, scene, steps, times)
+    cam_matrices = matrices["scene.camera."]
+    # If all matrices are equal, the camera is not moving
+    return not utils.all_elems_equal(cam_matrices)
+
+
+def convert(context, scene, objects, exported_objects):
     assert scene.camera
     motion_blur = scene.camera.data.luxcore.motion_blur
+    assert motion_blur.enable and (motion_blur.object_blur or motion_blur.camera_blur)
 
     steps = motion_blur.steps
-    assert steps > 1
+    assert steps >= 2 and isinstance(steps, int)
 
     step_interval = motion_blur.shutter / (steps - 1)
     times = [step_interval * step - motion_blur.shutter * 0.5 for step in range(steps)]
 
-    matrices = _get_matrices(scene, objects, exported_objects, steps, times)
+    matrices = _get_matrices(context, scene, steps, times, objects, exported_objects)
 
     # Find and delete entries of non-moving objects (where all matrices are equal)
     for prefix, matrix_steps in list(matrices.items()):
-        # https://stackoverflow.com/a/10285205
-        first = matrix_steps[0]
-        matrices_equal = all(matrix == first for matrix in matrix_steps)
+        matrices_equal = utils.all_elems_equal(matrix_steps)
 
         if matrices_equal:
             # This object does not need motion blur because it does not move
@@ -32,7 +43,8 @@ def convert(scene, objects, exported_objects):
         for step in range(steps):
             time = times[step]
             matrix = matrix_steps[step]
-            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True, invert=True)
+            invert = prefix != "scene.camera."
+            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True, invert=invert)
             definitions = {
                 "motion.%d.time" % step: time,
                 "motion.%d.transformation" % step: transformation,
@@ -42,7 +54,14 @@ def convert(scene, objects, exported_objects):
     return props
 
 
-def _get_matrices(scene, objects, exported_objects, steps, times):
+def _calc_times(shutter, steps):
+    step_interval = shutter / (steps - 1)
+    times = [step_interval * step - shutter * 0.5 for step in range(steps)]
+    return times
+
+
+def _get_matrices(context, scene, steps, times, objects=None, exported_objects=None):
+    motion_blur = scene.camera.data.luxcore.motion_blur
     matrices = {}  # {prefix: [matrix1, matrix2, ...]}
 
     frame_center = scene.frame_current
@@ -55,20 +74,34 @@ def _get_matrices(scene, objects, exported_objects, steps, times):
         subframe = time - frame
         scene.frame_set(frame, subframe)
 
-        for obj in objects:
-            if obj.type == "LAMP" and obj.data.type == "AREA":
-                # TODO: Area lights need special matrix calculation
-                continue
+        if motion_blur.object_blur and objects and exported_objects:
+            _append_object_matrices(objects, exported_objects, matrices, step)
 
-            key = utils.make_key(obj)
+        if motion_blur.camera_blur and not context:
+            matrix = scene.camera.matrix_world.copy()
+            # TODO: This is so stupid. I have no idea what I'm doing
+            rotate = Matrix.Rotation(math.radians(180), 4, "X")
+            scale = Matrix.Scale(-1, 4, (0, 1, 0))
+            matrix = matrix * rotate * scale
+            prefix = "scene.camera."
+            _append_matrix(matrices, prefix, matrix, step)
+            print("appended camera matrix")
 
-            try:
-                exported_thing = exported_objects[key]
-            except KeyError:
-                # This is not a problem, objects are skipped during epxort for various reasons
-                continue
+    # Restore original frame
+    scene.frame_set(frame_center, subframe_center)
+    return matrices
 
-            matrix = obj.matrix_world.copy()
+
+def _append_object_matrices(objects, exported_objects, matrices, step):
+    for obj in objects:
+        if obj.type == "LAMP" and obj.data.type == "AREA":
+            # TODO: Area lights need special matrix calculation
+            continue
+
+        key = utils.make_key(obj)
+
+        try:
+            exported_thing = exported_objects[key]
 
             for luxcore_name in exported_thing.luxcore_names:
                 # exported_objects contains instances of ExportedObject and ExportedLight
@@ -77,11 +110,17 @@ def _get_matrices(scene, objects, exported_objects, steps, times):
                 else:
                     prefix = "scene.lights." + luxcore_name + "."
 
-                if step == 0:
-                    matrices[prefix] = [matrix]
-                else:
-                    matrices[prefix].append(matrix)
+                matrix = obj.matrix_world.copy()
+                # Note: object matrices need to be inverted
+                _append_matrix(matrices, prefix, matrix, step)
+        except KeyError:
+            # This is not a problem, objects are skipped during epxort for various reasons
+            # E.g. if the object is not visible, or if it's a camera
+            pass
 
-    # Restore original frame
-    scene.frame_set(frame_center, subframe_center)
-    return matrices
+
+def _append_matrix(matrices, prefix, matrix, step):
+    if step == 0:
+        matrices[prefix] = [matrix]
+    else:
+        matrices[prefix].append(matrix)

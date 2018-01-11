@@ -26,7 +26,7 @@ class LuxCoreMotionBlur(PropertyGroup):
     """
     enable = BoolProperty(name="Enable Motion Blur", default=False)
     object_blur = BoolProperty(name="Object", default=True, description="Blur moving objects")
-    camera_blur = BoolProperty(name="Camera", default=True, description="Blur if camera moves")
+    camera_blur = BoolProperty(name="Camera", default=False, description="Blur if camera moves")
     shutter = FloatProperty(name="Shutter (s)", default=0.1, min=0, soft_max=2, description=SHUTTER_TIME_DESC)
     # TODO: add description about accelerators (Embree only supports 2 steps?) and what happens
     # if more than 2 steps are used

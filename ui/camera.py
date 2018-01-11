@@ -133,7 +133,10 @@ class LuxCoreMotionBlur(CameraButtonsPanel, Panel):
 
         col = split.column(align=True)
         col.prop(motion_blur, "object_blur")
-        col.prop(motion_blur, "camera_blur")
+        # TODO camera blur does not work
+        sub = col.column(align=True)
+        sub.enabled = False
+        sub.prop(motion_blur, "camera_blur")
 
         col = split.column(align=True)
         col.prop(motion_blur, "shutter")

@@ -2,6 +2,7 @@ import math
 from mathutils import Vector, Matrix
 from ..bin import pyluxcore
 from .. import utils
+from . import motion_blur
 
 
 def needs_update():
@@ -32,6 +33,7 @@ def convert(scene, context=None):
 
         _clipping(scene, definitions)
         _clipping_plane(scene, definitions)
+        _motion_blur(scene, definitions, context)
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
@@ -195,14 +197,31 @@ def _clipping_plane(scene, definitions):
         definitions["clippingplane.enable"] = False
 
 
-def _motion_blur(scene, definitions):
+def _motion_blur(scene, definitions, context):
     if scene.camera is None:
         # Viewport render should work without camera
         return
 
-    pass # TODO
-    # "shutteropen": shutter_open,
-    # "shutterclose": shutter_close,
+    moblur_settings = scene.camera.data.luxcore.motion_blur
+    if not moblur_settings.enable:
+        return
+
+    # TODO why does this not work as expected?
+    # definitions["shutteropen"] = -moblur_settings.shutter * 0.5
+    # definitions["shutterclose"] = moblur_settings.shutter * 0.5
+
+    # # Don't export camera blur in viewport render
+    # if moblur_settings.camera_blur and not context and motion_blur.is_camera_moving(context, scene):
+    #     # Make sure lookup is defined - this function should be the last to modify it
+    #     assert "lookat.orig" in definitions
+    #     assert "lookat.target" in definitions
+    #     assert "up" in definitions
+    #     # Reset lookat - it's handled by motion.x.transformation
+    #     # TODO: seems like this is not needed - why?
+    #     definitions["lookat.orig"] = [0, 0, 0]
+    #     definitions["lookat.target"] = [0, 0, -1]
+    #     definitions["up"] = [0, 1, 0]
+    #     # Note: camera motion system is defined in export/motion_blur.py
 
 
 def _calc_lookat(cam_matrix):
