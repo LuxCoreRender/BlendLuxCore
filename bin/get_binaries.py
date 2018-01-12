@@ -5,15 +5,17 @@ from shutil import copy2
 import platform
 import os
 
+
 def confirm(message):
     while True:
-        confirm = input(message)
-        if confirm in ("y", "n"):
-            return confirm == "y"
+        response = input(message)
+        if response in ("y", "n"):
+            return response == "y"
         else:
             print("\nValid answers: y/n")
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("source_path",
                         help="Source path where the script starts searching for the required files. "
@@ -56,3 +58,7 @@ if __name__ == "__main__":
 
     for file in files:
         print('ERROR: Could not find file "%s".' % file)
+
+
+if __name__ == "__main__":
+    main()
