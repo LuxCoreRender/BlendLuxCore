@@ -16,7 +16,7 @@ class Duplis:
         self.count += 1
 
 
-def convert(blender_obj, scene, context, luxcore_scene):
+def convert(blender_obj, scene, context, luxcore_scene, engine):
     assert blender_obj.is_duplicator
 
     dupli_props = pyluxcore.Properties()
@@ -28,7 +28,8 @@ def convert(blender_obj, scene, context, luxcore_scene):
     name_prefix = utils.get_unique_luxcore_name(blender_obj)
     exported_duplis = {}
 
-    for dupli in blender_obj.dupli_list:
+    dupli_count = len(blender_obj.dupli_list)
+    for i, dupli in enumerate(blender_obj.dupli_list):
         # Use the utils functions to build names so linked objects work (libraries)
         name = name_prefix + utils.get_unique_luxcore_name(dupli.object)
         matrix_list = utils.matrix_to_list(dupli.matrix, scene, apply_worldscale=True)
@@ -45,8 +46,16 @@ def convert(blender_obj, scene, context, luxcore_scene):
             obj_props, exported_obj = blender_object.convert(dupli.object, scene, context, luxcore_scene,
                                                              update_mesh=True, dupli_suffix=name_suffix)
             dupli_props.Set(obj_props)
-
             exported_duplis[name] = Duplis(exported_obj, matrix_list)
+
+        # Report progress and check if user wants to cancel export
+        if i % 1000 == 0:
+            progress = (i / dupli_count) * 100
+            engine.update_stats("Export", "Object: %s (Duplis: %d%%)" % (blender_obj.name, progress))
+
+            if engine.test_break():
+                blender_obj.dupli_list_clear()
+                return
 
     blender_obj.dupli_list_clear()
     # Need to parse so we have the dupli objects available for DuplicateObject
