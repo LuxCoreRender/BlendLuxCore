@@ -134,7 +134,9 @@ class VisibilityCache(object):
         return self.objects_to_remove or self.objects_to_add
 
     def _get_visible_objects(self, context):
-        as_keylist = [utils.make_key(obj) for obj in context.visible_objects]
+        ctx_vis = context.visible_objects
+        is_visible = utils.is_obj_visible
+        as_keylist = [utils.make_key(obj) for obj in ctx_vis if is_visible(obj, context.scene, context)]
         return set(as_keylist)
 
 
@@ -187,10 +189,7 @@ class Exporter(object):
         for index, obj in enumerate(objs, start=1):
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
                 engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
-                self._convert_object(scene_props, obj, scene, context, luxcore_scene)
-
-                if obj.is_duplicator:
-                    duplis.convert(obj, scene, context, luxcore_scene, engine)
+                self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine)
 
                 # Objects are the most expensive to export, so they dictate the progress
                 engine.update_progress(index / len_objs)
@@ -302,7 +301,7 @@ class Exporter(object):
         return session
 
     def _convert_object(self, props, obj, scene, context, luxcore_scene,
-                        update_mesh=False, dupli_suffix="", matrix=None):
+                        update_mesh=False, dupli_suffix="", matrix=None, engine=None):
         key = utils.make_key(obj)
         old_exported_obj = None
 
@@ -317,6 +316,12 @@ class Exporter(object):
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
         obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj,
                                                          update_mesh, dupli_suffix, matrix)
+
+        if obj.is_duplicator:
+            duplis.convert(obj, scene, context, luxcore_scene, engine)
+
+        if obj.parent and obj.parent.is_duplicator:
+            self._convert_object(props, obj.parent, scene, context, luxcore_scene)
 
         if exported_obj is None:
             # Object is not visible or an error happened.
@@ -349,7 +354,6 @@ class Exporter(object):
 
         if changes & Change.OBJECT:
             for obj in self.object_cache.changed_transform:
-                # TODO only update transform
                 print("transformed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False)
 
