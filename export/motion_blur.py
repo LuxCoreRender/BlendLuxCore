@@ -43,8 +43,7 @@ def convert(context, scene, objects, exported_objects):
         for step in range(steps):
             time = times[step]
             matrix = matrix_steps[step]
-            invert = prefix != "scene.camera."
-            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True, invert=invert)
+            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
             definitions = {
                 "motion.%d.time" % step: time,
                 "motion.%d.transformation" % step: transformation,
@@ -111,7 +110,6 @@ def _append_object_matrices(objects, exported_objects, matrices, step):
                     prefix = "scene.lights." + luxcore_name + "."
 
                 matrix = obj.matrix_world.copy()
-                # Note: object matrices need to be inverted
                 _append_matrix(matrices, prefix, matrix, step)
         except KeyError:
             # This is not a problem, objects are skipped during epxort for various reasons
