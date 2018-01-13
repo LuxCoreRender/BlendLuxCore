@@ -57,7 +57,7 @@ class Exporter(object):
 
 
                 if obj.is_duplicator:
-                    duplis.convert(obj, scene, context, luxcore_scene)
+                    duplis.convert(obj, scene, context, luxcore_scene, engine)
 
                 # Objects are the most expensive to export, so they dictate the progress
                 engine.update_progress(index / len_objs)
