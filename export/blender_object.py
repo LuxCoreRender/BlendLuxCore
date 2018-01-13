@@ -6,9 +6,9 @@ from ..utils import ExportedObject
 from . import material
 from .light import convert_lamp
 
-def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, update_mesh=False, dupli_name_suffix='', matrix=None):
-    is_dupli = len(dupli_name_suffix) > 0
-    
+def convert(blender_obj, scene, context, luxcore_scene,
+            exported_object=None, update_mesh=False, dupli_suffix="", matrix=None):
+
     if not utils.is_obj_visible(blender_obj, scene, context):
         return pyluxcore.Properties(), None
 
@@ -18,7 +18,7 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
     try:
         print("converting object:", blender_obj.name)
         # Note that his is not the final luxcore_name, as the object may be split by DefineBlenderMesh()
-        luxcore_name = utils.to_luxcore_name(blender_obj.name+dupli_name_suffix)
+        luxcore_name = utils.get_unique_luxcore_name(blender_obj) + dupli_suffix
         props = pyluxcore.Properties()
 
         if blender_obj.data is None:
@@ -37,7 +37,6 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
                 print(blender_obj.name + ": No mesh data after to_mesh()")
                 return props, None
 
-            print(matrix)
             mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, matrix)
             bpy.data.meshes.remove(mesh, do_unlink=False)
         else:
@@ -45,7 +44,7 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
 
-        transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
+        transformation = utils.matrix_to_list(blender_obj.matrix_world, scene, apply_worldscale=True)
             
         for lux_object_name, material_index in mesh_definitions:
             if material_index < len(blender_obj.material_slots):
@@ -83,7 +82,7 @@ def _define_luxcore_object(props, lux_object_name, lux_material_name, transforma
         props.Set(pyluxcore.Property(prefix + "transformation", transformation))
 
 
-def _convert_mesh_to_shapes(name, mesh, luxcore_scene, transformation = None):
+def _convert_mesh_to_shapes(name, mesh, luxcore_scene, transformation=None):
     faces = mesh.tessfaces[0].as_pointer()
     vertices = mesh.vertices[0].as_pointer()
 
