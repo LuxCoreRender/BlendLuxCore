@@ -270,7 +270,14 @@ def find_active_uv(uv_textures):
 def is_obj_visible(obj, scene, context=None, is_dupli=False):
     hidden = obj.hide if context else obj.hide_render
 
-    # TODO: check if is duplicator and if hidden or visible in particle/hair system
+    if obj.is_duplicator:
+        # Duplicators (Dupliverts/faces/frames) are always hidden
+        hidden = True
+
+        # obj.is_duplicator is also true if it has particle systems - they allow to show the duplicator
+        for psys in obj.particle_systems:
+            if psys.settings.use_render_emitter:
+                hidden = False
 
     renderlayer = scene.render.layers.active.layers
     visible = False

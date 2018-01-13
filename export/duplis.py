@@ -16,7 +16,7 @@ class Duplis:
         self.count += 1
 
 
-def convert(blender_obj, scene, context, luxcore_scene, engine):
+def convert(blender_obj, scene, context, luxcore_scene, engine=None):
     assert blender_obj.is_duplicator
 
     dupli_props = pyluxcore.Properties()
@@ -49,7 +49,8 @@ def convert(blender_obj, scene, context, luxcore_scene, engine):
             exported_duplis[name] = Duplis(exported_obj, matrix_list)
 
         # Report progress and check if user wants to cancel export
-        if i % 1000 == 0:
+        # Note: in viewport render we can't do all this, so we don't pass the engine there
+        if engine and i % 1000 == 0:
             progress = (i / dupli_count) * 100
             engine.update_stats("Export", "Object: %s (Duplis: %d%%)" % (blender_obj.name, progress))
 
