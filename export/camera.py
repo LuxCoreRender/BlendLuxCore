@@ -44,7 +44,7 @@ def convert(scene, context=None):
 
 def _view_ortho(scene, context, definitions):
     cam_matrix = Matrix(context.region_data.view_matrix).inverted()
-    lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
+    lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix, scene)
 
     definitions["type"] = "orthographic"
     zoom = 0.915 * context.space_data.region_3d.view_distance
@@ -62,7 +62,7 @@ def _view_ortho(scene, context, definitions):
 
 def _view_persp(scene, context, definitions):
     cam_matrix = Matrix(context.region_data.view_matrix).inverted()
-    lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix)
+    lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix, scene)
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
@@ -78,7 +78,7 @@ def _view_persp(scene, context, definitions):
 
 def _view_camera(scene, context, definitions):
     camera = scene.camera
-    lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world)
+    lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
@@ -115,7 +115,7 @@ def _view_camera(scene, context, definitions):
 
 def _final(scene, definitions):
     camera = scene.camera
-    lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world)
+    lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
@@ -224,7 +224,9 @@ def _motion_blur(scene, definitions, context):
     #     # Note: camera motion system is defined in export/motion_blur.py
 
 
-def _calc_lookat(cam_matrix):
+def _calc_lookat(cam_matrix, scene):
+    cam_matrix = utils.get_scaled_to_world(cam_matrix, scene)
+
     lookat_orig = list(cam_matrix.to_translation())
     lookat_target = list(cam_matrix * Vector((0, 0, -1)))
     up_vector = list(cam_matrix.to_3x3() * Vector((0, 1, 0)))
