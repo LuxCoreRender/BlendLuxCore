@@ -142,4 +142,10 @@ class LuxCoreConfig(PropertyGroup):
     use_filter = BoolProperty(name="Use Pixel Filter", default=True, description=FILTER_DESC)
     filter_width = FloatProperty(name="Width", default=1.5, min=0.5, soft_max=3, description=FILTER_WIDTH_DESC)
 
+    # FILESAVER options
     use_filesaver = BoolProperty(name="Only write LuxCore scene", default=False)
+    filesaver_format_items = [
+        ("TXT", "Text", "Save as .scn and .cfg text files", 0),
+        ("BIN", "Binary", "Save as .bcf binary file", 1),
+    ]
+    filesaver_format = EnumProperty(name="", items=filesaver_format_items, default="BIN")

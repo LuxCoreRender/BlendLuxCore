@@ -41,10 +41,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             if self.error:
                 # We have to re-raise the error from update() here because
-                # we can only use  self.error_set() in this function
+                # this function (render()) is the only one that can use self.error_set()
+                # to show a warning to the user after the render finished.
                 raise self.error
 
             if self._session is None:
+                # session is None, but self.error is not set -> User cancelled.
                 print("Export cancelled by user.")
                 return
 
@@ -58,7 +60,10 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             if scene.luxcore.config.use_filesaver:
                 self._session.Stop()
 
-                output_path = config.GetProperties().Get("filesaver.directory").GetString()
+                if scene.luxcore.config.filesaver_format == "BIN":
+                    output_path = config.GetProperties().Get("filesaver.filename").GetString()
+                else:
+                    output_path = config.GetProperties().Get("filesaver.directory").GetString()
                 self.report({"INFO"}, 'Exported to "%s"' % output_path)
 
                 # Clean up

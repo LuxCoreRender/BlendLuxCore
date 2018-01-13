@@ -1,5 +1,6 @@
 import bpy
-from bpy.props import PointerProperty, BoolProperty, FloatProperty
+from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
+from bpy.types import PropertyGroup
 
 FSTOP_DESC = (
     "Aperture, lower values result in stronger depth of field effect and "
@@ -12,12 +13,27 @@ CLIPPING_PLANE_DESC = (
     "The clipping plane object will not be exported"
 )
 
+SHUTTER_TIME_DESC = "Time in seconds between shutter open and shutter close, higher values lead to more blur"
+
 
 def init():
     bpy.types.Camera.luxcore = PointerProperty(type=LuxCoreCameraProps)
 
 
-class LuxCoreCameraProps(bpy.types.PropertyGroup):
+class LuxCoreMotionBlur(PropertyGroup):
+    """
+    motion_blur.*
+    """
+    enable = BoolProperty(name="Enable Motion Blur", default=False)
+    object_blur = BoolProperty(name="Object", default=True, description="Blur moving objects")
+    camera_blur = BoolProperty(name="Camera", default=False, description="Blur if camera moves")
+    shutter = FloatProperty(name="Shutter (s)", default=0.1, min=0, soft_max=2, description=SHUTTER_TIME_DESC)
+    # TODO: add description about accelerators (Embree only supports 2 steps?) and what happens
+    # if more than 2 steps are used
+    steps = IntProperty(name="Steps", default=2, min=2, description="Number of substeps")
+
+
+class LuxCoreCameraProps(PropertyGroup):
     # TODO descriptions
     use_clipping = BoolProperty(name="Clipping:", default=False)
     use_dof = BoolProperty(name="Use Depth of Field", default=False)
@@ -26,3 +42,5 @@ class LuxCoreCameraProps(bpy.types.PropertyGroup):
     fstop = FloatProperty(name="F-stop", default=2.8, min=0.01, description=FSTOP_DESC)
     use_clipping_plane = BoolProperty(name="Use Clipping Plane:", default=False, description=CLIPPING_PLANE_DESC)
     clipping_plane = PointerProperty(name="Clipping Plane", type=bpy.types.Object, description=CLIPPING_PLANE_DESC)
+
+    motion_blur = PointerProperty(type=LuxCoreMotionBlur)

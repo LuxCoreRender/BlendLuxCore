@@ -30,33 +30,6 @@ class LuxCoreLens(CameraButtonsPanel, Panel):
         elif cam.type == "ORTHO":
             col.prop(cam, "ortho_scale")
 
-        elif cam.type == "PANO":
-            engine = context.scene.render.engine
-            if engine == "CYCLES":
-                ccam = cam.cycles
-                col.prop(ccam, "panorama_type", text="Type")
-                if ccam.panorama_type == "FISHEYE_EQUIDISTANT":
-                    col.prop(ccam, "fisheye_fov")
-                elif ccam.panorama_type == "FISHEYE_EQUISOLID":
-                    row = layout.row()
-                    row.prop(ccam, "fisheye_lens", text="Lens")
-                    row.prop(ccam, "fisheye_fov")
-                elif ccam.panorama_type == "EQUIRECTANGULAR":
-                    row = layout.row()
-                    sub = row.column(align=True)
-                    sub.prop(ccam, "latitude_min")
-                    sub.prop(ccam, "latitude_max")
-                    sub = row.column(align=True)
-                    sub.prop(ccam, "longitude_min")
-                    sub.prop(ccam, "longitude_max")
-            elif engine == "BLENDER_RENDER":
-                row = col.row()
-                if cam.lens_unit == "MILLIMETERS":
-                    row.prop(cam, "lens")
-                elif cam.lens_unit == "FOV":
-                    row.prop(cam, "angle")
-                row.prop(cam, "lens_unit", text="")
-
         split = layout.split()
 
         col = split.column(align=True)
@@ -114,3 +87,29 @@ class LuxCoreDepthOfField(CameraButtonsPanel, Panel):
         col.prop(dof_options, "fstop")
         if dof_options.use_high_quality and hq_support:
             col.prop(dof_options, "blades")
+
+
+class LuxCoreMotionBlur(CameraButtonsPanel, Panel):
+    bl_label = "Motion Blur"
+    COMPAT_ENGINES = {"LUXCORE"}
+
+    def draw_header(self, context):
+        self.layout.prop(context.camera.luxcore.motion_blur, "enable", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        cam = context.camera
+        motion_blur = cam.luxcore.motion_blur
+        layout.active = motion_blur.enable
+
+        split = layout.split()
+
+        col = split.column(align=True)
+        col.prop(motion_blur, "object_blur")
+        col.prop(motion_blur, "camera_blur")
+
+        col = split.column(align=True)
+        col.prop(motion_blur, "shutter")
+        col.prop(motion_blur, "steps")
+
+        layout.label("Note: camera blur not implemented yet", icon="INFO")

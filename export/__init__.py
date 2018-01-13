@@ -4,7 +4,7 @@ from ..bin import pyluxcore
 from .. import utils
 from mathutils import Matrix
 from ..utils import node as utils_node
-from . import blender_object, camera, config, light, material
+from . import blender_object, camera, config, light, material, motion_blur
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from ..nodes.output import get_active_output
 
@@ -210,6 +210,17 @@ class Exporter(object):
             if engine.test_break():
                 return None
 
+        # Motion blur
+        if scene.camera:
+            blur_settings = scene.camera.data.luxcore.motion_blur
+            # Don't export camera blur in viewport
+            camera_blur = blur_settings.camera_blur and not context
+            enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
+
+            if enabled and blur_settings.shutter > 0:
+                motion_blur_props = motion_blur.convert(context, scene, objs, self.exported_objects)
+                scene_props.Set(motion_blur_props)
+
         # World
         if scene.world and scene.world.luxcore.light != "none":
             engine.update_stats("Export", "World")
@@ -378,7 +389,7 @@ class Exporter(object):
                     continue
 
                 # exported_objects contains instances of ExportedObject and ExportedLight
-                if isinstance(exported_thing, blender_object.ExportedObject):
+                if isinstance(exported_thing, utils.ExportedObject):
                     remove_func = luxcore_scene.DeleteObject
                 else:
                     remove_func = luxcore_scene.DeleteLight

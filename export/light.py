@@ -1,5 +1,5 @@
 import bpy
-import mathutils
+from mathutils import Matrix
 import math
 from ..bin import pyluxcore
 from .. import utils
@@ -137,7 +137,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
             definitions["position"] = [0, 0, 0]
             definitions["target"] = [0, 0, -1]
 
-            spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, "Z")
+            spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
             transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
             definitions["transformation"] = transformation
 
@@ -160,7 +160,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                 definitions["position"] = [0, 0, 0]
                 definitions["target"] = [0, 0, -1]
 
-                spot_fix = mathutils.Matrix.Rotation(math.radians(-90.0), 4, "Z")
+                spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
                 transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
                 definitions["transformation"] = transformation
             else:
@@ -212,7 +212,7 @@ def convert_world(world, scene):
 
         elif light_type == "infinite":
             if world.luxcore.image:
-                transformation = mathutils.Matrix.Rotation(world.luxcore.rotation, 4, "Z")
+                transformation = Matrix.Rotation(world.luxcore.rotation, 4, "Z")
                 _convert_infinite(definitions, world, scene, transformation)
             else:
                 # Fallback if no image is set
@@ -263,7 +263,7 @@ def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
     definitions["sampleupperhemisphereonly"] = lamp_or_world.luxcore.sampleupperhemisphereonly
 
     if transformation:
-        infinite_fix = mathutils.Matrix.Scale(1.0, 4)
+        infinite_fix = Matrix.Scale(1.0, 4)
         infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
         transformation = utils.matrix_to_list(infinite_fix * transformation.inverted(), scene)
         definitions["transformation"] = transformation
@@ -303,12 +303,12 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
 
     # Copy transformation of area lamp object
     transform_matrix = blender_obj.matrix_world.copy()
-    scale_x = mathutils.Matrix.Scale(lamp.size / 2, 4, (1, 0, 0))
+    scale_x = Matrix.Scale(lamp.size / 2, 4, (1, 0, 0))
     if lamp.shape == "RECTANGLE":
-        scale_y = mathutils.Matrix.Scale(lamp.size_y / 2, 4, (0, 1, 0))
+        scale_y = Matrix.Scale(lamp.size_y / 2, 4, (0, 1, 0))
     else:
         # basically scale_x, but for the y axis (note the last tuple argument)
-        scale_y = mathutils.Matrix.Scale(lamp.size / 2, 4, (0, 1, 0))
+        scale_y = Matrix.Scale(lamp.size / 2, 4, (0, 1, 0))
 
     transform_matrix *= scale_x
     transform_matrix *= scale_y

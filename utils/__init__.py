@@ -301,3 +301,10 @@ def absorption_at_depth_scaled(abs_col, depth, scale=1):
         scaled[i] = (-math.log(max([v, 1e-30])) / depth) * scale * (v == 1.0 and -1 or 1)
 
     return scaled
+
+
+def all_elems_equal(_list):
+    # https://stackoverflow.com/a/10285205
+    # The list must not be empty!
+    first = _list[0]
+    return all(x == first for x in _list)

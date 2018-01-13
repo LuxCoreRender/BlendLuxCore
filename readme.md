@@ -41,6 +41,8 @@ TODO: These do not contain .blend files yet.
 * [x] Depth of field
 * [x] Arbitrary clipping plane
 * [x] FILESAVER engine (scene export to LuxCore scn/cfg files)
+* [x] Object motion blur
+* [ ] Camera motion blur
 * [ ] Particles
 * [ ] Duplis
 * [ ] Some materials
@@ -49,7 +51,6 @@ TODO: These do not contain .blend files yet.
 * [ ] Light groups
 * [ ] AOVs
 * [ ] Tonemapping settings
-* [ ] Motion blur
 * [ ] Smoke/Fire
 * [ ] Pointiness
 * And more...

@@ -86,30 +86,7 @@ def convert(scene, context=None):
         # FILESAVER engine (only in final render)
         use_filesaver = context is None and config.use_filesaver
         if use_filesaver:
-            output_path = utils.get_abspath(scene.render.filepath, must_exist=True)
-
-            if output_path is None:
-                raise OSError('Not a valid output path: "%s"' % scene.render.filepath)
-
-            blend_name = bpy.path.basename(bpy.context.blend_data.filepath)
-            blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"
-            if not blend_name:
-                blend_name = "Untitled"
-            dir_name = blend_name + "_LuxCore"
-            frame_name = "%05d" % scene.frame_current
-            output_path = os.path.join(output_path, dir_name, frame_name)
-
-            if not os.path.exists(output_path):
-                # https://stackoverflow.com/a/273227
-                try:
-                    os.makedirs(output_path)
-                except OSError as e:
-                    if e.errno != errno.EEXIST:
-                        raise
-
-            definitions["renderengine.type"] = "FILESAVER"
-            definitions["filesaver.renderengine.type"] = engine
-            definitions["filesaver.directory"] = output_path
+            _convert_filesaver(scene, definitions, engine)
 
         # CPU thread settings (we use the properties from Blender here)
         if scene.render.threads_mode == "FIXED":
@@ -146,3 +123,44 @@ def _convert_path(config, definitions):
 
     if path.use_clamping:
         definitions["path.clamping.variance.maxvalue"] = path.clamping
+
+
+def _convert_filesaver(scene, definitions, engine):
+    config = scene.luxcore.config
+
+    output_path = utils.get_abspath(scene.render.filepath, must_exist=True)
+
+    if output_path is None:
+        raise OSError('Not a valid output path: "%s"' % scene.render.filepath)
+
+    blend_name = bpy.path.basename(bpy.context.blend_data.filepath)
+    blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"
+    if not blend_name:
+        blend_name = "Untitled"
+    dir_name = blend_name + "_LuxCore"
+    frame_name = "%05d" % scene.frame_current
+    if config.filesaver_format == "BIN":
+        # For binary format, the frame number is used as file name instead of directory name
+        frame_name += ".bcf"
+        output_path = os.path.join(output_path, dir_name)
+    else:
+        # For text format, we use the frame number as name for a subfolder
+        output_path = os.path.join(output_path, dir_name, frame_name)
+
+    if not os.path.exists(output_path):
+        # https://stackoverflow.com/a/273227
+        try:
+            os.makedirs(output_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+    if config.filesaver_format == "BIN":
+        definitions["filesaver.filename"] = os.path.join(output_path, frame_name)
+    else:
+        # Text format
+        definitions["filesaver.directory"] = output_path
+
+    definitions["filesaver.format"] = config.filesaver_format
+    definitions["renderengine.type"] = "FILESAVER"
+    definitions["filesaver.renderengine.type"] = engine
