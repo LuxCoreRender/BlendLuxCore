@@ -87,6 +87,17 @@ def get_worldscale(scene, as_scalematrix=True):
         return ws
 
 
+def get_scaled_to_world(matrix, scene):
+    matrix = matrix.copy()
+    sm = get_worldscale(scene)
+    matrix *= sm
+    ws = get_worldscale(scene, as_scalematrix=False)
+    matrix[0][3] *= ws
+    matrix[1][3] *= ws
+    matrix[2][3] *= ws
+    return matrix
+
+
 def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
     """
     Flatten a 4x4 matrix into a list
@@ -95,14 +106,7 @@ def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
     """
 
     if apply_worldscale:
-        assert scene is not None
-        matrix = matrix.copy()
-        sm = get_worldscale(scene)
-        matrix *= sm
-        ws = get_worldscale(scene, as_scalematrix=False)
-        matrix[0][3] *= ws
-        matrix[1][3] *= ws
-        matrix[2][3] *= ws
+        matrix = get_scaled_to_world(matrix, scene)
 
     if invert:
         matrix = matrix.inverted()
