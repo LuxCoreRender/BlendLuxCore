@@ -257,6 +257,8 @@ def find_active_uv(uv_textures):
 def is_obj_visible(obj, scene, context=None, is_dupli=False):
     hidden = obj.hide if context else obj.hide_render
 
+    # TODO: check if is duplicator and if hidden or visible in particle/hair system
+
     renderlayer = scene.render.layers.active.layers
     visible = False
     for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, renderlayer)]:
