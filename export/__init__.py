@@ -1,11 +1,9 @@
 from time import time
-from array import array
 import bpy
 from ..bin import pyluxcore
 from .. import utils
-from mathutils import Matrix
 from ..utils import node as utils_node
-from . import blender_object, camera, config, light, material, motion_blur
+from . import blender_object, camera, config, duplis, light, material, motion_blur
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 
 
@@ -59,65 +57,7 @@ class Exporter(object):
 
 
                 if obj.is_duplicator:
-                    print("Duplicator")
-                    start = time()
-
-                    mode = 'VIEWPORT' if context else 'RENDER'
-                    obj.dupli_list_create(scene, settings=mode)
-
-                    name_prefix = utils.get_unique_luxcore_name(obj)
-                    exported = {}
-
-                    class Duplis:
-                        def __init__(self, exported_obj, matrix):
-                            self.exported_obj = exported_obj
-                            self.matrices = matrix
-                            self.count = 1
-
-                        def add(self, matrix):
-                            self.matrices.extend(matrix)
-                            self.count += 1
-
-                    for dupli in obj.dupli_list:
-                        # Use the utils functions to build names so linked objects work (libraries)
-                        name = name_prefix + utils.get_unique_luxcore_name(dupli.object)
-                        matrix_list = utils.matrix_to_list(dupli.matrix, scene, apply_worldscale=True)
-
-                        try:
-                            # Already exported, just update the Duplis info
-                            exported[name].add(matrix_list)
-                        except KeyError:
-                            # Not yet exported
-                            name_suffix = name_prefix + str(dupli.index)
-                            if dupli.particle_system:
-                                name_suffix += utils.to_luxcore_name(dupli.particle_system.name)
-
-                            exported_obj = self._convert_object(scene_props, dupli.object, scene, context,
-                                                                luxcore_scene, update_mesh=True,
-                                                                dupli_suffix=name_suffix)
-                            print("exported:", name)
-                            exported[name] = Duplis(exported_obj, matrix_list)
-                            print("exported_obj:", exported_obj.luxcore_names)
-
-                    obj.dupli_list_clear()
-                    # Need to parse so we have the dupli objects available for DuplicateObject
-                    luxcore_scene.Parse(scene_props)
-
-                    for duplis in exported.values():
-                        # Objects might be split if they have multiple materials
-                        for src_name in duplis.exported_obj.luxcore_names:
-                            dst_name = src_name + "dupli"
-                            count = duplis.count
-                            transformations = array("f", duplis.matrices)
-                            luxcore_scene.DuplicateObject(src_name, dst_name, count, transformations)
-
-                            # TODO: support steps and times (motion blur)
-                            # steps = 0 # TODO
-                            # times = array("f", [])
-                            # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
-
-                    print("Dupli export took %.3fs" % (time() - start))
-                    
+                    duplis.convert(obj, scene, context, luxcore_scene)
 
                 # Objects are the most expensive to export, so they dictate the progress
                 engine.update_progress(index / len_objs)
