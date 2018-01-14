@@ -49,7 +49,6 @@ def convert(context, scene, objects, exported_objects):
                 "motion.%d.transformation" % step: transformation,
             }
             props.Set(utils.create_props(prefix, definitions))
-            print(props)
 
     return props
 
@@ -79,15 +78,8 @@ def _get_matrices(context, scene, steps, times, objects=None, exported_objects=N
 
         if motion_blur.camera_blur and not context:
             matrix = scene.camera.matrix_world.inverted()
-
-            # TODO: This is so stupid. I have no idea what I'm doing
-            # rotate = Matrix.Rotation(math.radians(180), 4, "X")
-            # scale = Matrix.Scale(-1, 4, (0, 1, 0))
-            # matrix = matrix * rotate * scale
-
             prefix = "scene.camera."
             _append_matrix(matrices, prefix, matrix, step)
-            print("appended camera matrix")
 
     # Restore original frame
     scene.frame_set(frame_center, subframe_center)
