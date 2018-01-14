@@ -1,10 +1,10 @@
 from bpy.props import IntProperty, BoolProperty, FloatProperty
-from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
 from .. import utils
+from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
 
 
-class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume):
-    bl_label = "Homogeneous Volume"
+class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
+    bl_label = "Heterogeneous Volume"
     bl_width_min = 160
 
     # TODO: get name, default, description etc. from super class or something
@@ -13,6 +13,11 @@ class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume):
     color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
+    step_size = FloatProperty(name="Step Size", default=1, min=0,
+                              subtype="DISTANCE", unit="LENGTH",
+                              description="Step Size for Volume Integration")
+    maxcount = IntProperty(name="Max. Step Count", default=1024, min=0,
+                                     description="Maximum Step Count for Volume Integration")
 
     multiscattering = BoolProperty(name="Multiscattering", default=False)
 
@@ -26,12 +31,14 @@ class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "multiscattering")
+        layout.prop(self, "step_size")
+        layout.prop(self, "maxcount")
         self.draw_common_buttons(context, layout)
 
     def export(self, props, luxcore_name=None):
         scatter_col = self.inputs["Scattering"].export(props)
         
-        # Implicitly create a scale texture with unique name
+        # Implicitly create a colordepth texture with unique name
         tex_name = self.make_name() + "_scale"
         helper_prefix = "scene.textures." + tex_name + "."
         helper_defs = {
@@ -42,12 +49,14 @@ class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume):
         props.Set(utils.create_props(helper_prefix, helper_defs))
         scatter_col = tex_name
 
+
         definitions = {
-            "type": "homogeneous",
+            "type": "heterogeneous",
             "scattering": scatter_col,
+            "steps.size": self.step_size,
+            "steps.maxcount": self.maxcount,
             "asymmetry": self.inputs["Asymmetry"].export(props),
             "multiscattering": self.multiscattering,
         }
-        print(definitions)
         self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)

@@ -113,7 +113,7 @@ luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorAtDepth", label="Color at depth"),        
     ]),
-    
+   
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
@@ -121,6 +121,8 @@ luxcore_node_categories_material = [
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[
         NodeItem("LuxCoreNodeMatEmission", label="Light Emission"),
+        NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
+        NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_POINTER", "Pointer", items=[

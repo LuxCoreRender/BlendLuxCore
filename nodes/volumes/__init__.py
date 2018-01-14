@@ -8,6 +8,7 @@ from ..output import get_active_output
 from .output import LuxCoreNodeVolOutput
 from .clear import LuxCoreNodeVolClear
 from .homogeneous import LuxCoreNodeVolHomogeneous
+from .heterogeneous import LuxCoreNodeVolHeterogeneous
 
 
 class LuxCoreVolumeNodeTree(NodeTree):
@@ -72,6 +73,7 @@ luxcore_node_categories_volume = [
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_VOLUME", "Volume", items=[
         NodeItem("LuxCoreNodeVolClear", label="Clear"),
         NodeItem("LuxCoreNodeVolHomogeneous", label="Homogeneous"),
+        NodeItem("LuxCoreNodeVolHeterogeneous", label="Heterogeneous"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_TEXTURE", "Texture", items=[
