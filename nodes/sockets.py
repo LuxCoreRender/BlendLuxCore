@@ -1,9 +1,6 @@
 import mathutils
 from bpy.types import NodeSocket
 from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty
-from . import LuxCoreNodeMaterial, LuxCoreNodeTexture, LuxCoreNodeVolume
-from .textures import LuxCoreNodeTexFresnel
-from .materials import LuxCoreNodeMatEmission
 
 # The rules for socket classes are these:
 # - If it is a socket that's used by more than one node, put it in this file
@@ -25,10 +22,17 @@ class LuxCoreNodeSocket(NodeSocket):
     slider = False
 
     def draw(self, context, layout, node, text):
-        if (self.is_linked and hasattr(self, "allowed_input")
-                and not isinstance(self.links[0].from_node, self.allowed_input)):
-            layout.label("Wrong Input!", icon="CANCEL")
-            return
+        # Check if the socket linked to this socket is in the set of allowed input socket classes.
+        if self.is_linked and hasattr(self, "allowed_inputs"):
+            is_allowed = False
+            for allowed_class in self.allowed_inputs:
+                if isinstance(self.links[0].from_socket, allowed_class):
+                    is_allowed = True
+                    break
+
+            if not is_allowed:
+                layout.label("Wrong Input!", icon="CANCEL")
+                return
 
         has_default = hasattr(self, "default_value") and self.default_value is not None
 
@@ -81,26 +85,25 @@ class Color:
 
 class LuxCoreSocketMaterial(LuxCoreNodeSocket):
     color = Color.material
-    allowed_input = LuxCoreNodeMaterial
+    # allowed_inputs = {LuxCoreNodeMaterial, LuxCoreNodeTreePointer}
     # no default value
 
 
 class LuxCoreSocketVolume(LuxCoreNodeSocket):
     color = Color.volume
-    allowed_input = LuxCoreNodeVolume
+    # allowed_inputs = {LuxCoreNodeVolume}
     # no default value
 
 
 class LuxCoreSocketFresnel(LuxCoreNodeSocket):
     color = Color.fresnel_texture
-    allowed_input = LuxCoreNodeTexFresnel
+    # allowed_inputs = {LuxCoreNodeTexFresnel}
     # no default value
 
 
 class LuxCoreSocketMatEmission(LuxCoreNodeSocket):
     """ Special socket for material emission """
     color = Color.mat_emission
-    allowed_input = LuxCoreNodeMatEmission
     # no default value
 
     def export_emission(self, props, definitions):
@@ -115,13 +118,11 @@ class LuxCoreSocketMatEmission(LuxCoreNodeSocket):
 
 class LuxCoreSocketBump(LuxCoreNodeSocket):
     color = Color.float_texture
-    allowed_input = LuxCoreNodeTexture
     # no default value
 
 
 class LuxCoreSocketColor(LuxCoreNodeSocket):
     color = Color.color_texture
-    allowed_input = LuxCoreNodeTexture
     default_value = FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1)
 
     def export_default(self):
@@ -130,7 +131,6 @@ class LuxCoreSocketColor(LuxCoreNodeSocket):
 
 class LuxCoreSocketFloat(LuxCoreNodeSocket):
     color = Color.float_texture
-    allowed_input = LuxCoreNodeTexture
     default_value = FloatProperty()
 
     def export_default(self):
@@ -199,3 +199,12 @@ class LuxCoreSocketMapping3D(LuxCoreNodeSocket):
         mapping_type = "globalmapping3d"
         transformation = mathutils.Matrix()
         return mapping_type, transformation
+
+
+LuxCoreSocketMaterial.allowed_inputs = {LuxCoreSocketMaterial}
+LuxCoreSocketVolume.allowed_inputs = {LuxCoreSocketVolume}
+LuxCoreSocketFresnel.allowed_inputs = {LuxCoreSocketFresnel}
+LuxCoreSocketMatEmission.allowed_inputs = {LuxCoreSocketMatEmission}
+LuxCoreSocketBump.allowed_inputs = {LuxCoreSocketBump, LuxCoreSocketColor, LuxCoreSocketFloat}
+LuxCoreSocketColor.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}
+LuxCoreSocketFloat.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}

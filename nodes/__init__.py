@@ -169,6 +169,10 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
             layout.template_ID(self, "node_tree", new="luxcore.mat_nodetree_new")
         elif self.node_tree and self.node_tree.bl_idname == "luxcore_texture_nodes":
             layout.template_ID(self, "node_tree", new="luxcore.tex_nodetree_new")
+        elif self.node_tree:
+            # Some unkown or unsupported node tree type, e.g. volumes
+            layout.template_ID(self, "node_tree")
+            layout.label("Node type not supported!", icon="ERROR")
         else:
             row = layout.row()
             row.label("Node Tree:")
