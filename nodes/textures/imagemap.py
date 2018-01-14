@@ -1,8 +1,12 @@
 import bpy
-from bpy.props import PointerProperty, EnumProperty
+from bpy.props import PointerProperty, EnumProperty, BoolProperty, FloatProperty
 from .. import LuxCoreNodeTexture
 from ...export.image import ImageExporter
 from ...utils import node as utils_node
+from ... import utils
+
+
+NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of the normal map"
 
 
 class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
@@ -31,24 +35,41 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     ]
     wrap = EnumProperty(name="Wrap", items=wrap_items, default="repeat")
 
+    def update_is_normal_map(self, context):
+        self.outputs["Color"].enabled = not self.is_normal_map
+        self.outputs["Bump"].enabled = self.is_normal_map
+
+    is_normal_map = BoolProperty(name="Normalmap", default=False, update=update_is_normal_map,
+                                 description="Might want to enable this if the image looks blue")
+    normal_map_scale = FloatProperty(name="Height", default=1, min=0, soft_max=5,
+                                     description=NORMAL_SCALE_DESC)
+
     def init(self, context):
         self.add_input("LuxCoreSocketFloatPositive", "Gamma", 2.2)
-        self.add_input("LuxCoreSocketFloatPositive", "Gain", 1)
+        self.add_input("LuxCoreSocketFloatPositive", "Brightness", 1)
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
 
         self.outputs.new("LuxCoreSocketColor", "Color")
+        self.outputs.new("LuxCoreSocketBump", "Bump")
+        self.outputs["Bump"].enabled = False
 
     def draw_buttons(self, context, layout):
         layout.template_ID(self, "image", open="image.open")
 
-        if self.image:
-            layout.prop(self, "channel")
-            layout.prop(self, "wrap")
+        col = layout.column()
+        col.active = self.image is not None
+
+        col.prop(self, "channel")
+        col.prop(self, "wrap")
 
         # Info about UV mapping (only show if default is used,
         # when no mapping node is linked)
         if not self.inputs["2D Mapping"].is_linked:
-            utils_node.draw_uv_info(context, layout)
+            utils_node.draw_uv_info(context, col)
+
+        col.prop(self, "is_normal_map")
+        if self.is_normal_map:
+            col.prop(self, "normal_map_scale")
 
     def export(self, props, luxcore_name=None):
         if self.image is None:
@@ -67,7 +88,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             "type": "imagemap",
             "file": filepath,
             "gamma": self.inputs["Gamma"].export(props),
-            "gain": self.inputs["Gain"].export(props),
+            "gain": self.inputs["Brightness"].export(props),
             "channel": self.channel,
             "wrap": self.wrap,
             # Mapping
@@ -75,4 +96,21 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             "mapping.uvscale": uvscale,
             "mapping.uvdelta": uvdelta,
         }
-        return self.base_export(props, definitions, luxcore_name)
+
+        luxcore_name = self.base_export(props, definitions, luxcore_name)
+
+        if self.is_normal_map and self.normal_map_scale > 0:
+            # Implicitly create a normalmap
+            tex_name = luxcore_name + "_normalmap"
+            helper_prefix = "scene.textures." + tex_name + "."
+            helper_defs = {
+                "type": "normalmap",
+                "texture": luxcore_name,
+                "scale": self.normal_map_scale,
+            }
+            props.Set(utils.create_props(helper_prefix, helper_defs))
+
+            # The helper texture gets linked in front of this node
+            return tex_name
+        else:
+            return luxcore_name
