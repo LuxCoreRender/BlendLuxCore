@@ -203,6 +203,8 @@ class Exporter(object):
 
             if enabled and blur_settings.shutter > 0:
                 motion_blur_props = motion_blur.convert(context, scene, objs, self.exported_objects)
+                if camera_blur:
+                    motion_blur_props.Set(camera_props)
                 scene_props.Set(motion_blur_props)
 
         # World

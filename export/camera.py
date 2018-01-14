@@ -35,7 +35,9 @@ def convert(scene, context=None):
         _clipping_plane(scene, definitions)
         _motion_blur(scene, definitions, context)
 
-        return utils.create_props(prefix, definitions)
+        p = utils.create_props(prefix, definitions)
+        print(p)
+        return p
     except Exception as error:
         msg = 'Camera: %s' % error
         scene.luxcore.errorlog.add_warning(msg)
@@ -207,21 +209,20 @@ def _motion_blur(scene, definitions, context):
         return
 
     # TODO why does this not work as expected?
-    # definitions["shutteropen"] = -moblur_settings.shutter * 0.5
-    # definitions["shutterclose"] = moblur_settings.shutter * 0.5
+    definitions["shutteropen"] = -moblur_settings.shutter * 0.5
+    definitions["shutterclose"] = moblur_settings.shutter * 0.5
 
     # # Don't export camera blur in viewport render
-    # if moblur_settings.camera_blur and not context and motion_blur.is_camera_moving(context, scene):
-    #     # Make sure lookup is defined - this function should be the last to modify it
-    #     assert "lookat.orig" in definitions
-    #     assert "lookat.target" in definitions
-    #     assert "up" in definitions
-    #     # Reset lookat - it's handled by motion.x.transformation
-    #     # TODO: seems like this is not needed - why?
-    #     definitions["lookat.orig"] = [0, 0, 0]
-    #     definitions["lookat.target"] = [0, 0, -1]
-    #     definitions["up"] = [0, 1, 0]
-    #     # Note: camera motion system is defined in export/motion_blur.py
+    if moblur_settings.camera_blur and not context and motion_blur.is_camera_moving(context, scene):
+        # Make sure lookup is defined - this function should be the last to modify it
+        assert "lookat.orig" in definitions
+        assert "lookat.target" in definitions
+        assert "up" in definitions
+        # Reset lookat - it's handled by motion.x.transformation
+        definitions["lookat.orig"] = [0, 0, 0]
+        definitions["lookat.target"] = [0, 0, -1]
+        definitions["up"] = [0, 1, 0]
+        # Note: camera motion system is defined in export/motion_blur.py
 
 
 def _calc_lookat(cam_matrix):
