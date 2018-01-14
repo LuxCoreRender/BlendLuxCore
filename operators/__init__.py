@@ -37,7 +37,7 @@ def init_vol_node_tree(node_tree):
     # User counting does not work reliably with Python PointerProperty.
     # Sometimes, the material this tree is linked to is not counted as user.
     node_tree.use_fake_user = True
-    
+
     nodes = node_tree.nodes
 
     output = nodes.new("LuxCoreNodeVolOutput")

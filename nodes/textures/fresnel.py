@@ -15,7 +15,7 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
     input_type_items = [
         ("color", "Color", "Use custom color as input"),
         ("preset", "Preset", "Use a Preset fresnel texture as input"),
-        ("nk", "Fresnel Texture File", "Use a fresnel texture file as input")
+        ("nk", "File", "Use a fresnel texture file (.nk) as input")
     ]
 
     preset_items = [

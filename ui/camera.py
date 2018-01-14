@@ -111,5 +111,3 @@ class LuxCoreMotionBlur(CameraButtonsPanel, Panel):
         col = split.column(align=True)
         col.prop(motion_blur, "shutter")
         col.prop(motion_blur, "steps")
-
-        layout.label("Note: camera blur not implemented yet", icon="INFO")
