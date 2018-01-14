@@ -5,11 +5,6 @@ from .. import utils
 from . import motion_blur
 
 
-def needs_update():
-    # TODO (store info in cache or so? and rely on cam_obj.is_updated for stuff like special parameters?)
-    return True
-
-
 def convert(scene, context=None):
     try:
         prefix = "scene.camera."
@@ -35,9 +30,7 @@ def convert(scene, context=None):
         _clipping_plane(scene, definitions)
         _motion_blur(scene, definitions, context)
 
-        p = utils.create_props(prefix, definitions)
-        print(p)
-        return p
+        return utils.create_props(prefix, definitions)
     except Exception as error:
         msg = 'Camera: %s' % error
         scene.luxcore.errorlog.add_warning(msg)
@@ -208,7 +201,6 @@ def _motion_blur(scene, definitions, context):
     if not moblur_settings.enable:
         return
 
-    # TODO why does this not work as expected?
     definitions["shutteropen"] = -moblur_settings.shutter * 0.5
     definitions["shutterclose"] = moblur_settings.shutter * 0.5
 
