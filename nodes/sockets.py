@@ -1,6 +1,9 @@
 import mathutils
 from bpy.types import NodeSocket
 from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty
+from . import LuxCoreNodeMaterial, LuxCoreNodeTexture, LuxCoreNodeVolume
+from .textures import LuxCoreNodeTexFresnel
+from .materials import LuxCoreNodeMatEmission
 
 # The rules for socket classes are these:
 # - If it is a socket that's used by more than one node, put it in this file
@@ -22,7 +25,13 @@ class LuxCoreNodeSocket(NodeSocket):
     slider = False
 
     def draw(self, context, layout, node, text):
+        if (self.is_linked and hasattr(self, "allowed_input")
+                and not isinstance(self.links[0].from_node, self.allowed_input)):
+            layout.label("Wrong Input!", icon="CANCEL")
+            return
+
         has_default = hasattr(self, "default_value") and self.default_value is not None
+
         if self.is_output or self.is_linked or not has_default:
             layout.label(text)
         else:
@@ -72,22 +81,26 @@ class Color:
 
 class LuxCoreSocketMaterial(LuxCoreNodeSocket):
     color = Color.material
+    allowed_input = LuxCoreNodeMaterial
     # no default value
 
 
 class LuxCoreSocketVolume(LuxCoreNodeSocket):
     color = Color.volume
+    allowed_input = LuxCoreNodeVolume
     # no default value
 
 
 class LuxCoreSocketFresnel(LuxCoreNodeSocket):
     color = Color.fresnel_texture
+    allowed_input = LuxCoreNodeTexFresnel
     # no default value
 
 
 class LuxCoreSocketMatEmission(LuxCoreNodeSocket):
     """ Special socket for material emission """
     color = Color.mat_emission
+    allowed_input = LuxCoreNodeMatEmission
     # no default value
 
     def export_emission(self, props, definitions):
@@ -102,11 +115,13 @@ class LuxCoreSocketMatEmission(LuxCoreNodeSocket):
 
 class LuxCoreSocketBump(LuxCoreNodeSocket):
     color = Color.float_texture
+    allowed_input = LuxCoreNodeTexture
     # no default value
 
 
 class LuxCoreSocketColor(LuxCoreNodeSocket):
     color = Color.color_texture
+    allowed_input = LuxCoreNodeTexture
     default_value = FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1)
 
     def export_default(self):
@@ -115,6 +130,7 @@ class LuxCoreSocketColor(LuxCoreNodeSocket):
 
 class LuxCoreSocketFloat(LuxCoreNodeSocket):
     color = Color.float_texture
+    allowed_input = LuxCoreNodeTexture
     default_value = FloatProperty()
 
     def export_default(self):

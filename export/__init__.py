@@ -204,6 +204,8 @@ class Exporter(object):
             if enabled and blur_settings.shutter > 0:
                 motion_blur_props = motion_blur.convert(context, scene, objs, self.exported_objects)
                 if camera_blur:
+                    # We have to set the camera props again because otherwise
+                    # they get deleted because we set the camera motion props
                     motion_blur_props.Set(camera_props)
                 scene_props.Set(motion_blur_props)
 
