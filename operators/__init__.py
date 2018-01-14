@@ -2,6 +2,11 @@ import bpy
 
 
 def init_mat_node_tree(node_tree):
+    # Seems like we still need this.
+    # User counting does not work reliably with Python PointerProperty.
+    # Sometimes, the material this tree is linked to is not counted as user.
+    node_tree.use_fake_user = True
+
     nodes = node_tree.nodes
 
     output = nodes.new("LuxCoreNodeMatOutput")
@@ -15,6 +20,11 @@ def init_mat_node_tree(node_tree):
 
 
 def init_tex_node_tree(node_tree):
+    # Seems like we still need this.
+    # User counting does not work reliably with Python PointerProperty.
+    # Sometimes, the material this tree is linked to is not counted as user.
+    node_tree.use_fake_user = True
+
     nodes = node_tree.nodes
 
     output = nodes.new("LuxCoreNodeTexOutput")
@@ -23,6 +33,11 @@ def init_tex_node_tree(node_tree):
 
 
 def init_vol_node_tree(node_tree):
+    # Seems like we still need this.
+    # User counting does not work reliably with Python PointerProperty.
+    # Sometimes, the material this tree is linked to is not counted as user.
+    node_tree.use_fake_user = True
+    
     nodes = node_tree.nodes
 
     output = nodes.new("LuxCoreNodeVolOutput")

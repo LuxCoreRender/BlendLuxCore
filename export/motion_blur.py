@@ -105,7 +105,7 @@ def _append_object_matrices(objects, exported_objects, matrices, step):
                 else:
                     prefix = "scene.lights." + luxcore_name + "."
 
-                matrix = obj.matrix_world.copy()
+                matrix = obj.matrix_world
                 _append_matrix(matrices, prefix, matrix, step)
         except KeyError:
             # This is not a problem, objects are skipped during epxort for various reasons
@@ -114,6 +114,7 @@ def _append_object_matrices(objects, exported_objects, matrices, step):
 
 
 def _append_matrix(matrices, prefix, matrix, step):
+    matrix = matrix.copy()
     if step == 0:
         matrices[prefix] = [matrix]
     else:
