@@ -78,7 +78,7 @@ def _get_matrices(context, scene, steps, times, objects=None, exported_objects=N
             _append_object_matrices(objects, exported_objects, matrices, step)
 
         if motion_blur.camera_blur and not context:
-            matrix = scene.camera.matrix_world.inverted()
+            matrix = scene.camera.matrix_world
 
             # TODO: This is so stupid. I have no idea what I'm doing
             # rotate = Matrix.Rotation(math.radians(180), 4, "X")
