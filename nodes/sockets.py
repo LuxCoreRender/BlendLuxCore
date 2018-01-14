@@ -85,19 +85,16 @@ class Color:
 
 class LuxCoreSocketMaterial(LuxCoreNodeSocket):
     color = Color.material
-    # allowed_inputs = {LuxCoreNodeMaterial, LuxCoreNodeTreePointer}
     # no default value
 
 
 class LuxCoreSocketVolume(LuxCoreNodeSocket):
     color = Color.volume
-    # allowed_inputs = {LuxCoreNodeVolume}
     # no default value
 
 
 class LuxCoreSocketFresnel(LuxCoreNodeSocket):
     color = Color.fresnel_texture
-    # allowed_inputs = {LuxCoreNodeTexFresnel}
     # no default value
 
 
@@ -201,6 +198,8 @@ class LuxCoreSocketMapping3D(LuxCoreNodeSocket):
         return mapping_type, transformation
 
 
+# Specify the allowed inputs of sockets. Subclasses inherit the settings of their parents.
+# We have to do this here because some sockets (e.g. Material) need to refer to their own class.
 LuxCoreSocketMaterial.allowed_inputs = {LuxCoreSocketMaterial}
 LuxCoreSocketVolume.allowed_inputs = {LuxCoreSocketVolume}
 LuxCoreSocketFresnel.allowed_inputs = {LuxCoreSocketFresnel}
