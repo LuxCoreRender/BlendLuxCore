@@ -148,10 +148,9 @@ class LuxCoreLampVisibility(DataButtonsPanel, Panel):
     def poll(cls, context):
         engine = context.scene.render.engine
 
+        visible = False
         if context.lamp:
             # Visible for sky2, sun, infinite, constantinfinite
-            visible = False
-
             if context.lamp.type == "SUN" and context.lamp.luxcore.sun_type == "sun":
                 visible = True
             elif context.lamp.type == "HEMI":
