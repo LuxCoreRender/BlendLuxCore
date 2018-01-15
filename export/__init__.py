@@ -3,7 +3,7 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
-from . import blender_object, camera, config, duplis, light, material, motion_blur
+from . import blender_object, caches, camera, config, duplis, light, material, motion_blur, particle
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 
 
@@ -57,6 +57,10 @@ class Exporter(object):
 
                 if obj.is_duplicator:
                     duplis.convert(obj, scene, context, luxcore_scene, engine)
+
+                for psys in obj.particle_systems:
+                    if psys.settings.type == "HAIR":
+                        particle.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
 
                 # Objects are the most expensive to export, so they dictate the progress
                 engine.update_progress(index / len_objs)
@@ -171,8 +175,7 @@ class Exporter(object):
         # because it might have been replaced in _update_config()
         return session
 
-    def _convert_object(self, props, obj, scene, context, luxcore_scene,
-                        update_mesh=False, dupli_suffix="", matrix=None):
+    def _convert_object(self, props, obj, scene, context, luxcore_scene, update_mesh=False):
         key = utils.make_key(obj)
         old_exported_obj = None
 
@@ -185,8 +188,7 @@ class Exporter(object):
             old_exported_obj = self.exported_objects[key]
 
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
-        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj,
-                                                         update_mesh, dupli_suffix, matrix)
+        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj, update_mesh)
 
         if exported_obj is None:
             # Object is not visible or an error happened.

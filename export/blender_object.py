@@ -7,7 +7,7 @@ from . import material
 from .light import convert_lamp
 
 
-def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, update_mesh=False):
+def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, update_mesh=False, dupli_suffix="", matrix=None):
     if not utils.is_obj_visible(blender_obj, scene, context):
         return pyluxcore.Properties(), None
 
