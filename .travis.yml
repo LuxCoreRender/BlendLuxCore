@@ -1,5 +1,5 @@
 dist: trusty
-sudo: true
+sudo: enabled
 language: python
 
 # Define which python version to build against.
@@ -30,14 +30,10 @@ before_install:
   - wget https://github.com/embree/embree/releases/download/v2.17.1/embree-2.17.1.x86_64.linux.tar.gz
   - tar zxf embree-2.17.1.x86_64.linux.tar.gz
   - export LD_LIBRARY_PATH=`pwd`/embree-2.17.1.x86_64.linux/lib:$LD_LIBRARY_PATH
-  # Install Pillow
-  - sudo pip3 install pillow
-  # Set OpenMP threads
-  - export OMP_NUM_THREADS=4
+  - cd ..
 
 install:
   # Compile LuxCore
-  - cd
   - cd LuxCore
   - cmake -D BOOST_SEARCH_PATH=`pwd`/boost_1_56_0-bin -D EMBREE_SEARCH_PATH=`pwd`/embree-2.17.1.x86_64.linux -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.4m.so -DPYTHON_INCLUDE_DIR=/usr/include/python3.4m .
   - make -j 2
