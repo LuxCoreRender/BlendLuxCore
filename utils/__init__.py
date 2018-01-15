@@ -26,7 +26,16 @@ def to_luxcore_name(string):
 
 
 def make_key(datablock):
-    key = str(datablock.as_pointer())
+    # We use the memory address as key, e.g. to track materials or objects even when they are
+    # renamed during viewport render.
+    # Note that the memory address changes on undo/redo, but in this case the viewport render
+    # is stopped and re-started anyway, so it should not be a problem.
+    return str(datablock.as_pointer())
+
+
+def make_key_from_name(datablock):
+    """ Old make_key method, not sure if we need it anymore """
+    key = datablock.name
     if hasattr(datablock, "type"):
         key += datablock.type
     if hasattr(datablock, "data") and hasattr(datablock.data, "type"):

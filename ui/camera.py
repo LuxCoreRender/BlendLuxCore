@@ -1,6 +1,4 @@
-import bl_ui
 from bl_ui.properties_data_camera import CameraButtonsPanel
-import bpy
 from bpy.types import Panel
 
 

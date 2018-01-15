@@ -46,13 +46,7 @@ class LuxCoreNode(Node):
             self.inputs[name].default_value = default
 
     def make_name(self):
-        node_tree = self.id_data
-        name_parts = [self.name, node_tree.name, self.suffix]
-
-        if node_tree.library:
-            name_parts.append(node_tree.library.name)
-
-        return utils.to_luxcore_name("_".join(name_parts))
+        return utils.make_key(self)
 
     def base_export(self, props, definitions, luxcore_name=None):
         if luxcore_name is None:

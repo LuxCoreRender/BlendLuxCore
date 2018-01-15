@@ -17,7 +17,7 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
     try:
         print("converting object:", blender_obj.name)
         # Note that his is not the final luxcore_name, as the object may be split by DefineBlenderMesh()
-        luxcore_name = utils.to_luxcore_name(blender_obj.name)
+        luxcore_name = utils.make_key(blender_obj)
         props = pyluxcore.Properties()
 
         if blender_obj.data is None:
@@ -44,6 +44,7 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
             mesh_definitions = exported_object.mesh_definitions
 
         transformation = utils.matrix_to_list(blender_obj.matrix_world, scene)
+
         for lux_object_name, material_index in mesh_definitions:
             if material_index < len(blender_obj.material_slots):
                 mat = blender_obj.material_slots[material_index].material
