@@ -4,7 +4,7 @@ from bpy.types import Panel
 # TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
 
 
-class LuxCoreLampHeader(DataButtonsPanel, Panel):
+class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
     """
     Lamp UI Panel
     """
@@ -118,7 +118,7 @@ class LuxCoreLampHeader(DataButtonsPanel, Panel):
             layout.prop(lamp.luxcore, "is_laser")
 
 
-class LuxCoreLampPerformance(DataButtonsPanel, Panel):
+class LUXCORE_LAMP_PT_performance(DataButtonsPanel, Panel):
     """
     Lamp UI Panel, shows stuff that affects the performance of the render
     """
@@ -139,7 +139,7 @@ class LuxCoreLampPerformance(DataButtonsPanel, Panel):
         layout.prop(lamp.luxcore, "importance")
 
 
-class LuxCoreLampVisibility(DataButtonsPanel, Panel):
+class LUXCORE_LAMP_PT_visibility(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Visibility"
     bl_options = {"DEFAULT_CLOSED"}

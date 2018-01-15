@@ -42,6 +42,33 @@ def convert(material, scene):
 
 def fallback(luxcore_name=GLOBAL_FALLBACK_MAT):
     props = pyluxcore.Properties()
-    props.Set(pyluxcore.Property("scene.materials.%s.type" % luxcore_name, "matte"))
-    props.Set(pyluxcore.Property("scene.materials.%s.kd" % luxcore_name, [0.5] * 3))
+    props.SetFromString("""
+        # The slight offset is there to avoid floating point precision issues
+        # with objects that are exactly at world center, e.g. "cube on a plane scene"
+        
+        # Dark subgrid (10cm blocks)
+        scene.textures.grid_10cm_1.type = "checkerboard3d"
+        scene.textures.grid_10cm_1.texture1 = 0.3 0.3 0.3
+        scene.textures.grid_10cm_1.texture2 = 0.4 0.4 0.4
+        scene.textures.grid_10cm_1.mapping.type = "globalmapping3d"
+        scene.textures.grid_10cm_1.mapping.transformation = 10 0 0 0 0 10 0 0 0 0 10 0 0.001 0.001 0.001 1
+        
+        # Light subgrid (10cm blocks)
+        scene.textures.grid_10cm_2.type = "checkerboard3d"
+        scene.textures.grid_10cm_2.texture1 = 0.4 0.4 0.4
+        scene.textures.grid_10cm_2.texture2 = 0.5 0.5 0.5
+        scene.textures.grid_10cm_2.mapping.type = "globalmapping3d"
+        scene.textures.grid_10cm_2.mapping.transformation = 10 0 0 0 0 10 0 0 0 0 10 0 0.001 0.001 0.001 1
+        
+        # Big grid (1m blocks)
+        scene.textures.grid_1m.type = "checkerboard3d"
+        scene.textures.grid_1m.texture1 = "grid_10cm_1"
+        scene.textures.grid_1m.texture2 = "grid_10cm_2"
+        scene.textures.grid_1m.mapping.type = "globalmapping3d"
+        scene.textures.grid_1m.mapping.transformation = 1 0 0 0 0 1 0 0 0 0 1 0 0.001 0.001 0.001 1
+        
+        # Material
+        scene.materials.{mat_name}.type = "matte"
+        scene.materials.{mat_name}.kd = grid_1m
+    """.format(mat_name=luxcore_name))
     return luxcore_name, props

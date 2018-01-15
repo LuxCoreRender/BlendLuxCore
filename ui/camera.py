@@ -2,7 +2,7 @@ from bl_ui.properties_data_camera import CameraButtonsPanel
 from bpy.types import Panel
 
 
-class LuxCoreLens(CameraButtonsPanel, Panel):
+class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
     bl_label = "Lens"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_options = {"HIDE_HEADER"}
@@ -50,7 +50,7 @@ class LuxCoreLens(CameraButtonsPanel, Panel):
         sub.prop(cam.luxcore, "clipping_plane", text="")
 
 
-class LuxCoreDepthOfField(CameraButtonsPanel, Panel):
+class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     bl_label = "Depth of Field"
     COMPAT_ENGINES = {"LUXCORE"}
 
@@ -87,7 +87,7 @@ class LuxCoreDepthOfField(CameraButtonsPanel, Panel):
             col.prop(dof_options, "blades")
 
 
-class LuxCoreMotionBlur(CameraButtonsPanel, Panel):
+class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
     bl_label = "Motion Blur"
     COMPAT_ENGINES = {"LUXCORE"}
 

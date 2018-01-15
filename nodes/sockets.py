@@ -207,3 +207,5 @@ LuxCoreSocketMatEmission.allowed_inputs = {LuxCoreSocketMatEmission}
 LuxCoreSocketBump.allowed_inputs = {LuxCoreSocketBump, LuxCoreSocketColor, LuxCoreSocketFloat}
 LuxCoreSocketColor.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}
 LuxCoreSocketFloat.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}
+LuxCoreSocketMapping2D.allowed_inputs = {LuxCoreSocketMapping2D}
+LuxCoreSocketMapping3D.allowed_inputs = {LuxCoreSocketMapping3D}

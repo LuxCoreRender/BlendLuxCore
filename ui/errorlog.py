@@ -1,5 +1,5 @@
-import bl_ui
-import bpy
+from bl_ui.properties_render import RenderButtonsPanel
+from bpy.types import Panel
 
 
 # Confusing, I know
@@ -8,7 +8,7 @@ ICON_WARNING = "ERROR"
 ICON_ALL_GOOD = "FILE_TICK"
 
 
-class LuxCoreErrorLog(bl_ui.properties_render.RenderButtonsPanel, bpy.types.Panel):
+class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Error Log"
 

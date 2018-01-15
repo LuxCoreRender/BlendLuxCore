@@ -1,10 +1,8 @@
-import bl_ui
 from bl_ui.properties_render import RenderButtonsPanel
-import bpy
 from bpy.types import Panel
 
 
-class LuxCorePostProcessing(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_post_processing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Post Processing"
     bl_options = {'DEFAULT_CLOSED'}

@@ -1,12 +1,8 @@
-import datetime
-
-import bl_ui
 from bl_ui.properties_render import RenderButtonsPanel
-import bpy
 from bpy.types import Panel
 
 
-class LuxCoreHaltConditions(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_halt_conditions(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Halt Conditions"
 

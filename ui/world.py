@@ -1,11 +1,8 @@
-import bl_ui
 from bl_ui.properties_world import WorldButtonsPanel
-import bpy
 from bpy.types import Panel
-from . import ICON_VOLUME
 
 
-class LuxCoreWorldHeader(WorldButtonsPanel, Panel):
+class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
     """
     World UI Panel
     """
@@ -30,7 +27,7 @@ class LuxCoreWorldHeader(WorldButtonsPanel, Panel):
             # TODO: id
 
 
-class LuxCoreWorldSky2(WorldButtonsPanel, Panel):
+class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
     """
     Sky2 UI Panel
     """
@@ -63,7 +60,7 @@ class LuxCoreWorldSky2(WorldButtonsPanel, Panel):
             layout.prop(world.luxcore, "ground_color")
 
 
-class LuxCoreWorldInfinite(WorldButtonsPanel, Panel):
+class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
     """
     Infinite UI Panel
     """
@@ -89,7 +86,7 @@ class LuxCoreWorldInfinite(WorldButtonsPanel, Panel):
         sub.prop(world.luxcore, "sampleupperhemisphereonly")
 
 
-class LuxCoreWorldPerformance(WorldButtonsPanel, Panel):
+class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
     """
     World UI Panel, shows stuff that affects the performance of the render
     """
@@ -110,7 +107,7 @@ class LuxCoreWorldPerformance(WorldButtonsPanel, Panel):
         layout.prop(world.luxcore, "importance")
 
 
-class LuxCoreWorldVisibility(WorldButtonsPanel, Panel):
+class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Visibility"
     bl_options = {"DEFAULT_CLOSED"}

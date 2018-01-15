@@ -1,8 +1,8 @@
-import bl_ui
-import bpy
+from bl_ui.properties_render import RenderButtonsPanel
+from bpy.types import Panel
 
 
-class LuxCoreDisplaySettings(bl_ui.properties_render.RenderButtonsPanel, bpy.types.Panel):
+class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Display Settings"
     bl_options = {"DEFAULT_CLOSED"}

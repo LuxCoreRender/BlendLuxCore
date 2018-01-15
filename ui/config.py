@@ -4,7 +4,7 @@ import bpy
 from bpy.types import Panel
 
 
-class LuxCoreConfig(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Config"
 
@@ -92,7 +92,7 @@ class LuxCoreConfig(RenderButtonsPanel, Panel):
         split.active = config.use_filter
         split.prop(config, "filter_width")
 
-class LuxCoreDeviceSettings(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Device Settings"
 

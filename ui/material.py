@@ -1,9 +1,8 @@
-import bl_ui
-import bpy
-from . import ICON_VOLUME
+from bl_ui.properties_material import MaterialButtonsPanel
+from bpy.types import Panel
 
 
-class LuxCoreMaterialHeader(bl_ui.properties_material.MaterialButtonsPanel, bpy.types.Panel):
+class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
     """
     Material UI Panel
     """
