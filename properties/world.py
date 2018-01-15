@@ -44,3 +44,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
                                              description=SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION)
     rotation = FloatProperty(name="Z Axis Rotation", default=0, min=0, max=(math.pi * 2), subtype="ANGLE", unit="ROTATION")
 
+    # sky2, sun, infinite, constantinfinite
+    visibility_indirect_diffuse = BoolProperty(name="Diffuse", default=True)
+    visibility_indirect_glossy = BoolProperty(name="Glossy", default=True)
+    visibility_indirect_specular = BoolProperty(name="Specular", default=True)
+

@@ -1,10 +1,10 @@
-import bl_ui
-import bpy
+from bl_ui.properties_data_lamp import DataButtonsPanel
+from bpy.types import Panel
 
 # TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
 
 
-class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.Panel):
+class LuxCoreLampHeader(DataButtonsPanel, Panel):
     """
     Lamp UI Panel
     """
@@ -118,7 +118,7 @@ class LuxCoreLampHeader(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.P
             layout.prop(lamp.luxcore, "is_laser")
 
 
-class LuxCoreLampPerformance(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.types.Panel):
+class LuxCoreLampPerformance(DataButtonsPanel, Panel):
     """
     Lamp UI Panel, shows stuff that affects the performance of the render
     """
@@ -137,3 +137,34 @@ class LuxCoreLampPerformance(bl_ui.properties_data_lamp.DataButtonsPanel, bpy.ty
 
         layout.prop(lamp.luxcore, "samples")
         layout.prop(lamp.luxcore, "importance")
+
+
+class LuxCoreLampVisibility(DataButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Visibility"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+
+        if context.lamp:
+            # Visible for sky2, sun, infinite, constantinfinite
+            visible = False
+
+            if context.lamp.type == "SUN" and context.lamp.luxcore.sun_type == "sun":
+                visible = True
+            elif context.lamp.type == "HEMI":
+                visible = True
+
+        return context.lamp and engine == "LUXCORE" and visible
+
+    def draw(self, context):
+        layout = self.layout
+        lamp = context.lamp
+
+        layout.label("Visibility for indirect light rays:")
+        row = layout.row()
+        row.prop(lamp.luxcore, "visibility_indirect_diffuse")
+        row.prop(lamp.luxcore, "visibility_indirect_glossy")
+        row.prop(lamp.luxcore, "visibility_indirect_specular")

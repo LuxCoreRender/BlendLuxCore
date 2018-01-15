@@ -130,4 +130,9 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     theta = FloatProperty(name="Size", default=10, min=0, soft_min=0.05)
 
     # laser
-    # Note: radius is set with default Blender properties (spot_size)
+    # Note: radius is set with default Blender properties (area light size)
+
+    # sky2, sun, infinite, constantinfinite
+    visibility_indirect_diffuse = BoolProperty(name="Diffuse", default=True)
+    visibility_indirect_glossy = BoolProperty(name="Glossy", default=True)
+    visibility_indirect_specular = BoolProperty(name="Specular", default=True)

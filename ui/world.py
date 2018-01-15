@@ -108,3 +108,25 @@ class LuxCoreWorldPerformance(WorldButtonsPanel, Panel):
 
         layout.prop(world.luxcore, "samples")
         layout.prop(world.luxcore, "importance")
+
+
+class LuxCoreWorldVisibility(WorldButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Visibility"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        visible = context.world and context.world.luxcore.light != "none"
+        return engine == "LUXCORE" and visible
+
+    def draw(self, context):
+        layout = self.layout
+        world = context.world
+
+        layout.label("Visibility for indirect light rays:")
+        row = layout.row()
+        row.prop(world.luxcore, "visibility_indirect_diffuse")
+        row.prop(world.luxcore, "visibility_indirect_glossy")
+        row.prop(world.luxcore, "visibility_indirect_specular")

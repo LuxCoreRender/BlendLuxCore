@@ -171,6 +171,8 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
             # Can only happen if Blender changes its lamp types
             raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % blender_obj.name)
 
+        _indirect_light_visibility(definitions, lamp)
+
         props = utils.create_props(prefix, definitions)
         return props, exported_light
     except Exception as error:
@@ -219,6 +221,8 @@ def convert_world(world, scene):
                 definitions["type"] = "constantinfinite"
         else:
             definitions["type"] = "constantinfinite"
+
+        _indirect_light_visibility(definitions, world)
 
         props = utils.create_props(prefix, definitions)
         return props
@@ -348,6 +352,14 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
     mesh_definition = [luxcore_name, fake_material_index]
     exported_obj = ExportedObject([mesh_definition])
     return props, exported_obj
+
+
+def _indirect_light_visibility(definitions, lamp_or_world):
+    definitions.update({
+        "visibility.indirect.diffuse.enable": lamp_or_world.luxcore.visibility_indirect_diffuse,
+        "visibility.indirect.glossy.enable": lamp_or_world.luxcore.visibility_indirect_glossy,
+        "visibility.indirect.specular.enable": lamp_or_world.luxcore.visibility_indirect_specular,
+    })
 
 
 def _report_missing_iesfile(blender_obj, scene, filepath):
