@@ -125,8 +125,16 @@ class LuxCoreWorldVisibility(WorldButtonsPanel, Panel):
         layout = self.layout
         world = context.world
 
-        layout.label("Visibility for indirect light rays:")
-        row = layout.row()
+        # These settings only work with PATH and TILEPATH, not with BIDIR
+        enabled = context.scene.luxcore.config.engine == "PATH"
+
+        sub = layout.column()
+        sub.enabled = enabled
+        sub.label("Visibility for indirect light rays:")
+        row = sub.row()
         row.prop(world.luxcore, "visibility_indirect_diffuse")
         row.prop(world.luxcore, "visibility_indirect_glossy")
         row.prop(world.luxcore, "visibility_indirect_specular")
+
+        if not enabled:
+            layout.label("Only supported by Path engines (not by Bidir)", icon="INFO")
