@@ -26,7 +26,7 @@ def to_luxcore_name(string):
 
 
 def make_key(datablock):
-    key = datablock.name
+    key = str(datablock.as_pointer())
     if hasattr(datablock, "type"):
         key += datablock.type
     if hasattr(datablock, "data") and hasattr(datablock.data, "type"):
