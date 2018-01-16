@@ -70,9 +70,7 @@ class LuxCoreNodeCategoryTexture(NodeCategory):
 # In general it is a good idea to put often used nodes near the top.
 luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_TEXTURE", "Texture", items=[
-        NodeItem("LuxCoreNodeTexColorMix", label="Color Mix"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
-        NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
@@ -85,6 +83,12 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
+    ]),
+
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
+        NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
+        NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexHSV", label="HSV"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
