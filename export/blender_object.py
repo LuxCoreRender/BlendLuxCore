@@ -8,8 +8,8 @@ from .light import convert_lamp
 
 def convert(blender_obj, scene, context, luxcore_scene,
             exported_object=None, update_mesh=False, dupli_suffix="", matrix=None):
-    
-    if not utils.is_obj_visible(blender_obj, scene, context):
+
+    if not utils.is_obj_visible(blender_obj, scene, context, is_dupli=dupli_suffix):
         return pyluxcore.Properties(), None
 
     if blender_obj.type == "LAMP":
@@ -18,7 +18,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
     try:
         print("converting object:", blender_obj.name)
         # Note that his is not the final luxcore_name, as the object may be split by DefineBlenderMesh()
-        luxcore_name = utils.to_luxcore_name(blender_obj.name) + dupli_suffix
+        luxcore_name = utils.get_unique_luxcore_name(blender_obj) + dupli_suffix
         props = pyluxcore.Properties()
 
         if blender_obj.data is None:
@@ -37,6 +37,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
                 print(blender_obj.name + ": No mesh data after to_mesh()")
                 return props, None
 
+
             mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, matrix)
             bpy.data.meshes.remove(mesh, do_unlink=False)
         else:
@@ -44,7 +45,9 @@ def convert(blender_obj, scene, context, luxcore_scene,
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
 
+
         transformation = utils.matrix_to_list(blender_obj.matrix_world, scene, apply_worldscale=True)
+            
 
         for lux_object_name, material_index in mesh_definitions:
             if material_index < len(blender_obj.material_slots):

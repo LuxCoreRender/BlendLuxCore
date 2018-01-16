@@ -149,6 +149,7 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
                     elif settings.export_color == "vertex_color" and has_vertex_colors:
                         if not col:
                             col = psys.mcol_on_emitter(mod, psys.particles[i], pindex, vertex_color.active_index)
+                            print(col)
                     
                         colors.append(col)
 
