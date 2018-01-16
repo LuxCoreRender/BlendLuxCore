@@ -19,6 +19,7 @@ from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .coloratdepth import LuxCoreNodeTexColorAtDepth
 from .colormix import LuxCoreNodeTexColorMix
 from .fresnel import LuxCoreNodeTexFresnel
+from .hitpoint import LuxCoreNodeTexHitpoint
 from .hsv import LuxCoreNodeTexHSV
 from .imagemap import LuxCoreNodeTexImagemap
 from .lampspectrum import LuxCoreNodeTexLampSpectrum
@@ -83,6 +84,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
+        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[

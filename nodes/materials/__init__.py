@@ -94,7 +94,8 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
-        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),        
+        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
+        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
     ]),
     
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_BLENDERTEXTURE", "Texture (Blender)", items=[
