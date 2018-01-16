@@ -191,9 +191,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             changes = self._exporter.get_changes(context)
 
             if changes & export.Change.REQUIRES_VIEW_UPDATE:
-                if changes & export.Change.CONFIG:
-                    # Film resize requires a new framebuffer
-                    self._framebuffer = FrameBuffer(context)
                 self.tag_redraw()
                 self.view_update_lux(context, changes)
                 return
