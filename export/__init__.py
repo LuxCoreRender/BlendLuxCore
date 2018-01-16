@@ -46,7 +46,7 @@ class Exporter(object):
         luxcore_scene.Parse(camera_props)
 
         # Objects and lamps
-        objs = context.visible_objects if context else bpy.data.objects
+        objs = context.visible_objects if context else scene.objects
         len_objs = len(objs)
 
         for index, obj in enumerate(objs, start=1):
