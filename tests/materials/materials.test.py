@@ -74,8 +74,8 @@ class TestMaterials(unittest.TestCase):
         assertListsAlmostEqual(self, props.Get(prefix + ".kr").Get(), [0.5, 0.0, 0.0])
         assertListsAlmostEqual(self, props.Get(prefix + ".kt").Get(), [0.5, 0.0, 0.0])
 
-    def test_metal(self):
-        props, luxcore_name, prefix = export_first_mat("metal")
+    def test_metal2(self):
+        props, luxcore_name, prefix = export_first_mat("metal2")
 
         # Only one texture in the props (the helper)
         all_exported_tex_prefixes = props.GetAllUniqueSubNames("scene.textures")
@@ -106,6 +106,85 @@ class TestMaterials(unittest.TestCase):
         assertAlmostEqual(self, props.Get(prefix + ".vroughness").Get(), [0.1])
         assertAlmostEqual(self, props.Get(prefix + ".d").Get(), [0.1])
         assertAlmostEqual(self, props.Get(prefix + ".multibounce").Get(), [False])
+
+    def test_glossytranslucent(self):
+        props, luxcore_name, prefix = export_first_mat("glossytranslucent")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["glossytranslucent"])
+        assertListsAlmostEqual(self, props.Get(prefix + ".kd").Get(), [0.5, 0.0, 0.0])
+        assertListsAlmostEqual(self, props.Get(prefix + ".kt").Get(), [0.5, 0.0, 0.0])
+        assertListsAlmostEqual(self, props.Get(prefix + ".ks").Get(), [0.1, 0.1, 0.1])
+        assertListsAlmostEqual(self, props.Get(prefix + ".ka").Get(), [0.0, 0.0, 0.2])
+        assertAlmostEqual(self, props.Get(prefix + ".uroughness").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".vroughness").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".d").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".multibounce").Get(), [False])
+
+    def test_glossycoating(self):
+        props, luxcore_name, prefix = export_first_mat("glossycoating")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["glossycoating"])
+        assertListsAlmostEqual(self, props.Get(prefix + ".ks").Get(), [0.1, 0.1, 0.1])
+        assertListsAlmostEqual(self, props.Get(prefix + ".ka").Get(), [0.0, 0.0, 0.2])
+        assertAlmostEqual(self, props.Get(prefix + ".uroughness").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".vroughness").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".d").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".multibounce").Get(), [False])
+        # TODO test if base material was exported correctly
+
+    def test_glass(self):
+        props, luxcore_name, prefix = export_first_mat("glass")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["glass"])
+        assertListsAlmostEqual(self, props.Get(prefix + ".kt").Get(), [0.5, 0.0, 0.0])
+        assertListsAlmostEqual(self, props.Get(prefix + ".kr").Get(), [0.5, 0.0, 0.0])
+        assertAlmostEqual(self, props.Get(prefix + ".interiorior").Get(), [1.3])
+        assertAlmostEqual(self, props.Get(prefix + ".cauchyc").Get(), [0.01])
+
+    def test_roughglass(self):
+        props, luxcore_name, prefix = export_first_mat("roughglass")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["roughglass"])
+        assertListsAlmostEqual(self, props.Get(prefix + ".kt").Get(), [0.5, 0.0, 0.0])
+        assertListsAlmostEqual(self, props.Get(prefix + ".kr").Get(), [0.5, 0.0, 0.0])
+        assertAlmostEqual(self, props.Get(prefix + ".interiorior").Get(), [1.3])
+        assertAlmostEqual(self, props.Get(prefix + ".uroughness").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".vroughness").Get(), [0.1])
+
+    def test_archglass(self):
+        props, luxcore_name, prefix = export_first_mat("archglass")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["archglass"])
+        assertListsAlmostEqual(self, props.Get(prefix + ".kt").Get(), [0.5, 0.0, 0.0])
+        assertListsAlmostEqual(self, props.Get(prefix + ".kr").Get(), [0.5, 0.0, 0.0])
+        assertAlmostEqual(self, props.Get(prefix + ".interiorior").Get(), [1.3])
+
+    def test_null(self):
+        props, luxcore_name, prefix = export_first_mat("null")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["null"])
+        assertListsAlmostEqual(self, props.Get(prefix + ".transparency").Get(), [0.5, 0.0, 0.0])
+
+    def test_carpaint(self):
+        props, luxcore_name, prefix = export_first_mat("carpaint")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["carpaint"])
+        self.assertEqual(props.Get(prefix + ".preset").Get(), ["blue matte"])
+        assertAlmostEqual(self, props.Get(prefix + ".d").Get(), [0.1])
+        assertListsAlmostEqual(self, props.Get(prefix + ".ka").Get(), [0.0, 0.0, 0.2])
+        # TODO the rest of the properties (in "manual" preset mode)
+
+    def test_cloth(self):
+        props, luxcore_name, prefix = export_first_mat("cloth")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["cloth"])
+        # TODO the rest of the properties
+
+    def test_velvet(self):
+        props, luxcore_name, prefix = export_first_mat("velvet")
+
+        self.assertEqual(props.Get(prefix + ".type").Get(), ["velvet"])
+        # TODO the rest of the properties
 
 
 # we have to manually invoke the test runner here, as we cannot use the CLI

@@ -1,6 +1,7 @@
 from bpy.props import FloatProperty, EnumProperty
 from .. import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
+from ...utils import node as utils_node
 
 REPEATU_DESCRIPTION = "Repetition count of pattern in U direction"
 REPEATV_DESCRIPTION = "Repetition count of pattern in V direction"
@@ -45,6 +46,9 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
     def draw_buttons(self, context, layout):
+        # Info about UV mapping (only show if default is used,
+        utils_node.draw_uv_info(context, layout)
+
         layout.prop(self, "preset")
 
     def export(self, props, luxcore_name=None):
