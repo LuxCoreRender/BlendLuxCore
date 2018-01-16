@@ -1,13 +1,11 @@
-import bpy
 from bpy.props import FloatProperty, BoolProperty, EnumProperty
 from .. import LuxCoreNodeMaterial, Roughness
-from ..sockets import LuxCoreSocketColor, LuxCoreSocketFresnel
 from .. import utils
 
 class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
     """metal material node"""
     bl_label = "Metal Material"
-    bl_width_min = 160
+    bl_width_min = 200
 
     def change_input_type(self, context):
         self.inputs["Fresnel"].enabled = self.input_type == "fresnel"

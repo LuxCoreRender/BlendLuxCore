@@ -57,6 +57,9 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
                     scene.luxcore.errorlog.add_warning(msg)
             else:
                 # The object has no material slots
+                msg = 'Object "%s": No material defined' % blender_obj.name
+                scene.luxcore.errorlog.add_warning(msg)
+                # Use fallback material
                 lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)

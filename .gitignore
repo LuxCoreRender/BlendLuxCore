@@ -1,5 +1,6 @@
 .idea
 __pycache__
+**/*.blend1
 
 # Test output
 tests/full_export/log.txt
