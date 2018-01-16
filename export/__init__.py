@@ -57,10 +57,6 @@ class Exporter(object):
                 engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
                 self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine)
 
-
-                if obj.is_duplicator:
-                    duplis.convert(obj, scene, context, luxcore_scene, engine)
-
                 for psys in obj.particle_systems:
                     if psys.settings.type == "HAIR":
                         particle.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
@@ -194,12 +190,6 @@ class Exporter(object):
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
         obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj,
                                                          update_mesh, dupli_suffix, matrix)
-
-        if obj.is_duplicator:
-            duplis.convert(obj, scene, context, luxcore_scene, engine)
-
-        if obj.parent and obj.parent.is_duplicator:
-            self._convert_object(props, obj.parent, scene, context, luxcore_scene)
 
         if obj.is_duplicator:
             duplis.convert(obj, scene, context, luxcore_scene, engine)
