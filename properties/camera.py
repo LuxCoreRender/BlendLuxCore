@@ -13,7 +13,10 @@ CLIPPING_PLANE_DESC = (
     "The clipping plane object will not be exported"
 )
 
-SHUTTER_TIME_DESC = "Time in seconds between shutter open and shutter close, higher values lead to more blur"
+SHUTTER_TIME_DESC = (
+    "Amount of frames between shutter open and shutter close, higher values lead to more blur. "
+    "A value of 1.0 blurs of the length of 1 frame, a value of 2.0 over 2 frames etc"  # no dot, Blender adds it
+)
 
 
 def init():
@@ -27,7 +30,7 @@ class LuxCoreMotionBlur(PropertyGroup):
     enable = BoolProperty(name="Enable Motion Blur", default=False)
     object_blur = BoolProperty(name="Object", default=True, description="Blur moving objects")
     camera_blur = BoolProperty(name="Camera", default=False, description="Blur if camera moves")
-    shutter = FloatProperty(name="Shutter (s)", default=0.1, min=0, soft_max=2, description=SHUTTER_TIME_DESC)
+    shutter = FloatProperty(name="Shutter (frames)", default=0.1, min=0, soft_max=2, description=SHUTTER_TIME_DESC)
     # TODO: add description about accelerators (Embree only supports 2 steps?) and what happens
     # if more than 2 steps are used
     steps = IntProperty(name="Steps", default=2, min=2, description="Number of substeps")
