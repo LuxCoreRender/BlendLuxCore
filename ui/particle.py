@@ -13,30 +13,31 @@ class LuxCoreHairSettings(ParticleButtonsPanel, Panel):
             return False
         if psys.settings is None:
             return False
-        return psys.settings.type == 'HAIR' and (engine == "LUXCORE")
+        return psys.settings.type == "HAIR" and (engine == "LUXCORE")
         
     def draw(self, context):
+        layout = self.layout
         settings = context.particle_settings.luxcore.hair
-        
-        layout = self.layout        
-        row = layout.row()
-        row.prop(settings, "hair_size")
+
+        layout.prop(settings, "hair_size")
+
         row = layout.row(align=True)
         row.prop(settings, "root_width")
         row.prop(settings, "tip_width")        
         row.prop(settings, "width_offset")
-        row = layout.row()
-        row.prop(settings, "tesseltype")
-        row = layout.row(align=True)        
-        row.prop(settings, "adaptive_maxdepth")
-        row.prop(settings, "adaptive_error")
+
+        layout.prop(settings, "tesseltype")
+
+        if "adaptive" in settings.tesseltype:
+            row = layout.row(align=True)
+            row.prop(settings, "adaptive_maxdepth")
+            row.prop(settings, "adaptive_error")
+
         if settings.tesseltype.startswith("solid"):
-            row = layout.row()
-            row.prop(settings, "solid_sidecount")
+            layout.prop(settings, "solid_sidecount")
+
             row = layout.row()
             row.prop(settings, "solid_capbottom")            
             row.prop(settings, "solid_captop")
-        row = layout.row()
-        row.prop(settings, "acceltype")
-        row = layout.row()
-        row.prop(settings, "export_color")
+
+        layout.prop(settings, "export_color")
