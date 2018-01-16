@@ -77,7 +77,7 @@ luxcore_node_categories_volume = [
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_TEXTURE", "Texture", items=[
-        NodeItem("LuxCoreNodeTexColorMix", label="Color Mix"),
+        # Note: 2D textures make no sense for volumes
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
         NodeItem("LuxCoreNodeTexBlenderClouds", label="Clouds"),
@@ -91,9 +91,21 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
     ]),
 
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_UTILS", "Utils", items=[
+        # Note: 2D textures make no sense for volumes
+        NodeItem("LuxCoreNodeTexColorMix", label="Color Mix"),
+        NodeItem("LuxCoreNodeTexHSV", label="HSV"),
+        NodeItem("LuxCoreNodeTexColorAtDepth", label="Color at depth"),
+    ]),
+
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MAPPING", "Mapping", items=[
-        # Note: 2D mapping and 2D textures makes no sense for volumes
+        # Note: 2D mapping makes no sense for volumes
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
+    ]),
+
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_LIGHT", "Light", items=[
+        NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
+        NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_POINTER", "Pointer", items=[

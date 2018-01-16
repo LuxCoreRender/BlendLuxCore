@@ -5,10 +5,7 @@ from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_TEXTURE
 
 # Import all texture nodes just so they get registered
-from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
-from .imagemap import LuxCoreNodeTexImagemap
-from .fresnel import LuxCoreNodeTexFresnel
-from .colormix import LuxCoreNodeTexColorMix
+from .blackbody import LuxCoreNodeTexBlackbody
 from .blenderblend import LuxCoreNodeTexBlenderBlend
 from .blenderclouds import LuxCoreNodeTexBlenderClouds
 from .blenderdistortednoise import LuxCoreNodeTexBlenderDistortedNoise
@@ -16,15 +13,19 @@ from .blendermagic import LuxCoreNodeTexBlenderMagic
 from .blendermarble import LuxCoreNodeTexBlenderMarble
 from .blendermusgrave import LuxCoreNodeTexBlenderMusgrave
 from .blenderstucci import LuxCoreNodeTexBlenderStucci
-from .blenderwood import LuxCoreNodeTexBlenderWood
 from .blendervoronoi import LuxCoreNodeTexBlenderVoronoi
-from .wrinkled import LuxCoreNodeTexWrinkled
-from .lampspectrum import LuxCoreNodeTexLampSpectrum
-from .blackbody import LuxCoreNodeTexBlackbody
+from .blenderwood import LuxCoreNodeTexBlenderWood
+from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .coloratdepth import LuxCoreNodeTexColorAtDepth
+from .colormix import LuxCoreNodeTexColorMix
+from .fresnel import LuxCoreNodeTexFresnel
+from .hsv import LuxCoreNodeTexHSV
+from .imagemap import LuxCoreNodeTexImagemap
+from .lampspectrum import LuxCoreNodeTexLampSpectrum
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
 from .output import LuxCoreNodeTexOutput
+from .wrinkled import LuxCoreNodeTexWrinkled
 
 # TODO: how to warn if some texture nodes are incompatible with materials/volumes
 # they are used in?
@@ -70,6 +71,7 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_TEXTURE", "Texture", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="Color Mix"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
+        NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),

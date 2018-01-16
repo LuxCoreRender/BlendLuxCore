@@ -91,7 +91,6 @@ luxcore_node_categories_material = [
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
-        NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
@@ -111,7 +110,8 @@ luxcore_node_categories_material = [
     ]),
     
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
-        NodeItem("LuxCoreNodeTexColorAtDepth", label="Color at depth"),        
+        NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
+        NodeItem("LuxCoreNodeTexHSV", label="HSV"),
     ]),
    
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
