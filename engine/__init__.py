@@ -173,6 +173,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
         if changes is None:
             changes = self._exporter.get_changes(context)
+
+        if changes & export.Change.CONFIG:
+            # Film resize requires a new framebuffer
+            self._framebuffer = FrameBuffer(context)
+
         # We have to re-assign the session because it might have been replaced due to filmsize change
         self._session = self._exporter.update(context, self._session, changes)
 
