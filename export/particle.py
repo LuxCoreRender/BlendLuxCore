@@ -186,7 +186,8 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
 
     luxcore_shape_name = utils.get_unique_luxcore_name(blender_obj) + "_" + utils.get_unique_luxcore_name(psys)
 
-    engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
+    if engine:
+        engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
     # Documentation: http://www.luxrender.net/forum/viewtopic.php?f=8&t=12116&sid=03a16c5c345db3ee0f8126f28f1063c8#p112819
 
     luxcore_scene.DefineStrands(luxcore_shape_name, total_strand_count, len(points), points_as_tuples, segments,

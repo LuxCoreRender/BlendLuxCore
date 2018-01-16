@@ -57,10 +57,6 @@ class Exporter(object):
                 engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
                 self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine)
 
-                for psys in obj.particle_systems:
-                    if psys.settings.type == "HAIR":
-                        particle.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
-
                 # Objects are the most expensive to export, so they dictate the progress
                 engine.update_progress(index / len_objs)
             # Regularly check if we should abort the export (important in heavy scenes)
@@ -191,11 +187,18 @@ class Exporter(object):
         obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj,
                                                          update_mesh, dupli_suffix, matrix)
 
+        # Convert particles and dupliverts/faces
         if obj.is_duplicator:
             duplis.convert(obj, scene, context, luxcore_scene, engine)
 
+        # When moving a duplicated object, update the parent, too (concerns dupliverts/faces)
         if obj.parent and obj.parent.is_duplicator:
             self._convert_object(props, obj.parent, scene, context, luxcore_scene)
+
+        # Convert hair
+        for psys in obj.particle_systems:
+            if psys.settings.type == "HAIR":
+                particle.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
 
         if exported_obj is None:
             # Object is not visible or an error happened.
