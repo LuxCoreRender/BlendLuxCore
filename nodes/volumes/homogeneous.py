@@ -47,7 +47,6 @@ class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume):
             "scattering": scatter_col,
             "asymmetry": self.inputs["Asymmetry"].export(props),
             "multiscattering": self.multiscattering,
-        }
-        print(definitions)
+        }        
         self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)

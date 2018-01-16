@@ -8,8 +8,7 @@ from .light import convert_lamp
 
 def convert(blender_obj, scene, context, luxcore_scene,
             exported_object=None, update_mesh=False, dupli_suffix="", matrix=None):
-
-def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, update_mesh=False, dupli_suffix="", matrix=None):
+    
     if not utils.is_obj_visible(blender_obj, scene, context):
         return pyluxcore.Properties(), None
 
@@ -19,7 +18,7 @@ def convert(blender_obj, scene, context, luxcore_scene, exported_object=None, up
     try:
         print("converting object:", blender_obj.name)
         # Note that his is not the final luxcore_name, as the object may be split by DefineBlenderMesh()
-        luxcore_name = utils.to_luxcore_name(blender_obj.name)+dupli_name_suffix
+        luxcore_name = utils.to_luxcore_name(blender_obj.name) + dupli_suffix
         props = pyluxcore.Properties()
 
         if blender_obj.data is None:
