@@ -24,6 +24,7 @@ from .imagemap import LuxCoreNodeTexImagemap
 from .lampspectrum import LuxCoreNodeTexLampSpectrum
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
+from .math import LuxCoreNodeTexMath
 from .output import LuxCoreNodeTexOutput
 from .wrinkled import LuxCoreNodeTexWrinkled
 

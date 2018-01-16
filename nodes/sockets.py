@@ -126,6 +126,8 @@ class LuxCoreSocketColor(LuxCoreNodeSocket):
         return list(self.default_value)
 
 
+# Warning! For some reason unknown to me, you can't use this socket on any node!
+# Use the "LuxCoreSocketFloatUnbounded" class below instead.
 class LuxCoreSocketFloat(LuxCoreNodeSocket):
     color = Color.float_texture
     default_value = FloatProperty()
@@ -134,32 +136,36 @@ class LuxCoreSocketFloat(LuxCoreNodeSocket):
         return self.default_value
 
 
+# Use this socket for normal float values without min/max bounds.
+# For some unkown reason, we can't use the LuxCoreSocketFloat directly.
+class LuxCoreSocketFloatUnbounded(LuxCoreSocketFloat):
+    default_value = FloatProperty(description="Float value")
+
+
 class LuxCoreSocketFloatPositive(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0)
-
-
-class LuxCoreSocketValueAtDepth(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, subtype='DISTANCE', unit='LENGTH', precision=5)
+    default_value = FloatProperty(min=0, description="Positive float value")
 
 
 class LuxCoreSocketFloat0to1(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, max=1)
+    default_value = FloatProperty(min=0, max=1, description="Float value between 0 and 1")
     slider = True
 
 
 class LuxCoreSocketFloat0to2(LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, max=2)
+    default_value = FloatProperty(min=0, max=2, description="Float value between 0 and 2")
     slider = True
 
 
 class LuxCoreSocketRoughness(LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
-    default_value = FloatProperty(min=0.001, soft_max=0.8, max=1.0, precision=4, description=ROUGHNESS_DESCRIPTION)
+    default_value = FloatProperty(min=0.001, soft_max=0.8, max=1.0, precision=4,
+                                  description=ROUGHNESS_DESCRIPTION)
     slider = True
 
 
 class LuxCoreSocketIOR(LuxCoreSocketFloat):
-    default_value = FloatProperty(name="IOR", min=0, soft_max=2.0, max=25, step=0.1, precision=4, description=IOR_DESCRIPTION)
+    default_value = FloatProperty(name="IOR", min=0, soft_max=2.0, max=25, step=0.1,
+                                  precision=4, description=IOR_DESCRIPTION)
 
     def draw(self, context, layout, node, text):
         if hasattr(node, "get_interior_volume") and node.get_interior_volume():
