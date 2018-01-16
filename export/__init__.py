@@ -3,8 +3,9 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
-from . import blender_object, caches, camera, config, duplis, light, material, motion_blur, particle
+from . import blender_object, caches, camera, config, duplis, light, material, motion_blur
 from .light import WORLD_BACKGROUND_LIGHT_NAME
+from ..nodes.output import get_active_output
 
 
 class Change:
@@ -19,6 +20,7 @@ class Change:
 
     REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | VISIBILITY | WORLD
     REQUIRES_VIEW_UPDATE = CONFIG
+
 
 
 class Exporter(object):
@@ -53,7 +55,8 @@ class Exporter(object):
         for index, obj in enumerate(objs, start=1):
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
                 engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
-                self._convert_object(scene_props, obj, scene, context, luxcore_scene)
+                self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine)
+
 
                 if obj.is_duplicator:
                     duplis.convert(obj, scene, context, luxcore_scene, engine)
@@ -175,20 +178,28 @@ class Exporter(object):
         # because it might have been replaced in _update_config()
         return session
 
-    def _convert_object(self, props, obj, scene, context, luxcore_scene, update_mesh=False):
+    def _convert_object(self, props, obj, scene, context, luxcore_scene,
+                        update_mesh=False, dupli_suffix="", matrix=None, engine=None):
         key = utils.make_key(obj)
         old_exported_obj = None
 
         if key not in self.exported_objects:
             # We have to update the mesh because the object was not yet exported
             update_mesh = True
-        
+
         if not update_mesh:
             # We need the previously exported mesh defintions
             old_exported_obj = self.exported_objects[key]
 
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
-        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj, update_mesh)
+        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj,
+                                                         update_mesh, dupli_suffix, matrix)
+
+        if obj.is_duplicator:
+            duplis.convert(obj, scene, context, luxcore_scene, engine)
+
+        if obj.parent and obj.parent.is_duplicator:
+            self._convert_object(props, obj.parent, scene, context, luxcore_scene)
 
         if exported_obj is None:
             # Object is not visible or an error happened.
@@ -221,7 +232,6 @@ class Exporter(object):
 
         if changes & Change.OBJECT:
             for obj in self.object_cache.changed_transform:
-                # TODO only update transform
                 print("transformed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False)
 
