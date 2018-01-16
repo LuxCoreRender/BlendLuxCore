@@ -3,7 +3,7 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
-from . import blender_object, caches, camera, config, duplis, light, material, motion_blur
+from . import blender_object, caches, camera, config, duplis, light, material, motion_blur, particle
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from ..nodes.output import get_active_output
 

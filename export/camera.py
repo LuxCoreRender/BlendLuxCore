@@ -216,7 +216,8 @@ def _motion_blur(scene, definitions, context):
         definitions["up"] = [0, 1, 0]
         # Note: camera motion system is defined in export/motion_blur.py
 
-
+def _calc_lookat(cam_matrix, scene):
+    cam_matrix = utils.get_scaled_to_world(cam_matrix, scene)
     lookat_orig = list(cam_matrix.to_translation())
     lookat_target = list(cam_matrix * Vector((0, 0, -1)))
     up_vector = list(cam_matrix.to_3x3() * Vector((0, 1, 0)))
