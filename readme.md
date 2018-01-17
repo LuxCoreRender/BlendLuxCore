@@ -11,7 +11,7 @@ It is still in early development, so expect bugs and missing features.
 - You will experience crashes and other bugs. Please report them in the bug tracker!
 ```
 
-**Note for Windows users:** Requires Blender 2.79a. A first testbuild of Blender 2.79a will be released on 2018-01-10.
+**Note for Windows users:** Requires Blender 2.79a, which is not yet released.
 You can also use [official Blender 2.79](https://www.blender.org/download/Blender2.79/blender-2.79-windows64.zip/), but then [your materials won't be loaded correctly](https://developer.blender.org/T53509) from saved .blend files.
 
 On Linux, you can use the latest Blender build from [builder.blender.org](https://builder.blender.org/download/).
@@ -31,7 +31,7 @@ TODO: These do not contain .blend files yet.
 
 * [x] Viewport and final render
 * [x] Basic object export
-* [x] Most materials and volumes
+* [x] All materials and volumes
 * [x] Glass dispersion
 * [x] Imagemap textures and texture mapping
 * [x] All light types (sun, sky, point, mappoint, distant, spot, projection, infinite (HDRI environment), constantinfinite, meshlights)
@@ -42,11 +42,10 @@ TODO: These do not contain .blend files yet.
 * [x] Arbitrary clipping plane
 * [x] FILESAVER engine (scene export to LuxCore scn/cfg files)
 * [x] Object motion blur
-* [ ] Camera motion blur
-* [ ] Particles
-* [ ] Duplis
-* [ ] Some materials
-* [ ] Some textures
+* [x] Camera motion blur
+* [x] Particles
+* [x] Duplis
+* [ ] All textures
 * [ ] Image sequences
 * [ ] Light groups
 * [ ] AOVs
