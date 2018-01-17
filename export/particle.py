@@ -202,7 +202,7 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
         mat = blender_obj.material_slots[material_index].material
     except IndexError:
         mat = None
-        print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, obj.name))
+        print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, blender_obj.name))
 
     ## Convert material
     strandsProps = pyluxcore.Properties()
