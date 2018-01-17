@@ -41,7 +41,7 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
             # Not yet exported
             name_suffix = name_prefix + str(dupli.index)
             if dupli.particle_system:
-                name_suffix += utils.to_luxcore_name(dupli.particle_system.name)
+                name_suffix += utils.get_unique_luxcore_name(dupli.particle_system)
 
             obj_props, exported_obj = blender_object.convert(dupli.object, scene, context, luxcore_scene,
                                                              update_mesh=True, dupli_suffix=name_suffix)

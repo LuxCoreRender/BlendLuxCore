@@ -1,7 +1,7 @@
 from bl_ui.properties_particle import ParticleButtonsPanel
 from bpy.types import Panel
 
-class LuxCoreHairSettings(ParticleButtonsPanel, Panel):
+class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
     bl_label = "LuxCore Hair Settings"
     COMPAT_ENGINES = {"LUXCORE"}
     
