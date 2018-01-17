@@ -43,29 +43,25 @@ def convert(material, scene):
 def fallback(luxcore_name=GLOBAL_FALLBACK_MAT):
     props = pyluxcore.Properties()
     props.SetFromString("""
-        # Dark subgrid (10cm blocks)
-        scene.textures.__grid_10cm_1.type = "checkerboard3d"
-        scene.textures.__grid_10cm_1.texture1 = 0.4 0.4 0.4
-        scene.textures.__grid_10cm_1.texture2 = 0.3 0.3 0.3
-        scene.textures.__grid_10cm_1.mapping.type = "globalmapping3d"
-        scene.textures.__grid_10cm_1.mapping.transformation = 10 0 0 0 0 10 0 0 0 0 10 0 0 0 0 1
-        
-        # Light subgrid (10cm blocks)
-        scene.textures.__grid_10cm_2.type = "checkerboard3d"
-        scene.textures.__grid_10cm_2.texture1 = 0.4 0.4 0.4
-        scene.textures.__grid_10cm_2.texture2 = 0.5 0.5 0.5
-        scene.textures.__grid_10cm_2.mapping.type = "globalmapping3d"
-        scene.textures.__grid_10cm_2.mapping.transformation = 10 0 0 0 0 10 0 0 0 0 10 0 0 0 0 1
-        
-        # Big grid (1m blocks)
-        scene.textures.__grid_1m.type = "checkerboard3d"
-        scene.textures.__grid_1m.texture1 = "__grid_10cm_1"
-        scene.textures.__grid_1m.texture2 = "__grid_10cm_2"
-        scene.textures.__grid_1m.mapping.type = "globalmapping3d"
-        scene.textures.__grid_1m.mapping.transformation = 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
-        
-        # Material
-        scene.materials.{mat_name}.type = "matte"
-        scene.materials.{mat_name}.kd = __grid_1m
+    scene.textures.__grid_10cm_1.type = checkerboard3d
+    scene.textures.__grid_10cm_1.texture1 = 0.4 0.4 0.4
+    scene.textures.__grid_10cm_1.texture2 = 0.3 0.3 0.3
+    scene.textures.__grid_10cm_1.mapping.type = globalmapping3d    
+    scene.textures.__grid_10cm_1.mapping.transformation = 10 0 0 0 0 10 0 0 0 0 10 0 0 0 0 1
+    
+    scene.textures.__grid_10cm_2.type = checkerboard3d
+    scene.textures.__grid_10cm_2.texture1 = 0.4 0.4 0.4
+    scene.textures.__grid_10cm_2.texture2 = 0.5 0.5 0.5
+    scene.textures.__grid_10cm_2.mapping.type = globalmapping3d    
+    scene.textures.__grid_10cm_2.mapping.transformation = 10 0 0 0 0 10 0 0 0 0 10 0 0 0 0 1
+    
+    scene.textures.__grid_1m.type = checkerboard3d
+    scene.textures.__grid_1m.texture1 = __grid_10cm_1
+    scene.textures.__grid_1m.texture2 = __grid_10cm_2
+    scene.textures.__grid_1m.mapping.type = globalmapping3d
+    scene.textures.__grid_1m.mapping.transformation = 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+    
+    scene.materials.{mat_name}.type = matte
+    scene.materials.{mat_name}.kd = __grid_1m    
     """.format(mat_name=luxcore_name))
     return luxcore_name, props

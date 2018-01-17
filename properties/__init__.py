@@ -1,5 +1,5 @@
 import bpy
-from . import camera, config, display, errorlog, halt, light, material, world
+from . import camera, config, display, errorlog, halt, light, material, particle, world
 from bpy.props import PointerProperty
 
 
@@ -7,6 +7,7 @@ def init():
     camera.init()
     light.init()
     material.init()
+    particle.init()
     world.init()
 
     bpy.types.Scene.luxcore = PointerProperty(type=LuxCoreScene)
