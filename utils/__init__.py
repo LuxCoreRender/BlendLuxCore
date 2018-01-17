@@ -330,3 +330,30 @@ def all_elems_equal(_list):
     # The list must not be empty!
     first = _list[0]
     return all(x == first for x in _list)
+
+
+def use_obj_motion_blur(obj, scene):
+    """ Check if this particular object will be exported with motion blur """
+    cam = scene.camera
+
+    if cam is None:
+        return False
+
+    motion_blur = cam.data.luxcore.motion_blur
+    object_blur = motion_blur.enable and motion_blur.object_blur
+
+    return object_blur and obj.luxcore.enable_motion_blur
+
+
+def use_instancing(obj, scene, context):
+    if context:
+        # Always instance in viewport so we can move the object/light around
+        return True
+
+    if use_obj_motion_blur(obj, scene):
+        # When using object motion blur, we export all objects as instances
+        return True
+
+    # TODO: more checks, e.g. Alt+D copies without modifiers or with equal modifier stacks
+
+    return False

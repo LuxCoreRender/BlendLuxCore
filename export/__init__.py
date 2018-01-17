@@ -55,7 +55,7 @@ class Exporter(object):
         for index, obj in enumerate(objs, start=1):
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
                 engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
-                self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine)
+                self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine=engine)
 
                 # Objects are the most expensive to export, so they dictate the progress
                 engine.update_progress(index / len_objs)
@@ -171,7 +171,7 @@ class Exporter(object):
         return session
 
     def _convert_object(self, props, obj, scene, context, luxcore_scene,
-                        update_mesh=False, dupli_suffix="", matrix=None, engine=None):
+                        update_mesh=False, dupli_suffix="", engine=None):
         key = utils.make_key(obj)
         old_exported_obj = None
 
@@ -185,7 +185,7 @@ class Exporter(object):
 
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
         obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj,
-                                                         update_mesh, dupli_suffix, matrix)
+                                                         update_mesh, dupli_suffix)
 
         # Convert particles and dupliverts/faces
         if obj.is_duplicator:

@@ -26,6 +26,16 @@ def convert(blender_obj, scene, context, luxcore_scene,
             print(blender_obj.name + ": No mesh data")
             return props, None
 
+        transformation = utils.matrix_to_list(blender_obj.matrix_world, scene, apply_worldscale=True)
+
+        # Instancing just means that we transform the object instead of the mesh
+        if utils.use_instancing(blender_obj, scene, context):
+            obj_transform = transformation
+            mesh_transform = None
+        else:
+            obj_transform = None
+            mesh_transform = transformation
+
         if update_mesh:
             print("converting mesh:", blender_obj.data.name)
             modifier_mode = "PREVIEW" if context else "RENDER"
@@ -37,17 +47,12 @@ def convert(blender_obj, scene, context, luxcore_scene,
                 print(blender_obj.name + ": No mesh data after to_mesh()")
                 return props, None
 
-
-            mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, matrix)
+            mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
             bpy.data.meshes.remove(mesh, do_unlink=False)
         else:
             assert exported_object is not None
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
-
-
-        transformation = utils.matrix_to_list(blender_obj.matrix_world, scene, apply_worldscale=True)
-            
 
         for lux_object_name, material_index in mesh_definitions:
             if material_index < len(blender_obj.material_slots):
@@ -67,7 +72,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
                 lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)
-            _define_luxcore_object(props, lux_object_name, lux_mat_name, transformation)
+            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform)
 
         return props, ExportedObject(mesh_definitions)
     except Exception as error:
@@ -78,17 +83,17 @@ def convert(blender_obj, scene, context, luxcore_scene,
         return pyluxcore.Properties(), None
 
 
-def _define_luxcore_object(props, lux_object_name, lux_material_name, transformation=None):
+def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform):
     # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
     luxcore_shape_name = "Mesh-" + lux_object_name
     prefix = "scene.objects." + lux_object_name + "."
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
     props.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
-    if transformation:
-        props.Set(pyluxcore.Property(prefix + "transformation", transformation))
+    if obj_transform:
+        props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 
 
-def _convert_mesh_to_shapes(name, mesh, luxcore_scene, transformation=None):
+def _convert_mesh_to_shapes(name, mesh, luxcore_scene, mesh_transform):
     faces = mesh.tessfaces[0].as_pointer()
     vertices = mesh.vertices[0].as_pointer()
 
@@ -105,8 +110,5 @@ def _convert_mesh_to_shapes(name, mesh, luxcore_scene, transformation=None):
     else:
         vertexColors = 0
 
-    # TODO
-    #transformation = None # if self.use_instancing else self.transformation            
-
     return luxcore_scene.DefineBlenderMesh(name, len(mesh.tessfaces), faces, len(mesh.vertices),
-                                           vertices, texCoords, vertexColors, transformation)
+                                           vertices, texCoords, vertexColors, mesh_transform)

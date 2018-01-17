@@ -1,7 +1,7 @@
 import math
-from mathutils import Matrix
 from ..bin import pyluxcore
 from .. import utils
+from . import light
 
 
 def is_camera_moving(context, scene):
@@ -34,6 +34,7 @@ def convert(context, scene, objects, exported_objects):
 
         if matrices_equal:
             # This object does not need motion blur because it does not move
+            print("deleting", prefix)
             del matrices[prefix]
 
     # Export the properties for moving objects
@@ -65,12 +66,16 @@ def _get_matrices(context, scene, steps, times, objects=None, exported_objects=N
 
     frame_center = scene.frame_current
     subframe_center = scene.frame_subframe
+    print("original:", frame_center, subframe_center)
 
     for step in range(steps):
         offset = times[step]
+        print("offset:", offset)
         time = frame_center + subframe_center + offset
+        print("time:", time)
         frame = math.floor(time)
         subframe = time - frame
+        print("setting:", frame, subframe)
         scene.frame_set(frame, subframe)
 
         if motion_blur.object_blur and objects and exported_objects:
@@ -83,16 +88,13 @@ def _get_matrices(context, scene, steps, times, objects=None, exported_objects=N
             _append_matrix(matrices, prefix, matrix, step)
 
     # Restore original frame
+    print("restoring:", frame_center, subframe_center)
     scene.frame_set(frame_center, subframe_center)
     return matrices
 
 
 def _append_object_matrices(objects, exported_objects, matrices, step):
     for obj in objects:
-        if obj.type == "LAMP" and obj.data.type == "AREA":
-            # TODO: Area lights need special matrix calculation
-            continue
-
         key = utils.make_key(obj)
 
         try:

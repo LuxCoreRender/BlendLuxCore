@@ -5,7 +5,8 @@ from .export.image import ImageExporter
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
-from .ui import camera, config, display, errorlog, halt, light, material, particle, postpro, world
+from .ui import (blender_object, camera, config, display, errorlog,
+                 halt, light, material, particle, postpro, world)
 
 bl_info = {
     "name": "LuxCore",

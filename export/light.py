@@ -273,6 +273,22 @@ def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
         definitions["transformation"] = transformation
 
 
+def calc_area_lamp_transformation(blender_obj):
+    lamp = blender_obj.data
+
+    transform_matrix = blender_obj.matrix_world.copy()
+    scale_x = Matrix.Scale(lamp.size / 2, 4, (1, 0, 0))
+    if lamp.shape == "RECTANGLE":
+        scale_y = Matrix.Scale(lamp.size_y / 2, 4, (0, 1, 0))
+    else:
+        # basically scale_x, but for the y axis (note the last tuple argument)
+        scale_y = Matrix.Scale(lamp.size / 2, 4, (0, 1, 0))
+
+    transform_matrix *= scale_x
+    transform_matrix *= scale_y
+    return transform_matrix
+
+
 def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples, importance):
     """
     An area light is a plane object with emissive material in LuxCore
@@ -306,21 +322,21 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
     # LuxCore object
 
     # Copy transformation of area lamp object
-    transform_matrix = blender_obj.matrix_world.copy()
-    scale_x = Matrix.Scale(lamp.size / 2, 4, (1, 0, 0))
-    if lamp.shape == "RECTANGLE":
-        scale_y = Matrix.Scale(lamp.size_y / 2, 4, (0, 1, 0))
-    else:
-        # basically scale_x, but for the y axis (note the last tuple argument)
-        scale_y = Matrix.Scale(lamp.size / 2, 4, (0, 1, 0))
-
-    transform_matrix *= scale_x
-    transform_matrix *= scale_y
+    transform_matrix = calc_area_lamp_transformation(blender_obj)
 
     transform = utils.matrix_to_list(transform_matrix, scene, apply_worldscale=True)
     # Only bake the transform into the mesh for final renders (disables instancing which
     # is needed for viewport render so we can move the light object)
-    shape_transform = None if context else transform
+
+    # Instancing just means that we transform the object instead of the mesh
+    if utils.use_instancing(blender_obj, scene, context):
+        obj_transform = transform
+        mesh_transform = None
+    else:
+        obj_transform = None
+        mesh_transform = transform
+
+    # shape_transform = None if context else transform
 
     shape_name = "Mesh-" + luxcore_name
     if not luxcore_scene.IsMeshDefined(shape_name):
@@ -334,16 +350,16 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
             (0, 1, 2),
             (2, 3, 0)
         ]
-        luxcore_scene.DefineMesh(shape_name, vertices, faces, None, None, None, None, shape_transform)
+        luxcore_scene.DefineMesh(shape_name, vertices, faces, None, None, None, None, mesh_transform)
 
     obj_prefix = "scene.objects." + luxcore_name + "."
     obj_definitions = {
         "material": mat_name,
         "shape": shape_name,
     }
-    if context:
+    if obj_transform:
         # Use instancing for viewport render so we can interactively move the light
-        obj_definitions["transformation"] = transform
+        obj_definitions["transformation"] = obj_transform
 
     obj_props = utils.create_props(obj_prefix, obj_definitions)
     props.Set(obj_props)
