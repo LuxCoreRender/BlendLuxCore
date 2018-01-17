@@ -1,18 +1,6 @@
 import math
 from ..bin import pyluxcore
 from .. import utils
-from . import light
-
-
-def is_camera_moving(context, scene):
-    motion_blur = scene.camera.data.luxcore.motion_blur
-    steps = motion_blur.steps
-    times = _calc_times(motion_blur.shutter, steps)
-    # Step through time and collect camera matrices
-    matrices = _get_matrices(context, scene, steps, times)
-    cam_matrices = matrices["scene.camera."]
-    # If all matrices are equal, the camera is not moving
-    return not utils.all_elems_equal(cam_matrices)
 
 
 def convert(context, scene, objects, exported_objects):
@@ -23,10 +11,8 @@ def convert(context, scene, objects, exported_objects):
     steps = motion_blur.steps
     assert steps >= 2 and isinstance(steps, int)
 
-    step_interval = motion_blur.shutter / (steps - 1)
-    times = [step_interval * step - motion_blur.shutter * 0.5 for step in range(steps)]
-
-    matrices = _get_matrices(context, scene, steps, times, objects, exported_objects)
+    frame_offsets = _calc_frame_offsets(motion_blur.shutter, steps)
+    matrices = _get_matrices(context, scene, steps, frame_offsets, objects, exported_objects)
 
     # Find and delete entries of non-moving objects (where all matrices are equal)
     for prefix, matrix_steps in list(matrices.items()):
@@ -42,7 +28,7 @@ def convert(context, scene, objects, exported_objects):
 
     for prefix, matrix_steps in matrices.items():
         for step in range(steps):
-            time = times[step]
+            time = frame_offsets[step]
             matrix = matrix_steps[step]
             transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
             definitions = {
@@ -51,16 +37,18 @@ def convert(context, scene, objects, exported_objects):
             }
             props.Set(utils.create_props(prefix, definitions))
 
-    return props
+    # We need this information outside
+    is_camera_moving = "scene.camera." in matrices
+    return props, is_camera_moving
 
 
-def _calc_times(shutter, steps):
+def _calc_frame_offsets(shutter, steps):
+    """ Return a list of offsets (unit: frame) to step through in _get_matrices() """
     step_interval = shutter / (steps - 1)
-    times = [step_interval * step - shutter * 0.5 for step in range(steps)]
-    return times
+    return [step_interval * step - shutter / 2 for step in range(steps)]
 
 
-def _get_matrices(context, scene, steps, times, objects=None, exported_objects=None):
+def _get_matrices(context, scene, steps, frame_offsets, objects=None, exported_objects=None):
     motion_blur = scene.camera.data.luxcore.motion_blur
     matrices = {}  # {prefix: [matrix1, matrix2, ...]}
 
@@ -69,14 +57,14 @@ def _get_matrices(context, scene, steps, times, objects=None, exported_objects=N
     print("original:", frame_center, subframe_center)
 
     for step in range(steps):
-        offset = times[step]
+        offset = frame_offsets[step]
         print("offset:", offset)
-        time = frame_center + subframe_center + offset
-        print("time:", time)
-        frame = math.floor(time)
-        subframe = time - frame
-        print("setting:", frame, subframe)
-        scene.frame_set(frame, subframe)
+        frame = frame_center + subframe_center + offset
+        print("frame:", frame)
+        frame_int = math.floor(frame)
+        subframe = frame - frame_int
+        print("setting:", frame_int, subframe)
+        scene.frame_set(frame_int, subframe)
 
         if motion_blur.object_blur and objects and exported_objects:
             _append_object_matrices(objects, exported_objects, matrices, step)

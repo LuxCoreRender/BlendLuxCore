@@ -2,10 +2,9 @@ import math
 from mathutils import Vector, Matrix
 from ..bin import pyluxcore
 from .. import utils
-from . import motion_blur
 
 
-def convert(scene, context=None):
+def convert(scene, context=None, is_camera_moving=False):
     try:
         prefix = "scene.camera."
         definitions = {}
@@ -28,7 +27,7 @@ def convert(scene, context=None):
 
         _clipping(scene, definitions)
         _clipping_plane(scene, definitions)
-        _motion_blur(scene, definitions, context)
+        _motion_blur(scene, definitions, context, is_camera_moving)
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
@@ -192,7 +191,7 @@ def _clipping_plane(scene, definitions):
         definitions["clippingplane.enable"] = False
 
 
-def _motion_blur(scene, definitions, context):
+def _motion_blur(scene, definitions, context, is_camera_moving):
     if scene.camera is None:
         # Viewport render should work without camera
         return
@@ -201,11 +200,11 @@ def _motion_blur(scene, definitions, context):
     if not moblur_settings.enable:
         return
 
-    definitions["shutteropen"] = -moblur_settings.shutter * 0.5
-    definitions["shutterclose"] = moblur_settings.shutter * 0.5
+    definitions["shutteropen"] = -moblur_settings.shutter / 2
+    definitions["shutterclose"] = moblur_settings.shutter / 2
 
-    # # Don't export camera blur in viewport render
-    if moblur_settings.camera_blur and not context and motion_blur.is_camera_moving(context, scene):
+    # Don't export camera blur in viewport render
+    if moblur_settings.camera_blur and not context and is_camera_moving:
         # Make sure lookup is defined - this function should be the last to modify it
         assert "lookat.orig" in definitions
         assert "lookat.target" in definitions

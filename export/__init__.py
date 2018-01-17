@@ -71,11 +71,15 @@ class Exporter(object):
             enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
 
             if enabled and blur_settings.shutter > 0:
-                motion_blur_props = motion_blur.convert(context, scene, objs, self.exported_objects)
-                if camera_blur:
-                    # We have to set the camera props again because otherwise
-                    # they get deleted because we set the camera motion props
+                motion_blur_props, cam_moving = motion_blur.convert(context, scene, objs, self.exported_objects)
+
+                if cam_moving:
+                    # Re-export the camera with motion blur enabled
+                    # (This is fast and we only have to step through the scene once in total, not twice)
+                    camera_props = camera.convert(scene, context, cam_moving)
+                    self.camera_cache.diff(camera_props)  # Update camera cache
                     motion_blur_props.Set(camera_props)
+
                 scene_props.Set(motion_blur_props)
 
         # World
