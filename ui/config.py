@@ -1,5 +1,6 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
+from .. import utils
 
 
 class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
@@ -20,6 +21,19 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         row.prop(config, "use_filesaver")
         if config.use_filesaver:
             row.prop(config, "filesaver_format")
+
+        # Resume file
+        # TODO: we might want to move this to a more appropriate place later
+        container = layout.box() if config.save_resumefile else layout
+        row = container.row()
+        row.prop(config, "save_resumefile")
+        if config.save_resumefile:
+            row.prop(config, "resumefile_save_interval")
+            time_humanized = utils.humanize_time(config.resumefile_save_interval)
+            container.label(time_humanized, icon="TIME")
+
+        if config.use_filesaver or config.save_resumefile:
+            # Both settings use the same filepath
             layout.prop(context.scene.render, "filepath")
             layout.separator()
 

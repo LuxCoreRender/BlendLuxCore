@@ -149,3 +149,10 @@ class LuxCoreConfig(PropertyGroup):
         ("BIN", "Binary", "Save as .bcf binary file", 1),
     ]
     filesaver_format = EnumProperty(name="", items=filesaver_format_items, default="BIN")
+
+    # TODO put this in a better place
+    save_resumefile = BoolProperty(name="Save Resume File (.rsm)", default=False,
+                                   description="Periodically save the scene and film to a file that "
+                                               "allows to resume the rendering at a later time")
+    resumefile_save_interval = IntProperty(name="Interval (s)", default=600, min=1, soft_min=300,
+                                           description="How often to save the resume file (.rsm), in seconds")

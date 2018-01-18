@@ -1,5 +1,6 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
+from .. import utils
 
 
 class LUXCORE_RENDER_PT_halt_conditions(RenderButtonsPanel, Panel):
@@ -24,9 +25,7 @@ class LUXCORE_RENDER_PT_halt_conditions(RenderButtonsPanel, Panel):
         split.active = halt.use_time
         split.prop(halt, "time")
 
-        m, s = divmod(halt.time, 60)
-        h, m = divmod(m, 60)
-        time_humanized = "%d hours, %d minutes, %d seconds" % (h, m, s)
+        time_humanized = utils.humanize_time(halt.time)
         row = layout.row()
         row.active = halt.use_time
         row.label(time_humanized, icon="TIME")

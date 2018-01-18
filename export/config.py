@@ -81,7 +81,14 @@ def convert(scene, context=None):
             "film.height": height,
             "film.filter.type": "BLACKMANHARRIS" if config.use_filter else "NONE",
             "film.filter.width": config.filter_width,
+
+            "periodicsave.resumerendering.period": 60,
+            "periodicsave.resumerendering.filename": "test.rsm",
         })
+
+        # Resume rendering file (only in final render)
+        if context is None and config.save_resumefile:
+            _convert_resumefile(scene, definitions)
 
         # FILESAVER engine (only in final render)
         use_filesaver = context is None and config.use_filesaver
@@ -125,11 +132,20 @@ def _convert_path(config, definitions):
         definitions["path.clamping.variance.maxvalue"] = path.clamping
 
 
-def _convert_filesaver(scene, definitions, engine):
-    config = scene.luxcore.config
+def _prepare_output_dir(scene):
+    """
+    Makes sure that the user-specified output path exists.
+    This function can be called multiple times.
+
+    Creates a subdirectory structure within, using the following scheme:
+    <.blend file name>_LuxCore/<frame number>/
+    E.g. output_path/Untitled_LuxCore/00001/
+
+    Returns: the output path, a suggested base name for files.
+    If the user-specified output path does not exist, an OSError is raised
+    """
 
     output_path = utils.get_abspath(scene.render.filepath, must_exist=True)
-
     if output_path is None:
         raise OSError('Not a valid output path: "%s"' % scene.render.filepath)
 
@@ -137,16 +153,15 @@ def _convert_filesaver(scene, definitions, engine):
     blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"
     if not blend_name:
         blend_name = "Untitled"
-    dir_name = blend_name + "_LuxCore"
-    frame_name = "%05d" % scene.frame_current
-    if config.filesaver_format == "BIN":
-        # For binary format, the frame number is used as file name instead of directory name
-        frame_name += ".bcf"
-        output_path = os.path.join(output_path, dir_name)
-    else:
-        # For text format, we use the frame number as name for a subfolder
-        output_path = os.path.join(output_path, dir_name, frame_name)
 
+    dir_name = blend_name + "_LuxCore"
+
+    frame_name = "%05d" % scene.frame_current
+
+    # example path: "output_path/Untitled_LuxCore/00001/"
+    output_path = os.path.join(output_path, dir_name, frame_name)
+
+    # Create the output path
     if not os.path.exists(output_path):
         # https://stackoverflow.com/a/273227
         try:
@@ -155,8 +170,19 @@ def _convert_filesaver(scene, definitions, engine):
             if e.errno != errno.EEXIST:
                 raise
 
+    # Basename for all kinds of output files
+    output_file_basename = blend_name + "_" + frame_name
+
+    return output_path, output_file_basename
+
+
+def _convert_filesaver(scene, definitions, engine):
+    config = scene.luxcore.config
+
+    output_path, basename = _prepare_output_dir(scene)
+
     if config.filesaver_format == "BIN":
-        definitions["filesaver.filename"] = os.path.join(output_path, frame_name)
+        definitions["filesaver.filename"] = os.path.join(output_path, basename + ".bcf")
     else:
         # Text format
         definitions["filesaver.directory"] = output_path
@@ -164,3 +190,27 @@ def _convert_filesaver(scene, definitions, engine):
     definitions["filesaver.format"] = config.filesaver_format
     definitions["renderengine.type"] = "FILESAVER"
     definitions["filesaver.renderengine.type"] = engine
+
+
+def _convert_resumefile(scene, definitions):
+    config = scene.luxcore.config
+
+    output_path, basename = _prepare_output_dir(scene)
+    filename = os.path.join(output_path, basename + ".rsm")
+
+    if os.path.isfile(filename):
+        # File exists
+        msg = 'Film resume file already exists: "%s"' % filename
+        scene.luxcore.errorlog.add_warning(msg)
+
+        # Find a new name by appending a number
+        i = 0
+        while True:
+            i += 1
+            new_name = "%s_%02d" % (filename, i)
+            if not os.path.isfile(new_name):
+                filename = new_name
+                break
+
+    definitions["periodicsave.resumerendering.period"] = config.resumefile_save_interval
+    definitions["periodicsave.resumerendering.filename"] = filename

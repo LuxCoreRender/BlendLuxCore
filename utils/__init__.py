@@ -89,12 +89,12 @@ def get_worldscale(scene, as_scalematrix=True):
 
 def get_scaled_to_world(matrix, scene):
     matrix = matrix.copy()
-    sm = get_worldscale(scene)
-    matrix *= sm
-    ws = get_worldscale(scene, as_scalematrix=False)
-    matrix[0][3] *= ws
-    matrix[1][3] *= ws
-    matrix[2][3] *= ws
+    scale_matrix = get_worldscale(scene)
+    matrix *= scale_matrix
+    worldscale = get_worldscale(scene, as_scalematrix=False)
+    matrix[0][3] *= worldscale
+    matrix[1][3] *= worldscale
+    matrix[2][3] *= worldscale
     return matrix
 
 
@@ -357,3 +357,9 @@ def use_instancing(obj, scene, context):
     # TODO: more checks, e.g. Alt+D copies without modifiers or with equal modifier stacks
 
     return False
+
+
+def humanize_time(seconds):
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return "%d hours, %d minutes, %d seconds" % (h, m, s)
