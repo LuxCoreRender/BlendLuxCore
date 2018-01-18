@@ -63,10 +63,25 @@ def main():
     print_divider()
 
     # Clone BlendLuxCore (will later put the binaries in there)
+    repo_path = os.path.join(script_dir, "BlendLuxCore")
+    if os.path.exists(repo_path):
+        # Clone fresh because we delete some stuff after cloning
+        print('Destinaton already exists, deleting it: "%s"' % repo_path)
+        shutil.rmtree(repo_path)
+
     clone_args = ["git", "clone", "https://github.com/LuxCoreRender/BlendLuxCore.git"]
     git_process = subprocess.Popen(clone_args)
     git_process.wait()
-    repo_path = os.path.join(script_dir, "BlendLuxCore")
+
+    # Delete developer stuff that is not needed by users (e.g. tests directory)
+    to_delete = [
+        os.path.join(repo_path, "tests"),
+        os.path.join(repo_path, "doc"),
+        os.path.join(repo_path, ".github"),
+        os.path.join(repo_path, ".git"),
+    ]
+    for path in to_delete:
+        shutil.rmtree(path)
 
     print_divider()
     print("Creating BlendLuxCore release subdirectories")
@@ -82,7 +97,6 @@ def main():
             shutil.rmtree(destination)
 
         shutil.copytree(repo_path, destination)
-
 
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if suffix.startswith("-linux")]
