@@ -22,19 +22,30 @@ sampler_to_str = {
 
 def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
     """ Stats and optional film refresh during final render """
-    engine._session.UpdateStats()
+    error_message = ""
+    try:
+        engine._session.UpdateStats()
+    except RuntimeError as error:
+        print("Error during UpdateStats():", error)
+        error_message = str(error)
+
     stats = engine._session.GetStats()
 
     # Show stats string in UI
     pretty_stats = get_pretty_stats(config, stats, scene)
+
     if draw_film:
         refresh_message = "Refreshing film..."
     else:
         refresh_message = "Film refresh in %ds" % time_until_film_refresh
+
+    if error_message:
+        refresh_message += " | " + error_message
+
     engine.update_stats(pretty_stats, refresh_message)
 
     if draw_film and not engine.test_break():
-        # Show updated film
+        # Show updated film (this operation is expensive)
         engine._framebuffer.draw(engine, engine._session)
 
     # Update progress bar if we have halt conditions
