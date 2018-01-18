@@ -13,7 +13,14 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     bl_label = "Imagemap"
     bl_width_min = 200
 
-    image = PointerProperty(name="Image", type=bpy.types.Image)
+    def update_image(self, context):
+        if self.image:
+            # Seems like we still need this.
+            # User counting does not work reliably with Python PointerProperty.
+            # Sometimes, this node is not counted as user.
+            self.image.use_fake_user = True
+
+    image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
 
     channel_items = [
         ("default", "Default", "Do not convert the image cannels", 0),
