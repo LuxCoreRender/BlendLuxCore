@@ -1,4 +1,5 @@
 import unittest
+import sys
 
 import BlendLuxCore
 from BlendLuxCore.export import light
@@ -39,4 +40,6 @@ class TestPointLight(unittest.TestCase):
 
 # we have to manually invoke the test runner here, as we cannot use the CLI
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPointLight)
-unittest.TextTestRunner().run(suite)
+result = unittest.TextTestRunner().run(suite)
+
+sys.exit(not result.wasSuccessful())

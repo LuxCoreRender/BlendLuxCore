@@ -1,4 +1,5 @@
 import unittest
+import sys
 
 # import the already loaded addon
 import BlendLuxCore
@@ -12,4 +13,6 @@ class TestAddon(unittest.TestCase):
 
 # we have to manually invoke the test runner here, as we cannot use the CLI
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestAddon)
-unittest.TextTestRunner().run(suite)
+result = unittest.TextTestRunner().run(suite)
+
+sys.exit(not result.wasSuccessful())

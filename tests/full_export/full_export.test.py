@@ -1,6 +1,7 @@
 import unittest
 from time import time
 from contextlib import redirect_stdout
+import sys
 
 import BlendLuxCore
 from BlendLuxCore import export
@@ -68,4 +69,6 @@ class TestFullExport(unittest.TestCase):
 
 # we have to manually invoke the test runner here, as we cannot use the CLI
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestFullExport)
-unittest.TextTestRunner().run(suite)
+result = unittest.TextTestRunner().run(suite)
+
+sys.exit(not result.wasSuccessful())
