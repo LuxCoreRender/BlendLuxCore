@@ -32,7 +32,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             assert self._session is None
             self.update_stats("Export", "exporting...")
-            self._session = self._exporter.create_session(self, scene)
+            self._session = self._exporter.create_session(scene, engine=self)
         except Exception as error:
             # Will be reported in self.render() below
             self.error = error
@@ -154,7 +154,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             try:
                 self.update_stats("Creating Render Session...", "")
                 # Note: in viewport render, the user can't cancel the export (Blender limitation)
-                self._session = self._exporter.create_session(self, context.scene, context)
+                self._session = self._exporter.create_session(context.scene, context)
                 self._session.Start()
                 return
             except Exception as error:

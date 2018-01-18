@@ -43,7 +43,7 @@ class TestFullExport(unittest.TestCase):
                 # Test final render export from the engine's point of view
                 _exporter = export.Exporter()
                 engine = RenderEngineMockup()
-                _session = _exporter.create_session(engine, bpy.context.scene)
+                _session = _exporter.create_session(bpy.context.scene, context=None, engine=engine)
 
         print("test_final_export(): Export took %.1fs" % (time() - start))
 
@@ -59,7 +59,7 @@ class TestFullExport(unittest.TestCase):
                 # Test user aborting the export process
                 _exporter = export.Exporter()
                 engine = RenderEngineMockup(abort_immediately=True)
-                _session = _exporter.create_session(engine, bpy.context.scene)
+                _session = _exporter.create_session(bpy.context.scene, context=None, engine=engine)
 
         print("test_user_abort(): Export took %.1fs" % (time() - start))
 

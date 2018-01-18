@@ -35,7 +35,11 @@ class Exporter(object):
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
 
-    def create_session(self, engine, scene, context=None):
+    def create_session(self, scene, context=None, engine=None):
+        # Notes:
+        # In final render, context is None
+        # In viewport render, engine is None (we can't show messages or check test_break() anyway)
+
         print("create_session")
         scene.luxcore.errorlog.clear()
         start = time()
@@ -54,13 +58,15 @@ class Exporter(object):
 
         for index, obj in enumerate(objs, start=1):
             if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
-                engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
+                if engine:
+                    engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
                 self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine=engine)
 
                 # Objects are the most expensive to export, so they dictate the progress
-                engine.update_progress(index / len_objs)
+                if engine:
+                    engine.update_progress(index / len_objs)
             # Regularly check if we should abort the export (important in heavy scenes)
-            if engine.test_break():
+            if engine and engine.test_break():
                 return None
 
         # Motion blur
@@ -84,14 +90,15 @@ class Exporter(object):
 
         # World
         if scene.world and scene.world.luxcore.light != "none":
-            engine.update_stats("Export", "World")
+            if engine:
+                engine.update_stats("Export", "World")
             props = light.convert_world(scene.world, scene)
             scene_props.Set(props)
 
         luxcore_scene.Parse(scene_props)
 
         # Regularly check if we should abort the export (important in heavy scenes)
-        if engine.test_break():
+        if engine and engine.test_break():
             return None
 
         # Convert config at last because all lightgroups and passes have to be already defined
@@ -100,16 +107,18 @@ class Exporter(object):
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
         # Regularly check if we should abort the export (important in heavy scenes)
-        if engine.test_break():
+        if engine and engine.test_break():
             return None
 
         # Session
-        engine.update_stats("Export", "Creating session")
+        if engine:
+            engine.update_stats("Export", "Creating session")
         session = pyluxcore.RenderSession(renderconfig)
 
         elapsed_msg = "Session created in %.1fs" % (time() - start)
         print(elapsed_msg)
-        engine.update_stats("Export", elapsed_msg)
+        if engine:
+            engine.update_stats("Export", elapsed_msg)
 
         return session
 

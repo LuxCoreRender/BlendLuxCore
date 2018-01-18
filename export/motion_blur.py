@@ -20,7 +20,6 @@ def convert(context, scene, objects, exported_objects):
 
         if matrices_equal:
             # This object does not need motion blur because it does not move
-            print("deleting", prefix)
             del matrices[prefix]
 
     # Export the properties for moving objects
