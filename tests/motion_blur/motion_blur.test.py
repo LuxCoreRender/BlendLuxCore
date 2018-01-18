@@ -30,7 +30,7 @@ def assertAlmostEqual(test_case, value1, value2, places=3):
         test_case.assertAlmostEqual(value1, value2, places=places)
 
 
-class TestMaterials(unittest.TestCase):
+class TestMotionBlur(unittest.TestCase):
     def test_only_obj_blur(self):
         # Get the object that moves and should be blurred
         moving_obj = bpy.data.objects["moving_obj"]
@@ -92,7 +92,12 @@ class TestMaterials(unittest.TestCase):
                 transformation_step_1 = scene_props.Get(prefix + "motion.1.transformation").Get()
                 assertListsAlmostEqual(self, transformation_step_1, expected_step_1)
 
+        # Check if camera shutter settings are correct
+        # Total shutter duration is 4.0 frames, so these should be -2.0 and 2.0
+        self.assertAlmostEqual(scene_props.Get("scene.camera.shutteropen").GetFloat(), -2.0)
+        self.assertAlmostEqual(scene_props.Get("scene.camera.shutterclose").GetFloat(), 2.0)
+
 
 # we have to manually invoke the test runner here, as we cannot use the CLI
-suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMaterials)
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMotionBlur)
 unittest.TextTestRunner().run(suite)
