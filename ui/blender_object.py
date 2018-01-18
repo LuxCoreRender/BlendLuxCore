@@ -28,6 +28,7 @@ class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
                 layout.label("Object blur disabled in camera settings", icon="INFO")
         else:
             layout.label("No camera in scene", icon="INFO")
+            object_blur = False
 
         row = layout.row()
         row.active = object_blur
