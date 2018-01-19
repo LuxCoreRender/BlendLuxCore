@@ -110,15 +110,22 @@ class Exporter(object):
         if engine and engine.test_break():
             return None
 
-        # Session
-        if engine:
-            engine.update_stats("Export", "Creating session")
-        session = pyluxcore.RenderSession(renderconfig)
+        export_time = time() - start
+        print("Export took %.1fs" % export_time)
 
+        if engine:
+            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
+                message = "Compiling OpenCL Kernels..."
+            else:
+                message = "Creating RenderSession..."
+
+            engine.update_stats("Export Finished (%.1fs)" % export_time, message)
+
+        # Create session (in case of OpenCL engines, render kernels are compiled here)
+        start = time()
+        session = pyluxcore.RenderSession(renderconfig)
         elapsed_msg = "Session created in %.1fs" % (time() - start)
         print(elapsed_msg)
-        if engine:
-            engine.update_stats("Export", elapsed_msg)
 
         return session
 
