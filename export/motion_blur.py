@@ -53,16 +53,12 @@ def _get_matrices(context, scene, steps, frame_offsets, objects=None, exported_o
 
     frame_center = scene.frame_current
     subframe_center = scene.frame_subframe
-    print("original:", frame_center, subframe_center)
 
     for step in range(steps):
         offset = frame_offsets[step]
-        print("offset:", offset)
         frame = frame_center + subframe_center + offset
-        print("frame:", frame)
         frame_int = math.floor(frame)
         subframe = frame - frame_int
-        print("setting:", frame_int, subframe)
         scene.frame_set(frame_int, subframe)
 
         if motion_blur.object_blur and objects and exported_objects:
@@ -75,7 +71,6 @@ def _get_matrices(context, scene, steps, frame_offsets, objects=None, exported_o
             _append_matrix(matrices, prefix, matrix, step)
 
     # Restore original frame
-    print("restoring:", frame_center, subframe_center)
     scene.frame_set(frame_center, subframe_center)
     return matrices
 

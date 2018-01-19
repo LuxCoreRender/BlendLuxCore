@@ -278,6 +278,7 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         for psys in obj.particle_systems:
             if psys.settings.use_render_emitter:
                 hidden = False
+                break
 
     renderlayer = scene.render.layers.active.layers
     visible = False
