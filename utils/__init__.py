@@ -61,6 +61,11 @@ def get_pretty_name(datablock):
 
 def get_luxcore_name(datablock, is_viewport_render=True):
     """
+    This is the function you should use to get a unique luxcore name
+    for a datablock (object, lamp, material etc.).
+    If is_viewport_render is True, the name is persistent even if
+    the user renames the datablock.
+
     Note that we can't use pretty names in viewport render.
     If we would do that, renaming a datablock during the render
     would change all references to it.

@@ -34,7 +34,7 @@ def export_first_mat(type_str):
     node_tree = mat.luxcore.node_tree
     active_output = get_active_output(node_tree)
 
-    luxcore_name = utils.get_unique_luxcore_name(mat)
+    luxcore_name = utils.get_luxcore_name(mat, is_viewport_render=False)
     props = pyluxcore.Properties()
 
     # Now export the material node tree, starting at the output node
