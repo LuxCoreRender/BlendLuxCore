@@ -53,6 +53,19 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             col.enabled = config.path.use_clamping
             col.prop(config.path, "clamping")
 
+            if config.path.optimal_clamping_value == -1:
+                # Optimal clamp value not yet found, need to start a render first
+                if config.path.use_clamping:
+                    # Can't compute optimal value if clamping is enabled
+                    layout.label("Render without clamping to find optimal clamp value!", icon="ERROR")
+                else:
+                    layout.label("Start a render to find the optimal clamp value", icon="INFO")
+            else:
+                # Show a button that can be used to set the optimal clamp value
+                op_text = "Set Optimal Value: %f" % config.path.optimal_clamping_value
+                op = layout.operator("luxcore.set_optimal_clamping_value", text=op_text)
+                op.value = config.path.optimal_clamping_value
+
             layout.prop(config, "use_tiles")
 
             if config.use_tiles:
@@ -89,6 +102,7 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         split = row.split()
         split.active = config.use_filter
         split.prop(config, "filter_width")
+
 
 class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}

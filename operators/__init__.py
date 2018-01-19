@@ -165,3 +165,19 @@ class LUXCORE_OT_switch_space_data_context(bpy.types.Operator):
         space.context = self.target
 
         return {"FINISHED"}
+
+
+
+class LUXCORE_OT_set_optimal_clamping_value(bpy.types.Operator):
+    bl_idname = "luxcore.set_optimal_clamping_value"
+    bl_label = ""
+    bl_description = "Set the optimal clamping value"
+
+    value = bpy.props.FloatProperty()
+
+    def execute(self, context):
+        config = context.scene.luxcore.config
+        config.path.use_clamping = True
+        config.path.clamping = config.path.optimal_clamping_value
+
+        return {"FINISHED"}
