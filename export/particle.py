@@ -184,7 +184,7 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
         # LuxCore needs tuples, not vectors
         uvs_as_tuples = [tuple(uv) for uv in uv_coords]
 
-    luxcore_shape_name = utils.get_unique_luxcore_name(blender_obj) + "_" + utils.get_unique_luxcore_name(psys)
+    luxcore_shape_name = utils.get_luxcore_name(blender_obj, context) + "_" + utils.get_luxcore_name(psys)
 
     if engine:
         engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
@@ -207,7 +207,7 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
     ## Convert material
     strandsProps = pyluxcore.Properties()
 
-    lux_mat_name, mat_props = material.convert(mat, blender_scene)
+    lux_mat_name, mat_props = material.convert(mat, blender_scene, context)
     strandsProps.Set(mat_props)
 
     # The hair shape is located at world origin and implicitly instanced, so we have to

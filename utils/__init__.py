@@ -22,6 +22,11 @@ class ExportedLight(object):
 
 
 def to_luxcore_name(string):
+    """
+    Do NOT use this function to create a luxcore name for an object/material/etc.!
+    Use the function get_unique_luxcore_name() instead.
+    This is just a regex that removes non-allowed characters.
+    """
     return re.sub("[^_0-9a-zA-Z]+", "__", string)
 
 
@@ -45,8 +50,28 @@ def make_key_from_name(datablock):
     return key
 
 
-def get_unique_luxcore_name(datablock):
-    return to_luxcore_name(make_key(datablock))
+def get_pretty_name(datablock):
+    name = datablock.name
+
+    if hasattr(datablock, "type"):
+        name = datablock.type.title() + "_" + name
+
+    return name
+
+
+def get_luxcore_name(datablock, is_viewport_render=True):
+    """
+    Note that we can't use pretty names in viewport render.
+    If we would do that, renaming a datablock during the render
+    would change all references to it.
+    """
+    key = make_key(datablock)
+
+    if not is_viewport_render:
+        # Final render - we can use pretty names
+        key = to_luxcore_name(get_pretty_name(datablock)) + "_" + key
+
+    return key
 
 
 def obj_from_key(key, objects):

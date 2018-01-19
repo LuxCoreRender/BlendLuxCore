@@ -17,7 +17,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
         assert blender_obj.type == "LAMP"
         print("converting lamp:", blender_obj.name)
 
-        luxcore_name = utils.get_unique_luxcore_name(blender_obj)
+        luxcore_name = utils.get_luxcore_name(blender_obj, context)
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
         exported_light = ExportedLight(luxcore_name)
@@ -295,7 +295,7 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
     # TODO: check if we need to scale gain with area?
     """
     lamp = blender_obj.data
-    luxcore_name = utils.get_unique_luxcore_name(blender_obj)
+    luxcore_name = utils.get_luxcore_name(blender_obj, context)
     props = pyluxcore.Properties()
 
     # Light emitting material

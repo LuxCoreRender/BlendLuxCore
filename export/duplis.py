@@ -25,13 +25,13 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
     mode = 'VIEWPORT' if context else 'RENDER'
     blender_obj.dupli_list_create(scene, settings=mode)
 
-    name_prefix = utils.get_unique_luxcore_name(blender_obj)
+    name_prefix = utils.get_luxcore_name(blender_obj, context)
     exported_duplis = {}
 
     dupli_count = len(blender_obj.dupli_list)
     for i, dupli in enumerate(blender_obj.dupli_list):
         # Use the utils functions to build names so linked objects work (libraries)
-        name = name_prefix + utils.get_unique_luxcore_name(dupli.object)
+        name = name_prefix + utils.get_luxcore_name(dupli.object, context)
         matrix_list = utils.matrix_to_list(dupli.matrix, scene, apply_worldscale=True)
 
         try:
@@ -41,7 +41,7 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
             # Not yet exported
             name_suffix = name_prefix + str(dupli.index)
             if dupli.particle_system:
-                name_suffix += utils.get_unique_luxcore_name(dupli.particle_system)
+                name_suffix += utils.get_luxcore_name(dupli.particle_system, context)
 
             obj_props, exported_obj = blender_object.convert(dupli.object, scene, context, luxcore_scene,
                                                              update_mesh=True, dupli_suffix=name_suffix)
