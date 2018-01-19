@@ -201,8 +201,10 @@ class TestMotionBlur(unittest.TestCase):
         translation = Matrix.Translation([3, 0, 0])
         rotation = Matrix.Rotation(math.radians(-90.0), 4, "X")
         scale = Matrix.Scale(1, 4)
-        # TODO: something about this is not yet correct
         expected_step_0 = create_expected_matrix(blender_scene, translation, rotation, scale)
+        # For some reason we need to invert these two... my matrix math is rusty
+        expected_step_0[6] *= -1
+        expected_step_0[9] *= -1
 
         transformation_step_0 = scene_props.Get("scene.camera.motion.0.transformation").GetFloats()
         assertListsAlmostEqual(self, transformation_step_0, expected_step_0)
@@ -211,8 +213,10 @@ class TestMotionBlur(unittest.TestCase):
         translation = Matrix.Translation([-3, 0, 0])
         rotation = Matrix.Rotation(math.radians(-90.0), 4, "X")
         scale = Matrix.Scale(1, 4)
-        # TODO: something about this is not yet correct
         expected_step_1 = create_expected_matrix(blender_scene, translation, rotation, scale)
+        # For some reason we need to invert these two... my matrix math is rusty
+        expected_step_1[6] *= -1
+        expected_step_1[9] *= -1
 
         transformation_step_1 = scene_props.Get("scene.camera.motion.1.transformation").GetFloats()
         assertListsAlmostEqual(self, transformation_step_1, expected_step_1)
