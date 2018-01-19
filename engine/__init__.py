@@ -56,6 +56,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
             config = self._session.GetRenderConfig()
             done = False
+            start = time()
 
             if scene.luxcore.config.use_filesaver:
                 self._session.Stop()
@@ -77,7 +78,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 FAST_REFRESH_DURATION = 5
                 refresh_interval = utils_render.shortest_display_interval(scene)
                 last_refresh = 0
-                start = time()
 
                 while not done:
                     now = time()
@@ -102,6 +102,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             last_film_refresh = time()
             stat_refresh_interval = 1
             last_stat_refresh = time()
+            computed_optimal_clamp = False
 
             while not self.test_break() and not done:
                 now = time()
@@ -118,6 +119,14 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                     last_stat_refresh = now
                     if draw_film:
                         last_film_refresh = now
+
+                # Compute and print the optimal clamp value. Done only once after a warmup phase.
+                # Only do this if clamping is disabled, otherwise the value is meaningless.
+                path_settings = scene.luxcore.config.path
+                if not computed_optimal_clamp and not path_settings.use_clamping and time() - start > 10:
+                    optimal_clamp = utils_render.find_optimal_clamp_value(self._session, scene)
+                    print("Recommended clamp value:", optimal_clamp)
+                    computed_optimal_clamp = True
 
                 # Don't use up too much CPU time for this refresh loop, but stay responsive
                 sleep(1 / 60)

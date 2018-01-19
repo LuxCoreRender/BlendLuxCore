@@ -18,6 +18,11 @@ FILTER_DESC = (
 )
 FILTER_WIDTH_DESC = "Filter width in pixels; lower values result in a sharper image, higher values smooth out noise"
 
+CLAMPING_DESC = (
+    "Use to reduce fireflies. The optimal clamping value is computed after "
+    "rendering for 10 seconds, but only if clamping is DISABLED"
+)
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -34,11 +39,11 @@ class LuxCoreConfigPath(PropertyGroup):
     # path.pathdepth.specular
     depth_specular = IntProperty(name="Specular", default=6, min=1, soft_max=16)
 
-    # TODO: can we estimate a good clamp value automatically?
-    # TODO: if not, add a warning/info label
-    use_clamping = BoolProperty(name="Clamp Output", default=False)
+    use_clamping = BoolProperty(name="Clamp Output", default=False, description=CLAMPING_DESC)
     # path.clamping.variance.maxvalue
-    clamping = FloatProperty(name="Max Brightness", default=1000, min=0)
+    clamping = FloatProperty(name="Max Brightness", default=1000, min=0, description=CLAMPING_DESC)
+    # This should only be set in the engine code after export. Only show a read-only label to the user.
+    optimal_clamping_value = FloatProperty(name="", default=-1)
 
     # TODO This will be set automatically on export when transparent film is used
     # path.forceblackbackground.enable

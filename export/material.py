@@ -6,14 +6,14 @@ from ..nodes.output import get_active_output
 GLOBAL_FALLBACK_MAT = "__CLAY__"
 
 
-def convert(material, scene):
+def convert(material, scene, context):
     try:
         if material is None:
             return fallback()
 
         # print("converting material:", material.name)
         props = pyluxcore.Properties()
-        luxcore_name = utils.get_unique_luxcore_name(material)
+        luxcore_name = utils.get_luxcore_name(material, context)
 
         node_tree = material.luxcore.node_tree
         if node_tree is None:

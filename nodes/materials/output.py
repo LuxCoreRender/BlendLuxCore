@@ -82,14 +82,14 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
         try:
             active_output = get_active_output(node_tree)
-            luxcore_name = utils.get_unique_luxcore_name(node_tree)
+            luxcore_name = utils.get_luxcore_name(node_tree)
             active_output.export(props, luxcore_name)
 
             props.Set(pyluxcore.Property(property_str, luxcore_name))
         except Exception as error:
-            # TODO: collect exporter errors
-            print("ERROR in volume", node_tree.name)
-            print(error)
+            msg = 'Node Tree "%s": %s' % (node_tree.name, error)
+            bpy.context.luxcore.errorlog.add_warning(msg)
+
     
     def _convert_fallback(self, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."

@@ -58,7 +58,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             split.separator()
 
         if mat:
-            layout.label("LuxCore Material Nodes:")
+            layout.label("LuxCore Material Nodes:", icon="NODETREE")
             layout.template_ID(mat.luxcore, "node_tree", new="luxcore.mat_nodetree_new")
 
             # Warning if not the right node tree type

@@ -153,3 +153,25 @@ def shortest_display_interval(scene):
     # Only used for final renders.
     width, height = calc_filmsize(scene)
     return (width * height) / 852272.0 * 1.1
+
+
+def find_optimal_clamp_value(session, scene=None):
+    """
+    Find optimal clamp value.
+    If a scene is passed, the value is set in the config properties so
+    the user later sees it in the render panel.
+    Only do this if clamping is disabled, otherwise the value is meaningless.
+    """
+    assert not scene.luxcore.config.path.use_clamping
+
+    avg_film_luminance = session.GetFilm().GetFilmY()
+    if avg_film_luminance < 0:
+        optimal_clamping_value = 0
+    else:
+        v = avg_film_luminance * 10
+        optimal_clamping_value = v * v
+
+    if scene:
+        scene.luxcore.config.path.optimal_clamping_value = optimal_clamping_value
+
+    return optimal_clamping_value
