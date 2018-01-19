@@ -63,16 +63,12 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             else:
                 # Show a button that can be used to set the optimal clamp value
                 op_text = "Set Optimal Value: %f" % config.path.optimal_clamping_value
-                op = layout.operator("luxcore.set_optimal_clamping_value", text=op_text)
-                op.value = config.path.optimal_clamping_value
+                layout.operator("luxcore.set_optimal_clamping_value", text=op_text)
 
             layout.prop(config, "use_tiles")
 
             if config.use_tiles:
                 layout.label("Tiled path uses special sampler", icon="INFO")
-                # TODO for some reason luxcore needs much RAM with small tiles
-                # and few RAM with large tiles... maybe a bug? Or am I doing something wrong?
-                # Also the startup time with small tiles is very long
                 layout.prop(config.tile, "size")
                 layout.prop(config.tile, "path_sampling_aa_size")
                 layout.prop(config.tile, "multipass_enable")
