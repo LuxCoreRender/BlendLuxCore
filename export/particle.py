@@ -32,10 +32,12 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
     tip_width = settings.tip_width
     width_offset = settings.width_offset
 
+    steps = 2 ** psys.settings.draw_step        
+
     if not context:
         psys.set_resolution(blender_scene, blender_obj, "RENDER")
-
-    steps = 2 ** psys.settings.render_step
+        steps = 2 ** psys.settings.render_step
+      
     num_parents = len(psys.particles)
     num_children = len(psys.child_particles)
 
@@ -95,7 +97,6 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
     i = 0
 
     for pindex in range(start, dupli_count):
-        point_count = 0
         if num_children == 0:
             i = pindex
 
@@ -112,8 +113,9 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
         uv_co = None
         col = None
         seg_length = 1.0
+        point_count = 0
 
-        for step in range(0, steps):
+        for step in range(0, steps+1):
             co = psys.co_hair(blender_obj, pindex, step)
             if step > 0:
                 seg_length = (co - blender_obj.matrix_world * points[len(points) - 1]).length_squared
@@ -153,11 +155,10 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
                     colors.append(col)
                 elif settings.export_color == "vertex_color" and has_vertex_colors:
                     if not col:
-                        col = psys.mcol_on_emitter(mod, psys.particles[i], pindex, vertex_color.active_index)
-                        print(col)
+                        col = psys.mcol_on_emitter(mod, psys.particles[i], pindex, vertex_color.active_index)                        
 
-                    colors.append(col)
-
+                    colors.append(col)            
+            
         if point_count == 1:
             points.pop()
 
@@ -167,7 +168,7 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
         elif point_count > 1:
             segments.append(point_count - 1)
             total_strand_count += 1
-            total_segments_count = total_segments_count + point_count - 1
+            total_segments_count = total_segments_count + point_count - 1        
 
     # LuxCore needs tuples, not vectors
     points_as_tuples = [tuple(point) for point in points]
