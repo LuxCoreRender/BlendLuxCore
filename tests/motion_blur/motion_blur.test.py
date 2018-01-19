@@ -155,7 +155,7 @@ class TestMotionBlur(unittest.TestCase):
 
         # Get the object that moves and should be blurred
         moving_obj = bpy.data.objects["moving_obj"]
-        moving_obj_name = utils.utils.get_luxcore_name(moving_obj, is_viewport_render=False)
+        moving_obj_name = utils.get_luxcore_name(moving_obj, is_viewport_render=False)
 
         # Make sure the settings are correct
         # (can only change if someone messes with the test scene)
