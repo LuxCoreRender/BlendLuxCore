@@ -109,3 +109,6 @@ class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
         col = split.column(align=True)
         col.prop(motion_blur, "shutter")
         col.prop(motion_blur, "steps")
+
+        if motion_blur.camera_blur:
+            layout.label("Camera blur is only visible in final render", icon="INFO")

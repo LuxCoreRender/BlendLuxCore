@@ -15,7 +15,7 @@ CLIPPING_PLANE_DESC = (
 
 SHUTTER_TIME_DESC = (
     "Amount of frames between shutter open and shutter close, higher values lead to more blur. \n"
-    "A value of 1.0 blurs of the length of 1 frame, a value of 2.0 over 2 frames etc"  # no dot, Blender adds it
+    "A value of 1.0 blurs over the length of 1 frame, a value of 2.0 over 2 frames etc"  # no dot, Blender adds it
 )
 
 
