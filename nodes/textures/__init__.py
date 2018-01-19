@@ -5,6 +5,7 @@ from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_TEXTURE
 
 # Import all texture nodes just so they get registered
+from .band import LuxCoreNodeTexBand
 from .blackbody import LuxCoreNodeTexBlackbody
 from .blenderblend import LuxCoreNodeTexBlenderBlend
 from .blenderclouds import LuxCoreNodeTexBlenderClouds
@@ -88,6 +89,7 @@ luxcore_node_categories_texture = [
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
+        NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),

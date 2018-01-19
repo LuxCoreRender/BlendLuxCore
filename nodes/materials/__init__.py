@@ -111,6 +111,7 @@ luxcore_node_categories_material = [
     ]),
     
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
+        NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
