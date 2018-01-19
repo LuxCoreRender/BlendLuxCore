@@ -70,19 +70,19 @@ def compatible_panels():
         # One panel per texture type
         "TEXTURE_PT_image",
         "TEXTURE_PT_image_mapping",
-        "TEXTURE_PT_blend,"
-        "TEXTURE_PT_clouds,"
+        "TEXTURE_PT_blend",
+        "TEXTURE_PT_clouds",
         "TEXTURE_PT_distortednoise",
-        "TEXTURE_PT_magic,"
-        "TEXTURE_PT_marble,"
+        "TEXTURE_PT_magic",
+        "TEXTURE_PT_marble",
         "TEXTURE_PT_musgrave",
         "TEXTURE_PT_ocean",
         "TEXTURE_PT_pointdensity",
         "TEXTURE_PT_pointdensity_turbulence",
-        "TEXTURE_PT_stucci,"
+        "TEXTURE_PT_stucci",
         "TEXTURE_PT_voronoi",
         "TEXTURE_PT_voxeldata",
-        "TEXTURE_PT_wood,"
+        "TEXTURE_PT_wood",
 
         # Particles
         "PARTICLE_PT_physics",
