@@ -61,7 +61,28 @@ def compatible_panels():
         "SCENE_PT_rigid_body_field_weights",
         "SCENE_PT_custom_props",
 
-        # TODO: texture panels
+        # Texture panels
+        # Used only for particles/brushes
+        "TEXTURE_PT_preview",
+        "TEXTURE_PT_colors",
+        "TEXTURE_PT_influence",
+        "TEXTURE_PT_mapping",
+        # One panel per texture type
+        "TEXTURE_PT_image",
+        "TEXTURE_PT_image_mapping",
+        "TEXTURE_PT_blend,"
+        "TEXTURE_PT_clouds,"
+        "TEXTURE_PT_distortednoise",
+        "TEXTURE_PT_magic,"
+        "TEXTURE_PT_marble,"
+        "TEXTURE_PT_musgrave",
+        "TEXTURE_PT_ocean",
+        "TEXTURE_PT_pointdensity",
+        "TEXTURE_PT_pointdensity_turbulence",
+        "TEXTURE_PT_stucci,"
+        "TEXTURE_PT_voronoi",
+        "TEXTURE_PT_voxeldata",
+        "TEXTURE_PT_wood,"
 
         # Particles
         "PARTICLE_PT_physics",

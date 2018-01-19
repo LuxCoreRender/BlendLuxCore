@@ -6,6 +6,8 @@ from BlendLuxCore.bin import pyluxcore
 from BlendLuxCore.export import Exporter
 from BlendLuxCore import utils
 import bpy
+from mathutils import Matrix, Vector
+import math
 
 TEST_FRAME = 3
 TEST_SUBFRAME = 0.0
@@ -84,6 +86,11 @@ def test_moving_object(test_case, scene_props, prefix):
     ]
     transformation_step_1 = scene_props.Get(prefix + "motion.1.transformation").Get()
     assertListsAlmostEqual(test_case, transformation_step_1, expected_step_1)
+
+
+def create_expected_matrix(scene, translation, rotation, scale):
+    transformation = translation * rotation * scale
+    return utils.matrix_to_list(transformation, scene)
 
 
 class TestMotionBlur(unittest.TestCase):
@@ -189,25 +196,24 @@ class TestMotionBlur(unittest.TestCase):
         self.assertAlmostEqual(scene_props.Get("scene.camera.motion.1.time").GetFloat(), 2.0)
 
         # Test the transformation matrices
+
         # step 0. We are at X = 3m, Y = 0, Z = 0m
-        x, y, z = 3, 0, 0
-        expected_step_0 = [
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            x, y, z, 1,
-        ]
+        translation = Matrix.Translation([3, 0, 0])
+        rotation = Matrix.Rotation(math.radians(-90.0), 4, "X")
+        scale = Matrix.Scale(1, 4)
+        # TODO: something about this is not yet correct
+        expected_step_0 = create_expected_matrix(blender_scene, translation, rotation, scale)
+
         transformation_step_0 = scene_props.Get("scene.camera.motion.0.transformation").GetFloats()
         assertListsAlmostEqual(self, transformation_step_0, expected_step_0)
 
         # step 1. We are at X = -3m, Y = 0, Z = 0m
-        x, y, z = -3, 0, 0
-        expected_step_1 = [
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            x, y, z, 1,
-        ]
+        translation = Matrix.Translation([-3, 0, 0])
+        rotation = Matrix.Rotation(math.radians(-90.0), 4, "X")
+        scale = Matrix.Scale(1, 4)
+        # TODO: something about this is not yet correct
+        expected_step_1 = create_expected_matrix(blender_scene, translation, rotation, scale)
+
         transformation_step_1 = scene_props.Get("scene.camera.motion.1.transformation").GetFloats()
         assertListsAlmostEqual(self, transformation_step_1, expected_step_1)
 

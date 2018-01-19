@@ -130,3 +130,38 @@ class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
     def execute(self, context):
         context.scene.luxcore.errorlog.clear()
         return {"FINISHED"}
+
+
+class LUXCORE_OT_switch_texture_context(bpy.types.Operator):
+    bl_idname = "luxcore.switch_texture_context"
+    bl_label = ""
+    bl_description = "Switch the texture context"
+
+    target = bpy.props.StringProperty()
+
+    def execute(self, context):
+        assert self.target in {"PARTICLES", "OTHER"}
+
+        space = context.space_data
+        space.texture_context = self.target
+
+        return {"FINISHED"}
+
+
+
+class LUXCORE_OT_switch_space_data_context(bpy.types.Operator):
+    bl_idname = "luxcore.switch_space_data_context"
+    bl_label = ""
+    bl_description = "Switch the properties context (Render, Scene, Material, Texture, ...)"
+
+    target = bpy.props.StringProperty()
+
+    def execute(self, context):
+        assert self.target in {"SCENE", "RENDER", "RENDER_LAYER", "WORLD", "OBJECT", "CONSTRAINT",
+                               "MODIFIER", "DATA", "BONE", "BONE_CONSTRAINT", "MATERIAL", "TEXTURE",
+                               "PARTICLES", "PHYSICS"}
+
+        space = context.space_data
+        space.context = self.target
+
+        return {"FINISHED"}
