@@ -1,4 +1,3 @@
-import bpy
 from ..bin import pyluxcore
 from .. import utils
 
@@ -17,7 +16,15 @@ def convert(scene, context=None):
         # Plugin index counter
         index = 0
 
-        index = _tonemapper(definitions, index, pipeline)
+        # Make sure the imagepipeline does nothing when no plugins are enabled
+        definitions[str(index) + ".type"] = "NOP"
+        index += 1
+
+        if pipeline.tonemapper.enabled:
+            index = _tonemapper(definitions, index, pipeline.tonemapper)
+
+        if pipeline.bloom.enabled:
+            index = _bloom(definitions, index, pipeline.bloom)
 
         if use_filesaver:
             # Needs gamma correction (Blender applies it for us,
@@ -31,29 +38,34 @@ def convert(scene, context=None):
         return pyluxcore.Properties()
 
 
-def _tonemapper(definitions, index, pipeline):
+def _tonemapper(definitions, index, tonemapper):
     # If "Auto Brightness" is enabled, put an autolinear tonemapper
     # in front of the linear tonemapper
-    if pipeline.tonemapper == "TONEMAP_LINEAR" and pipeline.use_autolinear:
+    if tonemapper.type == "TONEMAP_LINEAR" and tonemapper.use_autolinear:
         definitions[str(index) + ".type"] = "TONEMAP_AUTOLINEAR"
         index += 1
 
-    # Tonemapper
-    definitions[str(index) + ".type"] = pipeline.tonemapper
+    # Main tonemapper
+    definitions[str(index) + ".type"] = tonemapper.type
 
-    if pipeline.tonemapper == 'TONEMAP_LINEAR':
-        definitions[str(index) + ".scale"] = pipeline.linear_scale
+    if tonemapper.type == 'TONEMAP_LINEAR':
+        definitions[str(index) + ".scale"] = tonemapper.linear_scale
+    elif tonemapper.type == 'TONEMAP_REINHARD02':
+        definitions[str(index) + ".prescale"] = tonemapper.reinhard_prescale
+        definitions[str(index) + ".postscale"] = tonemapper.reinhard_postscale
+        definitions[str(index) + ".burn"] = tonemapper.reinhard_burn
+    elif tonemapper.type == 'TONEMAP_LUXLINEAR':
+        definitions[str(index) + ".fstop"] = tonemapper.fstop
+        definitions[str(index) + ".exposure"] = tonemapper.exposure
+        definitions[str(index) + ".sensitivity"] = tonemapper.sensitivity
 
-    elif pipeline.tonemapper == 'TONEMAP_REINHARD02':
-        definitions[str(index) + ".prescale"] = pipeline.reinhard_prescale
-        definitions[str(index) + ".postscale"] = pipeline.reinhard_postscale
-        definitions[str(index) + ".burn"] = pipeline.reinhard_burn
+    return index + 1
 
-    elif pipeline.tonemapper == 'TONEMAP_LUXLINEAR':
-        definitions[str(index) + ".fstop"] = pipeline.fstop
-        definitions[str(index) + ".exposure"] = pipeline.exposure
-        definitions[str(index) + ".sensitivity"] = pipeline.sensitivity
 
+def _bloom(definitions, index, bloom):
+    definitions[str(index) + ".type"] = "BLOOM"
+    definitions[str(index) + ".radius"] = bloom.radius / 100
+    definitions[str(index) + ".weight"] = bloom.weight / 100
     return index + 1
 
 

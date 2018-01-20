@@ -54,30 +54,51 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
     bl_label = "LuxCore Imagepipeline"
     COMPAT_ENGINES = {"LUXCORE"}
 
+    def draw_plugin_box(self, settings):
+        col = self.layout.column(align=True)
+        # Header
+        icon = "RESTRICT_RENDER_OFF" if settings.enabled else "RESTRICT_RENDER_ON"
+        col.prop(settings, "enabled", icon=icon, emboss=True)
+        # Body
+        if settings.enabled:
+            return col.box()
+        else:
+            return None
+
     def draw(self, context):
         layout = self.layout
         cam = context.camera
         pipeline = cam.luxcore.imagepipeline
 
-        box = layout.box()
-        box.label("Tonemapper:")
-        row = box.row()
-        row.prop(pipeline, "tonemapper", expand=True)
-
-        if pipeline.tonemapper == "TONEMAP_LINEAR":
+        # Tonemapper settings
+        tonemapper = pipeline.tonemapper
+        box = self.draw_plugin_box(tonemapper)
+        if box:
             row = box.row()
-            row.prop(pipeline, "linear_scale")
-            row.prop(pipeline, "use_autolinear")
-        elif pipeline.tonemapper == "TONEMAP_LUXLINEAR":
-            row = box.row(align=True)
-            row.prop(pipeline, "fstop")
-            row.prop(pipeline, "shutter")
-            row.prop(pipeline, "iso")
-        elif pipeline.tonemapper == "TONEMAP_REINHARD02":
-            row = box.row(align=True)
-            row.prop(pipeline, "reinhard_prescale")
-            row.prop(pipeline, "reinhard_postscale")
-            row.prop(pipeline, "reinhard_burn")
+            row.prop(tonemapper, "type", expand=True)
+
+            if tonemapper.type == "TONEMAP_LINEAR":
+                row = box.row()
+                row.prop(tonemapper, "linear_scale")
+                row.prop(tonemapper, "use_autolinear")
+            elif tonemapper.type == "TONEMAP_LUXLINEAR":
+                row = box.row(align=True)
+                row.prop(tonemapper, "fstop")
+                row.prop(tonemapper, "exposure")
+                row.prop(tonemapper, "sensitivity")
+            elif tonemapper.type == "TONEMAP_REINHARD02":
+                row = box.row(align=True)
+                row.prop(tonemapper, "reinhard_prescale")
+                row.prop(tonemapper, "reinhard_postscale")
+                row.prop(tonemapper, "reinhard_burn")
+
+        # Bloom settings
+        bloom = pipeline.bloom
+        box = self.draw_plugin_box(bloom)
+        if box:
+            row = box.row()
+            row.prop(bloom, "radius")
+            row.prop(bloom, "weight")
 
 
 class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
