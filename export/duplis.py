@@ -75,4 +75,7 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
             # times = array("f", [])
             # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
 
+            # Delete the object we used for duplication, we don't want it to show up in the scene
+            luxcore_scene.DeleteObject(src_name)
+
     print("Dupli export took %.3fs" % (time() - start))
