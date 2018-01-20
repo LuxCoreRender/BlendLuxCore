@@ -7,16 +7,19 @@ from . import material
 from .light import convert_lamp
 
 def convert(blender_obj, scene, context, luxcore_scene,
-            exported_object=None, update_mesh=False, dupli_suffix="", matrix=None):
+            exported_object=None, update_mesh=False, dupli_suffix=""):
 
     if not utils.is_obj_visible(blender_obj, scene, context, is_dupli=dupli_suffix):
+        return pyluxcore.Properties(), None
+
+    if blender_obj.is_duplicator and not utils.is_duplicator_visible(blender_obj):
         return pyluxcore.Properties(), None
 
     if blender_obj.type == "LAMP":
         return convert_lamp(blender_obj, scene, context, luxcore_scene)
 
     try:
-        print("converting object:", blender_obj.name)
+        # print("converting object:", blender_obj.name)
         # Note that his is not the final luxcore_name, as the object may be split by DefineBlenderMesh()
         luxcore_name = utils.get_luxcore_name(blender_obj, context) + dupli_suffix
         props = pyluxcore.Properties()
@@ -37,7 +40,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
             mesh_transform = transformation
 
         if update_mesh:
-            print("converting mesh:", blender_obj.data.name)
+            # print("converting mesh:", blender_obj.data.name)
             modifier_mode = "PREVIEW" if context else "RENDER"
             apply_modifiers = True
             mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)

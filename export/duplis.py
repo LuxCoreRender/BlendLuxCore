@@ -20,6 +20,11 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
     assert blender_obj.is_duplicator
 
     dupli_props = pyluxcore.Properties()
+
+    if not utils.is_obj_visible(blender_obj, scene, context):
+        # Emitter is not on a visible layer
+        return
+
     start = time()
 
     mode = 'VIEWPORT' if context else 'RENDER'

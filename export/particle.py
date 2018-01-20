@@ -18,6 +18,10 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
     elif not mod.particle_system.name == psys.name:
         return
 
+    if not utils.is_obj_visible(blender_obj, blender_scene, context):
+        # Emitter is not on a visible layer
+        return
+
     visible = (context and mod.show_viewport) or (not context and mod.show_render)
     if not visible:
         return

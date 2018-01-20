@@ -298,30 +298,38 @@ def find_active_uv(uv_textures):
 
 
 def is_obj_visible(obj, scene, context=None, is_dupli=False):
-    hidden = obj.hide if context else obj.hide_render
+    """
+    Find out if an object is visible.
+    Note: if the object is an emitter, check emitter visibility with is_duplicator_visible() below.
+    """
+    if is_dupli:
+        return True
 
-    if obj.is_duplicator:
-        # Duplicators (Dupliverts/faces/frames) are always hidden
-        hidden = True
-
-        # obj.is_duplicator is also true if it has particle systems - they allow to show the duplicator
-        for psys in obj.particle_systems:
-            if psys.settings.use_render_emitter:
-                hidden = False
-                break
-
-    renderlayer = scene.render.layers.active.layers
-    visible = False
-    for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, renderlayer)]:
-        visible |= lv
+    hidden_in_outliner = obj.hide if context else obj.hide_render
 
     # Check if object is used as camera clipping plane
-    # (don't do this for duplis because they can never
-    # be selected as clipping plane)
-    if not is_dupli and scene.camera and obj == scene.camera.data.luxcore.clipping_plane:
+    if scene.camera and obj == scene.camera.data.luxcore.clipping_plane:
         return False
 
-    return (visible or is_dupli) and not hidden
+    renderlayer = scene.render.layers.active.layers
+    on_visible_layer = False
+    for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, renderlayer)]:
+        on_visible_layer |= lv
+
+    return on_visible_layer and not hidden_in_outliner
+
+
+def is_duplicator_visible(obj):
+    """ Find out if a particle/hair emitter or duplicator is visible """
+    assert obj.is_duplicator
+
+    # obj.is_duplicator is also true if it has particle/hair systems - they allow to show the duplicator
+    for psys in obj.particle_systems:
+        if psys.settings.use_render_emitter:
+            return True
+
+    # Duplicators (Dupliverts/faces/frames) are always hidden
+    return False
 
 
 def get_theme(context):
