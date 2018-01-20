@@ -41,7 +41,7 @@ def main():
         "-win64-opencl.zip",
     ]
 
-    # Download LuxCore binaries for all platformsprint()
+    # Download LuxCore binaries for all platforms
     print_divider()
     print("Downloading LuxCore releases")
     print_divider()
@@ -58,6 +58,7 @@ def main():
         else:
             print('File already downloaded: "%s"' % name)
 
+    print()
     print_divider()
     print("Cloning BlendLuxCore")
     print_divider()
@@ -83,6 +84,7 @@ def main():
     for path in to_delete:
         shutil.rmtree(path)
 
+    print()
     print_divider()
     print("Creating BlendLuxCore release subdirectories")
     print_divider()
