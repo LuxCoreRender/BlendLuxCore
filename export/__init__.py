@@ -1,11 +1,11 @@
 from time import time
-import bpy
 from ..bin import pyluxcore
 from .. import utils
-from ..utils import node as utils_node
-from . import blender_object, caches, camera, config, duplis, light, material, motion_blur, particle
+from . import (
+    blender_object, caches, camera, config, duplis,
+    imagepipeline, light, material, motion_blur, particle
+)
 from .light import WORLD_BACKGROUND_LIGHT_NAME
-from ..nodes.output import get_active_output
 
 
 class Change:
@@ -17,10 +17,11 @@ class Change:
     MATERIAL = 1 << 3
     VISIBILITY = 1 << 4
     WORLD = 1 << 5
+    IMAGEPIPELINE = 1 << 6
 
     REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | VISIBILITY | WORLD
     REQUIRES_VIEW_UPDATE = CONFIG
-
+    REQUIRES_SESSION_PARSE = IMAGEPIPELINE
 
 
 class Exporter(object):
@@ -32,6 +33,7 @@ class Exporter(object):
         self.material_cache = caches.MaterialCache()
         self.visibility_cache = caches.VisibilityCache()
         self.world_cache = caches.WorldCache()
+        self.imagepipeline_cache = caches.StringCache()
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
 
@@ -127,6 +129,10 @@ class Exporter(object):
         elapsed_msg = "Session created in %.1fs" % (time() - start)
         print(elapsed_msg)
 
+        imagepipeline_props = imagepipeline.convert(scene, context)
+        self.imagepipeline_cache.diff(imagepipeline_props)  # Init imagepipeline cache
+        session.Parse(imagepipeline_props)
+
         return session
 
     def get_changes(self, context):
@@ -151,6 +157,10 @@ class Exporter(object):
 
         if self.world_cache.diff(context):
             changes |= Change.WORLD
+
+        imagepipeline_props = imagepipeline.convert(context.scene, context)
+        if self.imagepipeline_cache.diff(imagepipeline_props):
+            changes |= Change.IMAGEPIPELINE
 
         return changes
 
@@ -185,6 +195,11 @@ class Exporter(object):
 
             if session.IsInPause():
                 session.Resume()
+
+        if changes & Change.REQUIRES_SESSION_PARSE:
+            if changes & Change.IMAGEPIPELINE:
+                session.Parse(self.imagepipeline_cache.props)
+            # TODO: lightgroups will also be put here
 
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()

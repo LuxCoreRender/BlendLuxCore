@@ -50,6 +50,36 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
         sub.prop(cam.luxcore, "clipping_plane", text="")
 
 
+class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
+    bl_label = "LuxCore Imagepipeline"
+    COMPAT_ENGINES = {"LUXCORE"}
+
+    def draw(self, context):
+        layout = self.layout
+        cam = context.camera
+        pipeline = cam.luxcore.imagepipeline
+
+        box = layout.box()
+        box.label("Tonemapper:")
+        row = box.row()
+        row.prop(pipeline, "tonemapper", expand=True)
+
+        if pipeline.tonemapper == "TONEMAP_LINEAR":
+            row = box.row()
+            row.prop(pipeline, "linear_scale")
+            row.prop(pipeline, "use_autolinear")
+        elif pipeline.tonemapper == "TONEMAP_LUXLINEAR":
+            row = box.row(align=True)
+            row.prop(pipeline, "fstop")
+            row.prop(pipeline, "shutter")
+            row.prop(pipeline, "iso")
+        elif pipeline.tonemapper == "TONEMAP_REINHARD02":
+            row = box.row(align=True)
+            row.prop(pipeline, "reinhard_prescale")
+            row.prop(pipeline, "reinhard_postscale")
+            row.prop(pipeline, "reinhard_burn")
+
+
 class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     bl_label = "Depth of Field"
     COMPAT_ENGINES = {"LUXCORE"}

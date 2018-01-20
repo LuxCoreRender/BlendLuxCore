@@ -92,18 +92,6 @@ def convert(scene, context=None):
         if scene.render.threads_mode == "FIXED":
             definitions["native.threads.count"] = scene.render.threads
 
-        # TODO: remove this once we properly implement the imagepipeline
-        # very crude imagepipeline, just for now so final matches viewport
-        definitions["film.outputs.1.type"] = "RGB_IMAGEPIPELINE"
-        definitions["film.outputs.1.filename"] = "RGB_IMAGEPIPELINE.png"
-        definitions["film.imagepipeline.0.type"] = "TONEMAP_AUTOLINEAR"
-        definitions["film.imagepipeline.1.type"] = "TONEMAP_LINEAR"
-        definitions["film.imagepipeline.1.scale"] = 1 / 2.25
-        if use_filesaver:
-            # Needs gamma correction
-            definitions["film.imagepipeline.2.type"] = "GAMMA_CORRECTION"
-            definitions["film.imagepipeline.2.value"] = 2.2
-
         return utils.create_props(prefix, definitions)
     except Exception as error:
         msg = 'Config: %s' % error

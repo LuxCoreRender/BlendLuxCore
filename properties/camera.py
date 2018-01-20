@@ -1,11 +1,9 @@
 import bpy
 from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
 from bpy.types import PropertyGroup
+from .imagepipeline import LuxCoreImagepipeline
 
-FSTOP_DESC = (
-    "Aperture, lower values result in stronger depth of field effect and "
-    "brighten the image (if the camera settings tonemapper is selected)"
-)
+FSTOP_DESC = "Aperture, lower values result in stronger depth of field effect"
 
 CLIPPING_PLANE_DESC = (
     "The arbitrary clipping plane is used to clip the scene at any position and angle. "
@@ -46,3 +44,4 @@ class LuxCoreCameraProps(PropertyGroup):
     clipping_plane = PointerProperty(name="Clipping Plane", type=bpy.types.Object, description=CLIPPING_PLANE_DESC)
 
     motion_blur = PointerProperty(type=LuxCoreMotionBlur)
+    imagepipeline = PointerProperty(type=LuxCoreImagepipeline)
