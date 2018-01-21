@@ -10,26 +10,15 @@ def convert(smoke_obj, channel):
     print("[%s] Beginning smoke export (channel: %s)" % (smoke_obj.name, channel))
     start_time = time()
 
-    flowtype = -1    
     domain = None
 
     # Search smoke domain target for smoke modifiers
     for mod in smoke_obj.modifiers:
         if mod.name == "Smoke":
-            if mod.smoke_type == "FLOW":
-                if mod.flow_settings.smoke_flow_type == "BOTH":
-                    flowtype = 2
-                else:
-                    if mod.flow_settings.smoke_flow_type == 'SMOKE':
-                        flowtype = 0
-                    else:
-                        if mod.flow_settings.smoke_flow_type == "FIRE":
-                            flowtype = 1
-
             if mod.smoke_type == "DOMAIN":
                 domain = smoke_obj
-
-    eps = 0.000001
+                break
+    
     if domain is not None:
         settings = mod.domain_settings
 
