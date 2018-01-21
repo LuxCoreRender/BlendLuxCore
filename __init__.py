@@ -6,7 +6,7 @@ from .export.image import ImageExporter
 from . import engine, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
 from .ui import (blender_object, camera, config, display, errorlog,
-                 halt, light, material, particle, postpro, texture, world)
+                 halt, light, material, mesh, particle, postpro, texture, world)
 
 bl_info = {
     "name": "LuxCore",
