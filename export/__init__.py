@@ -232,7 +232,9 @@ class Exporter(object):
 
         # Convert hair
         for psys in obj.particle_systems:
-            if psys.settings.type == "HAIR":
+            settings = psys.settings
+            # render_type OBJECT and GROUP are handled by duplis.convert() above
+            if settings.type == "HAIR" and settings.render_type == "PATH":
                 particle.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
                 
         if exported_obj is None:

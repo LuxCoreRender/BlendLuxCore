@@ -5,6 +5,8 @@ from time import time
 import math
 
 def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, engine=None):
+    assert psys.settings.render_type == "PATH"
+
     if not blender_obj.modifiers:
         return
 
@@ -122,7 +124,7 @@ def convert_hair(blender_obj, psys, luxcore_scene, blender_scene, context=None, 
         for step in range(0, steps+1):
             co = psys.co_hair(blender_obj, pindex, step)
             if step > 0:
-                seg_length = (co - blender_obj.matrix_world * points[len(points) - 1]).length_squared
+                seg_length = (co - blender_obj.matrix_world * points[-1]).length_squared
 
             if not (co.length_squared == 0 or seg_length == 0):
                 points.append(transform * co)
