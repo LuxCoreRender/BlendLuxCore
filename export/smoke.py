@@ -6,12 +6,11 @@ from time import time
 from array import array
 from . import caches
 
-def convert(smoke_obj_name, channel):
-    print("[%s] Beginning smoke export (channel: %s)" % (smoke_obj_name, channel))
+def convert(smoke_obj, channel):
+    print("[%s] Beginning smoke export (channel: %s)" % (smoke_obj.name, channel))
     start_time = time()
 
-    flowtype = -1
-    smoke_obj = bpy.data.objects[smoke_obj_name]
+    flowtype = -1    
     domain = None
 
     # Search smoke domain target for smoke modifiers
@@ -52,6 +51,6 @@ def convert(smoke_obj_name, channel):
                 big_res[i] *= settings.amplify + 1                    
 
     elapsed_time = time() - start_time
-    print("[%s] Smoke export of channel %s took %.3fs" % (smoke_obj_name, channel, elapsed_time))
+    print("[%s] Smoke export of channel %s took %.3fs" % (smoke_obj.name, channel, elapsed_time))
 
     return big_res[0], big_res[1], big_res[2], channeldata

@@ -1,9 +1,10 @@
 import bpy
 import mathutils
 import math
-from bpy.props import EnumProperty, StringProperty
+from bpy.props import EnumProperty, PointerProperty, StringProperty
 from .. import LuxCoreNodeTexture
 from ...export import smoke 
+from ...export import caches 
 from ... import utils
 from .. import LuxCoreNodeTexture
 
@@ -11,8 +12,8 @@ from .. import LuxCoreNodeTexture
 class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
     bl_label = "Smoke"
     bl_width_min = 200
-
-    domain = StringProperty(name='Domain')
+    
+    domain = PointerProperty(name="Domain", type=bpy.types.Object)
 
     source_items = [
         ("density", "Density", "Smoke density grid"),
@@ -34,8 +35,6 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
 
 
     def init(self, context):
-        #Neo: Is this needed?
-        #self.add_input("LuxCoreSocketMapping3D", "3D Mapping")
         self.outputs.new("LuxCoreSocketFloatPositive", "Float")
 
     def draw_buttons(self, context, layout):
@@ -44,24 +43,18 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         col.prop(self, "source")
         col.prop(self, "wrap")
 
-    def export(self, props, luxcore_name=None):
-        #Neo: Is this needed?
-        #mapping_type, transformation = self.inputs["3D Mapping"].export(props)
-        #matrix_transformation = utils.matrix_to_list(transformation)
-        
+    def export(self, props, luxcore_name=None):       
         nx = 1
         ny = 1
         nz = 1
         grid = [1.0]
        
-        if self.domain in bpy.data.objects:                    
+        if self.domain:            
             nx, ny, nz, grid = smoke.convert(self.domain, self.source)
-
-            obj = bpy.data.objects[self.domain]
-        
-            scale = obj.dimensions
-            translate = obj.matrix_world * mathutils.Vector([v for v in obj.bound_box[0]])
-            rotate = obj.rotation_euler
+            
+            scale = self.domain.dimensions
+            translate = self.domain.matrix_world * mathutils.Vector([v for v in self.domain.bound_box[0]])
+            rotate = self.domain.rotation_euler
         
             # create a location matrix
             tex_loc = mathutils.Matrix.Translation((translate))
@@ -80,7 +73,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         
             # combine transformations
             mapping_type = 'globalmapping3d'
-            matrix_transformation = utils.matrix_to_list(tex_loc * tex_rot * tex_sca, None, False, invert=True)
+            matrix_transformation = utils.matrix_to_list(tex_loc * tex_rot * tex_sca, invert=True)
             
         else:
             error = "No Domain object selected."
