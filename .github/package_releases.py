@@ -2,7 +2,8 @@
 
 import argparse
 import os
-from urllib import request
+import urllib.request
+import urllib.error
 import subprocess
 import shutil
 import tarfile
@@ -30,13 +31,11 @@ def main():
     args = parser.parse_args()
 
     # Archives we need.
-    # Note: for linux versions, we need the SDK version
-    # because pyluxcore.so is missing from the normal version
     url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/luxcorerender_"
     prefix = "luxcorerender-"
     suffixes = [
-        "-linux64-sdk.tar.bz2",
-        "-linux64-opencl-sdk.tar.bz2",
+        "-linux64.tar.bz2",
+        "-linux64-opencl.tar.bz2",
         "-win64.zip",
         "-win64-opencl.zip",
     ]
@@ -46,17 +45,28 @@ def main():
     print("Downloading LuxCore releases")
     print_divider()
 
+    to_remove = []
     for suffix in suffixes:
         name = build_name(prefix, args.version_string, suffix)
 
         # Check if file already downloaded
-        if name not in os.listdir(script_dir):
+        if name in os.listdir(script_dir):
+            print('File already downloaded: "%s"' % name)
+        else:
             destination = os.path.join(script_dir, name)
             url = url_prefix + args.version_string + "/" + name
             print('Downloading: "%s"' % url)
-            request.urlretrieve(url, destination)
-        else:
-            print('File already downloaded: "%s"' % name)
+
+            try:
+                urllib.request.urlretrieve(url, destination)
+            except urllib.error.HTTPError as error:
+                print(error)
+                print("Archive", name, "not available, skipping it.")
+                to_remove.append(suffix)
+
+    # Remove suffixes that were not available for download
+    for suffix in to_remove:
+        suffixes.remove(suffix)
 
     print()
     print_divider()
