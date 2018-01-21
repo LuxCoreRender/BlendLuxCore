@@ -16,6 +16,7 @@ from .blendermusgrave import LuxCoreNodeTexBlenderMusgrave
 from .blenderstucci import LuxCoreNodeTexBlenderStucci
 from .blendervoronoi import LuxCoreNodeTexBlenderVoronoi
 from .blenderwood import LuxCoreNodeTexBlenderWood
+from .bump import LuxCoreNodeTexBump
 from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .coloratdepth import LuxCoreNodeTexColorAtDepth
 from .colormix import LuxCoreNodeTexColorMix
@@ -91,6 +92,7 @@ luxcore_node_categories_texture = [
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
+        NodeItem("LuxCoreNodeTexBump", label="Bump"),
         NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
