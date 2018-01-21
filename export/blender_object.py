@@ -32,7 +32,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
         transformation = utils.matrix_to_list(blender_obj.matrix_world, scene, apply_worldscale=True)
 
         # Instancing just means that we transform the object instead of the mesh
-        if utils.use_instancing(blender_obj, scene, context):
+        if utils.use_instancing(blender_obj, scene, context) or dupli_suffix:
             obj_transform = transformation
             mesh_transform = None
         else:

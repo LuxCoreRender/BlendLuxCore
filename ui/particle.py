@@ -9,12 +9,14 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):        
         psys = context.particle_system
-        engine = context.scene.render.engine
         if psys is None:
             return False
         if psys.settings is None:
             return False
-        return psys.settings.type == "HAIR" and (engine == "LUXCORE")
+        is_hair = psys.settings.type == "HAIR"
+        is_path = psys.settings.render_type == "PATH"
+        engine = context.scene.render.engine
+        return is_hair and is_path and engine == "LUXCORE"
         
     def draw(self, context):
         layout = self.layout
