@@ -28,6 +28,7 @@ from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
 from .math import LuxCoreNodeTexMath
 from .output import LuxCoreNodeTexOutput
+from .smoke import LuxCoreNodeTexSmoke
 from .wrinkled import LuxCoreNodeTexWrinkled
 
 # TODO: how to warn if some texture nodes are incompatible with materials/volumes
@@ -86,6 +87,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
         NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
+        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[

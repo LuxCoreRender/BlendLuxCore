@@ -89,6 +89,7 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
+        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_UTILS", "Utils", items=[

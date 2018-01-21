@@ -234,7 +234,7 @@ class Exporter(object):
         for psys in obj.particle_systems:
             if psys.settings.type == "HAIR":
                 particle.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
-
+                
         if exported_obj is None:
             # Object is not visible or an error happened.
             # In case of an error, it was already reported by blender_object.convert()
