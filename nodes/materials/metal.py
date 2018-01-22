@@ -7,9 +7,24 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
     bl_label = "Metal Material"
     bl_width_min = 200
 
+    # For internal use, do not show in UI
+    is_first_input_change = BoolProperty(default=True)
+
     def change_input_type(self, context):
-        self.inputs["Fresnel"].enabled = self.input_type == "fresnel"
-        self.inputs["Color"].enabled = self.input_type == "color"
+        is_fresnel = self.input_type == "fresnel"
+        is_color = self.input_type == "color"
+
+        self.inputs["Fresnel"].enabled = is_fresnel
+        self.inputs["Color"].enabled = is_color
+
+        # The first time the user switches to "fresnel" mode,
+        # add a fresnel texture automatically
+        if is_fresnel and self.is_first_input_change:
+            self.is_first_input_change = False
+            node_tree = self.id_data
+            fresnel_tex = node_tree.nodes.new("LuxCoreNodeTexFresnel")
+            fresnel_tex.location = (self.location.x - 300, self.location.y)
+            node_tree.links.new(fresnel_tex.outputs[0], self.inputs["Fresnel"])
 
     input_type_items = [
         ("color", "Color", "Use custom color as input", 0),

@@ -12,31 +12,28 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
         self.inputs["Reflection Color"].enabled = self.input_type == "color"
 
     input_type_items = [
-        ("color", "Color", "Use custom color as input"),
-        ("preset", "Preset", "Use a Preset fresnel texture as input"),
-        ("nk", "File", "Use a fresnel texture file (.nk) as input")
+        ("color", "Color", "Use custom color as input", 0),
+        ("preset", "Preset", "Use a Preset fresnel texture as input", 1),
+        ("nk", "File", "Use a fresnel texture file (.nk) as input", 2)
     ]
-
-    preset_items = [
-                ("amorphous carbon", "Amorphous carbon", "amorphous carbon"),
-                ("copper", "Copper", "copper"),
-                ("gold", "Gold", "gold"),
-                ("silver", "Silver", "silver"),
-                ("aluminium", "Aluminium", "aluminium")
-    ]
-
-    input_type = EnumProperty(name="Type", description="Input Type", items=input_type_items, default="color",
+    input_type = EnumProperty(name="Type", description="Input Type", items=input_type_items, default="preset",
                                         update=change_input_type)
 
+    preset_items = [
+                ("amorphous carbon", "Amorphous carbon", "amorphous carbon", 0),
+                ("copper", "Copper", "copper", 1),
+                ("gold", "Gold", "gold", 2),
+                ("silver", "Silver", "silver", 3),
+                ("aluminium", "Aluminium", "aluminium", 4)
+    ]
     preset = EnumProperty(name="Preset", description="NK data presets", items=preset_items,
                                            default="aluminium")
 
-
     filepath = bpy.props.StringProperty(name="Nk File", description="Nk file path", subtype="FILE_PATH")
-
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (0.7, 0.7, 0.7))
+        self.inputs["Reflection Color"].enabled = False
         self.outputs.new("LuxCoreSocketFresnel", "Fresnel")
 
     def draw_buttons(self, context, layout):
