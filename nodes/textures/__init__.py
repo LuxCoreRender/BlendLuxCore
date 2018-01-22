@@ -16,6 +16,7 @@ from .blendermusgrave import LuxCoreNodeTexBlenderMusgrave
 from .blenderstucci import LuxCoreNodeTexBlenderStucci
 from .blendervoronoi import LuxCoreNodeTexBlenderVoronoi
 from .blenderwood import LuxCoreNodeTexBlenderWood
+from .brick import LuxCoreNodeTexBrick
 from .bump import LuxCoreNodeTexBump
 from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .coloratdepth import LuxCoreNodeTexColorAtDepth
@@ -74,6 +75,7 @@ class LuxCoreNodeCategoryTexture(NodeCategory):
 # In general it is a good idea to put often used nodes near the top.
 luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_TEXTURE", "Texture", items=[
+        NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),

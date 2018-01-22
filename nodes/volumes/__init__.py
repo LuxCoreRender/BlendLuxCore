@@ -80,6 +80,7 @@ luxcore_node_categories_volume = [
         # Note: 2D textures make no sense for volumes
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
+        NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexBlenderClouds", label="Clouds"),
         NodeItem("LuxCoreNodeTexBlenderDistortedNoise", label="Distorted Noise"),
         NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),

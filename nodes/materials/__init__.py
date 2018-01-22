@@ -91,6 +91,7 @@ luxcore_node_categories_material = [
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
+        NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
