@@ -88,7 +88,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             props.Set(pyluxcore.Property(property_str, luxcore_name))
         except Exception as error:
             msg = 'Node Tree "%s": %s' % (node_tree.name, error)
-            bpy.context.luxcore.errorlog.add_warning(msg)
+            bpy.context.scene.luxcore.errorlog.add_warning(msg)
 
     
     def _convert_fallback(self, props, luxcore_name):

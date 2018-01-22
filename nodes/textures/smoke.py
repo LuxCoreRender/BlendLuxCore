@@ -35,10 +35,14 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
 
 
     def init(self, context):
-        self.outputs.new("LuxCoreSocketFloatPositive", "Float")
+        self.outputs.new("LuxCoreSocketFloatPositive", "Value")
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, "domain", bpy.data, "objects")
+
+        if self.domain and not utils.find_smoke_domain_modifier(self.domain):
+            layout.label("Not a smoke domain!", icon="ERROR")
+
         col = layout.column()
         col.prop(self, "source")
         col.prop(self, "wrap")

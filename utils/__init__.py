@@ -396,3 +396,9 @@ def use_instancing(obj, scene, context):
     # TODO: more checks, e.g. Alt+D copies without modifiers or with equal modifier stacks
 
     return False
+
+
+def find_smoke_domain_modifier(obj):
+    for mod in obj.modifiers:
+        if mod.name == "Smoke" and mod.smoke_type == "DOMAIN":
+            return mod
