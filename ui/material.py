@@ -1,6 +1,8 @@
 from bl_ui.properties_material import MaterialButtonsPanel
 from bpy.types import Panel, Menu
 from ..operators.node_tree import LUXCORE_OT_preset_material
+from . import ICON_MATERIAL
+from .. import utils
 
 
 class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
@@ -45,8 +47,15 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
         split = layout.split(percentage=0.68)
 
         if obj:
-            # We use our custom new material operator here
-            split.template_ID(obj, "active_material", new="luxcore.material_new")
+            row = split.row(align=True)
+            row.prop(obj, "active_material", text="")
+            if obj.active_material:
+                row.operator("luxcore.material_copy", text="", icon="COPY_ID")
+                text_new = ""
+            else:
+                text_new = "New"
+
+            row.operator("luxcore.material_new", text=text_new, icon="ZOOMIN")
 
             if slot:
                 row = split.row()
@@ -59,20 +68,27 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             split.separator()
 
         if mat:
-            layout.label("LuxCore Material Nodes:", icon="NODETREE")
-            layout.template_ID(mat.luxcore, "node_tree", new="luxcore.mat_nodetree_new")
+            if mat.luxcore.node_tree:
+                split = layout.split(percentage=0.2, align=True)
+                split.label("Node Tree:")
+                text = utils.get_tree_name_with_lib(mat.luxcore.node_tree)
+                split.menu("luxcore_material_menu_node_tree", text=text, icon=ICON_MATERIAL)
+            else:
+                split = layout.split(percentage=0.8, align=True)
+                text = "(Select or create a material node tree)"
+                split.menu("luxcore_material_menu_node_tree", text=text, icon=ICON_MATERIAL)
+                split.operator("luxcore.mat_nodetree_new", icon="ZOOMIN")
 
             # Warning if not the right node tree type
+            # TODO: should now never be possible - remove this?
             if mat.luxcore.node_tree and mat.luxcore.node_tree.bl_idname != "luxcore_material_nodes":
                 layout.label("Not a material node tree!", icon="ERROR")
-
-            # layout.operator_menu_enum("object.select_by_type", "type", text="Select All by Type...")
 
         layout.separator()
         layout.menu("luxcore_menu_node_tree_preset")
 
 
-class LUXCORE_MATERIAL_PT_node_tree_preset(Menu):
+class LUXCORE_MATERIAL_MT_node_tree_preset(Menu):
     bl_idname = "luxcore_menu_node_tree_preset"
     bl_label = "Add Node Tree Preset"
     bl_description = "Add a pre-definied node setup"
@@ -86,5 +102,5 @@ class LUXCORE_MATERIAL_PT_node_tree_preset(Menu):
             col.label(category)
 
             for preset in presets:
-                op = col.operator("luxcore.preset_material", text=preset.title())
+                op = col.operator("luxcore.preset_material", text=preset)
                 op.preset = preset

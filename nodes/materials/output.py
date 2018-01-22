@@ -3,6 +3,7 @@ from ...bin import pyluxcore
 from ... import utils
 from bpy.props import BoolProperty, PointerProperty
 from ..output import LuxCoreNodeOutput, update_active, get_active_output
+from ...ui import ICON_VOLUME
 
 
 class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
@@ -11,7 +12,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     This is where the export starts (if the output is active).
     """
     bl_label = "Material Output"
-    bl_width_min = 160
+    bl_width_min = 200
 
     active = BoolProperty(name="Active", default=True, update=update_active)
 
@@ -26,8 +27,6 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     def draw_buttons(self, context, layout):
         super().draw_buttons(context, layout)
 
-        # TODO maybe there's a way to restrict the dropdowns to volume node trees?
-
         layout.label("Interior Volume Nodes:")
         self._draw_volume_controls(context, layout, "interior_volume")
 
@@ -39,17 +38,37 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         assert hasattr(self, volume_str)
         volume = getattr(self, volume_str)
 
-        row = layout.row(align=True)
-        # We have to disable the new operator if node tree is linked from a library
-        # Because if it is enabled, the user can create and link a node tree that will not be saved
-        row.enabled = self.id_data.library is None
-        row.template_ID(self, volume_str)
+        split = layout.split(percentage=0.6, align=True)
+        row = split.row(align=True)
+
+        # Volume dropdown
+        if volume:
+            text = utils.get_tree_name_with_lib(volume)
+        else:
+            text = "-"
+
+        if volume_str == "interior_volume":
+            row.menu("luxcore_volume_menu_node_tree_interior", icon=ICON_VOLUME, text=text)
+        else:
+            row.menu("luxcore_volume_menu_node_tree_exterior", icon=ICON_VOLUME, text=text)
+
+        row = split.row(align=True)
+
+        # Operator to quickly switch to this volume node tree
+        if volume:
+            op = row.operator("luxcore.switch_to_node_tree")
+            op.name = volume.name
 
         # Operator for new node tree
         new_text = "" if volume else "New"
-        new = row.operator("luxcore.vol_nodetree_new", text=new_text, icon="ZOOMIN")
+        op = row.operator("luxcore.vol_nodetree_new", text=new_text, icon="ZOOMIN")
         # We have to tell the operator where the new node tree should be linked to
-        new.target = volume_str
+        op.target = volume_str
+
+        # Operator to unlink node tree
+        if volume:
+            op = row.operator("luxcore.vol_nodetree_unlink", text="", icon="X")
+            op.target = volume_str
 
         # Warning if not the right node tree type
         if volume and volume.bl_idname != "luxcore_volume_nodes":

@@ -3,12 +3,19 @@ from bpy.types import Node
 from bpy.props import PointerProperty
 from .. import utils
 from ..utils import node as utils_node
+from ..ui import ICON_MATERIAL, ICON_TEXTURE, ICON_VOLUME
 
 TREE_TYPES = (
     "luxcore_material_nodes",
     "luxcore_texture_nodes",
     "luxcore_volume_nodes",
 )
+
+TREE_ICONS = {
+    "luxcore_material_nodes": ICON_MATERIAL,
+    "luxcore_texture_nodes": ICON_TEXTURE,
+    "luxcore_volume_nodes": ICON_VOLUME,
+}
 
 NOISE_BASIS_ITEMS = [
     ("blender_original", "Blender Original", ""),

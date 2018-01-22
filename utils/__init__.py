@@ -402,3 +402,11 @@ def find_smoke_domain_modifier(obj):
     for mod in obj.modifiers:
         if mod.name == "Smoke" and mod.smoke_type == "DOMAIN":
             return mod
+
+
+def get_tree_name_with_lib(node_tree):
+    text = node_tree.name
+    if node_tree.library:
+        # text += ' (Lib: "%s")' % node_tree.library.name
+        text = "L " + text
+    return text

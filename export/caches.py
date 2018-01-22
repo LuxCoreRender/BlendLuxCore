@@ -69,7 +69,9 @@ class MaterialCache(object):
                 node_tree = mat.luxcore.node_tree
                 mat_updated = False
 
-                if node_tree:
+                if mat.is_updated:
+                    mat_updated = True
+                elif node_tree:
                     if node_tree.is_updated or node_tree.is_updated_data:
                         mat_updated = True
 
@@ -88,8 +90,6 @@ class MaterialCache(object):
                         pointer_tree = node.node_tree
                         if pointer_tree and (pointer_tree.is_updated or pointer_tree.is_updated_data):
                             mat_updated = True
-                else:
-                    mat_updated = mat.is_updated
 
                 if mat_updated:
                     self.changed_materials.append(mat)
