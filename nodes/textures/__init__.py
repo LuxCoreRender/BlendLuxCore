@@ -24,6 +24,7 @@ from .colormix import LuxCoreNodeTexColorMix
 from .constfloat1 import LuxCoreNodeTexConstfloat1
 from .constfloat3 import LuxCoreNodeTexConstfloat3
 from .dots import LuxCoreNodeTexDots
+from .fbm import LuxCoreNodeTexfBM
 from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
 from .hsv import LuxCoreNodeTexHSV
@@ -31,10 +32,12 @@ from .imagemap import LuxCoreNodeTexImagemap
 from .lampspectrum import LuxCoreNodeTexLampSpectrum
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
+from .marble import LuxCoreNodeTexMarble
 from .math import LuxCoreNodeTexMath
 from .output import LuxCoreNodeTexOutput
 from .smoke import LuxCoreNodeTexSmoke
 from .wrinkled import LuxCoreNodeTexWrinkled
+from .windy import LuxCoreNodeTexWindy
 
 # TODO: how to warn if some texture nodes are incompatible with materials/volumes
 # they are used in?
@@ -81,6 +84,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
+        NodeItem("LuxCoreNodeTexfBM", label="fBM"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
@@ -92,6 +96,8 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
+        NodeItem("LuxCoreNodeTexMarble", label="Marble"),
+        NodeItem("LuxCoreNodeTexWindy", label="Windy"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
         NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
