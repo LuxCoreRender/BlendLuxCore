@@ -44,7 +44,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
 
     engine.update_stats(pretty_stats, refresh_message)
 
-    if draw_film and not engine.test_break():
+    if draw_film:
         # Show updated film (this operation is expensive)
         engine._framebuffer.draw(engine, engine._session)
 
