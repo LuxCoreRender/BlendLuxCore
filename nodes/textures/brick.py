@@ -28,10 +28,6 @@ class LuxCoreNodeTexBrick(LuxCoreNodeTexture):
         self.add_input("LuxCoreSocketColor", "bricktex", (0.7, 0.7, 0.7))
         self.add_input("LuxCoreSocketColor", "mortartex", (0.2, 0.2, 0.2))
         self.add_input("LuxCoreSocketColor", "brickmodtex", (1.0, 1.0, 1.0))
-        #self.add_input("LuxCoreSocketFloatPositive", "brickwidth", 0.3)
-        #self.add_input("LuxCoreSocketFloatPositive", "brickheight", 0.1)
-        #self.add_input("LuxCoreSocketFloatPositive", "brickdepth", 0.15)
-        #self.add_input("LuxCoreSocketFloatPositive", "mortarsize", 0.01)
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")
         self.outputs.new("LuxCoreSocketColor", "Color")
 

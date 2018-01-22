@@ -21,6 +21,7 @@ from .bump import LuxCoreNodeTexBump
 from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .coloratdepth import LuxCoreNodeTexColorAtDepth
 from .colormix import LuxCoreNodeTexColorMix
+from .dots import LuxCoreNodeTexDots
 from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
 from .hsv import LuxCoreNodeTexHSV
@@ -76,6 +77,7 @@ class LuxCoreNodeCategoryTexture(NodeCategory):
 luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_TEXTURE", "Texture", items=[
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
+        NodeItem("LuxCoreNodeTexDots", label="Dots"),
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
