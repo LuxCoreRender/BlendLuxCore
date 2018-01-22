@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import PointerProperty, EnumProperty
+from bpy.props import PointerProperty, EnumProperty, StringProperty
 from .. import LuxCoreNodeTexture
 from ... import utils
 
@@ -10,6 +10,7 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
     
     def change_input_type(self, context):
         self.inputs["Reflection Color"].enabled = self.input_type == "color"
+        
 
     input_type_items = [
         ("color", "Color", "Use custom color as input", 0),
@@ -18,6 +19,12 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
     ]
     input_type = EnumProperty(name="Type", description="Input Type", items=input_type_items, default="preset",
                                         update=change_input_type)
+
+    file_type_items = [
+        ("luxpop", "Lux Pop", "Use Luxpop format for NK data file", 0),
+        ("sopra", "Sopra", "Use Sopra format for NK data file", 1),
+    ]
+    file_type = EnumProperty(name="FileType", description="File Type", items=file_type_items, default="luxpop")
 
     preset_items = [
                 ("amorphous carbon", "Amorphous carbon", "amorphous carbon", 0),
@@ -29,7 +36,7 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
     preset = EnumProperty(name="Preset", description="NK data presets", items=preset_items,
                                            default="aluminium")
 
-    filepath = bpy.props.StringProperty(name="Nk File", description="Nk file path", subtype="FILE_PATH")
+    filepath = StringProperty(name="Nk File", description="Nk file path", subtype="FILE_PATH")
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (0.7, 0.7, 0.7))
@@ -43,6 +50,7 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
             layout.prop(self, "preset")
 
         if self.input_type == "nk":
+            layout.prop(self, "file_type", expand=True)            
             layout.prop(self, "filepath")
 
     def export(self, props, luxcore_name=None):
@@ -59,12 +67,15 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
         else:
             #Fresnel data file
             filepath = utils.get_abspath(self.filepath, must_exist=True, must_be_file=True)
+            definitions = {
+                "file": filepath,                
+            }
 
-            if filepath:
-                definitions = {
-                    "type": "fresnelsopra",
-                    "file": filepath,
-                }
+            if self.input_type == "nk":
+                if self.file_type == "luxpop":
+                    definitions["type"] = "fresnelluxpop"
+                else:
+                    definitions["type"] = "fresnelsopra"                    
             else:
                 # Fallback, file not found
                 error = 'Could not find .nk file at path "%s"' % self.filepath
