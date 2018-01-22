@@ -99,6 +99,8 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexColorAtDepth", label="Color at depth"),
+        NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
+        NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MAPPING", "Mapping", items=[

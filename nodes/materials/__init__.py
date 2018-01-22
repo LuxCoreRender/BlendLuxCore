@@ -119,6 +119,8 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
+        NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
+        NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
     ]),
    
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[

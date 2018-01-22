@@ -21,6 +21,8 @@ from .bump import LuxCoreNodeTexBump
 from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .coloratdepth import LuxCoreNodeTexColorAtDepth
 from .colormix import LuxCoreNodeTexColorMix
+from .constfloat1 import LuxCoreNodeTexConstfloat1
+from .constfloat3 import LuxCoreNodeTexConstfloat3
 from .dots import LuxCoreNodeTexDots
 from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
@@ -101,6 +103,8 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
+        NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
+        NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
