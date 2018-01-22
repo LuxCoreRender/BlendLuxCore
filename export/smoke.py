@@ -16,18 +16,24 @@ def convert(smoke_obj, channel):
     settings = smoke_domain_mod.domain_settings
 
     if channel == "density":
-        channeldata = list(settings.density_grid)
+        grid = settings.density_grid
     elif channel == "fire":
-        channeldata = list(settings.flame_grid)
+        grid = settings.flame_grid
     elif channel == "heat":
-        channeldata = list(settings.heat_grid)
+        grid = settings.heat_grid
     # ToDo: implement velocity grid export
     # velocity grid has 3 times more values => probably vector field
     #elif channel == "velocity":
-    #    channeldata = list(settings.velocity_grid)
+    #    grid = settings.velocity_grid
     else:
         raise NotImplementedError("Unknown channel type " + channel)
 
+    # Prevent a crash
+    if len(grid) == 0:
+        msg = 'Object "%s": No smoke data (simulate some frames first)' % smoke_obj.name
+        raise Exception(msg)
+
+    channeldata = list(grid)
     big_res = list(settings.domain_resolution)
 
     if settings.use_high_resolution:
