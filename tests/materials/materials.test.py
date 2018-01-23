@@ -114,12 +114,22 @@ class TestMaterials(unittest.TestCase):
         self.assertEqual(props.Get(prefix + ".type").Get(), ["glossytranslucent"])
         assertListsAlmostEqual(self, props.Get(prefix + ".kd").Get(), [0.5, 0.0, 0.0])
         assertListsAlmostEqual(self, props.Get(prefix + ".kt").Get(), [0.5, 0.0, 0.0])
+
+        # Front face
         assertListsAlmostEqual(self, props.Get(prefix + ".ks").Get(), [0.1, 0.1, 0.1])
         assertListsAlmostEqual(self, props.Get(prefix + ".ka").Get(), [0.0, 0.0, 0.2])
         assertAlmostEqual(self, props.Get(prefix + ".uroughness").Get(), [0.1])
         assertAlmostEqual(self, props.Get(prefix + ".vroughness").Get(), [0.1])
         assertAlmostEqual(self, props.Get(prefix + ".d").Get(), [0.1])
         assertAlmostEqual(self, props.Get(prefix + ".multibounce").Get(), [False])
+
+        # Back face
+        assertListsAlmostEqual(self, props.Get(prefix + ".ks_bf").Get(), [0.1, 0.1, 0.1])
+        assertListsAlmostEqual(self, props.Get(prefix + ".ka_bf").Get(), [0.0, 0.0, 0.2])
+        assertAlmostEqual(self, props.Get(prefix + ".uroughness_bf").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".vroughness_bf").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".d_bf").Get(), [0.1])
+        assertAlmostEqual(self, props.Get(prefix + ".multibounce_bf").Get(), [False])
 
     def test_glossycoating(self):
         props, luxcore_name, prefix = export_first_mat("glossycoating")

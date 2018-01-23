@@ -213,22 +213,54 @@ class Roughness:
     """
 
     @staticmethod
+    def has_backface(node):
+        return "BF Roughness" in node.inputs or "BF U-Roughness" in node.inputs
+
+    @staticmethod
     def toggle_roughness(node, context):
-        """ Enable/disable all roughness inputs """
-        if node.use_anisotropy:
-            node.inputs["U-Roughness"].enabled = node.rough
-            node.inputs["V-Roughness"].enabled = node.rough
-        else:
-            node.inputs["Roughness"].enabled = node.rough
+        """
+        Enable/disable all roughness inputs.
+        Currently only used by glass node.
+
+        Strictly speaking we don't need backface support here,
+        but add it anyway in case we have a material in the
+        future that has backface and needs roughness on/off switch.
+        """
+        sockets = ["U-Roughness", "V-Roughness", "Roughness"]
+        # Back face variants
+        for socket in sockets.copy():
+            sockets.append("BF " + socket)
+
+        for socket in sockets:
+            try:
+                node.inputs[socket].enabled = node.rough
+            except KeyError:
+                pass
 
     @staticmethod
     def update_anisotropy(node, context):
-        if "Roughness" in node.inputs:
-            u_roughness = node.inputs["Roughness"]
-        else:
-            u_roughness = node.inputs["U-Roughness"]
-        u_roughness.name = "U-Roughness" if node.use_anisotropy else "Roughness"
-        node.inputs["V-Roughness"].enabled = node.use_anisotropy
+        def update(node, is_backface):
+            if is_backface:
+                roughness = "BF Roughness"
+                u_roughness = "BF U-Roughness"
+                v_roughness = "BF V-Roughness"
+                extra_check = node.use_backface
+            else:
+                roughness = "Roughness"
+                u_roughness = "U-Roughness"
+                v_roughness = "V-Roughness"
+                extra_check = True
+
+            if roughness in node.inputs:
+                u_roughness_input = node.inputs[roughness]
+            else:
+                u_roughness_input = node.inputs[u_roughness]
+            u_roughness_input.name = u_roughness if node.use_anisotropy else roughness
+            node.inputs[v_roughness].enabled = node.use_anisotropy and extra_check
+
+        update(node, False)
+        if Roughness.has_backface(node):
+            update(node, True)
 
     aniso_name = "Anisotropic Roughness"
     aniso_desc = ("Use different roughness values for "
@@ -240,6 +272,13 @@ class Roughness:
         node.inputs["Roughness"].enabled = init_enabled
         node.add_input("LuxCoreSocketRoughness", "V-Roughness", default)
         node.inputs["V-Roughness"].enabled = False
+
+    @staticmethod
+    def init_backface(node, default=0.05, init_enabled=True):
+        node.add_input("LuxCoreSocketRoughness", "BF Roughness", default)
+        node.inputs["BF Roughness"].enabled = init_enabled
+        node.add_input("LuxCoreSocketRoughness", "BF V-Roughness", default)
+        node.inputs["BF V-Roughness"].enabled = False
 
     @staticmethod
     def draw(node, context, layout):
@@ -258,3 +297,14 @@ class Roughness:
 
         definitions["uroughness"] = uroughness
         definitions["vroughness"] = vroughness
+
+        if Roughness.has_backface(node):
+            if node.use_anisotropy:
+                uroughness = node.inputs["BF U-Roughness"].export(props)
+                vroughness = node.inputs["BF V-Roughness"].export(props)
+            else:
+                uroughness = node.inputs["BF Roughness"].export(props)
+                vroughness = uroughness
+
+            definitions["uroughness_bf"] = uroughness
+            definitions["vroughness_bf"] = vroughness
