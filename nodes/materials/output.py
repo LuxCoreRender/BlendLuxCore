@@ -48,9 +48,9 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             text = "-"
 
         if volume_str == "interior_volume":
-            row.menu("luxcore_volume_menu_node_tree_interior", icon=ICON_VOLUME, text=text)
+            row.menu("LUXCORE_VOLUME_MT_node_tree_interior", icon=ICON_VOLUME, text=text)
         else:
-            row.menu("luxcore_volume_menu_node_tree_exterior", icon=ICON_VOLUME, text=text)
+            row.menu("LUXCORE_VOLUME_MT_node_tree_exterior", icon=ICON_VOLUME, text=text)
 
         row = split.row(align=True)
 

@@ -411,7 +411,7 @@ class LUXCORE_OT_set_vol_node_tree(LUXCORE_OT_set_node_tree):
 class LUXCORE_MT_node_tree(bpy.types.Menu):
     """ Generic version. There are subclasses for materials and volumes """
 
-    bl_idname = "luxcore_menu_node_tree"
+    bl_idname = "LUXCORE_MT_node_tree"
     bl_label = "Select Node Tree"
     bl_description = "Select a node tree"
 
@@ -432,10 +432,14 @@ class LUXCORE_MT_node_tree(bpy.types.Menu):
         col = row.column()
 
         if not trees:
-            # No node trees in the scene yet
-            col.label("No material node trees")
-            col.operator("luxcore.mat_nodetree_new", text="New Node Tree", icon="ZOOMIN")
-            col.menu("luxcore_menu_node_tree_preset")
+            # No node trees of this type in the scene yet
+            tree_type_pretty = tree_type.split("_")[1]
+            col.label("No " + tree_type_pretty + " node trees")
+
+            if tree_type == "luxcore_material_nodetree":
+                # Volumes need a more complicated new operator (Todo)
+                col.operator("luxcore.mat_nodetree_new", text="New Node Tree", icon="ZOOMIN")
+                col.menu("LUXCORE_MT_node_tree_preset")
 
         for j, (i, tree) in enumerate(trees):
             if j > 0 and j % 20 == 0:
@@ -454,7 +458,7 @@ class LUXCORE_MT_node_tree(bpy.types.Menu):
 class LUXCORE_MATERIAL_MT_node_tree(LUXCORE_MT_node_tree):
     """ Dropdown Menu Material version """
 
-    bl_idname = "luxcore_material_menu_node_tree"
+    bl_idname = "LUXCORE_MATERIAL_MT_node_tree"
     bl_description = "Select a material node tree"
 
     @classmethod
@@ -468,7 +472,7 @@ class LUXCORE_MATERIAL_MT_node_tree(LUXCORE_MT_node_tree):
 class LUXCORE_VOLUME_MT_node_tree_interior(LUXCORE_MT_node_tree):
     """ Dropdown Menu Volume version """
 
-    bl_idname = "luxcore_volume_menu_node_tree_interior"
+    bl_idname = "LUXCORE_VOLUME_MT_node_tree_interior"
     bl_description = "Select a volume node tree"
 
     @classmethod
@@ -484,7 +488,7 @@ class LUXCORE_VOLUME_MT_node_tree_interior(LUXCORE_MT_node_tree):
 class LUXCORE_VOLUME_MT_node_tree_exterior(LUXCORE_MT_node_tree):
     """ Dropdown Menu Volume version """
 
-    bl_idname = "luxcore_volume_menu_node_tree_exterior"
+    bl_idname = "LUXCORE_VOLUME_MT_node_tree_exterior"
     bl_description = "Select a volume node tree"
 
     @classmethod

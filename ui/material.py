@@ -72,11 +72,11 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                 split = layout.split(percentage=0.2, align=True)
                 split.label("Node Tree:")
                 text = utils.get_tree_name_with_lib(mat.luxcore.node_tree)
-                split.menu("luxcore_material_menu_node_tree", text=text, icon=ICON_MATERIAL)
+                split.menu("LUXCORE_MATERIAL_MT_node_tree", text=text, icon=ICON_MATERIAL)
             else:
                 split = layout.split(percentage=0.8, align=True)
                 text = "(Select or create a material node tree)"
-                split.menu("luxcore_material_menu_node_tree", text=text, icon=ICON_MATERIAL)
+                split.menu("LUXCORE_MATERIAL_MT_node_tree", text=text, icon=ICON_MATERIAL)
                 split.operator("luxcore.mat_nodetree_new", icon="ZOOMIN")
 
             # Warning if not the right node tree type
@@ -85,11 +85,11 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                 layout.label("Not a material node tree!", icon="ERROR")
 
         layout.separator()
-        layout.menu("luxcore_menu_node_tree_preset")
+        layout.menu("LUXCORE_MT_node_tree_preset")
 
 
 class LUXCORE_MATERIAL_MT_node_tree_preset(Menu):
-    bl_idname = "luxcore_menu_node_tree_preset"
+    bl_idname = "LUXCORE_MT_node_tree_preset"
     bl_label = "Add Node Tree Preset"
     bl_description = "Add a pre-definied node setup"
 
