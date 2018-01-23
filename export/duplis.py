@@ -35,6 +35,10 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
 
     dupli_count = len(blender_obj.dupli_list)
     for i, dupli in enumerate(blender_obj.dupli_list):
+        # Metaballs are omitted from this loop, they cause glitches.
+        if dupli.object.type == "META":
+            continue
+
         # Use the utils functions to build names so linked objects work (libraries)
         name = name_prefix + utils.get_luxcore_name(dupli.object, context)
         matrix_list = utils.matrix_to_list(dupli.matrix, scene, apply_worldscale=True)
