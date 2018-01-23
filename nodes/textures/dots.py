@@ -1,6 +1,6 @@
 import bpy
 from .. import LuxCoreNodeTexture
-from ... import utils
+from ...utils import node as utils_node
 
 class LuxCoreNodeTexDots(LuxCoreNodeTexture):
     bl_label = "Dots"
@@ -11,6 +11,10 @@ class LuxCoreNodeTexDots(LuxCoreNodeTexture):
         self.add_input("LuxCoreSocketColor", "Outside", (0.0, 0.0, 0.0))
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
         self.outputs.new("LuxCoreSocketColor", "Color")
+
+    def draw_buttons(self, context, layout):
+        if not self.inputs["2D Mapping"].is_linked:
+            utils_node.draw_uv_info(context, layout)
     
     def export(self, props, luxcore_name=None):        
         uvscale, uvdelta = self.inputs["2D Mapping"].export(props)
