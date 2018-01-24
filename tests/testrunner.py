@@ -5,6 +5,10 @@ import subprocess
 import sys
 import os
 
+ANSI_RESET = "\033[0m"
+ANSI_RED = "\033[91m"
+ANSI_GREEN = "\033[92m"
+
 blender_executable = "blender"
 
 # allow override of blender executable (important for CI!)
@@ -18,6 +22,7 @@ if not os.path.exists(blender_executable):
 # iterate over each *.test.blend file in the "tests" directory
 # and open up blender with the .test.blend file and the corresponding .test.py python script
 status = 0
+failed = []
 
 for blend_file in glob.glob("./**/*.test.blend"):
     test_name = os.path.splitext(os.path.basename(blend_file))[0]
@@ -34,5 +39,25 @@ for blend_file in glob.glob("./**/*.test.blend"):
     if return_code != 0:
         # Log the error, but continue testing
         status = return_code
+        failed.append(test_name)
+        print(ANSI_RED + "Test " + test_name + " failed!" + ANSI_RESET)
+
+# Show summary
+print("\n\n")
+print("=" * 40)
+print("  Summary:")
+print("=" * 40)
+print()
+
+if failed:
+    print(ANSI_RED + "Failed tests:" + ANSI_RESET)
+    print()
+
+    for test_name in failed:
+        print(ANSI_RED + "* " + test_name + ANSI_RESET)
+else:
+    print(ANSI_GREEN + "All tests successful." + ANSI_RESET)
+
+print()
 
 exit(status)

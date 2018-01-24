@@ -68,7 +68,7 @@ class LuxCoreConfigTile(PropertyGroup):
     # tilepath.sampling.aa.size
     path_sampling_aa_size = IntProperty(name="AA Samples", default=3, min=1, soft_max=13)
     # tile.size
-    size = IntProperty(name="Tile Size", default=64, min=16, soft_min=32, soft_max=256)
+    size = IntProperty(name="Tile Size", default=64, min=16, soft_min=32, soft_max=256, subtype="PIXEL")
     # tile.multipass.enable
     multipass_enable = BoolProperty(name="Multipass", default=True)
     # TODO: min/max correct?
@@ -151,7 +151,8 @@ class LuxCoreConfig(PropertyGroup):
 
     # Pixel filter
     use_filter = BoolProperty(name="Use Pixel Filter", default=True, description=FILTER_DESC)
-    filter_width = FloatProperty(name="Width", default=1.5, min=0.5, soft_max=3, description=FILTER_WIDTH_DESC)
+    filter_width = FloatProperty(name="Width", default=1.5, min=0.5, soft_max=3,
+                                 description=FILTER_WIDTH_DESC, subtype="PIXEL")
 
     # FILESAVER options
     use_filesaver = BoolProperty(name="Only write LuxCore scene", default=False)

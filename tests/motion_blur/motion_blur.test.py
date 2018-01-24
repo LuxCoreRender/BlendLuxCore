@@ -114,10 +114,10 @@ class TestMotionBlur(unittest.TestCase):
         # (can only change if someone messes with the test scene)
         self.assertIsNotNone(blender_scene.camera)
         blur_settings = blender_scene.camera.data.luxcore.motion_blur
-        self.assertIs(blur_settings.enable, True)
+        self.assertTrue(blur_settings.enable)
         self.assertAlmostEqual(blur_settings.shutter, 4.0)
-        self.assertIs(blur_settings.object_blur, True)
-        self.assertIs(blur_settings.camera_blur, False)
+        self.assertTrue(blur_settings.object_blur)
+        self.assertFalse(blur_settings.camera_blur)
         self.assertEqual(blur_settings.steps, 2)
         # Make sure we are at the correct frame
         self.assertEqual(blender_scene.frame_current, 3)
@@ -161,10 +161,10 @@ class TestMotionBlur(unittest.TestCase):
         # (can only change if someone messes with the test scene)
         self.assertIsNotNone(blender_scene.camera)
         blur_settings = blender_scene.camera.data.luxcore.motion_blur
-        self.assertIs(blur_settings.enable, True)
+        self.assertTrue(blur_settings.enable)
         self.assertAlmostEqual(blur_settings.shutter, 4.0)
-        self.assertIs(blur_settings.object_blur, True)
-        self.assertIs(blur_settings.camera_blur, True)
+        self.assertTrue(blur_settings.object_blur)
+        self.assertTrue(blur_settings.camera_blur)
         self.assertEqual(blur_settings.steps, 2)
         # Make sure we are at the correct frame
         self.assertEqual(blender_scene.frame_current, 3)
