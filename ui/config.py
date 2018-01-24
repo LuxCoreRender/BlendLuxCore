@@ -99,6 +99,13 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         split.active = config.use_filter
         split.prop(config, "filter_width")
 
+        # Seed settings
+        row = layout.row(align=True)
+        sub = row.row(align=True)
+        sub.active = not config.use_animated_seed
+        sub.prop(config, "seed")
+        row.prop(config, "use_animated_seed", icon="TIME", toggle=True)
+
 
 class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}

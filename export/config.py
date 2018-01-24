@@ -92,6 +92,8 @@ def convert(scene, context=None):
         if scene.render.threads_mode == "FIXED":
             definitions["native.threads.count"] = scene.render.threads
 
+        _convert_seed(scene, definitions)
+
         return utils.create_props(prefix, definitions)
     except Exception as error:
         msg = 'Config: %s' % error
@@ -152,3 +154,15 @@ def _convert_filesaver(scene, definitions, engine):
     definitions["filesaver.format"] = config.filesaver_format
     definitions["renderengine.type"] = "FILESAVER"
     definitions["filesaver.renderengine.type"] = engine
+
+
+def _convert_seed(scene, definitions):
+    config = scene.luxcore.config
+
+    if config.use_animated_seed:
+        # frame_current can be 0, but not negative, while LuxCore seed can only be > 1
+        seed = scene.frame_current + 1
+    else:
+        seed = config.seed
+
+    definitions["renderengine.seed"] = seed

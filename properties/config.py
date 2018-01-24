@@ -23,6 +23,12 @@ CLAMPING_DESC = (
     "rendering for 10 seconds, but only if clamping is DISABLED"
 )
 
+SEED_DESC = (
+    "Seed for random number generation. Images rendered with "
+    "the same seed will have the same noise pattern"
+)
+ANIM_SEED_DESC = "Use different seed values for different frames"
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -154,3 +160,7 @@ class LuxCoreConfig(PropertyGroup):
         ("BIN", "Binary", "Save as .bcf binary file", 1),
     ]
     filesaver_format = EnumProperty(name="", items=filesaver_format_items, default="BIN")
+
+    # Seed
+    seed = IntProperty(name="Seed", default=1, min=1, description=SEED_DESC)
+    use_animated_seed = BoolProperty(name="Animated Seed", default=False, description=ANIM_SEED_DESC)
