@@ -12,7 +12,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     This is where the export starts (if the output is active).
     """
     bl_label = "Material Output"
-    bl_width_min = 200
+    bl_width_min = 220
 
     active = BoolProperty(name="Active", default=True, update=update_active)
 

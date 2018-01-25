@@ -3,6 +3,19 @@ from .. import utils
 from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
 
 
+STEP_SIZE_DESCRIPTION = (
+    "Used to specify the granularity of the volume sampling steps. "
+    "If the step size is too large, artifacts will appear. "
+    "If it is too small, the rendering will be much slower"
+)
+
+MULTISCATTERING_DESC = (
+    "Simulate multiple scattering events per ray. "
+    "Makes volumes with high scattering scale appear more realistic, "
+    "but leads to slower rendering performance."
+)
+
+
 class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
     bl_label = "Heterogeneous Volume"
     bl_width_min = 160
@@ -13,13 +26,15 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
     color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
-    step_size = FloatProperty(name="Step Size", default=1, min=0,
+    step_size = FloatProperty(name="Step Size", default=0.1, min=0.0001,
+                              soft_min=0.01, soft_max=1,
                               subtype="DISTANCE", unit="LENGTH",
-                              description="Step Size for Volume Integration")
+                              description=STEP_SIZE_DESCRIPTION)
     maxcount = IntProperty(name="Max. Step Count", default=1024, min=0,
-                                     description="Maximum Step Count for Volume Integration")
+                           description="Maximum Step Count for Volume Integration")
 
-    multiscattering = BoolProperty(name="Multiscattering", default=False)
+    multiscattering = BoolProperty(name="Multiscattering", default=False,
+                                   description=MULTISCATTERING_DESC)
 
     def init(self, context):
         self.add_common_inputs()
@@ -36,23 +51,31 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
         self.draw_common_buttons(context, layout)
 
     def export(self, props, luxcore_name=None):
-        scatter_col = self.inputs["Scattering"].export(props)
-        
-        # Implicitly create a colordepth texture with unique name
-        tex_name = self.make_name() + "_scale"
-        helper_prefix = "scene.textures." + tex_name + "."
-        helper_defs = {
-            "type": "scale",
-            "texture1": self.inputs["Scattering Scale"].export(props),
-            "texture2": self.inputs["Scattering"].export(props),
-        }
-        props.Set(utils.create_props(helper_prefix, helper_defs))
-        scatter_col = tex_name
+        scattering_col_socket = self.inputs["Scattering"]
+        scattering_scale_socket = self.inputs["Scattering Scale"]
 
+        scattering_col = scattering_col_socket.export(props)
+        scattering_scale = scattering_scale_socket.export(props)
+
+        if scattering_scale_socket.is_linked or scattering_col_socket.is_linked:
+            # Implicitly create a colordepth texture with unique name
+            tex_name = self.make_name() + "_scale"
+            helper_prefix = "scene.textures." + tex_name + "."
+            helper_defs = {
+                "type": "scale",
+                "texture1": scattering_scale,
+                "texture2": scattering_col,
+            }
+            props.Set(utils.create_props(helper_prefix, helper_defs))
+            scattering_col = tex_name
+        else:
+            # We do not have to use a texture - improves performance
+            for i in range(len(scattering_col)):
+                scattering_col[i] *= scattering_scale
 
         definitions = {
             "type": "heterogeneous",
-            "scattering": scatter_col,
+            "scattering": scattering_col,
             "steps.size": self.step_size,
             "steps.maxcount": self.maxcount,
             "asymmetry": self.inputs["Asymmetry"].export(props),

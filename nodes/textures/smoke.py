@@ -42,6 +42,8 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
 
         if self.domain and not utils.find_smoke_domain_modifier(self.domain):
             layout.label("Not a smoke domain!", icon="ERROR")
+        elif self.domain is None:
+            layout.label("Select the smoke domain object", icon="ERROR")
 
         col = layout.column()
         col.prop(self, "source")

@@ -44,9 +44,9 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
             self.inputs[i].enabled = current_settings[i][1]
 
     mode_items = [
-        ("scale", "Multiply", ""),
-        ("add", "Add", ""),
-        ("subtract", "Subtract", ""),
+        ("scale", "Multiply", "Value 1 * Value 2"),
+        ("add", "Add", "Value 1 + Value 2"),
+        ("subtract", "Subtract", "Value 1 - Value 2"),
         ("mix", "Mix", MIX_DESCRIPTION),
         ("clamp", "Clamp", "Clamp the input so it is between min and max values"),
         ("abs", "Absolute", "Take the absolute value (remove minus sign)"),

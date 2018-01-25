@@ -1,7 +1,5 @@
 from bl_ui.properties_material import MaterialButtonsPanel
 from bpy.types import Panel, Menu
-from ..operators.node_tree import LUXCORE_OT_preset_material
-from . import ICON_MATERIAL
 from .. import utils
 
 
@@ -69,15 +67,10 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
 
         if mat:
             if mat.luxcore.node_tree:
-                split = layout.split(percentage=0.2, align=True)
-                split.label("Node Tree:")
-                text = utils.get_tree_name_with_lib(mat.luxcore.node_tree)
-                split.menu("LUXCORE_MATERIAL_MT_node_tree", text=text, icon=ICON_MATERIAL)
+                tree_name = utils.get_tree_name_with_lib(mat.luxcore.node_tree)
+                layout.label('Material Node Tree: "%s"' % tree_name, icon="NODETREE")
             else:
-                split = layout.split(percentage=0.8, align=True)
-                text = "(Select or create a material node tree)"
-                split.menu("LUXCORE_MATERIAL_MT_node_tree", text=text, icon=ICON_MATERIAL)
-                split.operator("luxcore.mat_nodetree_new", icon="ZOOMIN")
+                layout.operator("luxcore.mat_nodetree_new", icon="ZOOMIN", text="Use Material Nodes")
 
             # Warning if not the right node tree type
             # TODO: should now never be possible - remove this?
@@ -86,21 +79,3 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
 
         layout.separator()
         layout.menu("LUXCORE_MT_node_tree_preset")
-
-
-class LUXCORE_MATERIAL_MT_node_tree_preset(Menu):
-    bl_idname = "LUXCORE_MT_node_tree_preset"
-    bl_label = "Add Node Tree Preset"
-    bl_description = "Add a pre-definied node setup"
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-
-        for category, presets in LUXCORE_OT_preset_material.categories.items():
-            col = row.column()
-            col.label(category)
-
-            for preset in presets:
-                op = col.operator("luxcore.preset_material", text=preset)
-                op.preset = preset

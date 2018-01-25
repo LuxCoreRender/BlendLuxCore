@@ -1,7 +1,7 @@
 import bpy
 
 # Ensure initialization
-from . import node_tree
+from . import node_tree, node_tree_presets
 
 
 class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
