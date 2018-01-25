@@ -58,5 +58,8 @@ class LuxCoreImagepipeline(PropertyGroup):
     Used (and initialized) in properties/camera.py
     The UI elements are located in ui/camera.py
     """
+    transparent_film = BoolProperty(name="Transparent Film", default=False,
+                                    description="Make the world background transparent")
+
     tonemapper = PointerProperty(type=LuxCoreImagepipelineTonemapper)
     bloom = PointerProperty(type=LuxCoreImagepipelineBloom)

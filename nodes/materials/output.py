@@ -5,6 +5,12 @@ from bpy.props import BoolProperty, PointerProperty
 from ..output import LuxCoreNodeOutput, update_active, get_active_output
 from ...ui import ICON_VOLUME
 
+SHADOWCATCHER_DESC = (
+    "Make this material transparent and only catch shadows on it. "
+    "Used for compositing 3D objects into real-world footage. "
+    "Remember to enable transparent film in camera settings"
+)
+
 
 class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     """
@@ -19,6 +25,8 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     # TODO: option to sync volume settings among output nodes (workflow improvement)
     interior_volume = PointerProperty(name="Interior Volume", type=bpy.types.NodeTree)
     exterior_volume = PointerProperty(name="Exterior Volume", type=bpy.types.NodeTree)
+    is_shadow_catcher = BoolProperty(name="Shadow Catcher", default=False,
+                                     description=SHADOWCATCHER_DESC)
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
@@ -32,6 +40,21 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
         layout.label("Exterior Volume Nodes:")
         self._draw_volume_controls(context, layout, "exterior_volume")
+
+        # Shadow catcher
+        engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
+        col = layout.column()
+        col.active = not engine_is_bidir
+        col.prop(self, "is_shadow_catcher")
+
+        if engine_is_bidir:
+            col.label("Not supported by Bidir engine", icon="INFO")
+        elif self.is_shadow_catcher and context.scene.camera:
+            pipeline = context.scene.camera.data.luxcore.imagepipeline
+            if not pipeline.transparent_film:
+                layout.label("Needs transparent film:")
+                layout.prop(pipeline, "transparent_film", text="Enable Transparent Film",
+                            icon="CAMERA_DATA", emboss=True)
 
     def _draw_volume_controls(self, context, layout, volume_str):
         """ volume_str can be either "interior_volume" or "exterior_volume" """
@@ -90,6 +113,8 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
         self._convert_volume(self.interior_volume, props, prefix + "volume.interior")
         self._convert_volume(self.exterior_volume, props, prefix + "volume.exterior")
+
+        props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
 
     def _convert_volume(self, node_tree, props, property_str):
         """

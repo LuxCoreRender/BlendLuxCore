@@ -70,6 +70,9 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         cam = context.camera
         pipeline = cam.luxcore.imagepipeline
 
+        # General settings
+        layout.prop(pipeline, "transparent_film")
+
         # Tonemapper settings
         tonemapper = pipeline.tonemapper
         box = self.draw_plugin_box(tonemapper)

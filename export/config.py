@@ -3,6 +3,7 @@ import errno
 import bpy
 from ..bin import pyluxcore
 from .. import utils
+from . import aovs
 
 
 def convert(scene, context=None):
@@ -83,8 +84,19 @@ def convert(scene, context=None):
             "film.filter.width": config.filter_width,
         })
 
-        # FILESAVER engine (only in final render)
         use_filesaver = context is None and config.use_filesaver
+
+        # Transparent film settings
+        black_background = False
+        if scene.camera:
+            pipeline = scene.camera.data.luxcore.imagepipeline
+
+            if pipeline.transparent_film and not use_filesaver:
+                # This avoids issues with transparent film in Blender
+                black_background = True
+        definitions["path.forceblackbackground.enable"] = black_background
+
+        # FILESAVER engine (only in final render)
         if use_filesaver:
             _convert_filesaver(scene, definitions, engine)
 
@@ -94,7 +106,14 @@ def convert(scene, context=None):
 
         _convert_seed(scene, definitions)
 
-        return utils.create_props(prefix, definitions)
+        # Create the properties
+        config_props = utils.create_props(prefix, definitions)
+
+        # Convert AOVs
+        aov_props = aovs.convert(scene, context)
+        config_props.Set(aov_props)
+
+        return config_props
     except Exception as error:
         msg = 'Config: %s' % error
         scene.luxcore.errorlog.add_warning(msg)
@@ -109,7 +128,6 @@ def _convert_path(config, definitions):
     definitions["path.pathdepth.diffuse"] = path.depth_diffuse + 1
     definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
     definitions["path.pathdepth.specular"] = path.depth_specular
-    # TODO path.forceblackbackground.enable (if film is transparent)
 
     if path.use_clamping:
         definitions["path.clamping.variance.maxvalue"] = path.clamping

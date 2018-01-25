@@ -36,9 +36,10 @@ class FrameBuffer(object):
         self._width = filmsize[0]
         self._height = filmsize[1]
         self._border = utils.calc_blender_border(context.scene, context)
+        pipeline = context.scene.camera.data.luxcore.imagepipeline
+        self._transparent = pipeline.transparent_film
 
-        transparent = False  # TODO
-        if transparent:
+        if self._transparent:
             bufferdepth = 4
             self._buffertype = GL_RGBA
             self._output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
@@ -48,7 +49,6 @@ class FrameBuffer(object):
             self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
         self.buffer = Buffer(GL_FLOAT, [self._width * self._height * bufferdepth])
-        self._transparent = transparent
 
         # Create texture
         self.texture = Buffer(GL_INT, 1)
@@ -61,7 +61,11 @@ class FrameBuffer(object):
         # update texture
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
         # TODO: when we support transparent film we need to choose between GL_RGB and GL_RGBA
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self._width, self._height, 0, GL_RGB,
+        if self._transparent:
+            mode = GL_RGBA
+        else:
+            mode = GL_RGB
+        glTexImage2D(GL_TEXTURE_2D, 0, mode, self._width, self._height, 0, mode,
                      GL_FLOAT, self.buffer)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
@@ -105,7 +109,7 @@ class FrameBuffer(object):
             # Offset is only needed if viewport is in camera mode and uses border rendering
             aspect_x, aspect_y = utils.calc_aspect(context.scene.render.resolution_x, context.scene.render.resolution_y)
 
-            base = 0.5*zoom*max(width_raw, height_raw)
+            base = 0.5 * zoom * max(width_raw, height_raw)
            
             offset_x = (0.5 - 2*zoom * view_camera_offset[0])*width_raw  - aspect_x*base + border_min_x*2*aspect_x*base
             offset_y = (0.5 - 2*zoom * view_camera_offset[1])*height_raw - aspect_y*base + border_min_y*2*aspect_y*base
@@ -124,9 +128,10 @@ class FrameBufferFinal(object):
         self._width = filmsize[0]
         self._height = filmsize[1]
         self._border = utils.calc_blender_border(scene)
+        pipeline = scene.camera.data.luxcore.imagepipeline
+        self._transparent = pipeline.transparent_film
 
-        transparent = False  # TODO
-        if transparent:
+        if self._transparent:
             bufferdepth = 4
             self._output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
             self._convert_func = pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList
@@ -136,7 +141,6 @@ class FrameBufferFinal(object):
             self._convert_func = pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList
 
         self.buffer = array.array("f", [0.0] * (self._width * self._height * bufferdepth))
-        self._transparent = transparent
 
     def draw(self, render_engine, session):
         session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
