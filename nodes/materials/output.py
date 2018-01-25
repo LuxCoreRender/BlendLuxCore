@@ -66,7 +66,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
         # Volume dropdown
         if volume:
-            text = utils.get_tree_name_with_lib(volume)
+            text = utils.get_name_with_lib(volume)
         else:
             text = "-"
 

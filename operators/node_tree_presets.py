@@ -2,7 +2,7 @@ from collections import OrderedDict
 import bpy
 from bpy.props import StringProperty, IntProperty
 from .. import utils
-from .node_tree import poll_object, make_nodetree_name
+from .utils import poll_object, make_nodetree_name
 
 
 def new_node(bl_idname, node_tree, previous_node, output=0, input=0):

@@ -2,76 +2,10 @@ import bpy
 from bpy.props import StringProperty, IntProperty
 from .. import utils
 from ..nodes import TREE_TYPES, TREE_ICONS
-
-
-def make_nodetree_name(material_name):
-    return "Nodes_" + material_name
-
-
-def poll_volume(context):
-    # Volume node trees are attached to a material output node
-    if not hasattr(context, "node"):
-        return False
-    return context.node and not context.node.id_data.library
-
-
-def poll_object(context):
-    return context.object and not context.object.library
-
-
-def poll_material(context):
-        if not hasattr(context, "material"):
-            return False
-        return context.material and not context.material.library
-
-
-def init_mat_node_tree(node_tree):
-    # Seems like we still need this.
-    # User counting does not work reliably with Python PointerProperty.
-    # Sometimes, the material this tree is linked to is not counted as user.
-    node_tree.use_fake_user = True
-
-    nodes = node_tree.nodes
-
-    output = nodes.new("LuxCoreNodeMatOutput")
-    output.location = 300, 200
-    output.select = False
-
-    matte = nodes.new("LuxCoreNodeMatMatte")
-    matte.location = 50, 200
-
-    node_tree.links.new(matte.outputs[0], output.inputs[0])
-
-
-def init_tex_node_tree(node_tree):
-    # Seems like we still need this.
-    # User counting does not work reliably with Python PointerProperty.
-    # Sometimes, the material this tree is linked to is not counted as user.
-    node_tree.use_fake_user = True
-
-    nodes = node_tree.nodes
-
-    output = nodes.new("LuxCoreNodeTexOutput")
-    output.location = 300, 200
-    output.select = False
-
-
-def init_vol_node_tree(node_tree):
-    # Seems like we still need this.
-    # User counting does not work reliably with Python PointerProperty.
-    # Sometimes, the material this tree is linked to is not counted as user.
-    node_tree.use_fake_user = True
-
-    nodes = node_tree.nodes
-
-    output = nodes.new("LuxCoreNodeVolOutput")
-    output.location = 300, 200
-    output.select = False
-
-    clear = nodes.new("LuxCoreNodeVolClear")
-    clear.location = 50, 200
-
-    node_tree.links.new(clear.outputs[0], output.inputs[0])
+from .utils import (
+    poll_object, poll_material, poll_volume, make_nodetree_name,
+    init_mat_node_tree, init_tex_node_tree, init_vol_node_tree
+)
 
 
 class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
@@ -157,61 +91,6 @@ class LUXCORE_OT_vol_nodetree_unlink(bpy.types.Operator):
 
         if context.node and hasattr(context.node, self.target):
             context.node[self.target] = None
-
-        return {"FINISHED"}
-
-
-class LUXCORE_OT_material_new(bpy.types.Operator):
-    bl_idname = "luxcore.material_new"
-    bl_label = "New"
-    bl_description = "Create a new material and node tree"
-
-    @classmethod
-    def poll(cls, context):
-        return poll_object(context)
-
-    def execute(self, context):
-        mat = bpy.data.materials.new(name="Material")
-        tree_name = make_nodetree_name(mat.name)
-        node_tree = bpy.data.node_groups.new(name=tree_name, type="luxcore_material_nodes")
-        init_mat_node_tree(node_tree)
-        mat.luxcore.node_tree = node_tree
-
-        obj = context.active_object
-        if obj.material_slots:
-            obj.material_slots[obj.active_material_index].material = mat
-        else:
-            obj.data.materials.append(mat)
-
-        return {"FINISHED"}
-
-
-class LUXCORE_OT_material_copy(bpy.types.Operator):
-    bl_idname = "luxcore.material_copy"
-    bl_label = "Copy"
-    bl_description = "Create a copy of the material (also copying the nodetree)"
-
-    @classmethod
-    def poll(cls, context):
-        return poll_object(context)
-
-    def execute(self, context):
-        current_mat = context.active_object.active_material
-
-        # Create a copy of the material
-        new_mat = current_mat.copy()
-
-        current_node_tree = current_mat.luxcore.node_tree
-
-        if current_node_tree:
-            # Create a copy of the node_tree as well
-            new_node_tree = current_node_tree.copy()
-            new_node_tree.name = make_nodetree_name(new_mat.name)
-            new_node_tree.use_fake_user = True
-            # Assign new node_tree to the new material
-            new_mat.luxcore.node_tree = new_node_tree
-
-        context.active_object.active_material = new_mat
 
         return {"FINISHED"}
 
@@ -338,13 +217,12 @@ class LUXCORE_MT_node_tree(bpy.types.Menu):
             if j > 0 and j % 20 == 0:
                 col = row.column()
 
-            text = utils.get_tree_name_with_lib(tree)
+            text = utils.get_name_with_lib(tree)
 
             op = col.operator(set_operator, text=text, icon=icon)
             op.node_tree_index = i
 
             if volume_prop:
-                print(volume_prop)
                 op.target = volume_prop
 
 

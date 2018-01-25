@@ -45,9 +45,15 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
         split = layout.split(percentage=0.68)
 
         if obj:
+            # Note that we don't use layout.template_ID() because we can't
+            # control the copy operator in that template.
+            # So we mimic our own template_ID.
             row = split.row(align=True)
-            row.prop(obj, "active_material", text="")
+            sub = row.split(align=True, percentage=1 / (context.region.width * 0.015))
+            sub.menu("LUXCORE_MT_material_select", icon="MATERIAL", text="")
+            row = sub.row(align=True)
             if obj.active_material:
+                row.prop(obj.active_material, "name", text="")
                 row.operator("luxcore.material_copy", text="", icon="COPY_ID")
                 text_new = ""
             else:
@@ -67,7 +73,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
 
         if mat:
             if mat.luxcore.node_tree:
-                tree_name = utils.get_tree_name_with_lib(mat.luxcore.node_tree)
+                tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
                 layout.label('Material Node Tree: "%s"' % tree_name, icon="NODETREE")
             else:
                 layout.operator("luxcore.mat_nodetree_new", icon="ZOOMIN", text="Use Material Nodes")

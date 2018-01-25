@@ -404,9 +404,13 @@ def find_smoke_domain_modifier(obj):
             return mod
 
 
-def get_tree_name_with_lib(node_tree):
-    text = node_tree.name
-    if node_tree.library:
-        # text += ' (Lib: "%s")' % node_tree.library.name
+def get_name_with_lib(datablock):
+    """
+    Format the name for display similar to Blender,
+    with an "L" as prefix if from a library
+    """
+    text = datablock.name
+    if datablock.library:
+        # text += ' (Lib: "%s")' % datablock.library.name
         text = "L " + text
     return text
