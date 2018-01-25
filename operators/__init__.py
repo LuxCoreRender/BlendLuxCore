@@ -25,7 +25,11 @@ class LUXCORE_OT_switch_texture_context(bpy.types.Operator):
         assert self.target in {"PARTICLES", "OTHER"}
 
         space = context.space_data
-        space.texture_context = self.target
+        try:
+            space.texture_context = self.target
+        except TypeError:
+            # Sometimes one of the target contexts is not available
+            pass
 
         return {"FINISHED"}
 
