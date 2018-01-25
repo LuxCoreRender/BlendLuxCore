@@ -12,8 +12,9 @@ import zipfile
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
 # These are the same as in BlendLuxCore/bin/get_binaries.py
-linux_binaries = ["libembree.so.2", "libtbb.so.2", "pyluxcore.so", "luxcoreui"]
-windows_binaries = ["embree.dll", "tbb.dll", "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe"]
+# (apart from missing luxcoreui, that's only for developers)
+linux_binaries = ["libembree.so.2", "libtbb.so.2", "pyluxcore.so"]
+windows_binaries = ["embree.dll", "tbb.dll", "OpenImageIO.dll", "pyluxcore.pyd"]
 
 
 def print_divider():
