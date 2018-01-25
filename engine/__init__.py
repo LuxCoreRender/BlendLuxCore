@@ -32,6 +32,13 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             assert self._session is None
             self.update_stats("Export", "exporting...")
+
+            # Create a new exporter instance.
+            # This is only needed when scene.render.use_persistent_data is enabled
+            # because in that case our instance of LuxCoreRenderEngine is re-used
+            # See https://github.com/LuxCoreRender/BlendLuxCore/issues/59
+            self._exporter = export.Exporter()
+
             self._session = self._exporter.create_session(scene, engine=self)
         except Exception as error:
             # Will be reported in self.render() below
