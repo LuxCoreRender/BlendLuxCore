@@ -11,14 +11,13 @@ It is still in early development, so expect bugs and missing features.
 - You will experience crashes and other bugs. Please report them in the bug tracker!
 ```
 
-**Note for Windows users:** Requires Blender 2.79a, which is not yet released.
-You can also use [official Blender 2.79](https://www.blender.org/download/Blender2.79/blender-2.79-windows64.zip/), but then [your materials won't be loaded correctly](https://developer.blender.org/T53509) from saved .blend files.
-
-On Linux, you can use the latest Blender build from [builder.blender.org](https://builder.blender.org/download/).
+**Note:** This addon requires Blender 2.79a. You can download the release candidate [here](https://download.blender.org/release/Blender2.79/) (Choose one of the links prefixed with "blender-2.79**a-rc**")
 
 ### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
 
 ### [Download](https://luxcorerender.org/download/)
+
+[How to install or update](https://wiki.luxcorerender.org/BlendLuxCore_Installation)
 
 BlendLuxCore releases are fully self-contained. 
 Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addons.html#header), enable the addon, switch to the "LuxCore" engine and you're done.
@@ -52,6 +51,9 @@ TODO: These do not contain .blend files yet.
 * [ ] AOVs
 * [ ] Smoke/Fire
 * [ ] Pointiness
+* [ ] Transparent film
+* [ ] Saving a resumable film
+* [ ] Most imagepipeline plugins
 * And more...
 
 ### Great new features
