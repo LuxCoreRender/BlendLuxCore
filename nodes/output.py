@@ -1,6 +1,7 @@
 import bpy
 from . import LuxCoreNode
 from .. import utils
+from ..utils import node as utils_node
 
 OUTPUT_MAP = {
     "luxcore_material_nodes": "LuxCoreNodeMatOutput",
@@ -40,6 +41,7 @@ def update_active(output_node, context):
         return
 
     output_node.disable_other_outputs()
+    utils_node.update_opengl_materials(None, context)
 
 
 class LuxCoreNodeOutput(LuxCoreNode):
