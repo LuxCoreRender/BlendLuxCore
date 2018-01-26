@@ -315,6 +315,9 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
         # Note: not "emission.importance"
         "importance": importance,
         # TODO: id, iesfile, maybe transparency (hacky)
+
+        # Note: do not add support for visibility.indirect.* settings, they are useless here
+        # because the only sensible setting is to have them enabled, otherwise we lose MIS
     }
     mat_props = utils.create_props(mat_prefix, mat_definitions)
     props.Set(mat_props)

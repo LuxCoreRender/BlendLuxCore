@@ -1,4 +1,5 @@
 import bpy
+from bpy.app.handlers import persistent
 from .bin import pyluxcore
 from .export.image import ImageExporter
 
@@ -26,11 +27,22 @@ def blendluxcore_exit():
     ImageExporter.cleanup()
 
 
+@persistent
+def blendluxcore_scene_update_post(scene):
+    for mat in bpy.data.materials:
+        node_tree = mat.luxcore.node_tree
+
+        if node_tree and node_tree.name != mat.name:
+            node_tree.name = mat.name
+
+
 def register():
     import atexit
     # Make sure we only register the callback once
     atexit.unregister(blendluxcore_exit)
     atexit.register(blendluxcore_exit)
+
+    bpy.app.handlers.scene_update_post.append(blendluxcore_scene_update_post)
 
     nodes.materials.register()
     nodes.textures.register()
