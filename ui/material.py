@@ -73,9 +73,10 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
 
         if mat:
             if mat.luxcore.node_tree:
+                row = layout.row()
                 tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
-                layout.label('Material Node Tree: "%s"' % tree_name, icon="NODETREE")
-                layout.operator("luxcore.material_show_nodetree", icon="SCREEN_BACK")
+                row.label('Nodes: "%s"' % tree_name, icon="NODETREE")
+                row.operator("luxcore.material_show_nodetree", icon="SCREEN_BACK")
             else:
                 layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use Material Nodes")
 

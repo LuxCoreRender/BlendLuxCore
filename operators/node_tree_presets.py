@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import bpy
 from bpy.props import StringProperty, IntProperty
+from mathutils import Color
 from .. import utils
 from .utils import poll_object, make_nodetree_name
 
@@ -69,23 +70,41 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             mat.luxcore.node_tree = node_tree
 
         nodes = node_tree.nodes
+        output = None
 
-        # Add the new nodes below all other nodes
-        # x location should be centered (average of other nodes x positions)
-        # y location shoud be below all others
-        location_x = 300
-        location_y = 500
+        if len(nodes) == 2:
+            # It is probably a default material, replace the matte node with the preset
+            matte = None
 
-        for node in nodes:
-            location_x = max(node.location.x, location_x)
-            location_y = min(node.location.y, location_y)
-            # De-select all nodes
-            node.select = False
+            for node in nodes:
+                # Make sure it is an unchanged default matte node
+                if (node.bl_idname == "LuxCoreNodeMatMatte"
+                        and node.inputs["Diffuse Color"].default_value == Color((0.7, 0.7, 0.7))
+                        and node.inputs["Sigma"].default_value == 0
+                        and node.inputs["Opacity"].default_value == 1):
+                    matte = node
 
-        # Create an output for the new nodes
-        output = nodes.new("LuxCoreNodeMatOutput")
-        output.location = (location_x, location_y - 300)
-        output.select = False
+            if matte:
+                nodes.remove(matte)
+                output = nodes[0]
+
+        if output is None:
+            # Add the new nodes below all other nodes
+            # x location should be centered (average of other nodes x positions)
+            # y location shoud be below all others
+            location_x = 300
+            location_y = 500
+
+            for node in nodes:
+                location_x = max(node.location.x, location_x)
+                location_y = min(node.location.y, location_y)
+                # De-select all nodes
+                node.select = False
+
+            # Create an output for the new nodes
+            output = nodes.new("LuxCoreNodeMatOutput")
+            output.location = (location_x, location_y - 300)
+            output.select = False
 
         # Category: Basic
         if self.preset in self.basic_mapping:
