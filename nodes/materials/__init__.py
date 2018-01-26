@@ -3,6 +3,7 @@ from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_MATERIAL
+from ...utils import node as utils_node
 
 # Import all material nodes just so they get registered
 from .emission import LuxCoreNodeMatEmission
@@ -54,10 +55,13 @@ class LuxCoreMaterialNodeTree(NodeTree):
     def update(self):
         self.refresh = True
 
+        # Update opengl materials in case the node linked to the
+        # output has changed
+        utils_node.update_opengl_materials(None, bpy.context)
+
     def acknowledge_connection(self, context):
-        while self.refresh:
-            self.refresh = False
-            break
+        # Set refresh to False without triggering acknowledge_connection again
+        self["refresh"] = False
 
     refresh = bpy.props.BoolProperty(name="Links Changed",
                                      default=False,

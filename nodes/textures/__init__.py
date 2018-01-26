@@ -61,9 +61,8 @@ class LuxCoreTextureNodeTree(NodeTree):
         self.refresh = True
 
     def acknowledge_connection(self, context):
-        while self.refresh:
-            self.refresh = False
-            break
+        # Set refresh to False without triggering acknowledge_connection again
+        self["refresh"] = False
 
     refresh = bpy.props.BoolProperty(name="Links Changed",
                                      default=False,

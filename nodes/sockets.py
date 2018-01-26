@@ -1,6 +1,7 @@
 import mathutils
 from bpy.types import NodeSocket
 from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty
+from ..utils.node import update_opengl_materials
 
 # The rules for socket classes are these:
 # - If it is a socket that's used by more than one node, put it in this file
@@ -120,7 +121,9 @@ class LuxCoreSocketBump(LuxCoreNodeSocket):
 
 class LuxCoreSocketColor(LuxCoreNodeSocket):
     color = Color.color_texture
-    default_value = FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1)
+    # Currently this is the only socket that updates OpenGL materials
+    default_value = FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1,
+                                        update=update_opengl_materials)
 
     def export_default(self):
         return list(self.default_value)

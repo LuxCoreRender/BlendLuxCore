@@ -11,6 +11,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_label = "LuxCore"
     bl_use_preview = False  # TODO: disabled for now
     bl_use_shading_nodes_custom = True
+    # bl_use_shading_nodes = True  # This makes the "MATERIAL" shading mode work like in Cycles
 
     def __init__(self):
         print("init")

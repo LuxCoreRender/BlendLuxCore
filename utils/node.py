@@ -1,3 +1,4 @@
+import bpy
 from ..bin import pyluxcore
 from . import find_active_uv
 
@@ -44,3 +45,39 @@ def find_nodes(node_tree, bl_idname):
             nodes.append(node)
 
     return nodes
+
+
+def update_opengl_materials(_, context):
+    if not context.object or not context.object.active_material:
+        return
+
+    mat = context.object.active_material
+    node_tree = mat.luxcore.node_tree
+    diffuse_color = (0, 0, 0)
+
+    if node_tree is None:
+        mat.diffuse_color = (0.5, 0.5, 0.5)
+        return
+
+    from ..nodes.output import get_active_output
+    output = get_active_output(node_tree)
+
+    if output:
+        first_node = get_linked_node(output.inputs["Material"])
+
+        if first_node:
+            # Set default color for nodes without color sockets, e.g. mix or glossy coating
+            diffuse_color = (0.5, 0.5, 0.5)
+
+            # Usually we want to show the color in the first input as main color
+            socket = first_node.inputs[0]
+
+            if socket.is_linked:
+                # TODO (complicated topic)
+                color_node = get_linked_node(socket)
+                if color_node.bl_idname == "LuxCoreNodeTexImagemap":
+                    ...
+            elif hasattr(socket, "default_value"):
+                diffuse_color = socket.default_value
+
+    mat.diffuse_color = diffuse_color

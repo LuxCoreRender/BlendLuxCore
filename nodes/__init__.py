@@ -156,7 +156,8 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
             self.outputs["Material"].enabled = False
             self.outputs["Color"].enabled = False
 
-    node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree)
+    node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree,
+                                description="Use the output of the selected node tree in this node tree")
 
     def init(self, context):
         self.outputs.new("LuxCoreSocketMaterial", "Material")
@@ -179,7 +180,13 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
             row.label("Node Tree:")
             row.template_ID(self, "node_tree")
 
+        if self.node_tree == self.id_data:
+            layout.label("Recursion!", icon="ERROR")
+
     def export(self, props, luxcore_name=None):
+        if self.node_tree == self.id_data:
+            raise Exception("Recursion (pointer referencing its own node tree)")
+
         # Import statement here to prevent circular imports
         from .output import get_active_output
         output = get_active_output(self.node_tree)
