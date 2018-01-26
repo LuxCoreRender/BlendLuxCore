@@ -35,12 +35,12 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
                           default="denim")
     
     def init(self, context):
-        self.add_input("LuxCoreSocketRepeatU", "Repeat U", 100)
-        self.add_input("LuxCoreSocketRepeatV", "Repeat V", 100)
         self.add_input("LuxCoreSocketColor", "Wrap Diffuse Color", (0.7, 0.05, 0.05))
         self.add_input("LuxCoreSocketColor", "Wrap Specular Color", (0.04, 0.04, 0.04))
         self.add_input("LuxCoreSocketColor", "Weft Diffuse Color", (0.64, 0.64, 0.64))
         self.add_input("LuxCoreSocketColor", "Weft Specular Color", (0.04, 0.04, 0.04))
+        self.add_input("LuxCoreSocketRepeatU", "Repeat U", 100)
+        self.add_input("LuxCoreSocketRepeatV", "Repeat V", 100)
         self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
