@@ -106,3 +106,29 @@ class LUXCORE_MT_material_select(bpy.types.Menu):
 
             op = col.operator("luxcore.material_set", text=name, icon="MATERIAL")
             op.material_index = i
+
+
+class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
+    bl_idname = "luxcore.material_show_nodetree"
+    bl_label = "Show Node Tree"
+    bl_description = "Switch to the node tree of this material"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj and obj.active_material and obj.active_material.luxcore.node_tree
+
+    def execute(self, context):
+        mat = context.active_object.active_material
+        node_tree = mat.luxcore.node_tree
+
+        for area in context.screen.areas:
+            if area.type == "NODE_EDITOR":
+                for space in area.spaces:
+                    if space.type == "NODE_EDITOR":
+                        space.tree_type = node_tree.bl_idname
+                        space.node_tree = node_tree
+                        return {"FINISHED"}
+
+        self.report({"ERROR"}, "Open a node editor first")
+        return {"CANCELLED"}

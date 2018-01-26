@@ -96,6 +96,10 @@ class LUXCORE_OT_vol_nodetree_unlink(bpy.types.Operator):
 
 
 class LUXCORE_OT_switch_to_node_tree(bpy.types.Operator):
+    """
+    Note: this operator only works in layouts of nodes (needs node editor context)
+    """
+
     bl_idname = "luxcore.switch_to_node_tree"
     bl_label = "Show"
     bl_description = "Show node tree"
