@@ -90,8 +90,15 @@ class LUXCORE_MT_material_select(bpy.types.Menu):
         row = layout.row()
         col = row.column()
 
-        for i in range(len(bpy.data.materials)):
-            if i > 0 and i % 15 == 0:
+        mat_count = len(bpy.data.materials)
+        entries_per_column = 15
+
+        for i in range(mat_count):
+            if mat_count < 50 and i > 0 and i % entries_per_column == 0:
+                # Make a new column to the right instead of creating a huge list
+                # If we have many materials, we can't do this, because it removes
+                # the ability to scroll through the menu if there are more
+                # entries than fit on the screen.
                 col = row.column()
 
             mat = bpy.data.materials[i]
