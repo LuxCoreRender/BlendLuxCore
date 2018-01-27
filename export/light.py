@@ -35,10 +35,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
         definitions["importance"] = importance
 
         if lamp.type == "POINT":
-            lc = lamp.luxcore
-            has_ies = (lc.iesfile_type == "TEXT" and lc.iesfile_text) or (lc.iesfile_type == "PATH" and lc.iesfile_path)
-
-            if lamp.luxcore.image or has_ies:
+            if lamp.luxcore.image or lamp.luxcore.use_ies:
                 # mappoint
                 definitions["type"] = "mappoint"
                 definitions["flipz"] = lamp.luxcore.flipz
@@ -56,27 +53,12 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                         # Signal that the image is missing
                         definitions["gain"] = [x * lamp.luxcore.gain for x in MISSING_IMAGE_COLOR]
 
-                # There are two ways to specify IES data: filepath or blob (ascii text)
-                if lamp.luxcore.iesfile_type == "TEXT":
-                    # Blender text block
-                    text = lamp.luxcore.iesfile_text
-
-                    if text:
-                        blob = text.as_string().encode("ascii")
-
-                        if blob:
-                            definitions["iesblob"] = [blob]
-                else:
-                    # File path
-                    iesfile = lamp.luxcore.iesfile_path
-
-                    if iesfile:
-                        filepath = utils.get_abspath(iesfile, lamp.library, must_exist=True, must_be_file=True)
-
-                        if filepath:
-                            definitions["iesfile"] = filepath
-                        else:
-                            _report_missing_iesfile(blender_obj, scene, iesfile)
+                try:
+                    export_ies(definitions, lamp.luxcore.iesfile_type, lamp.luxcore.iesfile_text,
+                               lamp.luxcore.iesfile_path, lamp.luxcore.flipz, lamp.library)
+                except OSError as error:
+                    msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+                    scene.luxcore.errorlog.add_warning(msg)
             else:
                 # point
                 definitions["type"] = "point"
@@ -311,14 +293,24 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
         "emission.power": lamp.luxcore.power,
         "emission.efficency": lamp.luxcore.efficacy,
         "emission.samples": samples,
-        # "emission.theta": TODO,
+        "emission.theta": math.degrees(lamp.luxcore.spread_angle),
         # Note: not "emission.importance"
         "importance": importance,
-        # TODO: id, iesfile, maybe transparency (hacky)
+        # TODO: id, maybe transparency (hacky)
 
         # Note: do not add support for visibility.indirect.* settings, they are useless here
         # because the only sensible setting is to have them enabled, otherwise we lose MIS
     }
+
+    # IES data
+    if lamp.luxcore.use_ies:
+        try:
+            export_ies(mat_definitions, lamp.luxcore.iesfile_type, lamp.luxcore.iesfile_text,
+                       lamp.luxcore.iesfile_path, lamp.luxcore.flipz, lamp.library, is_meshlight=True)
+        except OSError as error:
+            msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+            scene.luxcore.errorlog.add_warning(msg)
+
     mat_props = utils.create_props(mat_prefix, mat_definitions)
     props.Set(mat_props)
 
@@ -326,6 +318,11 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
 
     # Copy transformation of area lamp object
     transform_matrix = calc_area_lamp_transformation(blender_obj)
+
+    if transform_matrix.determinant() == 0:
+        # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)
+        # This happens if the lamp size is set to 0
+        raise Exception("Area lamp has size 0 (can not be exported)")
 
     transform = utils.matrix_to_list(transform_matrix, scene, apply_worldscale=True)
     # Only bake the transform into the mesh for final renders (disables instancing which
@@ -381,11 +378,32 @@ def _indirect_light_visibility(definitions, lamp_or_world):
     })
 
 
-def _report_missing_iesfile(blender_obj, scene, filepath):
-    """
-    Note: pass in the original filepath - the one returned by
-    utils.get_abspath() is None if the file is not found
-    """
-    error = 'Could not find .ies file at path "%s"' % filepath
-    msg = 'Lamp "%s": %s' % (blender_obj.name, error)
-    scene.luxcore.errorlog.add_warning(msg)
+def export_ies(definitions, iesfile_type, iesfile_text, iesfile_path, flipz, library, is_meshlight=False):
+    prefix = "emission." if is_meshlight else ""
+    has_ies = (iesfile_type == "TEXT" and iesfile_text) or (iesfile_type == "PATH" and iesfile_path)
+
+    if has_ies:
+        definitions[prefix + "flipz"] = flipz
+
+        # There are two ways to specify IES data: filepath or blob (ascii text)
+        if iesfile_type == "TEXT":
+            # Blender text block
+            text = iesfile_text
+
+            if text:
+                blob = text.as_string().encode("ascii")
+
+                if blob:
+                    definitions[prefix + "iesblob"] = [blob]
+        else:
+            # File path
+            iesfile = iesfile_path
+
+            if iesfile:
+                filepath = utils.get_abspath(iesfile, library, must_exist=True, must_be_file=True)
+
+                if filepath:
+                    definitions[prefix + "iesfile"] = filepath
+                else:
+                    error = 'Could not find .ies file at path "%s"' % iesfile
+                    raise OSError(error)

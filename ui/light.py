@@ -27,6 +27,32 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
         if lamp.luxcore.image:
             col.prop(lamp.luxcore, "gamma")
 
+    def draw_ies_controls(self, context):
+        layout = self.layout
+        lamp = context.lamp
+
+        col = layout.column(align=True)
+        col.prop(lamp.luxcore, "use_ies", toggle=True)
+
+        if lamp.luxcore.use_ies:
+            box = col.box()
+
+            row = box.row()
+            row.label("IES Data:")
+            row.prop(lamp.luxcore, "iesfile_type", expand=True)
+
+            if lamp.luxcore.iesfile_type == "TEXT":
+                box.prop(lamp.luxcore, "iesfile_text")
+                iesfile = lamp.luxcore.iesfile_text
+            else:
+                # lamp.luxcore.iesfile_type == "PATH":
+                box.prop(lamp.luxcore, "iesfile_path")
+                iesfile = lamp.luxcore.iesfile_path
+
+            sub = box.column()
+            sub.active = bool(iesfile)
+            sub.prop(lamp.luxcore, "flipz")
+
     def draw(self, context):
         layout = self.layout
         lamp = context.lamp
@@ -47,22 +73,7 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
             row.prop(lamp.luxcore, "efficacy")
 
             # IES Data
-            col = layout.column()
-            row = col.row()
-            row.label("IES Data:")
-            row.prop(lamp.luxcore, "iesfile_type", expand=True)
-
-            if lamp.luxcore.iesfile_type == "TEXT":
-                col.prop(lamp.luxcore, "iesfile_text")
-                iesfile = lamp.luxcore.iesfile_text
-            else:
-                # lamp.luxcore.iesfile_type == "PATH":
-                col.prop(lamp.luxcore, "iesfile_path")
-                iesfile = lamp.luxcore.iesfile_path
-
-            sub = col.column()
-            sub.active = bool(iesfile)
-            sub.prop(lamp.luxcore, "flipz")
+            self.draw_ies_controls(context)
 
             self.draw_image_controls(context)
 
@@ -81,14 +92,13 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
             row.prop(lamp.luxcore, "efficacy")
 
             row = layout.row(align=True)
-            row.prop(lamp, "spot_size")
+            row.prop(lamp, "spot_size", slider=True)
             if lamp.luxcore.image is None:
                 # projection does not have this property
-                row.prop(lamp, "spot_blend")
+                row.prop(lamp, "spot_blend", slider=True)
+            layout.prop(lamp, "show_cone")
 
             self.draw_image_controls(context)
-
-            layout.prop(lamp, "show_cone")
 
         elif lamp.type == "HEMI":
             self.draw_image_controls(context)
@@ -114,6 +124,10 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
                 else:
                     row.prop(lamp, "size", text="Size X")
                     row.prop(lamp, "size_y")
+
+            layout.prop(lamp.luxcore, "spread_angle", slider=True)
+
+            self.draw_ies_controls(context)
 
             layout.prop(lamp.luxcore, "is_laser")
 

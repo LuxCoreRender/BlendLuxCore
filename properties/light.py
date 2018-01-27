@@ -3,6 +3,7 @@ from bpy.props import (
     PointerProperty, EnumProperty, FloatProperty, IntProperty,
     FloatVectorProperty, BoolProperty, StringProperty
 )
+import math
 
 
 SAMPLES_DESCRIPTION = (
@@ -36,6 +37,7 @@ SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION = (
     "Used to avoid shadows cast from below when using shadow catcher"
 )
 
+USE_IES_DESCRIPTION = "Use an IES file to control the shape of the emitted light"
 IES_FILE_DESCRIPTION = "Specify path to IES file. Only portable if a relative path is used."
 IES_TEXT_DESCRIPTION = (
     "Use Blender text block as IES file. Recommended if you plan to append/link this light later."
@@ -44,6 +46,12 @@ iesfile_type_items = [
     ("PATH", "File", IES_FILE_DESCRIPTION, 0),
     ("TEXT", "Text", IES_TEXT_DESCRIPTION, 1)
 ]
+
+SPREAD_ANGLE_DESCRIPTION = (
+    "How directional the light is emitted, set as the half-angle of the light source. "
+    "Default is 90°. Smaller values mean that more light is emitted in the direction "
+    "of the light and less to the sides."
+)
 
 
 def init():
@@ -113,6 +121,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0, description=EFFICACY_DESCRIPTION)
 
     # mappoint
+    use_ies = BoolProperty(name="Use IES File", default=False, description=USE_IES_DESCRIPTION)
     iesfile_type = EnumProperty(name="IES File Type", items=iesfile_type_items, default="TEXT")
     iesfile_path = StringProperty(name="IES File", subtype="FILE_PATH", description=IES_FILE_DESCRIPTION)
     iesfile_text = PointerProperty(name="IES Text", type=bpy.types.Text, description=IES_TEXT_DESCRIPTION)
@@ -136,3 +145,10 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     visibility_indirect_diffuse = BoolProperty(name="Diffuse", default=True)
     visibility_indirect_glossy = BoolProperty(name="Glossy", default=True)
     visibility_indirect_specular = BoolProperty(name="Specular", default=True)
+
+    # area
+    # We use unit="ROTATION" because angles are radians, so conversion is necessary for the UI
+    spread_angle = FloatProperty(name="Spread Angle", default=math.pi / 2, min=0, soft_min=math.radians(5),
+                                 max=math.pi / 2, subtype="ANGLE", unit="ROTATION",
+                                 description=SPREAD_ANGLE_DESCRIPTION)
+
