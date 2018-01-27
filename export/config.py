@@ -80,9 +80,13 @@ def convert(scene, context=None):
             "sampler.type": sampler,
             "film.width": width,
             "film.height": height,
-            "film.filter.type": "BLACKMANHARRIS" if config.use_filter else "NONE",
+            "film.filter.type": config.filter,
             "film.filter.width": config.filter_width,
         })
+
+        # Filter
+        if config.filter == "GAUSSIAN":
+            definitions["film.filter.gaussian.alpha"] = config.gaussian_alpha
 
         use_filesaver = context is None and config.use_filesaver
 

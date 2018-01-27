@@ -69,12 +69,15 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
             if config.use_tiles:
                 layout.label("Tiled path uses special sampler", icon="INFO")
-                layout.prop(config.tile, "size")
-                layout.prop(config.tile, "path_sampling_aa_size")
+                row = layout.row(align=True)
+                row.prop(config.tile, "size")
+                row.prop(config.tile, "path_sampling_aa_size")
+
                 layout.prop(config.tile, "multipass_enable")
                 if config.tile.multipass_enable:
-                    layout.prop(config.tile, "multipass_convtest_threshold")
-                    layout.prop(config.tile, "multipass_convtest_threshold_reduction")
+                    col = layout.column(align=True)
+                    col.prop(config.tile, "multipass_convtest_threshold")
+                    col.prop(config.tile, "multipass_convtest_threshold_reduction")
                     # TODO do we need to expose this? In LuxBlend we didn't
                     # layout.prop(config.tile, "multipass_convtest_warmup")
             else:
@@ -94,10 +97,12 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
         # Filter settings
         row = layout.row()
-        row.prop(config, "use_filter")
-        split = row.split()
-        split.active = config.use_filter
-        split.prop(config, "filter_width")
+        row.prop(config, "filter")
+        sub = row.row()
+        sub.active = config.filter != "NONE"
+        sub.prop(config, "filter_width")
+        if config.filter == "GAUSSIAN":
+            layout.prop(config, "gaussian_alpha")
 
         # Seed settings
         row = layout.row(align=True)

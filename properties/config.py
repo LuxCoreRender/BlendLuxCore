@@ -150,9 +150,18 @@ class LuxCoreConfig(PropertyGroup):
     bidir_path_maxdepth = IntProperty(name="Eye Depth", default=10, min=1, soft_max=16)
 
     # Pixel filter
-    use_filter = BoolProperty(name="Use Pixel Filter", default=True, description=FILTER_DESC)
-    filter_width = FloatProperty(name="Width", default=1.5, min=0.5, soft_max=3,
+    filters = [
+        ("BLACKMANHARRIS", "Blackman-Harris", "Default, usually the best option", 0),
+        ("MITCHELL_SS", "Mitchell", "Sharp, but can produce black ringing artifacts around bright pixels", 1),
+        ("GAUSSIAN", "Gaussian", "Blurry", 2),
+        ("NONE", "None", "Disable pixel filtering. Fastest setting when rendering on GPU", 3)
+    ]
+    filter = EnumProperty(name="Filter", items=filters, default="BLACKMANHARRIS",
+                          description=FILTER_DESC)
+    filter_width = FloatProperty(name="Filter Width", default=1.5, min=0.5, soft_max=3,
                                  description=FILTER_WIDTH_DESC, subtype="PIXEL")
+    gaussian_alpha = FloatProperty(name="Gaussian Filter Alpha", default=2, min=0.1, max=10,
+                                   description="Gaussian rate of falloff. Lower values give blurrier images.")
 
     # FILESAVER options
     use_filesaver = BoolProperty(name="Only write LuxCore scene", default=False)
