@@ -58,6 +58,8 @@ def register():
 
 
 def unregister():
+    bpy.app.handlers.scene_update_post.remove(blendluxcore_scene_update_post)
+
     ui.unregister()
     nodes.materials.unregister()
     nodes.textures.unregister()
