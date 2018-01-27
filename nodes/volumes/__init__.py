@@ -114,6 +114,7 @@ luxcore_node_categories_volume = [
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_LIGHT", "Light", items=[
         NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
         NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
+        NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_POINTER", "Pointer", items=[

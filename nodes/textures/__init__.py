@@ -29,6 +29,7 @@ from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
 from .hsv import LuxCoreNodeTexHSV
 from .imagemap import LuxCoreNodeTexImagemap
+from .irregulardata import LuxCoreNodeTexIrregularData
 from .lampspectrum import LuxCoreNodeTexLampSpectrum
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
@@ -100,6 +101,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
         NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
