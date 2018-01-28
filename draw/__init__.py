@@ -64,7 +64,6 @@ class FrameBuffer(object):
 
         # update texture
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
-        # TODO: when we support transparent film we need to choose between GL_RGB and GL_RGBA
         if self._transparent:
             mode = GL_RGBA
         else:
@@ -88,6 +87,7 @@ class FrameBuffer(object):
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
 
         if engine.support_display_space_shader(context.scene):
+            # This is the fragment shader that applies Blender color management
             engine.bind_display_space_shader(context.scene)
 
         draw_quad(offset_x, offset_y, self._width, self._height)
