@@ -7,6 +7,16 @@ TILED_DESCRIPTION = (
     "Render the image in quadratic chunks instead of sampling the whole film at once;\n"
     "Causes lower memory usage; Uses a special sampler"
 )
+TILE_SIZE_DESC = (
+    "Note that OpenCL devices will automatically render multiple tiles if it increases performance"
+)
+
+AA_SAMPLE_DESC = "How many samples to compute per pass. Higher values increase memory usage"
+
+THRESH_REDUCT_DESC = (
+    "Multiply noise level with this value after all tiles have converged, "
+    "then continue with the lowered noise level"
+)
 
 SIMPLE_DESC = "Recommended for scenes with simple lighting (outdoors, studio setups, indoors with large windows)"
 COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoors with small windows)"
@@ -66,19 +76,26 @@ class LuxCoreConfigTile(PropertyGroup):
     Stored in LuxCoreConfig, accesss with scene.luxcore.config.tile
     """
     # tilepath.sampling.aa.size
-    path_sampling_aa_size = IntProperty(name="AA Samples", default=3, min=1, soft_max=13)
+    path_sampling_aa_size = IntProperty(name="AA Samples", default=3, min=1, soft_max=13,
+                                        description=AA_SAMPLE_DESC)
+
     # tile.size
-    size = IntProperty(name="Tile Size", default=64, min=16, soft_min=32, soft_max=256, subtype="PIXEL")
+    size = IntProperty(name="Tile Size", default=64, min=16, soft_min=32, soft_max=256, subtype="PIXEL",
+                       description=TILE_SIZE_DESC)
+
     # tile.multipass.enable
-    multipass_enable = BoolProperty(name="Multipass", default=True)
+    multipass_enable = BoolProperty(name="Multipass", default=True, description="")
+
     # TODO: min/max correct?
     # tile.multipass.convergencetest.threshold
     multipass_convtest_threshold = FloatProperty(name="Convergence Threshold", default=(6 / 256),
-                                                 min=0.0000001, soft_max=(6 / 256))
+                                                 min=0.0000001, soft_max=(6 / 256),
+                                                 description="")
     # TODO min/max/default
     # tile.multipass.convergencetest.threshold.reduction
     multipass_convtest_threshold_reduction = FloatProperty(name="Threshold Reduction", default=0.5, min=0.001,
-                                                           soft_min=0.1, max=0.99, soft_max=0.9)
+                                                           soft_min=0.1, max=0.99, soft_max=0.9,
+                                                           description=THRESH_REDUCT_DESC)
     # TODO do we need to expose this? In LuxBlend we didn't
     # tile.multipass.convergencetest.warmup.count
     # multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0, soft_max=128)

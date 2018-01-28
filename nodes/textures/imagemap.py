@@ -60,6 +60,12 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketBump", "Bump")
         self.outputs["Bump"].enabled = False
 
+    def draw_label(self):
+        if self.image:
+            return self.image.name
+        else:
+            return self.bl_label
+
     def draw_buttons(self, context, layout):
         layout.template_ID(self, "image", open="image.open")
 
