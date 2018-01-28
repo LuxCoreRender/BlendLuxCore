@@ -7,16 +7,11 @@ from bpy.types import Panel, Texture, ParticleSettings, Brush
 class LUXCORE_TEXTURE_PT_context_texture(TextureButtonsPanel, Panel):
     bl_label = ""
     bl_options = {'HIDE_HEADER'}
-    COMPAT_ENGINES = {'LUXCORE'}
 
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return ((context.texture or
-                 context.particle_system or
-                 isinstance(context.space_data.pin_id, ParticleSettings) or
-                 context.texture_user) and
-                (engine in cls.COMPAT_ENGINES))
+        return engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
