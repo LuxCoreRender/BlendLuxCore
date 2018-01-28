@@ -1,8 +1,6 @@
-import bpy
 from bpy.props import FloatProperty, BoolProperty, FloatVectorProperty, EnumProperty
 from mathutils import Matrix
 from .. import LuxCoreNodeTexture
-from math import radians
 
 
 class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
@@ -59,9 +57,9 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
             mapping_type = self.mapping_type
 
         # create a location matrix
-        tex_loc = Matrix.Translation((self.translate))
+        tex_loc = Matrix.Translation(self.translate)
 
-        # create an identitiy matrix
+        # create an identity matrix
         tex_sca = Matrix()
         tex_sca[0][0] = self.uniform_scale if self.use_uniform_scale else self.scale[0]  # X
         tex_sca[1][1] = self.uniform_scale if self.use_uniform_scale else self.scale[1]  # Y
@@ -73,9 +71,9 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
                 tex_sca[i][i] = 0.0000000001
 
         # create a rotation matrix
-        tex_rot0 = Matrix.Rotation(radians(self.rotate[0]), 4, "X")
-        tex_rot1 = Matrix.Rotation(radians(self.rotate[1]), 4, "Y")
-        tex_rot2 = Matrix.Rotation(radians(self.rotate[2]), 4, "Z")
+        tex_rot0 = Matrix.Rotation(self.rotate[0], 4, "X")
+        tex_rot1 = Matrix.Rotation(self.rotate[1], 4, "Y")
+        tex_rot2 = Matrix.Rotation(self.rotate[2], 4, "Z")
         tex_rot = tex_rot0 * tex_rot1 * tex_rot2
 
         # combine transformations
