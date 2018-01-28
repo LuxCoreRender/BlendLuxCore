@@ -3,11 +3,6 @@ from bpy.props import StringProperty, CollectionProperty
 from bpy.types import PropertyGroup
 
 
-def read_only(string_property, value):
-    print("tried to access")
-    pass
-
-
 class LuxCoreError(PropertyGroup):
     message = StringProperty()
 

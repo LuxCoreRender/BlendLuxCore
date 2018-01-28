@@ -63,3 +63,14 @@ class LUXCORE_OT_set_optimal_clamping_value(bpy.types.Operator):
         config.path.clamping = config.path.optimal_clamping_value
 
         return {"FINISHED"}
+
+
+class LUXCORE_OT_update_opencl_devices(bpy.types.Operator):
+    bl_idname = "luxcore.update_opencl_devices"
+    bl_label = "Update OpenCL device list"
+
+    def execute(self, context):
+        opencl = context.scene.luxcore.opencl
+        device_list = opencl.get_opencl_devices()
+        opencl.init_devices(device_list)
+        return {"FINISHED"}

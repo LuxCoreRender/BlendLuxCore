@@ -120,14 +120,56 @@ class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
     def poll(cls, context):
         return context.scene.render.engine == "LUXCORE"
 
+    def _draw_devices(self, layout, devices):
+        for device in devices:
+            layout.prop(device, "enabled", text=device.name)
+
     def draw(self, context):
         layout = self.layout
         config = context.scene.luxcore.config
+        opencl = context.scene.luxcore.opencl
 
         if config.engine == "PATH" and config.device == "OCL":
-            layout.label("OpenCL Options:")
-            layout.prop(config.opencl, "use_cpu")
-            layout.prop(config.opencl, "use_gpu")
+            if not opencl.devices:
+                layout.label("No OpenCL Devices available.", icon="ERROR")
+                layout.operator("luxcore.update_opencl_devices")
+
+            gpu_devices = [device for device in opencl.devices if device.type == "OPENCL_GPU"]
+            cpu_devices = [device for device in opencl.devices if device.type == "OPENCL_CPU"]
+            other_devices = set(opencl.devices) - (set(gpu_devices) | set(cpu_devices))
+
+            if gpu_devices:
+                col = layout.column(align=True)
+                col.prop(opencl, "use_gpu", toggle=True)
+
+                if opencl.use_gpu:
+                    box = col.box()
+                    box.active = opencl.use_gpu
+                    self._draw_devices(box, gpu_devices)
+
+            if cpu_devices:
+                col = layout.column(align=True)
+                col.prop(opencl, "use_cpu", toggle=True)
+
+                if opencl.use_cpu:
+                    box = col.box()
+                    box.active = opencl.use_cpu
+                    self._draw_devices(box, cpu_devices)
+
+            if other_devices:
+                col = layout.column(align=True)
+                box = col.box()
+                box.label("Other Devices")
+                box = col.box()
+                box.active = opencl.use_gpu
+                self._draw_devices(box, other_devices)
+
+            has_cpus = any([device.enabled for device in cpu_devices]) and opencl.use_cpu
+            has_gpus = any([device.enabled for device in gpu_devices]) and opencl.use_gpu
+            has_others = any([device.enabled for device in other_devices])
+            if not has_cpus and not has_gpus and not has_others:
+                layout.label("Select at least one OpenCL device!", icon="ERROR")
+
         elif config.device == "CPU" or config.engine == "BIDIR":
             layout.label(text="CPU Threads:")
             row = layout.row(align=True)

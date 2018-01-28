@@ -1,6 +1,8 @@
 import bpy
-from . import (blender_object, camera, config, display,
-               errorlog, halt, light, material, particle, world)
+from . import (
+    blender_object, camera, config, display, errorlog, halt,
+    light, material, opencl, particle, world
+)
 from bpy.props import PointerProperty
 
 
@@ -20,3 +22,4 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     errorlog = PointerProperty(type=errorlog.LuxCoreErrorLog)
     halt = PointerProperty(type=halt.LuxCoreHaltConditions)
     display = PointerProperty(type=display.LuxCoreDisplaySettings)
+    opencl = PointerProperty(type=opencl.LuxCoreOpenCLSettings)

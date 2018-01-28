@@ -28,7 +28,18 @@ def blendluxcore_exit():
 
 
 @persistent
-def blendluxcore_scene_update_post(scene):
+def luxcore_load_post(_):
+    """ Note: the only argument Blender passes is always None """
+    for scene in bpy.data.scenes:
+        scene.luxcore.opencl.update_devices_if_necessary()
+
+        if pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool():
+            # OpenCL not available, make sure we are using CPU device
+            scene.luxcore.config.device = "CPU"
+
+
+@persistent
+def luxcore_scene_update_post(scene):
     for mat in bpy.data.materials:
         node_tree = mat.luxcore.node_tree
 
@@ -42,7 +53,8 @@ def register():
     atexit.unregister(blendluxcore_exit)
     atexit.register(blendluxcore_exit)
 
-    bpy.app.handlers.scene_update_post.append(blendluxcore_scene_update_post)
+    bpy.app.handlers.load_post.append(luxcore_load_post)
+    bpy.app.handlers.scene_update_post.append(luxcore_scene_update_post)
 
     nodes.materials.register()
     nodes.textures.register()
@@ -58,7 +70,8 @@ def register():
 
 
 def unregister():
-    bpy.app.handlers.scene_update_post.remove(blendluxcore_scene_update_post)
+    bpy.app.handlers.load_post.remove(luxcore_load_post)
+    bpy.app.handlers.scene_update_post.remove(luxcore_scene_update_post)
 
     ui.unregister()
     nodes.materials.unregister()

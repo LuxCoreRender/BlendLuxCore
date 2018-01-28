@@ -101,25 +101,6 @@ class LuxCoreConfigTile(PropertyGroup):
     # multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0, soft_max=128)
 
 
-class LuxCoreConfigOpenCL(PropertyGroup):
-    """
-    opencl.*
-    Stored in LuxCoreConfig, accesss with scene.luxcore.config.opencl
-    """
-    # TODO: opencl.platform.index - do we expose this?
-    # opencl.cpu.use
-    use_cpu = BoolProperty(name="Use CPUs", default=False)
-    # opencl.gpu.use
-    use_gpu = BoolProperty(name="Use GPUs", default=True)
-
-    # TODO This will be set automatically on export when custom device selection is enabled
-    # opencl.devices.select
-
-    # We probably don't need to expose these properties
-    # opencl.cpu.workgroup.size
-    # opencl.gpu.workgroup.size
-
-
 class LuxCoreConfig(PropertyGroup):
     """
     Main config storage class.
@@ -159,7 +140,6 @@ class LuxCoreConfig(PropertyGroup):
     # Special properties of the various engines
     path = PointerProperty(type=LuxCoreConfigPath)
     tile = PointerProperty(type=LuxCoreConfigTile)
-    opencl = PointerProperty(type=LuxCoreConfigOpenCL)
     # BIDIR properties
     # light.maxdepth
     bidir_light_maxdepth = IntProperty(name="Light Depth", default=10, min=1, soft_max=16)

@@ -61,9 +61,10 @@ def convert(scene, context=None):
 
                 if config.device == "OCL":
                     # OpenCL specific settings
-                    definitions["opencl.cpu.use"] = config.opencl.use_cpu
-                    definitions["opencl.gpu.use"] = config.opencl.use_gpu
-                    # TODO opencl.devices.select
+                    opencl = scene.luxcore.opencl
+                    definitions["opencl.cpu.use"] = opencl.use_cpu
+                    definitions["opencl.gpu.use"] = opencl.use_gpu
+                    definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
             else:
                 # config.engine == BIDIR
                 engine = "BIDIRCPU"
