@@ -20,7 +20,7 @@ A new instance of `LuxCoreRenderEngine` is created in these cases:
 * Viewport render: created when shading mode is set to RENDERED, destroyed when shading mode is changed to something else.
   Also destroyed and re-created when changing frame!
 * Final render: created when final render is started (e.g. by F12), destroyed when the render ends 
-  (when leaving the `render(scene)` function)
+  (when leaving the `render(scene)` function) - with one exception, see [this issue](https://github.com/LuxCoreRender/BlendLuxCore/issues/59)
 * Material preview: same as final render (we can check if we are in preview mode with `self.is_preview`,
   the rest is exactly the same)
 
@@ -38,6 +38,8 @@ It's also responsible for scene and session updates during viewport render sessi
 Note: If we have a context (i.e. `context is not None`) then we are in viewport render mode. 
 If we have no context (`context is None`) then we are in final render or material preview mode.
 This is not explained/commented all the time in the code because it's such a fundamental concept.
+However, it's not like we have no context at all in final render mode, you can still get it with `bpy.context`. 
+But it is not passed into the methods by the RenderEngine API in Blender.
 
 Note also that nodes are not exported here, they have their own 
 export methods in their classes (in the **nodes** directory, see below).
@@ -56,7 +58,8 @@ Contains everything node-related.
   
   Note that texture nodes can also be created "inline" in material or volume node trees. 
   The texture node tree is made for re-usable texture setups, for example when you want to use the same
-  very complex texture setup in several different material node trees.
+  very complex texture setup in several different material node trees. 
+  In this case you can reference the texture node tree using the Pointer node.
   
   #### volumes
   
@@ -69,6 +72,22 @@ Custom operators, e.g. wrappers.
 ### properties
 
 All custom properties are registered and attached here.
+
+We group them in a `luxcore` PropertyGroup for each datablock type. Some Examples:
+
+* `bpy.types.Material.luxcore.*`
+* `bpy.types.World.luxcore.*`
+* `bpy.types.Camera.luxcore.*`
+* `bpy.types.Scene.luxcore.*`
+
+So if you want to access the LuxCore node tree of a material, you can get it like this:
+
+```python
+# Assuming we have an active object, get the material
+material = context.object.active_material
+node_tree = material.luxcore.node_tree
+print("Material", material.name, "has the following node tree:", node_tree.name)
+```
 
 ### tests
 
@@ -87,7 +106,7 @@ In these panels we display the properties defined in the **properties/** folder.
 Utility functions that can be used in many different places.
 
 Some functions are grouped, e.g. node related utility functions in `utils/node.py`. It is recommended to import them like this:
-```
+```python
 from .utils import node as utils_node
 # Now use one of the functions
 utils_node.draw_uv_info(context, layout)
