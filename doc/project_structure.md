@@ -73,6 +73,22 @@ Custom operators, e.g. wrappers.
 
 All custom properties are registered and attached here.
 
+We group them in a `luxcore` PropertyGroup for each datablock type. Some Examples:
+
+* `bpy.types.Material.luxcore.*`
+* `bpy.types.World.luxcore.*`
+* `bpy.types.Camera.luxcore.*`
+* `bpy.types.Scene.luxcore.*`
+
+So if you want to access the LuxCore node tree of a material, you can get it like this:
+
+```python
+# Assuming we have an active object, get the material
+material = context.object.active_material
+node_tree = material.luxcore.node_tree
+print("Material", material.name, "has the following node tree:", node_tree.name)
+```
+
 ### tests
 
 Automated tests. See https://github.com/LuxCoreRender/BlendLuxCore/blob/master/tests/readme.md
@@ -90,7 +106,7 @@ In these panels we display the properties defined in the **properties/** folder.
 Utility functions that can be used in many different places.
 
 Some functions are grouped, e.g. node related utility functions in `utils/node.py`. It is recommended to import them like this:
-```
+```python
 from .utils import node as utils_node
 # Now use one of the functions
 utils_node.draw_uv_info(context, layout)
