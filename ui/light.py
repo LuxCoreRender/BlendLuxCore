@@ -125,9 +125,9 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
                     row.prop(lamp, "size", text="Size X")
                     row.prop(lamp, "size_y")
 
-            layout.prop(lamp.luxcore, "spread_angle", slider=True)
+                layout.prop(lamp.luxcore, "spread_angle", slider=True)
 
-            self.draw_ies_controls(context)
+                self.draw_ies_controls(context)
 
             layout.prop(lamp.luxcore, "is_laser")
 
