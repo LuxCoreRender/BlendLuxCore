@@ -23,7 +23,6 @@ class LuxCoreVolumeNodeTree(NodeTree):
         return context.scene.render.engine == "LUXCORE"
 
     # TODO figure out if we even can choose the volume node tree for the user
-    # TODO because materials have interior and exterior nodetree (need to open two trees)
     # @classmethod
     # def get_from_context(cls, context):
     #     obj = context.active_object

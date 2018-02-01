@@ -1,7 +1,9 @@
 import bpy
 
-# Ensure initialization
-from . import material, node_tree, node_tree_presets
+# Ensure initialization (note: no need to initialize utils)
+from . import (
+    camera, material, node_tree_presets, pointer_node, texture, world
+)
 
 
 class LUXCORE_OT_errorlog_clear(bpy.types.Operator):

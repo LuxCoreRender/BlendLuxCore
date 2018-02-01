@@ -49,3 +49,5 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     visibility_indirect_glossy = BoolProperty(name="Glossy", default=True)
     visibility_indirect_specular = BoolProperty(name="Specular", default=True)
 
+    volume = PointerProperty(type=bpy.types.NodeTree)
+

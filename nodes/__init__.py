@@ -3,6 +3,7 @@ from bpy.types import Node
 from bpy.props import PointerProperty
 from .. import utils
 from ..utils import node as utils_node
+from ..utils import ui as utils_ui
 from ..ui import ICON_MATERIAL, ICON_TEXTURE, ICON_VOLUME
 
 TREE_TYPES = (
@@ -146,15 +147,18 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
     """ Pointer to a node tree """
     bl_label = "Pointer"
     bl_width_min = 160
+    bl_width_default = 210
     suffix = "pointer"
 
     def update_node_tree(self, context):
         if self.node_tree:
             self.outputs["Material"].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
             self.outputs["Color"].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
+            self.outputs["Volume"].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
         else:
             self.outputs["Material"].enabled = False
             self.outputs["Color"].enabled = False
+            self.outputs["Volume"].enabled = False
 
     node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree,
                                 description="Use the output of the selected node tree in this node tree")
@@ -164,21 +168,20 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
         self.outputs["Material"].enabled = False
         self.outputs.new("LuxCoreSocketColor", "Color")
         self.outputs["Color"].enabled = False
+        self.outputs.new("LuxCoreSocketVolume", "Volume")
+        self.outputs["Volume"].enabled = False
 
     def draw_buttons(self, context, layout):
-        # TODO the new operators don't link the created node tree to self.node_tree
-        if self.node_tree and self.node_tree.bl_idname == "luxcore_material_nodes":
-            layout.template_ID(self, "node_tree", new="luxcore.mat_nodetree_new")
-        elif self.node_tree and self.node_tree.bl_idname == "luxcore_texture_nodes":
-            layout.template_ID(self, "node_tree", new="luxcore.tex_nodetree_new")
-        elif self.node_tree:
-            # Some unkown or unsupported node tree type, e.g. volumes
-            layout.template_ID(self, "node_tree")
-            layout.label("Node type not supported!", icon="ERROR")
+        if self.node_tree:
+            icon = TREE_ICONS[self.node_tree.bl_idname]
         else:
-            row = layout.row()
-            row.label("Node Tree:")
-            row.template_ID(self, "node_tree")
+            icon = "NODETREE"
+
+        utils_ui.template_node_tree(layout, self, "node_tree", icon,
+                                    "LUXCORE_MT_pointer_select_node_tree",
+                                    "luxcore.pointer_show_node_tree",
+                                    "",  # Do not offer to create a node tree
+                                    "luxcore.pointer_unlink_node_tree")
 
         if self.node_tree == self.id_data:
             layout.label("Recursion!", icon="ERROR")

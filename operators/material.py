@@ -1,7 +1,10 @@
 import bpy
 from bpy.props import IntProperty, StringProperty
-from .utils import poll_object, make_nodetree_name, init_mat_node_tree
 from .. import utils
+from .utils import (
+    poll_object, poll_material, init_mat_node_tree, make_nodetree_name,
+    LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree
+)
 
 
 class LUXCORE_OT_material_new(bpy.types.Operator):
@@ -108,6 +111,9 @@ class LUXCORE_MT_material_select(bpy.types.Menu):
             op.material_index = i
 
 
+# Node tree related operators
+
+
 class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
     bl_idname = "luxcore.material_show_nodetree"
     bl_label = "Show"
@@ -132,3 +138,60 @@ class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
 
         self.report({"ERROR"}, "Open a node editor first")
         return {"CANCELLED"}
+
+
+class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
+    bl_idname = "luxcore.mat_nodetree_new"
+    bl_label = "New"
+    bl_description = "Create a material node tree"
+
+    @classmethod
+    def poll(cls, context):
+        return poll_object(context)
+
+    def execute(self, context):
+        if getattr(context, "material", None):
+            name = make_nodetree_name(context.material.name)
+        else:
+            name = "Material Node Tree"
+
+        node_tree = bpy.data.node_groups.new(name=name, type="luxcore_material_nodes")
+        init_mat_node_tree(node_tree)
+
+        if getattr(context, "material", None):
+            context.material.luxcore.node_tree = node_tree
+
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_set_mat_node_tree(LUXCORE_OT_set_node_tree):
+    """ Dropdown Operator Material version """
+
+    bl_idname = "luxcore.set_mat_node_tree"
+
+    node_tree_index = IntProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return poll_material(context)
+
+    def execute(self, context):
+        mat = context.material
+        node_tree = bpy.data.node_groups[self.node_tree_index]
+        self.set_node_tree(mat, mat.luxcore, "node_tree", node_tree)
+        return {"FINISHED"}
+
+
+# Note: this is a material, not an operator
+class LUXCORE_MATERIAL_MT_node_tree(LUXCORE_MT_node_tree):
+    """ Dropdown Menu Material version """
+
+    bl_idname = "LUXCORE_MATERIAL_MT_node_tree"
+    bl_description = "Select a material node tree"
+
+    @classmethod
+    def poll(cls, context):
+        return poll_material(context)
+
+    def draw(self, context):
+        self.custom_draw("luxcore_material_nodes", "luxcore.set_mat_node_tree")

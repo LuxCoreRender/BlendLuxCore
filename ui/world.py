@@ -1,5 +1,7 @@
 from bl_ui.properties_world import WorldButtonsPanel
 from bpy.types import Panel
+from ..utils import ui as utils_ui
+from . import ICON_VOLUME
 
 
 class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
@@ -24,7 +26,14 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
             split = layout.split(percentage=0.33)
             split.prop(world.luxcore, "rgb_gain", text="")
             split.prop(world.luxcore, "gain")
-            # TODO: id
+            # TODO: id (light group)
+
+        layout.label("World Volume:")
+        utils_ui.template_node_tree(layout, world.luxcore, "volume", ICON_VOLUME,
+                                    "LUXCORE_VOLUME_MT_world_select_volume_node_tree",
+                                    "luxcore.world_show_volume_node_tree",
+                                    "luxcore.world_new_volume_node_tree",
+                                    "luxcore.world_unlink_volume_node_tree")
 
 
 class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):

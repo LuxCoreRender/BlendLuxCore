@@ -80,10 +80,5 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             else:
                 layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use Material Nodes")
 
-            # Warning if not the right node tree type
-            # TODO: should now never be possible - remove this?
-            if mat.luxcore.node_tree and mat.luxcore.node_tree.bl_idname != "luxcore_material_nodes":
-                layout.label("Not a material node tree!", icon="ERROR")
-
         layout.separator()
         layout.menu("LUXCORE_MT_node_tree_preset")

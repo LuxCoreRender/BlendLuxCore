@@ -1,6 +1,8 @@
 import bpy
 from ...bin import pyluxcore
 from ... import utils
+from ...utils import ui as utils_ui
+from ...utils import node as utils_node
 from bpy.props import BoolProperty, PointerProperty
 from ..output import LuxCoreNodeOutput, update_active, get_active_output
 from ...ui import ICON_VOLUME
@@ -21,25 +23,18 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     bl_width_min = 220
 
     active = BoolProperty(name="Active", default=True, update=update_active)
-
-    # TODO: option to sync volume settings among output nodes (workflow improvement)
-    interior_volume = PointerProperty(name="Interior Volume", type=bpy.types.NodeTree)
-    exterior_volume = PointerProperty(name="Exterior Volume", type=bpy.types.NodeTree)
     is_shadow_catcher = BoolProperty(name="Shadow Catcher", default=False,
                                      description=SHADOWCATCHER_DESC)
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
+        # TODO: option to sync volume settings among output nodes (workflow improvement)
+        self.inputs.new("LuxCoreSocketVolume", "Interior Volume")
+        self.inputs.new("LuxCoreSocketVolume", "Exterior Volume")
         super().init(context)
 
     def draw_buttons(self, context, layout):
         super().draw_buttons(context, layout)
-
-        layout.label("Interior Volume Nodes:")
-        self._draw_volume_controls(context, layout, "interior_volume")
-
-        layout.label("Exterior Volume Nodes:")
-        self._draw_volume_controls(context, layout, "exterior_volume")
 
         # Shadow catcher
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
@@ -56,46 +51,10 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
                 layout.prop(pipeline, "transparent_film", text="Enable Transparent Film",
                             icon="CAMERA_DATA", emboss=True)
 
-    def _draw_volume_controls(self, context, layout, volume_str):
-        """ volume_str can be either "interior_volume" or "exterior_volume" """
-        assert hasattr(self, volume_str)
-        volume = getattr(self, volume_str)
+        # TODO Remove this in the future
+        if "Interior Volume" not in self.inputs:
+            layout.label("Outdated ouput, replace it!", icon="ERROR")
 
-        split = layout.split(percentage=0.6, align=True)
-        row = split.row(align=True)
-
-        # Volume dropdown
-        if volume:
-            text = utils.get_name_with_lib(volume)
-        else:
-            text = "-"
-
-        if volume_str == "interior_volume":
-            row.menu("LUXCORE_VOLUME_MT_node_tree_interior", icon=ICON_VOLUME, text=text)
-        else:
-            row.menu("LUXCORE_VOLUME_MT_node_tree_exterior", icon=ICON_VOLUME, text=text)
-
-        row = split.row(align=True)
-
-        # Operator to quickly switch to this volume node tree
-        if volume:
-            op = row.operator("luxcore.switch_to_node_tree")
-            op.name = volume.name
-
-        # Operator for new node tree
-        new_text = "" if volume else "New"
-        op = row.operator("luxcore.vol_nodetree_new", text=new_text, icon="ZOOMIN")
-        # We have to tell the operator where the new node tree should be linked to
-        op.target = volume_str
-
-        # Operator to unlink node tree
-        if volume:
-            op = row.operator("luxcore.vol_nodetree_unlink", text="", icon="X")
-            op.target = volume_str
-
-        # Warning if not the right node tree type
-        if volume and volume.bl_idname != "luxcore_volume_nodes":
-            layout.label("Not a volume node tree!", icon="ERROR")
 
     def export(self, props, luxcore_name):
         # We have to export volumes before the material definition because LuxCore properties
@@ -111,8 +70,16 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             # Define a black material that signals an unconnected material socket
             self._convert_fallback(props, luxcore_name)
 
-        self._convert_volume(self.interior_volume, props, prefix + "volume.interior")
-        self._convert_volume(self.exterior_volume, props, prefix + "volume.exterior")
+        # TODO Remove this if in the future (keep the body of course)
+        if "Interior Volume" in self.inputs:
+            interior_volume = utils_node.get_linked_node(self.inputs["Interior Volume"])
+            self._convert_volume(interior_volume, props, prefix + "volume.interior")
+
+            exterior_volume = utils_node.get_linked_node(self.inputs["Exterior Volume"])
+            self._convert_volume(exterior_volume, props, prefix + "volume.exterior")
+        else:
+            # It is an outdated output node, export it anyway but ignore volumes
+            pass
 
         props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
 

@@ -1,5 +1,7 @@
 from bl_ui.properties_data_camera import CameraButtonsPanel
 from bpy.types import Panel
+from ..utils import ui as utils_ui
+from . import ICON_VOLUME
 
 
 class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
@@ -48,6 +50,13 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
         sub = row.row(align=True)
         sub.active = cam.luxcore.use_clipping_plane
         sub.prop(cam.luxcore, "clipping_plane", text="")
+
+        layout.label("Camera Volume:")
+        utils_ui.template_node_tree(layout, cam.luxcore, "volume", ICON_VOLUME,
+                                    "LUXCORE_VOLUME_MT_camera_select_volume_node_tree",
+                                    "luxcore.camera_show_volume_node_tree",
+                                    "luxcore.camera_new_volume_node_tree",
+                                    "luxcore.camera_unlink_volume_node_tree")
 
 
 class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):

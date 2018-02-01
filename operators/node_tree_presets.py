@@ -128,7 +128,9 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         vol_node_tree = bpy.data.node_groups.new(name=name, type="luxcore_volume_nodes")
         vol_nodes = vol_node_tree.nodes
         # Attach to output node
-        output.interior_volume = vol_node_tree
+        volume_pointer = new_node("LuxCoreNodeTreePointer", node_tree, output, "Volume", "Interior Volume")
+        volume_pointer.node_tree = vol_node_tree
+        volume_pointer.location.y -= 100
 
         # Add volume nodes
         vol_output = vol_nodes.new("LuxCoreNodeVolOutput")
@@ -156,7 +158,9 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         vol_node_tree = bpy.data.node_groups.new(name=name, type="luxcore_volume_nodes")
         vol_nodes = vol_node_tree.nodes
         # Attach to output node
-        output.interior_volume = vol_node_tree
+        volume_pointer = new_node("LuxCoreNodeTreePointer", node_tree, output, "Volume", "Interior Volume")
+        volume_pointer.node_tree = vol_node_tree
+        volume_pointer.location.y -= 100
 
         # Add volume nodes
         vol_output = vol_nodes.new("LuxCoreNodeVolOutput")

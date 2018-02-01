@@ -1,7 +1,6 @@
 import bpy
 from .. import utils
 from ..utils import node as utils_node
-from ..utils import make_key
 from ..nodes.output import get_active_output
 from ..export import smoke
 
@@ -77,10 +76,10 @@ class MaterialCache(object):
 
                     # Check linked volumes for changes
                     active_output = get_active_output(node_tree)
-                    interior_vol = active_output.interior_volume
+                    interior_vol = utils_node.get_linked_node(active_output.inputs["Interior Volume"])
                     if interior_vol and (interior_vol.is_updated or interior_vol.is_updated_data):
                         mat_updated = True
-                    exterior_vol = active_output.exterior_volume
+                    exterior_vol = utils_node.get_linked_node(active_output.inputs["Exterior Volume"])
                     if exterior_vol and (exterior_vol.is_updated or exterior_vol.is_updated_data):
                         mat_updated = True
 

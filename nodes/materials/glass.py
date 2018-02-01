@@ -2,6 +2,7 @@ from bpy.props import FloatProperty, BoolProperty
 from .. import LuxCoreNodeMaterial, Roughness
 from ..sockets import LuxCoreSocketFloat
 from ..output import get_active_output
+from ...utils import node as utils_node
 
 CAUCHYC_DESCRIPTION = (
     "Dispersion strength (cauchy C coefficient)\n"
@@ -109,5 +110,5 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         node_tree = self.id_data
         active_output = get_active_output(node_tree)
         if active_output:
-            return active_output.interior_volume
+            return utils_node.get_linked_node(active_output.inputs["Interior Volume"])
         return False

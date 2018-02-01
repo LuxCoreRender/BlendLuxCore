@@ -45,3 +45,5 @@ class LuxCoreCameraProps(PropertyGroup):
 
     motion_blur = PointerProperty(type=LuxCoreMotionBlur)
     imagepipeline = PointerProperty(type=LuxCoreImagepipeline)
+
+    volume = PointerProperty(type=bpy.types.NodeTree)
