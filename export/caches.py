@@ -2,7 +2,7 @@ import bpy
 from .. import utils
 from ..utils import node as utils_node
 from ..nodes.output import get_active_output
-from ..export import smoke
+from ..export import smoke, camera
 
 class StringCache(object):
     def __init__(self):
@@ -19,6 +19,27 @@ class StringCache(object):
 
         has_changes = props_str != new_props_str
         self.props = new_props
+        return has_changes
+
+
+class CameraCache(object):
+    def __init__(self):
+        self.string_cache = StringCache()
+
+    @property
+    def props(self):
+        return self.string_cache.props
+
+    def diff(self, scene, context):
+        # String cache
+        camera_props = camera.convert(scene, context)
+        has_changes = self.string_cache.diff(camera_props)
+
+        # Check camera object and data for changes
+        # Needed in case the volume node tree was relinked/unlinked
+        if scene.camera and (scene.camera.is_updated or scene.camera.is_updated_data):
+            return True
+
         return has_changes
 
 

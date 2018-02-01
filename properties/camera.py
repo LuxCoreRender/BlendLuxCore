@@ -16,6 +16,8 @@ SHUTTER_TIME_DESC = (
     "A value of 1.0 blurs over the length of 1 frame, a value of 2.0 over 2 frames etc"  # no dot, Blender adds it
 )
 
+AUTO_VOLUME_DESC = "Use the exterior volume of the object in the middle of the film as camera volume"
+
 
 def init():
     bpy.types.Camera.luxcore = PointerProperty(type=LuxCoreCameraProps)
@@ -47,3 +49,4 @@ class LuxCoreCameraProps(PropertyGroup):
     imagepipeline = PointerProperty(type=LuxCoreImagepipeline)
 
     volume = PointerProperty(type=bpy.types.NodeTree)
+    auto_volume = BoolProperty(name="Auto-Detect Camera Volume", default=True, description=AUTO_VOLUME_DESC)

@@ -2,6 +2,7 @@ import math
 from mathutils import Vector, Matrix
 from ..bin import pyluxcore
 from .. import utils
+from ..nodes.output import get_active_output
 
 
 def convert(scene, context=None, is_camera_moving=False):
@@ -29,7 +30,9 @@ def convert(scene, context=None, is_camera_moving=False):
         _clipping_plane(scene, definitions)
         _motion_blur(scene, definitions, context, is_camera_moving)
 
-        return utils.create_props(prefix, definitions)
+        cam_props = utils.create_props(prefix, definitions)
+        cam_props.Set(_get_volume_props(scene))
+        return cam_props
     except Exception as error:
         msg = 'Camera: %s' % error
         scene.luxcore.errorlog.add_warning(msg)
@@ -215,9 +218,36 @@ def _motion_blur(scene, definitions, context, is_camera_moving):
         definitions["up"] = [0, 1, 0]
         # Note: camera motion system is defined in export/motion_blur.py
 
+
 def _calc_lookat(cam_matrix, scene):
     cam_matrix = utils.get_scaled_to_world(cam_matrix, scene)
     lookat_orig = list(cam_matrix.to_translation())
     lookat_target = list(cam_matrix * Vector((0, 0, -1)))
     up_vector = list(cam_matrix.to_3x3() * Vector((0, 1, 0)))
     return lookat_orig, lookat_target, up_vector
+
+
+def _get_volume_props(scene):
+    props = pyluxcore.Properties()
+
+    if scene.camera is None:
+        # Viewport render should work without camera
+        return props
+
+    cam_settings = scene.camera.data.luxcore
+    volume_node_tree = cam_settings.volume
+
+    if volume_node_tree:
+        luxcore_name = utils.get_luxcore_name(volume_node_tree)
+        active_output = get_active_output(volume_node_tree)
+        try:
+            active_output.export(props, luxcore_name)
+            props.Set(pyluxcore.Property("scene.camera.volume", luxcore_name))
+        except Exception as error:
+            msg = 'Camera: %s' % error
+            scene.luxcore.errorlog.add_warning(msg)
+
+    props.Set(pyluxcore.Property("scene.camera.autovolume.enable", cam_settings.auto_volume))
+    return props
+
+

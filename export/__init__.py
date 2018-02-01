@@ -28,7 +28,7 @@ class Exporter(object):
     def __init__(self):
         print("exporter init")
         self.config_cache = caches.StringCache()
-        self.camera_cache = caches.StringCache()
+        self.camera_cache = caches.CameraCache()
         self.object_cache = caches.ObjectCache()
         self.material_cache = caches.MaterialCache()
         self.visibility_cache = caches.VisibilityCache()
@@ -50,9 +50,8 @@ class Exporter(object):
         scene_props = pyluxcore.Properties()
 
         # Camera (needs to be parsed first because it is needed for hair tesselation)
-        camera_props = camera.convert(scene, context)
-        self.camera_cache.diff(camera_props)  # Init camera cache
-        luxcore_scene.Parse(camera_props)
+        self.camera_cache.diff(scene, context)  # Init camera cache
+        luxcore_scene.Parse(self.camera_cache.props)
 
         # Objects and lamps
         objs = context.visible_objects if context else scene.objects
@@ -85,7 +84,6 @@ class Exporter(object):
                     # Re-export the camera with motion blur enabled
                     # (This is fast and we only have to step through the scene once in total, not twice)
                     camera_props = camera.convert(scene, context, cam_moving)
-                    self.camera_cache.diff(camera_props)  # Update camera cache
                     motion_blur_props.Set(camera_props)
 
                 scene_props.Set(motion_blur_props)
@@ -139,8 +137,7 @@ class Exporter(object):
         if self.config_cache.diff(config_props):
             changes |= Change.CONFIG
 
-        camera_props = camera.convert(context.scene, context)
-        if self.camera_cache.diff(camera_props):
+        if self.camera_cache.diff(context.scene, context):
             changes |= Change.CAMERA
 
         if self.object_cache.diff(context.scene):

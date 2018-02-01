@@ -51,12 +51,16 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
         sub.active = cam.luxcore.use_clipping_plane
         sub.prop(cam.luxcore, "clipping_plane", text="")
 
-        layout.label("Camera Volume:")
-        utils_ui.template_node_tree(layout, cam.luxcore, "volume", ICON_VOLUME,
-                                    "LUXCORE_VOLUME_MT_camera_select_volume_node_tree",
-                                    "luxcore.camera_show_volume_node_tree",
-                                    "luxcore.camera_new_volume_node_tree",
-                                    "luxcore.camera_unlink_volume_node_tree")
+        # Volume
+        layout.prop(cam.luxcore, "auto_volume")
+
+        if not cam.luxcore.auto_volume:
+            layout.label("Camera Volume:")
+            utils_ui.template_node_tree(layout, cam.luxcore, "volume", ICON_VOLUME,
+                                        "LUXCORE_VOLUME_MT_camera_select_volume_node_tree",
+                                        "luxcore.camera_show_volume_node_tree",
+                                        "luxcore.camera_new_volume_node_tree",
+                                        "luxcore.camera_unlink_volume_node_tree")
 
 
 class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
