@@ -39,12 +39,7 @@ def get_linked_node(socket):
 
 
 def find_nodes(node_tree, bl_idname):
-    nodes = []
-    for node in node_tree.nodes:
-        if node.bl_idname == bl_idname:
-            nodes.append(node)
-
-    return nodes
+    return [node for node in node_tree.nodes if node.bl_idname == bl_idname]
 
 
 def update_opengl_materials(_, context):

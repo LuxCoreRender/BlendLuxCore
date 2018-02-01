@@ -57,49 +57,54 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
 
     def export(self, props, luxcore_name):
+        prefix = "scene.materials." + luxcore_name + "."
+
         # We have to export volumes before the material definition because LuxCore properties
         # do not support forward declarations (the volume has to be already defined when it is
         # referenced in the material)
-        # TODO: default exterior/interior volume
-        # TODO: cache volume export (can be slow in case of smoke. But maybe a smoke cache is enough or even better?)
-        prefix = "scene.materials." + luxcore_name + "."
 
+        interior_volume_name = None
+        exterior_volume_name = None
+
+        interior_pointer = utils_node.get_linked_node(self.inputs["Interior Volume"])
+        if interior_pointer:
+            node_tree = interior_pointer.node_tree
+            interior_volume_name = self._convert_volume(node_tree, props)
+
+        exterior_pointer = utils_node.get_linked_node(self.inputs["Exterior Volume"])
+        if exterior_pointer:
+            node_tree = exterior_pointer.node_tree
+            exterior_volume_name = self._convert_volume(node_tree, props)
+
+        # The material is defined here for the first time (volumes already completely exported)
+        if interior_volume_name:
+            props.Set(pyluxcore.Property(prefix + "volume.interior", interior_volume_name))
+        if exterior_volume_name:
+            props.Set(pyluxcore.Property(prefix + "volume.exterior", exterior_volume_name))
+
+        # Export the material
         exported_name = self.inputs["Material"].export(props, luxcore_name)
+
         if exported_name is None or exported_name != luxcore_name:
             # Export failed, e.g. because no node is linked or it's not a material node
             # Define a black material that signals an unconnected material socket
             self._convert_fallback(props, luxcore_name)
 
-        # TODO Remove this if in the future (keep the body of course)
-        if "Interior Volume" in self.inputs:
-            interior_volume = utils_node.get_linked_node(self.inputs["Interior Volume"])
-            self._convert_volume(interior_volume, props, prefix + "volume.interior")
-
-            exterior_volume = utils_node.get_linked_node(self.inputs["Exterior Volume"])
-            self._convert_volume(exterior_volume, props, prefix + "volume.exterior")
-        else:
-            # It is an outdated output node, export it anyway but ignore volumes
-            pass
-
         props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
 
-    def _convert_volume(self, node_tree, props, property_str):
-        """
-        property_str should be of the form
-        "scene.materials.<luxcore_name>.volume.<interior/exterior>"
-        """
+    def _convert_volume(self, node_tree, props):
         if node_tree is None:
-            return
+            return None
 
         try:
-            active_output = get_active_output(node_tree)
             luxcore_name = utils.get_luxcore_name(node_tree)
+            active_output = get_active_output(node_tree)
             active_output.export(props, luxcore_name)
-
-            props.Set(pyluxcore.Property(property_str, luxcore_name))
+            return luxcore_name
         except Exception as error:
             msg = 'Node Tree "%s": %s' % (node_tree.name, error)
             bpy.context.scene.luxcore.errorlog.add_warning(msg)
+            return None
 
     
     def _convert_fallback(self, props, luxcore_name):

@@ -2,6 +2,7 @@ import bpy
 from bpy.app.handlers import persistent
 from .bin import pyluxcore
 from .export.image import ImageExporter
+from .utils import compatibility
 
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
@@ -30,12 +31,17 @@ def blendluxcore_exit():
 @persistent
 def luxcore_load_post(_):
     """ Note: the only argument Blender passes is always None """
+
+    # Update OpenCL devices if .blend is opened on a different computer than it was saved on
     for scene in bpy.data.scenes:
         scene.luxcore.opencl.update_devices_if_necessary()
 
         if pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool():
             # OpenCL not available, make sure we are using CPU device
             scene.luxcore.config.device = "CPU"
+
+    # Run converters for backwards compatibility
+    compatibility.run()
 
 
 @persistent
