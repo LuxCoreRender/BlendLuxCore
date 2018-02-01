@@ -3,7 +3,7 @@ from ..bin import pyluxcore
 from .. import utils
 from . import (
     blender_object, caches, camera, config, duplis,
-    imagepipeline, light, material, motion_blur, particle
+    imagepipeline, light, material, motion_blur, particle, world
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 
@@ -91,11 +91,8 @@ class Exporter(object):
                 scene_props.Set(motion_blur_props)
 
         # World
-        if scene.world and scene.world.luxcore.light != "none":
-            if engine:
-                engine.update_stats("Export", "World")
-            props = light.convert_world(scene.world, scene)
-            scene_props.Set(props)
+        world_props = world.convert(scene)
+        scene_props.Set(world_props)
 
         luxcore_scene.Parse(scene_props)
 
@@ -316,8 +313,8 @@ class Exporter(object):
         if changes & Change.WORLD:
             if context.scene.world.luxcore.light == "none":
                 luxcore_scene.DeleteLight(WORLD_BACKGROUND_LIGHT_NAME)
-            else:
-                world_props = light.convert_world(context.scene.world, context.scene)
-                props.Set(world_props)
+
+            world_props = world.convert(context.scene)
+            props.Set(world_props)
 
         return props
