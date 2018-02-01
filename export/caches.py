@@ -95,15 +95,6 @@ class MaterialCache(object):
                     if node_tree.is_updated or node_tree.is_updated_data:
                         mat_updated = True
 
-                    # Check linked volumes for changes
-                    active_output = get_active_output(node_tree)
-                    interior_vol = utils_node.get_linked_node(active_output.inputs["Interior Volume"])
-                    if interior_vol and (interior_vol.is_updated or interior_vol.is_updated_data):
-                        mat_updated = True
-                    exterior_vol = utils_node.get_linked_node(active_output.inputs["Exterior Volume"])
-                    if exterior_vol and (exterior_vol.is_updated or exterior_vol.is_updated_data):
-                        mat_updated = True
-
                     # Check pointer nodes for changes
                     pointer_nodes = utils_node.find_nodes(node_tree, "LuxCoreNodeTreePointer")
                     for node in pointer_nodes:
