@@ -102,7 +102,8 @@ class Exporter(object):
 
         # Convert config at last because all lightgroups and passes have to be already defined
         config_props = config.convert(scene, context)
-        self.config_cache.diff(config_props)  # Init config cache
+        # Init config cache (convert to string here because config_props gets changed below)
+        self.config_cache.diff(str(config_props))
 
         # Imagepipeline
         imagepipeline_props = imagepipeline.convert(scene, context)

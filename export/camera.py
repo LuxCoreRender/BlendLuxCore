@@ -236,13 +236,11 @@ def _get_volume_props(scene):
 
     cam_settings = scene.camera.data.luxcore
     volume_node_tree = cam_settings.volume
-    print("cam volume node tree:", volume_node_tree)
 
     if volume_node_tree:
         luxcore_name = utils.get_luxcore_name(volume_node_tree)
-        print("luxcore_name:", luxcore_name)
         active_output = get_active_output(volume_node_tree)
-        print("active output:", active_output)
+
         try:
             active_output.export(props, luxcore_name)
             props.Set(pyluxcore.Property("scene.camera.volume", luxcore_name))

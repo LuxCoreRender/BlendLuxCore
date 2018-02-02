@@ -28,7 +28,7 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
             split.prop(world.luxcore, "gain")
             # TODO: id (light group)
 
-        layout.label("World Volume:")
+        layout.label("Default Volume (used on materials without attached volume):")
         utils_ui.template_node_tree(layout, world.luxcore, "volume", ICON_VOLUME,
                                     "LUXCORE_VOLUME_MT_world_select_volume_node_tree",
                                     "luxcore.world_show_volume_node_tree",
