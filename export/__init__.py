@@ -52,8 +52,6 @@ class Exporter(object):
         # Camera (needs to be parsed first because it is needed for hair tesselation)
         self.camera_cache.diff(scene, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
-        # Need to set the camera props here, otherwise Blender can crash (see issue #62)
-        scene_props.Set(self.camera_cache.props)
 
         # Objects and lamps
         objs = context.visible_objects if context else scene.objects
