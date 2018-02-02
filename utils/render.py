@@ -127,7 +127,12 @@ def get_pretty_stats(config, stats, scene):
 
     # Triangle count
     triangle_count = stats.Get("stats.dataset.trianglecount").GetInt()
-    pretty.append('{:,} Tris'.format(triangle_count))
+    pretty.append("{:,} Tris".format(triangle_count))
+
+    # Convergence (how many pixels are converged, in percent)
+    convergence = stats.Get("stats.renderengine.convergence").GetFloat()
+    if convergence > 0:
+        pretty.append("%d%% Pixels Converged" % round(convergence * 100))
 
     # Errors and warnings
     error_str = ""
