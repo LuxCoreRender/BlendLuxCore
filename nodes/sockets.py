@@ -39,6 +39,18 @@ class LuxCoreNodeSocket(NodeSocket):
 
         if self.is_output or self.is_linked or not has_default:
             layout.label(text)
+
+            # Show a button that lets the user add a node for this socket instantly.
+            # Sockets that only accept one node (e.g. volume, emission, fresnel) should have a default_node member
+            show_operator = not self.is_output and not self.is_linked and hasattr(self, "default_node")
+            # Don't show for volume sockets on volume output
+            is_vol_socket_on_vol_output = self.bl_idname == "LuxCoreSocketVolume" and node.bl_idname == "LuxCoreNodeVolOutput"
+
+            if show_operator and not is_vol_socket_on_vol_output:
+                op = layout.operator("luxcore.add_node", icon="ZOOMIN")
+                op.node_type = self.default_node
+                op.socket_type = self.bl_idname
+                op.input_socket = self.name
         else:
             if type(self.default_value) == mathutils.Color:
                 row = layout.row()
@@ -91,17 +103,26 @@ class LuxCoreSocketMaterial(LuxCoreNodeSocket):
 
 class LuxCoreSocketVolume(LuxCoreNodeSocket):
     color = Color.volume
+    # The node type that can be instantly added to this node
+    # (via operator drawn in LuxCoreNodeSocket)
+    default_node = "LuxCoreNodeTreePointer"
     # no default value
 
 
 class LuxCoreSocketFresnel(LuxCoreNodeSocket):
     color = Color.fresnel_texture
+    # The node type that can be instantly added to this node
+    # (via operator drawn in LuxCoreNodeSocket)
+    default_node = "LuxCoreNodeTexFresnel"
     # no default value
 
 
 class LuxCoreSocketMatEmission(LuxCoreNodeSocket):
     """ Special socket for material emission """
     color = Color.mat_emission
+    # The node type that can be instantly added to this node
+    # (via operator drawn in LuxCoreNodeSocket)
+    default_node = "LuxCoreNodeMatEmission"
     # no default value
 
     def export_emission(self, props, definitions):
