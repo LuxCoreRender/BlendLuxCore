@@ -1,9 +1,11 @@
 import bpy
+from bpy.props import StringProperty, BoolProperty
 
 # Ensure initialization (note: no need to initialize utils)
 from . import (
     camera, material, node_tree_presets, pointer_node, texture, world
 )
+from .utils import init_vol_node_tree
 
 
 class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
@@ -75,4 +77,41 @@ class LUXCORE_OT_update_opencl_devices(bpy.types.Operator):
         opencl = context.scene.luxcore.opencl
         device_list = opencl.get_opencl_devices()
         opencl.init_devices(device_list)
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_add_node(bpy.types.Operator):
+    bl_idname = "luxcore.add_node"
+    bl_label = "Add"
+
+    node_type = StringProperty()
+    socket_type = StringProperty()
+    input_socket = StringProperty()
+
+    def execute(self, context):
+        node = context.node
+        node_tree = node.id_data
+        new_node = node_tree.nodes.new(self.node_type)
+        # Place new node a bit to the left and down
+        offset_x = new_node.width + 50
+        new_node.location = (node.location.x - offset_x, node.location.y - 100)
+
+        # Link
+        output = 0
+        for out in new_node.outputs:
+            if out.bl_idname == self.socket_type:
+                output = out.name
+                break
+
+        node_tree.links.new(new_node.outputs[output], node.inputs[self.input_socket])
+
+        # Special stuff only needed by material output
+        if self.socket_type == "LuxCoreSocketVolume" and self.node_type == "LuxCoreNodeTreePointer":
+            name = "Volume"
+
+            vol_tree = bpy.data.node_groups.new(name=name, type="luxcore_volume_nodes")
+            init_vol_node_tree(vol_tree)
+
+            new_node.node_tree = vol_tree
+
         return {"FINISHED"}

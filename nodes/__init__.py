@@ -139,8 +139,37 @@ class LuxCoreNodeVolume(LuxCoreNode):
             # Do not occur the overhead of the colordepth texture
             abs_col = utils.absorption_at_depth_scaled(abs_col, self.color_depth)
 
+        if "Scattering" in self.inputs:
+            scattering_col = self.export_scattering(props)
+            definitions["scattering"] = scattering_col
+
         definitions["absorption"] = abs_col
         definitions["emission"] = self.inputs["Emission"].export(props)
+
+    def export_scattering(self, props):
+        scattering_col_socket = self.inputs["Scattering"]
+        scattering_scale_socket = self.inputs["Scattering Scale"]
+
+        scattering_col = scattering_col_socket.export(props)
+        scattering_scale = scattering_scale_socket.export(props)
+
+        if scattering_scale_socket.is_linked or scattering_col_socket.is_linked:
+            # Implicitly create a colordepth texture with unique name
+            tex_name = self.make_name() + "_scale"
+            helper_prefix = "scene.textures." + tex_name + "."
+            helper_defs = {
+                "type": "scale",
+                "texture1": scattering_scale,
+                "texture2": scattering_col,
+            }
+            props.Set(utils.create_props(helper_prefix, helper_defs))
+            scattering_col = tex_name
+        else:
+            # We do not have to use a texture - improves performance
+            for i in range(len(scattering_col)):
+                scattering_col[i] *= scattering_scale
+
+        return scattering_col
 
 
 class LuxCoreNodeTreePointer(LuxCoreNode):
@@ -170,6 +199,12 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
         self.outputs["Color"].enabled = False
         self.outputs.new("LuxCoreSocketVolume", "Volume")
         self.outputs["Volume"].enabled = False
+
+    def draw_label(self):
+        if self.node_tree:
+            return 'Pointer to "%s"' % self.node_tree.name
+        else:
+            return self.bl_label
 
     def draw_buttons(self, context, layout):
         if self.node_tree:
