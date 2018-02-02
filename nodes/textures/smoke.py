@@ -80,7 +80,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
             # combine transformations
             mapping_type = 'globalmapping3d'
             matrix_transformation = utils.matrix_to_list(tex_loc * tex_rot * tex_sca, invert=True)
-            
+
         else:
             error = "No Domain object selected."
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)

@@ -154,15 +154,16 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             del self._session
             self._session = None
         except Exception as error:
-            del self._session
-            self._session = None
-
             self.report({"ERROR"}, str(error))
             self.error_set(str(error))
             import traceback
             traceback.print_exc()
             # Add error to error log so the user can inspect and copy/paste it
             scene.luxcore.errorlog.add_error(error)
+
+            # Clean up
+            del self._session
+            self._session = None
 
     def view_update(self, context):
         # We use a custom function because sometimes we need to pass

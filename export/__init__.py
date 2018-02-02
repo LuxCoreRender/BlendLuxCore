@@ -51,11 +51,9 @@ class Exporter(object):
 
         # Camera (needs to be parsed first because it is needed for hair tesselation)
         self.camera_cache.diff(scene, context)  # Init camera cache
-        print("=" * 50)
-        print("Camera props:")
-        print(self.camera_cache.props)
-        print("=" * 50)
         luxcore_scene.Parse(self.camera_cache.props)
+        # Need to set the camera props here, otherwise Blender can crash (see issue #62)
+        scene_props.Set(self.camera_cache.props)
 
         # Objects and lamps
         objs = context.visible_objects if context else scene.objects
@@ -95,11 +93,6 @@ class Exporter(object):
         # World
         world_props = world.convert(scene)
         scene_props.Set(world_props)
-
-        print("=" * 50)
-        print("Scene props")
-        print(scene_props)
-        print("=" * 50)
 
         luxcore_scene.Parse(scene_props)
 
