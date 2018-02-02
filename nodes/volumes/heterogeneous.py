@@ -51,31 +51,8 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
         self.draw_common_buttons(context, layout)
 
     def export(self, props, luxcore_name=None):
-        scattering_col_socket = self.inputs["Scattering"]
-        scattering_scale_socket = self.inputs["Scattering Scale"]
-
-        scattering_col = scattering_col_socket.export(props)
-        scattering_scale = scattering_scale_socket.export(props)
-
-        if scattering_scale_socket.is_linked or scattering_col_socket.is_linked:
-            # Implicitly create a colordepth texture with unique name
-            tex_name = self.make_name() + "_scale"
-            helper_prefix = "scene.textures." + tex_name + "."
-            helper_defs = {
-                "type": "scale",
-                "texture1": scattering_scale,
-                "texture2": scattering_col,
-            }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
-            scattering_col = tex_name
-        else:
-            # We do not have to use a texture - improves performance
-            for i in range(len(scattering_col)):
-                scattering_col[i] *= scattering_scale
-
         definitions = {
             "type": "heterogeneous",
-            "scattering": scattering_col,
             "steps.size": self.step_size,
             "steps.maxcount": self.maxcount,
             "asymmetry": self.inputs["Asymmetry"].export(props),

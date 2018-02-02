@@ -29,22 +29,8 @@ class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume):
         self.draw_common_buttons(context, layout)
 
     def export(self, props, luxcore_name=None):
-        scatter_col = self.inputs["Scattering"].export(props)
-        
-        # Implicitly create a scale texture with unique name
-        tex_name = self.make_name() + "_scale"
-        helper_prefix = "scene.textures." + tex_name + "."
-        helper_defs = {
-            "type": "scale",
-            "texture1": self.inputs["Scattering Scale"].export(props),
-            "texture2": self.inputs["Scattering"].export(props),
-        }
-        props.Set(utils.create_props(helper_prefix, helper_defs))
-        scatter_col = tex_name
-
         definitions = {
             "type": "homogeneous",
-            "scattering": scatter_col,
             "asymmetry": self.inputs["Asymmetry"].export(props),
             "multiscattering": self.multiscattering,
         }        
