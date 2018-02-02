@@ -51,6 +51,10 @@ class Exporter(object):
 
         # Camera (needs to be parsed first because it is needed for hair tesselation)
         self.camera_cache.diff(scene, context)  # Init camera cache
+        print("=" * 50)
+        print("Camera props:")
+        print(self.camera_cache.props)
+        print("=" * 50)
         luxcore_scene.Parse(self.camera_cache.props)
 
         # Objects and lamps
@@ -92,6 +96,11 @@ class Exporter(object):
         world_props = world.convert(scene)
         scene_props.Set(world_props)
 
+        print("=" * 50)
+        print("Scene props")
+        print(scene_props)
+        print("=" * 50)
+
         luxcore_scene.Parse(scene_props)
 
         # Regularly check if we should abort the export (important in heavy scenes)
@@ -101,6 +110,14 @@ class Exporter(object):
         # Convert config at last because all lightgroups and passes have to be already defined
         config_props = config.convert(scene, context)
         self.config_cache.diff(config_props)  # Init config cache
+
+        # Imagepipeline
+        imagepipeline_props = imagepipeline.convert(scene, context)
+        self.imagepipeline_cache.diff(imagepipeline_props)  # Init imagepipeline cache
+        # Add imagepipeline to config props
+        config_props.Set(imagepipeline_props)
+
+        # Create the renderconfig
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
         # Regularly check if we should abort the export (important in heavy scenes)
@@ -124,35 +141,34 @@ class Exporter(object):
         elapsed_msg = "Session created in %.1fs" % (time() - start)
         print(elapsed_msg)
 
-        imagepipeline_props = imagepipeline.convert(scene, context)
-        self.imagepipeline_cache.diff(imagepipeline_props)  # Init imagepipeline cache
-        session.Parse(imagepipeline_props)
-
         return session
 
-    def get_changes(self, context):
+    def get_changes(self, scene, context=None):
         changes = Change.NONE
 
-        config_props = config.convert(context.scene, context)
-        if self.config_cache.diff(config_props):
-            changes |= Change.CONFIG
+        if context:
+            # Changes that only need to be checked in viewport render, not in final render
+            config_props = config.convert(scene, context)
+            if self.config_cache.diff(config_props):
+                changes |= Change.CONFIG
 
-        if self.camera_cache.diff(context.scene, context):
-            changes |= Change.CAMERA
+            if self.camera_cache.diff(scene, context):
+                changes |= Change.CAMERA
 
-        if self.object_cache.diff(context.scene):
-            changes |= Change.OBJECT
+            if self.object_cache.diff(scene):
+                changes |= Change.OBJECT
 
-        if self.material_cache.diff():
-            changes |= Change.MATERIAL
+            if self.material_cache.diff():
+                changes |= Change.MATERIAL
 
-        if self.visibility_cache.diff(context):
-            changes |= Change.VISIBILITY
+            if self.visibility_cache.diff(context):
+                changes |= Change.VISIBILITY
 
-        if self.world_cache.diff(context):
-            changes |= Change.WORLD
+            if self.world_cache.diff(context):
+                changes |= Change.WORLD
 
-        imagepipeline_props = imagepipeline.convert(context.scene, context)
+        # Relevant during final render
+        imagepipeline_props = imagepipeline.convert(scene, context)
         if self.imagepipeline_cache.diff(imagepipeline_props):
             changes |= Change.IMAGEPIPELINE
 
@@ -168,7 +184,7 @@ class Exporter(object):
             session.BeginSceneEdit()
 
             try:
-                props = self._scene_edit(context, changes, luxcore_scene)
+                props = self._update_scene(context, changes, luxcore_scene)
                 luxcore_scene.Parse(props)
             except Exception as error:
                 context.scene.luxcore.errorlog.add_error(error)
@@ -191,13 +207,16 @@ class Exporter(object):
                 session.Resume()
 
         if changes & Change.REQUIRES_SESSION_PARSE:
-            if changes & Change.IMAGEPIPELINE:
-                session.Parse(self.imagepipeline_cache.props)
-            # TODO: lightgroups will also be put here
+            self.update_session(changes, session)
 
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()
         return session
+
+    def update_session(self, changes, session):
+        if changes & Change.IMAGEPIPELINE:
+            session.Parse(self.imagepipeline_cache.props)
+        # TODO: lightgroups will also be put here
 
     def _convert_object(self, props, obj, scene, context, luxcore_scene,
                         update_mesh=False, dupli_suffix="", engine=None):
@@ -253,7 +272,7 @@ class Exporter(object):
         session.Start()
         return session
 
-    def _scene_edit(self, context, changes, luxcore_scene):
+    def _update_scene(self, context, changes, luxcore_scene):
         props = pyluxcore.Properties()
 
         if changes & Change.CAMERA:

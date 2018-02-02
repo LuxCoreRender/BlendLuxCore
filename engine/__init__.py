@@ -121,6 +121,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                     time_until_film_refresh = scene.luxcore.display.interval - (now - last_film_refresh)
                     draw_film = time_until_film_refresh <= 0
 
+                    # Do session update (imagepipeline, lightgroups)
+                    changes = self._exporter.get_changes(scene)
+                    self._exporter.update_session(changes, self._session)
+                    # Refresh quickly when user changed something
+                    draw_film |= changes
+
                     stats = utils_render.refresh(self, scene, config, draw_film, time_until_film_refresh)
                     done = utils_render.halt_condition_met(scene, stats) or self.test_break() or self._session.HasDone()
 
@@ -188,7 +194,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 return
 
         if changes is None:
-            changes = self._exporter.get_changes(context)
+            changes = self._exporter.get_changes(context.scene, context)
 
         if changes & export.Change.CONFIG:
             # Film resize requires a new framebuffer
@@ -204,7 +210,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             # Check for changes because some actions in Blender (e.g. moving the viewport camera)
             # do not trigger a view_update() call, but only a view_draw() call.
-            changes = self._exporter.get_changes(context)
+            changes = self._exporter.get_changes(context.scene, context)
 
             if changes & export.Change.REQUIRES_VIEW_UPDATE:
                 self.tag_redraw()
