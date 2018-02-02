@@ -39,6 +39,11 @@ SEED_DESC = (
 )
 ANIM_SEED_DESC = "Use different seed values for different frames"
 
+SOBOL_ADAPTIVE_STRENGTH_DESC = (
+    "A value of 0 means that each pixel is sampled equally, higher values "
+    "focus more samples on noisy areas of the image"
+)
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -124,6 +129,10 @@ class LuxCoreConfig(PropertyGroup):
     # A trick so we can show the user that bidir should only be used with Metropolis
     bidir_sampler = EnumProperty(name="Sampler", items=samplers, default="METROPOLIS",
                                  description="Only Metropolis makes sense for Bidir")
+
+    # SOBOL properties
+    sobol_adaptive_strength = FloatProperty(name="Adaptive Strength", default=0.7, min=0, max=0.95,
+                                            description=SOBOL_ADAPTIVE_STRENGTH_DESC)
 
     # Only available when engine is PATH (not BIDIR)
     devices = [

@@ -84,6 +84,9 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                 row_sampler = layout.row()
                 row_sampler.label("Sampler:")
                 row_sampler.prop(config, "sampler", expand=True)
+
+                if config.sampler == "SOBOL":
+                    layout.prop(config, "sobol_adaptive_strength", slider=True)
         else:
             # Bidir options
             row_depths = layout.row(align=True)

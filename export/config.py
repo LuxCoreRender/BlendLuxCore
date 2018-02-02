@@ -55,6 +55,7 @@ def convert(scene, context=None):
                 else:
                     engine = "PATH"
                     sampler = config.sampler
+                    definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
 
                 # Add CPU/OCL suffix
                 engine += config.device
