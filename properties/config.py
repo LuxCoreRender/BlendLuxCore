@@ -64,7 +64,7 @@ class LuxCoreConfigPath(PropertyGroup):
     # path.clamping.variance.maxvalue
     clamping = FloatProperty(name="Max Brightness", default=1000, min=0, description=CLAMPING_DESC)
     # This should only be set in the engine code after export. Only show a read-only label to the user.
-    optimal_clamping_value = FloatProperty(name="", default=-1)
+    suggested_clamping_value = FloatProperty(name="", default=-1)
 
     # TODO This will be set automatically on export when transparent film is used
     # path.forceblackbackground.enable

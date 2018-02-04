@@ -138,7 +138,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                 # Only do this if clamping is disabled, otherwise the value is meaningless.
                 path_settings = scene.luxcore.config.path
                 if not computed_optimal_clamp and not path_settings.use_clamping and time() - start > 10:
-                    optimal_clamp = utils_render.find_optimal_clamp_value(self._session, scene)
+                    optimal_clamp = utils_render.find_suggested_clamp_value(self._session, scene)
                     print("Recommended clamp value:", optimal_clamp)
                     computed_optimal_clamp = True
 

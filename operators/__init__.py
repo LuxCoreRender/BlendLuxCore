@@ -56,15 +56,18 @@ class LUXCORE_OT_switch_space_data_context(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class LUXCORE_OT_set_optimal_clamping_value(bpy.types.Operator):
-    bl_idname = "luxcore.set_optimal_clamping_value"
+class LUXCORE_OT_set_suggested_clamping_value(bpy.types.Operator):
+    bl_idname = "luxcore.set_suggested_clamping_value"
     bl_label = ""
-    bl_description = "Apply the optimal clamping value"
+    bl_description = (
+        "Apply the suggested clamping value. Note that this is only a starting point, "
+        "you might need to adjust the value to get the best results for your scene"
+    )
 
     def execute(self, context):
         config = context.scene.luxcore.config
         config.path.use_clamping = True
-        config.path.clamping = config.path.optimal_clamping_value
+        config.path.clamping = config.path.suggested_clamping_value
 
         return {"FINISHED"}
 
