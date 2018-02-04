@@ -20,13 +20,14 @@ def convert(scene, context=None, is_camera_moving=False):
                 _view_persp(scene, context, definitions)
             elif view_cam_type == "CAMERA":
                 _view_camera(scene, context, definitions)
+                _clipping(scene, definitions)
             else:
                 raise NotImplementedError("Unknown context.region_data.view_perspective")
         else:
             # Final render
             _final(scene, definitions)
+            _clipping(scene, definitions)
 
-        _clipping(scene, definitions)
         _clipping_plane(scene, definitions)
         _motion_blur(scene, definitions, context, is_camera_moving)
 
