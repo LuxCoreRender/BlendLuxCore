@@ -26,7 +26,7 @@ def main():
     if platform.system() == "Linux":
         files = ["libembree.so.2", "libtbb.so.2", "pyluxcore.so", "luxcoreui"]
     elif platform.system() == "Windows":
-        files = ["embree.dll", "tbb.dll", "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe"]
+        files = ["embree.dll", "tbb.dll", "tbbmalloc.dll", "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe"]
     else:
         print("Unsupported system:", platform.system())
 
