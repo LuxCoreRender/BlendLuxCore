@@ -241,6 +241,7 @@ LuxCoreSocketFresnel.allowed_inputs = {LuxCoreSocketFresnel}
 LuxCoreSocketMatEmission.allowed_inputs = {LuxCoreSocketMatEmission}
 LuxCoreSocketBump.allowed_inputs = {LuxCoreSocketBump, LuxCoreSocketColor, LuxCoreSocketFloat}
 LuxCoreSocketColor.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}
-LuxCoreSocketFloat.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}
+# Note: Utility nodes like "math" can be used to add bumpmaps together, so we allow Bump input here
+LuxCoreSocketFloat.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketBump}
 LuxCoreSocketMapping2D.allowed_inputs = {LuxCoreSocketMapping2D}
 LuxCoreSocketMapping3D.allowed_inputs = {LuxCoreSocketMapping3D}

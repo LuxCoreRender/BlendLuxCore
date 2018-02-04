@@ -17,7 +17,7 @@ class LuxCoreNodeTexBump(LuxCoreNodeTexture):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value", 0.0)
         self.add_input("LuxCoreSocketBumpHeight", "Bump Height", 0.001)
 
-        self.outputs.new("LuxCoreSocketFloatUnbounded", "Bump")
+        self.outputs.new("LuxCoreSocketBump", "Bump")
 
     def export(self, props, luxcore_name=None):
         definitions = {
