@@ -76,14 +76,14 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             node_tree = exterior_pointer.node_tree
             exterior_volume_name = self._convert_volume(node_tree, props)
 
-        # The material is defined here for the first time (volumes already completely exported)
+        # Export the material
+        exported_name = self.inputs["Material"].export(props, luxcore_name)
+
+        # Attach the volumes
         if interior_volume_name:
             props.Set(pyluxcore.Property(prefix + "volume.interior", interior_volume_name))
         if exterior_volume_name:
             props.Set(pyluxcore.Property(prefix + "volume.exterior", exterior_volume_name))
-
-        # Export the material
-        exported_name = self.inputs["Material"].export(props, luxcore_name)
 
         if exported_name is None or exported_name != luxcore_name:
             # Export failed, e.g. because no node is linked or it's not a material node
