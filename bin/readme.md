@@ -9,6 +9,7 @@ Files that need to be copied from the binary SDK into this directory for release
 ## Windows
 
 * tbb.dll
+* tbbmalloc.dll
 * embree.dll
 * OpenImageIO.dll
 * pyluxcore.pyd
