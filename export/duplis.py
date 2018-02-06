@@ -72,19 +72,21 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
     luxcore_scene.Parse(dupli_props)
 
     for duplis in exported_duplis.values():
-        # Objects might be split if they have multiple materials
-        for src_name in duplis.exported_obj.luxcore_names:
-            dst_name = src_name + "dupli"
-            count = duplis.count
-            transformations = array("f", duplis.matrices)
-            luxcore_scene.DuplicateObject(src_name, dst_name, count, transformations)
+        # exported_obj sometimes is None, e.g. when instancing a group using an empty
+        if duplis.exported_obj:
+            # Objects might be split if they have multiple materials
+            for src_name in duplis.exported_obj.luxcore_names:
+                dst_name = src_name + "dupli"
+                count = duplis.count
+                transformations = array("f", duplis.matrices)
+                luxcore_scene.DuplicateObject(src_name, dst_name, count, transformations)
 
-            # TODO: support steps and times (motion blur)
-            # steps = 0 # TODO
-            # times = array("f", [])
-            # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
+                # TODO: support steps and times (motion blur)
+                # steps = 0 # TODO
+                # times = array("f", [])
+                # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
 
-            # Delete the object we used for duplication, we don't want it to show up in the scene
-            luxcore_scene.DeleteObject(src_name)
+                # Delete the object we used for duplication, we don't want it to show up in the scene
+                luxcore_scene.DeleteObject(src_name)
 
     print("Dupli export took %.3fs" % (time() - start))

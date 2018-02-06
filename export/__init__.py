@@ -58,7 +58,7 @@ class Exporter(object):
         len_objs = len(objs)
 
         for index, obj in enumerate(objs, start=1):
-            if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP"):
+            if obj.type in ("MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP", "EMPTY"):
                 if engine:
                     engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
                 self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine=engine)
