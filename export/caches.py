@@ -1,7 +1,6 @@
 import bpy
 from .. import utils
 from ..utils import node as utils_node
-from ..nodes.output import get_active_output
 from ..export import smoke, camera
 
 class StringCache(object):
@@ -84,6 +83,8 @@ class MaterialCache(object):
         self.changed_materials = []
 
     def diff(self):
+        self._reset()
+
         if bpy.data.materials.is_updated:
             for mat in bpy.data.materials:
                 node_tree = mat.luxcore.node_tree
@@ -115,7 +116,7 @@ class SmokeCache(object):
     The really expensive operation is *not* the smoke export, but the Property setting.)
     """    
     def __init__(self):
-        cache = {}
+        self.reset()
     
     def convert(self, smoke_obj, channel):
         key = utils.get_luxcore_name(smoke_obj, context) + channel

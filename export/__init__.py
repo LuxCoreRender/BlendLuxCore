@@ -23,6 +23,17 @@ class Change:
     REQUIRES_VIEW_UPDATE = CONFIG
     REQUIRES_SESSION_PARSE = IMAGEPIPELINE
 
+    @staticmethod
+    def to_string(changes):
+        s = ""
+        members = [attr for attr in dir(Change) if not callable(getattr(Change, attr)) and not attr.startswith("__")]
+        for changetype in members:
+            if changes & getattr(Change, changetype):
+                if s:
+                    s += " | "
+                s += changetype
+        return s
+
 
 class Exporter(object):
     def __init__(self):
@@ -167,6 +178,8 @@ class Exporter(object):
         return changes
 
     def update(self, context, session, changes):
+        print("Update because of:", Change.to_string(changes))
+
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
             session = self._update_config(session, self.config_cache.props)
