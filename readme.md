@@ -49,12 +49,12 @@ TODO: These do not contain .blend files yet.
 * [x] Tonemapping settings
 * [x] Shadow catcher
 * [x] Transparent film
+* [x] Smoke/Fire
+* [x] Pointiness
 * [ ] All LuxCore textures [(Status)](https://github.com/LuxCoreRender/BlendLuxCore/issues/43)
 * [ ] Image sequences
 * [ ] Light groups
 * [ ] AOVs
-* [ ] Smoke/Fire
-* [ ] Pointiness
 * [ ] Saving a resumable film
 * [ ] Most imagepipeline plugins
 * And more...
