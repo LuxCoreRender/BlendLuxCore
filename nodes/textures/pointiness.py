@@ -5,6 +5,7 @@ from ... import utils
 
 class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
     bl_label = "Pointiness"
+    bl_width_default = 180
 
     curvature_items = [
         ("concave", "Concave", "Only use dents"),
