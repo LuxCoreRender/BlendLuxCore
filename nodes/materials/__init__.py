@@ -132,6 +132,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
+        NodeItem("LuxCoreNodeTexUV", label="UV Test"),
     ]),
    
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[

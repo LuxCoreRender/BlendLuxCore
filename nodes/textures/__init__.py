@@ -40,6 +40,7 @@ from .normalmap import LuxCoreNodeTexNormalmap
 from .output import LuxCoreNodeTexOutput
 from .pointiness import LuxCoreNodeTexPointiness
 from .smoke import LuxCoreNodeTexSmoke
+from .uv import LuxCoreNodeTexUV
 from .wrinkled import LuxCoreNodeTexWrinkled
 from .windy import LuxCoreNodeTexWindy
 
@@ -121,6 +122,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
+        NodeItem("LuxCoreNodeTexUV", label="UV Test"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
