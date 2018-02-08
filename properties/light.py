@@ -53,6 +53,11 @@ SPREAD_ANGLE_DESCRIPTION = (
     "of the light and less to the sides."
 )
 
+VISIBILITYMAP_ENABLE_DESC = (
+    "Compute a visibility map for this light source. Recommended for indoor scenes where this "
+    "light source is only visible through small openings (e.g. windows)"
+)
+
 
 def init():
     bpy.types.Lamp.luxcore = PointerProperty(type=LuxCoreLightProps)
@@ -145,6 +150,10 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     visibility_indirect_diffuse = BoolProperty(name="Diffuse", default=True)
     visibility_indirect_glossy = BoolProperty(name="Glossy", default=True)
     visibility_indirect_specular = BoolProperty(name="Specular", default=True)
+
+    # sky2, infinite, constantinfinite
+    visibilitymap_enable = BoolProperty(name="Build Visibility Map", default=True,
+                                        description=VISIBILITYMAP_ENABLE_DESC)
 
     # area
     # We use unit="ROTATION" because angles are radians, so conversion is necessary for the UI

@@ -115,6 +115,8 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
         layout.prop(world.luxcore, "samples")
         layout.prop(world.luxcore, "importance")
 
+        layout.prop(world.luxcore, "visibilitymap_enable")
+
 
 class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}

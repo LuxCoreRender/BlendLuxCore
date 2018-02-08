@@ -154,6 +154,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
             raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % blender_obj.name)
 
         _indirect_light_visibility(definitions, lamp)
+        _visibilitymap(definitions, lamp)
 
         props = utils.create_props(prefix, definitions)
         return props, exported_light
@@ -205,6 +206,7 @@ def convert_world(world, scene):
             definitions["type"] = "constantinfinite"
 
         _indirect_light_visibility(definitions, world)
+        _visibilitymap(definitions, world)
 
         props = utils.create_props(prefix, definitions)
         return props
@@ -376,6 +378,9 @@ def _indirect_light_visibility(definitions, lamp_or_world):
         "visibility.indirect.glossy.enable": lamp_or_world.luxcore.visibility_indirect_glossy,
         "visibility.indirect.specular.enable": lamp_or_world.luxcore.visibility_indirect_specular,
     })
+
+def _visibilitymap(definitions, lamp_or_world):
+    definitions["visibilitymap.enable"] = lamp_or_world.luxcore.visibilitymap_enable
 
 
 def export_ies(definitions, iesfile_type, iesfile_text, iesfile_path, flipz, library, is_meshlight=False):

@@ -152,6 +152,10 @@ class LUXCORE_LAMP_PT_performance(DataButtonsPanel, Panel):
         layout.prop(lamp.luxcore, "samples")
         layout.prop(lamp.luxcore, "importance")
 
+        if lamp.type == "HEMI":
+            # infinite (with image) and constantinfinte lights
+            layout.prop(lamp.luxcore, "visibilitymap_enable")
+
 
 class LUXCORE_LAMP_PT_visibility(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}

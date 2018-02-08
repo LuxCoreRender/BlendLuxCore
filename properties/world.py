@@ -6,7 +6,8 @@ from bpy.props import (
 )
 from .light import (
     SAMPLES_DESCRIPTION, IMPORTANCE_DESCRIPTION,
-    GAMMA_DESCRIPTION, SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION
+    GAMMA_DESCRIPTION, SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION,
+    VISIBILITYMAP_ENABLE_DESC,
 )
 
 
@@ -49,5 +50,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     visibility_indirect_glossy = BoolProperty(name="Glossy", default=True)
     visibility_indirect_specular = BoolProperty(name="Specular", default=True)
 
-    volume = PointerProperty(type=bpy.types.NodeTree)
+    # sky2, infinite, constantinfinite
+    visibilitymap_enable = BoolProperty(name="Build Visibility Map", default=True,
+                                        description=VISIBILITYMAP_ENABLE_DESC)
 
+    volume = PointerProperty(type=bpy.types.NodeTree)
