@@ -78,20 +78,24 @@ luxcore_node_categories_volume = [
         # Note: 2D textures make no sense for volumes
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
+        NodeItem("LuxCoreNodeTexfBM", label="fBM"),
+        NodeItem("LuxCoreNodeTexMarble", label="Marble"),
+        NodeItem("LuxCoreNodeTexWindy", label="Windy"),
+        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
+        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+    ]),
+
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_BLENDERTEXTURE", "Texture (Blender)", items=[
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
         NodeItem("LuxCoreNodeTexBlenderClouds", label="Clouds"),
         NodeItem("LuxCoreNodeTexBlenderDistortedNoise", label="Distorted Noise"),
         NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),
         NodeItem("LuxCoreNodeTexBlenderMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexBlenderMusgrave", label="Musgrave"),
+        NodeItem("LuxCoreNodeTexBlenderNoise", label="Noise"),
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
-        NodeItem("LuxCoreNodeTexfBM", label="fBM"),
-        NodeItem("LuxCoreNodeTexMarble", label="Marble"),
-        NodeItem("LuxCoreNodeTexWindy", label="Windy"),
-        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
-        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_UTILS", "Utils", items=[

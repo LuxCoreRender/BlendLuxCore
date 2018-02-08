@@ -1,11 +1,5 @@
-import bpy
 from bpy.props import EnumProperty, FloatProperty, IntProperty
 from .. import LuxCoreNodeTexture
-
-from .. import NOISE_BASIS_ITEMS
-from .. import NOISE_TYPE_ITEMS
-
-from .. import sockets
 from ... import utils
 
 class LuxCoreNodeTexBlenderNoise(LuxCoreNodeTexture):

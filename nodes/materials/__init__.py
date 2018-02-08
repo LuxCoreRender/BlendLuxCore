@@ -95,17 +95,18 @@ luxcore_node_categories_material = [
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
+        NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
+        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
+        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
+        # Procedurals (TODO: add dividers)
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
-        NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
-        NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexWindy", label="Windy"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
-        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
-        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
     ]),
     
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_BLENDERTEXTURE", "Texture (Blender)", items=[
@@ -122,10 +123,11 @@ luxcore_node_categories_material = [
     ]),
     
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
-        NodeItem("LuxCoreNodeTexBump", label="Bump"),
-        NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexBump", label="Bump"),
+        NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
+        NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),

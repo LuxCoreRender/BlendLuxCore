@@ -36,6 +36,7 @@ from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
 from .marble import LuxCoreNodeTexMarble
 from .math import LuxCoreNodeTexMath
+from .normalmap import LuxCoreNodeTexNormalmap
 from .output import LuxCoreNodeTexOutput
 from .pointiness import LuxCoreNodeTexPointiness
 from .smoke import LuxCoreNodeTexSmoke
@@ -89,6 +90,15 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
+        NodeItem("LuxCoreNodeTexMarble", label="Marble"),
+        NodeItem("LuxCoreNodeTexWindy", label="Windy"),
+        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
+        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
+        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
+    ]),
+
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_BLENDERTEXTURE", "Texture (Blender)", items=[
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
         NodeItem("LuxCoreNodeTexBlenderClouds", label="Clouds"),
         NodeItem("LuxCoreNodeTexBlenderDistortedNoise", label="Distorted Noise"),
@@ -99,16 +109,11 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
-        NodeItem("LuxCoreNodeTexMarble", label="Marble"),
-        NodeItem("LuxCoreNodeTexWindy", label="Windy"),
-        NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
-        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
-        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
-        NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
+        NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
         NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
