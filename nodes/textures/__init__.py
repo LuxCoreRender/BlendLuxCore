@@ -36,6 +36,7 @@ from .mapping3d import LuxCoreNodeTexMapping3D
 from .marble import LuxCoreNodeTexMarble
 from .math import LuxCoreNodeTexMath
 from .output import LuxCoreNodeTexOutput
+from .pointiness import LuxCoreNodeTexPointiness
 from .smoke import LuxCoreNodeTexSmoke
 from .wrinkled import LuxCoreNodeTexWrinkled
 from .windy import LuxCoreNodeTexWindy
@@ -112,6 +113,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
+        NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[

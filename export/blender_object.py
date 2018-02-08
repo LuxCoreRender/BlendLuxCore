@@ -2,6 +2,7 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import ExportedObject
+from ..utils import node as utils_node
 
 from . import material
 from .light import convert_lamp
@@ -75,7 +76,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
                 lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)
-            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform)
+            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform, blender_obj)
 
         return props, ExportedObject(mesh_definitions)
     except Exception as error:
@@ -86,11 +87,34 @@ def convert(blender_obj, scene, context, luxcore_scene,
         return pyluxcore.Properties(), None
 
 
-def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform):
+def _handle_pointiness(props, luxcore_shape_name, blender_obj):
+    use_pointiness = False
+
+    for mat_slot in blender_obj.material_slots:
+        mat = mat_slot.material
+        if mat and mat.luxcore.node_tree:
+            # Material with nodetree, check the nodes for pointiness node
+            use_pointiness = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")
+
+    if use_pointiness:
+        pointiness_shape = luxcore_shape_name + "_pointiness"
+        prefix = "scene.shapes." + pointiness_shape + "."
+        props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
+        props.Set(pyluxcore.Property(prefix + "source", luxcore_shape_name))
+        luxcore_shape_name = pointiness_shape
+
+    return luxcore_shape_name
+
+
+def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform, blender_obj):
     # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
     luxcore_shape_name = "Mesh-" + lux_object_name
+    luxcore_shape_name = _handle_pointiness(props, luxcore_shape_name, blender_obj)
+    print(">>>", luxcore_shape_name)
+
     prefix = "scene.objects." + lux_object_name + "."
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
+
     props.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
