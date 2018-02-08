@@ -19,6 +19,7 @@ from .blendervoronoi import LuxCoreNodeTexBlenderVoronoi
 from .blenderwood import LuxCoreNodeTexBlenderWood
 from .brick import LuxCoreNodeTexBrick
 from .bump import LuxCoreNodeTexBump
+from .checkerboard2d import LuxCoreNodeTexCheckerboard2D
 from .checkerboard3d import LuxCoreNodeTexCheckerboard3D
 from .coloratdepth import LuxCoreNodeTexColorAtDepth
 from .colormix import LuxCoreNodeTexColorMix
@@ -90,6 +91,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
+        NodeItem("LuxCoreNodeTexCheckerboard2D", label="2D Checkerboard"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexWindy", label="Windy"),

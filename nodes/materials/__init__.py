@@ -103,6 +103,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
+        NodeItem("LuxCoreNodeTexCheckerboard2D", label="2D Checkerboard"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexWindy", label="Windy"),
