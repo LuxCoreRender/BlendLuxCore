@@ -13,6 +13,7 @@ from .blenderdistortednoise import LuxCoreNodeTexBlenderDistortedNoise
 from .blendermagic import LuxCoreNodeTexBlenderMagic
 from .blendermarble import LuxCoreNodeTexBlenderMarble
 from .blendermusgrave import LuxCoreNodeTexBlenderMusgrave
+from .blendernoise import LuxCoreNodeTexBlenderNoise
 from .blenderstucci import LuxCoreNodeTexBlenderStucci
 from .blendervoronoi import LuxCoreNodeTexBlenderVoronoi
 from .blenderwood import LuxCoreNodeTexBlenderWood
@@ -94,6 +95,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),
         NodeItem("LuxCoreNodeTexBlenderMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexBlenderMusgrave", label="Musgrave"),
+        NodeItem("LuxCoreNodeTexBlenderNoise", label="Noise"),
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),

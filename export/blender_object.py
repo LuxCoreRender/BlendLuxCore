@@ -110,7 +110,6 @@ def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transf
     # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
     luxcore_shape_name = "Mesh-" + lux_object_name
     luxcore_shape_name = _handle_pointiness(props, luxcore_shape_name, blender_obj)
-    print(">>>", luxcore_shape_name)
 
     prefix = "scene.objects." + lux_object_name + "."
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))

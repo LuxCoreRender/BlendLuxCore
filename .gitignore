@@ -5,4 +5,8 @@ __pycache__
 # Test output
 tests/full_export/log.txt
 
+# Release (ignore everything except the package script)
+release/*
+!release/package_releases.py
+
 # For ignored files in bin/ subdirectory, see the .gitignore file in bin/

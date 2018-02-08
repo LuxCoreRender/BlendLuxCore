@@ -115,6 +115,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),
         NodeItem("LuxCoreNodeTexBlenderMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexBlenderMusgrave", label="Musgrave"),
+        NodeItem("LuxCoreNodeTexBlenderNoise", label="Noise"),
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
