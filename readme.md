@@ -33,6 +33,7 @@ TODO: These do not contain .blend files yet.
 * [x] Viewport and final render
 * [x] Basic object export
 * [x] All LuxCore materials and volumes
+* [x] All LuxCore textures
 * [x] Glass dispersion
 * [x] Imagemap textures and texture mapping
 * [x] All light types (sun, sky, point, mappoint, distant, spot, projection, infinite (HDRI environment), constantinfinite, meshlights)
@@ -51,7 +52,6 @@ TODO: These do not contain .blend files yet.
 * [x] Transparent film
 * [x] Smoke/Fire
 * [x] Pointiness
-* [ ] All LuxCore textures [(Status)](https://github.com/LuxCoreRender/BlendLuxCore/issues/43)
 * [ ] Image sequences
 * [ ] Light groups
 * [ ] AOVs
