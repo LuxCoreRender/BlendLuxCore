@@ -57,6 +57,7 @@ TODO: These do not contain .blend files yet.
 * [ ] AOVs
 * [ ] Saving a resumable film
 * [ ] Most imagepipeline plugins
+* [ ] Material preview
 * And more...
 
 ### Great new features
