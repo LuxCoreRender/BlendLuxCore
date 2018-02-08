@@ -18,7 +18,8 @@ class ImageExporter(object):
             # Image was already exported
             temp_image = cls.temp_images[key]
         else:
-            temp_image = tempfile.NamedTemporaryFile(delete=False)
+            _, extension = os.path.splitext(image.filepath_raw)
+            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=extension)
             cls.temp_images[key] = temp_image
 
             print('Unpacking image "%s" to temp file "%s"' % (image.name, temp_image.name))
