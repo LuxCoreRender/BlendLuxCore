@@ -5,7 +5,7 @@ from bpy.props import StringProperty, BoolProperty
 from . import (
     camera, material, node_tree_presets, pointer_node, texture, world
 )
-from .utils import init_vol_node_tree
+from .utils import init_vol_node_tree, poll_node
 
 
 class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
@@ -90,6 +90,10 @@ class LUXCORE_OT_add_node(bpy.types.Operator):
     node_type = StringProperty()
     socket_type = StringProperty()
     input_socket = StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return poll_node(context)
 
     def execute(self, context):
         node = context.node
