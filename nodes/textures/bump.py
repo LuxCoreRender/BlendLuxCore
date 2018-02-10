@@ -6,7 +6,9 @@ from ... import utils
 
 
 class LuxCoreSocketBumpHeight(LuxCoreSocketFloat):
-    default_value = FloatProperty(default=0.001, min=0, subtype="DISTANCE", description="Bump height")
+    # Allow negative values for inverting the bump. These values are in meters.
+    default_value = FloatProperty(default=0.001, soft_min=-0.01, soft_max=0.01,
+                                  subtype="DISTANCE", description="Bump height")
 
 
 class LuxCoreNodeTexBump(LuxCoreNodeTexture):
