@@ -167,8 +167,6 @@ def find_suggested_clamp_value(session, scene=None):
     the user later sees it in the render panel.
     Only do this if clamping is disabled, otherwise the value is meaningless.
     """
-    assert not scene.luxcore.config.path.use_clamping
-
     avg_film_luminance = session.GetFilm().GetFilmY()
     if avg_film_luminance < 0:
         optimal_clamping_value = 0
