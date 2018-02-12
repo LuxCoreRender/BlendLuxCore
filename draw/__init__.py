@@ -138,11 +138,11 @@ class FrameBufferFinal(object):
         if self._transparent:
             bufferdepth = 4
             self._output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
-            self._convert_func = pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList
+            self._convert_combined = pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList
         else:
             bufferdepth = 3
             self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
-            self._convert_func = pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList
+            self._convert_combined = pyluxcore.ConvertFilmChannelOutput_3xFloat_To_4xFloatList
 
         self.buffer = array.array("f", [0.0] * (self._width * self._height * bufferdepth))
 
@@ -150,32 +150,15 @@ class FrameBufferFinal(object):
         session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
         result = engine.begin_result(0, 0, self._width, self._height)
         layer = result.layers[0]
+
         combined = layer.passes["Combined"]
+        combined.rect = self._convert_combined(self._width, self._height, self.buffer, False)
 
-        if self._transparent:
-            # Need the extra "False" because this function has an additional "normalize" argument
-            combined.rect = self._convert_func(self._width, self._height, self.buffer, False)
-        else:
-            combined.rect = self._convert_func(self._width, self._height, self.buffer)
-
-        samplecount = layer.passes["Samplecount"]
         arrayDepth = 1
         channel_buffer = array.array("I", [0] * (self._width * self._height * arrayDepth))
         session.GetFilm().GetOutputUInt(pyluxcore.FilmOutputType.SAMPLECOUNT, channel_buffer)
 
-        max = 0
-
-        for i in range(len(channel_buffer)):
-            if channel_buffer[i] > max:
-                max = channel_buffer[i]
-
-        scale = 1 / max if max > 0 else 0
-
-        channel_buffer_float = array.array("f", [0] * (self._width * self._height * arrayDepth))
-        for i in range(len(channel_buffer)):
-            channel_buffer_float[i] = channel_buffer[i] * scale
-
-        nested_list = [channel_buffer_float[i:i + arrayDepth] for i in range(0, len(channel_buffer_float), arrayDepth)]
-        samplecount.rect = nested_list
+        samplecount = layer.passes["Samplecount"]
+        samplecount.rect = pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList(self._width, self._height, channel_buffer, True)
 
         engine.end_result(result)
