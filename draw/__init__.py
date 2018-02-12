@@ -135,6 +135,9 @@ class FrameBufferFinal(object):
         pipeline = scene.camera.data.luxcore.imagepipeline
         self._transparent = pipeline.transparent_film
 
+        self._use_depth = scene.luxcore.aovs.depth
+        self._use_samplecount = scene.luxcore.aovs.samplecount
+
         if self._transparent:
             bufferdepth = 4
             self._output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
@@ -154,11 +157,20 @@ class FrameBufferFinal(object):
         combined = layer.passes["Combined"]
         combined.rect = self._convert_combined(self._width, self._height, self.buffer, False)
 
-        arrayDepth = 1
-        channel_buffer = array.array("I", [0] * (self._width * self._height * arrayDepth))
-        session.GetFilm().GetOutputUInt(pyluxcore.FilmOutputType.SAMPLECOUNT, channel_buffer)
+        if self._use_depth:
+            arrayDepth = 1
+            channel_buffer = array.array("f", [0] * (self._width * self._height * arrayDepth))
+            session.GetFilm().GetOutputFloat(pyluxcore.FilmOutputType.DEPTH, channel_buffer)
 
-        samplecount = layer.passes["Samplecount"]
-        samplecount.rect = pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList(self._width, self._height, channel_buffer, True)
+            depth = layer.passes["Depth"]
+            depth.rect = pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList(self._width, self._height, channel_buffer, False)
+
+        if self._use_samplecount:
+            arrayDepth = 1
+            channel_buffer = array.array("I", [0] * (self._width * self._height * arrayDepth))
+            session.GetFilm().GetOutputUInt(pyluxcore.FilmOutputType.SAMPLECOUNT, channel_buffer)
+
+            samplecount = layer.passes["Samplecount"]
+            samplecount.rect = pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList(self._width, self._height, channel_buffer, True)
 
         engine.end_result(result)

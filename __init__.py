@@ -7,7 +7,7 @@ from .utils import compatibility
 # Have to import everything with classes which need to be registered
 from . import engine, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
-from .ui import (blender_object, camera, config, display, errorlog,
+from .ui import (aovs, blender_object, camera, config, display, errorlog,
                  halt, light, material, mesh, particle, postpro, texture, world)
 
 bl_info = {

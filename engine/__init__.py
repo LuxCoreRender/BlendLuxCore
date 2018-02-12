@@ -21,6 +21,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self.error = None
 
         # I have no idea where add_pass should be placed
+        # self.add_pass("Depth", 1, "Z")  # the Depth pass is already there
         self.add_pass("Samplecount", 1, "X")
 
     def __del__(self):
