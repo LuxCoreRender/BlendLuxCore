@@ -31,6 +31,13 @@ def convert(scene, context=None):
             definitions["1.type"] = "RGBA_IMAGEPIPELINE"
             definitions["1.filename"] = "image2.png"
 
+
+        definitions["1.type"] = "SAMPLECOUNT"
+        definitions["1.filename"] = "samplecount.png"
+
+        # definitions["1.type"] = "ALPHA"
+        # definitions["1.filename"] = "alpha.png"
+
         return utils.create_props(prefix, definitions)
     except Exception as error:
         msg = "Imagepipeline: %s" % error

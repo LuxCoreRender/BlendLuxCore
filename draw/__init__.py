@@ -146,15 +146,36 @@ class FrameBufferFinal(object):
 
         self.buffer = array.array("f", [0.0] * (self._width * self._height * bufferdepth))
 
-    def draw(self, render_engine, session):
+    def draw(self, engine, session):
         session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
-        result = render_engine.begin_result(0, 0, self._width, self._height)
-        layer = result.layers[0].passes[0]
+        result = engine.begin_result(0, 0, self._width, self._height)
+        layer = result.layers[0]
+        combined = layer.passes["Combined"]
 
         if self._transparent:
             # Need the extra "False" because this function has an additional "normalize" argument
-            layer.rect = self._convert_func(self._width, self._height, self.buffer, False)
+            combined.rect = self._convert_func(self._width, self._height, self.buffer, False)
         else:
-            layer.rect = self._convert_func(self._width, self._height, self.buffer)
+            combined.rect = self._convert_func(self._width, self._height, self.buffer)
 
-        render_engine.end_result(result)
+        samplecount = layer.passes["Samplecount"]
+        arrayDepth = 1
+        channel_buffer = array.array("I", [0] * (self._width * self._height * arrayDepth))
+        session.GetFilm().GetOutputUInt(pyluxcore.FilmOutputType.SAMPLECOUNT, channel_buffer)
+
+        max = 0
+
+        for i in range(len(channel_buffer)):
+            if channel_buffer[i] > max:
+                max = channel_buffer[i]
+
+        scale = 1 / max if max > 0 else 0
+
+        channel_buffer_float = array.array("f", [0] * (self._width * self._height * arrayDepth))
+        for i in range(len(channel_buffer)):
+            channel_buffer_float[i] = channel_buffer[i] * scale
+
+        nested_list = [channel_buffer_float[i:i + arrayDepth] for i in range(0, len(channel_buffer_float), arrayDepth)]
+        samplecount.rect = nested_list
+
+        engine.end_result(result)

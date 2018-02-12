@@ -20,6 +20,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self._exporter = export.Exporter()
         self.error = None
 
+        # I have no idea where add_pass should be placed
+        self.add_pass("Samplecount", 1, "X")
+
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
         print("LuxCoreRenderEngine del")
