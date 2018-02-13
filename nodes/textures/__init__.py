@@ -31,6 +31,7 @@ from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
 from .hsv import LuxCoreNodeTexHSV
 from .imagemap import LuxCoreNodeTexImagemap
+from .iorpreset import LuxCoreNodeIORPreset
 from .irregulardata import LuxCoreNodeTexIrregularData
 from .lampspectrum import LuxCoreNodeTexLampSpectrum
 from .mapping2d import LuxCoreNodeTexMapping2D
