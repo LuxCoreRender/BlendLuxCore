@@ -24,19 +24,60 @@ def convert(scene, context=None):
         # TODO make this generic
         # TODO correct filepaths
 
-        index = 0
+        # Reset the index
+        _add_output.index = 0
 
         # This output is always defined
-        index = _add_output(definitions, "RGB_IMAGEPIPELINE", index)
+        _add_output(definitions, "RGB_IMAGEPIPELINE")
 
         if pipeline.transparent_film:
-            index = _add_output(definitions, "RGBA_IMAGEPIPELINE", index)
+            _add_output(definitions, "RGBA_IMAGEPIPELINE")
 
+        # AOVs
+        if aovs.rgb:
+            _add_output(definitions, "RGB")
+        if aovs.rgba:
+            _add_output(definitions, "RGBA")
+        if aovs.alpha:
+            _add_output(definitions, "ALPHA")
         if aovs.depth:
-            index = _add_output(definitions, "DEPTH", index)
-
+            _add_output(definitions, "DEPTH")
+        if aovs.material_id:
+            _add_output(definitions, "MATERIAL_ID")
+        if aovs.object_id:
+            _add_output(definitions, "OBJECT_ID")
+        if aovs.emission:
+            _add_output(definitions, "EMISSION")
+        if aovs.direct_diffuse:
+            _add_output(definitions, "DIRECT_DIFFUSE")
+        if aovs.direct_glossy:
+            _add_output(definitions, "DIRECT_GLOSSY")
+        if aovs.indirect_diffuse:
+            _add_output(definitions, "INDIRECT_DIFFUSE")
+        if aovs.indirect_glossy:
+            _add_output(definitions, "INDIRECT_GLOSSY")
+        if aovs.indirect_specular:
+            _add_output(definitions, "INDIRECT_SPECULAR")
+        if aovs.position:
+            _add_output(definitions, "POSITION")
+        if aovs.shading_normal:
+            _add_output(definitions, "SHADING_NORMAL")
+        if aovs.geometry_normal:
+            _add_output(definitions, "GEOMETRY_NORMAL")
+        if aovs.uv:
+            _add_output(definitions, "UV")
+        if aovs.direct_shadow_mask:
+            _add_output(definitions, "DIRECT_SHADOW_MASK")
+        if aovs.indirect_shadow_mask:
+            _add_output(definitions, "INDIRECT_SHADOW_MASK")
+        if aovs.raycount:
+            _add_output(definitions, "RAYCOUNT")
         if aovs.samplecount:
-            index = _add_output(definitions, "SAMPLECOUNT", index)
+            _add_output(definitions, "SAMPLECOUNT")
+        if aovs.convergence:
+            _add_output(definitions, "CONVERGENCE")
+        if aovs.irradiance:
+            _add_output(definitions, "IRRADIANCE")
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
@@ -45,7 +86,8 @@ def convert(scene, context=None):
         return pyluxcore.Properties()
 
 
-def _add_output(definitions, output_type_str, index):
+@utils.count_index
+def _add_output(definitions, output_type_str, index=0):
     definitions[str(index) + ".type"] = output_type_str
 
     extension = ".png" if output_type_str in LDR_CHANNELS else ".exr"

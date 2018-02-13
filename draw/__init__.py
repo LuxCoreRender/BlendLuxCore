@@ -125,6 +125,39 @@ class FrameBuffer(object):
         # offset_x, offset_y are in pixels
         return int(offset_x), int(offset_y)
 
+
+class AOV:
+    """ Storage class for info about an Arbitrary Output Variable """
+    def __init__(self, channel_count, array_type, convert_func, normalize):
+        self.channel_count = channel_count
+        # array_type is the type of the intermediate array.
+        # In the end, everything is converted to float for Blender.
+        self.array_type = array_type
+        self.convert_func = convert_func
+        self.normalize = normalize
+
+
+# Note: RGB_IMAGEPIPELINE and RGBA_IMAGEPIPELINE are missing here because they
+# are not imported along with the other AOVs (they have a special code path)
+# Note: The default AOV settings are:
+# AOV(3, "f", pyluxcore.ConvertFilmChannelOutput_3xFloat_To_4xFloatList, False)
+# AOVs with these default settings are not included in the aovs dictionary.
+AOVS = {
+    "RGBA": AOV(4, "f", pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList, False),
+    "ALPHA": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "DEPTH": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "DIRECT_SHADOW_MASK": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "INDIRECT_SHADOW_MASK": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "UV": AOV(2, "f", pyluxcore.ConvertFilmChannelOutput_2xFloat_To_2xFloatList, False),
+    "RAYCOUNT": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, True),
+    "MATERIAL_ID": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
+    "OBJECT_ID": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
+    "SAMPLECOUNT": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, True),
+    "CONVERGENCE": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, True),
+}
+# TODO: outputs like MATERIAL_ID_MASK (with ID)
+
+
 class FrameBufferFinal(object):
     """ FrameBuffer for final render """
     def __init__(self, scene):
@@ -154,107 +187,33 @@ class FrameBufferFinal(object):
         combined = layer.passes["Combined"]
         combined.rect = self._convert_combined(self._width, self._height, self.buffer, False)
 
-        # if aovs.depth:
-        #     arrayDepth = 1
-        #     channel_buffer = array.array("f", [0] * (self._width * self._height * arrayDepth))
-        #     session.GetFilm().GetOutputFloat(pyluxcore.FilmOutputType.DEPTH, channel_buffer)
-        #
-        #     depth = layer.passes["Depth"]
-        #     depth.rect = pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList(self._width, self._height, channel_buffer, False)
-        #
-        # if aovs.samplecount:
-        #     arrayDepth = 1
-        #     channel_buffer = array.array("I", [0] * (self._width * self._height * arrayDepth))
-        #     session.GetFilm().GetOutputUInt(pyluxcore.FilmOutputType.SAMPLECOUNT, channel_buffer)
-        #
-        #     samplecount = layer.passes["Samplecount"]
-        #     samplecount.rect = pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList(self._width, self._height, channel_buffer, True)
-
-        # # Default count is 3, those are not included here
-        # channel_count = {
-        #     "DEPTH": 1,
-        #     "SAMPLECOUNT": 1,
-        # }
-        #
-        # # Default type is "f", those are not included here
-        # array_types = {
-        #     "SAMPLECOUNT": "I",
-        # }
-        #
-        # convert_func = {
-        #     "DEPTH": pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList,
-        #     "SAMPLECOUNT": pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList,
-        # }
-        #
-        # normalize_channels = {
-        #     "SAMPLECOUNT"
-        # }
-
-        aovs = {
-            "DEPTH": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
-            "SAMPLECOUNT": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, True),
-        }
-
         for output_name, output_type in pyluxcore.FilmOutputType.names.items():
+            # Check if AOV is enabled by user
             if getattr(scene.luxcore.aovs, output_name.lower(), False):
-                # AOV is enabled by user
-                # if output_name in channel_count.keys():
-                #     array_depth = channel_count[output_name]
-                # else:
-                #     # Use default channel count
-                #     array_depth = 3
-                #
-                # if output_name in array_types.keys():
-                #     array_type = array_types[output_name]
-                # else:
-                #     array_type = "f"
-                #
-                # buffer = array.array(array_type, [0] * (self._width * self._height * array_depth))
-                #
-                # # Fill the buffer
-                # if array_type == "I":
-                #     session.GetFilm().GetOutputUInt(output_type, buffer)
-                # else:
-                #     session.GetFilm().GetOutputFloat(output_type, buffer)
-                #
-                # normalize = output_name in normalize_channels
-
-                # blender_pass = layer.passes[output_name.title()]
-                # blender_pass.rect = convert_func[output_name](self._width, self._height, buffer, normalize)
-
-                aov = aovs[output_name]
-                w = self._width
-                h = self._height
-
-                buffer = array.array(aov.array_type, [0] * (w * h * aov.channel_count))
-
-                # Fill the buffer
-                if aov.array_type == "I":
-                    session.GetFilm().GetOutputUInt(output_type, buffer)
-                else:
-                    session.GetFilm().GetOutputFloat(output_type, buffer)
-
-                blender_pass = layer.passes[output_name.title()]
-                blender_pass.rect = aov.convert_func(w, h, buffer, aov.normalize)
+                try:
+                    self._import_aov(output_name, output_type, layer, session)
+                except RuntimeError as error:
+                    print("Error on import of AOV %s: %s" % (output_name, error))
 
         engine.end_result(result)
 
+    def _import_aov(self, output_name, output_type, layer, session):
+        if output_name in AOVS:
+            aov = AOVS[output_name]
+        else:
+            # Use default values
+            aov = AOV(3, "f", pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList, False)
 
-class AOV:
-    def __init__(self, channel_count, array_type, convert_func, normalize):
-        self.channel_count = channel_count
-        self.array_type = array_type
-        self.convert_func = convert_func
-        self.normalize = normalize
+        w = self._width
+        h = self._height
 
-# AOVS = {
-#     "DEPTH": AOV(pyluxcore.FilmOutputType.DEPTH, 1),
-# }
+        buffer = array.array(aov.array_type, [0] * (w * h * aov.channel_count))
 
-# d = {key: value for (key, value) in iterable}
-#
-#
-#
-# AOVS = {
-#     str()
-# }
+        # Fill the buffer
+        if aov.array_type == "I":
+            session.GetFilm().GetOutputUInt(output_type, buffer)
+        else:
+            session.GetFilm().GetOutputFloat(output_type, buffer)
+
+        blender_pass = layer.passes[output_name.title()]
+        blender_pass.rect = aov.convert_func(w, h, buffer, aov.normalize)

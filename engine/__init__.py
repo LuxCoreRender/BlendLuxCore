@@ -23,6 +23,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         # I have no idea where add_pass should be placed
         # self.add_pass("Depth", 1, "Z")  # the Depth pass is already there
         self.add_pass("Samplecount", 1, "X")
+        self.add_pass("Shading_Normal", 3, "XYZ")
+        # TODO add the rest of the AOVs
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)

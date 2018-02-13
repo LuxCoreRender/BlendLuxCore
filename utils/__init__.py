@@ -414,3 +414,15 @@ def get_name_with_lib(datablock):
         # text += ' (Lib: "%s")' % datablock.library.name
         text = "L " + text
     return text
+
+
+def count_index(func):
+    """
+    A decorator TODO
+    """
+    def wrapper(*args, **kwargs):
+        kwargs["index"] = wrapper.index
+        wrapper.index += 1
+        return func(*args, **kwargs)
+    wrapper.index = 0
+    return wrapper
