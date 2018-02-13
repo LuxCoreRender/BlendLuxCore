@@ -20,12 +20,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self._exporter = export.Exporter()
         self.error = None
 
-        # I have no idea where add_pass should be placed
-        # self.add_pass("Depth", 1, "Z")  # the Depth pass is already there
-        self.add_pass("Samplecount", 1, "X")
-        self.add_pass("Shading_Normal", 3, "XYZ")
-        # TODO add the rest of the AOVs
-
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
         print("LuxCoreRenderEngine del")
@@ -66,6 +60,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
             self.update_stats("Render", "Starting session...")
             self._framebuffer = FrameBufferFinal(scene)
+            self.add_passes(scene)
             self._session.Start()
 
             config = self._session.GetRenderConfig()
@@ -268,3 +263,31 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.update_stats("Error: ", str(error))
             import traceback
             traceback.print_exc()
+
+    def add_passes(self, scene):
+        """
+        A custom method (not API defined) to add our custom passes.
+        Called by self.render() before the render starts.
+        """
+        aovs = scene.luxcore.aovs
+
+        # Note: the Depth pass is already added by Blender
+
+        if aovs.samplecount:
+            self.add_pass("Samplecount", 1, "X")
+        if aovs.shading_normal:
+            self.add_pass("Shading_Normal", 3, "XYZ")
+
+    def update_render_passes(self, scene=None, renderlayer=None):
+        """
+        Blender API defined method.
+        Called by compositor to display sockets of custom render passes.
+        """
+        self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
+
+        aovs = scene.luxcore.aovs
+
+        if aovs.samplecount:
+            self.register_pass(scene, renderlayer, "Samplecount", 1, "X", 'VALUE')
+        if aovs.shading_normal:
+            self.register_pass(scene, renderlayer, "Shading_Normal", 3, "XYZ", 'VECTOR')

@@ -139,9 +139,7 @@ class AOV:
 
 # Note: RGB_IMAGEPIPELINE and RGBA_IMAGEPIPELINE are missing here because they
 # are not imported along with the other AOVs (they have a special code path)
-# Note: The default AOV settings are:
-# AOV(3, "f", pyluxcore.ConvertFilmChannelOutput_3xFloat_To_4xFloatList, False)
-# AOVs with these default settings are not included in the aovs dictionary.
+# Note: AOVs with the default settings are not included in the aovs dictionary.
 AOVS = {
     "RGBA": AOV(4, "f", pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList, False),
     "ALPHA": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
@@ -155,6 +153,7 @@ AOVS = {
     "SAMPLECOUNT": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, True),
     "CONVERGENCE": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, True),
 }
+DEFAULT_AOV_SETTINGS = AOV(3, "f", pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList, False)
 # TODO: outputs like MATERIAL_ID_MASK (with ID)
 
 
@@ -201,8 +200,7 @@ class FrameBufferFinal(object):
         if output_name in AOVS:
             aov = AOVS[output_name]
         else:
-            # Use default values
-            aov = AOV(3, "f", pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList, False)
+            aov = DEFAULT_AOV_SETTINGS
 
         w = self._width
         h = self._height
