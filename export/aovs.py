@@ -86,7 +86,20 @@ def convert(scene, context=None):
         return pyluxcore.Properties()
 
 
-@utils.count_index
+def count_index(func):
+    """
+    A decorator that increments an index each time the decorated function is called.
+    It also passes the index as a keyword argument to the function.
+    """
+    def wrapper(*args, **kwargs):
+        kwargs["index"] = wrapper.index
+        wrapper.index += 1
+        return func(*args, **kwargs)
+    wrapper.index = 0
+    return wrapper
+
+
+@count_index
 def _add_output(definitions, output_type_str, index=0):
     definitions[str(index) + ".type"] = output_type_str
 
