@@ -49,9 +49,11 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
                 box.prop(lamp.luxcore.ies, "file_path")
                 iesfile = lamp.luxcore.ies.file_path
 
-            sub = box.column()
+            sub = box.row(align=True)
             sub.active = bool(iesfile)
             sub.prop(lamp.luxcore.ies, "flipz")
+            sub.prop(lamp.luxcore.ies, "map_width")
+            sub.prop(lamp.luxcore.ies, "map_height")
 
     def draw(self, context):
         layout = self.layout

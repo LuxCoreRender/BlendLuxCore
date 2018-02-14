@@ -51,25 +51,29 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         layout.prop(self, "spread_angle", slider=True)
 
         # IES Data
-        col = layout.column()
+        col = layout.column(align=True)
         col.prop(self.ies, "use", toggle=True)
 
         if self.ies.use:
-            row = col.row()
+            box = col.box()
+
+            row = box.row()
             row.label("Source:")
             row.prop(self.ies, "file_type", expand=True)
 
             if self.ies.file_type == "TEXT":
-                col.prop(self.ies, "file_text")
+                box.prop(self.ies, "file_text")
                 iesfile = self.ies.file_text
             else:
                 # self.iesfile_type == "PATH":
-                col.prop(self.ies, "file_path")
+                box.prop(self.ies, "file_path")
                 iesfile = self.ies.file_path
 
-            sub = col.column()
+            sub = box.column(align=True)
             sub.active = bool(iesfile)
             sub.prop(self.ies, "flipz")
+            sub.prop(self.ies, "map_width")
+            sub.prop(self.ies, "map_height")
 
     def export(self, props, definitions):
         """

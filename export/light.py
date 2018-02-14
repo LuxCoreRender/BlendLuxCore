@@ -392,6 +392,8 @@ def export_ies(definitions, ies, library, is_meshlight=False):
 
     if has_ies:
         definitions[prefix + "flipz"] = ies.flipz
+        definitions[prefix + "map.width"] = ies.map_width
+        definitions[prefix + "map.height"] = ies.map_height
 
         # There are two ways to specify IES data: filepath or blob (ascii text)
         if ies.file_type == "TEXT":
