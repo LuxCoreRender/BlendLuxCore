@@ -109,7 +109,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexWindy", label="Windy"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
     ]),
-    
+
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_BLENDERTEXTURE", "Texture (Blender)", items=[
         NodeItem("LuxCoreNodeTexBlenderBlend", label="Blend"),
         NodeItem("LuxCoreNodeTexBlenderClouds", label="Clouds"),
@@ -122,7 +122,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
     ]),
-    
+
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
@@ -134,8 +134,9 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
+        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
     ]),
-   
+
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),

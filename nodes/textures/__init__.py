@@ -31,6 +31,7 @@ from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
 from .hsv import LuxCoreNodeTexHSV
 from .imagemap import LuxCoreNodeTexImagemap
+from .iorpreset import LuxCoreNodeTexIORPreset
 from .irregulardata import LuxCoreNodeTexIrregularData
 from .lampspectrum import LuxCoreNodeTexLampSpectrum
 from .mapping2d import LuxCoreNodeTexMapping2D
@@ -125,6 +126,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
+        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
