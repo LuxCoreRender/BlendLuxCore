@@ -271,7 +271,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         """
         aovs = scene.luxcore.aovs
 
-        # Note: the Depth pass is already added by Blender
+        # Note: The Depth pass is already added by Blender. If we add it again, it won't be
+        # displayed correctly in the "Depth" view mode of the "Combined" pass in the image editor.
 
         if aovs.rgb:
             self.add_pass("RGB", 3, "RGB")
@@ -279,8 +280,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.add_pass("RGBA", 4, "RGBA")
         if aovs.alpha:
             self.add_pass("ALPHA", 1, "A")
-        # if aovs.depth:
-        #     self.add_pass("DEPTH", 1, "Z")
         if aovs.material_id:
             self.add_pass("MATERIAL_ID", 1, "X")
         if aovs.object_id:
@@ -329,8 +328,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         aovs = scene.luxcore.aovs
 
         # Notes:
-        # - The Depth pass is already added by Blender. If you add it again, it won't be displayed correctly
-        #   in the "Depth" view mode of the "Combined" pass in the image editor.
         # - It seems like Blender can not handle passes with 2 elements. They must have 1, 3 or 4 elements.
         # - The last argument must be in ("COLOR", "VECTOR", "VALUE") and controls the socket color.
         if aovs.rgb:
@@ -339,8 +336,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "RGBA", 4, "RGBA", "COLOR")
         if aovs.alpha:
             self.register_pass(scene, renderlayer, "ALPHA", 1, "A", "VALUE")
-        # if aovs.depth:
-        #     self.register_pass(scene, renderlayer, "DEPTH", 1, "Z", "VALUE")
+        if aovs.depth:
+            # In the compositor we need to register the Depth pass
+            self.register_pass(scene, renderlayer, "Depth", 1, "Z", "VALUE")
         if aovs.material_id:
             self.register_pass(scene, renderlayer, "MATERIAL_ID", 1, "X", "VALUE")
         if aovs.object_id:

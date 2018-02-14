@@ -205,6 +205,9 @@ class FrameBufferFinal(object):
         w = self._width
         h = self._height
 
+        from time import time
+        start = time()
+
         buffer = array.array(aov.array_type, [0] * (w * h * aov.channel_count))
 
         # Fill the buffer
@@ -213,7 +216,9 @@ class FrameBufferFinal(object):
         else:
             session.GetFilm().GetOutputFloat(output_type, buffer)
 
-        # Depth needs special treatment
+        # Depth needs special treatment because it's pre-defined by Blender and not uppercase
         pass_name = "Depth" if output_name == "DEPTH" else output_name
         blender_pass = layer.passes[pass_name]
         blender_pass.rect = aov.convert_func(w, h, buffer, aov.normalize)
+
+        print("Importing %s took %.3fs" % (output_name, (time() - start)))
