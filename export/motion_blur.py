@@ -62,7 +62,7 @@ def _get_matrices(context, scene, steps, frame_offsets, objects=None, exported_o
         scene.frame_set(frame_int, subframe)
 
         if motion_blur.object_blur and objects and exported_objects:
-            _append_object_matrices(objects, exported_objects, matrices, step)
+            _append_object_matrices(scene, objects, exported_objects, matrices, step)
 
         if motion_blur.camera_blur and not context:
             matrix = scene.camera.matrix_world
@@ -75,8 +75,12 @@ def _get_matrices(context, scene, steps, frame_offsets, objects=None, exported_o
     return matrices
 
 
-def _append_object_matrices(objects, exported_objects, matrices, step):
+def _append_object_matrices(scene, objects, exported_objects, matrices, step):
     for obj in objects:
+        if not utils.use_obj_motion_blur(obj, scene):
+            # User disabled motion blur for this object, skip it
+            continue
+
         key = utils.make_key(obj)
 
         try:
