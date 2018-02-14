@@ -1,6 +1,6 @@
 import bpy
 from . import (
-    blender_object, camera, config, display, errorlog, halt,
+    aovs, blender_object, camera, config, display, errorlog, halt,
     light, material, opencl, particle, world
 )
 from bpy.props import PointerProperty
@@ -23,3 +23,5 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     halt = PointerProperty(type=halt.LuxCoreHaltConditions)
     display = PointerProperty(type=display.LuxCoreDisplaySettings)
     opencl = PointerProperty(type=opencl.LuxCoreOpenCLSettings)
+    # Move AOVs to render layer if we ever support them
+    aovs = PointerProperty(type=aovs.LuxCoreAOVSettings)

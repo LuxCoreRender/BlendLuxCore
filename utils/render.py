@@ -46,7 +46,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
 
     if draw_film:
         # Show updated film (this operation is expensive)
-        engine._framebuffer.draw(engine, engine._session)
+        engine._framebuffer.draw(engine, engine._session, scene)
 
     # Update progress bar if we have halt conditions
     halt = scene.luxcore.halt
