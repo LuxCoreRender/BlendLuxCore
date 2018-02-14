@@ -358,6 +358,7 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
     obj_definitions = {
         "material": mat_name,
         "shape": shape_name,
+        "camerainvisible": not blender_obj.luxcore.visible_to_camera,
     }
     if obj_transform:
         # Use instancing for viewport render so we can interactively move the light

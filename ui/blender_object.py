@@ -16,6 +16,8 @@ class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
         layout = self.layout
         obj = context.object
 
+        layout.prop(obj.luxcore, "visible_to_camera")
+
         # Motion blur settings
         cam = context.scene.camera
         if cam:

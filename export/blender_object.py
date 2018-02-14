@@ -118,6 +118,8 @@ def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transf
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 
+    props.Set(pyluxcore.Property(prefix + "camerainvisible", not blender_obj.luxcore.visible_to_camera))
+
 
 def _convert_mesh_to_shapes(name, mesh, luxcore_scene, mesh_transform):
     faces = mesh.tessfaces[0].as_pointer()

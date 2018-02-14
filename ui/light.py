@@ -112,6 +112,11 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
             if lamp.luxcore.is_laser:
                 layout.prop(lamp, "size", text="Size")
             else:
+                row = layout.row()
+                if context.object:
+                    row.prop(context.object.luxcore, "visible_to_camera")
+                row.prop(lamp.luxcore, "spread_angle", slider=True)
+
                 col = layout.column(align=True)
                 # the shape controls should be two horizontal buttons
                 sub = col.row(align=True)
@@ -124,8 +129,6 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
                 else:
                     row.prop(lamp, "size", text="Size X")
                     row.prop(lamp, "size_y")
-
-                layout.prop(lamp.luxcore, "spread_angle", slider=True)
 
                 self.draw_ies_controls(context)
 

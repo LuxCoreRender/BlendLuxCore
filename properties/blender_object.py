@@ -10,4 +10,5 @@ def init():
 
 
 class LuxCoreObjectProps(PropertyGroup):
+    visible_to_camera = BoolProperty(name="Visible to Camera", default=True)
     enable_motion_blur = BoolProperty(name="Motion Blur", default=True, description=DESC_MOTION_BLUR)
