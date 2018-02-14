@@ -38,6 +38,9 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
         # Metaballs are omitted from this loop, they cause glitches.
         if dupli.object.type == "META":
             continue
+        # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)
+        if dupli.matrix.determinant() == 0:
+            continue
 
         # Use the utils functions to build names so linked objects work (libraries)
         name = name_prefix + utils.get_luxcore_name(dupli.object, context)
