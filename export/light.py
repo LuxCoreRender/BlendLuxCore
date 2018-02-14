@@ -35,7 +35,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
         definitions["importance"] = importance
 
         if lamp.type == "POINT":
-            if lamp.luxcore.image or lamp.luxcore.use_ies:
+            if lamp.luxcore.image or lamp.luxcore.ies.use:
                 # mappoint
                 definitions["type"] = "mappoint"
                 definitions["flipz"] = lamp.luxcore.flipz
@@ -305,10 +305,9 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
     }
 
     # IES data
-    if lamp.luxcore.use_ies:
+    if lamp.luxcore.ies.use:
         try:
-            export_ies(mat_definitions, lamp.luxcore.iesfile_type, lamp.luxcore.iesfile_text,
-                       lamp.luxcore.iesfile_path, lamp.luxcore.flipz, lamp.library, is_meshlight=True)
+            export_ies(mat_definitions, lamp.luxcore.ies, lamp.library, is_meshlight=True)
         except OSError as error:
             msg = 'Lamp "%s": %s' % (blender_obj.name, error)
             scene.luxcore.errorlog.add_warning(msg)
@@ -384,17 +383,20 @@ def _visibilitymap(definitions, lamp_or_world):
     definitions["visibilitymap.enable"] = lamp_or_world.luxcore.visibilitymap_enable
 
 
-def export_ies(definitions, iesfile_type, iesfile_text, iesfile_path, flipz, library, is_meshlight=False):
+def export_ies(definitions, ies, library, is_meshlight=False):
+    """
+    ies is a LuxCoreIESProps PropertyGroup
+    """
     prefix = "emission." if is_meshlight else ""
-    has_ies = (iesfile_type == "TEXT" and iesfile_text) or (iesfile_type == "PATH" and iesfile_path)
+    has_ies = (ies.file_type == "TEXT" and ies.file_text) or (ies.file_type == "PATH" and ies.file_path)
 
     if has_ies:
-        definitions[prefix + "flipz"] = flipz
+        definitions[prefix + "flipz"] = ies.flipz
 
         # There are two ways to specify IES data: filepath or blob (ascii text)
-        if iesfile_type == "TEXT":
+        if ies.file_type == "TEXT":
             # Blender text block
-            text = iesfile_text
+            text = ies.file_text
 
             if text:
                 blob = text.as_string().encode("ascii")
@@ -403,7 +405,7 @@ def export_ies(definitions, iesfile_type, iesfile_text, iesfile_path, flipz, lib
                     definitions[prefix + "iesblob"] = [blob]
         else:
             # File path
-            iesfile = iesfile_path
+            iesfile = ies.file_path
 
             if iesfile:
                 filepath = utils.get_abspath(iesfile, library, must_exist=True, must_be_file=True)

@@ -32,26 +32,26 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
         lamp = context.lamp
 
         col = layout.column(align=True)
-        col.prop(lamp.luxcore, "use_ies", toggle=True)
+        col.prop(lamp.luxcore.ies, "use", toggle=True)
 
-        if lamp.luxcore.use_ies:
+        if lamp.luxcore.ies.use:
             box = col.box()
 
             row = box.row()
             row.label("IES Data:")
-            row.prop(lamp.luxcore, "iesfile_type", expand=True)
+            row.prop(lamp.luxcore.ies, "file_type", expand=True)
 
-            if lamp.luxcore.iesfile_type == "TEXT":
-                box.prop(lamp.luxcore, "iesfile_text")
-                iesfile = lamp.luxcore.iesfile_text
+            if lamp.luxcore.ies.file_type == "TEXT":
+                box.prop(lamp.luxcore.ies, "file_text")
+                iesfile = lamp.luxcore.ies.file_text
             else:
-                # lamp.luxcore.iesfile_type == "PATH":
-                box.prop(lamp.luxcore, "iesfile_path")
-                iesfile = lamp.luxcore.iesfile_path
+                # lamp.luxcore.ies.file_type == "PATH":
+                box.prop(lamp.luxcore.ies, "file_path")
+                iesfile = lamp.luxcore.ies.file_path
 
             sub = box.column()
             sub.active = bool(iesfile)
-            sub.prop(lamp.luxcore, "flipz")
+            sub.prop(lamp.luxcore.ies, "flipz")
 
     def draw(self, context):
         layout = self.layout

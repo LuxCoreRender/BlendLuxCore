@@ -7,9 +7,9 @@ from bpy.props import (
 from .. import LuxCoreNode
 from ...properties.light import (
     POWER_DESCRIPTION, EFFICACY_DESCRIPTION, SAMPLES_DESCRIPTION,
-    IES_FILE_DESCRIPTION, IES_TEXT_DESCRIPTION, iesfile_type_items,
-    SPREAD_ANGLE_DESCRIPTION, USE_IES_DESCRIPTION
+    SPREAD_ANGLE_DESCRIPTION,
 )
+from ...properties.ies import LuxCoreIESProps
 from ...export import light
 
 
@@ -28,11 +28,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
     gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
     power = FloatProperty(name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
     efficacy = FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
-    use_ies = BoolProperty(name="Use IES File", default=False, description=USE_IES_DESCRIPTION)
-    iesfile_type = EnumProperty(name="IES File Type", items=iesfile_type_items, default="TEXT")
-    iesfile_path = StringProperty(name="File", subtype="FILE_PATH", description=IES_FILE_DESCRIPTION)
-    iesfile_text = PointerProperty(name="Text", type=bpy.types.Text, description=IES_TEXT_DESCRIPTION)
-    flipz = BoolProperty(name="Flip IES Z Axis", default=False)
+    ies = PointerProperty(type=LuxCoreIESProps)
     samples = IntProperty(name="Samples", default=-1, min=-1, description=SAMPLES_DESCRIPTION)
     # We use unit="ROTATION" because angles are radians, so conversion is necessary for the UI
     spread_angle = FloatProperty(name="Spread Angle", default=math.pi / 2, min=0, soft_min=math.radians(5),
@@ -56,24 +52,24 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
 
         # IES Data
         col = layout.column()
-        col.prop(self, "use_ies", toggle=True)
+        col.prop(self.ies, "use", toggle=True)
 
-        if self.use_ies:
+        if self.ies.use:
             row = col.row()
             row.label("Source:")
-            row.prop(self, "iesfile_type", expand=True)
+            row.prop(self.ies, "file_type", expand=True)
 
-            if self.iesfile_type == "TEXT":
-                col.prop(self, "iesfile_text")
-                iesfile = self.iesfile_text
+            if self.ies.file_type == "TEXT":
+                col.prop(self.ies, "file_text")
+                iesfile = self.ies.file_text
             else:
                 # self.iesfile_type == "PATH":
-                col.prop(self, "iesfile_path")
-                iesfile = self.iesfile_path
+                col.prop(self.ies, "file_path")
+                iesfile = self.ies.file_path
 
             sub = col.column()
             sub.active = bool(iesfile)
-            sub.prop(self, "flipz")
+            sub.prop(self.ies, "flipz")
 
     def export(self, props, definitions):
         """
@@ -87,10 +83,9 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         definitions["emission.samples"] = self.samples
         definitions["emission.theta"] = math.degrees(self.spread_angle)
 
-        if self.use_ies:
+        if self.ies.use:
             try:
-                light.export_ies(definitions, self.iesfile_type, self.iesfile_text,
-                                 self.iesfile_path, self.flipz, self.id_data.library, is_meshlight=True)
+                light.export_ies(definitions, self.ies, self.id_data.library, is_meshlight=True)
             except OSError as error:
                 msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
                 bpy.context.scene.luxcore.errorlog.add_warning(msg)

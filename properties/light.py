@@ -4,6 +4,7 @@ from bpy.props import (
     FloatVectorProperty, BoolProperty, StringProperty
 )
 import math
+from .ies import LuxCoreIESProps
 
 
 SAMPLES_DESCRIPTION = (
@@ -36,16 +37,6 @@ GAMMA_DESCRIPTION = (
 SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION = (
     "Used to avoid shadows cast from below when using shadow catcher"
 )
-
-USE_IES_DESCRIPTION = "Use an IES file to control the shape of the emitted light"
-IES_FILE_DESCRIPTION = "Specify path to IES file. Only portable if a relative path is used."
-IES_TEXT_DESCRIPTION = (
-    "Use Blender text block as IES file. Recommended if you plan to append/link this light later."
-)
-iesfile_type_items = [
-    ("PATH", "File", IES_FILE_DESCRIPTION, 0),
-    ("TEXT", "Text", IES_TEXT_DESCRIPTION, 1)
-]
 
 SPREAD_ANGLE_DESCRIPTION = (
     "How directional the light is emitted, set as the half-angle of the light source. "
@@ -126,11 +117,12 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0, description=EFFICACY_DESCRIPTION)
 
     # mappoint
-    use_ies = BoolProperty(name="Use IES File", default=False, description=USE_IES_DESCRIPTION)
-    iesfile_type = EnumProperty(name="IES File Type", items=iesfile_type_items, default="TEXT")
-    iesfile_path = StringProperty(name="IES File", subtype="FILE_PATH", description=IES_FILE_DESCRIPTION)
-    iesfile_text = PointerProperty(name="IES Text", type=bpy.types.Text, description=IES_TEXT_DESCRIPTION)
-    flipz = BoolProperty(name="Flip IES Z Axis", default=False)
+    ies = PointerProperty(type=LuxCoreIESProps)
+    # use_ies = BoolProperty(name="Use IES File", default=False, description=USE_IES_DESCRIPTION)
+    # iesfile_type = EnumProperty(name="IES File Type", items=iesfile_type_items, default="TEXT")
+    # iesfile_path = StringProperty(name="IES File", subtype="FILE_PATH", description=IES_FILE_DESCRIPTION)
+    # iesfile_text = PointerProperty(name="IES Text", type=bpy.types.Text, description=IES_TEXT_DESCRIPTION)
+    # flipz = BoolProperty(name="Flip IES Z Axis", default=False)
     # not exposed: emission.map.width, emission.map.height - do we need them?
 
     # spot
