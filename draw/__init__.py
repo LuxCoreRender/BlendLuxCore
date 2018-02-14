@@ -146,7 +146,7 @@ AOVS = {
     "DEPTH": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
     "DIRECT_SHADOW_MASK": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
     "INDIRECT_SHADOW_MASK": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
-    "UV": AOV(2, "f", pyluxcore.ConvertFilmChannelOutput_2xFloat_To_2xFloatList, False),
+    "UV": AOV(2, "f", pyluxcore.ConvertFilmChannelOutput_2xFloat_To_3xFloatList, False),
     "RAYCOUNT": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, True),
     "MATERIAL_ID": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
     "OBJECT_ID": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
@@ -213,5 +213,7 @@ class FrameBufferFinal(object):
         else:
             session.GetFilm().GetOutputFloat(output_type, buffer)
 
-        blender_pass = layer.passes[output_name.title()]
+        # Depth needs special treatment
+        pass_name = "Depth" if output_name == "DEPTH" else output_name
+        blender_pass = layer.passes[pass_name]
         blender_pass.rect = aov.convert_func(w, h, buffer, aov.normalize)
