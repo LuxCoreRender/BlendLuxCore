@@ -1,4 +1,3 @@
-import bgl
 from bgl import *  # Nah I'm not typing them all out
 import math
 import array
@@ -176,16 +175,19 @@ class FrameBufferFinal(object):
             self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
             self._convert_combined = pyluxcore.ConvertFilmChannelOutput_3xFloat_To_4xFloatList
 
-        self.buffer = array.array("f", [0.0] * (self._width * self._height * bufferdepth))
+        self.combined_buffer = array.array("f", [0.0] * (self._width * self._height * bufferdepth))
         self.aov_buffers = {}
 
     def draw(self, engine, session, scene):
-        session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
+        from time import time
+        start = time()
+
+        session.GetFilm().GetOutputFloat(self._output_type, self.combined_buffer)
         result = engine.begin_result(0, 0, self._width, self._height)
         layer = result.layers[0]
 
         combined = layer.passes["Combined"]
-        combined.rect = self._convert_combined(self._width, self._height, self.buffer, False)
+        self._convert_combined(self._width, self._height, self.combined_buffer, combined.as_pointer(), False)
 
         for output_name, output_type in pyluxcore.FilmOutputType.names.items():
             # Check if AOV is enabled by user
@@ -197,49 +199,34 @@ class FrameBufferFinal(object):
 
         engine.end_result(result)
 
-    def _import_aov(self, output_name, output_type, layer, session):
-        print("--------")
+        print("FrameBuffer draw took %.3fs" % (time() - start))
 
+    def _import_aov(self, output_name, output_type, layer, session):
         if output_name in AOVS:
             aov = AOVS[output_name]
         else:
             aov = DEFAULT_AOV_SETTINGS
 
-        w = self._width
-        h = self._height
-
-        from time import time
-        start = time()
+        width = self._width
+        height = self._height
 
         try:
             # Try to get the existing buffer for this AOV
             buffer = self.aov_buffers[output_name]
         except KeyError:
             # Buffer for this AOV does not exist yet, create it
-            s = time()
-            buffer = array.array(aov.array_type, [0] * (w * h * aov.channel_count))
+            buffer = array.array(aov.array_type, [0] * (width * height * aov.channel_count))
             self.aov_buffers[output_name] = buffer
-            print("Buffer created in %.3fs" % (time() - s))
 
         # Fill the buffer
-        s = time()
         if aov.array_type == "I":
             session.GetFilm().GetOutputUInt(output_type, buffer)
         else:
             session.GetFilm().GetOutputFloat(output_type, buffer)
-        print("[1] Buffer filled in %.3fs" % (time() - s))
 
         # Depth needs special treatment because it's pre-defined by Blender and not uppercase
         pass_name = "Depth" if output_name == "DEPTH" else output_name
         blender_pass = layer.passes[pass_name]
 
-        s = time()
-        blender_pass.rect = aov.convert_func(w, h, buffer, aov.normalize)
-        print("[2] Buffer copied to rect in %.3fs" % (time() - s))
-
-        # __import__('code').interact(local=dict(globals(), **locals()))
-        # aov.convert_func(w, h, buffer, blender_pass.as_pointer(), aov.normalize)
-        # layer.passes.foreach_set("rect", aov.convert_func(w, h, buffer, aov.normalize))
-
-        print("Importing %s took %.3fs" % (output_name, (time() - start)))
-        print("-------")
+        # Convert and copy the buffer into the blender_pass.rect
+        aov.convert_func(width, height, buffer, blender_pass.as_pointer(), aov.normalize)
