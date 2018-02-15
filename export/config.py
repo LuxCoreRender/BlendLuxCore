@@ -63,9 +63,19 @@ def convert(scene, context=None):
                 if config.device == "OCL":
                     # OpenCL specific settings
                     opencl = scene.luxcore.opencl
-                    definitions["opencl.cpu.use"] = opencl.use_cpu
-                    definitions["opencl.gpu.use"] = opencl.use_gpu
+                    definitions["opencl.cpu.use"] = False
+                    definitions["opencl.gpu.use"] = True
                     definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
+
+                    # OpenCL CPU (hybrid render) thread settings (we use the properties from Blender here)
+                    if opencl.use_native_cpu:
+                        if scene.render.threads_mode == "FIXED":
+                            # Explicitly set the number of threads
+                            definitions["opencl.native.threads.count"] = scene.render.threads
+                        # If no thread count is specified, LuxCore automatically uses all available cores
+                    else:
+                        # Disable hybrid rendering
+                        definitions["opencl.native.threads.count"] = 0
             else:
                 # config.engine == BIDIR
                 engine = "BIDIRCPU"

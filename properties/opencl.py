@@ -17,10 +17,9 @@ class LuxCoreOpenCLSettings(PropertyGroup):
     devices_hash = StringProperty()
 
     # TODO: opencl.platform.index - do we expose this?
-    # opencl.cpu.use
-    use_cpu = BoolProperty(name="Use CPUs", default=False)
-    # opencl.gpu.use
-    use_gpu = BoolProperty(name="Use GPUs", default=True)
+
+    use_native_cpu = BoolProperty(name="Use CPUs", default=True,
+                                  description="Use native C++ threads on the CPU (hybrid rendering)")
 
     def init_devices(self, device_list):
         print("Updating OpenCL device list")
@@ -42,8 +41,6 @@ class LuxCoreOpenCLSettings(PropertyGroup):
 
         if self.devices_hash != new_devices_hash:
             self.init_devices(device_list)
-            self.use_cpu = False
-            self.use_gpu = True
 
     def get_devices_hash_str(self, device_list):
         concat = ""
@@ -57,9 +54,8 @@ class LuxCoreOpenCLSettings(PropertyGroup):
 
         for device in self.devices:
             enabled = device.enabled
-            if device.type == "OPENCL_CPU" and not self.use_cpu:
-                enabled = False
-            if device.type == "OPENCL_GPU" and not self.use_gpu:
+            # Never use OpenCL CPU devices
+            if device.type == "OPENCL_CPU":
                 enabled = False
             selection += "1" if enabled else "0"
 
