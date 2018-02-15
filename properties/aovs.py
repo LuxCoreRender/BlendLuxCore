@@ -5,6 +5,12 @@ from bpy.types import PropertyGroup
 
 # Note: currently attached to scene because we don't support render layers
 class LuxCoreAOVSettings(PropertyGroup):
+    def toggle_depth(self, context):
+        # Enable/disable Blender's Z pass along with our DEPTH AOV
+        # because we use the Blender-defined Z pass instead of a custom one
+        # (it is better integrated in the image editor)
+        context.scene.render.layers.active.use_pass_z = self.depth
+
     # Basic Information
     rgb = BoolProperty(name="RGB", default=False,
                        description="Raw RGB values (HDR)")
@@ -12,8 +18,9 @@ class LuxCoreAOVSettings(PropertyGroup):
                        description="Raw RGBA values (HDR)")
     alpha = BoolProperty(name="Alpha", default=False,
                        description="Alpha value [0..1]")
-    depth = BoolProperty(name="Depth", default=True,
-                       description="Distance from camera (Z-Pass)")
+    depth = BoolProperty(name="Depth", default=False,
+                         description="Distance from camera (Z-Pass)",
+                         update=toggle_depth)
 
     # Material/Object Information
     material_id = BoolProperty(name="Material ID", default=False,

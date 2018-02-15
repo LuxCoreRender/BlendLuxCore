@@ -33,13 +33,18 @@ def blendluxcore_exit():
 def luxcore_load_post(_):
     """ Note: the only argument Blender passes is always None """
 
-    # Update OpenCL devices if .blend is opened on a different computer than it was saved on
     for scene in bpy.data.scenes:
+        # Update OpenCL devices if .blend is opened on
+        # a different computer than it was saved on
         scene.luxcore.opencl.update_devices_if_necessary()
 
         if pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool():
             # OpenCL not available, make sure we are using CPU device
             scene.luxcore.config.device = "CPU"
+
+        # Disable depth pass by default
+        if not scene.luxcore.aovs.depth:
+            scene.render.layers.active.use_pass_z = False
 
     # Run converters for backwards compatibility
     compatibility.run()
