@@ -17,6 +17,9 @@ class Duplis:
 
 
 def convert(blender_obj, scene, context, luxcore_scene, engine=None):
+    """
+    Converts particle systems and dupliverts/faces (everything apart from hair)
+    """
     try:
         assert blender_obj.is_duplicator
 
@@ -105,7 +108,7 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
 
         print("Dupli export took %.3fs" % (time() - start))
     except Exception as error:
-        msg = "[%s] %s" % (blender_obj.name, error)
+        msg = '[Duplicator "%s"] %s' % (blender_obj.name, error)
         scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()

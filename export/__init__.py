@@ -3,7 +3,7 @@ from ..bin import pyluxcore
 from .. import utils
 from . import (
     blender_object, caches, camera, config, duplis,
-    imagepipeline, light, material, motion_blur, particle, world
+    imagepipeline, light, material, motion_blur, hair, world
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 
@@ -253,7 +253,7 @@ class Exporter(object):
             settings = psys.settings
             # render_type OBJECT and GROUP are handled by duplis.convert() above
             if settings.type == "HAIR" and settings.render_type == "PATH":
-                particle.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
+                hair.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
                 
         if exported_obj is None:
             # Object is not visible or an error happened.
