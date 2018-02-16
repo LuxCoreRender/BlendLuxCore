@@ -139,6 +139,7 @@ def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
         matrix = get_scaled_to_world(matrix, scene)
 
     if invert:
+        matrix = matrix.copy()
         matrix.invert_safe()
 
     l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
@@ -148,12 +149,13 @@ def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
 
     if matrix.determinant() == 0:
         # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
-        # Prevent a RuntimeError from LuxCore by adding a small epsilon.
+        # Prevent a RuntimeError from LuxCore by adding a small random epsilon.
         msg = "Non-invertible matrix. Can happen if e.g. an object has scale 0"
         bpy.context.scene.luxcore.errorlog.add_warning(msg)
 
-        epsilon = 1e-5
-        return [float(i) + epsilon for i in l]
+        # TODO maybe look for a better way to handle this
+        from random import random
+        return [float(i) + (1e-5 + random() * 1e-5) for i in l]
     else:
         return [float(i) for i in l]
 
