@@ -32,6 +32,8 @@ def convert(scene, context=None):
             _convert_path(config, definitions)
         else:
             # Final render
+            _convert_halt_conditions(scene, definitions)
+
             if config.engine == "PATH":
                 # Specific settings for PATH and TILEPATH
                 _convert_path(config, definitions)
@@ -200,3 +202,19 @@ def _convert_seed(scene, definitions):
         seed = config.seed
 
     definitions["renderengine.seed"] = seed
+
+
+def _convert_halt_conditions(scene, definitions):
+    halt = scene.luxcore.halt
+
+    if halt.use_time:
+        definitions["batch.halttime"] = halt.time
+
+    if halt.use_samples:
+        definitions["batch.haltspp"] = halt.samples
+
+    if halt.use_noise_thresh:
+        definitions["batch.haltthreshold"] = halt.noise_thresh
+        definitions["batch.haltthreshold.warmup"] = halt.noise_thresh_warmup
+        definitions["batch.haltthreshold.step"] = halt.noise_thresh_step
+        definitions["batch.haltthreshold.filter.enable"] = halt.noise_thresh_use_filter

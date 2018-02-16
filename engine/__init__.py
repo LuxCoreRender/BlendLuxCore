@@ -92,8 +92,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                     now = time()
 
                     if now - last_refresh > refresh_interval:
-                        stats = utils_render.refresh(self, scene, config, draw_film=True)
-                        done = utils_render.halt_condition_met(scene, stats) or self.test_break() or self._session.HasDone()
+                        utils_render.refresh(self, scene, config, draw_film=True)
+                        done = self.test_break() or self._session.HasDone()
 
                     if now - start > FAST_REFRESH_DURATION:
                         # It's time to switch to the loop with slow refresh below
@@ -128,8 +128,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                     # Refresh quickly when user changed something
                     draw_film |= changes
 
-                    stats = utils_render.refresh(self, scene, config, draw_film, time_until_film_refresh)
-                    done = utils_render.halt_condition_met(scene, stats) or self.test_break() or self._session.HasDone()
+                    utils_render.refresh(self, scene, config, draw_film, time_until_film_refresh)
+                    done = self.test_break() or self._session.HasDone()
 
                     last_stat_refresh = now
                     if draw_film:

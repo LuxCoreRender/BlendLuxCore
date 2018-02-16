@@ -91,6 +91,8 @@ class LuxCoreConfigTile(PropertyGroup):
     # tile.multipass.enable
     multipass_enable = BoolProperty(name="Multipass", default=True, description="")
 
+    # TODO: unify with halt condition noise threshold settings
+
     # TODO: min/max correct?
     # tile.multipass.convergencetest.threshold
     multipass_convtest_threshold = FloatProperty(name="Convergence Threshold", default=(6 / 256),

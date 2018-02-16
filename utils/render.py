@@ -62,30 +62,12 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
             percent_samples = rendered_samples / halt.samples
             percent = max(percent, percent_samples)
 
+        # TODO noise threshold
+
         engine.update_progress(percent)
     else:
         # Reset to 0 in case the user disables the halt conditions during render
         engine.update_progress(0)
-
-    return stats
-
-
-def halt_condition_met(scene, stats):
-    halt = scene.luxcore.halt
-
-    if halt.enable:
-        rendered_samples = stats.Get("stats.renderengine.pass").GetInt()
-        rendered_time = stats.Get("stats.renderengine.time").GetFloat()
-
-        if halt.use_time and (rendered_time > halt.time):
-            print("Reached halt time: %d seconds" % halt.time)
-            return True
-
-        if halt.use_samples and (rendered_samples > halt.samples):
-            print("Reached halt samples: %d samples" % halt.samples)
-            return True
-
-    return False
 
 
 def get_pretty_stats(config, stats, scene):

@@ -37,3 +37,23 @@ class LUXCORE_RENDER_PT_halt_conditions(RenderButtonsPanel, Panel):
         split.active = halt.use_samples
         split.prop(halt, "samples")
 
+        config = context.scene.luxcore.config
+        is_sobol_sampler = config.engine == "PATH" and config.sampler == "SOBOL"
+        show_adaptive_sampling_props = halt.use_noise_thresh and is_sobol_sampler
+
+        if show_adaptive_sampling_props:
+            thresh_layout = layout.box()
+        else:
+            thresh_layout = layout
+
+        row = thresh_layout.row()
+        row.prop(halt, "use_noise_thresh")
+        split = row.split()
+        split.active = halt.use_noise_thresh
+        split.prop(halt, "noise_thresh")
+
+        if show_adaptive_sampling_props:
+            row = thresh_layout.row(align=True)
+            row.prop(halt, "noise_thresh_warmup")
+            row.prop(halt, "noise_thresh_step")
+            thresh_layout.prop(halt, "noise_thresh_use_filter")
