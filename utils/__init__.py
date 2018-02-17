@@ -183,8 +183,8 @@ def calc_filmsize(scene, context=None):
         width = width_raw
         height = height_raw
         if context.region_data.view_perspective in ("ORTHO", "PERSP"):
-            width = round(width_raw * (border_max_x - border_min_x))
-            height = round(height_raw * (border_max_y - border_min_y))
+            width = int(width_raw * border_max_x) - int(width_raw * border_min_x)
+            height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
         else:
             # Camera viewport
             if scene.render.use_border:
@@ -194,9 +194,9 @@ def calc_filmsize(scene, context=None):
                 base = max(width_raw, height_raw)
                 width = round(zoom * base * aspect_x * (border_max_x - border_min_x))
                 height = round(zoom * base * aspect_y * (border_max_y - border_min_y))
-    else:
-        width = round(width_raw * (border_max_x - border_min_x))
-        height = round(height_raw * (border_max_y - border_min_y))
+    else:        
+        width = int(width_raw * border_max_x) - int(width_raw * border_min_x)
+        height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
 
     return width, height
 
