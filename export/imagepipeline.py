@@ -27,17 +27,21 @@ def convert(scene, context=None):
             # Blender expects premultiplied alpha, luxcoreui does not
             index = _premul_alpha(definitions, index)
 
-        if pipeline.bloom.enabled:
-            index = _bloom(definitions, index, pipeline.bloom)
+        # TODO background image
 
         if pipeline.mist.enabled:
             index = _mist(definitions, index, pipeline.mist, scene)
 
-        if pipeline.vignetting.enabled:
-            index = _vignetting(definitions, index, pipeline.vignetting)
+        if pipeline.bloom.enabled:
+            index = _bloom(definitions, index, pipeline.bloom)
 
         if pipeline.coloraberration.enabled:
             index = _coloraberration(definitions, index, pipeline.coloraberration)
+
+        if pipeline.vignetting.enabled:
+            index = _vignetting(definitions, index, pipeline.vignetting)
+
+        # TODO irradiance contour lines
 
         if use_filesaver:
             # Needs gamma correction (Blender applies it for us,
@@ -80,13 +84,6 @@ def _premul_alpha(definitions, index):
     return index + 1
 
 
-def _bloom(definitions, index, bloom):
-    definitions[str(index) + ".type"] = "BLOOM"
-    definitions[str(index) + ".radius"] = bloom.radius / 100
-    definitions[str(index) + ".weight"] = bloom.weight / 100
-    return index + 1
-
-
 def _mist(definitions, index, mist, scene):
     worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
@@ -99,15 +96,22 @@ def _mist(definitions, index, mist, scene):
     return index + 1
 
 
-def _vignetting(definitions, index, vignetting):
-    definitions[str(index) + ".type"] = "VIGNETTING"
-    definitions[str(index) + ".scale"] = vignetting.scale / 100
+def _bloom(definitions, index, bloom):
+    definitions[str(index) + ".type"] = "BLOOM"
+    definitions[str(index) + ".radius"] = bloom.radius / 100
+    definitions[str(index) + ".weight"] = bloom.weight / 100
     return index + 1
 
 
 def _coloraberration(definitions, index, coloraberration):
     definitions[str(index) + ".type"] = "COLOR_ABERRATION"
     definitions[str(index) + ".amount"] = coloraberration.amount / 100
+    return index + 1
+
+
+def _vignetting(definitions, index, vignetting):
+    definitions[str(index) + ".type"] = "VIGNETTING"
+    definitions[str(index) + ".scale"] = vignetting.scale / 100
     return index + 1
 
 
