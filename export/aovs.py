@@ -18,6 +18,7 @@ def convert(scene, context=None):
             # Can not work without a camera
             return pyluxcore.Properties()
 
+        cam = scene.camera
         pipeline = scene.camera.data.luxcore.imagepipeline
         aovs = scene.luxcore.aovs
 
@@ -40,7 +41,7 @@ def convert(scene, context=None):
             _add_output(definitions, "RGBA")
         if aovs.alpha:
             _add_output(definitions, "ALPHA")
-        if aovs.depth:
+        if aovs.depth or pipeline.mist.enabled:
             _add_output(definitions, "DEPTH")
         if aovs.material_id:
             _add_output(definitions, "MATERIAL_ID")

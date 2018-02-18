@@ -116,6 +116,17 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
             row.prop(bloom, "radius")
             row.prop(bloom, "weight")
 
+        mist = pipeline.mist
+        box = self.draw_plugin_box(mist)
+        if box:
+            row = box.row()
+            row.prop(mist, "color", text="")
+            row.prop(mist, "amount", slider=True)
+            row = box.row(align=True)
+            row.prop(mist, "start_distance")
+            row.prop(mist, "end_distance")
+            box.prop(mist, "exclude_background")
+
 
 class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     bl_label = "Depth of Field"

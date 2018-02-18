@@ -26,6 +26,9 @@ def convert(scene, context=None):
         if pipeline.bloom.enabled:
             index = _bloom(definitions, index, pipeline.bloom)
 
+        if pipeline.mist.enabled:
+            index = _mist(definitions, index, pipeline.mist, scene)
+
         if use_filesaver:
             # Needs gamma correction (Blender applies it for us,
             # but now we export for luxcoreui)
@@ -66,6 +69,18 @@ def _bloom(definitions, index, bloom):
     definitions[str(index) + ".type"] = "BLOOM"
     definitions[str(index) + ".radius"] = bloom.radius / 100
     definitions[str(index) + ".weight"] = bloom.weight / 100
+    return index + 1
+
+
+def _mist(definitions, index, mist, scene):
+    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+
+    definitions[str(index) + ".type"] = "MIST"
+    definitions[str(index) + ".color"] = list(mist.color)
+    definitions[str(index) + ".amount"] = mist.amount / 100
+    definitions[str(index) + ".startdistance"] = mist.start_distance * worldscale
+    definitions[str(index) + ".enddistance"] = mist.end_distance * worldscale
+    definitions[str(index) + ".excludebackground"] = mist.exclude_background
     return index + 1
 
 

@@ -1,20 +1,24 @@
-from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty, EnumProperty
-from bpy.types import PropertyGroup
-
-FSTOP_DESC = "Camera aperture, lower values result in a brighter image"
-EXPOSURE_DESC = (
-    "Camera exposure time in seconds. Lower values result in a darker image. "
-    "Don't forget that you can enter math formulas here, e.g. 1/100"
+from bpy.props import (
+    PointerProperty, BoolProperty, FloatProperty,
+    IntProperty, EnumProperty, FloatVectorProperty
 )
-SENSITIVITY_DESC = "Camera sensitivity to light (ISO), lower values lead to a darker image"
-
-REINHARD_PRESCALE_DESC = ""
-REINHARD_POSTSCALE_DESC = ""
-REINHARD_BURN_DESC = ""
+from bpy.types import PropertyGroup
 
 
 class LuxCoreImagepipelineTonemapper(PropertyGroup):
-    enabled = BoolProperty(name="Tonemapper", default=True, description="Enable/disable tonemapping")
+    NAME = "Tonemapper"
+    enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+
+    FSTOP_DESC = "Camera aperture, lower values result in a brighter image"
+    EXPOSURE_DESC = (
+        "Camera exposure time in seconds. Lower values result in a darker image. "
+        "Don't forget that you can enter math formulas here, e.g. 1/100"
+    )
+    SENSITIVITY_DESC = "Camera sensitivity to light (ISO), lower values lead to a darker image"
+
+    REINHARD_PRESCALE_DESC = ""
+    REINHARD_POSTSCALE_DESC = ""
+    REINHARD_BURN_DESC = ""
 
     type_items = [
         ("TONEMAP_LINEAR", "Linear", "Brightness is controlled by the scale value", 0),
@@ -45,12 +49,29 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup):
 
 
 class LuxCoreImagepipelineBloom(PropertyGroup):
-    enabled = BoolProperty(name="Bloom", default=False, description="Enable/disable bloom")
+    NAME = "Bloom"
+    enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
 
     radius = FloatProperty(name="Radius", default=7, min=0.1, max=100, precision=1, subtype="PERCENTAGE",
                            description="Size of the bloom effect (percent of the image size)")
     weight = FloatProperty(name="Strength", default=25, min=0, max=100, precision=1, subtype="PERCENTAGE",
                            description="Strength of the bloom effect (a linear mix factor)")
+
+class LuxCoreImagepipelineMist(PropertyGroup):
+    NAME = "Mist"
+    enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+
+    EXCLUDE_BACKGROUND_DESC = "Disable mist over background parts of the image (where distance = infinity)"
+
+    color = FloatVectorProperty(name="Color", default=(0.3, 0.4, 0.55), min=0, max=1, subtype="COLOR")
+    amount = FloatProperty(name="Strength", default=30, min=0, max=100, precision=1, subtype="PERCENTAGE",
+                           description="Strength of the mist overlay")
+    start_distance = FloatProperty(name="Start", default=100, min=0, subtype="DISTANCE",
+                                   description="Distance from the camera where the mist starts to be visible")
+    end_distance = FloatProperty(name="End", default=1000, min=0, subtype="DISTANCE",
+                                 description="Distance from the camera where the mist reaches full strength")
+    exclude_background = BoolProperty(name="Exclude Background", default=True,
+                                      description=EXCLUDE_BACKGROUND_DESC)
 
 
 class LuxCoreImagepipeline(PropertyGroup):
@@ -63,3 +84,4 @@ class LuxCoreImagepipeline(PropertyGroup):
 
     tonemapper = PointerProperty(type=LuxCoreImagepipelineTonemapper)
     bloom = PointerProperty(type=LuxCoreImagepipelineBloom)
+    mist = PointerProperty(type=LuxCoreImagepipelineMist)
