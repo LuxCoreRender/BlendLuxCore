@@ -22,7 +22,6 @@ def convert(scene, context=None):
         pipeline = scene.camera.data.luxcore.imagepipeline
         aovs = scene.luxcore.aovs
 
-        # TODO make this generic
         # TODO correct filepaths
 
         # Reset the index

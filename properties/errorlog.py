@@ -41,8 +41,11 @@ class LuxCoreErrorLog(PropertyGroup):
                 print("Error or warning already logged. Abort adding to collection.")
                 return
 
-        collection.add()
-        new = collection[-1]
-        # Access message property without using the setter
-        # (because it's read only for the user)
-        new["message"] = str(message)
+        try:
+            collection.add()
+            new = collection[-1]
+            # Access message property without using the setter
+            # (because it's read only for the user)
+            new["message"] = str(message)
+        except AttributeError:
+            print("Can't log errors in _RestrictContext")
