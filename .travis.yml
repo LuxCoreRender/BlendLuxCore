@@ -48,7 +48,7 @@ install:
 
   # download the blender version we want to test against
   # TODO: for now this points to release candidate 1, but it should point to 2.79a once that gets out
-  - wget https://github.com/LuxCoreRender/BlenderForTesting/releases/download/blender-2.79a-rc1/blender.tar.bz2
+  - wget https://github.com/LuxCoreRender/BlenderForTesting/releases/download/2.79a_rc1/blender.tar.bz2
 
   # Extract the archive
   - tar jxf blender.tar.bz2
