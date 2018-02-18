@@ -1,4 +1,5 @@
 from time import time
+from enum import Flag, auto
 from ..bin import pyluxcore
 from .. import utils
 from . import (
@@ -8,31 +9,23 @@ from . import (
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 
 
-class Change:
+class Change(Flag):
     NONE = 0
 
-    CONFIG = 1 << 0
-    CAMERA = 1 << 1
-    OBJECT = 1 << 2
-    MATERIAL = 1 << 3
-    VISIBILITY = 1 << 4
-    WORLD = 1 << 5
-    IMAGEPIPELINE = 1 << 6
+    CONFIG = auto()
+    CAMERA = auto()
+    OBJECT = auto()
+    MATERIAL = auto()
+    VISIBILITY = auto()
+    WORLD = auto()
+    IMAGEPIPELINE = auto()
 
     REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | VISIBILITY | WORLD
     REQUIRES_VIEW_UPDATE = CONFIG
     REQUIRES_SESSION_PARSE = IMAGEPIPELINE
 
-    @staticmethod
-    def to_string(changes):
-        s = ""
-        members = [attr for attr in dir(Change) if not callable(getattr(Change, attr)) and not attr.startswith("__")]
-        for changetype in members:
-            if changes & getattr(Change, changetype):
-                if s:
-                    s += " | "
-                s += changetype
-        return s
+    def __str__(self):
+        return " | ".join([flag.name for flag in Change if self & flag])
 
 
 class Exporter(object):
@@ -178,7 +171,7 @@ class Exporter(object):
         return changes
 
     def update(self, context, session, changes):
-        print("Update because of:", Change.to_string(changes))
+        print("Update because of:", changes)
 
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
