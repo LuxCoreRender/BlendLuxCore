@@ -25,6 +25,10 @@ def build_name(prefix, version_string, suffix):
     return prefix + version_string + suffix
 
 
+def build_zip_name(version_string, suffix):
+    return "BlendLuxCore-" + version_string + suffix.split(".")[0]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("version_string",
@@ -85,6 +89,19 @@ def main():
     git_process = subprocess.Popen(clone_args)
     git_process.wait()
 
+    # If the current version tag already exists, set the repository to this version
+    # This is used in case we re-package a release
+    os.chdir("BlendLuxCore")
+    tags_raw = subprocess.check_output(["git", "tag", "-l"])
+    tags = [tag.decode("utf-8") for tag in tags_raw.splitlines()]
+
+    current_version_tag = "blendluxcore_" + args.version_string
+    if current_version_tag in tags:
+        print("Checking out tag", current_version_tag)
+        subprocess.check_output(["git", "checkout", "tags/" + current_version_tag])
+
+    os.chdir("..")
+
     # Delete developer stuff that is not needed by users (e.g. tests directory)
     to_delete = [
         os.path.join(repo_path, "tests"),
@@ -102,7 +119,7 @@ def main():
 
     # Create subdirectories for all platforms
     for suffix in suffixes:
-        name = "BlendLuxCore" + suffix.split(".")[0]
+        name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, name, "BlendLuxCore")
 
         if os.path.exists(destination):
@@ -114,7 +131,7 @@ def main():
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if suffix.startswith("-linux")]
     for suffix in linux_suffixes:
-        dst_name = "BlendLuxCore" + suffix.split(".")[0]
+        dst_name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
 
         print()
@@ -155,7 +172,7 @@ def main():
     # Windows archives are zip
     windows_suffixes = [suffix for suffix in suffixes if suffix.startswith("-win")]
     for suffix in windows_suffixes:
-        dst_name = "BlendLuxCore" + suffix.split(".")[0]
+        dst_name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
 
         print()
@@ -202,7 +219,7 @@ def main():
     os.mkdir(release_dir)
 
     for suffix in suffixes:
-        name = "BlendLuxCore" + suffix.split(".")[0]
+        name = build_zip_name(args.version_string, suffix)
         zip_this = os.path.join(script_dir, name)
         print("Zipping:", name)
         zip_name = name + ".zip"
