@@ -126,7 +126,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
                     changes = self._exporter.get_changes(scene)
                     self._exporter.update_session(changes, self._session)
                     # Refresh quickly when user changed something
-                    draw_film |= changes
+                    draw_film |= bool(changes)
 
                     utils_render.refresh(self, scene, config, draw_film, time_until_film_refresh)
                     done = self.test_break() or self._session.HasDone()
