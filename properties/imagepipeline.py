@@ -74,6 +74,14 @@ class LuxCoreImagepipelineMist(PropertyGroup):
                                       description=EXCLUDE_BACKGROUND_DESC)
 
 
+class LuxCoreImagepipelineVignetting(PropertyGroup):
+    NAME = "Vignetting"
+    enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+
+    scale = FloatProperty(name="Strength", default=40, min=0, soft_max=60, max=100, precision=1,
+                          subtype="PERCENTAGE", description="Strength of the vignette")
+
+
 class LuxCoreImagepipeline(PropertyGroup):
     """
     Used (and initialized) in properties/camera.py
@@ -85,3 +93,4 @@ class LuxCoreImagepipeline(PropertyGroup):
     tonemapper = PointerProperty(type=LuxCoreImagepipelineTonemapper)
     bloom = PointerProperty(type=LuxCoreImagepipelineBloom)
     mist = PointerProperty(type=LuxCoreImagepipelineMist)
+    vignetting = PointerProperty(type=LuxCoreImagepipelineVignetting)

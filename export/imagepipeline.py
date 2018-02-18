@@ -29,6 +29,9 @@ def convert(scene, context=None):
         if pipeline.mist.enabled:
             index = _mist(definitions, index, pipeline.mist, scene)
 
+        if pipeline.vignetting.enabled:
+            index = _vignetting(definitions, index, pipeline.vignetting)
+
         if use_filesaver:
             # Needs gamma correction (Blender applies it for us,
             # but now we export for luxcoreui)
@@ -81,6 +84,12 @@ def _mist(definitions, index, mist, scene):
     definitions[str(index) + ".startdistance"] = mist.start_distance * worldscale
     definitions[str(index) + ".enddistance"] = mist.end_distance * worldscale
     definitions[str(index) + ".excludebackground"] = mist.exclude_background
+    return index + 1
+
+
+def _vignetting(definitions, index, vignetting):
+    definitions[str(index) + ".type"] = "VIGNETTING"
+    definitions[str(index) + ".scale"] = vignetting.scale / 100
     return index + 1
 
 

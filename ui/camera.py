@@ -127,6 +127,11 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
             row.prop(mist, "end_distance")
             box.prop(mist, "exclude_background")
 
+        vignetting = pipeline.vignetting
+        box = self.draw_plugin_box(vignetting)
+        if box:
+            box.prop(vignetting, "scale", slider=True)
+
 
 class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     bl_label = "Depth of Field"
