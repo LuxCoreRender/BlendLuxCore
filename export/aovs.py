@@ -1,5 +1,6 @@
 from ..bin import pyluxcore
 from .. import utils
+from .imagepipeline import use_backgroundimage
 
 # set of channels that don"t use an HDR format
 LDR_CHANNELS = {
@@ -39,7 +40,7 @@ def convert(scene, context=None):
             _add_output(definitions, "RGB")
         if aovs.rgba:
             _add_output(definitions, "RGBA")
-        if aovs.alpha or use_transparent_film:
+        if aovs.alpha or use_transparent_film or use_backgroundimage(context, scene):
             _add_output(definitions, "ALPHA")
         if aovs.depth or pipeline.mist.enabled:
             _add_output(definitions, "DEPTH")

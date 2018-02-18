@@ -2,7 +2,8 @@ from bpy.props import (
     PointerProperty, BoolProperty, FloatProperty,
     IntProperty, EnumProperty, FloatVectorProperty
 )
-from bpy.types import PropertyGroup
+from bpy.types import PropertyGroup, Image
+from .light import GAMMA_DESCRIPTION
 
 
 class LuxCoreImagepipelineTonemapper(PropertyGroup):
@@ -86,8 +87,13 @@ class LuxCoreImagepipelineColorAberration(PropertyGroup):
     NAME = "Color Aberration"
     enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
 
-    amount = FloatProperty(name="Strength", default=0.5, min=0, soft_max=10, max=100, precision=1,
-                           subtype="PERCENTAGE", description="Strength of the color aberration effect")
+
+class LuxCoreImagepipelineBackgroundImage(PropertyGroup):
+    NAME = "Background Image"
+    enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+
+    image = PointerProperty(name="Image", type=Image)
+    gamma = FloatProperty(name="Gamma", default=2.2, min=0, description=GAMMA_DESCRIPTION)
 
 
 class LuxCoreImagepipeline(PropertyGroup):
@@ -103,3 +109,4 @@ class LuxCoreImagepipeline(PropertyGroup):
     mist = PointerProperty(type=LuxCoreImagepipelineMist)
     vignetting = PointerProperty(type=LuxCoreImagepipelineVignetting)
     coloraberration = PointerProperty(type=LuxCoreImagepipelineColorAberration)
+    backgroundimage = PointerProperty(type=LuxCoreImagepipelineBackgroundImage)

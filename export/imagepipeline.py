@@ -1,5 +1,6 @@
 from ..bin import pyluxcore
 from .. import utils
+from .image import ImageExporter
 
 
 def convert(scene, context=None):
@@ -27,7 +28,8 @@ def convert(scene, context=None):
             # Blender expects premultiplied alpha, luxcoreui does not
             index = _premul_alpha(definitions, index)
 
-        # TODO background image
+        if use_backgroundimage(context, scene):
+            index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
 
         if pipeline.mist.enabled:
             index = _mist(definitions, index, pipeline.mist, scene)
@@ -53,6 +55,13 @@ def convert(scene, context=None):
         msg = 'Imagepipeline: %s' % error
         scene.luxcore.errorlog.add_warning(msg)
         return pyluxcore.Properties()
+
+
+def use_backgroundimage(context, scene):
+    viewport_in_camera_view = context and context.region_data.view_perspective == "CAMERA"
+    final_render = not context
+    pipeline = scene.camera.data.luxcore.imagepipeline
+    return pipeline.backgroundimage.enabled and (final_render or viewport_in_camera_view)
 
 
 def _tonemapper(definitions, index, tonemapper):
@@ -81,6 +90,22 @@ def _tonemapper(definitions, index, tonemapper):
 
 def _premul_alpha(definitions, index):
     definitions[str(index) + ".type"] = "PREMULTIPLY_ALPHA"
+    return index + 1
+
+
+def _backgroundimage(definitions, index, backgroundimage, scene):
+    try:
+        filepath = ImageExporter.export(backgroundimage.image)
+    except OSError as error:
+        msg = 'Imagepipeline: %s' % error
+        scene.luxcore.errorlog.add_warning(msg)
+        # Skip this plugin
+        return index
+
+    definitions[str(index) + ".type"] = "BACKGROUND_IMG"
+    definitions[str(index) + ".file"] = filepath
+    definitions[str(index) + ".gamma"] = backgroundimage.gamma
+    definitions[str(index) + ".storage"] = "byte"
     return index + 1
 
 

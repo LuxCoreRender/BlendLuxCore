@@ -4,6 +4,7 @@ import bpy
 from ..bin import pyluxcore
 from .. import utils
 from . import aovs
+from .imagepipeline import use_backgroundimage
 
 
 def convert(scene, context=None):
@@ -109,7 +110,7 @@ def convert(scene, context=None):
         if scene.camera:
             pipeline = scene.camera.data.luxcore.imagepipeline
 
-            if pipeline.transparent_film and not use_filesaver:
+            if (pipeline.transparent_film or use_backgroundimage(context, scene)) and not use_filesaver:
                 # This avoids issues with transparent film in Blender
                 black_background = True
         definitions["path.forceblackbackground.enable"] = black_background

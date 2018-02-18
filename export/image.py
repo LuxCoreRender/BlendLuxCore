@@ -11,7 +11,7 @@ class ImageExporter(object):
     temp_images = {}
 
     @classmethod
-    def _save_to_temp_file(cls, image, scene):
+    def _save_to_temp_file(cls, image):
         key = utils.make_key(image)
 
         if key in cls.temp_images:
@@ -31,12 +31,12 @@ class ImageExporter(object):
         return temp_image.name
 
     @classmethod
-    def export(cls, image, scene=None):
+    def export(cls, image):
         if image.source == "GENERATED":
-            return cls._save_to_temp_file(image, scene)
+            return cls._save_to_temp_file(image)
         elif image.source == "FILE":
             if image.packed_file:
-                return cls._save_to_temp_file(image, scene)
+                return cls._save_to_temp_file(image)
             else:
                 filepath = utils.get_abspath(image.filepath, library=image.library, must_exist=True, must_be_file=True)
                 if filepath:
