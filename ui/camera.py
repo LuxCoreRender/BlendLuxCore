@@ -132,6 +132,11 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         if box:
             box.prop(vignetting, "scale", slider=True)
 
+        coloraberration = pipeline.coloraberration
+        box = self.draw_plugin_box(coloraberration)
+        if box:
+            box.prop(coloraberration, "amount", slider=True)
+
 
 class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     bl_label = "Depth of Field"

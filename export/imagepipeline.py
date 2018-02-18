@@ -32,6 +32,9 @@ def convert(scene, context=None):
         if pipeline.vignetting.enabled:
             index = _vignetting(definitions, index, pipeline.vignetting)
 
+        if pipeline.coloraberration.enabled:
+            index = _coloraberration(definitions, index, pipeline.coloraberration)
+
         if use_filesaver:
             # Needs gamma correction (Blender applies it for us,
             # but now we export for luxcoreui)
@@ -90,6 +93,12 @@ def _mist(definitions, index, mist, scene):
 def _vignetting(definitions, index, vignetting):
     definitions[str(index) + ".type"] = "VIGNETTING"
     definitions[str(index) + ".scale"] = vignetting.scale / 100
+    return index + 1
+
+
+def _coloraberration(definitions, index, coloraberration):
+    definitions[str(index) + ".type"] = "COLOR_ABERRATION"
+    definitions[str(index) + ".amount"] = coloraberration.amount / 100
     return index + 1
 
 
