@@ -78,7 +78,7 @@ def convert(scene, context=None):
             _add_output(definitions, "SAMPLECOUNT")
         if aovs.convergence:
             _add_output(definitions, "CONVERGENCE")
-        if aovs.irradiance:
+        if aovs.irradiance or pipeline.contour_lines.enabled:
             _add_output(definitions, "IRRADIANCE")
 
         return utils.create_props(prefix, definitions)

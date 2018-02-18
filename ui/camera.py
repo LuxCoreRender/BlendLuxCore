@@ -143,6 +143,16 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
             box.template_ID(backgroundimage, "image", open="image.open")
             box.prop(backgroundimage, "gamma")
 
+        contour_lines = pipeline.contour_lines
+        box = self.draw_plugin_box(contour_lines)
+        if box:
+            row = box.row(align=True)
+            row.prop(contour_lines, "scale")
+            row.prop(contour_lines, "contour_range")
+            row = box.row(align=True)
+            row.prop(contour_lines, "steps")
+            row.prop(contour_lines, "zero_grid_size")
+
 
 class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     bl_label = "Depth of Field"

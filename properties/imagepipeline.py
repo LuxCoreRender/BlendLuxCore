@@ -99,6 +99,23 @@ class LuxCoreImagepipelineBackgroundImage(PropertyGroup):
     gamma = FloatProperty(name="Gamma", default=2.2, min=0, description=GAMMA_DESCRIPTION)
 
 
+class LuxCoreImagepipelineContourLines(PropertyGroup):
+    NAME = "Irradiance Contour Lines"
+    enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+
+    ZERO_GRID_SIZE_DESC = (
+        "Size of the black grid to draw on image where irradiance values are not avilable "
+        "(-1 => no grid, 0 => all black, >0 => size of the black grid)"
+    )
+
+    scale = FloatProperty(name="Scale", default=179, min=0, soft_max=1000)
+    contour_range = FloatProperty(name="Range", default=100, soft_max=1000,
+                                  description="Max range of irradiance values (unit: lux), minimum is always 0")
+    steps = IntProperty(name="Steps", default=8, min=0, soft_min=2, soft_max=50,
+                        description="Number of steps to draw in interval range")
+    zero_grid_size = IntProperty(name="Grid Size", default=8, min=-1, soft_max=20,
+                                 description=ZERO_GRID_SIZE_DESC)
+
 class LuxCoreImagepipeline(PropertyGroup):
     """
     Used (and initialized) in properties/camera.py
@@ -113,3 +130,4 @@ class LuxCoreImagepipeline(PropertyGroup):
     vignetting = PointerProperty(type=LuxCoreImagepipelineVignetting)
     coloraberration = PointerProperty(type=LuxCoreImagepipelineColorAberration)
     backgroundimage = PointerProperty(type=LuxCoreImagepipelineBackgroundImage)
+    contour_lines = PointerProperty(type=LuxCoreImagepipelineContourLines)

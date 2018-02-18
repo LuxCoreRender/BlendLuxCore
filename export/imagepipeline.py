@@ -43,7 +43,8 @@ def convert(scene, context=None):
         if pipeline.vignetting.enabled:
             index = _vignetting(definitions, index, pipeline.vignetting)
 
-        # TODO irradiance contour lines
+        if pipeline.contour_lines.enabled:
+            index = _contour_lines(definitions, index, pipeline.contour_lines)
 
         if use_filesaver:
             # Needs gamma correction (Blender applies it for us,
@@ -137,6 +138,15 @@ def _coloraberration(definitions, index, coloraberration):
 def _vignetting(definitions, index, vignetting):
     definitions[str(index) + ".type"] = "VIGNETTING"
     definitions[str(index) + ".scale"] = vignetting.scale / 100
+    return index + 1
+
+
+def _contour_lines(definitions, index, contour_lines):
+    definitions[str(index) + ".type"] = "CONTOUR_LINES"
+    definitions[str(index) + ".range"] = contour_lines.contour_range
+    definitions[str(index) + ".scale"] = contour_lines.scale
+    definitions[str(index) + ".steps"] = contour_lines.steps
+    definitions[str(index) + ".zerogridsize"] = contour_lines.zero_grid_size
     return index + 1
 
 
