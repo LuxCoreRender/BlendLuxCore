@@ -199,6 +199,11 @@ def calc_filmsize(scene, context=None):
         width = int(width_raw * border_max_x) - int(width_raw * border_min_x)
         height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
 
+    # Make sure width and height are never zero
+    # (can e.g. happen if you have a small border in camera viewport and zoom out a lot)
+    width = max(2, width)
+    height = max(2, height)
+
     return width, height
 
 
