@@ -7,7 +7,7 @@ from ... import utils
 
 class LuxCoreNodeTexWindy(LuxCoreNodeTexture):
     bl_label = "Windy"
-    bl_width_min = 200
+    bl_width_default = 200
     
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

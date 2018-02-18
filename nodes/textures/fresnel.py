@@ -6,7 +6,7 @@ from ... import utils
 
 class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
     bl_label = "Fresnel"
-    bl_width_min = 200
+    bl_width_default = 200
     
     def change_input_type(self, context):
         self.inputs["Reflection Color"].enabled = self.input_type == "color"

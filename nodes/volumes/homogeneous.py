@@ -5,7 +5,7 @@ from .. import utils
 
 class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume):
     bl_label = "Homogeneous Volume"
-    bl_width_min = 160
+    bl_width_default = 160
 
     # TODO: get name, default, description etc. from super class or something
     priority = IntProperty(name="Priority", default=0, min=0)

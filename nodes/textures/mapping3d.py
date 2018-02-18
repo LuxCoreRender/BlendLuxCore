@@ -5,7 +5,7 @@ from .. import LuxCoreNodeTexture
 
 class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
     bl_label = "3D Mapping"
-    bl_width_min = 260
+    bl_width_default = 260
 
     mapping_types = [
         ("globalmapping3d", "Global", "World coordinate system", 0),

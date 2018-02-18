@@ -4,7 +4,7 @@ from .. import LuxCoreNodeMaterial
 
 class LuxCoreNodeMatMatteTranslucent(LuxCoreNodeMaterial):
     bl_label = "Matte Translucent Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (0.5, 0.5, 0.5))

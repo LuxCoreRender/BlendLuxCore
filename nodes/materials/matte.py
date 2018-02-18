@@ -13,7 +13,7 @@ class LuxCoreSocketSigma(LuxCoreSocketFloat):
 class LuxCoreNodeMatMatte(LuxCoreNodeMaterial):
     """(Rough) matte material node"""
     bl_label = "Matte Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Diffuse Color", (0.7, 0.7, 0.7))

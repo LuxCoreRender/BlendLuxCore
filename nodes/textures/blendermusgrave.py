@@ -9,7 +9,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
     bl_label = "Blender Musgrave"
-    bl_width_min = 200    
+    bl_width_default = 200    
 
     musgrave_type_items = [
         ("multifractal", "Multifractal", ""),

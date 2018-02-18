@@ -37,7 +37,7 @@ class LuxCoreSocketCauchyC(LuxCoreSocketFloat):
 class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
     """ Node for the three LuxCore materials glass, roughglass and archglass """
     bl_label = "Glass Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     use_anisotropy = BoolProperty(name=Roughness.aniso_name,
                                   default=False,

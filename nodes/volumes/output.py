@@ -10,7 +10,7 @@ class LuxCoreNodeVolOutput(LuxCoreNodeOutput):
     This is where the export starts (if the output is active).
     """
     bl_label = "Volume Output"
-    bl_width_min = 160
+    bl_width_default = 160
 
     active = BoolProperty(name="Active", default=True, update=update_active)
 

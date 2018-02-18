@@ -3,7 +3,7 @@ from .. import LuxCoreNodeMaterial
 
 class LuxCoreNodeMatNull(LuxCoreNodeMaterial):
     bl_label = "Null Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Transmission Color", (1, 1, 1))

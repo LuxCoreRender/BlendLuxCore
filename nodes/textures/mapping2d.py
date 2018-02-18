@@ -6,7 +6,7 @@ from ...utils import node as utils_node
 
 class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
     bl_label = "2D Mapping"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def update_uniform_scale(self, context):
         self["uscale"] = self.uniform_scale

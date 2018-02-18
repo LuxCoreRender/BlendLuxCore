@@ -4,7 +4,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderNoise(LuxCoreNodeTexture):
     bl_label = "Blender Noise"
-    bl_width_min = 200    
+    bl_width_default = 200    
 
     noise_depth = IntProperty(name="Noise Depth", default=2, min=0)
     bright = FloatProperty(name="Brightness", default=1.0, min=0)

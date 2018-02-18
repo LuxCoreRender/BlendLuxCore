@@ -31,7 +31,7 @@ class ColorRampItem(PropertyGroup):
 
 class LuxCoreNodeTexBand(LuxCoreNodeTexture):
     bl_label = "Band"
-    bl_width_min = 200
+    bl_width_default = 200
 
     interpolation_items = [
         ("linear", "Linear", "Linear interpolation between values, smooth transition", 0),

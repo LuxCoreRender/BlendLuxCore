@@ -137,7 +137,7 @@ ABSORPTION_ITEMS = [
 
 class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
     bl_label = "Lamp Spectrum"
-    bl_width_min = 200   
+    bl_width_default = 200
 
     
     lamp_category = EnumProperty(name="Lamp Category", description="Lamp Preset Category", items=CATEGORY_ITEMS,

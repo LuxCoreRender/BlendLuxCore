@@ -5,7 +5,7 @@ from ...utils import node as utils_node
 
 class LuxCoreNodeMatVelvet(LuxCoreNodeMaterial):
     bl_label = "Velvet Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def update_advanced(self, context):
         self.inputs["p1"].enabled = self.advanced

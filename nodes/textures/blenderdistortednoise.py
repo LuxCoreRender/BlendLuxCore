@@ -9,7 +9,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
     bl_label = "Blender Distorted Noise"
-    bl_width_min = 200    
+    bl_width_default = 200
 
     noise_basis = EnumProperty(name="Noise Basis", description="Type of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")

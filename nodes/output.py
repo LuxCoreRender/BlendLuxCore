@@ -49,7 +49,7 @@ class LuxCoreNodeOutput(LuxCoreNode):
     Output classes for material, texture and volume node trees are derived from this class.
     Only one output node should be active at any time (this class handles that).
     """
-    bl_width_min = 160
+    bl_width_default = 160
 
     def init(self, context):
         self.disable_other_outputs()

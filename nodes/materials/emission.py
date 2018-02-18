@@ -23,7 +23,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
     material node would contain dozens of sockets
     """
     bl_label = "Emission"
-    bl_width_min = 160
+    bl_width_default = 160
 
     gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
     power = FloatProperty(name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)

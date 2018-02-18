@@ -6,7 +6,7 @@ from ..sockets import LuxCoreSocketFloat
 class LuxCoreNodeMatMirror(LuxCoreNodeMaterial):
     """mirror material node"""
     bl_label = "Mirror Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (1, 1, 1))

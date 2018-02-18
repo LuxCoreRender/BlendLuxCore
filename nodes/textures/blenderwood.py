@@ -9,7 +9,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderWood(LuxCoreNodeTexture):
     bl_label = "Blender Wood"
-    bl_width_min = 200    
+    bl_width_default = 200
 
     wood_type_items = [
         ("bands", "Bands", ""),

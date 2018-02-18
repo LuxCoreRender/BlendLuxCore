@@ -7,7 +7,7 @@ from ... import utils
 
 class LuxCoreNodeTexWrinkled(LuxCoreNodeTexture):
     bl_label = "Wrinkled"
-    bl_width_min = 200
+    bl_width_default = 200
 
 
     octaves = IntProperty(name="Octaves", default=8, min=1, max=29)

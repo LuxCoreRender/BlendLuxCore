@@ -11,7 +11,7 @@ NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of th
 
 class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     bl_label = "Imagemap"
-    bl_width_min = 200
+    bl_width_default = 200
 
     def update_image(self, context):
         if self.image:

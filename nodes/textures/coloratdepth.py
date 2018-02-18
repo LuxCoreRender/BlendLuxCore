@@ -6,7 +6,7 @@ from .. import COLORDEPTH_DESC
 
 class LuxCoreNodeTexColorAtDepth(LuxCoreNodeTexture):
     bl_label = "Color at depth"
-    bl_width_min = 200
+    bl_width_default = 200
     
     color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",

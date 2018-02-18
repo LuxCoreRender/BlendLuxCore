@@ -5,7 +5,7 @@ from .. import utils
 class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
     """metal material node"""
     bl_label = "Metal Material"
-    bl_width_min = 200
+    bl_width_default = 200
 
     # For internal use, do not show in UI
     is_first_input_change = BoolProperty(default=True)

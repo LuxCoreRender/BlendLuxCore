@@ -9,7 +9,7 @@ from .. import LuxCoreNodeTexture
 
 class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
     bl_label = "Smoke"
-    bl_width_min = 200
+    bl_width_default = 200
     
     domain = PointerProperty(name="Domain", type=bpy.types.Object)
 

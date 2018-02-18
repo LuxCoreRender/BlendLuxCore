@@ -10,7 +10,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderMarble(LuxCoreNodeTexture):
     bl_label = "Blender Marble"
-    bl_width_min = 200    
+    bl_width_default = 200    
 
     marble_type_items = [
         ("soft", "Soft", ""),

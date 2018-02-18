@@ -4,7 +4,7 @@ from ... import utils
 
 class LuxCoreNodeTexCheckerboard3D(LuxCoreNodeTexture):
     bl_label = "3D Checkerboard"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Color 1", [0.1] * 3)

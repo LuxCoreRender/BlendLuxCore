@@ -4,7 +4,7 @@ from ...utils import node as utils_node
 
 class LuxCoreNodeMatMix(LuxCoreNodeMaterial):
     bl_label = "Mix Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def init(self, context):
         self.add_input("LuxCoreSocketMaterial", "Material 1")

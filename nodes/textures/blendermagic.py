@@ -10,7 +10,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderMagic(LuxCoreNodeTexture):
     bl_label = "Blender Magic"
-    bl_width_min = 200    
+    bl_width_default = 200
 
     noise_depth = IntProperty(name="Noise Depth", default=2, min=0)
     turbulence = FloatProperty(name="Turbulence", default=5, min=0)

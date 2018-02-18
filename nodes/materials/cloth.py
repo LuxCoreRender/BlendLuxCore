@@ -20,7 +20,7 @@ class LuxCoreSocketRepeatV(LuxCoreSocketFloat):
 class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
     """Cloth material node"""
     bl_label = "Cloth Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     preset_items = [
         ("denim", "Denim", "Denim", 0),

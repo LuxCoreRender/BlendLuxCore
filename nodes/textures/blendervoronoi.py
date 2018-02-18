@@ -7,7 +7,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
     bl_label = "Blender Voronoi"
-    bl_width_min = 200    
+    bl_width_default = 200
 
     distance_items = [
         ("actual_distance", "Actual Distance", "actual distance"),

@@ -20,7 +20,7 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
     M1, M2, M3 seem to be roughness values for the reflection values.
     """
     bl_label = "Carpaint Material"
-    bl_width_min = 200
+    bl_width_default = 200
 
     def update_preset(self, context):
         enabled = self.preset == "manual"

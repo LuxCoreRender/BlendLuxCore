@@ -10,7 +10,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderStucci(LuxCoreNodeTexture):
     bl_label = "Blender Stucci"
-    bl_width_min = 200    
+    bl_width_default = 200    
 
     stucci_type_items = [
         ("plastic", "Plastic", ""),

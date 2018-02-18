@@ -10,7 +10,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderClouds(LuxCoreNodeTexture):
     bl_label = "Blender Clouds"
-    bl_width_min = 200    
+    bl_width_default = 200
 
     noise_type = EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
                                        default="soft_noise")

@@ -13,7 +13,7 @@ MULTIBOUNCE_DESCRIPTION = (
 
 class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial):
     bl_label = "Glossy Translucent Material"
-    bl_width_min = 160
+    bl_width_default = 160
 
     def update_use_ior(self, context):
         self.inputs["IOR"].enabled = self.use_ior

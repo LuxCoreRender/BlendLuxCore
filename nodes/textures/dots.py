@@ -4,7 +4,7 @@ from ...utils import node as utils_node
 
 class LuxCoreNodeTexDots(LuxCoreNodeTexture):
     bl_label = "Dots"
-    bl_width_min = 200   
+    bl_width_default = 200
     
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Inside", (1.0, 1.0, 1.0))

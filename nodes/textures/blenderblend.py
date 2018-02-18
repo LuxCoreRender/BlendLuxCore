@@ -7,7 +7,7 @@ from ... import utils
 
 class LuxCoreNodeTexBlenderBlend(LuxCoreNodeTexture):
     bl_label = "Blender Blend"
-    bl_width_min = 200    
+    bl_width_default = 200    
 
     progression_items = [
         ("linear", "Linear", "linear"),
