@@ -18,9 +18,10 @@ def convert(scene, context=None):
             # Can not work without a camera
             return pyluxcore.Properties()
 
-        cam = scene.camera
         pipeline = scene.camera.data.luxcore.imagepipeline
         aovs = scene.luxcore.aovs
+
+        use_transparent_film = pipeline.transparent_film and not utils.use_filesaver(context, scene)
 
         # TODO correct filepaths
 
@@ -30,7 +31,7 @@ def convert(scene, context=None):
         # This output is always defined
         _add_output(definitions, "RGB_IMAGEPIPELINE")
 
-        if pipeline.transparent_film:
+        if use_transparent_film:
             _add_output(definitions, "RGBA_IMAGEPIPELINE")
 
         # AOVs
@@ -38,7 +39,7 @@ def convert(scene, context=None):
             _add_output(definitions, "RGB")
         if aovs.rgba:
             _add_output(definitions, "RGBA")
-        if aovs.alpha:
+        if aovs.alpha or use_transparent_film:
             _add_output(definitions, "ALPHA")
         if aovs.depth or pipeline.mist.enabled:
             _add_output(definitions, "DEPTH")

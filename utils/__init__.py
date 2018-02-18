@@ -438,3 +438,7 @@ def get_name_with_lib(datablock):
 
 def clamp(value, _min=0, _max=1):
     return max(_min, min(_max, value))
+
+
+def use_filesaver(context, scene):
+    return context is None and scene.luxcore.config.use_filesaver

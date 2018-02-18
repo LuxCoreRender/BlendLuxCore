@@ -12,7 +12,7 @@ def convert(scene, context=None):
             return pyluxcore.Properties()
 
         pipeline = scene.camera.data.luxcore.imagepipeline
-        use_filesaver = context is None and scene.luxcore.config.use_filesaver
+        use_filesaver = utils.use_filesaver(context, scene)
         # Plugin index counter
         index = 0
 
@@ -22,6 +22,10 @@ def convert(scene, context=None):
 
         if pipeline.tonemapper.enabled:
             index = _tonemapper(definitions, index, pipeline.tonemapper)
+
+        if pipeline.transparent_film and not use_filesaver:
+            # Blender expects premultiplied alpha, luxcoreui does not
+            index = _premul_alpha(definitions, index)
 
         if pipeline.bloom.enabled:
             index = _bloom(definitions, index, pipeline.bloom)
@@ -68,6 +72,11 @@ def _tonemapper(definitions, index, tonemapper):
         definitions[str(index) + ".exposure"] = tonemapper.exposure
         definitions[str(index) + ".sensitivity"] = tonemapper.sensitivity
 
+    return index + 1
+
+
+def _premul_alpha(definitions, index):
+    definitions[str(index) + ".type"] = "PREMULTIPLY_ALPHA"
     return index + 1
 
 

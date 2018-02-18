@@ -102,7 +102,7 @@ def convert(scene, context=None):
         if config.filter == "GAUSSIAN":
             definitions["film.filter.gaussian.alpha"] = config.gaussian_alpha
 
-        use_filesaver = context is None and config.use_filesaver
+        use_filesaver = utils.use_filesaver(context, scene)
 
         # Transparent film settings
         black_background = False
