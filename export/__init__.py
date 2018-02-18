@@ -25,7 +25,10 @@ class Change(Flag):
     REQUIRES_SESSION_PARSE = IMAGEPIPELINE
 
     def __str__(self):
-        return " | ".join([flag.name for flag in Change if self & flag])
+        if self:
+            return " | ".join([flag.name for flag in Change if self & flag])
+        else:
+            return Change.NONE.name
 
 
 class Exporter(object):
