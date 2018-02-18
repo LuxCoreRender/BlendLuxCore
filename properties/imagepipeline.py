@@ -87,6 +87,9 @@ class LuxCoreImagepipelineColorAberration(PropertyGroup):
     NAME = "Color Aberration"
     enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
 
+    amount = FloatProperty(name="Strength", default=0.5, min=0, soft_max=10, max=100, precision=1,
+                           subtype = "PERCENTAGE", description = "Strength of the color aberration effect")
+
 
 class LuxCoreImagepipelineBackgroundImage(PropertyGroup):
     NAME = "Background Image"
