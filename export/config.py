@@ -207,14 +207,15 @@ def _convert_seed(scene, definitions):
 def _convert_halt_conditions(scene, definitions):
     halt = scene.luxcore.halt
 
-    if halt.use_time:
-        definitions["batch.halttime"] = halt.time
+    if halt.enable:
+        if halt.use_time:
+            definitions["batch.halttime"] = halt.time
 
-    if halt.use_samples:
-        definitions["batch.haltspp"] = halt.samples
+        if halt.use_samples:
+            definitions["batch.haltspp"] = halt.samples
 
-    if halt.use_noise_thresh:
-        definitions["batch.haltthreshold"] = halt.noise_thresh / 256
-        definitions["batch.haltthreshold.warmup"] = halt.noise_thresh_warmup
-        definitions["batch.haltthreshold.step"] = halt.noise_thresh_step
-        definitions["batch.haltthreshold.filter.enable"] = halt.noise_thresh_use_filter
+        if halt.use_noise_thresh:
+            definitions["batch.haltthreshold"] = halt.noise_thresh / 256
+            definitions["batch.haltthreshold.warmup"] = halt.noise_thresh_warmup
+            definitions["batch.haltthreshold.step"] = halt.noise_thresh_step
+            definitions["batch.haltthreshold.filter.enable"] = halt.noise_thresh_use_filter
