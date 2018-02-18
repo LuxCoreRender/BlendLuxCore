@@ -194,7 +194,8 @@ def calc_filmsize(scene, context=None):
                 base = max(width_raw, height_raw)
                 width = round(zoom * base * aspect_x * (border_max_x - border_min_x))
                 height = round(zoom * base * aspect_y * (border_max_y - border_min_y))
-    else:        
+    else:
+        # Final render
         width = int(width_raw * border_max_x) - int(width_raw * border_min_x)
         height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
 
@@ -222,6 +223,9 @@ def calc_blender_border(scene, context=None):
 
     if use_border:
         blender_border = [border_min_x, border_max_x, border_min_y, border_max_y]
+        # Round all values to avoid running into problems later
+        # when a value is for example 0.699999988079071
+        blender_border = [round(value, 3) for value in blender_border]
     else:
         blender_border = [0, 1, 0, 1]
 
@@ -425,3 +429,7 @@ def get_name_with_lib(datablock):
         # text += ' (Lib: "%s")' % datablock.library.name
         text = "L " + text
     return text
+
+
+def clamp(value, _min=0, _max=1):
+    return max(_min, min(_max, value))

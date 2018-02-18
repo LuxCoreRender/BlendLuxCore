@@ -6,8 +6,8 @@ import sys
 import os
 
 ANSI_RESET = "\033[0m"
-ANSI_RED = "\033[91m"
-ANSI_GREEN = "\033[92m"
+ANSI_RED = "\033[31m"
+ANSI_GREEN = "\033[32m"
 
 blender_executable = "blender"
 
