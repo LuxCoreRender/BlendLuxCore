@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import IntProperty, StringProperty
+from bpy.props import IntProperty, StringProperty, EnumProperty
 from .. import utils
 from .utils import (
     poll_object, poll_material, init_mat_node_tree, make_nodetree_name,
@@ -81,6 +81,7 @@ class LUXCORE_OT_material_set(bpy.types.Operator):
 
 
 class LUXCORE_MT_material_select(bpy.types.Menu):
+    """ Old material selection dropdown without search (TODO: remove?) """
     bl_label = "Select Material"
     bl_description = "Select a material"
 
@@ -109,6 +110,40 @@ class LUXCORE_MT_material_select(bpy.types.Menu):
 
             op = col.operator("luxcore.material_set", text=name, icon="MATERIAL")
             op.material_index = i
+
+
+class LuxCore_OT_material_select(bpy.types.Operator):
+    """ Material selection dropdown with search feature """
+    bl_idname = "luxcore.material_select"
+    bl_label = ""
+    bl_property = "material"
+
+    def callback(self, context):
+        items = []
+
+        for index, mat in enumerate(bpy.data.materials):
+            name = utils.get_name_with_lib(mat)
+            # We can not show descriptions or icons here unfortunately
+            items.append((str(index), name, ""))
+
+        return items
+
+    material = EnumProperty(name="Materials", items=callback)
+
+    @classmethod
+    def poll(cls, context):
+        return poll_object(context)
+
+    def execute(self, context):
+        # Get the index of the selected material
+        mat_index = int(self.material)
+        mat = bpy.data.materials[mat_index]
+        context.object.active_material = mat
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.invoke_search_popup(self)
+        return {'FINISHED'}
 
 
 # Node tree related operators

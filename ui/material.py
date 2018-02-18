@@ -50,7 +50,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             # So we mimic our own template_ID.
             row = split.row(align=True)
             sub = row.split(align=True, percentage=1 / (context.region.width * 0.015))
-            sub.menu("LUXCORE_MT_material_select", icon="MATERIAL", text="")
+            sub.operator("luxcore.material_select", icon="MATERIAL", text="")
             row = sub.row(align=True)
             if obj.active_material:
                 row.prop(obj.active_material, "name", text="")
