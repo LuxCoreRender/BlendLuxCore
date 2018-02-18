@@ -8,7 +8,7 @@ from .light import GAMMA_DESCRIPTION
 
 class LuxCoreImagepipelineTonemapper(PropertyGroup):
     NAME = "Tonemapper"
-    enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    enabled = BoolProperty(name=NAME, default=True, description="Enable/disable " + NAME)
 
     FSTOP_DESC = "Camera aperture, lower values result in a brighter image"
     EXPOSURE_DESC = (
