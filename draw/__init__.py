@@ -99,7 +99,7 @@ class FrameBuffer(object):
 
         err = glGetError()
         if err != GL_NO_ERROR:
-            print("GL Error: %s\n" % (gluErrorString(err)))
+            print("GL Error:", err)
 
         if self._transparent:
             glDisable(GL_BLEND)

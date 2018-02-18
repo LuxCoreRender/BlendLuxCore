@@ -172,8 +172,22 @@ def _clipping(scene, definitions):
 
     if camera.data.luxcore.use_clipping:
         worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-        definitions["cliphither"] = camera.data.clip_start * worldscale
-        definitions["clipyon"] = camera.data.clip_end * worldscale
+        clip_start = camera.data.clip_start * worldscale
+        clip_end = camera.data.clip_end * worldscale
+
+        definitions["cliphither"] = clip_start
+        definitions["clipyon"] = clip_end
+
+        # Show a warning if the clip settings don't make sense
+        warning = ""
+        if clip_start > clip_end:
+            warning = "Clip start greater than clip end"
+        if clip_start == clip_end:
+            warning = "Clip start and clip end are exactly equal"
+
+        if warning:
+            msg = 'Camera: %s' % warning
+            scene.luxcore.errorlog.add_warning(msg)
 
 
 def _clipping_plane(scene, definitions):
