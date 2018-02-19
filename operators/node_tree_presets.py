@@ -88,9 +88,11 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
                         and node.inputs["Opacity"].default_value == 1):
                     matte = node
 
-            if matte:
+                if node.bl_idname == "LuxCoreNodeMatOutput":
+                    output = node
+
+            if matte and output:
                 nodes.remove(matte)
-                output = nodes[0]
 
         if output is None:
             # Add the new nodes below all other nodes
