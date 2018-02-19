@@ -209,6 +209,9 @@ class LuxCoreSocketFloatVector(LuxCoreSocketFloat):
 
 class LuxCoreSocketMapping2D(LuxCoreNodeSocket):
     color = Color.mapping_2d
+    # The node type that can be instantly added to this node
+    # (via operator drawn in LuxCoreNodeSocket)
+    default_node = "LuxCoreNodeTexMapping2D"
     # We have to set the default_value to something
     # so export_default() is called by LuxCoreNodeSocket.export()
     default_value = None
@@ -224,6 +227,9 @@ class LuxCoreSocketMapping2D(LuxCoreNodeSocket):
 
 class LuxCoreSocketMapping3D(LuxCoreNodeSocket):
     color = Color.mapping_3d
+    # The node type that can be instantly added to this node
+    # (via operator drawn in LuxCoreNodeSocket)
+    default_node = "LuxCoreNodeTexMapping3D"
     # We have to set the default_value to something
     # so export_default() is called by LuxCoreNodeSocket.export()
     default_value = None
