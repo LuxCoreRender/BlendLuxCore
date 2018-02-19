@@ -252,7 +252,6 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
     if context:
         # Viewport rendering            
         if context.region_data.view_perspective == "CAMERA":
-            print("Camera view")
             # Camera view
             if scene.render.use_border:
                 xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
@@ -292,7 +291,6 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
                 screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + 0.5*scale*offset_y
             ]
     else:
-        print("Final rendering")
         #Final rendering
         xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
 
