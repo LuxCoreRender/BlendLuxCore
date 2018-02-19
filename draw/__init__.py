@@ -175,7 +175,7 @@ class FrameBufferFinal(object):
             self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
             self._convert_combined = pyluxcore.ConvertFilmChannelOutput_3xFloat_To_4xFloatList
 
-        self.combined_buffer = array.array("f", [0.0] * (self._width * self._height * bufferdepth))
+        self.combined_buffer = array.array("f", [0.0]) * (self._width * self._height * bufferdepth)
         self.aov_buffers = {}
 
     def draw(self, engine, session, scene):
@@ -215,7 +215,7 @@ class FrameBufferFinal(object):
             buffer = self.aov_buffers[output_name]
         except KeyError:
             # Buffer for this AOV does not exist yet, create it
-            buffer = array.array(aov.array_type, [0] * (width * height * aov.channel_count))
+            buffer = array.array(aov.array_type, [0]) * (width * height * aov.channel_count)
             self.aov_buffers[output_name] = buffer
 
         # Fill the buffer
