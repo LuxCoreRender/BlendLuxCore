@@ -13,7 +13,7 @@ class LuxCoreNodeTexCheckerboard2D(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def export(self, props, luxcore_name=None):
-        uvscale, uvdelta = self.inputs["2D Mapping"].export(props)
+        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(props)
 
         definitions = {
             "type": "checkerboard2d",
@@ -22,6 +22,7 @@ class LuxCoreNodeTexCheckerboard2D(LuxCoreNodeTexture):
             # Mapping
             "mapping.type": "uvmapping2d",
             "mapping.uvscale": uvscale,
+            "mapping.rotation": uvrotation,
             "mapping.uvdelta": uvdelta,
         }
         return self.base_export(props, definitions, luxcore_name)

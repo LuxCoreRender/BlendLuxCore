@@ -1,4 +1,4 @@
-import bpy
+import math
 from bpy.props import FloatProperty, BoolProperty
 from .. import LuxCoreNodeTexture
 from ...utils import node as utils_node
@@ -17,6 +17,8 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
     uniform_scale = FloatProperty(name="UV Scale", default=1, update=update_uniform_scale)
     uscale = FloatProperty(name="U", default=1)
     vscale = FloatProperty(name="V", default=1)
+    rotation = FloatProperty(name="Rotation", default=0, min=(-math.pi * 2),
+                                 max=(math.pi * 2), subtype="ANGLE", unit="ROTATION")
     udelta = FloatProperty(name="U", default=0)
     vdelta = FloatProperty(name="V", default=0)
     center_map = BoolProperty(name="Center Map", default=False)
@@ -42,20 +44,28 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
             row.prop(self, "uscale")
             row.prop(self, "vscale")
 
+        layout.prop(self, "rotation")
+
         layout.label("Offset:")
         row = layout.row(align=True)
         row.prop(self, "udelta")
         row.prop(self, "vdelta")
 
     def export(self, props):
-        input_uvscale, input_uvdelta = self.inputs["2D Mapping (optional)"].export(props)
+        input_uvscale, input_rotation, input_uvdelta = self.inputs["2D Mapping (optional)"].export(props)
 
+        # Scale
         if self.use_uniform_scale:
             uvscale = [self.uniform_scale, self.uniform_scale]
         else:
             uvscale = [self.uscale, self.vscale]
         output_uvscale = [a * b for a, b in zip(input_uvscale, uvscale)]
 
+        # Rotation
+        rotation = math.degrees(self.rotation)
+        output_rotation = input_rotation + rotation
+
+        # Translation
         if self.center_map:
             uvdelta = [self.udelta + 0.5 * (1 - uvscale[0]),
                        self.vdelta * -1 + 1 - (0.5 * (1 - uvscale[1]))]
@@ -65,4 +75,4 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
 
         output_uvdelta = [a + b for a, b in zip(input_uvdelta, uvdelta)]
 
-        return output_uvscale, output_uvdelta
+        return output_uvscale, output_rotation, output_uvdelta

@@ -103,7 +103,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             print(msg)
             return [0, 0, 0]
 
-        uvscale, uvdelta = self.inputs["2D Mapping"].export(props)
+        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(props)
 
         definitions = {
             "type": "imagemap",
@@ -115,6 +115,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             # Mapping
             "mapping.type": "uvmapping2d",
             "mapping.uvscale": uvscale,
+            "mapping.rotation": uvrotation,
             "mapping.uvdelta": uvdelta,
         }
 

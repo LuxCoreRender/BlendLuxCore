@@ -217,8 +217,9 @@ class LuxCoreSocketMapping2D(LuxCoreNodeSocket):
         # These are not the LuxCore API default values because
         # we have to compensate Blenders mirrored V axis
         uvscale = [1, -1]
+        uvrotation = 0
         uvdelta = [0, 1]
-        return uvscale, uvdelta
+        return uvscale, uvrotation, uvdelta
 
 
 class LuxCoreSocketMapping3D(LuxCoreNodeSocket):

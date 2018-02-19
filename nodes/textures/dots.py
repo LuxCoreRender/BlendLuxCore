@@ -17,7 +17,7 @@ class LuxCoreNodeTexDots(LuxCoreNodeTexture):
             utils_node.draw_uv_info(context, layout)
     
     def export(self, props, luxcore_name=None):        
-        uvscale, uvdelta = self.inputs["2D Mapping"].export(props)
+        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(props)
 
         definitions = {
             "type": "dots",
@@ -26,6 +26,7 @@ class LuxCoreNodeTexDots(LuxCoreNodeTexture):
             # Mapping
             "mapping.type": "uvmapping2d",
             "mapping.uvscale": uvscale,
+            "mapping.rotation": uvrotation,
             "mapping.uvdelta": uvdelta,
         }       
         
