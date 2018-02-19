@@ -3,11 +3,7 @@ from bpy.props import BoolProperty
 from .. import LuxCoreNodeMaterial, Roughness
 
 
-IOR_DESCRIPTION = (
-    "Specify index of refraction to control reflection brightness.\n"
-    "Set specular color to white (1, 1, 1) if this option is enabled.\n"
-    "Note that an IOR below 1 is not realistic"
-)
+IOR_DESCRIPTION = "Specify index of refraction to control reflection brightness."
 
 MULTIBOUNCE_DESCRIPTION = (
     "Gives the material a fuzzy sheen and makes it look "
@@ -21,9 +17,11 @@ class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial):
 
     def update_use_ior(self, context):
         self.inputs["IOR"].enabled = self.use_ior
+        self.inputs["Specular Color"].enabled = not self.use_ior
 
     def update_use_ior_bf(self, context):
         self.inputs["BF IOR"].enabled = self.use_ior_bf
+        self.inputs["BF Specular Color"].enabled = not self.use_ior_bf
 
     def update_use_backface(self, context):
         # Note: these are the names (strings), not references to the sockets
@@ -34,6 +32,8 @@ class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial):
                 self.inputs[socket].enabled = self.use_backface and self.use_anisotropy
             elif socket == "BF IOR":
                 self.inputs[socket].enabled = self.use_backface and self.use_ior_bf
+            elif socket == "BF Specular Color":
+                self.inputs[socket].enabled = self.use_backface and not self.use_ior_bf
             else:
                 self.inputs[socket].enabled = self.use_backface
 
@@ -105,25 +105,29 @@ class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial):
 
             # Front face (in normal direction)
             "multibounce": self.multibounce,
-            "ks": self.inputs["Specular Color"].export(props),
             "ka": self.inputs["Absorption Color"].export(props),
             "d": self.inputs["Absorption Depth (nm)"].export(props),
         }
 
         if self.use_ior:
             definitions["index"] = self.inputs["IOR"].export(props)
+            definitions["ks"] = [1, 1, 1]
+        else:
+            definitions["ks"] = self.inputs["Specular Color"].export(props)
 
         if self.use_backface:
             definitions.update({
                 # Back face (on opposite side of normal)
                 "multibounce_bf": self.multibounce_bf,
-                "ks_bf": self.inputs["BF Specular Color"].export(props),
                 "ka_bf": self.inputs["BF Absorption Color"].export(props),
                 "d_bf": self.inputs["BF Absorption Depth (nm)"].export(props),
             })
 
             if self.use_ior_bf:
                 definitions["index_bf"] = self.inputs["BF IOR"].export(props)
+                definitions["ks_bf"] = [1, 1, 1]
+            else:
+                definitions["ks_bf"] = self.inputs["BF Specular Color"].export(props)
 
         # This includes backface roughness
         Roughness.export(self, props, definitions)

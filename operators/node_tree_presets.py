@@ -72,7 +72,11 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         nodes = node_tree.nodes
         output = None
 
-        if len(nodes) == 2:
+        if len(nodes) == 1 and nodes[0].bl_idname == "LuxCoreNodeMatOutput":
+            # The user deleted all nodes except the output.
+            # Just use it instead of creating a new output.
+            output = nodes[0]
+        elif len(nodes) == 2:
             # It is probably a default material, replace the matte node with the preset
             matte = None
 

@@ -10,6 +10,7 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
 
     def update_use_ior(self, context):
         self.inputs["IOR"].enabled = self.use_ior
+        self.inputs["Specular Color"].enabled = not self.use_ior
 
     multibounce = BoolProperty(name="Multibounce", default=False)
     use_ior = BoolProperty(name="Use IOR", default=False,
@@ -41,15 +42,16 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
         definitions = {
             "type": "glossy2",
             "kd": self.inputs["Diffuse Color"].export(props),
-            "ks": self.inputs["Specular Color"].export(props),
             "ka": self.inputs["Absorption Color"].export(props),
             "d": self.inputs["Absorption Depth (nm)"].export(props),
-            # "index":
             "multibounce": self.multibounce,
         }
 
         if self.use_ior:
             definitions["index"] = self.inputs["IOR"].export(props)
+            definitions["ks"] = [1, 1, 1]
+        else:
+            definitions["ks"] = self.inputs["Specular Color"].export(props)
 
         Roughness.export(self, props, definitions)
         self.export_common_inputs(props, definitions)
