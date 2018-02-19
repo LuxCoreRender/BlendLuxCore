@@ -3,7 +3,11 @@ from bpy.props import BoolProperty
 from .. import LuxCoreNodeMaterial, Roughness
 
 
-IOR_DESCRIPTION = "Specify index of refraction to control reflection brightness"
+IOR_DESCRIPTION = (
+    "Specify index of refraction to control reflection brightness.\n"
+    "Set specular color to white (1, 1, 1) if this option is enabled.\n"
+    "Note that an IOR below 1 is not realistic"
+)
 
 MULTIBOUNCE_DESCRIPTION = (
     "Gives the material a fuzzy sheen and makes it look "

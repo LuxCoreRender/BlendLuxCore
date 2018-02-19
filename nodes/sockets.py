@@ -188,7 +188,7 @@ class LuxCoreSocketRoughness(LuxCoreSocketFloat):
 
 
 class LuxCoreSocketIOR(LuxCoreSocketFloat):
-    default_value = FloatProperty(name="IOR", min=0, soft_max=2.0, max=25, step=0.1,
+    default_value = FloatProperty(name="IOR", min=1, soft_max=2.0, max=25, step=0.1,
                                   precision=4, description=IOR_DESCRIPTION)
 
     def draw(self, context, layout, node, text):
