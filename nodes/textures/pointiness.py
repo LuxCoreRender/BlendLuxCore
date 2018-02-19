@@ -96,6 +96,4 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
 
             luxcore_name = multiplier_name
 
-        print(props)
-
         return luxcore_name
