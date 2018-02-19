@@ -45,7 +45,7 @@ def _view_ortho(scene, context, definitions):
     lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix, scene)
 
     definitions["type"] = "orthographic"
-    zoom = 0.915 * context.space_data.region_3d.view_distance
+    zoom = 0.915 * context.space_data.region_3d.view_distance*35/context.space_data.lens
 
     # Move the camera origin away from the viewport center to avoid clipping
     origin = Vector(lookat_orig)
@@ -104,6 +104,7 @@ def _view_camera(scene, context, definitions):
     else:
         xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
 
+
     offset_x = 2 * (view_camera_offset[0] * xaspect * 2)
     offset_y = 2 * (view_camera_offset[1] * yaspect * 2)
 
@@ -117,9 +118,12 @@ def _final(scene, definitions):
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
+    zoom = 1
 
     if camera.data.type == "ORTHO":
         type = "orthographic"
+        zoom = camera.data.ortho_scale / 2
+
     elif camera.data.type == "PANO":
         type = "environment"
     else:
@@ -140,7 +144,6 @@ def _final(scene, definitions):
         _depth_of_field(scene, definitions)
 
     # screenwindow (for border rendering and camera shift)
-    zoom = 1
     definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, 0, 0, scene)
 
 
