@@ -1,17 +1,17 @@
 <sup> [LuxCoreRender.org](https://luxcorerender.org/) | [Forums](https://forums.luxcorerender.org/) | [Wiki](http://wiki.luxcorerender.org/LuxCoreRender_Wiki) </sup>
 
+## BlendLuxCore
+
 This is the new Blender integration addon for LuxCore, rewritten from scratch.
-It is still in early development, so expect bugs and missing features.
+It is still in early development, so expect bugs and missing features. You can find information and updates about the ongoing development in [this thread](https://forums.luxcorerender.org/viewtopic.php?f=5&t=9).
 
-[Information and updates about the ongoing development](https://forums.luxcorerender.org/viewtopic.php?f=5&t=9)
+### Important
 
-```diff
-- Do not use the current version of this addon for real production work!
-- If you want to test it on important scenes, make a copy of the .blend file first!
-- You will experience crashes and other bugs. Please report them in the bug tracker!
-```
+* **Do not use the current version of this addon for real production work!**
+* **If you want to test it on important scenes, make a copy of the .blend file first!**
+* **You will experience crashes and other bugs. Please report them in the bug tracker!**
 
-**Note:** This addon requires Blender 2.79a. You can download the release candidate [here](https://download.blender.org/release/Blender2.79/) (Choose one of the links prefixed with "blender-2.79**a-rc**")
+This addon requires Blender 2.79a. You can download the release candidate [here](https://download.blender.org/release/Blender2.79/) (Choose one of the links prefixed with "blender-2.79**a-rc**")
 
 ### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
 
@@ -47,16 +47,18 @@ TODO: These do not contain .blend files yet.
 * [x] Camera motion blur
 * [x] Particles
 * [x] Duplis
+* [x] Hair
 * [x] Tonemapping settings
 * [x] Shadow catcher
 * [x] Transparent film
 * [x] Smoke/Fire
 * [x] Pointiness
+* [x] AOVs (aka render passes)
+* [x] Imagepipeline plugins for quick effects (bloom, vignette etc.)
 * [ ] Image sequences
 * [ ] Light groups
-* [ ] AOVs
 * [ ] Saving a resumable film
-* [ ] Most imagepipeline plugins
+* [ ] Periodic film saving
 * [ ] Material preview
 * And more...
 
