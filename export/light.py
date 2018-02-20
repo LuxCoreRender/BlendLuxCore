@@ -38,7 +38,6 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
             if lamp.luxcore.image or lamp.luxcore.ies.use:
                 # mappoint
                 definitions["type"] = "mappoint"
-                definitions["flipz"] = lamp.luxcore.flipz
 
                 if lamp.luxcore.image:
                     try:
@@ -54,8 +53,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                         definitions["gain"] = [x * lamp.luxcore.gain for x in MISSING_IMAGE_COLOR]
 
                 try:
-                    export_ies(definitions, lamp.luxcore.iesfile_type, lamp.luxcore.iesfile_text,
-                               lamp.luxcore.iesfile_path, lamp.luxcore.flipz, lamp.library)
+                    export_ies(definitions, lamp.luxcore.ies, lamp.library)
                 except OSError as error:
                     msg = 'Lamp "%s": %s' % (blender_obj.name, error)
                     scene.luxcore.errorlog.add_warning(msg)
