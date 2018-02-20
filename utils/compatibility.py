@@ -11,6 +11,7 @@ e.g. replace old nodes with updated ones when socket names change.
 
 def run():
     update_output_nodes_volume_change()
+    update_glossy_nodes_ior_change()
 
 
 def update_output_nodes_volume_change():
@@ -51,5 +52,23 @@ def update_output_nodes_volume_change():
             except KeyError:
                 pass
 
-            print("Updated output node %s in tree %s to new version" % (old_output.name, node_tree.name))
+            print('Updated output node "%s" in tree %s to new version' % (old_output.name, node_tree.name))
             node_tree.nodes.remove(old_output)
+
+
+def update_glossy_nodes_ior_change():
+    # commit c3152dec8e0e07e676a60be56ba4578dbe297df6
+
+    for node_tree in bpy.data.node_groups:
+        if node_tree.library:
+            continue
+
+        affected_nodes = find_nodes(node_tree, "LuxCoreNodeMatGlossy2")
+        affected_nodes += find_nodes(node_tree, "LuxCoreNodeMatGlossyCoating")
+
+        for node in affected_nodes:
+            if not "IOR" in node.inputs:
+                # Note: the IOR input will be at the very bottom, but at least the export works
+                node.add_input("LuxCoreSocketIOR", "IOR", 1.5)
+                node.inputs["IOR"].enabled = False
+                print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))

@@ -11,7 +11,7 @@ SAMPLES_DESCRIPTION = (
     "The number of shadow rays to trace to compute direct light "
     "for this light source.\n"
     "This property is a hint and the render engine can ignore this information.\n"
-    "-1 means use the default global value."
+    "-1 means use the default global value"
 )
 
 IMPORTANCE_DESCRIPTION = (
