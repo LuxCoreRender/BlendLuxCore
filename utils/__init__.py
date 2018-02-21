@@ -24,7 +24,7 @@ class ExportedLight(object):
 def to_luxcore_name(string):
     """
     Do NOT use this function to create a luxcore name for an object/material/etc.!
-    Use the function get_unique_luxcore_name() instead.
+    Use the function get_luxcore_name() instead.
     This is just a regex that removes non-allowed characters.
     """
     return re.sub("[^_0-9a-zA-Z]+", "__", string)
