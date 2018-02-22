@@ -35,6 +35,8 @@ def convert(scene, context=None, is_camera_moving=False):
         cam_props.Set(_get_volume_props(scene))
         return cam_props
     except Exception as error:
+        import traceback
+        traceback.print_exc()
         msg = 'Camera: %s' % error
         scene.luxcore.errorlog.add_warning(msg)
         return pyluxcore.Properties()

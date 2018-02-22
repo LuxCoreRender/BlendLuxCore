@@ -246,7 +246,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
     # Following: Black Magic
 
     scale = 2
-    if scene.camera.data.type == "ORTHO":
+    if scene.camera and scene.camera.data.type == "ORTHO":
         scale = scene.camera.data.ortho_scale
     
     if context:
