@@ -2,6 +2,7 @@ import bpy
 from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty, EnumProperty
 from bpy.types import PropertyGroup
 
+
 def init():
     bpy.types.ParticleSettings.luxcore = PointerProperty(type=LuxCoreParticlesProps)
 
