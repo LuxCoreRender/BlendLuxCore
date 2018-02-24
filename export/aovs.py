@@ -20,7 +20,9 @@ def convert(scene, context=None):
             return pyluxcore.Properties()
 
         pipeline = scene.camera.data.luxcore.imagepipeline
-        aovs = scene.luxcore.aovs
+        # This is the layer that is currently being exported, not the active layer in the UI!
+        current_layer = scene.render.layers[scene.luxcore.active_layer_index]
+        aovs = current_layer.luxcore.aovs
 
         use_transparent_film = pipeline.transparent_film and not utils.use_filesaver(context, scene)
 
@@ -83,7 +85,9 @@ def convert(scene, context=None):
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
-        msg = "Imagepipeline: %s" % error
+        import traceback
+        traceback.print_exc()
+        msg = "AOVs: %s" % error
         scene.luxcore.errorlog.add_warning(msg)
         return pyluxcore.Properties()
 

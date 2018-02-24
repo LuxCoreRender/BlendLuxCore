@@ -63,7 +63,10 @@ def view_draw(engine, context):
         engine.framebuffer = FrameBuffer(context)
 
     # Update and draw the framebuffer
-    engine.session.UpdateStats()
+    try:
+        engine.session.UpdateStats()
+    except RuntimeError as error:
+        print("Error during UpdateStats():", error)
     engine.session.WaitNewFrame()
     engine.framebuffer.update(engine.session)
 

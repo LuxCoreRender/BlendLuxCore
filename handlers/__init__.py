@@ -23,9 +23,10 @@ def luxcore_load_post(_):
             # OpenCL not available, make sure we are using CPU device
             scene.luxcore.config.device = "CPU"
 
-        # Disable depth pass by default
-        if not scene.luxcore.aovs.depth:
-            scene.render.layers.active.use_pass_z = False
+        for layer in scene.render.layers:
+            # Disable depth pass by default
+            if not layer.luxcore.aovs.depth:
+                layer.use_pass_z = False
 
     # Run converters for backwards compatibility
     compatibility.run()

@@ -14,7 +14,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         print("init")
         self.framebuffer = None
         self.session = None
-        self.exporter = export.Exporter()
+        self.exporter = None
         self.error = None
 
     def __del__(self):
@@ -71,60 +71,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             import traceback
             traceback.print_exc()
 
-    def add_passes(self, scene):
-        """
-        A custom method (not API defined) to add our custom passes.
-        Called by self.render() before the render starts.
-        """
-        aovs = scene.luxcore.aovs
-
-        # Note: The Depth pass is already added by Blender. If we add it again, it won't be
-        # displayed correctly in the "Depth" view mode of the "Combined" pass in the image editor.
-
-        if aovs.rgb:
-            self.add_pass("RGB", 3, "RGB")
-        if aovs.rgba:
-            self.add_pass("RGBA", 4, "RGBA")
-        if aovs.alpha:
-            self.add_pass("ALPHA", 1, "A")
-        if aovs.material_id:
-            self.add_pass("MATERIAL_ID", 1, "X")
-        if aovs.object_id:
-            self.add_pass("OBJECT_ID", 1, "X")
-        if aovs.emission:
-            self.add_pass("EMISSION", 3, "RGB")
-        if aovs.direct_diffuse:
-            self.add_pass("DIRECT_DIFFUSE", 3, "RGB")
-        if aovs.direct_glossy:
-            self.add_pass("DIRECT_GLOSSY", 3, "RGB")
-        if aovs.indirect_diffuse:
-            self.add_pass("INDIRECT_DIFFUSE", 3, "RGB")
-        if aovs.indirect_glossy:
-            self.add_pass("INDIRECT_GLOSSY", 3, "RGB")
-        if aovs.indirect_specular:
-            self.add_pass("INDIRECT_SPECULAR", 3, "RGB")
-        if aovs.position:
-            self.add_pass("POSITION", 3, "XYZ")
-        if aovs.shading_normal:
-            self.add_pass("SHADING_NORMAL", 3, "XYZ")
-        if aovs.geometry_normal:
-            self.add_pass("GEOMETRY_NORMAL", 3, "XYZ")
-        if aovs.uv:
-            # We need to pad the UV pass to 3 elements (Blender can't handle 2 elements)
-            self.add_pass("UV", 3, "UVA")
-        if aovs.direct_shadow_mask:
-            self.add_pass("DIRECT_SHADOW_MASK", 1, "X")
-        if aovs.indirect_shadow_mask:
-            self.add_pass("INDIRECT_SHADOW_MASK", 1, "X")
-        if aovs.raycount:
-            self.add_pass("RAYCOUNT", 1, "X")
-        if aovs.samplecount:
-            self.add_pass("SAMPLECOUNT", 1, "X")
-        if aovs.convergence:
-            self.add_pass("CONVERGENCE", 1, "X")
-        if aovs.irradiance:
-            self.add_pass("IRRADIANCE", 3, "RGB")
-
     def update_render_passes(self, scene=None, renderlayer=None):
         """
         Blender API defined method.
@@ -132,7 +78,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         """
         self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
 
-        aovs = scene.luxcore.aovs
+        aovs = renderlayer.luxcore.aovs
 
         # Notes:
         # - It seems like Blender can not handle passes with 2 elements. They must have 1, 3 or 4 elements.

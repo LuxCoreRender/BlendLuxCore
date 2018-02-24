@@ -179,29 +179,32 @@ class FrameBufferFinal(object):
         self.aov_buffers = {}
 
     def draw(self, engine, session, scene):
-        from time import time
-        start = time()
+        """
+        layer_index is the index of the render layer that is currently being rendered
+        """
+        active_layer_index = scene.luxcore.active_layer_index
+        scene_layer = scene.render.layers[active_layer_index]
+        print("name of scene layer with index %d: %s" % (active_layer_index, scene_layer.name))
 
         session.GetFilm().GetOutputFloat(self._output_type, self.combined_buffer)
-        result = engine.begin_result(0, 0, self._width, self._height)
-        layer = result.layers[0]
+        result = engine.begin_result(0, 0, self._width, self._height, scene_layer.name)
+        # Regardless of the scene render layers, the result always only contains one layer
+        render_layer = result.layers[0]
 
-        combined = layer.passes["Combined"]
+        combined = render_layer.passes["Combined"]
         self._convert_combined(self._width, self._height, self.combined_buffer, combined.as_pointer(), False)
 
         for output_name, output_type in pyluxcore.FilmOutputType.names.items():
             # Check if AOV is enabled by user
-            if getattr(scene.luxcore.aovs, output_name.lower(), False):
+            if getattr(scene_layer.luxcore.aovs, output_name.lower(), False):
                 try:
-                    self._import_aov(output_name, output_type, layer, session)
+                    self._import_aov(output_name, output_type, render_layer, session)
                 except RuntimeError as error:
                     print("Error on import of AOV %s: %s" % (output_name, error))
 
         engine.end_result(result)
 
-        print("FrameBuffer draw took %.3fs" % (time() - start))
-
-    def _import_aov(self, output_name, output_type, layer, session):
+    def _import_aov(self, output_name, output_type, render_layer, session):
         if output_name in AOVS:
             aov = AOVS[output_name]
         else:
@@ -226,7 +229,7 @@ class FrameBufferFinal(object):
 
         # Depth needs special treatment because it's pre-defined by Blender and not uppercase
         pass_name = "Depth" if output_name == "DEPTH" else output_name
-        blender_pass = layer.passes[pass_name]
+        blender_pass = render_layer.passes[pass_name]
 
         # Convert and copy the buffer into the blender_pass.rect
         aov.convert_func(width, height, buffer, blender_pass.as_pointer(), aov.normalize)

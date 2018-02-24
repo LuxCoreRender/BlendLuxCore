@@ -1,4 +1,4 @@
-from . import blender_object, camera, light, material, particle, scene, world
+from . import blender_object, camera, light, material, particle, render_layer, scene, world
 
 
 def init():
@@ -7,5 +7,6 @@ def init():
     light.init()
     material.init()
     particle.init()
+    render_layer.init()
     scene.init()
     world.init()

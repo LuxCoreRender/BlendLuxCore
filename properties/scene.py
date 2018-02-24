@@ -13,5 +13,6 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     halt = PointerProperty(type=halt.LuxCoreHaltConditions)
     display = PointerProperty(type=display.LuxCoreDisplaySettings)
     opencl = PointerProperty(type=opencl.LuxCoreOpenCLSettings)
-    # Move AOVs to render layer if we ever support them
-    aovs = PointerProperty(type=aovs.LuxCoreAOVSettings)
+
+    # Set during render and used during export
+    active_layer_index = IntProperty()

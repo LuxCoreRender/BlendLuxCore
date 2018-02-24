@@ -53,6 +53,8 @@ def convert(scene, context=None):
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
+        import traceback
+        traceback.print_exc()
         msg = 'Imagepipeline: %s' % error
         scene.luxcore.errorlog.add_warning(msg)
         return pyluxcore.Properties()

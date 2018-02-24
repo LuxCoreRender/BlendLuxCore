@@ -5,10 +5,12 @@ from bpy.types import Panel
 class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
     bl_label = "LuxCore Arbitrary Output Variables (AOVs)"
     COMPAT_ENGINES = {"LUXCORE"}
+    bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
         layout = self.layout
-        aovs = context.scene.luxcore.aovs
+        active_layer = context.scene.render.layers.active
+        aovs = active_layer.luxcore.aovs
 
         layout.label("Basic Information")
         layout.prop(aovs, "rgb")

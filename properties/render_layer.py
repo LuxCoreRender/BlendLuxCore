@@ -1,0 +1,11 @@
+import bpy
+from bpy.props import PointerProperty
+from . import aovs
+
+
+def init():
+    bpy.types.SceneRenderLayer.luxcore = PointerProperty(type=LuxCoreRenderLayer)
+
+
+class LuxCoreRenderLayer(bpy.types.PropertyGroup):
+    aovs = PointerProperty(type=aovs.LuxCoreAOVSettings)

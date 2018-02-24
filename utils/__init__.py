@@ -342,9 +342,14 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
     if scene.camera and obj == scene.camera.data.luxcore.clipping_plane:
         return False
 
-    renderlayer = scene.render.layers.active.layers
+    # This is the layer that is currently being exported, not the active layer in the UI!
+    current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+    # TODO exclude layers?
+    # We need the list of enabled/disabled layers in the settings of this render layer
+    render_layers = current_render_layer.layers
+
     on_visible_layer = False
-    for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, renderlayer)]:
+    for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, render_layers)]:
         on_visible_layer |= lv
 
     return on_visible_layer and not hidden_in_outliner

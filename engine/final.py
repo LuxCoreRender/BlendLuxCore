@@ -5,19 +5,47 @@ from ..utils import render as utils_render
 
 
 def update(engine, scene):
-    assert engine.session is None
-    engine.update_stats("Export", "exporting...")
+    pass
+    # assert engine.session is None
+    # engine.update_stats("Export", "exporting...")
+    #
+    # # Create a new exporter instance.
+    # # This is only needed when scene.render.use_persistent_data is enabled
+    # # because in that case our instance of LuxCoreRenderEngine is re-used
+    # # See https://github.com/LuxCoreRender/BlendLuxCore/issues/59
+    # engine.exporter = export.Exporter()
+    #
+    # engine.session = engine.exporter.create_session(scene, engine=engine)
 
-    # Create a new exporter instance.
-    # This is only needed when scene.render.use_persistent_data is enabled
-    # because in that case our instance of LuxCoreRenderEngine is re-used
-    # See https://github.com/LuxCoreRender/BlendLuxCore/issues/59
-    engine.exporter = export.Exporter()
-
-    engine.session = engine.exporter.create_session(scene, engine=engine)
-    
 
 def render(engine, scene):
+    for layer_index, layer in enumerate(scene.render.layers):
+        print("Rendering layer", layer.name, layer)
+
+        dummy_result = engine.begin_result(0, 0, 1, 1, layer.name)
+
+        if layer.name not in dummy_result.layers:
+            # The layer is disabled
+            engine.end_result(dummy_result)
+            continue
+
+        # TODO: correct to end it here?
+        engine.end_result(dummy_result)
+
+        scene.luxcore.active_layer_index = layer_index
+
+        _add_passes(engine, layer)
+
+        # Export for this layer
+        engine.exporter = export.Exporter()
+        engine.session = engine.exporter.create_session(scene, engine=engine)
+        # Render this layer
+        _render_layer(engine, scene)
+
+        print("Finished rendering layer", layer.name, layer)
+    
+
+def _render_layer(engine, scene):
     if engine.session is None:
         # session is None, but engine.error is not set -> User cancelled.
         print("Export cancelled by user.")
@@ -25,7 +53,6 @@ def render(engine, scene):
 
     engine.update_stats("Render", "Starting session...")
     engine.framebuffer = FrameBufferFinal(scene)
-    engine.add_passes(scene)
     engine.session.Start()
 
     config = engine.session.GetRenderConfig()
@@ -119,3 +146,59 @@ def render(engine, scene):
     # Clean up
     del engine.session
     engine.session = None
+
+
+def _add_passes(engine, layer):
+    """
+    Add our custom passes.
+    Called by engine.final.render() before the render starts.
+    layer is the current render layer.
+    """
+    aovs = layer.luxcore.aovs
+
+    # Note: The Depth pass is already added by Blender. If we add it again, it won't be
+    # displayed correctly in the "Depth" view mode of the "Combined" pass in the image editor.
+
+    if aovs.rgb:
+        engine.add_pass("RGB", 3, "RGB")
+    if aovs.rgba:
+        engine.add_pass("RGBA", 4, "RGBA")
+    if aovs.alpha:
+        engine.add_pass("ALPHA", 1, "A")
+    if aovs.material_id:
+        engine.add_pass("MATERIAL_ID", 1, "X")
+    if aovs.object_id:
+        engine.add_pass("OBJECT_ID", 1, "X")
+    if aovs.emission:
+        engine.add_pass("EMISSION", 3, "RGB")
+    if aovs.direct_diffuse:
+        engine.add_pass("DIRECT_DIFFUSE", 3, "RGB")
+    if aovs.direct_glossy:
+        engine.add_pass("DIRECT_GLOSSY", 3, "RGB")
+    if aovs.indirect_diffuse:
+        engine.add_pass("INDIRECT_DIFFUSE", 3, "RGB")
+    if aovs.indirect_glossy:
+        engine.add_pass("INDIRECT_GLOSSY", 3, "RGB")
+    if aovs.indirect_specular:
+        engine.add_pass("INDIRECT_SPECULAR", 3, "RGB")
+    if aovs.position:
+        engine.add_pass("POSITION", 3, "XYZ")
+    if aovs.shading_normal:
+        engine.add_pass("SHADING_NORMAL", 3, "XYZ")
+    if aovs.geometry_normal:
+        engine.add_pass("GEOMETRY_NORMAL", 3, "XYZ")
+    if aovs.uv:
+        # We need to pad the UV pass to 3 elements (Blender can't handle 2 elements)
+        engine.add_pass("UV", 3, "UVA")
+    if aovs.direct_shadow_mask:
+        engine.add_pass("DIRECT_SHADOW_MASK", 1, "X")
+    if aovs.indirect_shadow_mask:
+        engine.add_pass("INDIRECT_SHADOW_MASK", 1, "X")
+    if aovs.raycount:
+        engine.add_pass("RAYCOUNT", 1, "X")
+    if aovs.samplecount:
+        engine.add_pass("SAMPLECOUNT", 1, "X")
+    if aovs.convergence:
+        engine.add_pass("CONVERGENCE", 1, "X")
+    if aovs.irradiance:
+        engine.add_pass("IRRADIANCE", 3, "RGB")
