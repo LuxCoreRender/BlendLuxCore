@@ -208,6 +208,17 @@ def _convert_seed(scene, definitions):
 def _convert_halt_conditions(scene, definitions):
     halt = scene.luxcore.halt
 
+    # Set this property even if halt conditions are disabled
+    # so we can use a very low haltthreshold for final renders
+    # and still have endless rendering
+    use_noise_thresh = halt.enable and halt.use_noise_thresh
+    definitions["batch.haltthreshold.stoprendering.enable"] = use_noise_thresh
+
+    if not use_noise_thresh:
+        # Set a very low noise threshold so final renders use
+        # the adaptive sampling to full advantage
+        definitions["batch.haltthreshold"] = 1 / 256
+
     if halt.enable:
         if halt.use_time:
             definitions["batch.halttime"] = halt.time
