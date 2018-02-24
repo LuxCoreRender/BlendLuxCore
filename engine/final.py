@@ -14,7 +14,7 @@ def update(engine, scene):
     # See https://github.com/LuxCoreRender/BlendLuxCore/issues/59
     engine.exporter = export.Exporter()
 
-    engine.session = engine.exporter.create_session(scene, engine)
+    engine.session = engine.exporter.create_session(scene, engine=engine)
     
 
 def render(engine, scene):
