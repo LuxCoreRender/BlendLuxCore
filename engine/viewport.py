@@ -11,6 +11,7 @@ def view_update(engine, context, changes=None):
         print("new session")
         try:
             engine.update_stats("Creating Render Session...", "")
+            engine.exporter = export.Exporter()
             # Note: in viewport render, the user can't cancel the
             # export (Blender limitation), so we don't pass engine here
             engine.session = engine.exporter.create_session(scene, context)

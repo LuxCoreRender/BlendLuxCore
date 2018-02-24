@@ -24,6 +24,7 @@ bl_info = {
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
+# TODO remember to remove this later
 def print_nothing(msg):
     pass
 
