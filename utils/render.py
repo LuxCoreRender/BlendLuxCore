@@ -24,12 +24,12 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
     """ Stats and optional film refresh during final render """
     error_message = ""
     try:
-        engine._session.UpdateStats()
+        engine.session.UpdateStats()
     except RuntimeError as error:
         print("Error during UpdateStats():", error)
         error_message = str(error)
 
-    stats = engine._session.GetStats()
+    stats = engine.session.GetStats()
 
     # Show stats string in UI
     pretty_stats = get_pretty_stats(config, stats, scene)
@@ -46,7 +46,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
 
     if draw_film:
         # Show updated film (this operation is expensive)
-        engine._framebuffer.draw(engine, engine._session, scene)
+        engine.framebuffer.draw(engine, engine.session, scene)
 
     # Update progress bar if we have halt conditions
     halt = scene.luxcore.halt
