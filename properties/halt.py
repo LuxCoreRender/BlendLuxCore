@@ -11,10 +11,10 @@ NOISE_THRESH_DESC = (
     "It may be hard to reach a smaller noise value than 3"
 )
 NOISE_THRESH_WARMUP_DESC = (
-    "number of average samples per pixel before to start the convergence test"
+    "Number of average samples per pixel before to start the convergence test"
 )
 NOISE_THRESH_STEP_DESC = (
-    "number of average samples per pixel between two tests"
+    "Number of average samples per pixel between two tests"
 )
 NOISE_THRESH_USE_FILTER_DESC = (
     "Use a 3x3 box filter to blur the Convergence AOV that is used "
@@ -34,7 +34,7 @@ class LuxCoreHaltConditions(bpy.types.PropertyGroup):
     # Noise threshold
     use_noise_thresh = BoolProperty(name="Use Noise Threshold", default=False,
                                     description=USE_NOISE_THRESH_DESC)
-    noise_thresh = IntProperty(name="Noise Threshold", default=5, min=1, soft_min=3, max=255,
+    noise_thresh = IntProperty(name="Noise Threshold", default=5, min=0, max=255,
                                description=NOISE_THRESH_DESC)
     # These props can only be used with adaptive sampling (SOBOL sampler)
     noise_thresh_warmup = IntProperty(name="Warmup Samples", default=64, min=1,
