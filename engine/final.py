@@ -26,6 +26,7 @@ def render(engine, scene):
         _render_layer(engine, scene)
 
         if engine.test_break():
+            # Blender skips the rest of the render layers anyway
             return
 
         print("Finished rendering layer", layer.name, layer)
