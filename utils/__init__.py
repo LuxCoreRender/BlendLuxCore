@@ -257,6 +257,10 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
                 xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
                 offset_x = 0
                 offset_y = 0
+                
+                zoom = 1
+                if scene.camera and scene.camera.data.type == "ORTHO":
+                    zoom = scene.camera.data.ortho_scale /2
             else:
                 xaspect, yaspect = calc_aspect(width_raw, height_raw)
             
