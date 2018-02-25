@@ -78,6 +78,11 @@ def get_pretty_stats(config, stats, scene):
     # so the result will look like: "message 1 | message 2 | ..."
     pretty = []
 
+    # Name of the current render layer
+    if len(scene.render.layers) > 1:
+        current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+        pretty.append(current_render_layer.name)
+
     # Time
     if halt.enable and halt.use_time:
         rendered_time = stats.Get("stats.renderengine.time").GetFloat()
