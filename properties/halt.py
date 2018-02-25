@@ -34,7 +34,7 @@ class LuxCoreHaltConditions(bpy.types.PropertyGroup):
     # Noise threshold
     use_noise_thresh = BoolProperty(name="Use Noise Threshold", default=False,
                                     description=USE_NOISE_THRESH_DESC)
-    noise_thresh = IntProperty(name="Noise Threshold", default=5, min=0, max=255,
+    noise_thresh = IntProperty(name="Noise Threshold", default=5, min=0, soft_min=3, max=255,
                                description=NOISE_THRESH_DESC)
     # These props can only be used with adaptive sampling (SOBOL sampler)
     noise_thresh_warmup = IntProperty(name="Warmup Samples", default=64, min=1,
