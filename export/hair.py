@@ -229,20 +229,23 @@ def convert_hair(blender_obj, psys, luxcore_scene, scene, context=None, engine=N
         # move it to the correct position
         transform = utils.matrix_to_list(blender_obj.matrix_world, scene, apply_worldscale=True)
 
-        prefix = 'scene.objects.' + luxcore_shape_name
+        prefix = "scene.objects." + luxcore_shape_name + "."
 
-        strandsProps.Set(pyluxcore.Property(prefix + '.material', lux_mat_name))
-        strandsProps.Set(pyluxcore.Property(prefix + '.shape', luxcore_shape_name))
-        strandsProps.Set(pyluxcore.Property(prefix + '.transformation', transform))
+        strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
+        strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+        strandsProps.Set(pyluxcore.Property(prefix + "transformation", transform))
+
+        visible_to_cam = utils.is_obj_visible_to_cam(blender_obj, scene, context)
+        strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
 
         luxcore_scene.Parse(strandsProps)
 
         if not context:
-            # Resolution was changed to 'RENDER' for final renders, change it back
-            psys.set_resolution(scene, blender_obj, 'PREVIEW')
+            # Resolution was changed to "RENDER" for final renders, change it back
+            psys.set_resolution(scene, blender_obj, "PREVIEW")
 
         time_elapsed = time() - start_time
-        print('[%s: %s] Hair export finished (%.3fs)' % (blender_obj.name, psys.name, time_elapsed))
+        print("[%s: %s] Hair export finished (%.3fs)" % (blender_obj.name, psys.name, time_elapsed))
     except Exception as error:
         msg = "[%s: %s] %s" % (blender_obj.name, psys.name, error)
         scene.luxcore.errorlog.add_warning(msg)
