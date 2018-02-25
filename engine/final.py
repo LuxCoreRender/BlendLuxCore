@@ -160,45 +160,45 @@ def _add_passes(engine, layer):
     # displayed correctly in the "Depth" view mode of the "Combined" pass in the image editor.
 
     if aovs.rgb:
-        engine.add_pass("RGB", 3, "RGB")
+        engine.add_pass("RGB", 3, "RGB", layer.name)
     if aovs.rgba:
-        engine.add_pass("RGBA", 4, "RGBA")
+        engine.add_pass("RGBA", 4, "RGBA", layer.name)
     if aovs.alpha:
-        engine.add_pass("ALPHA", 1, "A")
+        engine.add_pass("ALPHA", 1, "A", layer.name)
     if aovs.material_id:
-        engine.add_pass("MATERIAL_ID", 1, "X")
+        engine.add_pass("MATERIAL_ID", 1, "X", layer.name)
     if aovs.object_id:
-        engine.add_pass("OBJECT_ID", 1, "X")
+        engine.add_pass("OBJECT_ID", 1, "X", layer.name)
     if aovs.emission:
-        engine.add_pass("EMISSION", 3, "RGB")
+        engine.add_pass("EMISSION", 3, "RGB", layer.name)
     if aovs.direct_diffuse:
-        engine.add_pass("DIRECT_DIFFUSE", 3, "RGB")
+        engine.add_pass("DIRECT_DIFFUSE", 3, "RGB", layer.name)
     if aovs.direct_glossy:
-        engine.add_pass("DIRECT_GLOSSY", 3, "RGB")
+        engine.add_pass("DIRECT_GLOSSY", 3, "RGB", layer.name)
     if aovs.indirect_diffuse:
-        engine.add_pass("INDIRECT_DIFFUSE", 3, "RGB")
+        engine.add_pass("INDIRECT_DIFFUSE", 3, "RGB", layer.name)
     if aovs.indirect_glossy:
-        engine.add_pass("INDIRECT_GLOSSY", 3, "RGB")
+        engine.add_pass("INDIRECT_GLOSSY", 3, "RGB", layer.name)
     if aovs.indirect_specular:
-        engine.add_pass("INDIRECT_SPECULAR", 3, "RGB")
+        engine.add_pass("INDIRECT_SPECULAR", 3, "RGB", layer.name)
     if aovs.position:
-        engine.add_pass("POSITION", 3, "XYZ")
+        engine.add_pass("POSITION", 3, "XYZ", layer.name)
     if aovs.shading_normal:
-        engine.add_pass("SHADING_NORMAL", 3, "XYZ")
+        engine.add_pass("SHADING_NORMAL", 3, "XYZ", layer.name)
     if aovs.geometry_normal:
-        engine.add_pass("GEOMETRY_NORMAL", 3, "XYZ")
+        engine.add_pass("GEOMETRY_NORMAL", 3, "XYZ", layer.name)
     if aovs.uv:
         # We need to pad the UV pass to 3 elements (Blender can't handle 2 elements)
-        engine.add_pass("UV", 3, "UVA")
+        engine.add_pass("UV", 3, "UVA", layer.name)
     if aovs.direct_shadow_mask:
-        engine.add_pass("DIRECT_SHADOW_MASK", 1, "X")
+        engine.add_pass("DIRECT_SHADOW_MASK", 1, "X", layer.name)
     if aovs.indirect_shadow_mask:
-        engine.add_pass("INDIRECT_SHADOW_MASK", 1, "X")
+        engine.add_pass("INDIRECT_SHADOW_MASK", 1, "X", layer.name)
     if aovs.raycount:
-        engine.add_pass("RAYCOUNT", 1, "X")
+        engine.add_pass("RAYCOUNT", 1, "X", layer.name)
     if aovs.samplecount:
-        engine.add_pass("SAMPLECOUNT", 1, "X")
+        engine.add_pass("SAMPLECOUNT", 1, "X", layer.name)
     if aovs.convergence:
-        engine.add_pass("CONVERGENCE", 1, "X")
+        engine.add_pass("CONVERGENCE", 1, "X", layer.name)
     if aovs.irradiance:
-        engine.add_pass("IRRADIANCE", 3, "RGB")
+        engine.add_pass("IRRADIANCE", 3, "RGB", layer.name)
