@@ -4,20 +4,6 @@ from ..draw import FrameBufferFinal
 from ..utils import render as utils_render
 
 
-def update(engine, scene):
-    pass
-    # assert engine.session is None
-    # engine.update_stats("Export", "exporting...")
-    #
-    # # Create a new exporter instance.
-    # # This is only needed when scene.render.use_persistent_data is enabled
-    # # because in that case our instance of LuxCoreRenderEngine is re-used
-    # # See https://github.com/LuxCoreRender/BlendLuxCore/issues/59
-    # engine.exporter = export.Exporter()
-    #
-    # engine.session = engine.exporter.create_session(scene, engine=engine)
-
-
 def render(engine, scene):
     for layer_index, layer in enumerate(scene.render.layers):
         print("Rendering layer", layer.name, layer)

@@ -25,22 +25,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.session.Stop()
             del self.session
 
-    def update(self, data, scene):
-        """Export scene data for render"""
-        try:
-            final.update(self, scene)
-        except Exception as error:
-            # Will be reported in self.render() below
-            self.error = error
-
     def render(self, scene):
         try:
-            if self.error:
-                # We have to re-raise the error from update() here because
-                # this function (render()) is the only one that can use self.error_set()
-                # to show a warning to the user after the render finished.
-                raise self.error
-
             final.render(self, scene)
         except Exception as error:
             self.report({"ERROR"}, str(error))
