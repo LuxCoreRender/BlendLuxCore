@@ -342,21 +342,38 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
 
     if context:
         # We don't account for render layer visiblity in viewport render
-        # so we create a mock list of 20 enabled layers
-        render_layers = [True] * 20
+        # so we create a mock list here
+        exclude_layers = [False] * 20
     else:
-        # This is the layer that is currently being exported, not the active layer in the UI!
+        # This is the layer that is currently being exported, not the active layer in the UI
         current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
-        # TODO exclude layers?
-        # We need the list of enabled/disabled layers in the settings of this render layer
-        render_layers = current_render_layer.layers
+        # We need the list of excluded layers in the settings of this render layer
+        exclude_layers = current_render_layer.layers_exclude
 
     on_visible_layer = False
-    for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, render_layers)]:
+    # for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, render_layers)]:
+    for lv in [ol and sl and not el for ol, sl, el in zip(obj.layers, scene.layers, exclude_layers)]:
         on_visible_layer |= lv
 
     hidden_in_outliner = obj.hide if context else obj.hide_render
     return on_visible_layer and not hidden_in_outliner
+
+
+def is_obj_visible_to_cam(obj, scene, context=None):
+    visible_to_cam = obj.luxcore.visible_to_camera
+
+    if context:
+        # We don't account for render layer visiblity in viewport render
+        return visible_to_cam
+
+    # This is the layer that is currently being exported, not the active layer in the UI
+    current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+
+    on_visible_layer = False
+    for lv in [ol and sl for ol, sl in zip(obj.layers, current_render_layer.layers)]:
+        on_visible_layer |= lv
+
+    return visible_to_cam and on_visible_layer
 
 
 def is_duplicator_visible(obj):

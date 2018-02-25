@@ -18,6 +18,7 @@ def render(engine, scene):
         # TODO: correct to end it here?
         engine.end_result(dummy_result)
 
+        # This property is used during export, e.g. to check for layer visibility
         scene.luxcore.active_layer_index = layer_index
 
         _add_passes(engine, layer)

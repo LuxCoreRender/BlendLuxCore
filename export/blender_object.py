@@ -76,7 +76,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
                 lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)
-            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform, blender_obj)
+            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform, blender_obj, scene, context)
 
         return props, ExportedObject(mesh_definitions)
     except Exception as error:
@@ -106,7 +106,7 @@ def _handle_pointiness(props, luxcore_shape_name, blender_obj):
     return luxcore_shape_name
 
 
-def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform, blender_obj):
+def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform, blender_obj, scene, context):
     # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
     luxcore_shape_name = "Mesh-" + lux_object_name
     luxcore_shape_name = _handle_pointiness(props, luxcore_shape_name, blender_obj)
@@ -118,7 +118,8 @@ def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transf
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 
-    props.Set(pyluxcore.Property(prefix + "camerainvisible", not blender_obj.luxcore.visible_to_camera))
+    visible_to_cam = utils.is_obj_visible_to_cam(blender_obj, scene, context)
+    props.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
 
 
 def _convert_mesh_to_shapes(name, mesh, luxcore_scene, mesh_transform):
