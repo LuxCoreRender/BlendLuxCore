@@ -14,28 +14,29 @@ def render(engine, scene):
 
         if layer.name not in dummy_result.layers:
             # The layer is disabled
-            engine.end_result(dummy_result, cancel=True, highlight=False, do_merge_results=False)
+            engine.end_result(dummy_result, cancel=True, do_merge_results=False)
             continue
 
-        engine.end_result(dummy_result, cancel=True, highlight=False, do_merge_results=False)
+        engine.end_result(dummy_result, cancel=True, do_merge_results=False)
 
         # This property is used during export, e.g. to check for layer visibility
         scene.luxcore.active_layer_index = layer_index
 
         _add_passes(engine, layer)
-
-        # Export for this layer
-        engine.exporter = export.Exporter()
-        engine.session = engine.exporter.create_session(scene, engine=engine)
-        # Render this layer
         _render_layer(engine, scene)
+
+        if engine.test_break():
+            return
 
         print("Finished rendering layer", layer.name, layer)
     
 
 def _render_layer(engine, scene):
+    engine.exporter = export.Exporter()
+    engine.session = engine.exporter.create_session(scene, engine=engine)
+
     if engine.session is None:
-        # session is None, but engine.error is not set -> User cancelled.
+        # session is None, but no error was thrown
         print("Export cancelled by user.")
         return
 
