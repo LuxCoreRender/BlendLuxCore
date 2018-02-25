@@ -179,12 +179,8 @@ class FrameBufferFinal(object):
         self.aov_buffers = {}
 
     def draw(self, engine, session, scene):
-        """
-        layer_index is the index of the render layer that is currently being rendered
-        """
         active_layer_index = scene.luxcore.active_layer_index
         scene_layer = scene.render.layers[active_layer_index]
-        print("name of scene layer with index %d: %s" % (active_layer_index, scene_layer.name))
 
         session.GetFilm().GetOutputFloat(self._output_type, self.combined_buffer)
         result = engine.begin_result(0, 0, self._width, self._height, scene_layer.name)

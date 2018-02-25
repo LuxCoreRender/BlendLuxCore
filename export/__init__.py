@@ -54,7 +54,6 @@ class Exporter(object):
         # In viewport render, engine is None (we can't show messages or check test_break() anyway)
 
         print("create_session")
-        scene.luxcore.errorlog.clear()
         start = time()
         # Scene
         luxcore_scene = pyluxcore.Scene()

@@ -5,6 +5,8 @@ from ..utils import render as utils_render
 
 
 def render(engine, scene):
+    scene.luxcore.errorlog.clear()
+
     for layer_index, layer in enumerate(scene.render.layers):
         print("Rendering layer", layer.name, layer)
 
@@ -12,11 +14,10 @@ def render(engine, scene):
 
         if layer.name not in dummy_result.layers:
             # The layer is disabled
-            engine.end_result(dummy_result)
+            engine.end_result(dummy_result, cancel=True, highlight=False, do_merge_results=False)
             continue
 
-        # TODO: correct to end it here?
-        engine.end_result(dummy_result)
+        engine.end_result(dummy_result, cancel=True, highlight=False, do_merge_results=False)
 
         # This property is used during export, e.g. to check for layer visibility
         scene.luxcore.active_layer_index = layer_index
