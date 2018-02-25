@@ -35,9 +35,9 @@ def convert_hair(blender_obj, psys, luxcore_scene, scene, context=None, engine=N
         settings = psys.settings.luxcore.hair
 
         hair_size = settings.hair_size
-        root_width = settings.root_width
-        tip_width = settings.tip_width
-        width_offset = settings.width_offset
+        root_width = settings.root_width / 100
+        tip_width = settings.tip_width / 100
+        width_offset = settings.width_offset / 100
 
         steps = 2 ** psys.settings.draw_step
 

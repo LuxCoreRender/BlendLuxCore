@@ -25,32 +25,37 @@ class LuxCoreHair(PropertyGroup):
     LuxCore Hair Rendering settings
     """
     
-    hair_size = FloatProperty(name="Hair Thickness", default=0.001, min=0.000001,soft_min=0.000001,
-                              max=1000.0, soft_max=1000.0, precision=3, subtype="DISTANCE", 
+    hair_size = FloatProperty(name="Hair Thickness", default=0.001, min=0.000001,
+                              max=1000.0, precision=3, step=0.0001, subtype="DISTANCE",
                               unit="LENGTH", description="Diameter of the individual hair strands")
 
-    root_width = FloatProperty(name="Root", default=1.0, min=0.000001, soft_min=0.000001, max=1.0, 
-                               soft_max=1.0, precision=3, description="Thickness of hair at root")
+    root_width = FloatProperty(name="Root", default=100, min=0.0001, max=100,
+                               precision=0, subtype="PERCENTAGE",
+                               description="Thickness of hair at root")
     
-    tip_width = FloatProperty(name="Tip", default=1.0, min=0.000001, soft_min=0.000001, max=1.0, 
-                              soft_max=1.0, precision=3, description="Thickness of hair at root")
+    tip_width = FloatProperty(name="Tip", default=100, min=0.0001, max=100,
+                              precision=0, subtype="PERCENTAGE",
+                              description="Thickness of hair at root")
     
-    width_offset = FloatProperty(name="Offset", default=0.0, min=0.000001, soft_min=0.000001, 
-                                 max=1.0, soft_max=1.0, precision=3, subtype="DISTANCE", 
-                                 unit="LENGTH", description="Offset from root for thickness variation")    
+    width_offset = FloatProperty(name="Offset", default=0, min=0.0001, max=100,
+                                 precision=0, subtype="PERCENTAGE",
+                                 description="Offset from root for thickness variation")
     
     tesseltype = EnumProperty(name="Tessellation Type", default="ribbonadaptive", items=TESSEL_ITEMS, 
                               description="Tessellation method for hair strands")
     
-    adaptive_maxdepth = IntProperty(name="Max Tessellation Depth", default=8, min=1, soft_min=2, 
-                                    max=24, soft_max=12, description="Maximum tessellation depth for adaptive modes")
+    adaptive_maxdepth = IntProperty(name="Max Tessellation Depth",
+                                    default=8, min=1, soft_min=2, soft_max=12, max=24,
+                                    description="Maximum tessellation depth for adaptive modes")
     
-    solid_sidecount = IntProperty(name="Number of Sides", default=3, min=3, soft_min=3, max=64, soft_max=8, 
+    solid_sidecount = IntProperty(name="Number of Sides", default=3, min=3, soft_max=8, max=64,
                                   description="Number of sides for each hair cylinder")    
     
-    solid_capbottom = BoolProperty(name="Cap Root", default=False, description="Add a base cap to each hair cylinder")
+    solid_capbottom = BoolProperty(name="Cap Root", default=False,
+                                   description="Add a base cap to each hair cylinder")
     
-    solid_captop = BoolProperty(name="Cap Top", default=False, description="Add an end cap to each hair cylinder")
+    solid_captop = BoolProperty(name="Cap Top", default=False,
+                                description="Add an end cap to each hair cylinder")
     
     adaptive_error = FloatProperty(name="Max Tessellation Error", default=0.1, min=0.001, max=0.9, 
                                    description="Maximum tessellation error for adaptive modes")
