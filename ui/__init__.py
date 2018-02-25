@@ -18,9 +18,6 @@ def compatible_panels():
         "RENDER_PT_dimensions",
         "RENDER_PT_stamp",
 
-        # Render layer controls
-        "RENDERLAYER_PT_layers",
-
         # Data panels
         # Lamp
         "DATA_PT_context_lamp",

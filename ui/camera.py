@@ -108,6 +108,11 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
                 row.prop(tonemapper, "reinhard_postscale")
                 row.prop(tonemapper, "reinhard_burn")
 
+            if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
+                name = "Auto" if tonemapper.type == "TONEMAP_LINEAR" else "Reinhard"
+                msg = name + " and multiple renderlayers will cause brightness difference!"
+                box.label(msg, icon="ERROR")
+
         # Bloom settings
         bloom = pipeline.bloom
         box = self.draw_plugin_box(bloom)

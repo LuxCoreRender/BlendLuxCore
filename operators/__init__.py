@@ -56,6 +56,24 @@ class LUXCORE_OT_switch_space_data_context(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class LUXCORE_OT_switch_to_camera_settings(bpy.types.Operator):
+    """
+    Used in render layer UI
+    """
+    bl_idname = "luxcore.switch_to_camera_settings"
+    bl_label = "Switch to camera settings to solve"
+    bl_description = "Solve this issue by using a non-automatic tonemapper in the imagepipeline settings"
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.camera
+
+    def execute(self, context):
+        context.scene.objects.active = context.scene.camera
+        bpy.ops.luxcore.switch_space_data_context(target="DATA")
+        return {"FINISHED"}
+
+
 class LUXCORE_OT_set_suggested_clamping_value(bpy.types.Operator):
     bl_idname = "luxcore.set_suggested_clamping_value"
     bl_label = ""

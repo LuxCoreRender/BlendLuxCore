@@ -48,6 +48,10 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup):
     reinhard_burn = FloatProperty(name="Burn", default=6, min=0.01, max=25,
                                   description=REINHARD_BURN_DESC)
 
+    def is_automatic(self):
+        autolinear = (self.type == "TONEMAP_LINEAR" and self.use_autolinear)
+        return autolinear or self.type == "TONEMAP_REINHARD02"
+
 
 class LuxCoreImagepipelineBloom(PropertyGroup):
     NAME = "Bloom"

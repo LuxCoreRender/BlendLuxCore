@@ -7,8 +7,14 @@ from ..utils import render as utils_render
 def render(engine, scene):
     scene.luxcore.errorlog.clear()
 
+    tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
+    if len(scene.render.layers) > 1 and tonemapper.is_automatic():
+        msg = ("Using an automatic tonemapper with multiple "
+               "renderlayers will result in brightness differences")
+        scene.luxcore.errorlog.add_warning(msg)
+
     for layer_index, layer in enumerate(scene.render.layers):
-        print("Rendering layer", layer.name, layer)
+        print('Rendering layer "%s"' % layer.name)
 
         dummy_result = engine.begin_result(0, 0, 1, 1, layer.name)
 
@@ -29,7 +35,7 @@ def render(engine, scene):
             # Blender skips the rest of the render layers anyway
             return
 
-        print("Finished rendering layer", layer.name, layer)
+        print('Finished rendering layer "%s"' % layer.name)
     
 
 def _render_layer(engine, scene):

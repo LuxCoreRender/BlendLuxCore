@@ -2,14 +2,37 @@ from bl_ui.properties_render_layer import RenderLayerButtonsPanel
 from bpy.types import Panel
 
 
+class RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
+    bl_label = "Layer List"
+    bl_options = {'HIDE_HEADER'}
+    COMPAT_ENGINES = {"LUXCORE"}
+
+    def draw(self, context):
+        layout = self.layout
+
+        scene = context.scene
+        rd = scene.render
+
+        row = layout.row()
+        col = row.column()
+        col.template_list("RENDERLAYER_UL_renderlayers", "", rd, "layers", rd.layers, "active_index", rows=2)
+
+        col = row.column()
+        sub = col.column(align=True)
+        sub.operator("scene.render_layer_add", icon='ZOOMIN', text="")
+        sub.operator("scene.render_layer_remove", icon='ZOOMOUT', text="")
+        col.prop(rd, "use_single_layer", icon_only=True)
+
+        tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
+        if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
+            msg = "Auto tonemapper will cause brightness difference!"
+            layout.label(msg, icon="ERROR")
+            layout.operator("luxcore.switch_to_camera_settings", icon="CAMERA_DATA")
+
+
 class LUXCORE_PT_layer_options(RenderLayerButtonsPanel, Panel):
     bl_label = "Layer"
     COMPAT_ENGINES = {"LUXCORE"}
-
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
