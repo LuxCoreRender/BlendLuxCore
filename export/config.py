@@ -217,7 +217,7 @@ def _convert_halt_conditions(scene, definitions):
     if not use_noise_thresh:
         # Set a very low noise threshold so final renders use
         # the adaptive sampling to full advantage
-        definitions["batch.haltthreshold"] = 1 / 256
+        definitions["batch.haltthreshold"] = 0
 
     if halt.enable:
         if halt.use_time:
