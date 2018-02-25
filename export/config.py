@@ -214,10 +214,13 @@ def _convert_halt_conditions(scene, definitions):
     use_noise_thresh = halt.enable and halt.use_noise_thresh
     definitions["batch.haltthreshold.stoprendering.enable"] = use_noise_thresh
 
+    # noise threshold has to be a little greater than 0
+    SMALLEST_NOISE_THRESH = 0.0001
+
     if not use_noise_thresh:
         # Set a very low noise threshold so final renders use
         # the adaptive sampling to full advantage
-        definitions["batch.haltthreshold"] = 0
+        definitions["batch.haltthreshold"] = SMALLEST_NOISE_THRESH
 
     if halt.enable:
         if halt.use_time:
@@ -227,7 +230,12 @@ def _convert_halt_conditions(scene, definitions):
             definitions["batch.haltspp"] = halt.samples
 
         if halt.use_noise_thresh:
-            definitions["batch.haltthreshold"] = halt.noise_thresh / 256
+            if halt.noise_thresh == 0:
+                noise_thresh = SMALLEST_NOISE_THRESH
+            else:
+                noise_thresh = halt.noise_thresh / 256
+
+            definitions["batch.haltthreshold"] = noise_thresh
             definitions["batch.haltthreshold.warmup"] = halt.noise_thresh_warmup
             definitions["batch.haltthreshold.step"] = halt.noise_thresh_step
             definitions["batch.haltthreshold.filter.enable"] = halt.noise_thresh_use_filter
