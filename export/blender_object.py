@@ -58,22 +58,29 @@ def convert(blender_obj, scene, context, luxcore_scene,
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
 
-        for lux_object_name, material_index in mesh_definitions:
-            if material_index < len(blender_obj.material_slots):
-                mat = blender_obj.material_slots[material_index].material
-                # TODO material cache
-                lux_mat_name, mat_props = material.convert(mat, scene, context)
+        current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+        override_mat = current_render_layer.material_override
 
-                if mat is None:
-                    # Note: material.convert returned the fallback material in this case
-                    msg = 'Object "%s": No material attached to slot %d' % (blender_obj.name, material_index)
-                    scene.luxcore.errorlog.add_warning(msg)
+        for lux_object_name, material_index in mesh_definitions:
+            if not context and override_mat:
+                # Only use override material in final render
+                lux_mat_name, mat_props = material.convert(override_mat, scene, context)
             else:
-                # The object has no material slots
-                msg = 'Object "%s": No material defined' % blender_obj.name
-                scene.luxcore.errorlog.add_warning(msg)
-                # Use fallback material
-                lux_mat_name, mat_props = material.fallback()
+                if material_index < len(blender_obj.material_slots):
+                    mat = blender_obj.material_slots[material_index].material
+                    # TODO material cache
+                    lux_mat_name, mat_props = material.convert(mat, scene, context)
+
+                    if mat is None:
+                        # Note: material.convert returned the fallback material in this case
+                        msg = 'Object "%s": No material attached to slot %d' % (blender_obj.name, material_index)
+                        scene.luxcore.errorlog.add_warning(msg)
+                else:
+                    # The object has no material slots
+                    msg = 'Object "%s": No material defined' % blender_obj.name
+                    scene.luxcore.errorlog.add_warning(msg)
+                    # Use fallback material
+                    lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)
             _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform, blender_obj, scene, context)

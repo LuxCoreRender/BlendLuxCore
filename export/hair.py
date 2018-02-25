@@ -206,11 +206,18 @@ def convert_hair(blender_obj, psys, luxcore_scene, scene, context=None, engine=N
         # For some reason this index is not starting at 0 but at 1 (Blender is strange)
         material_index = psys.settings.material - 1
 
-        try:
-            mat = blender_obj.material_slots[material_index].material
-        except IndexError:
-            mat = None
-            print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, blender_obj.name))
+        current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+        override_mat = current_render_layer.material_override
+
+        if not context and override_mat:
+            # Only use override material in final render
+            mat = override_mat
+        else:
+            try:
+                mat = blender_obj.material_slots[material_index].material
+            except IndexError:
+                mat = None
+                print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, blender_obj.name))
 
         ## Convert material
         strandsProps = pyluxcore.Properties()
