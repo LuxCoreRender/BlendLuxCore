@@ -24,10 +24,6 @@ bl_info = {
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
-# TODO remember to remove this later
-def print_nothing(msg):
-    pass
-
 
 def register():
     import atexit
@@ -47,7 +43,7 @@ def register():
     properties.init()
 
     # Has to be called at least once, can be called multiple times
-    pyluxcore.Init(print_nothing)
+    pyluxcore.Init()
     print("pyluxcore version:", pyluxcore.Version())
 
 
