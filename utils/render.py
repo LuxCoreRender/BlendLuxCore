@@ -64,7 +64,8 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
             percent = max(percent, percent_samples)
 
         if halt.use_noise_thresh:
-            percent = stats.Get("stats.renderengine.convergence").GetFloat()
+            convergence = stats.Get("stats.renderengine.convergence").GetFloat()
+            percent = max(percent, convergence)
 
         engine.update_progress(percent)
     else:
