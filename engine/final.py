@@ -1,5 +1,5 @@
 from time import time, sleep
-from .. import export
+from .. import export, utils
 from ..draw import FrameBufferFinal
 from ..utils import render as utils_render
 
@@ -12,6 +12,8 @@ def render(engine, scene):
         msg = ("Using an automatic tonemapper with multiple "
                "renderlayers will result in brightness differences")
         scene.luxcore.errorlog.add_warning(msg)
+
+    _check_halt_conditions(engine, scene)
 
     for layer_index, layer in enumerate(scene.render.layers):
         print('Rendering layer "%s"' % layer.name)
@@ -142,6 +144,30 @@ def _render_layer(engine, scene):
     # Clean up
     del engine.session
     engine.session = None
+
+
+def _check_halt_conditions(engine, scene):
+    needs_halt_condition = len(scene.render.layers) > 1 or engine.is_animation
+
+    # Global halt conditions
+    is_halt_enabled = scene.luxcore.halt.is_enabled()
+
+    if len(scene.render.layers) > 1:
+        # When we have multiple render layers, we need a halt condition for each one
+        for layer in scene.render.layers:
+            layer_halt = layer.luxcore.halt
+            if layer_halt.enable:
+                # The layer overrides the global halt conditions
+                has_halt_condition = layer_halt.is_enabled()
+
+                if not has_halt_condition:
+                    msg = 'Halt condition missing for render layer "%s"' % layer.name
+                    scene.luxcore.errorlog.add_error(msg)
+
+                is_halt_enabled &= has_halt_condition
+
+    if needs_halt_condition and not is_halt_enabled:
+        raise Exception("Missing halt condition (check error log)")
 
 
 def _add_passes(engine, layer):

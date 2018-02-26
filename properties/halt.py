@@ -43,3 +43,6 @@ class LuxCoreHaltConditions(bpy.types.PropertyGroup):
                                     description=NOISE_THRESH_STEP_DESC)
     noise_thresh_use_filter = BoolProperty(name="Blur Convergence AOV", default=True,
                                            description=NOISE_THRESH_USE_FILTER_DESC)
+
+    def is_enabled(self):
+        return self.enable and (self.use_time or self.use_samples or self.use_noise_thresh)
