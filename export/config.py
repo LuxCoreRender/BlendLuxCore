@@ -206,7 +206,7 @@ def _convert_seed(scene, definitions):
 
 
 def _convert_halt_conditions(scene, definitions):
-    halt = scene.luxcore.halt
+    halt = utils.get_halt_conditions(scene)
 
     # Set this property even if halt conditions are disabled
     # so we can use a very low haltthreshold for final renders

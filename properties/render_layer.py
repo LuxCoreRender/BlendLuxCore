@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import PointerProperty
-from . import aovs
+from . import aovs, halt
 
 
 def init():
@@ -9,3 +9,4 @@ def init():
 
 class LuxCoreRenderLayer(bpy.types.PropertyGroup):
     aovs = PointerProperty(type=aovs.LuxCoreAOVSettings)
+    halt = PointerProperty(type=halt.LuxCoreHaltConditions)

@@ -58,7 +58,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
 
-        current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+        current_render_layer = utils.get_current_render_layer(scene)
         override_mat = current_render_layer.material_override
 
         for lux_object_name, material_index in mesh_definitions:

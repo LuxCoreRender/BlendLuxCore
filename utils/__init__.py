@@ -349,8 +349,7 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         # so we create a mock list here
         exclude_layers = [False] * 20
     else:
-        # This is the layer that is currently being exported, not the active layer in the UI
-        current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+        current_render_layer = get_current_render_layer(scene)
         # We need the list of excluded layers in the settings of this render layer
         exclude_layers = current_render_layer.layers_exclude
 
@@ -370,8 +369,7 @@ def is_obj_visible_to_cam(obj, scene, context=None):
         # We don't account for render layer visiblity in viewport render
         return visible_to_cam
 
-    # This is the layer that is currently being exported, not the active layer in the UI
-    current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+    current_render_layer = get_current_render_layer(scene)
 
     on_visible_layer = False
     for lv in [ol and sl for ol, sl in zip(obj.layers, current_render_layer.layers)]:
@@ -483,3 +481,19 @@ def clamp(value, _min=0, _max=1):
 
 def use_filesaver(context, scene):
     return context is None and scene.luxcore.config.use_filesaver
+
+
+def get_current_render_layer(scene):
+    """ This is the layer that is currently being exported, not the active layer in the UI """
+    return scene.render.layers[scene.luxcore.active_layer_index]
+
+
+def get_halt_conditions(scene):
+    current_render_layer = get_current_render_layer(scene)
+
+    if current_render_layer.luxcore.halt.enable:
+        # Global halt conditions are overridden by this render layer
+        return current_render_layer.luxcore.halt
+    else:
+        # Use global halt conditions
+        return scene.luxcore.halt

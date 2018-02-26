@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
-from . import aovs, config, display, errorlog, halt, opencl
+from . import config, display, errorlog, halt, opencl
 
 
 def init():

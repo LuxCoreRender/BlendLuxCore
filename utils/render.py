@@ -1,4 +1,5 @@
 from . import calc_filmsize
+from .. import utils
 
 engine_to_str = {
     "PATHCPU": "Path CPU",
@@ -49,7 +50,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
         engine.framebuffer.draw(engine, engine.session, scene)
 
     # Update progress bar if we have halt conditions
-    halt = scene.luxcore.halt
+    halt = utils.get_halt_conditions(scene)
     if halt.enable and (halt.use_time or halt.use_samples):
         rendered_samples = stats.Get("stats.renderengine.pass").GetInt()
         rendered_time = stats.Get("stats.renderengine.time").GetFloat()
@@ -62,7 +63,8 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
             percent_samples = rendered_samples / halt.samples
             percent = max(percent, percent_samples)
 
-        # TODO noise threshold
+        if halt.use_noise_thresh:
+            percent = stats.Get("stats.renderengine.convergence").GetFloat()
 
         engine.update_progress(percent)
     else:
@@ -71,7 +73,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
 
 
 def get_pretty_stats(config, stats, scene):
-    halt = scene.luxcore.halt
+    halt = utils.get_halt_conditions(scene)
     errorlog = scene.luxcore.errorlog
 
     # Here we collect strings in a list and later join them
@@ -80,7 +82,7 @@ def get_pretty_stats(config, stats, scene):
 
     # Name of the current render layer
     if len(scene.render.layers) > 1:
-        current_render_layer = scene.render.layers[scene.luxcore.active_layer_index]
+        current_render_layer = utils.get_current_render_layer(scene)
         pretty.append(current_render_layer.name)
 
     # Time

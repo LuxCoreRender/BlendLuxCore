@@ -2,7 +2,7 @@ from bl_ui.properties_render_layer import RenderLayerButtonsPanel
 from bpy.types import Panel
 
 
-class RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
+class LUXCORE_RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
     bl_label = "Layer List"
     bl_options = {'HIDE_HEADER'}
     COMPAT_ENGINES = {"LUXCORE"}
@@ -30,7 +30,7 @@ class RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
             layout.operator("luxcore.switch_to_camera_settings", icon="CAMERA_DATA")
 
 
-class LUXCORE_PT_layer_options(RenderLayerButtonsPanel, Panel):
+class LUXCORE_RENDERLAYER_PT_layer_options(RenderLayerButtonsPanel, Panel):
     bl_label = "Layer"
     COMPAT_ENGINES = {"LUXCORE"}
 
