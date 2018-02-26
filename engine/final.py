@@ -38,6 +38,7 @@ def render(engine, scene):
             return
 
         print('Finished rendering layer "%s"' % layer.name)
+        scene.luxcore.active_layer_index = -1
     
 
 def _render_layer(engine, scene):

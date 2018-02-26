@@ -83,8 +83,10 @@ def get_pretty_stats(config, stats, scene):
 
     # Name of the current render layer
     if len(scene.render.layers) > 1:
-        current_render_layer = utils.get_current_render_layer(scene)
-        pretty.append(current_render_layer.name)
+        render_layer = utils.get_current_render_layer(scene)
+        # render_layer is None in viewport render
+        if render_layer:
+            pretty.append(render_layer.name)
 
     # Time
     if halt.enable and halt.use_time:

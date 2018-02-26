@@ -20,9 +20,16 @@ def convert(scene, context=None):
             return pyluxcore.Properties()
 
         pipeline = scene.camera.data.luxcore.imagepipeline
-        # This is the layer that is currently being exported, not the active layer in the UI!
-        current_layer = scene.render.layers[scene.luxcore.active_layer_index]
-        aovs = current_layer.luxcore.aovs
+        final = not context
+
+        if final:
+            # This is the layer that is currently being exported, not the active layer in the UI!
+            current_layer = utils.get_current_render_layer(scene)
+            aovs = current_layer.luxcore.aovs
+        else:
+            # AOVs should not be accessed in viewport render
+            # (they are a render layer property and those are not evaluated for viewport)
+            aovs = None
 
         use_transparent_film = pipeline.transparent_film and not utils.use_filesaver(context, scene)
 
@@ -38,15 +45,15 @@ def convert(scene, context=None):
             _add_output(definitions, "RGBA_IMAGEPIPELINE")
 
         # AOVs
-        if aovs.alpha or use_transparent_film or use_backgroundimage(context, scene):
+        if (final and aovs.alpha) or use_transparent_film or use_backgroundimage(context, scene):
             _add_output(definitions, "ALPHA")
-        if aovs.depth or pipeline.mist.enabled:
+        if (final and aovs.depth) or pipeline.mist.enabled:
             _add_output(definitions, "DEPTH")
-        if aovs.irradiance or pipeline.contour_lines.enabled:
+        if (final and aovs.irradiance) or pipeline.contour_lines.enabled:
             _add_output(definitions, "IRRADIANCE")
 
         # These AOVs only make sense in final renders
-        if not context:
+        if final:
             if aovs.rgb:
                 _add_output(definitions, "RGB")
             if aovs.rgba:

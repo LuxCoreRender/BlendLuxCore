@@ -32,8 +32,11 @@ class LuxCoreErrorLog(PropertyGroup):
         self._add("WARNING:", self.warnings, message)
 
     def clear(self):
-        self.errors.clear()
-        self.warnings.clear()
+        try:
+            self.errors.clear()
+            self.warnings.clear()
+        except AttributeError:
+            print("Can't clear errors in _RestrictContext")
 
     def _add(self, prefix, collection, message):
         for elem in collection:
@@ -50,4 +53,4 @@ class LuxCoreErrorLog(PropertyGroup):
             # (because it's read only for the user)
             new["message"] = str(message)
         except AttributeError:
-            print("Can't log errors in _RestrictContext")
+            print("Can't add errors in _RestrictContext")

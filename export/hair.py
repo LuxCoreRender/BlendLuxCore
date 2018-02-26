@@ -206,8 +206,8 @@ def convert_hair(blender_obj, psys, luxcore_scene, scene, context=None, engine=N
         # For some reason this index is not starting at 0 but at 1 (Blender is strange)
         material_index = psys.settings.material - 1
 
-        current_render_layer = utils.get_current_render_layer(scene)
-        override_mat = current_render_layer.material_override
+        render_layer = utils.get_current_render_layer(scene)
+        override_mat = render_layer.material_override if render_layer else None
 
         if not context and override_mat:
             # Only use override material in final render
