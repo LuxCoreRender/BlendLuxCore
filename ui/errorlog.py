@@ -5,7 +5,6 @@ from bpy.types import Panel
 # Confusing, I know
 ICON_ERROR = "CANCEL"
 ICON_WARNING = "ERROR"
-ICON_ALL_GOOD = "FILE_TICK"
 
 
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
@@ -23,7 +22,7 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
         elif errorlog.warnings:
             self.layout.label("(Warnings)", icon=ICON_WARNING)
         else:
-            self.layout.label("(No Errors)", icon=ICON_ALL_GOOD)
+            self.layout.label("(No Errors)")
 
     def draw(self, context):
         errorlog = context.scene.luxcore.errorlog
@@ -46,6 +45,16 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
         box = col.box()
         for elem in errors_or_warnings:
             row = box.row()
+
             if icon:
                 row.label("", icon=icon)
-            row.prop(elem, "message", text="")
+
+            if elem.count > 1:
+                sub = row.split(percentage=0.9)
+            else:
+                sub = row
+
+            sub.prop(elem, "message", text="")
+
+            if elem.count > 1:
+                sub.label("%dx" % elem.count)
