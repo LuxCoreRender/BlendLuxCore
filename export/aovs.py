@@ -38,50 +38,53 @@ def convert(scene, context=None):
             _add_output(definitions, "RGBA_IMAGEPIPELINE")
 
         # AOVs
-        if aovs.rgb:
-            _add_output(definitions, "RGB")
-        if aovs.rgba:
-            _add_output(definitions, "RGBA")
         if aovs.alpha or use_transparent_film or use_backgroundimage(context, scene):
             _add_output(definitions, "ALPHA")
         if aovs.depth or pipeline.mist.enabled:
             _add_output(definitions, "DEPTH")
-        if aovs.material_id:
-            _add_output(definitions, "MATERIAL_ID")
-        if aovs.object_id:
-            _add_output(definitions, "OBJECT_ID")
-        if aovs.emission:
-            _add_output(definitions, "EMISSION")
-        if aovs.direct_diffuse:
-            _add_output(definitions, "DIRECT_DIFFUSE")
-        if aovs.direct_glossy:
-            _add_output(definitions, "DIRECT_GLOSSY")
-        if aovs.indirect_diffuse:
-            _add_output(definitions, "INDIRECT_DIFFUSE")
-        if aovs.indirect_glossy:
-            _add_output(definitions, "INDIRECT_GLOSSY")
-        if aovs.indirect_specular:
-            _add_output(definitions, "INDIRECT_SPECULAR")
-        if aovs.position:
-            _add_output(definitions, "POSITION")
-        if aovs.shading_normal:
-            _add_output(definitions, "SHADING_NORMAL")
-        if aovs.geometry_normal:
-            _add_output(definitions, "GEOMETRY_NORMAL")
-        if aovs.uv:
-            _add_output(definitions, "UV")
-        if aovs.direct_shadow_mask:
-            _add_output(definitions, "DIRECT_SHADOW_MASK")
-        if aovs.indirect_shadow_mask:
-            _add_output(definitions, "INDIRECT_SHADOW_MASK")
-        if aovs.raycount:
-            _add_output(definitions, "RAYCOUNT")
-        if aovs.samplecount:
-            _add_output(definitions, "SAMPLECOUNT")
-        if aovs.convergence:
-            _add_output(definitions, "CONVERGENCE")
         if aovs.irradiance or pipeline.contour_lines.enabled:
             _add_output(definitions, "IRRADIANCE")
+
+        # These AOVs only make sense in final renders
+        if not context:
+            if aovs.rgb:
+                _add_output(definitions, "RGB")
+            if aovs.rgba:
+                _add_output(definitions, "RGBA")
+            if aovs.material_id:
+                _add_output(definitions, "MATERIAL_ID")
+            if aovs.object_id:
+                _add_output(definitions, "OBJECT_ID")
+            if aovs.emission:
+                _add_output(definitions, "EMISSION")
+            if aovs.direct_diffuse:
+                _add_output(definitions, "DIRECT_DIFFUSE")
+            if aovs.direct_glossy:
+                _add_output(definitions, "DIRECT_GLOSSY")
+            if aovs.indirect_diffuse:
+                _add_output(definitions, "INDIRECT_DIFFUSE")
+            if aovs.indirect_glossy:
+                _add_output(definitions, "INDIRECT_GLOSSY")
+            if aovs.indirect_specular:
+                _add_output(definitions, "INDIRECT_SPECULAR")
+            if aovs.position:
+                _add_output(definitions, "POSITION")
+            if aovs.shading_normal:
+                _add_output(definitions, "SHADING_NORMAL")
+            if aovs.geometry_normal:
+                _add_output(definitions, "GEOMETRY_NORMAL")
+            if aovs.uv:
+                _add_output(definitions, "UV")
+            if aovs.direct_shadow_mask:
+                _add_output(definitions, "DIRECT_SHADOW_MASK")
+            if aovs.indirect_shadow_mask:
+                _add_output(definitions, "INDIRECT_SHADOW_MASK")
+            if aovs.raycount:
+                _add_output(definitions, "RAYCOUNT")
+            if aovs.samplecount:
+                _add_output(definitions, "SAMPLECOUNT")
+            if aovs.convergence:
+                _add_output(definitions, "CONVERGENCE")
 
         return utils.create_props(prefix, definitions)
     except Exception as error:
