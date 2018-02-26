@@ -238,19 +238,19 @@ def calc_blender_border(scene, context=None):
 
 
 def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context=None):
-    # offset and shift are in range -1..1 ( I think)
+    # shift is in range -2..2
+    # offset is in range -4..4
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
 
     # Following: Black Magic
-
     scale = 2
     if scene.camera and scene.camera.data.type == "ORTHO":
         scale = scene.camera.data.ortho_scale
     
     if context:
-        # Viewport rendering            
+        # Viewport rendering
         if context.region_data.view_perspective == "CAMERA":
             # Camera view
             if scene.render.use_border:
@@ -260,57 +260,31 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
                 
                 zoom = 1
                 if scene.camera and scene.camera.data.type == "ORTHO":
-                    zoom = scene.camera.data.ortho_scale /2
+                    zoom = 0.5*scene.camera.data.ortho_scale
             else:
                 xaspect, yaspect = calc_aspect(width_raw, height_raw)
-            
-            screenwindow = [
-                scale*shift_x - xaspect*zoom,
-                scale*shift_x + xaspect*zoom,
-                scale*shift_y - yaspect*zoom,
-                scale*shift_y + yaspect*zoom
-            ]
-
-            screenwindow = [
-                screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + 0.5*scale*offset_x,
-                screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + 0.5*scale*offset_x,
-                screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + 0.5*scale*offset_y,
-                screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + 0.5*scale*offset_y
-            ]
         else:
             # Normal viewport
             xaspect, yaspect = calc_aspect(width_raw, height_raw)
-
-            screenwindow = [
-                scale*shift_x - xaspect*zoom,
-                scale*shift_x + xaspect*zoom,
-                scale*shift_y - yaspect*zoom,
-                scale*shift_y + yaspect*zoom
-            ]
-
-            screenwindow = [
-                screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + 0.5*scale*offset_x,
-                screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + 0.5*scale*offset_x,
-                screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + 0.5*scale*offset_y,
-                screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + 0.5*scale*offset_y
-            ]
     else:
         #Final rendering
         xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+        offset_x = 0
+        offset_y = 0
 
-        screenwindow = [
-            scale*shift_x - xaspect*zoom,
-            scale*shift_x + xaspect*zoom,
-            scale*shift_y - yaspect*zoom,
-            scale*shift_y + yaspect*zoom
-        ]
+    screenwindow = [
+        scale*shift_x - xaspect*zoom,
+        scale*shift_x + xaspect*zoom,
+        scale*shift_y - yaspect*zoom,
+        scale*shift_y + yaspect*zoom
+    ]
 
-        screenwindow = [
-            screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x,
-            screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x,
-            screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y,
-            screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y
-        ]
+    screenwindow = [
+        screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x + 0.5*scale*offset_x,
+        screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x + 0.5*scale*offset_x,
+        screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y + 0.5*scale*offset_y,
+        screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y + 0.5*scale*offset_y
+    ]
     
     return screenwindow
 
