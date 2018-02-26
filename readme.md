@@ -31,31 +31,25 @@ TODO: These do not contain .blend files yet.
 ### Features
 
 * [x] Viewport and final render
-* [x] Basic object export
-* [x] All LuxCore materials and volumes
-* [x] All LuxCore textures
+* [x] All LuxCore materials, textures, volumes and lights
 * [x] Glass dispersion
-* [x] Imagemap textures and texture mapping
-* [x] All light types (sun, sky, point, mappoint, distant, spot, projection, infinite (HDRI environment), constantinfinite, meshlights)
 * [x] IES lighting
-* [x] Render settings for all engines
+* [x] Shadow catcher
 * [x] Cameras (perspective, ortographic, panoramic)
 * [x] Depth of field
 * [x] Arbitrary clipping plane
-* [x] FILESAVER engine (scene export to LuxCore scn/cfg files)
-* [x] Object motion blur
-* [x] Camera motion blur
+* [x] Filesaver engine (scene export to LuxCore scn/cfg files)
+* [x] Object and camera motion blur
 * [x] Particles
 * [x] Duplis
 * [x] Hair
 * [x] Tonemapping settings
-* [x] Shadow catcher
+* [x] Imagepipeline plugins for quick effects (bloom, vignette etc.)
 * [x] Transparent film
 * [x] Smoke/Fire
 * [x] Pointiness
 * [x] AOVs (aka render passes)
-* [x] Imagepipeline plugins for quick effects (bloom, vignette etc.)
-* [x] Render layer support
+* [x] Render layers
 * [ ] Image sequences
 * [ ] Light groups
 * [ ] Saving a resumable film
