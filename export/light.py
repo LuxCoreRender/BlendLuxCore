@@ -36,8 +36,8 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
 
         if lamp.type == "POINT":
             if lamp.luxcore.image or lamp.luxcore.ies.use:
-                # mappoint
-                definitions["type"] = "mappoint"
+                # mappoint/mapsphere
+                definitions["type"] = "mappoint" if lamp.luxcore.radius == 0 else "mapsphere"
 
                 if lamp.luxcore.image:
                     try:
@@ -58,8 +58,8 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
                     msg = 'Lamp "%s": %s' % (blender_obj.name, error)
                     scene.luxcore.errorlog.add_warning(msg)
             else:
-                # point
-                definitions["type"] = "point"
+                # point/sphere
+                definitions["type"] = "point" if lamp.luxcore.radius == 0 else "sphere"
 
             definitions["efficency"] = lamp.luxcore.efficacy
             definitions["power"] = lamp.luxcore.power
@@ -67,6 +67,10 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
             definitions["position"] = [0, 0, 0]
             transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
             definitions["transformation"] = transformation
+
+            if lamp.luxcore.radius > 0:
+                worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+                definitions["radius"] = lamp.luxcore.radius * worldscale
 
         elif lamp.type == "SUN":
             distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]

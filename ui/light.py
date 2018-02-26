@@ -74,6 +74,8 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
             row.prop(lamp.luxcore, "power")
             row.prop(lamp.luxcore, "efficacy")
 
+            layout.prop(lamp.luxcore, "radius")
+
             # IES Data
             self.draw_ies_controls(context)
 

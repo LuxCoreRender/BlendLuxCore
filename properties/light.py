@@ -112,18 +112,16 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     sampleupperhemisphereonly = BoolProperty(name="Sample Upper Hemisphere Only", default=False,
                                              description=SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION)
 
+    # point, mappoint
+    radius = FloatProperty(name="Radius", default=0, min=0, subtype="DISTANCE", step=0.001,
+                           description="If radius is greater than 0, a sphere light is used")
+
     # point, mappoint, spot, laser
     power = FloatProperty(name="Power (W)", default=0, min=0, description=POWER_DESCRIPTION)
     efficacy = FloatProperty(name="Efficacy (lm/W)", default=0, min=0, description=EFFICACY_DESCRIPTION)
 
     # mappoint
     ies = PointerProperty(type=LuxCoreIESProps)
-    # use_ies = BoolProperty(name="Use IES File", default=False, description=USE_IES_DESCRIPTION)
-    # iesfile_type = EnumProperty(name="IES File Type", items=iesfile_type_items, default="TEXT")
-    # iesfile_path = StringProperty(name="IES File", subtype="FILE_PATH", description=IES_FILE_DESCRIPTION)
-    # iesfile_text = PointerProperty(name="IES Text", type=bpy.types.Text, description=IES_TEXT_DESCRIPTION)
-    # flipz = BoolProperty(name="Flip IES Z Axis", default=False)
-    # not exposed: emission.map.width, emission.map.height - do we need them?
 
     # spot
     # Note: coneangle and conedeltaangle are set with default Blender properties
