@@ -55,6 +55,7 @@ TODO: These do not contain .blend files yet.
 * [x] Pointiness
 * [x] AOVs (aka render passes)
 * [x] Imagepipeline plugins for quick effects (bloom, vignette etc.)
+* [x] Render layer support
 * [ ] Image sequences
 * [ ] Light groups
 * [ ] Saving a resumable film
