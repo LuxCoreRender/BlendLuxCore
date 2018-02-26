@@ -50,9 +50,6 @@ class LUXCORE_PT_layer_options(RenderLayerButtonsPanel, Panel):
         col.prop(rl, "layers", text="Layer")
         #col.prop(rl, "layers_zmask", text="Mask Layer")
 
-        split = layout.split()
-
-        col = split.column()
         col.label(text="Override Material:")
         col.prop(rl, "material_override", text="")
 
