@@ -1,14 +1,16 @@
 import bpy
-from bpy.props import StringProperty, CollectionProperty
+from bpy.props import StringProperty, CollectionProperty, IntProperty
 from bpy.types import PropertyGroup
 
 
 class LuxCoreError(PropertyGroup):
     message = StringProperty()
+    count = IntProperty(default=1)
 
 
 class LuxCoreWarning(PropertyGroup):
     message = StringProperty()
+    count = IntProperty(default=1)
 
 
 class LuxCoreErrorLog(PropertyGroup):
@@ -34,16 +36,16 @@ class LuxCoreErrorLog(PropertyGroup):
         self.warnings.clear()
 
     def _add(self, prefix, collection, message):
-        print(prefix, message)
-
         for elem in collection:
             if elem.message == message:
-                print("Error or warning already logged. Abort adding to collection.")
+                elem.count += 1
+                # print("Error or warning already logged. Abort adding to collection.")
                 return
 
+        print(prefix, message)
+
         try:
-            collection.add()
-            new = collection[-1]
+            new = collection.add()
             # Access message property without using the setter
             # (because it's read only for the user)
             new["message"] = str(message)

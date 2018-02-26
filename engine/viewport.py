@@ -7,6 +7,8 @@ def view_update(engine, context, changes=None):
     scene = context.scene
     print("view_update")
 
+    scene.luxcore.errorlog.clear()
+
     if engine.session is None:
         print("new session")
         try:

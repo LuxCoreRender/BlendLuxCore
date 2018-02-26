@@ -164,7 +164,15 @@ def _depth_of_field(scene, definitions):
         dof_obj = camera.data.dof_object
 
         if dof_obj:
-            definitions["focaldistance"] = (camera.location - dof_obj.location).length * worldscale
+            # Use distance along camera Z direction
+            cam_matrix = camera.matrix_world
+            lookat_orig = cam_matrix.to_translation()
+            lookat_target = cam_matrix * Vector((0, 0, -1))
+
+            lookat_dir = lookat_target.normalized()
+            dof_dir = lookat_orig - dof_obj.matrix_world.to_translation()
+
+            definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir)) * worldscale
         else:
             definitions["focaldistance"] = camera.data.dof_distance * worldscale
 
