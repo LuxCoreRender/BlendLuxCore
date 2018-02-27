@@ -130,16 +130,16 @@ def get_pretty_stats(config, stats, scene):
     error_str = ""
 
     if errorlog.errors:
-        error_str += "%d errors" % len(errorlog.errors)
+        error_str += "%d error" % len(errorlog.errors)
+        if len(errorlog.errors) > 1:
+            error_str += "s"
 
     if errorlog.warnings:
         if error_str:
             error_str += ", "
-        error_str += "%d warnings" % len(errorlog.warnings)
-
-    if error_str:
-        error_str += " (check error log in render properties)"
-        pretty.append(error_str)
+        error_str += "%d warning" % len(errorlog.warnings)
+        if len(errorlog.warnings) > 1:
+            error_str += "s"
 
     return " | ".join(pretty)
 
