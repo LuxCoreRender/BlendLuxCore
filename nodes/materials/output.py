@@ -1,16 +1,20 @@
 import bpy
 from ...bin import pyluxcore
 from ... import utils
-from ...utils import ui as utils_ui
 from ...utils import node as utils_node
-from bpy.props import BoolProperty, PointerProperty
+from bpy.props import BoolProperty, PointerProperty, IntProperty
 from ..output import LuxCoreNodeOutput, update_active, get_active_output
-from ...ui import ICON_VOLUME
 
 SHADOWCATCHER_DESC = (
     "Make this material transparent and only catch shadows on it. "
     "Used for compositing 3D objects into real-world footage. "
     "Remember to enable transparent film in camera settings"
+)
+
+MATERIAL_ID_DESC = (
+    "ID for Material ID AOV, if -1 is set a random ID is chosen. "
+    "Note that the random IDs of LuxCore can be greater than 32767 "
+    "(the ID Mask node in the compositor can't handle those numbers)"
 )
 
 
@@ -25,6 +29,8 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     active = BoolProperty(name="Active", default=True, update=update_active)
     is_shadow_catcher = BoolProperty(name="Shadow Catcher", default=False,
                                      description=SHADOWCATCHER_DESC)
+    id = IntProperty(name="Material ID", default=-1, min=-1, soft_max=32767,
+                     description=MATERIAL_ID_DESC)
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
@@ -35,6 +41,8 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
     def draw_buttons(self, context, layout):
         super().draw_buttons(context, layout)
+
+        layout.prop(self, "id")
 
         # Shadow catcher
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
@@ -50,10 +58,6 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
                 layout.label("Needs transparent film:")
                 layout.prop(pipeline, "transparent_film", text="Enable Transparent Film",
                             icon="CAMERA_DATA", emboss=True)
-
-        # TODO Remove this in the future
-        if "Interior Volume" not in self.inputs:
-            layout.label("Outdated ouput, replace it!", icon="ERROR")
 
 
     def export(self, props, luxcore_name):
@@ -90,6 +94,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             # Define a black material that signals an unconnected material socket
             self._convert_fallback(props, luxcore_name)
 
+        props.Set(pyluxcore.Property(prefix + "id", self.id))
         props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
 
     def _convert_volume(self, node_tree, props):
