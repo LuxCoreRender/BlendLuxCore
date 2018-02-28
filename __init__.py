@@ -9,7 +9,6 @@ from .ui import (
     halt, light, material, mesh, particle, postpro, render_layer,
     texture, world
 )
-from .handlers import blendluxcore_exit, luxcore_load_post, luxcore_scene_update_post
 
 bl_info = {
     "name": "LuxCore",
@@ -26,14 +25,7 @@ bl_info = {
 
 
 def register():
-    import atexit
-    # Make sure we only register the callback once
-    atexit.unregister(blendluxcore_exit)
-    atexit.register(blendluxcore_exit)
-
-    bpy.app.handlers.load_post.append(luxcore_load_post)
-    bpy.app.handlers.scene_update_post.append(luxcore_scene_update_post)
-
+    handlers.register()
     nodes.materials.register()
     nodes.textures.register()
     nodes.volumes.register()
@@ -48,9 +40,7 @@ def register():
 
 
 def unregister():
-    bpy.app.handlers.load_post.remove(luxcore_load_post)
-    bpy.app.handlers.scene_update_post.remove(luxcore_scene_update_post)
-
+    handlers.unregister()
     ui.unregister()
     nodes.materials.unregister()
     nodes.textures.unregister()
