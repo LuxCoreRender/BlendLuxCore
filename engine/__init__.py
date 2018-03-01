@@ -1,14 +1,15 @@
 import bpy
-from .. import export
-from . import final, viewport
+from . import final, preview, viewport
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_idname = "LUXCORE"
     bl_label = "LuxCore"
-    bl_use_preview = False  # TODO: disabled for now
+    bl_use_preview = True
     bl_use_shading_nodes_custom = True
     # bl_use_shading_nodes = True  # This makes the "MATERIAL" shading mode work like in Cycles
+    bl_use_exclude_layers = True  # No idea what this does, but we support exclude layers
+    bl_use_postprocess = True  # No idea what this does
 
     def __init__(self):
         print("init")
@@ -26,6 +27,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             del self.session
 
     def render(self, scene):
+        if self.is_preview:
+            self.render_preview(scene)
+        else:
+            self.render_final(scene)
+
+    def render_final(self, scene):
         try:
             final.render(self, scene)
         except Exception as error:
@@ -39,6 +46,17 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             # Clean up
             del self.session
             self.session = None
+
+    def render_preview(self, scene):
+        try:
+            preview.render(self, scene)
+        except Exception as error:
+            import traceback
+            traceback.print_exc()
+            # Clean up
+            del self.session
+            self.session = None
+
 
     def view_update(self, context):
         viewport.view_update(self, context)

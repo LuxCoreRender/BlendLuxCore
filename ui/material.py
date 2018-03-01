@@ -82,3 +82,17 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
 
         layout.separator()
         layout.menu("LUXCORE_MT_node_tree_preset")
+
+
+class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Preview"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return context.material and (engine == "LUXCORE")
+
+    def draw(self, context):
+        self.layout.template_preview(context.material)

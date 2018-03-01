@@ -69,6 +69,9 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.template_ID(self, "image", open="image.open")
 
+        # TODO
+        # layout.template_ID_preview(self, "image", open="image.open")
+
         col = layout.column()
         col.active = self.image is not None
 
