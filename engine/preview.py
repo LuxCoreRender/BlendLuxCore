@@ -32,7 +32,7 @@ def render(engine, scene):
         engine.session = export_mat_scene(obj, scene)
     else:
         print("Unsupported preview type")
-        return cleanup()
+        return enable_log_output()
 
     engine.framebuffer = FrameBufferFinal(scene)
     engine.session.Start()
@@ -55,13 +55,14 @@ def render(engine, scene):
         if engine.test_break():
             # Abort as fast as possible, without drawing the framebuffer again
             engine.session.Stop()
-            return cleanup()
+            return enable_log_output()
 
     engine.framebuffer.draw(engine, engine.session, scene)
     engine.session.Stop()
+    enable_log_output()
 
 
-def cleanup():
+def enable_log_output():
     # Re-enable the log output
     pyluxcore.Init()
 
