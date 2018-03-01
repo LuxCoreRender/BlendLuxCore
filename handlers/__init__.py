@@ -59,6 +59,10 @@ def luxcore_scene_update_post(scene):
 
 def luxcore_draw_3dview():
     context = bpy.context
+
+    if context.scene.render.engine != "LUXCORE":
+        return
+
     obj = context.object
 
     if obj and obj.type == "LAMP" and obj.data.type == "POINT":
