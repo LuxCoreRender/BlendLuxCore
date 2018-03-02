@@ -1,6 +1,5 @@
 from enum import Enum
 from time import sleep
-import bpy
 from mathutils import Matrix
 from ..bin import pyluxcore
 from .. import utils
@@ -162,10 +161,14 @@ def _create_lights(scene, luxcore_scene, props, is_world_sphere):
     if is_world_sphere:
         props.Set(pyluxcore.Property("scene.lights.sky.type", "sky2"))
         props.Set(pyluxcore.Property("scene.lights.sky.gain", [.00003] * 3))
+        # Building the visibility map and not needed in an open scene
+        props.Set(pyluxcore.Property("scene.lights.sky.visibilitymap.enable", False))
 
         props.Set(pyluxcore.Property("scene.lights.sun.type", "sun"))
         props.Set(pyluxcore.Property("scene.lights.sun.dir", [-0.6, -1, 0.9]))
         props.Set(pyluxcore.Property("scene.lights.sun.gain", [.00003] * 3))
+        # Avoid fireflies
+        props.Set(pyluxcore.Property("scene.lights.sun.visibility.indirect.specular.enable", False))
     else:
         # Key light
         color_key = [70] * 3
