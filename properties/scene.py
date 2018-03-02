@@ -15,4 +15,4 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     opencl = PointerProperty(type=opencl.LuxCoreOpenCLSettings)
 
     # Set during render and used during export
-    active_layer_index = IntProperty()
+    active_layer_index = IntProperty(default=-1)

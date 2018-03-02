@@ -46,6 +46,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             # Clean up
             del self.session
             self.session = None
+        finally:
+            scene.luxcore.active_layer_index = -1
 
     def render_preview(self, scene):
         try:
