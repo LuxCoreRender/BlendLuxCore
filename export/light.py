@@ -18,6 +18,12 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene):
         print("converting lamp:", blender_obj.name)
 
         luxcore_name = utils.get_luxcore_name(blender_obj, context)
+
+        # If this light was previously defined as an area lamp, delete the area lamp mesh
+        luxcore_scene.DeleteObject(luxcore_name)
+        # If this light was previously defined as a light, delete it
+        luxcore_scene.DeleteLight(luxcore_name)
+
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
         exported_light = ExportedLight(luxcore_name)
