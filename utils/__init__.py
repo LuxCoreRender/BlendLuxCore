@@ -318,14 +318,14 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
     if scene.camera and obj == scene.camera.data.luxcore.clipping_plane:
         return False
 
-    if context:
-        # We don't account for render layer visiblity in viewport render
-        # so we create a mock list here
-        exclude_layers = [False] * 20
-    else:
-        render_layer = get_current_render_layer(scene)
+    render_layer = get_current_render_layer(scene)
+    if render_layer:
         # We need the list of excluded layers in the settings of this render layer
         exclude_layers = render_layer.layers_exclude
+    else:
+        # We don't account for render layer visiblity in viewport/preview render
+        # so we create a mock list here
+        exclude_layers = [False] * 20
 
     on_visible_layer = False
     # for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, render_layers)]:
@@ -338,18 +338,17 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
 
 def is_obj_visible_to_cam(obj, scene, context=None):
     visible_to_cam = obj.luxcore.visible_to_camera
+    render_layer = get_current_render_layer(scene)
 
-    if context:
-        # We don't account for render layer visiblity in viewport render
-        return visible_to_cam
-    else:
-        render_layer = get_current_render_layer(scene)
-
+    if render_layer:
         on_visible_layer = False
         for lv in [ol and sl for ol, sl in zip(obj.layers, render_layer.layers)]:
             on_visible_layer |= lv
 
         return visible_to_cam and on_visible_layer
+    else:
+        # We don't account for render layer visiblity in viewport/preview render
+        return visible_to_cam
 
 
 def is_duplicator_visible(obj):
