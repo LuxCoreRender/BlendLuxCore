@@ -5,12 +5,13 @@ from .image import ImageExporter
 
 def convert(scene, context=None):
     try:
-        prefix = "film.imagepipeline."
+        prefix = "film.imagepipelines.0."
         definitions = {}
 
         if scene.camera is None:
             # Can not work without a camera
-            return pyluxcore.Properties()
+            _fallback(definitions)
+            return utils.create_props(prefix, definitions)
 
         pipeline = scene.camera.data.luxcore.imagepipeline
         use_filesaver = utils.use_filesaver(context, scene)
@@ -67,6 +68,21 @@ def use_backgroundimage(context, scene):
     return pipeline.backgroundimage.enabled and (final_render or viewport_in_camera_view)
 
 
+def _fallback(definitions):
+    """
+    Fallback imagepipeline if no camera is in the scene
+    """
+    index = 0
+    definitions[str(index) + ".type"] = "NOP"
+    index += 1
+    definitions[str(index) + ".type"] = "TONEMAP_AUTOLINEAR"
+    index += 1
+    # The result of autolinear looks too bright in Blender.
+    # Apply the default scale of 0.5 that is also the default in the camera settings
+    definitions[str(index) + ".type"] = "TONEMAP_LINEAR"
+    definitions[str(index) + ".scale"] = 0.5
+
+
 def _tonemapper(definitions, index, tonemapper):
     # If "Auto Brightness" is enabled, put an autolinear tonemapper
     # in front of the linear tonemapper
@@ -77,13 +93,13 @@ def _tonemapper(definitions, index, tonemapper):
     # Main tonemapper
     definitions[str(index) + ".type"] = tonemapper.type
 
-    if tonemapper.type == 'TONEMAP_LINEAR':
+    if tonemapper.type == "TONEMAP_LINEAR":
         definitions[str(index) + ".scale"] = tonemapper.linear_scale
-    elif tonemapper.type == 'TONEMAP_REINHARD02':
+    elif tonemapper.type == "TONEMAP_REINHARD02":
         definitions[str(index) + ".prescale"] = tonemapper.reinhard_prescale
         definitions[str(index) + ".postscale"] = tonemapper.reinhard_postscale
         definitions[str(index) + ".burn"] = tonemapper.reinhard_burn
-    elif tonemapper.type == 'TONEMAP_LUXLINEAR':
+    elif tonemapper.type == "TONEMAP_LUXLINEAR":
         definitions[str(index) + ".fstop"] = tonemapper.fstop
         definitions[str(index) + ".exposure"] = tonemapper.exposure
         definitions[str(index) + ".sensitivity"] = tonemapper.sensitivity
@@ -100,7 +116,7 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
     try:
         filepath = ImageExporter.export(backgroundimage.image)
     except OSError as error:
-        msg = 'Imagepipeline: %s' % error
+        msg = "Imagepipeline: %s" % error
         scene.luxcore.errorlog.add_warning(msg)
         # Skip this plugin
         return index
