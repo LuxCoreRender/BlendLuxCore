@@ -37,7 +37,7 @@ def render(engine, scene):
     preview_type, obj = _get_preview_settings(scene)
 
     if preview_type == PreviewType.MATERIAL:
-        engine.session = export_mat_scene(obj, scene)
+        engine.session = _export_mat_scene(obj, scene)
     else:
         print("Unsupported preview type")
         return enable_log_output()
@@ -75,7 +75,7 @@ def enable_log_output():
     pyluxcore.Init()
 
 
-def export_mat_scene(obj, scene):
+def _export_mat_scene(obj, scene):
     # The diameter that the preview objects should have, in meters
     size = obj.active_material.luxcore.preview.size
     worldscale = size / DEFAULT_SPHERE_SIZE
@@ -96,7 +96,11 @@ def export_mat_scene(obj, scene):
     luxcore_scene.Parse(cam_props)
 
     # Object
-    _convert_obj(obj, scene, luxcore_scene, scene_props)
+    is_plane_scene = obj.name == "preview"
+    if is_plane_scene:
+        _export_plane_scene(scene, obj.active_material, scene_props, luxcore_scene)
+    else:
+        _convert_obj(obj, scene, luxcore_scene, scene_props)
 
     # Lights (either two area lights or a sun+sky setup)
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
@@ -113,6 +117,45 @@ def export_mat_scene(obj, scene):
     session = pyluxcore.RenderSession(renderconfig)
 
     return session
+
+
+def _export_plane_scene(scene, mat, props, luxcore_scene):
+    # The default plane from the Blender preview scene is ugly (wrong scale and UVs), so we make our own.
+    # A quadratic texture (with UV mapping) is tiled exactly 2 times in horizontal directon on this plane,
+    # so it's also a nice tiling preview
+
+    lux_mat_name, mat_props = export.material.convert(mat, scene, None)
+    props.Set(mat_props)
+
+    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+
+    mesh_name = "mat_preview_planemesh"
+    size_z_raw = 7
+    size_z = size_z_raw * worldscale
+    size_x = size_z_raw * 2 * worldscale
+    ypos = -1.00001 * worldscale
+    zpos = 2 * worldscale
+    vertices = [
+        (-size_x / 2, ypos, zpos - size_z / 2),
+        (size_x / 2, ypos, zpos - size_z / 2),
+        (size_x / 2, ypos, zpos + size_z / 2),
+        (-size_x / 2, ypos, zpos + size_z / 2),
+    ]
+    faces = [
+        (0, 1, 2),
+        (2, 3, 0)
+    ]
+    uv = [
+        (1, 2),
+        (1, 0),
+        (0, 0),
+        (0, 2)
+    ]
+    luxcore_scene.DefineMesh(mesh_name, vertices, faces, None, uv, None, None)
+    # Create object
+    obj_name = "mat_preview_planeobj"
+    props.Set(pyluxcore.Property("scene.objects." + obj_name + ".ply", mesh_name))
+    props.Set(pyluxcore.Property("scene.objects." + obj_name + ".material", lux_mat_name))
 
 
 def _create_lights(scene, luxcore_scene, props, is_world_sphere):
@@ -314,7 +357,7 @@ def _convert_obj(obj, scene, luxcore_scene, props):
 def _get_preview_settings(scene):
     # Iterate through the preview scene, finding objects with materials attached
     objects = [o for o in scene.objects
-               if o.is_visible(scene) and not o.hide_render and o.name.startswith('preview')]
+               if o.is_visible(scene) and not o.hide_render and o.name.startswith("preview")]
 
     if objects:
         return PreviewType.MATERIAL, objects[0]

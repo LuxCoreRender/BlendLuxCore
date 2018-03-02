@@ -14,7 +14,7 @@ class LuxCoreMaterialPreviewProps(PropertyGroup):
         material.preview_render_type = material.preview_render_type
 
     size = FloatProperty(name="Sphere Size (m)", default=0.1, min=0.01, soft_max=1,
-                         description="Diameter of the preview sphere in meters"
+                         description="Diameter of the preview sphere in meters\n"
                                      "(one checker tile has a size of 10cm)",
                          update=update_preview)
 
