@@ -46,6 +46,5 @@ class LuxCoreNodeTexBump(LuxCoreNodeTexture):
         else:
             # Bump height is just a value, we can apply worldscale directly
             definitions["texture2"] = bump_height * worldscale
-            print(">>> bump height:", bump_height * worldscale, "world scale:", worldscale)
 
         return self.base_export(props, definitions, luxcore_name)

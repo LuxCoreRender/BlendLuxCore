@@ -33,7 +33,6 @@ def render(engine, scene):
         # We do not render thumbnails
         return
 
-    print("material/texture preview")
     pyluxcore.Init(no_log_output)
     preview_type, obj = _get_preview_settings(scene)
 
