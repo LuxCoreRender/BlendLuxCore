@@ -162,10 +162,18 @@ def _convert_filesaver(scene, definitions, engine):
 
     blend_name = bpy.path.basename(bpy.context.blend_data.filepath)
     blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"
+
     if not blend_name:
         blend_name = "Untitled"
+
     dir_name = blend_name + "_LuxCore"
     frame_name = "%05d" % scene.frame_current
+
+    # If we have multiple render layers, we append the layer name
+    if len(scene.render.layers) > 1:
+        render_layer = utils.get_current_render_layer(scene)
+        frame_name += "_" + render_layer.name
+
     if config.filesaver_format == "BIN":
         # For binary format, the frame number is used as file name instead of directory name
         frame_name += ".bcf"
