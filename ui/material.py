@@ -95,4 +95,9 @@ class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
         return context.material and (engine == "LUXCORE")
 
     def draw(self, context):
-        self.layout.template_preview(context.material)
+        layout = self.layout
+        layout.template_preview(context.material)
+        row = layout.row(align=True)
+        preview = context.material.luxcore.preview
+        row.prop(preview, "zoom")
+        row.prop(preview, "size")
