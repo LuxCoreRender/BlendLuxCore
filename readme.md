@@ -11,7 +11,7 @@ It is still in early development, so expect bugs and missing features. You can f
 * **If you want to test it on important scenes, make a copy of the .blend file first!**
 * **You will experience crashes and other bugs. Please report them in the bug tracker!**
 
-This addon requires Blender 2.79a. You can download the release candidate [here](https://download.blender.org/release/Blender2.79/) (Choose one of the links prefixed with "blender-2.79**a-rc**")
+This addon requires the very latest stable version of Blender: 2.79**a**. [Download](https://www.blender.org/download/)
 
 ### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
 
