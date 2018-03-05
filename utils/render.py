@@ -161,12 +161,31 @@ def find_suggested_clamp_value(session, scene=None):
     """
     avg_film_luminance = session.GetFilm().GetFilmY()
     if avg_film_luminance < 0:
-        optimal_clamping_value = 0
+        suggested_clamping_value = 0
     else:
         v = avg_film_luminance * 10
-        optimal_clamping_value = v * v
+        suggested_clamping_value = v * v
 
     if scene:
-        scene.luxcore.config.path.suggested_clamping_value = optimal_clamping_value
+        scene.luxcore.config.path.suggested_clamping_value = suggested_clamping_value
 
-    return optimal_clamping_value
+    return suggested_clamping_value
+
+
+def find_suggested_tonemap_scale(session):
+    """
+    This is the same code as in the TONEMAP_AUTOLINEAR imagepipeline plugin.
+    If you use the return value as the scale of the TONEMAP_LINEAR plugin,
+    you emulate the autolinear tonemapper.
+    """
+    avg_film_luminance = session.GetFilm().GetFilmY()
+    return (1.25 / avg_film_luminance * (118 / 255))
+
+    # TODO
+    # measure this all the time, show a message to the user if
+    # abs(old - new) > threshold
+    # so the user can set the new value with one click
+
+    # imagepipeline = scene.camera.data.luxcore.imagepipeline
+    # imagepipeline.tonemapper.linear_scale = suggested_linear_scale
+    # imagepipeline.tonemapper.use_autolinear = False
