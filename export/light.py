@@ -11,13 +11,13 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
-def convert_lamp(blender_obj, scene, context, luxcore_scene):
+def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
     try:
         assert isinstance(blender_obj, bpy.types.Object)
         assert blender_obj.type == "LAMP"
         print("converting lamp:", blender_obj.name)
 
-        luxcore_name = utils.get_luxcore_name(blender_obj, context)
+        luxcore_name = utils.get_luxcore_name(blender_obj, context) + dupli_suffix
 
         # If this light was previously defined as an area lamp, delete the area lamp mesh
         luxcore_scene.DeleteObject(luxcore_name)
