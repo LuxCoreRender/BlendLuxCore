@@ -17,6 +17,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self.session = None
         self.exporter = None
         self.error = None
+        self.aov_imagepipelines = {}
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)

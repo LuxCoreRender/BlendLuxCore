@@ -8,9 +8,15 @@ LDR_CHANNELS = {
     "DIRECT_SHADOW_MASK", "INDIRECT_SHADOW_MASK", "MATERIAL_ID_MASK"
 }
 
+# set of channels that should be tonemapped the same way as the RGB_IMAGEPIPELINE
+NEED_TONEMAPPING = {
+    "EMISSION", "DIRECT_DIFFUSE", "DIRECT_GLOSSY",
+    "INDIRECT_DIFFUSE", "INDIRECT_GLOSSY", "INDIRECT_SPECULAR",
+}
+
 
 # Exported in config export
-def convert(scene, context=None):
+def convert(scene, context=None, engine=None):
     try:
         prefix = "film.outputs."
         definitions = {}
@@ -35,14 +41,19 @@ def convert(scene, context=None):
 
         # TODO correct filepaths
 
-        # Reset the index
+        # Reset the output index
         _add_output.index = 0
 
+        # Some AOVs need tonemapping with a custom imagepipeline
+        pipeline_index = 0
+
         # This output is always defined
-        _add_output(definitions, "RGB_IMAGEPIPELINE")
+        _add_output(definitions, "RGB_IMAGEPIPELINE", pipeline_index)
 
         if use_transparent_film:
-            _add_output(definitions, "RGBA_IMAGEPIPELINE")
+            _add_output(definitions, "RGBA_IMAGEPIPELINE", pipeline_index)
+
+        pipeline_index += 1
 
         # AOVs
         if (final and aovs.alpha) or use_transparent_film or use_backgroundimage(context, scene):
@@ -52,48 +63,26 @@ def convert(scene, context=None):
         if (final and aovs.irradiance) or pipeline.contour_lines.enabled:
             _add_output(definitions, "IRRADIANCE")
 
+        pipeline_props = pyluxcore.Properties()
+
         # These AOVs only make sense in final renders
         if final:
-            if aovs.rgb:
-                _add_output(definitions, "RGB")
-            if aovs.rgba:
-                _add_output(definitions, "RGBA")
-            if aovs.material_id:
-                _add_output(definitions, "MATERIAL_ID")
-            if aovs.object_id:
-                _add_output(definitions, "OBJECT_ID")
-            if aovs.emission:
-                _add_output(definitions, "EMISSION")
-            if aovs.direct_diffuse:
-                _add_output(definitions, "DIRECT_DIFFUSE")
-            if aovs.direct_glossy:
-                _add_output(definitions, "DIRECT_GLOSSY")
-            if aovs.indirect_diffuse:
-                _add_output(definitions, "INDIRECT_DIFFUSE")
-            if aovs.indirect_glossy:
-                _add_output(definitions, "INDIRECT_GLOSSY")
-            if aovs.indirect_specular:
-                _add_output(definitions, "INDIRECT_SPECULAR")
-            if aovs.position:
-                _add_output(definitions, "POSITION")
-            if aovs.shading_normal:
-                _add_output(definitions, "SHADING_NORMAL")
-            if aovs.geometry_normal:
-                _add_output(definitions, "GEOMETRY_NORMAL")
-            if aovs.uv:
-                _add_output(definitions, "UV")
-            if aovs.direct_shadow_mask:
-                _add_output(definitions, "DIRECT_SHADOW_MASK")
-            if aovs.indirect_shadow_mask:
-                _add_output(definitions, "INDIRECT_SHADOW_MASK")
-            if aovs.raycount:
-                _add_output(definitions, "RAYCOUNT")
-            if aovs.samplecount:
-                _add_output(definitions, "SAMPLECOUNT")
-            if aovs.convergence:
-                _add_output(definitions, "CONVERGENCE")
+            for output_name, output_type in pyluxcore.FilmOutputType.names.items():
+                if output_name in {"RGB_IMAGEPIPELINE", "RGBA_IMAGEPIPELINE", "ALPHA", "DEPTH", "IRRADIANCE"}:
+                    # We already checked these
+                    continue
 
-        return utils.create_props(prefix, definitions)
+                # Check if AOV is enabled by user
+                if getattr(aovs, output_name.lower(), False):
+                    _add_output(definitions, output_name)
+
+                    if output_name in NEED_TONEMAPPING:
+                        pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
+                                                             pipeline_index, definitions, engine)
+
+        props = utils.create_props(prefix, definitions)
+        props.Set(pipeline_props)
+        return props
     except Exception as error:
         import traceback
         traceback.print_exc()
@@ -116,10 +105,56 @@ def count_index(func):
 
 
 @count_index
-def _add_output(definitions, output_type_str, index=0):
+def _add_output(definitions, output_type_str, pipeline_index=-1, index=0):
     definitions[str(index) + ".type"] = output_type_str
 
+    filename = output_type_str
+
+    if pipeline_index != -1:
+        definitions[str(index) + ".index"] = pipeline_index
+        filename += "_" + str(pipeline_index)
+
     extension = ".png" if output_type_str in LDR_CHANNELS else ".exr"
-    definitions[str(index) + ".filename"] = output_type_str + extension
+    definitions[str(index) + ".filename"] = filename + extension
 
     return index + 1
+
+
+def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine):
+    # TODO I think we need the full imagepipeline with all plugins here
+
+    tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
+
+    if tonemapper.is_automatic():
+        # We can not work with an automatic tonemapper because
+        # every AOV will differ in brightness
+        msg = "Use a non-automatic tonemapper to get tonemapped AOVs"
+        scene.luxcore.errorlog.add_warning(msg)
+        return pipeline_index
+
+    prefix = "film.imagepipelines." + str(pipeline_index) + "."
+    definitions = {}
+    index = 0
+
+    definitions[str(index) + ".type"] = "OUTPUT_SWITCHER"
+    definitions[str(index) + ".channel"] = output_name
+    index += 1
+
+    # Tonemapper
+    definitions[str(index) + ".type"] = tonemapper.type
+
+    if tonemapper.type == "TONEMAP_LINEAR":
+        definitions[str(index) + ".scale"] = tonemapper.linear_scale
+    elif tonemapper.type == "TONEMAP_LUXLINEAR":
+        definitions[str(index) + ".fstop"] = tonemapper.fstop
+        definitions[str(index) + ".exposure"] = tonemapper.exposure
+        definitions[str(index) + ".sensitivity"] = tonemapper.sensitivity
+    index += 1
+
+    props.Set(utils.create_props(prefix, definitions))
+    _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
+
+    # Register in the engine so we know the correct index for framebuffer drawing
+    engine.aov_imagepipelines[output_name] = pipeline_index
+
+    return pipeline_index + 1

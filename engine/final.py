@@ -41,6 +41,7 @@ def render(engine, scene):
     
 
 def _render_layer(engine, scene):
+    engine.aov_imagepipelines = {}
     engine.exporter = export.Exporter()
     engine.session = engine.exporter.create_session(scene, engine=engine)
 

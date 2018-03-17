@@ -194,17 +194,29 @@ class FrameBufferFinal(object):
             # Check if AOV is enabled by user
             if getattr(scene_layer.luxcore.aovs, output_name.lower(), False):
                 try:
-                    self._import_aov(output_name, output_type, render_layer, session)
+                    self._import_aov(output_name, output_type, render_layer, session, engine)
                 except RuntimeError as error:
                     print("Error on import of AOV %s: %s" % (output_name, error))
 
         engine.end_result(result)
 
-    def _import_aov(self, output_name, output_type, render_layer, session):
+    def _import_aov(self, output_name, output_type, render_layer, session, engine):
         if output_name in AOVS:
             aov = AOVS[output_name]
         else:
             aov = DEFAULT_AOV_SETTINGS
+
+        if output_name in engine.aov_imagepipelines:
+            index = engine.aov_imagepipelines[output_name]
+            output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+            channel_count = DEFAULT_AOV_SETTINGS.channel_count
+            array_type = DEFAULT_AOV_SETTINGS.array_type
+            convert_func = DEFAULT_AOV_SETTINGS.convert_func
+        else:
+            index = 0
+            channel_count = aov.channel_count
+            array_type = aov.array_type
+            convert_func = aov.convert_func
 
         width = self._width
         height = self._height
@@ -214,18 +226,18 @@ class FrameBufferFinal(object):
             buffer = self.aov_buffers[output_name]
         except KeyError:
             # Buffer for this AOV does not exist yet, create it
-            buffer = array.array(aov.array_type, [0]) * (width * height * aov.channel_count)
+            buffer = array.array(array_type, [0]) * (width * height * channel_count)
             self.aov_buffers[output_name] = buffer
 
         # Fill the buffer
-        if aov.array_type == "I":
-            session.GetFilm().GetOutputUInt(output_type, buffer)
+        if array_type == "I":
+            session.GetFilm().GetOutputUInt(output_type, buffer, index)
         else:
-            session.GetFilm().GetOutputFloat(output_type, buffer)
+            session.GetFilm().GetOutputFloat(output_type, buffer, index)
 
         # Depth needs special treatment because it's pre-defined by Blender and not uppercase
         pass_name = "Depth" if output_name == "DEPTH" else output_name
         blender_pass = render_layer.passes[pass_name]
 
         # Convert and copy the buffer into the blender_pass.rect
-        aov.convert_func(width, height, buffer, blender_pass.as_pointer(), aov.normalize)
+        convert_func(width, height, buffer, blender_pass.as_pointer(), aov.normalize)

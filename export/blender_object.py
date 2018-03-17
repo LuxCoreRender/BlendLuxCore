@@ -17,7 +17,7 @@ def convert(blender_obj, scene, context, luxcore_scene,
         return pyluxcore.Properties(), None
 
     if blender_obj.type == "LAMP":
-        return convert_lamp(blender_obj, scene, context, luxcore_scene)
+        return convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix)
 
     try:
         # print("converting object:", blender_obj.name)

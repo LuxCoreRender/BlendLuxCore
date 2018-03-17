@@ -109,7 +109,7 @@ class Exporter(object):
             return None
 
         # Convert config at last because all lightgroups and passes have to be already defined
-        config_props = config.convert(scene, context)
+        config_props = config.convert(scene, context, engine)
         # Init config cache (convert to string here because config_props gets changed below)
         self.config_cache.diff(str(config_props))
 

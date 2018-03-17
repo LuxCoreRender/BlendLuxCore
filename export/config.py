@@ -7,7 +7,7 @@ from . import aovs
 from .imagepipeline import use_backgroundimage
 
 
-def convert(scene, context=None):
+def convert(scene, context=None, engine=None):
     try:
         prefix = ""
         # We collect the properties in this dictionary.
@@ -23,7 +23,7 @@ def convert(scene, context=None):
         if context:
             # TODO: Support OpenCL in viewport?
             # Viewport render
-            engine = "RTPATHCPU"
+            luxcore_engine = "RTPATHCPU"
             sampler = "RTPATHCPUSAMPLER"
             # Size of the blocks right after a scene edit (in pixels)
             definitions["rtpathcpu.zoomphase.size"] = 4
@@ -40,7 +40,7 @@ def convert(scene, context=None):
                 _convert_path(config, definitions)
 
                 if config.use_tiles:
-                    engine = "TILEPATH"
+                    luxcore_engine = "TILEPATH"
                     # TILEPATH needs exactly this sampler
                     sampler = "TILEPATHSAMPLER"
                     # Tile specific settings
@@ -56,12 +56,12 @@ def convert(scene, context=None):
                     # warmup = tile.multipass_convtest_warmup
                     # definitions["tile.multipass.convergencetest.warmup.count"] = warmup
                 else:
-                    engine = "PATH"
+                    luxcore_engine = "PATH"
                     sampler = config.sampler
                     definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
 
                 # Add CPU/OCL suffix
-                engine += config.device
+                luxcore_engine += config.device
 
                 if config.device == "OCL":
                     # OpenCL specific settings
@@ -81,7 +81,7 @@ def convert(scene, context=None):
                         definitions["opencl.native.threads.count"] = 0
             else:
                 # config.engine == BIDIR
-                engine = "BIDIRCPU"
+                luxcore_engine = "BIDIRCPU"
                 # SOBOL or RANDOM would be possible, but make little sense for BIDIR
                 sampler = "METROPOLIS"
                 definitions["light.maxdepth"] = config.bidir_light_maxdepth
@@ -91,7 +91,7 @@ def convert(scene, context=None):
         # We create them as variables and set them here because then the IDE can warn us
         # if we forget some in the if/else construct above.
         definitions.update({
-            "renderengine.type": engine,
+            "renderengine.type": luxcore_engine,
             "sampler.type": sampler,
             "film.width": width,
             "film.height": height,
@@ -117,7 +117,7 @@ def convert(scene, context=None):
 
         # FILESAVER engine (only in final render)
         if use_filesaver:
-            _convert_filesaver(scene, definitions, engine)
+            _convert_filesaver(scene, definitions, luxcore_engine)
 
         # CPU thread settings (we use the properties from Blender here)
         if scene.render.threads_mode == "FIXED":
@@ -129,7 +129,7 @@ def convert(scene, context=None):
         config_props = utils.create_props(prefix, definitions)
 
         # Convert AOVs
-        aov_props = aovs.convert(scene, context)
+        aov_props = aovs.convert(scene, context, engine)
         config_props.Set(aov_props)
 
         return config_props
