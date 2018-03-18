@@ -3,7 +3,7 @@ from bpy.props import PointerProperty, BoolProperty
 from bpy.types import PropertyGroup
 
 
-# Note: currently attached to scene because we don't support render layers
+# Attached to render layer
 class LuxCoreAOVSettings(PropertyGroup):
     def toggle_depth(self, context):
         # Enable/disable Blender's Z pass along with our DEPTH AOV

@@ -22,6 +22,7 @@ NOISE_THRESH_USE_FILTER_DESC = (
 )
 
 
+# Attached to render layer and scene
 class LuxCoreHaltConditions(bpy.types.PropertyGroup):
     enable = BoolProperty(name="Enable", default=False)
 

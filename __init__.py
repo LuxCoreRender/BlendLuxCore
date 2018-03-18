@@ -6,8 +6,8 @@ from . import engine, handlers, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
 from .ui import (
     aovs, blender_object, camera, config, display, errorlog,
-    halt, light, material, mesh, particle, postpro, render_layer,
-    texture, world
+    halt, light, lightgroups, material, mesh, particle, postpro,
+    render_layer, texture, world
 )
 
 bl_info = {
@@ -18,7 +18,7 @@ bl_info = {
     "category": "Render",
     "location": "Info header, render engine menu",
     "description": "LuxCore integration for Blender",
-    "warning": "alpha6",
+    "warning": "alpha7",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }

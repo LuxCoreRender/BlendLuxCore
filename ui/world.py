@@ -23,10 +23,20 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         layout.prop(world.luxcore, "light", expand=True)
 
         if world.luxcore.light != "none":
+            # TODO: id (light group)
             split = layout.split(percentage=0.33)
             split.prop(world.luxcore, "rgb_gain", text="")
-            split.prop(world.luxcore, "gain")
-            # TODO: id (light group)
+
+            is_sky = world.luxcore.light == "sky2"
+            has_sun = world.luxcore.sun and world.luxcore.sun.type == "LAMP"
+
+            if is_sky and has_sun and world.luxcore.use_sun_gain_for_sky:
+                split.prop(world.luxcore.sun.data.luxcore, "gain")
+            else:
+                split.prop(world.luxcore, "gain")
+
+            if is_sky and has_sun:
+                split.prop(world.luxcore, "use_sun_gain_for_sky")
 
         layout.label("Default Volume (used on materials without attached volume):")
         utils_ui.template_node_tree(layout, world.luxcore, "volume", ICON_VOLUME,
@@ -54,10 +64,15 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
         world = context.world
 
         layout.prop(world.luxcore, "sun")
-        sun_obj = world.luxcore.sun
-        if sun_obj and sun_obj.data and sun_obj.data.type == "SUN":
-            layout.label("Using turbidity of sun light:", icon="INFO")
-            layout.prop(sun_obj.data.luxcore, "turbidity")
+        sun = world.luxcore.sun
+        if sun:
+            is_really_a_sun = sun.type == "LAMP" and sun.data and sun.data.type == "SUN"
+
+            if is_really_a_sun:
+                layout.label("Using turbidity of sun light:", icon="INFO")
+                layout.prop(sun.data.luxcore, "turbidity")
+            else:
+                layout.label("Not a sun lamp", icon="ERROR")
         else:
             layout.prop(world.luxcore, "turbidity")
 
