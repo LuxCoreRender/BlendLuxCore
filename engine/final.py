@@ -103,7 +103,7 @@ def _render_layer(engine, scene):
     last_stat_refresh = time()
     computed_optimal_clamp = False
 
-    while not engine.test_break() and not done:
+    while not done:
         now = time()
 
         if now - last_stat_refresh > stat_refresh_interval:

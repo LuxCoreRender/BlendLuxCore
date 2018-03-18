@@ -140,3 +140,17 @@ class LUXCORE_OT_add_node(bpy.types.Operator):
             new_node.node_tree = vol_tree
 
         return {"FINISHED"}
+
+
+class LUXCORE_OT_attach_sun_to_sky(bpy.types.Operator):
+    bl_idname = "luxcore.attach_sun_to_sky"
+    bl_label = "Attach to Sky"
+    bl_description = "Attach if the sky should use the rotation and turbidity settings of this sun"
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.world and context.object
+
+    def execute(self, context):
+        context.scene.world.luxcore.sun = context.object
+        return {"FINISHED"}
