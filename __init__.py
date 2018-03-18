@@ -6,8 +6,8 @@ from . import engine, handlers, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
 from .ui import (
     aovs, blender_object, camera, config, display, errorlog,
-    halt, light, material, mesh, particle, postpro, render_layer,
-    texture, world
+    halt, light, lightgroups, material, mesh, particle, postpro,
+    render_layer, texture, world
 )
 
 bl_info = {

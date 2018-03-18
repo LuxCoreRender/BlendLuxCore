@@ -11,13 +11,13 @@ LDR_CHANNELS = {
 
 # Exported in config export
 def convert(scene, context=None):
+    if scene.camera is None:
+        # Can not work without a camera
+        return pyluxcore.Properties()
+
     try:
         prefix = "film.outputs."
         definitions = {}
-
-        if scene.camera is None:
-            # Can not work without a camera
-            return pyluxcore.Properties()
 
         pipeline = scene.camera.data.luxcore.imagepipeline
         final = not context

@@ -3,7 +3,7 @@ from bpy.props import StringProperty, BoolProperty
 
 # Ensure initialization (note: no need to initialize utils)
 from . import (
-    camera, material, node_tree_presets, pointer_node, texture, world, ior_presets
+    camera, ior_presets, lightgroups, material, node_tree_presets, pointer_node, texture, world,
 )
 from .utils import init_vol_node_tree, poll_node
 
