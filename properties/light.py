@@ -70,7 +70,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     ##############################################
     # BlendLuxCore specific properties needed to translate LuxCore light concepts to Blender
     sun_types = [
-        ("sun", "Sun", "Sun", 0),
+        ("sun", "Sun", "Physically correct sun that emits parallel light rays and changes color with elevation", 0),
         ("distant", "Distant", "Distant star without atmosphere simulation (emits parallel light)", 1),
     ]
     sun_type = EnumProperty(name="Sun Type", items=sun_types, default="sun")

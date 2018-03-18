@@ -10,6 +10,10 @@ from .light import (
     VISIBILITYMAP_ENABLE_DESC,
 )
 
+USE_SUN_GAIN_FOR_SKY_DESC = (
+    "Use the gain setting of the attached sun "
+    "(so you adjust both sun and sky gain at the same time)"
+)
 
 def init():
     bpy.types.World.luxcore = PointerProperty(type=LuxCoreWorldProps)
@@ -33,6 +37,9 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
 
     # sky2 settings
     sun = PointerProperty(name="Sun", type=bpy.types.Object, description="Used to specify the sun direction")
+    # Only shown in UI when light is sky2 and a sun is attached
+    use_sun_gain_for_sky = BoolProperty(name="Use Sun Gain", default=True,
+                                        description=USE_SUN_GAIN_FOR_SKY_DESC)
     turbidity = FloatProperty(name="Turbidity", default=2.2, min=0, max=30)
     groundalbedo = FloatVectorProperty(name="Ground Albedo", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
     ground_enable = BoolProperty(name="Use Ground Color", default=False)

@@ -196,6 +196,10 @@ def convert_world(world, scene):
             if world.luxcore.sun:
                 definitions["dir"] = _calc_sun_dir(world.luxcore.sun)
 
+                if world.luxcore.use_sun_gain_for_sky:
+                    gain = [x * world.luxcore.sun.data.luxcore.gain for x in world.luxcore.rgb_gain]
+                    definitions["gain"] = gain
+
             if world.luxcore.sun and world.luxcore.sun.data:
                 # Use sun turbidity so the user does not have to keep two values in sync
                 definitions["turbidity"] = world.luxcore.sun.data.luxcore.turbidity
