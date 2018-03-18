@@ -50,11 +50,11 @@ TODO: These do not contain .blend files yet.
 * [x] Pointiness
 * [x] AOVs (aka render passes)
 * [x] Render layers
+* [x] Material preview
 * [ ] Image sequences
 * [ ] Light groups
 * [ ] Saving a resumable film
 * [ ] Periodic film saving
-* [ ] Material preview
 * And more...
 
 ### Great new features
