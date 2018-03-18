@@ -7,7 +7,7 @@ from bpy.props import (
 from .. import LuxCoreNode
 from ...properties.light import (
     POWER_DESCRIPTION, EFFICACY_DESCRIPTION, SAMPLES_DESCRIPTION,
-    SPREAD_ANGLE_DESCRIPTION,
+    SPREAD_ANGLE_DESCRIPTION, LIGHTGROUP_DESC,
 )
 from ...properties.ies import LuxCoreIESProps
 from ...export import light
@@ -34,8 +34,8 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
     spread_angle = FloatProperty(name="Spread Angle", default=math.pi / 2, min=0, soft_min=math.radians(5),
                                  max=math.pi / 2, subtype="ANGLE", unit="ROTATION",
                                  description=SPREAD_ANGLE_DESCRIPTION)
+    lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
     # TODO: mapfile and gamma?
-    # TODO: lightgroup
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Color", (1, 1, 1))
@@ -47,6 +47,11 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         col.prop(self, "gain")
         col.prop(self, "power")
         col.prop(self, "efficacy")
+
+        lightgroups = context.scene.luxcore.lightgroups
+        layout.prop_search(self, "lightgroup",
+                           lightgroups, "custom",
+                           icon="OUTLINER_OB_LAMP", text="")
 
         layout.prop(self, "spread_angle", slider=True)
 

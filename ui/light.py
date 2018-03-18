@@ -64,7 +64,11 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
         split = layout.split(percentage=0.33)
         split.prop(lamp.luxcore, "rgb_gain", text="")
         split.prop(lamp.luxcore, "gain")
-        # TODO: id
+
+        lightgroups = context.scene.luxcore.lightgroups
+        split.prop_search(lamp.luxcore, "lightgroup",
+                          lightgroups, "custom",
+                          icon="OUTLINER_OB_LAMP", text="")
 
         layout.separator()
 

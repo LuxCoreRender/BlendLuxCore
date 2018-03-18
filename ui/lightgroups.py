@@ -17,8 +17,7 @@ class LUXCORE_RENDERLAYER_PT_lightgroups(RenderLayerButtonsPanel, Panel):
 
     def draw(self, context):
         layout = self.layout
-        active_layer = context.scene.render.layers.active
-        groups = active_layer.luxcore.lightgroups
+        groups = context.scene.luxcore.lightgroups
 
         self.draw_lightgroup(layout, groups.default, -1,
                              is_default_group=True)

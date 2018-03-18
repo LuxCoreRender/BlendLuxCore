@@ -23,7 +23,7 @@ class LuxCoreLightGroup(PropertyGroup):
                                 description="Blackbody emission color in Kelvin")
 
 
-# Attached to render layer
+# Attached to scene
 class LuxCoreLightGroupSettings(PropertyGroup):
     default = PointerProperty(type=LuxCoreLightGroup)
     custom = CollectionProperty(type=LuxCoreLightGroup)

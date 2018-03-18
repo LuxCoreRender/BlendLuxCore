@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
-from . import config, display, errorlog, halt, opencl
+from . import config, display, errorlog, halt, lightgroups, opencl
 
 
 def init():
@@ -13,6 +13,7 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     halt = PointerProperty(type=halt.LuxCoreHaltConditions)
     display = PointerProperty(type=display.LuxCoreDisplaySettings)
     opencl = PointerProperty(type=opencl.LuxCoreOpenCLSettings)
+    lightgroups = PointerProperty(type=lightgroups.LuxCoreLightGroupSettings)
 
     # Set during render and used during export
     active_layer_index = IntProperty(default=-1)

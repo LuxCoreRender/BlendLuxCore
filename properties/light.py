@@ -41,13 +41,15 @@ SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION = (
 SPREAD_ANGLE_DESCRIPTION = (
     "How directional the light is emitted, set as the half-angle of the light source. "
     "Default is 90°. Smaller values mean that more light is emitted in the direction "
-    "of the light and less to the sides."
+    "of the light and less to the sides"
 )
 
 VISIBILITYMAP_ENABLE_DESC = (
     "Compute a visibility map for this light source. Recommended for indoor scenes where this "
     "light source is only visible through small openings (e.g. windows)"
 )
+
+LIGHTGROUP_DESC = "Add this light to a light group from the scene"
 
 
 def init():
@@ -80,11 +82,11 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
 
     ##############################################
     # Generic properties shared by all light types
-    gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
+    gain = FloatProperty(name="Gain", default=1, min=0, precision=4, description="Brightness multiplier")
     rgb_gain = FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR")
     samples = IntProperty(name="Samples", default=-1, min=-1, description=SAMPLES_DESCRIPTION)
     importance = FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
-    # TODO: id
+    lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
 
     ##############################################
     # Light type specific properties (some are shared by multiple lights, noted in comments)

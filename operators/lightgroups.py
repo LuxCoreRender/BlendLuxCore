@@ -15,8 +15,7 @@ class LUXCORE_OT_add_lightgroup(bpy.types.Operator):
     #     return len(groups.custom) < MAX_LIGHTGROUPS
 
     def execute(self, context):
-        active_layer = context.scene.render.layers.active
-        groups = active_layer.luxcore.lightgroups
+        groups = context.scene.luxcore.lightgroups
         groups.add()
         return {"FINISHED"}
 
@@ -29,7 +28,6 @@ class LUXCORE_OT_remove_lightgroup(bpy.types.Operator):
     index = IntProperty()
 
     def execute(self, context):
-        active_layer = context.scene.render.layers.active
-        groups = active_layer.luxcore.lightgroups
+        groups = context.scene.luxcore.lightgroups
         groups.remove(self.index)
         return {"FINISHED"}

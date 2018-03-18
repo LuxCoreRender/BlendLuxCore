@@ -35,8 +35,13 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
             else:
                 split.prop(world.luxcore, "gain")
 
+            lightgroups = context.scene.luxcore.lightgroups
+            split.prop_search(world.luxcore, "lightgroup",
+                              lightgroups, "custom",
+                              icon="OUTLINER_OB_LAMP", text="")
+
             if is_sky and has_sun:
-                split.prop(world.luxcore, "use_sun_gain_for_sky")
+                layout.prop(world.luxcore, "use_sun_gain_for_sky")
 
         layout.label("Default Volume (used on materials without attached volume):")
         utils_ui.template_node_tree(layout, world.luxcore, "volume", ICON_VOLUME,
