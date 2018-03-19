@@ -156,10 +156,8 @@ def _convert_path(config, definitions):
 def _convert_filesaver(scene, definitions, engine):
     config = scene.luxcore.config
 
-    output_path = utils.get_abspath(config.filesaver_path, must_exist=True)
-
-    if output_path is None:
-        raise OSError('Not a valid output directory: "%s"' % config.filesaver_path)
+    filesaver_path = config.filesaver_path
+    output_path = utils.get_abspath(filesaver_path, must_exist=True, must_be_existing_dir=True)
 
     blend_name = bpy.path.basename(bpy.context.blend_data.filepath)
     blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"

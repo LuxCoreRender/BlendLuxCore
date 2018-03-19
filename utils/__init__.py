@@ -369,17 +369,20 @@ def get_theme(context):
     return context.user_preferences.themes[current_theme_name]
 
 
-def get_abspath(path, library=None, must_exist=False, must_be_file=False):
+def get_abspath(path, library=None, must_exist=False, must_be_existing_file=False, must_be_existing_dir=False):
     """ library: The library this path is from. """
+    assert not (must_be_existing_file and must_be_existing_dir)
+
     abspath = bpy.path.abspath(path, library=library)
 
-    if must_exist and not os.path.exists(abspath):
-        print('Path does not exist: "%s"' % abspath)
-        return None
+    if must_be_existing_file and not os.path.isfile(abspath):
+        raise OSError('Not an existing file: "%s"' % abspath)
 
-    if must_be_file and not os.path.isfile(abspath):
-        print('Not a file: "%s"' % abspath)
-        return None
+    if must_be_existing_dir and not os.path.isdir(abspath):
+        raise OSError('Not an existing directory: "%s"' % abspath)
+
+    if must_exist and not os.path.exists(abspath):
+        raise OSError('Path does not exist: "%s"' % abspath)
 
     return abspath
 

@@ -38,11 +38,13 @@ class ImageExporter(object):
             if image.packed_file:
                 return cls._save_to_temp_file(image)
             else:
-                filepath = utils.get_abspath(image.filepath, library=image.library, must_exist=True, must_be_file=True)
-                if filepath:
+                try:
+                    filepath = utils.get_abspath(image.filepath, library=image.library, must_exist=True, must_be_existing_file=True)
                     return filepath
-                else:
-                    raise OSError('Could not find image "%s" at path "%s"' % (image.name, image.filepath))
+                except OSError as error:
+                    # Make the error message more precise
+                    raise OSError('Could not find image "%s" at path "%s" (%s)'
+                                  % (image.name, image.filepath, error))
         elif image.source == "SEQUENCE":
             # TODO
             raise NotImplementedError("Sequence not supported yet")
