@@ -66,9 +66,15 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
             }
         else:
             #Fresnel data file
-            filepath = utils.get_abspath(self.filepath, must_exist=True, must_be_file=True)
+            try:
+                filepath = utils.get_abspath(self.filepath, must_exist=True, must_be_existing_file=True)
+            except OSError as error:
+                # Make the error message more precise
+                raise OSError('Could not find fresnel data at path "%s" (%s)'
+                              % (self.filepath, error))
+
             definitions = {
-                "file": filepath,                
+                "file": filepath,
             }
 
             if self.input_type == "nk":

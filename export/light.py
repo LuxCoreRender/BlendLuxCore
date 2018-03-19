@@ -430,10 +430,10 @@ def export_ies(definitions, ies, library, is_meshlight=False):
             iesfile = ies.file_path
 
             if iesfile:
-                filepath = utils.get_abspath(iesfile, library, must_exist=True, must_be_file=True)
-
-                if filepath:
+                try:
+                    filepath = utils.get_abspath(iesfile, library, must_exist=True, must_be_existing_file=True)
                     definitions[prefix + "iesfile"] = filepath
-                else:
-                    error = 'Could not find .ies file at path "%s"' % iesfile
-                    raise OSError(error)
+                except OSError as error:
+                    # Make the error message more precise
+                    raise OSError('Could not find .ies file at path "%s" (%s)'
+                                  % (iesfile, error))
