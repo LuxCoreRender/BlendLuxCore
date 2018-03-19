@@ -1,6 +1,9 @@
 import bpy
 from bpy.types import PropertyGroup
-from bpy.props import EnumProperty, BoolProperty, IntProperty, FloatProperty, PointerProperty
+from bpy.props import (
+    EnumProperty, BoolProperty, IntProperty, FloatProperty,
+    PointerProperty, StringProperty,
+)
 
 
 TILED_DESCRIPTION = (
@@ -178,6 +181,7 @@ class LuxCoreConfig(PropertyGroup):
         ("BIN", "Binary", "Save as .bcf binary file", 1),
     ]
     filesaver_format = EnumProperty(name="", items=filesaver_format_items, default="BIN")
+    filesaver_path = StringProperty(name="", subtype="DIR_PATH")
 
     # Seed
     seed = IntProperty(name="Seed", default=1, min=1, description=SEED_DESC)
