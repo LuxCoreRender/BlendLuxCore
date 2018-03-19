@@ -135,8 +135,9 @@ def convert(scene, context=None):
         return config_props
     except Exception as error:
         msg = 'Config: %s' % error
-        scene.luxcore.errorlog.add_warning(msg)
-        return pyluxcore.Properties()
+        # Note: Exceptions in the config are critical, we can't render without a config
+        scene.luxcore.errorlog.add_error(msg)
+        return None
 
 
 def _convert_path(config, definitions):
@@ -155,10 +156,10 @@ def _convert_path(config, definitions):
 def _convert_filesaver(scene, definitions, engine):
     config = scene.luxcore.config
 
-    output_path = utils.get_abspath(scene.render.filepath, must_exist=True)
+    output_path = utils.get_abspath(config.filesaver_path, must_exist=True)
 
     if output_path is None:
-        raise OSError('Not a valid output path: "%s"' % scene.render.filepath)
+        raise OSError('Not a valid output directory: "%s"' % config.filesaver_path)
 
     blend_name = bpy.path.basename(bpy.context.blend_data.filepath)
     blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"

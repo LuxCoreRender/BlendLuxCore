@@ -17,10 +17,11 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         # Filesaver
         # TODO: we might want to move this to a more appropriate place later
         row = layout.row()
-        row.prop(config, "use_filesaver")
+        split = row.split(percentage=0.7)
+        split.prop(config, "use_filesaver")
         if config.use_filesaver:
-            row.prop(config, "filesaver_format")
-            layout.prop(context.scene.render, "filepath")
+            split.prop(config, "filesaver_format")
+            layout.prop(config, "filesaver_path")
             layout.separator()
 
         # Device
