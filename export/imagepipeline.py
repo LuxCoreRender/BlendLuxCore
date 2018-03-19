@@ -52,6 +52,8 @@ def convert(scene, context=None):
             # but now we export for luxcoreui)
             index = _gamma(definitions, index)
 
+        _lightgroups(definitions, scene)
+
         return utils.create_props(prefix, definitions)
     except Exception as error:
         import traceback
@@ -172,3 +174,26 @@ def _gamma(definitions, index):
     definitions[str(index) + ".type"] = "GAMMA_CORRECTION"
     definitions[str(index) + ".value"] = 2.2
     return index + 1
+
+
+def _lightgroups(definitions, scene):
+    lightgroups = scene.luxcore.lightgroups
+
+    _lightgroup(definitions, lightgroups.default, 0)
+
+    for i, group in enumerate(lightgroups.custom):
+        # +1 to group_id because default group is id 0, but not in the list
+        group_id = i + 1
+        _lightgroup(definitions, group, group_id)
+
+
+def _lightgroup(definitions, group, group_id):
+    prefix = "radiancescales." + str(group_id) + "."
+    definitions[prefix + "enabled"] = group.enabled
+    definitions[prefix + "globalscale"] = group.gain
+
+    if group.use_rgb_gain:
+        definitions[prefix + "rgbscale"] = list(group.rgb_gain)
+
+    if group.use_temperature:
+        definitions[prefix + "temperature"] = group.temperature
