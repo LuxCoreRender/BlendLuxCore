@@ -35,10 +35,11 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
 
         # Common light settings shared by all light types
         # Note: these variables are also passed to the area light export function
-        gain, samples, importance = _convert_common_props(lamp)
+        gain, samples, importance, lightgroup_id = _convert_common_props(scene, lamp)
         definitions["gain"] = gain
         definitions["samples"] = samples
         definitions["importance"] = importance
+        definitions["id"] = lightgroup_id
 
         if lamp.type == "POINT":
             if lamp.luxcore.image or lamp.luxcore.ies.use:
@@ -181,10 +182,11 @@ def convert_world(world, scene):
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
 
-        gain, samples, importance = _convert_common_props(world)
+        gain, samples, importance, lightgroup_id = _convert_common_props(scene, world)
         definitions["gain"] = gain
         definitions["samples"] = samples
         definitions["importance"] = importance
+        definitions["id"] = lightgroup_id
 
         light_type = world.luxcore.light
         if light_type == "sky2":
@@ -235,11 +237,17 @@ def _calc_sun_dir(blender_obj):
     return [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
 
 
-def _convert_common_props(lamp_or_world):
+def _convert_common_props(scene, lamp_or_world):
     gain = [x * lamp_or_world.luxcore.gain for x in lamp_or_world.luxcore.rgb_gain]
     samples = lamp_or_world.luxcore.samples
     importance = lamp_or_world.luxcore.importance
-    return gain, samples, importance
+
+    lightgroup_id = 0
+    for i, group in enumerate(scene.luxcore.lightgroups.custom):
+        if group.name == lamp_or_world.luxcore.lightgroup:
+            lightgroup_id = i
+
+    return gain, samples, importance, lightgroup_id
 
 
 def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):

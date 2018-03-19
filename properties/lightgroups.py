@@ -11,9 +11,10 @@ MAX_LIGHTGROUPS = 8 - 1
 
 
 class LuxCoreLightGroup(PropertyGroup):
-    enabled = BoolProperty(default=True, description="Enable this light group")
+    enabled = BoolProperty(default=True, description="Enable/disable this light group. "
+                                                     "If disabled, all lights in this group are off")
     show_settings = BoolProperty(default=True)
-    name = StringProperty(default="Default Light Group")
+    name = StringProperty()
     gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
     use_rgb_gain = BoolProperty(name="Color:", default=True, description="Use RGB color multiplier")
     rgb_gain = FloatVectorProperty(name="", default=(1, 1, 1), min=0, max=1, subtype="COLOR")
@@ -31,7 +32,8 @@ class LuxCoreLightGroupSettings(PropertyGroup):
     def add(self):
         if len(self.custom) < MAX_LIGHTGROUPS:
             new_group = self.custom.add()
-            new_group.name = "Light Group %d" % len(self.custom)
+            # +1 because the default group is 0
+            new_group.name = "Light Group %d" % (len(self.custom) + 1)
             return new_group
 
     def remove(self, index):

@@ -1,6 +1,6 @@
 import bpy
 from . import final, preview, viewport
-
+from ..utils import render as utils_render
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_idname = "LUXCORE"
@@ -136,3 +136,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "CONVERGENCE", 1, "X", "VALUE")
         if aovs.irradiance:
             self.register_pass(scene, renderlayer, "IRRADIANCE", 3, "RGB", "COLOR")
+
+        # Light groups
+        for name in utils_render.get_lightgroup_pass_names(scene):
+            self.register_pass(scene, renderlayer, name, 3, "RGB", "COLOR")

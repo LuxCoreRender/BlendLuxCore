@@ -3,6 +3,7 @@ import math
 import array
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import render as utils_render
 
 
 def draw_quad(offset_x, offset_y, width, height):
@@ -153,8 +154,8 @@ AOVS = {
     "CONVERGENCE": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, True),
 }
 DEFAULT_AOV_SETTINGS = AOV(3, "f", pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList, False)
-# TODO: outputs like MATERIAL_ID_MASK (with ID)
 
+AOVS_WITH_ID = {"RADIANCE_GROUP", "BY_MATERIAL_ID", "BY_OBJECT_ID", "MATERIAL_ID_MASK", "OBJECT_ID_MASK"}
 
 class FrameBufferFinal(object):
     """ FrameBuffer for final render """
@@ -194,17 +195,29 @@ class FrameBufferFinal(object):
             # Check if AOV is enabled by user
             if getattr(scene_layer.luxcore.aovs, output_name.lower(), False):
                 try:
-                    self._import_aov(output_name, output_type, render_layer, session, engine)
+                    self._import_aov(output_name, output_type, render_layer, session, engine, scene)
                 except RuntimeError as error:
                     print("Error on import of AOV %s: %s" % (output_name, error))
 
+        for i, name in enumerate(utils_render.get_lightgroup_pass_names(scene)):
+            output_name = "RADIANCE_GROUP"
+            output_type = pyluxcore.FilmOutputType.RADIANCE_GROUP
+            try:
+                self._import_aov(output_name, output_type, render_layer, session, engine, scene, i)
+            except RuntimeError as error:
+                print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
+
         engine.end_result(result)
 
-    def _import_aov(self, output_name, output_type, render_layer, session, engine):
+    def _import_aov(self, output_name, output_type, render_layer, session, engine, scene, index=0):
         if output_name in AOVS:
             aov = AOVS[output_name]
         else:
             aov = DEFAULT_AOV_SETTINGS
+
+        if output_name in AOVS_WITH_ID:
+            # Add the index so we can differentiate between the outputs with id
+            output_name += str(index)
 
         if output_name in engine.aov_imagepipelines:
             index = engine.aov_imagepipelines[output_name]
@@ -213,7 +226,6 @@ class FrameBufferFinal(object):
             array_type = DEFAULT_AOV_SETTINGS.array_type
             convert_func = DEFAULT_AOV_SETTINGS.convert_func
         else:
-            index = 0
             channel_count = aov.channel_count
             array_type = aov.array_type
             convert_func = aov.convert_func
@@ -236,7 +248,14 @@ class FrameBufferFinal(object):
             session.GetFilm().GetOutputFloat(output_type, buffer, index)
 
         # Depth needs special treatment because it's pre-defined by Blender and not uppercase
-        pass_name = "Depth" if output_name == "DEPTH" else output_name
+        if output_name == "DEPTH":
+            pass_name = "Depth"
+        elif output_name.startswith("RADIANCE_GROUP"):
+            lightgroup_pass_names = utils_render.get_lightgroup_pass_names(scene)
+            pass_name = lightgroup_pass_names[index]
+        else:
+            pass_name = output_name
+
         blender_pass = render_layer.passes[pass_name]
 
         # Convert and copy the buffer into the blender_pass.rect

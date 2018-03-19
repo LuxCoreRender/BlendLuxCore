@@ -30,7 +30,7 @@ def render(engine, scene):
         # This property is used during export, e.g. to check for layer visibility
         scene.luxcore.active_layer_index = layer_index
 
-        _add_passes(engine, layer)
+        _add_passes(engine, layer, scene)
         _render_layer(engine, scene)
 
         if engine.test_break():
@@ -171,7 +171,7 @@ def _check_halt_conditions(engine, scene):
         raise Exception("Missing halt condition (check error log)")
 
 
-def _add_passes(engine, layer):
+def _add_passes(engine, layer, scene):
     """
     Add our custom passes.
     Called by engine.final.render() before the render starts.
@@ -225,3 +225,7 @@ def _add_passes(engine, layer):
         engine.add_pass("CONVERGENCE", 1, "X", layer.name)
     if aovs.irradiance:
         engine.add_pass("IRRADIANCE", 3, "RGB", layer.name)
+
+    # Light groups
+    for name in utils_render.get_lightgroup_pass_names(scene):
+        engine.add_pass(name, 3, "RGB", layer.name)

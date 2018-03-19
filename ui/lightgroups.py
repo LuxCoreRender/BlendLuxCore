@@ -1,4 +1,4 @@
-from bl_ui.properties_render_layer import RenderLayerButtonsPanel
+from bl_ui.properties_scene import SceneButtonsPanel
 from bpy.types import Panel
 from ..properties.lightgroups import MAX_LIGHTGROUPS
 
@@ -10,10 +10,9 @@ def settings_toggle_icon(enabled):
     return 'TRIA_DOWN' if enabled else 'TRIA_RIGHT'
 
 
-class LUXCORE_RENDERLAYER_PT_lightgroups(RenderLayerButtonsPanel, Panel):
+class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
     bl_label = "LuxCore Light Groups"
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
         layout = self.layout
@@ -42,7 +41,11 @@ class LUXCORE_RENDERLAYER_PT_lightgroups(RenderLayerButtonsPanel, Panel):
                  icon_only=True, toggle=True)
         sub_row = row.row()
         sub_row.active = group.enabled
-        sub_row.prop(group, "name", text="")
+        if is_default_group:
+            sub_row.label("Default Light Group")
+            box.label("Contains all lights without specified light group", icon="INFO")
+        else:
+            sub_row.prop(group, "name", text="")
 
         # Can't delete the default lightgroup
         if not is_default_group:

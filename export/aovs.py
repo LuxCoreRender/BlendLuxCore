@@ -82,6 +82,19 @@ def convert(scene, context=None, engine=None):
                         pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
                                                              pipeline_index, definitions, engine)
 
+        # Light groups
+        lightgroups = scene.luxcore.lightgroups
+        # Number of custom groups + default group
+        lightgroup_count = len(lightgroups.custom) + 1
+
+        for group_id in range(lightgroup_count):
+            output_name = "RADIANCE_GROUP"
+            _add_output(definitions, output_name, output_id=group_id)
+            # TODO
+            # pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
+            #                                      pipeline_index, definitions, engine,
+            #                                      group_id)
+
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
         return props
@@ -107,7 +120,7 @@ def count_index(func):
 
 
 @count_index
-def _add_output(definitions, output_type_str, pipeline_index=-1, index=0):
+def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, index=0):
     definitions[str(index) + ".type"] = output_type_str
 
     filename = output_type_str
@@ -119,13 +132,19 @@ def _add_output(definitions, output_type_str, pipeline_index=-1, index=0):
     extension = ".png" if output_type_str in LDR_CHANNELS else ".exr"
     definitions[str(index) + ".filename"] = filename + extension
 
+    if output_id != -1:
+        definitions[str(index) + ".id"] = output_id
+
     return index + 1
 
 
-def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine):
+def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine, output_id=-1):
     # TODO I think we need the full imagepipeline with all plugins here
 
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
+
+    if not tonemapper.enabled:
+        return pipeline_index
 
     if tonemapper.is_automatic():
         # We can not work with an automatic tonemapper because
@@ -140,6 +159,8 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
 
     definitions[str(index) + ".type"] = "OUTPUT_SWITCHER"
     definitions[str(index) + ".channel"] = output_name
+    if output_id != -1:
+        definitions[str(index) + ".index"] = output_id
     index += 1
 
     # Tonemapper
@@ -157,6 +178,9 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
 
     # Register in the engine so we know the correct index for framebuffer drawing
-    engine.aov_imagepipelines[output_name] = pipeline_index
+    key = output_name
+    if output_id != -1:
+        key += str(output_id)
+    engine.aov_imagepipelines[key] = pipeline_index
 
     return pipeline_index + 1

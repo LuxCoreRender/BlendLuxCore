@@ -189,3 +189,22 @@ def find_suggested_tonemap_scale(session):
     # imagepipeline = scene.camera.data.luxcore.imagepipeline
     # imagepipeline.tonemapper.linear_scale = suggested_linear_scale
     # imagepipeline.tonemapper.use_autolinear = False
+
+
+def get_lightgroup_pass_name(group_name="", group_index=-1, is_default_group=False):
+    if is_default_group:
+        return 'LG %d: "%s"' % (1, "Default Lightgroup")
+    else:
+        # +1 because the default group is 0
+        # another +1 to get natural numbering starting at 1 instead of 0
+        return 'LG %d: "%s"' % (group_index + 2, group_name)
+
+
+def get_lightgroup_pass_names(scene):
+    # Default light group
+    names = [get_lightgroup_pass_name(is_default_group=True)]
+
+    for i, group in enumerate(scene.luxcore.lightgroups.custom):
+        names.append(get_lightgroup_pass_name(group.name, i))
+
+    return names
