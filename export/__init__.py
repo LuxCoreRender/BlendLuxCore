@@ -110,9 +110,8 @@ class Exporter(object):
 
         # Convert config at last because all lightgroups and passes have to be already defined
         config_props = config.convert(scene, context, engine)
-
-        if config_props is None:
-            # There was a critical error in config export, we can't render
+        if str(config_props) == "":
+            # Config props are empty: there was a critical error in config export, we can't render
             raise Exception("Errors in config, check error log")
 
         # Init config cache (convert to string here because config_props gets changed below)

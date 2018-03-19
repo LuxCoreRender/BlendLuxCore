@@ -137,7 +137,7 @@ def convert(scene, context=None, engine=None):
         msg = 'Config: %s' % error
         # Note: Exceptions in the config are critical, we can't render without a config
         scene.luxcore.errorlog.add_error(msg)
-        return None
+        return pyluxcore.Properties()
 
 
 def _convert_path(config, definitions):
@@ -153,7 +153,7 @@ def _convert_path(config, definitions):
         definitions["path.clamping.variance.maxvalue"] = path.clamping
 
 
-def _convert_filesaver(scene, definitions, engine):
+def _convert_filesaver(scene, definitions, luxcore_engine):
     config = scene.luxcore.config
 
     filesaver_path = config.filesaver_path
@@ -197,7 +197,7 @@ def _convert_filesaver(scene, definitions, engine):
 
     definitions["filesaver.format"] = config.filesaver_format
     definitions["renderengine.type"] = "FILESAVER"
-    definitions["filesaver.renderengine.type"] = engine
+    definitions["filesaver.renderengine.type"] = luxcore_engine
 
 
 def _convert_seed(scene, definitions):

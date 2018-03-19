@@ -166,6 +166,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
         _visibilitymap(definitions, lamp)
 
         props = utils.create_props(prefix, definitions)
+        print(props)
         return props, exported_light
     except Exception as error:
         msg = 'Light "%s": %s' % (blender_obj.name, error)
@@ -245,7 +246,8 @@ def _convert_common_props(scene, lamp_or_world):
     lightgroup_id = 0
     for i, group in enumerate(scene.luxcore.lightgroups.custom):
         if group.name == lamp_or_world.luxcore.lightgroup:
-            lightgroup_id = i
+            # Add 1 because 0 is the default group
+            lightgroup_id = i + 1
 
     return gain, samples, importance, lightgroup_id
 
@@ -256,8 +258,8 @@ def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
     try:
         filepath = ImageExporter.export(lamp_or_world.luxcore.image)
     except OSError as error:
-        type = "Lamp" if isinstance(lamp_or_world, bpy.types.Lamp) else "World"
-        msg = '%s "%s": %s' % (type, lamp_or_world.name, error)
+        error_context = "Lamp" if isinstance(lamp_or_world, bpy.types.Lamp) else "World"
+        msg = '%s "%s": %s' % (error_context, lamp_or_world.name, error)
         scene.luxcore.errorlog.add_warning(msg)
         # Fallback
         definitions["type"] = "constantinfinite"
@@ -398,6 +400,7 @@ def _indirect_light_visibility(definitions, lamp_or_world):
         "visibility.indirect.glossy.enable": lamp_or_world.luxcore.visibility_indirect_glossy,
         "visibility.indirect.specular.enable": lamp_or_world.luxcore.visibility_indirect_specular,
     })
+
 
 def _visibilitymap(definitions, lamp_or_world):
     definitions["visibilitymap.enable"] = lamp_or_world.luxcore.visibilitymap_enable

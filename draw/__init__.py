@@ -195,7 +195,7 @@ class FrameBufferFinal(object):
             # Check if AOV is enabled by user
             if getattr(scene_layer.luxcore.aovs, output_name.lower(), False):
                 try:
-                    self._import_aov(output_name, output_type, render_layer, session, engine, scene)
+                    self._import_aov(output_name, output_type, render_layer, session, engine)
                 except RuntimeError as error:
                     print("Error on import of AOV %s: %s" % (output_name, error))
 
@@ -203,13 +203,13 @@ class FrameBufferFinal(object):
             output_name = "RADIANCE_GROUP"
             output_type = pyluxcore.FilmOutputType.RADIANCE_GROUP
             try:
-                self._import_aov(output_name, output_type, render_layer, session, engine, scene, i)
+                self._import_aov(output_name, output_type, render_layer, session, engine, i, name)
             except RuntimeError as error:
                 print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
 
         engine.end_result(result)
 
-    def _import_aov(self, output_name, output_type, render_layer, session, engine, scene, index=0):
+    def _import_aov(self, output_name, output_type, render_layer, session, engine, index=0, lightgroup_name=""):
         if output_name in AOVS:
             aov = AOVS[output_name]
         else:
@@ -251,8 +251,7 @@ class FrameBufferFinal(object):
         if output_name == "DEPTH":
             pass_name = "Depth"
         elif output_name.startswith("RADIANCE_GROUP"):
-            lightgroup_pass_names = utils_render.get_lightgroup_pass_names(scene)
-            pass_name = lightgroup_pass_names[index]
+            pass_name = lightgroup_name
         else:
             pass_name = output_name
 

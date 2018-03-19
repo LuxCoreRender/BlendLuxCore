@@ -82,18 +82,17 @@ def convert(scene, context=None, engine=None):
                         pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
                                                              pipeline_index, definitions, engine)
 
-        # Light groups
-        lightgroups = scene.luxcore.lightgroups
-        # Number of custom groups + default group
-        lightgroup_count = len(lightgroups.custom) + 1
+            # Light groups
+            lightgroups = scene.luxcore.lightgroups
+            # Number of custom groups + default group
+            lightgroup_count = len(lightgroups.custom) + 1
 
-        for group_id in range(lightgroup_count):
-            output_name = "RADIANCE_GROUP"
-            _add_output(definitions, output_name, output_id=group_id)
-            # TODO
-            # pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
-            #                                      pipeline_index, definitions, engine,
-            #                                      group_id)
+            for group_id in range(lightgroup_count):
+                output_name = "RADIANCE_GROUP"
+                _add_output(definitions, output_name, output_id=group_id)
+                pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
+                                                     pipeline_index, definitions, engine,
+                                                     group_id, lightgroup_count)
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
@@ -138,7 +137,8 @@ def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, i
     return index + 1
 
 
-def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine, output_id=-1):
+def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine,
+                        output_id=-1, lightgroup_count=-1):
     # TODO I think we need the full imagepipeline with all plugins here
 
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
@@ -157,11 +157,16 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     definitions = {}
     index = 0
 
-    definitions[str(index) + ".type"] = "OUTPUT_SWITCHER"
-    definitions[str(index) + ".channel"] = output_name
-    if output_id != -1:
-        definitions[str(index) + ".index"] = output_id
-    index += 1
+    if output_name == "RADIANCE_GROUP":
+        for group_id in range(lightgroup_count):
+            # Disable all light groups except one per imagepipeline
+            definitions["radiancescales." + str(group_id) + ".enabled"] = (output_id == group_id)
+    else:
+        definitions[str(index) + ".type"] = "OUTPUT_SWITCHER"
+        definitions[str(index) + ".channel"] = output_name
+        if output_id != -1:
+            definitions[str(index) + ".index"] = output_id
+        index += 1
 
     # Tonemapper
     definitions[str(index) + ".type"] = tonemapper.type
@@ -177,7 +182,8 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     props.Set(utils.create_props(prefix, definitions))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
 
-    # Register in the engine so we know the correct index for framebuffer drawing
+    # Register in the engine so we know the correct index
+    # when we draw the framebuffer during rendering
     key = output_name
     if output_id != -1:
         key += str(output_id)
