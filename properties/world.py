@@ -6,7 +6,7 @@ from bpy.props import (
     StringProperty,
 )
 from .light import (
-    SAMPLES_DESCRIPTION, IMPORTANCE_DESCRIPTION,
+    RGB_GAIN_DESC, SAMPLES_DESCRIPTION, IMPORTANCE_DESCRIPTION,
     GAMMA_DESCRIPTION, SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION,
     VISIBILITYMAP_ENABLE_DESC, LIGHTGROUP_DESC,
 )
@@ -35,7 +35,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
 
     # Generic properties shared by all background light types
     gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
-    rgb_gain = FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR")
+    rgb_gain = FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
+                                   description=RGB_GAIN_DESC)
     samples = IntProperty(name="Samples", default=-1, min=-1, description=SAMPLES_DESCRIPTION)
     importance = FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
