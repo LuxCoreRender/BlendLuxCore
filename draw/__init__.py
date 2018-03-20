@@ -3,7 +3,6 @@ import math
 import array
 from ..bin import pyluxcore
 from .. import utils
-from ..utils import render as utils_render
 
 
 def draw_quad(offset_x, offset_y, width, height):
@@ -199,7 +198,8 @@ class FrameBufferFinal(object):
                 except RuntimeError as error:
                     print("Error on import of AOV %s: %s" % (output_name, error))
 
-        for i, name in enumerate(utils_render.get_lightgroup_pass_names(scene)):
+        lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
+        for i, name in enumerate(lightgroup_pass_names):
             output_name = "RADIANCE_GROUP"
             output_type = pyluxcore.FilmOutputType.RADIANCE_GROUP
             try:

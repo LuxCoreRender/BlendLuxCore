@@ -227,5 +227,6 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("IRRADIANCE", 3, "RGB", layer.name)
 
     # Light groups
-    for name in utils_render.get_lightgroup_pass_names(scene):
+    lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
+    for name in lightgroup_pass_names:
         engine.add_pass(name, 3, "RGB", layer.name)

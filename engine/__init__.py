@@ -1,6 +1,6 @@
 import bpy
 from . import final, preview, viewport
-from ..utils import render as utils_render
+
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_idname = "LUXCORE"
@@ -59,7 +59,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             # Clean up
             del self.session
             self.session = None
-
 
     def view_update(self, context):
         viewport.view_update(self, context)
@@ -138,5 +137,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "IRRADIANCE", 3, "RGB", "COLOR")
 
         # Light groups
-        for name in utils_render.get_lightgroup_pass_names(scene):
+        lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
+        for name in lightgroup_pass_names:
             self.register_pass(scene, renderlayer, name, 3, "RGB", "COLOR")

@@ -47,3 +47,30 @@ class LuxCoreLightGroupSettings(PropertyGroup):
                 return i + 1
         # Fallback to default group
         return 0
+
+    @staticmethod
+    def get_lightgroup_pass_name(group_name="", group_index=-1, is_default_group=False):
+        """
+        Get the name used for a lightgroup in the Blender render passes of a render layer.
+        This name is used both as a key and in the UI, so it uses a nice formatting
+        and the numbering starts from 1 instead of 0.
+        """
+        if is_default_group:
+            return 'LG %d: "%s"' % (1, "Default Lightgroup")
+        else:
+            # +1 because the default group is 0
+            # another +1 to get natural numbering starting at 1 instead of 0
+            return 'LG %d: "%s"' % (group_index + 2, group_name)
+
+    def get_pass_names(self):
+        """
+        Get a list of formatted names of all lightgroups in the scene.
+        These names are used both as keys and in the UI, so they use a nice formatting
+        and the numbering starts from 1 instead of 0.
+        """
+        names = [self.get_lightgroup_pass_name(is_default_group=True)]
+
+        for i, group in enumerate(self.custom):
+            names.append(self.get_lightgroup_pass_name(group.name, i))
+
+        return names
