@@ -91,6 +91,8 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         definitions["emission.efficency"] = self.efficacy
         definitions["emission.samples"] = self.samples
         definitions["emission.theta"] = math.degrees(self.spread_angle)
+        lightgroups = bpy.context.scene.luxcore.lightgroups
+        definitions["emission.id"] = lightgroups.get_id_by_name(self.lightgroup)
 
         if self.ies.use:
             try:

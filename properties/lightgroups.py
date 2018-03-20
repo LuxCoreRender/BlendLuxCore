@@ -38,3 +38,12 @@ class LuxCoreLightGroupSettings(PropertyGroup):
 
     def remove(self, index):
         self.custom.remove(index)
+
+    def get_id_by_name(self, group_name):
+        # Check if the name is in the custom groups
+        for i, group in enumerate(self.custom):
+            if group.name == group_name:
+                # Add 1 because 0 is the default group
+                return i + 1
+        # Fallback to default group
+        return 0

@@ -224,7 +224,6 @@ class Exporter(object):
     def update_session(self, changes, session):
         if changes & Change.IMAGEPIPELINE:
             session.Parse(self.imagepipeline_cache.props)
-        # TODO: lightgroups will also be put here
 
     def _convert_object(self, props, obj, scene, context, luxcore_scene,
                         update_mesh=False, dupli_suffix="", engine=None):

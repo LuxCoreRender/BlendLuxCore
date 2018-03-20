@@ -35,6 +35,7 @@ TODO: These do not contain .blend files yet.
 * [x] Glass dispersion
 * [x] IES lighting
 * [x] Shadow catcher
+* [x] Light groups
 * [x] Cameras (perspective, ortographic, panoramic)
 * [x] Depth of field
 * [x] Arbitrary clipping plane
@@ -52,7 +53,6 @@ TODO: These do not contain .blend files yet.
 * [x] Render layers
 * [x] Material preview
 * [ ] Image sequences
-* [ ] Light groups
 * [ ] Saving a resumable film
 * [ ] Periodic film saving
 * And more...

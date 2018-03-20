@@ -242,13 +242,7 @@ def _convert_common_props(scene, lamp_or_world):
     gain = [x * lamp_or_world.luxcore.gain for x in lamp_or_world.luxcore.rgb_gain]
     samples = lamp_or_world.luxcore.samples
     importance = lamp_or_world.luxcore.importance
-
-    lightgroup_id = 0
-    for i, group in enumerate(scene.luxcore.lightgroups.custom):
-        if group.name == lamp_or_world.luxcore.lightgroup:
-            # Add 1 because 0 is the default group
-            lightgroup_id = i + 1
-
+    lightgroup_id = scene.luxcore.lightgroups.get_id_by_name(lamp_or_world.luxcore.lightgroup)
     return gain, samples, importance, lightgroup_id
 
 
@@ -318,9 +312,10 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
         "emission.efficency": lamp.luxcore.efficacy,
         "emission.samples": samples,
         "emission.theta": math.degrees(lamp.luxcore.spread_angle),
+        "emission.id": scene.luxcore.lightgroups.get_id_by_name(lamp.luxcore.lightgroup),
         # Note: not "emission.importance"
         "importance": importance,
-        # TODO: id, maybe transparency (hacky)
+        # TODO: maybe transparency (hacky)
 
         # Note: do not add support for visibility.indirect.* settings, they are useless here
         # because the only sensible setting is to have them enabled, otherwise we lose MIS
