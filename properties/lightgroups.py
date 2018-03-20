@@ -9,6 +9,9 @@ from bpy.types import PropertyGroup
 # However one group is always there (the default group), so 7 can be user-defined
 MAX_LIGHTGROUPS = 8 - 1
 
+RGB_GAIN_DESC = "The color of each light in this group is multiplied with this multiplier, if enabled"
+TEMP_DESC = "Blackbody emission color in Kelvin by which to shift the color of each light in this group"
+
 
 class LuxCoreLightGroup(PropertyGroup):
     enabled = BoolProperty(default=True, description="Enable/disable this light group. "
@@ -17,11 +20,12 @@ class LuxCoreLightGroup(PropertyGroup):
     name = StringProperty()
     gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
     use_rgb_gain = BoolProperty(name="Color:", default=True, description="Use RGB color multiplier")
-    rgb_gain = FloatVectorProperty(name="", default=(1, 1, 1), min=0, max=1, subtype="COLOR")
+    rgb_gain = FloatVectorProperty(name="", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
+                                   description=RGB_GAIN_DESC)
     use_temperature = BoolProperty(name="Temperature:", default=False,
                                    description="Use temperature multiplier")
     temperature = FloatProperty(name="Kelvin", default=4000, min=1000, max=10000, precision=0, step=10000,
-                                description="Blackbody emission color in Kelvin")
+                                description=TEMP_DESC)
 
 
 # Attached to scene

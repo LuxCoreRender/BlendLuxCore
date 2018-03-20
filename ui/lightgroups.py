@@ -2,6 +2,7 @@ from bl_ui.properties_scene import SceneButtonsPanel
 from bpy.types import Panel
 from ..properties.lightgroups import MAX_LIGHTGROUPS
 
+
 def lightgroup_icon(enabled):
     return 'OUTLINER_OB_LAMP' if enabled else 'LAMP'
 
@@ -27,7 +28,8 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         if len(groups.custom) < MAX_LIGHTGROUPS:
             layout.operator("luxcore.add_lightgroup", icon="ZOOMIN")
 
-    def draw_lightgroup(self, layout, group, index, is_default_group=False):
+    @staticmethod
+    def draw_lightgroup(layout, group, index, is_default_group=False):
         col = layout.column(align=True)
 
         # Upper row (enable/disable, name, remove)

@@ -61,14 +61,19 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
 
         layout.prop(lamp, "type", expand=True)
 
-        split = layout.split(percentage=0.33)
-        split.prop(lamp.luxcore, "rgb_gain", text="")
-        split.prop(lamp.luxcore, "gain")
+        split = layout.split()
 
+        col = split.column(align=True)
+        col.prop(lamp.luxcore, "rgb_gain", text="")
+        col.prop(lamp.luxcore, "gain")
+
+        col = split.column(align=True)
+        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
+        op.target = "SCENE"
         lightgroups = context.scene.luxcore.lightgroups
-        split.prop_search(lamp.luxcore, "lightgroup",
-                          lightgroups, "custom",
-                          icon="OUTLINER_OB_LAMP", text="")
+        col.prop_search(lamp.luxcore, "lightgroup",
+                        lightgroups, "custom",
+                        icon="OUTLINER_OB_LAMP", text="")
 
         layout.separator()
 
