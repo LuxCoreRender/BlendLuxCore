@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import StringProperty, CollectionProperty, IntProperty
 from bpy.types import PropertyGroup
+from ..utils import ui as utils_ui
 
 
 class LuxCoreError(PropertyGroup):
@@ -35,6 +36,9 @@ class LuxCoreErrorLog(PropertyGroup):
         try:
             self.errors.clear()
             self.warnings.clear()
+            # Force the panel to update (if we don't do this, the added warnings
+            # are only visible after the user moves the mouse over the error log panel)
+            utils_ui.tag_region_for_redraw(bpy.context, "PROPERTIES", "WINDOW")
         except AttributeError:
             print("Can't clear errors in _RestrictContext")
 
@@ -52,5 +56,8 @@ class LuxCoreErrorLog(PropertyGroup):
             # Access message property without using the setter
             # (because it's read only for the user)
             new["message"] = str(message)
+            # Force the panel to update (if we don't do this, the added warnings
+            # are only visible after the user moves the mouse over the error log panel)
+            utils_ui.tag_region_for_redraw(bpy.context, "PROPERTIES", "WINDOW")
         except AttributeError:
             print("Can't add errors in _RestrictContext")

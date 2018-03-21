@@ -41,3 +41,23 @@ def template_node_tree(layout, data, property, icon,
     # Operator to unlink node tree
     if node_tree and operator_unlink:
         row.operator(operator_unlink, text="", icon="X")
+
+
+def tag_region_for_redraw(context, area_type, region_type):
+    """
+    Force a region to redraw itself.
+    This is necessary if some non-UI related code changes stuff in the UI
+    and the user is currently not hovering the mouse over the affected
+    panel. Example: On export, some errors are added to the error log.
+
+    Example arguments: area_type == "PROPERTIES", region_type == "WINDOW"
+    tags the properties for redraw.
+    region_type can be "HEADER" or "WINDOW" in most cases
+    """
+    for area in context.screen.areas:
+        if area.type != area_type:
+            continue
+        for region in area.regions:
+            if region.type == region_type:
+                region.tag_redraw()
+                break
