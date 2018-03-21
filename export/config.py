@@ -97,6 +97,7 @@ def convert(scene, context=None, engine=None):
             "film.height": height,
             "film.filter.type": config.filter,
             "film.filter.width": config.filter_width,
+            "lightstrategy.type": config.light_strategy,
         })
 
         # Filter

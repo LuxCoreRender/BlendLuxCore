@@ -47,6 +47,19 @@ SOBOL_ADAPTIVE_STRENGTH_DESC = (
     "focus more samples on noisy areas of the image"
 )
 
+LOG_POWER_DESC = (
+    "(Default) Sample lights according to their brightness, but weighting very bright "
+    "lights not much more than dim lights (recommended when using environment "
+    "lights (HDRI/sky) plus few small light sources)"
+)
+
+POWER_DESC = (
+    "Sample lights according to their brightness (recommended when using very bright "
+    "lights (e.g. sun) together with highpoly meshlights with more than about 10 tris)"
+)
+
+UNIFORM_DESC = "Sample all lights equally, not according to their brightness"
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -173,6 +186,15 @@ class LuxCoreConfig(PropertyGroup):
                                  description=FILTER_WIDTH_DESC, subtype="PIXEL")
     gaussian_alpha = FloatProperty(name="Gaussian Filter Alpha", default=2, min=0.1, max=10,
                                    description="Gaussian rate of falloff. Lower values give blurrier images.")
+
+    # Light strategy
+    light_strategy_items = [
+        ("LOG_POWER", "Log Power", LOG_POWER_DESC, 0),
+        ("POWER", "Power", POWER_DESC, 1),
+        ("UNIFORM", "Uniform", UNIFORM_DESC, 2),
+    ]
+    light_strategy = EnumProperty(name="Light Strategy", items=light_strategy_items, default="LOG_POWER",
+                                  description="Decides how the lights in the scene are sampled")
 
     # FILESAVER options
     use_filesaver = BoolProperty(name="Only write LuxCore scene", default=False)

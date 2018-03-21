@@ -115,6 +115,9 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         sub.prop(config, "seed")
         row.prop(config, "use_animated_seed", icon="TIME", toggle=True)
 
+        # Light strategy
+        layout.prop(config, "light_strategy")
+
 
 class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
