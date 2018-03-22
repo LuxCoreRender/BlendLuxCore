@@ -2,6 +2,12 @@ import requests
 from requests import ConnectionError
 import json
 import platform
+import os
+import shutil
+import tempfile
+import urllib.request
+import urllib.error
+import zipfile
 from collections import OrderedDict
 
 import bpy
@@ -143,6 +149,31 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
 
         self.report({"INFO"}, "Downloading version " + requested_release.version_string)
 
-        # TODO download and replace
+        with tempfile.TemporaryDirectory() as temp_dir_path:
+            temp_zip_path = os.path.join(temp_dir_path, "default.zip")
+
+            url = requested_release.download_url
+            try:
+                with urllib.request.urlopen(url, timeout=60) as url_handle, \
+                                   open(temp_zip_path, "wb") as file_handle:
+                    file_handle.write(url_handle.read())
+            except urllib.error.URLError as err:
+                self.report({"ERROR"}, "Could not download: %s" % err)
+                return {"CANCELLED"}
+
+            current_dir = os.path.dirname(os.path.realpath(__file__))
+            # Call dirname twice to go up 2 levels (from addons/BlendLuxCore/operators/)
+            blendluxcore_dir = os.path.dirname(current_dir)
+            addon_dir = os.path.dirname(blendluxcore_dir)
+
+            # Rename current installation of BlendLuxCore to have a backup
+            backup_path = blendluxcore_dir + "_backup"
+            while os.path.exists(backup_path):
+                backup_path += "b"
+            shutil.move(blendluxcore_dir, backup_path)
+
+            with zipfile.ZipFile(temp_zip_path) as zf:
+                print("Extracting zip to", addon_dir)
+                zf.extractall(addon_dir)
 
         return {"FINISHED"}
