@@ -84,9 +84,6 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
         layout.separator()
         layout.menu("LUXCORE_MT_node_tree_preset")
 
-        # TODO remove, just for testing
-        layout.operator("luxcore.change_version")
-
 
 class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
