@@ -1,6 +1,7 @@
 from bl_ui.properties_material import MaterialButtonsPanel
 from bpy.types import Panel, Menu
 from .. import utils
+from ..operators.node_tree_presets import LUXCORE_OT_preset_material
 
 
 class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
@@ -82,6 +83,29 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
 
         layout.separator()
         layout.menu("LUXCORE_MT_node_tree_preset")
+
+
+class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Node Tree Presets"
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return context.material and (engine == "LUXCORE")
+
+    def draw(self, context):
+        layout = self.layout
+
+        row = layout.row()
+
+        for category, presets in LUXCORE_OT_preset_material.categories.items():
+            col = row.column()
+            col.label(category)
+
+            for preset in presets:
+                op = col.operator("luxcore.preset_material", text=preset)
+                op.preset = preset
 
 
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
