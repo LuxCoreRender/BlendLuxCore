@@ -39,7 +39,6 @@ def get_current_version():
 
 
 def release_items_callback(scene, context):
-    print("callback called")
     items = []
     current_version = get_current_version()
 
@@ -140,26 +139,32 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
         The execute method is called when the user clicks the "OK" button.
         It downloads and installs the requested version.
         """
-        print(self.selected_release)
         requested_release = releases[self.selected_release]
-
-        if requested_release.version_string == get_current_version():
+        current_version = get_current_version()
+        if requested_release.version_string == current_version:
             self.report({"ERROR"}, "This is the currently installed version")
             return {"CANCELLED"}
 
-        self.report({"INFO"}, "Downloading version " + requested_release.version_string)
+        print("=======================================")
+        print("Changing version to", self.selected_release)
+        print("Current version:", current_version)
+        from ..bin import pyluxcore
+        print("Current pyluxcore version:", pyluxcore.Version())
+        print()
 
         with tempfile.TemporaryDirectory() as temp_dir_path:
             temp_zip_path = os.path.join(temp_dir_path, "default.zip")
 
             url = requested_release.download_url
             try:
+                print("Downloading:", url)
                 with urllib.request.urlopen(url, timeout=60) as url_handle, \
                                    open(temp_zip_path, "wb") as file_handle:
                     file_handle.write(url_handle.read())
             except urllib.error.URLError as err:
                 self.report({"ERROR"}, "Could not download: %s" % err)
                 return {"CANCELLED"}
+            print("Download finished")
 
             current_dir = os.path.dirname(os.path.realpath(__file__))
             # Call dirname twice to go up 2 levels (from addons/BlendLuxCore/operators/)
@@ -169,11 +174,31 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
             # Rename current installation of BlendLuxCore to have a backup
             backup_path = blendluxcore_dir + "_backup"
             while os.path.exists(backup_path):
+                # Avoid name collision if some user has a folder
+                # called "BlendLuxCore_backup" for whatever reason
                 backup_path += "b"
+            print("Backing up files at:", backup_path)
             shutil.move(blendluxcore_dir, backup_path)
 
-            with zipfile.ZipFile(temp_zip_path) as zf:
-                print("Extracting zip to", addon_dir)
-                zf.extractall(addon_dir)
+            try:
+                with zipfile.ZipFile(temp_zip_path) as zf:
+                    print("Extracting zip to", addon_dir)
+                    zf.extractall(addon_dir)
 
+                # We don't need the backup anymore
+                print("Cleaning up")
+                shutil.rmtree(backup_path)
+            except Exception:
+                # If the extraction failed halfway, there might be a partially filled folder
+                if os.path.exists(blendluxcore_dir):
+                    shutil.rmtree(blendluxcore_dir)
+                # Restore the backup
+                shutil.move(backup_path, blendluxcore_dir)
+
+        print()
+        print("Done. Changed to version", self.selected_release)
+        from ..bin import pyluxcore
+        pyluxcore.Init()
+        print("New pyluxcore version:", pyluxcore.Version())
+        print("=======================================")
         return {"FINISHED"}
