@@ -190,22 +190,24 @@ class FrameBufferFinal(object):
         combined = render_layer.passes["Combined"]
         self._convert_combined(self._width, self._height, self.combined_buffer, combined.as_pointer(), False)
 
-        for output_name, output_type in pyluxcore.FilmOutputType.names.items():
-            # Check if AOV is enabled by user
-            if getattr(scene_layer.luxcore.aovs, output_name.lower(), False):
-                try:
-                    self._import_aov(output_name, output_type, render_layer, session, engine)
-                except RuntimeError as error:
-                    print("Error on import of AOV %s: %s" % (output_name, error))
+        # Import AOVs only in final render, not in material preview mode
+        if not engine.is_preview:
+            for output_name, output_type in pyluxcore.FilmOutputType.names.items():
+                # Check if AOV is enabled by user
+                if getattr(scene_layer.luxcore.aovs, output_name.lower(), False):
+                    try:
+                        self._import_aov(output_name, output_type, render_layer, session, engine)
+                    except RuntimeError as error:
+                        print("Error on import of AOV %s: %s" % (output_name, error))
 
-        lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
-        for i, name in enumerate(lightgroup_pass_names):
-            output_name = "RADIANCE_GROUP"
-            output_type = pyluxcore.FilmOutputType.RADIANCE_GROUP
-            try:
-                self._import_aov(output_name, output_type, render_layer, session, engine, i, name)
-            except RuntimeError as error:
-                print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
+            lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
+            for i, name in enumerate(lightgroup_pass_names):
+                output_name = "RADIANCE_GROUP"
+                output_type = pyluxcore.FilmOutputType.RADIANCE_GROUP
+                try:
+                    self._import_aov(output_name, output_type, render_layer, session, engine, i, name)
+                except RuntimeError as error:
+                    print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
 
         engine.end_result(result)
 
