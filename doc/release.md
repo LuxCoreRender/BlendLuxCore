@@ -1,7 +1,7 @@
 
 ### How to create a release
 
-In the .github folder, there's a python script `package_releases.py`.
+In the release/ folder, there's a python script `package_releases.py`.
 You can use it to create the zip files necessary for a release.
 It downloads the LuxCore release, extracts the binaries, puts them in BlendLuxCore clones and zips the result.
 
