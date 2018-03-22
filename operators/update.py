@@ -148,8 +148,6 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
         print("=======================================")
         print("Changing version to", self.selected_release)
         print("Current version:", current_version)
-        from ..bin import pyluxcore
-        print("Current pyluxcore version:", pyluxcore.Version())
         print()
 
         with tempfile.TemporaryDirectory() as temp_dir_path:
@@ -197,8 +195,8 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
 
         print()
         print("Done. Changed to version", self.selected_release)
-        from ..bin import pyluxcore
-        pyluxcore.Init()
-        print("New pyluxcore version:", pyluxcore.Version())
+        print("Restart Blender for the changes to take effect.")
         print("=======================================")
+        # We have to report as error, otherwise we don't get a popup message
+        self.report({"ERROR"}, "Restart Blender!")
         return {"FINISHED"}
