@@ -28,6 +28,30 @@ class Release:
 releases = OrderedDict()
 
 
+def recursive_overwrite(src, dest):
+    if os.path.isdir(src):
+        if not os.path.isdir(dest):
+            os.makedirs(dest)
+        files = os.listdir(src)
+
+        for f in files:
+            recursive_overwrite(os.path.join(src, f),
+                                os.path.join(dest, f))
+    else:
+        # Windows does not allow us to delete or replace loaded .dll and .pyd files.
+        # However, we can rename them.
+        _, extension = os.path.splitext(dest)
+        if extension.lower() in {".pyd", ".dll"}:
+            dest_old = dest + ".old"
+            # If the name we want to use already exists from a previous update,
+            # delete the old file (it is not in use anyway)
+            if os.path.exists(dest_old):
+                os.remove(dest_old)
+            shutil.move(dest, dest + ".old")
+
+        shutil.copyfile(src, dest)
+
+
 def get_current_version():
     from .. import bl_info
     version = bl_info["version"]
@@ -167,31 +191,13 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
             current_dir = os.path.dirname(os.path.realpath(__file__))
             # Call dirname twice to go up 2 levels (from addons/BlendLuxCore/operators/)
             blendluxcore_dir = os.path.dirname(current_dir)
-            addon_dir = os.path.dirname(blendluxcore_dir)
 
-            # Rename current installation of BlendLuxCore to have a backup
-            backup_path = blendluxcore_dir + "_backup"
-            while os.path.exists(backup_path):
-                # Avoid name collision if some user has a folder
-                # called "BlendLuxCore_backup" for whatever reason
-                backup_path += "b"
-            print("Backing up files at:", backup_path)
-            shutil.move(blendluxcore_dir, backup_path)
+            with zipfile.ZipFile(temp_zip_path) as zf:
+                print("Extracting zip to", temp_dir_path)
+                zf.extractall(temp_dir_path)
 
-            try:
-                with zipfile.ZipFile(temp_zip_path) as zf:
-                    print("Extracting zip to", addon_dir)
-                    zf.extractall(addon_dir)
-
-                # We don't need the backup anymore
-                print("Cleaning up")
-                shutil.rmtree(backup_path)
-            except Exception:
-                # If the extraction failed halfway, there might be a partially filled folder
-                if os.path.exists(blendluxcore_dir):
-                    shutil.rmtree(blendluxcore_dir)
-                # Restore the backup
-                shutil.move(backup_path, blendluxcore_dir)
+            extracted_blendluxcore = os.path.join(temp_dir_path, "BlendLuxCore")
+            recursive_overwrite(extracted_blendluxcore, blendluxcore_dir)
 
         print()
         print("Done. Changed to version", self.selected_release)
