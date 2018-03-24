@@ -205,20 +205,20 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         fire_band.update_add(bpy.context)
         fire_band.update_add(bpy.context)
         # Black
-        fire_band.items[0].offset = 0
-        fire_band.items[0].value = (0, 0, 0)
+        fire_band.ramp_items[0].offset = 0
+        fire_band.ramp_items[0].value = (0, 0, 0)
         # Dark red
-        fire_band.items[1].offset = 0.25
-        fire_band.items[1].value = (0.35, 0.03, 0)
+        fire_band.ramp_items[1].offset = 0.25
+        fire_band.ramp_items[1].value = (0.35, 0.03, 0)
         # Orange/yellow
-        fire_band.items[2].offset = 0.8
-        fire_band.items[2].value = (0.9, 0.4, 0)
+        fire_band.ramp_items[2].offset = 0.8
+        fire_band.ramp_items[2].value = (0.9, 0.4, 0)
         # Blue
-        fire_band.items[3].offset = 0.95
-        fire_band.items[3].value = (0.03, 0.3, 0.8)
+        fire_band.ramp_items[3].offset = 0.95
+        fire_band.ramp_items[3].value = (0.03, 0.3, 0.8)
         # White
-        fire_band.items[4].offset = 1
-        fire_band.items[4].value = (1, 1, 1)
+        fire_band.ramp_items[4].offset = 1
+        fire_band.ramp_items[4].value = (1, 1, 1)
 
         fire_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, fire_band, 0, "Amount")
         if is_smoke_domain:

@@ -46,14 +46,14 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
             new_offset = 1
             new_value = (1, 1, 1)
         else:
-            max = None
+            max_item = None
 
             for item in self.ramp_items:
-                if max is None or item.offset > max.offset:
-                    max = item
+                if max_item is None or item.offset > max_item.offset:
+                    max_item = item
 
-            new_offset = max.offset
-            new_value = max.value
+            new_offset = max_item.offset
+            new_value = max_item.value
 
         new_item = self.ramp_items.add()
         new_item.offset = new_offset
@@ -141,7 +141,6 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
             else:
                 # sub = split.row(align=True)
                 row.prop(item, "add_keyframe", toggle=True, icon="KEY_HLT")
-
 
     def export(self, props, luxcore_name=None):
         definitions = {

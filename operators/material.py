@@ -151,7 +151,7 @@ class LuxCore_OT_material_select(bpy.types.Operator):
 
 class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
     bl_idname = "luxcore.material_show_nodetree"
-    bl_label = "Show"
+    bl_label = "Show Nodes"
     bl_description = "Switch to the node tree of this material"
 
     @classmethod

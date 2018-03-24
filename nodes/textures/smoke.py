@@ -31,7 +31,6 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
     ]
     wrap = EnumProperty(name="Wrap", items=wrap_items, default="black")
 
-
     def init(self, context):
         self.outputs.new("LuxCoreSocketFloatPositive", "Value")
 
