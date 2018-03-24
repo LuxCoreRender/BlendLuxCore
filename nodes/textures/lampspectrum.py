@@ -139,7 +139,6 @@ class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
     bl_label = "Lamp Spectrum"
     bl_width_default = 200
 
-    
     lamp_category = EnumProperty(name="Lamp Category", description="Lamp Preset Category", items=CATEGORY_ITEMS,
                                         default="Natural")
 
@@ -157,6 +156,8 @@ class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
                                         default="MHN")
     lamp_spectrum_diode = EnumProperty(name="Diode Preset", description="Diode Preset", items=DIODE_ITEMS,
                                         default="LEDB")
+    lamp_spectrum_spectral = EnumProperty(name="Spectral", description="Spectral Preset", items=SPECTRAL_ITEMS,
+                                       default="XeI")
     lamp_spectrum_glow_discharge = EnumProperty(name="Glow Discharge Preset", description="low Discharge Preset", items=GLOW_DISCHARGE_ITEMS,
                                         default="NeKrFL")
     lamp_spectrum_molecular = EnumProperty(name="Molecular Preset", description="Molecular Preset", items=MOLECULAR_ITEMS,
@@ -171,8 +172,7 @@ class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
                                         default="UVA")
     lamp_spectrum_absorption = EnumProperty(name="Absorption/Mixed Preset", description="bsorption/Mixed Preset", items=ABSORPTION_ITEMS,
                                         default="HPMFLCobaltGlass")
-    
-   
+
     def init(self, context):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
