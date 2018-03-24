@@ -81,7 +81,10 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
 
         # combine transformations
         mapping_type = 'globalmapping3d'
-        matrix_transformation = utils.matrix_to_list(tex_loc * tex_rot * tex_sca, invert=True)
+        matrix_transformation = utils.matrix_to_list(tex_loc * tex_rot * tex_sca,
+                                                     scene=bpy.context.scene,
+                                                     apply_worldscale=True,
+                                                     invert=True)
 
         definitions = {
             "type": "densitygrid",
