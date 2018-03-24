@@ -81,9 +81,6 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             else:
                 layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use Material Nodes")
 
-        layout.separator()
-        layout.menu("LUXCORE_MT_node_tree_preset")
-
 
 class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -92,7 +89,7 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.material and (engine == "LUXCORE")
+        return engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
