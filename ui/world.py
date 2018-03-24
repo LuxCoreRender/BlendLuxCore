@@ -124,7 +124,7 @@ class LUXCORE_WORLD_PT_volume(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.world and engine == "LUXCORE" and context.world.luxcore.light != "none"
+        return context.world and engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
