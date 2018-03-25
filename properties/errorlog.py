@@ -9,11 +9,17 @@ class LuxCoreError:
 
 
 class LuxCoreCollection(list):
-    def __init__(self, template):
+    """
+    Mimics Blender's CollectionProperty a bit.
+    If you pass a template (must be a class) you can use the add() method
+    to append more instances of that template.
+    """
+    def __init__(self, *args, template=None):
+        list.__init__(*args)
         self.template = template
-        super().__init__()
 
     def add(self):
+        assert self.template is not None
         new = self.template()
         self.append(new)
         return new
