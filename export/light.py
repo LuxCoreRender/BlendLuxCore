@@ -55,15 +55,20 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
                         msg = 'Lamp "%s": %s' % (blender_obj.name, error)
                         scene.luxcore.errorlog.add_warning(msg)
                         # Fallback
-                        definitions["type"] = "point"
+                        definitions["type"] = "point" if lamp.luxcore.radius == 0 else "sphere"
                         # Signal that the image is missing
                         definitions["gain"] = [x * lamp.luxcore.gain for x in MISSING_IMAGE_COLOR]
 
+                has_ies = False
                 try:
-                    export_ies(definitions, lamp.luxcore.ies, lamp.library)
+                    has_ies = export_ies(definitions, lamp.luxcore.ies, lamp.library)
                 except OSError as error:
                     msg = 'Lamp "%s": %s' % (blender_obj.name, error)
                     scene.luxcore.errorlog.add_warning(msg)
+                finally:
+                    if not has_ies:
+                        # Fallback
+                        definitions["type"] = "point" if lamp.luxcore.radius == 0 else "sphere"
             else:
                 # point/sphere
                 definitions["type"] = "point" if lamp.luxcore.radius == 0 else "sphere"
@@ -407,30 +412,35 @@ def export_ies(definitions, ies, library, is_meshlight=False):
     prefix = "emission." if is_meshlight else ""
     has_ies = (ies.file_type == "TEXT" and ies.file_text) or (ies.file_type == "PATH" and ies.file_path)
 
-    if has_ies:
-        definitions[prefix + "flipz"] = ies.flipz
-        definitions[prefix + "map.width"] = ies.map_width
-        definitions[prefix + "map.height"] = ies.map_height
+    if not has_ies:
+        return False
 
-        # There are two ways to specify IES data: filepath or blob (ascii text)
-        if ies.file_type == "TEXT":
-            # Blender text block
-            text = ies.file_text
+    definitions[prefix + "flipz"] = ies.flipz
+    definitions[prefix + "map.width"] = ies.map_width
+    definitions[prefix + "map.height"] = ies.map_height
 
-            if text:
-                blob = text.as_string().encode("ascii")
+    # There are two ways to specify IES data: filepath or blob (ascii text)
+    if ies.file_type == "TEXT":
+        # Blender text block
+        text = ies.file_text
 
-                if blob:
-                    definitions[prefix + "iesblob"] = [blob]
-        else:
-            # File path
-            iesfile = ies.file_path
+        if text:
+            blob = text.as_string().encode("ascii")
 
-            if iesfile:
-                try:
-                    filepath = utils.get_abspath(iesfile, library, must_exist=True, must_be_existing_file=True)
-                    definitions[prefix + "iesfile"] = filepath
-                except OSError as error:
-                    # Make the error message more precise
-                    raise OSError('Could not find .ies file at path "%s" (%s)'
-                                  % (iesfile, error))
+            if blob:
+                definitions[prefix + "iesblob"] = [blob]
+    else:
+        # File path
+        iesfile = ies.file_path
+
+        if iesfile:
+            try:
+                filepath = utils.get_abspath(iesfile, library, must_exist=True, must_be_existing_file=True)
+                definitions[prefix + "iesfile"] = filepath
+            except OSError as error:
+                # Make the error message more precise
+                raise OSError('Could not find .ies file at path "%s" (%s)'
+                              % (iesfile, error))
+
+    # has ies
+    return True
