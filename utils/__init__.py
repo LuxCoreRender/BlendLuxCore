@@ -480,3 +480,10 @@ def get_halt_conditions(scene):
     else:
         # Use global halt conditions
         return scene.luxcore.halt
+
+
+def pluralize(format_str, amount):
+    formatted = format_str % amount
+    if amount != 1:
+        formatted += "s"
+    return formatted

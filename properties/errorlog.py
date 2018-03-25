@@ -1,17 +1,22 @@
 import bpy
-from bpy.props import StringProperty, CollectionProperty, IntProperty
 from bpy.types import PropertyGroup
 from ..utils import ui as utils_ui
 
 
-class LuxCoreError(PropertyGroup):
-    message = StringProperty()
-    count = IntProperty(default=1)
+class LuxCoreError:
+    message = ""
+    count = 1
 
 
-class LuxCoreWarning(PropertyGroup):
-    message = StringProperty()
-    count = IntProperty(default=1)
+class LuxCoreCollection(list):
+    def __init__(self, template):
+        self.template = template
+        super().__init__()
+
+    def add(self):
+        new = self.template()
+        self.append(new)
+        return new
 
 
 class LuxCoreErrorLog(PropertyGroup):
@@ -23,8 +28,8 @@ class LuxCoreErrorLog(PropertyGroup):
     But not every small export warning that can happen in normal Blender scenes,
     do not report: object without mesh data (aka Empty) or mesh without faces (e.g. curves used in modifiers)
     """
-    errors = CollectionProperty(type=LuxCoreError)
-    warnings = CollectionProperty(type=LuxCoreWarning)
+    errors = LuxCoreCollection(LuxCoreError)
+    warnings = LuxCoreCollection(LuxCoreError)
 
     def add_error(self, message):
         self._add("ERROR:", self.errors, message)
@@ -33,14 +38,15 @@ class LuxCoreErrorLog(PropertyGroup):
         self._add("WARNING:", self.warnings, message)
 
     def clear(self):
+        self.errors.clear()
+        self.warnings.clear()
+
         try:
-            self.errors.clear()
-            self.warnings.clear()
             # Force the panel to update (if we don't do this, the added warnings
             # are only visible after the user moves the mouse over the error log panel)
             utils_ui.tag_region_for_redraw(bpy.context, "PROPERTIES", "WINDOW")
         except AttributeError:
-            print("Can't clear errors in _RestrictContext")
+            print("Can't tag errorlog for redraw in _RestrictContext")
 
     def _add(self, prefix, collection, message):
         for elem in collection:
@@ -50,14 +56,12 @@ class LuxCoreErrorLog(PropertyGroup):
                 return
 
         print(prefix, message)
+        new = collection.add()
+        new.message = str(message)
 
         try:
-            new = collection.add()
-            # Access message property without using the setter
-            # (because it's read only for the user)
-            new["message"] = str(message)
             # Force the panel to update (if we don't do this, the added warnings
             # are only visible after the user moves the mouse over the error log panel)
             utils_ui.tag_region_for_redraw(bpy.context, "PROPERTIES", "WINDOW")
         except AttributeError:
-            print("Can't add errors in _RestrictContext")
+            print("Can't tag errorlog for redraw in _RestrictContext")

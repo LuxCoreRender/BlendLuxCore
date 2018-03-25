@@ -1,5 +1,6 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
+from .. import utils
 
 
 # Confusing, I know
@@ -17,12 +18,23 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
 
     def draw_header(self, context):
         errorlog = context.scene.luxcore.errorlog
+        text = "("
+        icon = "NONE"
         if errorlog.errors:
-            self.layout.label("(Errors)", icon=ICON_ERROR)
-        elif errorlog.warnings:
-            self.layout.label("(Warnings)", icon=ICON_WARNING)
+            text += utils.pluralize("%d Error", len(errorlog.errors))
+            icon = ICON_ERROR
+        if errorlog.warnings:
+            if text != "(":
+                text += ", "
+            text += utils.pluralize("%d Warning", len(errorlog.warnings))
+            if icon == "NONE":
+                icon = ICON_WARNING
+
+        if text == "(":
+            text = "(No Errors or Warnings)"
         else:
-            self.layout.label("(No Errors)")
+            text += ")"
+            self.layout.label(text, icon)
 
     def draw(self, context):
         errorlog = context.scene.luxcore.errorlog
@@ -33,7 +45,7 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
         self._draw(errorlog.errors, "Errors:", ICON_ERROR)
         self._draw(errorlog.warnings, "Warnings:", ICON_WARNING)
 
-    def _draw(self, errors_or_warnings, label, icon=None):
+    def _draw(self, errors_or_warnings, label, icon="NONE"):
         if len(errors_or_warnings) == 0:
             return
 
@@ -46,15 +58,8 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
         for elem in errors_or_warnings:
             row = box.row()
 
-            if icon:
-                row.label("", icon=icon)
-
+            text = elem.message
             if elem.count > 1:
-                sub = row.split(percentage=0.9)
-            else:
-                sub = row
+                text += str(elem.count) + "x"
 
-            sub.prop(elem, "message", text="")
-
-            if elem.count > 1:
-                sub.label("%dx" % elem.count)
+            row.label(elem.message, icon=icon)
