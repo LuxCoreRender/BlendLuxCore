@@ -4,25 +4,9 @@ from ..utils import ui as utils_ui
 
 
 class LuxCoreError:
-    message = ""
-    count = 1
-
-
-class LuxCoreCollection(list):
-    """
-    Mimics Blender's CollectionProperty a bit.
-    If you pass a template (must be a class) you can use the add() method
-    to append more instances of that template.
-    """
-    def __init__(self, *args, template=None):
-        list.__init__(*args)
-        self.template = template
-
-    def add(self):
-        assert self.template is not None
-        new = self.template()
-        self.append(new)
-        return new
+    def __init__(self, message):
+        self.message = str(message)
+        self.count = 1
 
 
 class LuxCoreErrorLog(PropertyGroup):
@@ -34,8 +18,8 @@ class LuxCoreErrorLog(PropertyGroup):
     But not every small export warning that can happen in normal Blender scenes,
     do not report: object without mesh data (aka Empty) or mesh without faces (e.g. curves used in modifiers)
     """
-    errors = LuxCoreCollection(LuxCoreError)
-    warnings = LuxCoreCollection(LuxCoreError)
+    errors = []
+    warnings = []
 
     def add_error(self, message):
         self._add("ERROR:", self.errors, message)
@@ -62,8 +46,8 @@ class LuxCoreErrorLog(PropertyGroup):
                 return
 
         print(prefix, message)
-        new = collection.add()
-        new.message = str(message)
+        new = LuxCoreError(message)
+        collection.append(new)
 
         try:
             # Force the panel to update (if we don't do this, the added warnings
