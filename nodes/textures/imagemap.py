@@ -82,6 +82,8 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
                                        update=update_set_as_active_uvmap,
                                        description="Show this image map on all objects with this material")
 
+    show_thumbnail = BoolProperty(name="", default=True, description="Show thumbnail")
+
     def init(self, context):
         self.add_input("LuxCoreSocketFloatPositive", "Gamma", 2.2)
         self.add_input("LuxCoreSocketFloatPositive", "Brightness", 1)
@@ -98,11 +100,13 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             return self.bl_label
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "set_as_active_uvmap", toggle=True)
-        layout.template_ID(self, "image", open="image.open")
-
-        # TODO
-        # layout.template_ID_preview(self, "image", open="image.open")
+        row = layout.row()
+        row.prop(self, "show_thumbnail", icon="IMAGE_COL")
+        row.prop(self, "set_as_active_uvmap", toggle=True)
+        if self.show_thumbnail:
+            layout.template_ID_preview(self, "image", open="image.open")
+        else:
+            layout.template_ID(self, "image", open="image.open")
 
         col = layout.column()
         col.active = self.image is not None
