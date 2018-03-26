@@ -4,6 +4,7 @@ from .. import LuxCoreNodeTexture
 from ...export.image import ImageExporter
 from ...utils import node as utils_node
 from ... import utils
+from ...utils import ui as utils_ui
 
 
 NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of the normal map"
@@ -51,6 +52,36 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     normal_map_scale = FloatProperty(name="Height", default=1, min=0, soft_max=5,
                                      description=NORMAL_SCALE_DESC)
 
+    # This function assigns self.image to all faces of all objects using this material
+    # and assigns self.image to all image editors that do not have their image pinned.
+    def update_set_as_active_uvmap(self, context):
+        if not self.set_as_active_uvmap:
+            return
+        # Reset button to "unclicked"
+        self["set_as_active_uvmap"] = False
+
+        if not context.object:
+            return
+        material = context.object.active_material
+
+        for obj in context.scene.objects:
+            for slot in obj.material_slots:
+                if slot.material == material:
+                    mesh = obj.data
+                    if hasattr(mesh, "uv_textures") and mesh.uv_textures:
+                        for uv_face in mesh.uv_textures.active.data:
+                            uv_face.image = self.image
+
+        for space in utils_ui.get_all_spaces(context, "IMAGE_EDITOR", "IMAGE_EDITOR"):
+            # Assign image in all image editors that do not have pinning enabled
+            if not space.use_image_pin:
+                space.image = self.image
+
+    # Note: the old "use a property as a button because it is so much simpler" trick
+    set_as_active_uvmap = BoolProperty(name="Show in Viewport", default=False,
+                                       update=update_set_as_active_uvmap,
+                                       description="Show this image map on all objects with this material")
+
     def init(self, context):
         self.add_input("LuxCoreSocketFloatPositive", "Gamma", 2.2)
         self.add_input("LuxCoreSocketFloatPositive", "Brightness", 1)
@@ -67,6 +98,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             return self.bl_label
 
     def draw_buttons(self, context, layout):
+        layout.prop(self, "set_as_active_uvmap", toggle=True)
         layout.template_ID(self, "image", open="image.open")
 
         # TODO
