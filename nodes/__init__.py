@@ -175,7 +175,6 @@ class LuxCoreNodeVolume(LuxCoreNode):
 class LuxCoreNodeTreePointer(LuxCoreNode):
     """ Pointer to a node tree """
     bl_label = "Pointer"
-    bl_width_default = 160
     bl_width_default = 210
     suffix = "pointer"
 

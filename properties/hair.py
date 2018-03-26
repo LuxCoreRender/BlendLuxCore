@@ -20,6 +20,7 @@ COLOREXPORT_ITEMS = [
     ("none", "None", "none"),
 ]
 
+
 class LuxCoreHair(PropertyGroup):
     """
     LuxCore Hair Rendering settings
@@ -62,6 +63,7 @@ class LuxCoreHair(PropertyGroup):
     
     export_color = EnumProperty(name="Color Export Mode", default="none", items=COLOREXPORT_ITEMS, 
                                 description="Mode of color export for the hair file")
+
 
 class LuxCoreParticlesProps(PropertyGroup):
     # TODO descriptions

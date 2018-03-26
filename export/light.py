@@ -317,8 +317,7 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
         "emission.samples": samples,
         "emission.theta": math.degrees(lamp.luxcore.spread_angle),
         "emission.id": scene.luxcore.lightgroups.get_id_by_name(lamp.luxcore.lightgroup),
-        # Note: not "emission.importance"
-        "importance": importance,
+        "emission.importance": importance,
         # TODO: maybe transparency (hacky)
 
         # Note: do not add support for visibility.indirect.* settings, they are useless here
