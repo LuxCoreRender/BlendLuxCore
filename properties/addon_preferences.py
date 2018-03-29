@@ -1,9 +1,12 @@
+from os.path import basename, dirname
 from bpy.types import AddonPreferences
 
 
 class LuxCoreAddonPreferences(AddonPreferences):
-    # Must match the addon name
-    bl_idname = "BlendLuxCore"
+    # Must be the addon directory name
+    # (by default "BlendLuxCore", but a user/dev might change the folder name)
+    # We use dirname() two times to go up one level in the file system
+    bl_idname = basename(dirname(dirname(__file__)))
 
     # We could add properties here
 
