@@ -168,7 +168,6 @@ class LUXCORE_LAMP_PT_performance(DataButtonsPanel, Panel):
         layout = self.layout
         lamp = context.lamp
 
-        layout.prop(lamp.luxcore, "samples")
         layout.prop(lamp.luxcore, "importance")
 
         if lamp.type == "HEMI":

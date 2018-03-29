@@ -13,13 +13,6 @@ RGB_GAIN_DESC = (
     "For those lights, their inherent color is multiplied with this color"
 )
 
-SAMPLES_DESCRIPTION = (
-    "The number of shadow rays to trace to compute direct light "
-    "for this light source.\n"
-    "This property is a hint and the render engine can ignore this information.\n"
-    "-1 means use the default global value"
-)
-
 IMPORTANCE_DESCRIPTION = (
     "A hint how much processing power to spend on this "
     "light compared to other lights"
@@ -91,7 +84,6 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     gain = FloatProperty(name="Gain", default=1, min=0, precision=4, description="Brightness multiplier")
     rgb_gain = FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
                                    description=RGB_GAIN_DESC)
-    samples = IntProperty(name="Samples", default=-1, min=-1, description=SAMPLES_DESCRIPTION)
     importance = FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
 

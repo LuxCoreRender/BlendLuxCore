@@ -155,9 +155,7 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
         layout = self.layout
         world = context.world
 
-        layout.prop(world.luxcore, "samples")
         layout.prop(world.luxcore, "importance")
-
         layout.prop(world.luxcore, "visibilitymap_enable")
 
 

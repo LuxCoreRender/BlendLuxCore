@@ -6,7 +6,7 @@ from bpy.props import (
 )
 from .. import LuxCoreNode
 from ...properties.light import (
-    POWER_DESCRIPTION, EFFICACY_DESCRIPTION, SAMPLES_DESCRIPTION,
+    POWER_DESCRIPTION, EFFICACY_DESCRIPTION,
     SPREAD_ANGLE_DESCRIPTION, LIGHTGROUP_DESC, IMPORTANCE_DESCRIPTION,
 )
 from ...properties.ies import LuxCoreIESProps
@@ -29,7 +29,6 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
     power = FloatProperty(name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
     efficacy = FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
     ies = PointerProperty(type=LuxCoreIESProps)
-    samples = IntProperty(name="Samples", default=-1, min=-1, description=SAMPLES_DESCRIPTION)
     importance = FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     # We use unit="ROTATION" because angles are radians, so conversion is necessary for the UI
     spread_angle = FloatProperty(name="Spread Angle", default=math.pi / 2, min=0, soft_min=math.radians(5),
@@ -49,9 +48,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         col.prop(self, "power")
         col.prop(self, "efficacy")
 
-        col = layout.column(align=True)
-        col.prop(self, "samples")
-        col.prop(self, "importance")
+        layout.prop(self, "importance")
 
         lightgroups = context.scene.luxcore.lightgroups
         layout.prop_search(self, "lightgroup",
@@ -94,7 +91,6 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         definitions["emission.gain"] = [self.gain] * 3
         definitions["emission.power"] = self.power
         definitions["emission.efficency"] = self.efficacy
-        definitions["emission.samples"] = self.samples
         definitions["emission.importance"] = self.importance
         definitions["emission.theta"] = math.degrees(self.spread_angle)
         lightgroups = bpy.context.scene.luxcore.lightgroups

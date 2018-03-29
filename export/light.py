@@ -35,9 +35,8 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
 
         # Common light settings shared by all light types
         # Note: these variables are also passed to the area light export function
-        gain, samples, importance, lightgroup_id = _convert_common_props(scene, lamp)
+        gain, importance, lightgroup_id = _convert_common_props(scene, lamp)
         definitions["gain"] = gain
-        definitions["samples"] = samples
         definitions["importance"] = importance
         definitions["id"] = lightgroup_id
 
@@ -161,7 +160,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
                 definitions["transformation"] = transformation
             else:
                 # area (mesh light)
-                return _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples, importance)
+                return _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importance)
 
         else:
             # Can only happen if Blender changes its lamp types
@@ -187,9 +186,8 @@ def convert_world(world, scene):
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
 
-        gain, samples, importance, lightgroup_id = _convert_common_props(scene, world)
+        gain, importance, lightgroup_id = _convert_common_props(scene, world)
         definitions["gain"] = gain
-        definitions["samples"] = samples
         definitions["importance"] = importance
         definitions["id"] = lightgroup_id
 
@@ -244,10 +242,9 @@ def _calc_sun_dir(blender_obj):
 
 def _convert_common_props(scene, lamp_or_world):
     gain = [x * lamp_or_world.luxcore.gain for x in lamp_or_world.luxcore.rgb_gain]
-    samples = lamp_or_world.luxcore.samples
     importance = lamp_or_world.luxcore.importance
     lightgroup_id = scene.luxcore.lightgroups.get_id_by_name(lamp_or_world.luxcore.lightgroup)
-    return gain, samples, importance, lightgroup_id
+    return gain, importance, lightgroup_id
 
 
 def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
@@ -293,7 +290,7 @@ def calc_area_lamp_transformation(blender_obj):
     return transform_matrix
 
 
-def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples, importance):
+def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importance):
     """
     An area light is a plane object with emissive material in LuxCore
     # TODO: check if we need to scale gain with area?
@@ -314,7 +311,6 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, samples
         "emission.gain": gain,
         "emission.power": lamp.luxcore.power,
         "emission.efficency": lamp.luxcore.efficacy,
-        "emission.samples": samples,
         "emission.theta": math.degrees(lamp.luxcore.spread_angle),
         "emission.id": scene.luxcore.lightgroups.get_id_by_name(lamp.luxcore.lightgroup),
         "emission.importance": importance,
