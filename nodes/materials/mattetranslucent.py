@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import FloatProperty
 from .. import LuxCoreNodeMaterial
+from ...utils import node as utils_node
 
 class LuxCoreNodeMatMatteTranslucent(LuxCoreNodeMaterial):
     bl_label = "Matte Translucent Material"
@@ -12,6 +13,9 @@ class LuxCoreNodeMatMatteTranslucent(LuxCoreNodeMaterial):
         self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
+
+    def draw_buttons(self, context, layout):
+        utils_node.draw_transmission_info(self, layout)
 
     def export(self, props, luxcore_name=None):
         definitions = {

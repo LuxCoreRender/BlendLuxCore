@@ -19,6 +19,25 @@ def draw_uv_info(context, layout):
             layout.label("No UV map", icon="ERROR")
 
 
+def draw_transmission_info(node, layout):
+    try:
+        kd_socket = node.inputs["Diffuse Color"]
+    except KeyError:
+        # For some reason, this socket is named differently in the mattetranslucent material
+        kd_socket = node.inputs["Reflection Color"]
+
+    kt_socket = node.inputs["Transmission Color"]
+
+    if not kd_socket.is_linked and not kt_socket.is_linked:
+        # V component of the HSV color model
+        kd_value = kd_socket.default_value.v
+        kt_value = kt_socket.default_value.v
+        # Note that this is an estimation.
+        # We are for example not accounting for specular reflections
+        transmitted = min(1 - kd_value, kt_value)
+        layout.label("Transmitted: %.2f" % transmitted, icon="INFO")
+
+
 def export_material_input(input, props):
     material_name = input.export(props)
 

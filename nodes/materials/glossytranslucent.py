@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import BoolProperty
 from .. import LuxCoreNodeMaterial, Roughness
+from ...utils import node as utils_node
 
 
 IOR_DESCRIPTION = "Specify index of refraction to control reflection brightness."
@@ -96,6 +97,8 @@ class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial):
         if self.use_backface:
             layout.prop(self, "multibounce_bf")
             layout.prop(self, "use_ior_bf")
+
+        utils_node.draw_transmission_info(self, layout)
 
     def export(self, props, luxcore_name=None):
         definitions = {
