@@ -27,7 +27,6 @@ class TestPointLight(unittest.TestCase):
         transformation = utils.matrix_to_list(obj.matrix_world, bpy.context.scene, apply_worldscale=True)
         self.assertEqual(props.Get(prefix + ".transformation").Get(), transformation)
         self.assertEqual(props.Get(prefix + ".importance").Get(), [2])
-        self.assertEqual(props.Get(prefix + ".samples").Get(), [3])
         self.assertEqual(props.Get(prefix + ".power").Get(), [3])
         self.assertEqual(props.Get(prefix + ".efficency").Get(), [12])
 
