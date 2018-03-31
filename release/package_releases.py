@@ -13,7 +13,7 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 
 # These are the same as in BlendLuxCore/bin/get_binaries.py
 # (apart from missing luxcoreui, that's only for developers)
-linux_binaries = ["libembree.so.2", "libtbb.so.2", "pyluxcore.so"]
+linux_binaries = ["libembree.so.2", "libtbb.so.2", "libtbbmalloc.so.2", "pyluxcore.so"]
 windows_binaries = ["embree.dll", "tbb.dll", "tbbmalloc.dll", "OpenImageIO.dll", "pyluxcore.pyd"]
 
 
