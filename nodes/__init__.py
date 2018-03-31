@@ -109,7 +109,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
     def draw_common_buttons(self, context, layout):
         layout.prop(self, "priority")
-        layout.prop(self, "emission_id")
+        # layout.prop(self, "emission_id")  # TODO correct lightgroup dropdown
         layout.prop(self, "color_depth")
 
     def add_common_inputs(self):

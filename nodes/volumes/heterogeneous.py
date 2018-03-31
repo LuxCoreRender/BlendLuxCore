@@ -1,5 +1,7 @@
-from bpy.props import IntProperty, BoolProperty, FloatProperty
-from .. import utils
+import math
+import bpy
+from bpy.props import IntProperty, BoolProperty, FloatProperty, PointerProperty
+from ... import utils
 from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
 
 
@@ -30,8 +32,13 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
                               soft_min=0.01, soft_max=1,
                               subtype="DISTANCE", unit="LENGTH",
                               description=STEP_SIZE_DESCRIPTION)
-    maxcount = IntProperty(name="Max. Step Count", default=1024, min=0,
+    maxcount = IntProperty(name="Max. Steps", default=1024, min=0,
                            description="Maximum Step Count for Volume Integration")
+    auto_step_settings = BoolProperty(name="Auto Step Settings", default=False,
+                                      description="Enable when using a smoke domain."
+                                                  "Automatically calculates the correct step size and max. steps")
+    domain = PointerProperty(name="Domain", type=bpy.types.Object,
+                             description="Domain object to take the step size and max. steps settings from")
 
     multiscattering = BoolProperty(name="Multiscattering", default=False,
                                    description=MULTISCATTERING_DESC)
@@ -46,17 +53,60 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "multiscattering")
-        layout.prop(self, "step_size")
-        layout.prop(self, "maxcount")
         self.draw_common_buttons(context, layout)
+
+        layout.prop(self, "auto_step_settings")
+        if self.auto_step_settings:
+            layout.prop(self, "domain")
+
+            if self.domain and not utils.find_smoke_domain_modifier(self.domain):
+                layout.label("Not a smoke domain!", icon="ERROR")
+            elif self.domain is None:
+                layout.label("Select the smoke domain object", icon="ERROR")
+        else:
+            layout.prop(self, "step_size")
+            layout.prop(self, "maxcount")
 
     def export(self, props, luxcore_name=None):
         definitions = {
             "type": "heterogeneous",
-            "steps.size": self.step_size,
-            "steps.maxcount": self.maxcount,
             "asymmetry": self.inputs["Asymmetry"].export(props),
             "multiscattering": self.multiscattering,
         }
+
+        if self.auto_step_settings and self.domain:
+            # Search smoke domain target for smoke modifiers
+            smoke_domain_mod = utils.find_smoke_domain_modifier(self.domain)
+
+            if smoke_domain_mod is None:
+                msg = 'Object "%s" is not a smoke domain' % self.domain.name
+                raise Exception(msg)
+
+            settings = smoke_domain_mod.domain_settings
+            # A list with 3 elements (resolution in x, y, z directions)
+            resolutions = list(settings.domain_resolution)
+            if settings.use_high_resolution:
+                resolutions = [res * (settings.amplify + 1) for res in resolutions]
+
+            worldscale = utils.get_worldscale(bpy.context.scene, as_scalematrix=False)
+            dimensions = [dim * worldscale for dim in self.domain.dimensions]
+            # The optimal step size on each axis
+            step_sizes = [dim / res for dim, res in zip(dimensions, resolutions)]
+            # Use the smallest step size in LuxCore
+            step_size = min(step_sizes)
+            definitions["steps.size"] = step_size
+
+            # Find the max. count required in the worst case
+            diagonal = self.domain.dimensions.length * worldscale
+            worst_case_maxcount = math.ceil(diagonal / step_size)
+            definitions["steps.maxcount"] = worst_case_maxcount
+
+            print('INFO: "%s" in volume node tree "%s" Auto Step Settings:' % (self.name, self.id_data.name))
+            print("  Using steps.size =", step_size, "m")
+            print("  Using steps.maxcount =", worst_case_maxcount)
+        else:
+            definitions["steps.size"] = self.step_size
+            definitions["steps.maxcount"] = self.maxcount
+
         self.export_common_inputs(props, definitions)
         return self.base_export(props, definitions, luxcore_name)

@@ -146,6 +146,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         smoke_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, heterogeneous, 0, "Scattering")
         if is_smoke_domain:
             smoke_node.domain = obj
+            heterogeneous.auto_step_settings = True
+            heterogeneous.domain = obj
         smoke_node.source = "density"
         smoke_node.wrap = "black"
         # Use IOR of air (doesn't really matter)
@@ -183,6 +185,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
 
         if is_smoke_domain:
             smoke_node.domain = obj
+            heterogeneous.auto_step_settings = True
+            heterogeneous.domain = obj
         smoke_node.source = "density"
         smoke_node.wrap = "black"
 

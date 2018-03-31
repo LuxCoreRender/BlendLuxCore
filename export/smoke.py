@@ -2,6 +2,7 @@ import bpy
 from .. import utils
 from time import time
 
+
 def convert(smoke_obj, channel):
     print("[%s] Beginning smoke export (channel: %s)" % (smoke_obj.name, channel))
     start_time = time()
