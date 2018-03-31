@@ -148,6 +148,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             smoke_node.domain = obj
         smoke_node.source = "density"
         smoke_node.wrap = "black"
+        # Use IOR of air (doesn't really matter)
+        heterogeneous.inputs["IOR"].default_value = 1
 
         # A smoke material setup only makes sense on the smoke domain object
         if not is_smoke_domain:
@@ -173,20 +175,12 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         vol_output.location = 300, 200
 
         heterogeneous = new_node("LuxCoreNodeVolHeterogeneous", vol_node_tree, vol_output)
-        # No scattering
-        heterogeneous.inputs["Scattering Scale"].default_value = 0
-        heterogeneous.inputs["Scattering"].default_value = (0, 0, 0)
+        # Scattering
+        heterogeneous.inputs["Scattering Scale"].default_value = 10
+        smoke_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, heterogeneous, 0, "Scattering")
         # Use IOR of air (doesn't really matter)
         heterogeneous.inputs["IOR"].default_value = 1
-        # Use smaller absorption depth
-        heterogeneous.color_depth = 0.05
 
-        # Absorption (we need to invert it, so we subtract from 1)
-        absorption_scale = new_node("LuxCoreNodeTexMath", vol_node_tree, heterogeneous, 0, "Absorption")
-        absorption_scale.mode = "subtract"
-        absorption_scale.inputs["Value 1"].default_value = 1
-
-        smoke_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, absorption_scale, 0, "Value 2")
         if is_smoke_domain:
             smoke_node.domain = obj
         smoke_node.source = "density"
