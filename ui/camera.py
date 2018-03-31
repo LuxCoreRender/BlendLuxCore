@@ -148,6 +148,19 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
             box.template_ID(backgroundimage, "image", open="image.open")
             box.prop(backgroundimage, "gamma")
 
+        camera_response_func = pipeline.camera_response_func
+        box = self.draw_plugin_box(camera_response_func)
+        if box:
+            row = box.row()
+            row.prop(camera_response_func, "type", expand=True)
+
+            if camera_response_func.type == "PRESET":
+                selected = camera_response_func.preset
+                label = selected.replace("_", " ") if selected else "Select Preset"
+                box.operator("luxcore.select_crf", text=label)
+            else:
+                box.prop(camera_response_func, "file")
+
         contour_lines = pipeline.contour_lines
         box = self.draw_plugin_box(contour_lines)
         if box:

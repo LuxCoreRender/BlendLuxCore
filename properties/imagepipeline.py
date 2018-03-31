@@ -1,6 +1,7 @@
 from bpy.props import (
     PointerProperty, BoolProperty, FloatProperty,
-    IntProperty, EnumProperty, FloatVectorProperty
+    IntProperty, EnumProperty, FloatVectorProperty,
+    StringProperty,
 )
 from bpy.types import PropertyGroup, Image
 from .light import GAMMA_DESCRIPTION
@@ -27,7 +28,7 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup):
         ("TONEMAP_REINHARD02", "Reinhard", "Non-linear tonemapper that adapts to the image brightness", 2),
     ]
     type = EnumProperty(name="Tonemapper Type", items=type_items, default="TONEMAP_LINEAR",
-                              description="The tonemapper converts the image from HDR to LDR")
+                        description="The tonemapper converts the image from HDR to LDR")
 
     # Settings for TONEMAP_LINEAR
     use_autolinear = BoolProperty(name="Auto Brightness", default=True,
@@ -61,6 +62,7 @@ class LuxCoreImagepipelineBloom(PropertyGroup):
                            description="Size of the bloom effect (percent of the image size)")
     weight = FloatProperty(name="Strength", default=25, min=0, max=100, precision=1, subtype="PERCENTAGE",
                            description="Strength of the bloom effect (a linear mix factor)")
+
 
 class LuxCoreImagepipelineMist(PropertyGroup):
     NAME = "Mist"
@@ -103,6 +105,24 @@ class LuxCoreImagepipelineBackgroundImage(PropertyGroup):
     gamma = FloatProperty(name="Gamma", default=2.2, min=0, description=GAMMA_DESCRIPTION)
 
 
+class LuxCoreImagepipelineCameraResponseFunc(PropertyGroup):
+    NAME = "Analog Film Simulation"
+    enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+
+    # TODO: Support CRF file as Blender text block (similar to IES files)
+    type_items = [
+        ("PRESET", "Preset", "Choose a CRF profile from a list of built-in presets", 1),
+        ("FILE", "File", "Choose a camera response function file (.crf)", 2),
+    ]
+    type = EnumProperty(name="Type", items=type_items, default="PRESET",
+                        description="Source of the CRF data")
+
+    file = StringProperty(name="", subtype="FILE_PATH",
+                          description="Path to the external .crf file")
+    # Internal, not shown to the user (set by operator "luxcore.select_crf")
+    preset = StringProperty(name="")
+
+
 class LuxCoreImagepipelineContourLines(PropertyGroup):
     NAME = "Irradiance Contour Lines"
     enabled = BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
@@ -120,6 +140,7 @@ class LuxCoreImagepipelineContourLines(PropertyGroup):
     zero_grid_size = IntProperty(name="Grid Size", default=8, min=-1, soft_max=20,
                                  description=ZERO_GRID_SIZE_DESC)
 
+
 class LuxCoreImagepipeline(PropertyGroup):
     """
     Used (and initialized) in properties/camera.py
@@ -134,4 +155,5 @@ class LuxCoreImagepipeline(PropertyGroup):
     vignetting = PointerProperty(type=LuxCoreImagepipelineVignetting)
     coloraberration = PointerProperty(type=LuxCoreImagepipelineColorAberration)
     backgroundimage = PointerProperty(type=LuxCoreImagepipelineBackgroundImage)
+    camera_response_func = PointerProperty(type=LuxCoreImagepipelineCameraResponseFunc)
     contour_lines = PointerProperty(type=LuxCoreImagepipelineContourLines)

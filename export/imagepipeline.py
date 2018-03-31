@@ -44,6 +44,9 @@ def convert(scene, context=None):
         if pipeline.vignetting.enabled:
             index = _vignetting(definitions, index, pipeline.vignetting)
 
+        if pipeline.camera_response_func.enabled:
+            index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
+
         if pipeline.contour_lines.enabled:
             index = _contour_lines(definitions, index, pipeline.contour_lines)
 
@@ -159,6 +162,31 @@ def _vignetting(definitions, index, vignetting):
     definitions[str(index) + ".type"] = "VIGNETTING"
     definitions[str(index) + ".scale"] = vignetting.scale / 100
     return index + 1
+
+
+def _camera_response_func(definitions, index, camera_response_func, scene):
+    if camera_response_func.type == "PRESET":
+        name = camera_response_func.preset
+    elif camera_response_func.type == "FILE":
+        try:
+            library = scene.camera.data.library
+            name = utils.get_abspath(camera_response_func.file, library,
+                                     must_exist=True, must_be_existing_file=True)
+        except OSError as error:
+            # Make the error message more precise
+            scene.luxcore.errorlog.add_warning('Could not find .crf file at path "%s" (%s)'
+                                               % (camera_response_func.file, error))
+            name = None
+    else:
+        raise NotImplementedError("Unknown crf type: " + camera_response_func.type)
+
+    # Note: preset or file are empty strings until the user selects something
+    if name:
+        definitions[str(index) + ".type"] = "CAMERA_RESPONSE_FUNC"
+        definitions[str(index) + ".name"] = name
+        return index + 1
+    else:
+        return index
 
 
 def _contour_lines(definitions, index, contour_lines):
