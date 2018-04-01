@@ -22,6 +22,13 @@ class LuxCoreNodeSocket(NodeSocket):
     color = (1, 1, 1, 1)
     slider = False
 
+    def draw_prop(self, context, layout, node, text):
+        """
+        This method can be overriden by subclasses to draw their property differently
+        (e.g. done by LuxCoreSocketColor)
+        """
+        layout.prop(self, "default_value", text=text, slider=self.slider)
+
     def draw(self, context, layout, node, text):
         # Check if the socket linked to this socket is in the set of allowed input socket classes.
         if self.is_linked and hasattr(self, "allowed_inputs"):
@@ -52,13 +59,7 @@ class LuxCoreNodeSocket(NodeSocket):
                 op.socket_type = self.bl_idname
                 op.input_socket = self.name
         else:
-            if type(self.default_value) == mathutils.Color:
-                row = layout.row()
-                row.alignment = "LEFT"
-                row.prop(self, "default_value", text="")
-                row.label(text=text)
-            else:
-                layout.prop(self, "default_value", text=text, slider=self.slider)
+            self.draw_prop(context, layout, node, text)
 
     # Socket color
     def draw_color(self, context, node):
@@ -146,6 +147,12 @@ class LuxCoreSocketColor(LuxCoreNodeSocket):
     default_value = FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1,
                                         update=update_opengl_materials)
 
+    def draw_prop(self, context, layout, node, text):
+        row = layout.row()
+        row.alignment = "LEFT"
+        row.prop(self, "default_value", text="")
+        row.label(text=text)
+
     def export_default(self):
         return list(self.default_value)
 
@@ -200,8 +207,21 @@ class LuxCoreSocketIOR(LuxCoreSocketFloat):
         super().draw(context, layout, node, text)
 
 
-class LuxCoreSocketFloatVector(LuxCoreSocketFloat):
-    default_value = FloatVectorProperty()
+class LuxCoreSocketVolumeAsymmetry(LuxCoreNodeSocket):
+    color = Color.color_texture
+    default_value = FloatVectorProperty(name="", default=(0, 0, 0), min=-1, max=1, subtype="COLOR",
+                                        description="Scattering asymmetry. -1 means back scatter, "
+                                                    "0 is isotropic, 1 is forwards scattering")
+
+    def draw_prop(self, context, layout, node, text):
+        split = layout.split()
+        col = split.column()
+        # Empty label to center the text vertically
+        col.label("")
+        col.label("Asymmetry:")
+
+        col = split.column()
+        col.prop(self, "default_value", expand=True)
 
     def export_default(self):
         return list(self.default_value)

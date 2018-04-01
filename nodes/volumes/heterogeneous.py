@@ -20,7 +20,7 @@ MULTISCATTERING_DESC = (
 
 class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
     bl_label = "Heterogeneous Volume"
-    bl_width_default = 160
+    bl_width_default = 190
 
     # TODO: get name, default, description etc. from super class or something
     priority = IntProperty(name="Priority", default=0, min=0)
@@ -47,7 +47,7 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
         self.add_common_inputs()
         self.add_input("LuxCoreSocketColor", "Scattering", (1, 1, 1))
         self.add_input("LuxCoreSocketFloatPositive", "Scattering Scale", 1.0)
-        self.add_input("LuxCoreSocketFloatVector", "Asymmetry", (0, 0, 0))
+        self.add_input("LuxCoreSocketVolumeAsymmetry", "Asymmetry", (0, 0, 0))
 
         self.outputs.new("LuxCoreSocketVolume", "Volume")
 
