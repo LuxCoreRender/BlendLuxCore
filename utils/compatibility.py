@@ -12,6 +12,7 @@ e.g. replace old nodes with updated ones when socket names change.
 def run():
     update_output_nodes_volume_change()
     update_glossy_nodes_ior_change()
+    update_volume_nodes_asymmetry_change()
 
 
 def update_output_nodes_volume_change():
@@ -71,4 +72,25 @@ def update_glossy_nodes_ior_change():
                 # Note: the IOR input will be at the very bottom, but at least the export works
                 node.add_input("LuxCoreSocketIOR", "IOR", 1.5)
                 node.inputs["IOR"].enabled = False
+                print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_volume_nodes_asymmetry_change():
+    # commit 2387d1c300b5a1f6931592efcdd0574d243356e7
+
+    for node_tree in bpy.data.node_groups:
+        if node_tree.library:
+            continue
+
+        if node_tree.bl_idname != "luxcore_volume_nodes":
+            continue
+
+        affected_nodes = find_nodes(node_tree, "LuxCoreNodeVolHeterogeneous")
+        affected_nodes += find_nodes(node_tree, "LuxCoreNodeVolHomogeneous")
+
+        for node in affected_nodes:
+            asymmetry_socket = node.inputs["Asymmetry"]
+            if asymmetry_socket.bl_idname == "NodeSocketUndefined":
+                node.inputs.remove(asymmetry_socket)
+                node.add_input("LuxCoreSocketVolumeAsymmetry", "Asymmetry", (0, 0, 0))
                 print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
