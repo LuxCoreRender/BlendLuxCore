@@ -31,8 +31,8 @@ class LuxCoreMotionBlur(PropertyGroup):
     object_blur = BoolProperty(name="Object", default=True, description="Blur moving objects")
     camera_blur = BoolProperty(name="Camera", default=False, description="Blur if camera moves")
     shutter = FloatProperty(name="Shutter (frames)", default=0.1, min=0, soft_max=2, description=SHUTTER_TIME_DESC)
-    # Note: a very high number of steps (e.g. 500) crashes Blender
-    steps = IntProperty(name="Steps", default=2, min=2, soft_max=20, max=100, description="Number of substeps")
+    # Note: Embree allows a maximum of 129 motion steps
+    steps = IntProperty(name="Steps", default=2, min=2, soft_max=20, max=129, description="Number of substeps")
 
 
 class LuxCoreCameraProps(PropertyGroup):
