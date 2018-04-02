@@ -7,11 +7,13 @@ It is still in early development, so expect bugs and missing features. You can f
 
 ### Important
 
-* **Do not use the current version of this addon for real production work!**
-* **If you want to test it on important scenes, make a copy of the .blend file first!**
-* **You will experience crashes and other bugs. Please report them in the bug tracker!**
-
 This addon requires the very latest stable version of Blender: 2.79**a**. [Download](https://www.blender.org/download/)
+
+Note that if you save a .blend file that was opened with this addon enabled, you will not be able to open it with older Blender versions anymore.
+This is because of a bug in Blender versions prior to 2.79.
+See the [Blender 2.79 release notes](https://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.79/PythonAPI#Data-block_Pointer_Properties):
+> Unfortunately, this new custom property type revealed a critical bug in current code, which crashes Blender on unknown property types. This bug has been fixed in 15189baa52 for the future, but it is impossible to fix this for existing releases. 
+**This means that trying to load a .blend file using new data-block custom properties will crash on any version prior to 2.79.**
 
 ### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
 
