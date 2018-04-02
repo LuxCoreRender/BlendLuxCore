@@ -156,3 +156,15 @@ class LUXCORE_OT_attach_sun_to_sky(bpy.types.Operator):
     def execute(self, context):
         context.scene.world.luxcore.sun = context.object
         return {"FINISHED"}
+
+
+class LUXCORE_OT_copy_error_to_clipboard(bpy.types.Operator):
+    bl_idname = "luxcore.copy_error_to_clipboard"
+    bl_label = ""
+    bl_description = "Copy the error message to clipboard so you can paste it with Ctrl+V"
+
+    message = StringProperty()
+
+    def execute(self, context):
+        context.window_manager.clipboard = self.message
+        return {"FINISHED"}

@@ -34,7 +34,8 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
             text = "(No Errors or Warnings)"
         else:
             text += ")"
-            self.layout.label(text, icon)
+
+        self.layout.label(text, icon)
 
     def draw(self, context):
         errorlog = context.scene.luxcore.errorlog
@@ -63,3 +64,5 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
                 text += str(elem.count) + "x"
 
             row.label(elem.message, icon=icon)
+            op = row.operator("luxcore.copy_error_to_clipboard", icon="COPYDOWN")
+            op.message = elem.message
