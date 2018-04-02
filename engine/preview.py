@@ -317,7 +317,7 @@ def _create_config(scene, is_world_sphere):
 
         "path.pathdepth.total": total_depth,
         "path.pathdepth.diffuse": diffuse_depth,
-        "path.pathdepth.glossy": 2,
+        "path.pathdepth.glossy": 3,
         "path.pathdepth.specular": specular_depth,
 
         "path.clamping.variance.maxvalue": 3,
