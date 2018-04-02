@@ -15,6 +15,8 @@ See the [Blender 2.79 release notes](https://wiki.blender.org/index.php/Dev:Ref/
 > Unfortunately, this new custom property type revealed a critical bug in current code, which crashes Blender on unknown property types. This bug has been fixed in 15189baa52 for the future, but it is impossible to fix this for existing releases. 
 **This means that trying to load a .blend file using new data-block custom properties will crash on any version prior to 2.79.**
 
+So if you want to render an important scene with LuxCore, please save it as a copy.
+
 ### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
 
 Before reporting a bug, take a look at the [reported issues](https://github.com/LuxCoreRender/BlendLuxCore/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Abug) to make sure it was not already reported.
