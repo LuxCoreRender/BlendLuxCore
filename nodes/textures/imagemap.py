@@ -65,12 +65,18 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         material = context.object.active_material
 
         for obj in context.scene.objects:
-            for slot in obj.material_slots:
+            for mat_index, slot in enumerate(obj.material_slots):
                 if slot.material == material:
                     mesh = obj.data
                     if hasattr(mesh, "uv_textures") and mesh.uv_textures:
-                        for uv_face in mesh.uv_textures.active.data:
-                            uv_face.image = self.image
+                        uv_faces = mesh.uv_textures.active.data
+                        polygons = mesh.polygons
+                        # Unfortunately the uv_face has no information about the material
+                        # that is assigned to the face, so we have to get this information
+                        # from the polygons of the mesh
+                        for uv_face, polygon in zip(uv_faces, polygons):
+                            if polygon.material_index == mat_index:
+                                uv_face.image = self.image
 
         for space in utils_ui.get_all_spaces(context, "IMAGE_EDITOR", "IMAGE_EDITOR"):
             # Assign image in all image editors that do not have pinning enabled
