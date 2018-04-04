@@ -88,6 +88,8 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
                 if config.sampler == "SOBOL":
                     layout.prop(config, "sobol_adaptive_strength", slider=True)
+                elif config.sampler == "METROPOLIS":
+                    self.draw_metropolis_props(layout, config)
         else:
             # Bidir options
             row_depths = layout.row(align=True)
@@ -98,6 +100,8 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             row_sampler.enabled = False
             row_sampler.label("Sampler:")
             row_sampler.prop(config, "bidir_sampler", expand=True)
+
+            self.draw_metropolis_props(layout, config)
 
         # Filter settings
         row = layout.row()
@@ -117,6 +121,12 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
         # Light strategy
         layout.prop(config, "light_strategy")
+
+    def draw_metropolis_props(self, layout, config):
+        col = layout.column(align=True)
+        col.prop(config, "metropolis_largesteprate", slider=True)
+        col.prop(config, "metropolis_maxconsecutivereject")
+        col.prop(config, "metropolis_imagemutationrate", slider=True)
 
 
 class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):

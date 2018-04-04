@@ -59,6 +59,7 @@ def convert(scene, context=None, engine=None):
                     luxcore_engine = "PATH"
                     sampler = config.sampler
                     definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
+                    _convert_metropolis_settings(definitions, config)
 
                 # Add CPU/OCL suffix
                 luxcore_engine += config.device
@@ -84,6 +85,7 @@ def convert(scene, context=None, engine=None):
                 luxcore_engine = "BIDIRCPU"
                 # SOBOL or RANDOM would be possible, but make little sense for BIDIR
                 sampler = "METROPOLIS"
+                _convert_metropolis_settings(definitions, config)
                 definitions["light.maxdepth"] = config.bidir_light_maxdepth
                 definitions["path.maxdepth"] = config.bidir_path_maxdepth
 
@@ -247,3 +249,9 @@ def _convert_halt_conditions(scene, definitions):
             definitions["batch.haltthreshold.warmup"] = halt.noise_thresh_warmup
             definitions["batch.haltthreshold.step"] = halt.noise_thresh_step
             definitions["batch.haltthreshold.filter.enable"] = halt.noise_thresh_use_filter
+
+
+def _convert_metropolis_settings(definitions, config):
+    definitions["sampler.metropolis.largesteprate"] = config.metropolis_largesteprate / 100
+    definitions["sampler.metropolis.maxconsecutivereject"] = config.metropolis_maxconsecutivereject
+    definitions["sampler.metropolis.imagemutationrate"] = config.metropolis_imagemutationrate / 100

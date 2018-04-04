@@ -151,6 +151,24 @@ class LuxCoreConfig(PropertyGroup):
     # SOBOL properties
     sobol_adaptive_strength = FloatProperty(name="Adaptive Strength", default=0.7, min=0, max=0.95,
                                             description=SOBOL_ADAPTIVE_STRENGTH_DESC)
+    # METROPOLIS properties
+    # sampler.metropolis.largesteprate
+    metropolis_largesteprate = FloatProperty(name="Large Mutation Probability", default=40,
+                                             min=0, max=100, subtype="PERCENTAGE",
+                                             description="Probability of generating a large sample mutation."
+                                                         "Low values cause the sampler to focus more on "
+                                                         "caustics and other hotspots it found, while high "
+                                                         "values make the sampler behave more like a pure "
+                                                         "random sampler")
+    # sampler.metropolis.maxconsecutivereject
+    metropolis_maxconsecutivereject = IntProperty(name="Max Consecutive Rejects", default=512, min=0,
+                                                  description="Number of consecutive rejects before a next "
+                                                              "mutation is forced. Low values can cause bias")
+    # sampler.metropolis.imagemutationrate
+    metropolis_imagemutationrate = FloatProperty(name="Image Mutation Rate", default=10,
+                                                 min=0, max=100, subtype="PERCENTAGE",
+                                                 description="Maximum distance over the "
+                                                             "image plane for a small mutation")
 
     # Only available when engine is PATH (not BIDIR)
     devices = [
