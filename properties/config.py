@@ -60,6 +60,21 @@ POWER_DESC = (
 
 UNIFORM_DESC = "Sample all lights equally, not according to their brightness"
 
+LARGE_STEP_RATE_DESC = (
+    "Probability of generating a large sample mutation."
+    "Low values cause the sampler to focus more on "
+    "caustics and other hotspots it found, while high "
+    "values make the sampler behave more like a pure "
+    "random sampler"
+)
+
+MAX_CONSECUTIVE_REJECT_DESC = (
+    "Number of consecutive rejects before a next "
+    "mutation is forced. Low values can cause bias"
+)
+
+IMAGE_MUTATION_RATE_DESC = "Maximum distance over the image plane for a small mutation"
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -154,21 +169,15 @@ class LuxCoreConfig(PropertyGroup):
     # METROPOLIS properties
     # sampler.metropolis.largesteprate
     metropolis_largesteprate = FloatProperty(name="Large Mutation Probability", default=40,
-                                             min=0, max=100, subtype="PERCENTAGE",
-                                             description="Probability of generating a large sample mutation."
-                                                         "Low values cause the sampler to focus more on "
-                                                         "caustics and other hotspots it found, while high "
-                                                         "values make the sampler behave more like a pure "
-                                                         "random sampler")
+                                             min=0, max=100, precision=0, subtype="PERCENTAGE",
+                                             description=LARGE_STEP_RATE_DESC)
     # sampler.metropolis.maxconsecutivereject
     metropolis_maxconsecutivereject = IntProperty(name="Max Consecutive Rejects", default=512, min=0,
-                                                  description="Number of consecutive rejects before a next "
-                                                              "mutation is forced. Low values can cause bias")
+                                                  description=MAX_CONSECUTIVE_REJECT_DESC)
     # sampler.metropolis.imagemutationrate
     metropolis_imagemutationrate = FloatProperty(name="Image Mutation Rate", default=10,
-                                                 min=0, max=100, subtype="PERCENTAGE",
-                                                 description="Maximum distance over the "
-                                                             "image plane for a small mutation")
+                                                 min=0, max=100, precision=0, subtype="PERCENTAGE",
+                                                 description=IMAGE_MUTATION_RATE_DESC)
 
     # Only available when engine is PATH (not BIDIR)
     devices = [
