@@ -100,6 +100,7 @@ def convert(scene, context=None, engine=None):
             "film.filter.type": config.filter,
             "film.filter.width": config.filter_width,
             "lightstrategy.type": config.light_strategy,
+            "scene.epsilon.min": config.min_epsilon,
         })
 
         # Filter
