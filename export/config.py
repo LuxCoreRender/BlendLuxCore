@@ -101,6 +101,7 @@ def convert(scene, context=None, engine=None):
             "film.filter.width": config.filter_width,
             "lightstrategy.type": config.light_strategy,
             "scene.epsilon.min": config.min_epsilon,
+            "scene.epsilon.max": config.max_epsilon,
         })
 
         # Filter

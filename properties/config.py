@@ -240,7 +240,11 @@ class LuxCoreConfig(PropertyGroup):
     show_min_epsilon = BoolProperty(name="Advanced LuxCore Settings", default=False,
                                     description="Show/Hide advanced LuxCore features. "
                                                 "Only change them if you know what you are doing")
-    min_epsilon = FloatProperty(name="Min. Epsilon", default=1e-5, min=1e-6, max=0.1,
+    min_epsilon = FloatProperty(name="Min. Epsilon", default=1e-5, soft_min=1e-6, soft_max=1e-1,
                                 precision=10000,
                                 description="User higher values when artifacts due to floating point precision "
                                             "issues appear in the rendered image")
+    max_epsilon = FloatProperty(name="Max. Epsilon", default=1e-1, soft_min=1e-3, soft_max=1e+2,
+                                precision=10000,
+                                description="Might need adjustment along with the min epsilon to avoid "
+                                            "artifacts due to floating point precision issues")
