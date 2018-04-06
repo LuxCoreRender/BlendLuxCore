@@ -9,6 +9,11 @@ It is still in early development, so expect bugs and missing features. You can f
 
 This addon requires the very latest stable version of Blender: 2.79**a**. [Download](https://www.blender.org/download/)
 
+Custom Blender builds and buildbot builds are not supported.
+
+If you have the old LuxBlend addon installed, disable it, save the user preferences 
+and restart Blender before you can enable the new addon.
+
 Note that if you save a .blend file that was opened with this addon enabled, you will not be able to open it with older Blender versions anymore.
 This is because of a bug in Blender versions prior to 2.79.
 See the [Blender 2.79 release notes](https://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.79/PythonAPI#Data-block_Pointer_Properties):
