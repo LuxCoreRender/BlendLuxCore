@@ -1,3 +1,14 @@
+import addon_utils
+
+_, luxblend_is_enabled = addon_utils.check("luxrender")
+if luxblend_is_enabled:
+    addon_utils.disable("luxrender", default_set=True)
+    print("Disabled the old LuxBlend addon.")
+    raise Exception("\n\nThe old LuxBlend addon causes conflicts, "
+                    "so it was disabled. Save your user preferences "
+                    "and restart Blender before you can enable the "
+                    "new addon.")
+
 import bpy
 from .bin import pyluxcore
 
