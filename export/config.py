@@ -104,6 +104,9 @@ def convert(scene, context=None, engine=None):
             "scene.epsilon.max": config.max_epsilon,
         })
 
+        if config.path.use_clamping:
+            definitions["path.clamping.variance.maxvalue"] = config.path.clamping
+
         # Filter
         if config.filter == "GAUSSIAN":
             definitions["film.filter.gaussian.alpha"] = config.gaussian_alpha
@@ -153,9 +156,6 @@ def _convert_path(config, definitions):
     definitions["path.pathdepth.diffuse"] = path.depth_diffuse + 1
     definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
     definitions["path.pathdepth.specular"] = path.depth_specular
-
-    if path.use_clamping:
-        definitions["path.clamping.variance.maxvalue"] = path.clamping
 
 
 def _convert_filesaver(scene, definitions, luxcore_engine):
