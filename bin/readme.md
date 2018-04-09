@@ -4,6 +4,7 @@ Files that need to be copied from the binary SDK into this directory for release
 
 * libembree.so.2
 * libtbb.so.2
+* libtbbmalloc.so.2
 * pyluxcore.so
 
 ## Windows
