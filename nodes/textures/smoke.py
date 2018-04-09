@@ -58,8 +58,6 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
             }
             return self.base_export(props, definitions, luxcore_name)
 
-        nx, ny, nz, grid = smoke.convert(self.domain, self.source)
-
         scale = self.domain.dimensions
         translate = self.domain.matrix_world * mathutils.Vector([v for v in self.domain.bound_box[0]])
         rotate = self.domain.rotation_euler
@@ -89,13 +87,31 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         definitions = {
             "type": "densitygrid",
             "wrap": self.wrap,
-            "nx": nx,
-            "ny": ny,
-            "nz": nz,
-            "data": grid,
             # Mapping
             "mapping.type": mapping_type,
             "mapping.transformation": matrix_transformation,
         }
+
+        smoke_domain_mod = utils.find_smoke_domain_modifier(self.domain)
+
+        if smoke_domain_mod is None:
+            msg = 'Object "%s" is not a smoke domain' % self.domain.name
+            raise Exception(msg)
+
+        settings = smoke_domain_mod.domain_settings
+
+        if settings.cache_file_format == "OPENVDB":
+            # TODO how to get the filepath??
+            definitions["openvdb.file"] = ...
+            # Assuming that these have the same name as in Blender
+            # TODO: test if this is true for all source modes
+            definitions["openvdb.grid"] = self.source
+        else:
+            # Point cache
+            nx, ny, nz, grid = smoke.convert(self.domain, self.source)
+            definitions["data"] = grid
+            definitions["nx"] = nx
+            definitions["ny"] = ny
+            definitions["nz"] = nz
 
         return self.base_export(props, definitions, luxcore_name)
