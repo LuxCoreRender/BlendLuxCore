@@ -31,3 +31,10 @@ NotImplementedError: Area light not implemented yet
 
 #### Exact steps for others to reproduce the error
 Based on a (as simple as possible) attached .blend file with minimum amount of steps
+
+Please tell us which render engine you used and if it was in OpenCL or CPU mode.
+If you were rendering with OpenCL, please test if the error also happens in CPU mode 
+and append this information, it can help us to pinpoint the problem faster.
+
+Thank you for supporting the development!
+Please replace or delete all text in this template that is not a #### heading, including this text.

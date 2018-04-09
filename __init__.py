@@ -1,3 +1,14 @@
+import addon_utils
+
+_, luxblend_is_enabled = addon_utils.check("luxrender")
+if luxblend_is_enabled:
+    addon_utils.disable("luxrender", default_set=True)
+    print("Disabled the old LuxBlend addon.")
+    raise Exception("\n\nThe old LuxBlend addon causes conflicts, "
+                    "so it was disabled. Save your user preferences "
+                    "and restart Blender before you can enable the "
+                    "new addon.")
+
 import bpy
 from .bin import pyluxcore
 
@@ -7,7 +18,7 @@ from .nodes import materials, volumes, textures
 from .ui import (
     aovs, blender_object, camera, config, display, errorlog,
     halt, light, lightgroups, material, mesh, particle, postpro,
-    render_layer, texture, world
+    render_layer, texture, units, world
 )
 
 bl_info = {
@@ -18,7 +29,7 @@ bl_info = {
     "category": "Render",
     "location": "Info header, render engine menu",
     "description": "LuxCore integration for Blender",
-    "warning": "beta1",
+    "warning": "beta2",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
