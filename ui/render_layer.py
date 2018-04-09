@@ -23,11 +23,12 @@ class LUXCORE_RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
         sub.operator("scene.render_layer_remove", icon='ZOOMOUT', text="")
         col.prop(rd, "use_single_layer", icon_only=True)
 
-        tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
-        if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
-            msg = "Auto tonemapper will cause brightness difference!"
-            layout.label(msg, icon="ERROR")
-            layout.operator("luxcore.switch_to_camera_settings", icon="CAMERA_DATA")
+        if scene.camera:
+            tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
+            if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
+                msg = "Auto tonemapper will cause brightness difference!"
+                layout.label(msg, icon="ERROR")
+                layout.operator("luxcore.switch_to_camera_settings", icon="CAMERA_DATA")
 
 
 class LUXCORE_RENDERLAYER_PT_layer_options(RenderLayerButtonsPanel, Panel):

@@ -60,6 +60,21 @@ POWER_DESC = (
 
 UNIFORM_DESC = "Sample all lights equally, not according to their brightness"
 
+LARGE_STEP_RATE_DESC = (
+    "Probability of generating a large sample mutation."
+    "Low values cause the sampler to focus more on "
+    "caustics and other hotspots it found, while high "
+    "values make the sampler behave more like a pure "
+    "random sampler"
+)
+
+MAX_CONSECUTIVE_REJECT_DESC = (
+    "Number of consecutive rejects before a next "
+    "mutation is forced. Low values can cause bias"
+)
+
+IMAGE_MUTATION_RATE_DESC = "Maximum distance over the image plane for a small mutation"
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -151,6 +166,18 @@ class LuxCoreConfig(PropertyGroup):
     # SOBOL properties
     sobol_adaptive_strength = FloatProperty(name="Adaptive Strength", default=0.7, min=0, max=0.95,
                                             description=SOBOL_ADAPTIVE_STRENGTH_DESC)
+    # METROPOLIS properties
+    # sampler.metropolis.largesteprate
+    metropolis_largesteprate = FloatProperty(name="Large Mutation Probability", default=40,
+                                             min=0, max=100, precision=0, subtype="PERCENTAGE",
+                                             description=LARGE_STEP_RATE_DESC)
+    # sampler.metropolis.maxconsecutivereject
+    metropolis_maxconsecutivereject = IntProperty(name="Max Consecutive Rejects", default=512, min=0,
+                                                  description=MAX_CONSECUTIVE_REJECT_DESC)
+    # sampler.metropolis.imagemutationrate
+    metropolis_imagemutationrate = FloatProperty(name="Image Mutation Rate", default=10,
+                                                 min=0, max=100, precision=0, subtype="PERCENTAGE",
+                                                 description=IMAGE_MUTATION_RATE_DESC)
 
     # Only available when engine is PATH (not BIDIR)
     devices = [
@@ -208,3 +235,16 @@ class LuxCoreConfig(PropertyGroup):
     # Seed
     seed = IntProperty(name="Seed", default=1, min=1, description=SEED_DESC)
     use_animated_seed = BoolProperty(name="Animated Seed", default=False, description=ANIM_SEED_DESC)
+
+    # Min. epsilon settings (drawn in ui/units.py)
+    show_min_epsilon = BoolProperty(name="Advanced LuxCore Settings", default=False,
+                                    description="Show/Hide advanced LuxCore features. "
+                                                "Only change them if you know what you are doing")
+    min_epsilon = FloatProperty(name="Min. Epsilon", default=1e-5, soft_min=1e-6, soft_max=1e-1,
+                                precision=10000,
+                                description="User higher values when artifacts due to floating point precision "
+                                            "issues appear in the rendered image")
+    max_epsilon = FloatProperty(name="Max. Epsilon", default=1e-1, soft_min=1e-3, soft_max=1e+2,
+                                precision=10000,
+                                description="Might need adjustment along with the min epsilon to avoid "
+                                            "artifacts due to floating point precision issues")

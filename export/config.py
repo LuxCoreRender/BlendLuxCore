@@ -59,6 +59,7 @@ def convert(scene, context=None, engine=None):
                     luxcore_engine = "PATH"
                     sampler = config.sampler
                     definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
+                    _convert_metropolis_settings(definitions, config)
 
                 # Add CPU/OCL suffix
                 luxcore_engine += config.device
@@ -84,6 +85,7 @@ def convert(scene, context=None, engine=None):
                 luxcore_engine = "BIDIRCPU"
                 # SOBOL or RANDOM would be possible, but make little sense for BIDIR
                 sampler = "METROPOLIS"
+                _convert_metropolis_settings(definitions, config)
                 definitions["light.maxdepth"] = config.bidir_light_maxdepth
                 definitions["path.maxdepth"] = config.bidir_path_maxdepth
 
@@ -98,7 +100,12 @@ def convert(scene, context=None, engine=None):
             "film.filter.type": config.filter,
             "film.filter.width": config.filter_width,
             "lightstrategy.type": config.light_strategy,
+            "scene.epsilon.min": config.min_epsilon,
+            "scene.epsilon.max": config.max_epsilon,
         })
+
+        if config.path.use_clamping:
+            definitions["path.clamping.variance.maxvalue"] = config.path.clamping
 
         # Filter
         if config.filter == "GAUSSIAN":
@@ -149,9 +156,6 @@ def _convert_path(config, definitions):
     definitions["path.pathdepth.diffuse"] = path.depth_diffuse + 1
     definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
     definitions["path.pathdepth.specular"] = path.depth_specular
-
-    if path.use_clamping:
-        definitions["path.clamping.variance.maxvalue"] = path.clamping
 
 
 def _convert_filesaver(scene, definitions, luxcore_engine):
@@ -247,3 +251,9 @@ def _convert_halt_conditions(scene, definitions):
             definitions["batch.haltthreshold.warmup"] = halt.noise_thresh_warmup
             definitions["batch.haltthreshold.step"] = halt.noise_thresh_step
             definitions["batch.haltthreshold.filter.enable"] = halt.noise_thresh_use_filter
+
+
+def _convert_metropolis_settings(definitions, config):
+    definitions["sampler.metropolis.largesteprate"] = config.metropolis_largesteprate / 100
+    definitions["sampler.metropolis.maxconsecutivereject"] = config.metropolis_maxconsecutivereject
+    definitions["sampler.metropolis.imagemutationrate"] = config.metropolis_imagemutationrate / 100

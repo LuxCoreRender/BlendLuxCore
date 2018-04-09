@@ -48,23 +48,7 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             subrow.prop(config.path, "depth_glossy")
             subrow.prop(config.path, "depth_specular")
 
-            split = layout.split()
-            split.prop(config.path, "use_clamping")
-            col = split.column()
-            col.enabled = config.path.use_clamping
-            col.prop(config.path, "clamping")
-
-            if config.path.suggested_clamping_value == -1:
-                # Optimal clamp value not yet found, need to start a render first
-                if config.path.use_clamping:
-                    # Can't compute optimal value if clamping is enabled
-                    layout.label("Render without clamping to get suggested clamp value!", icon="ERROR")
-                else:
-                    layout.label("Start a render to get a suggested clamp value", icon="INFO")
-            else:
-                # Show a button that can be used to set the optimal clamp value
-                op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
-                layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
+            self.draw_clamp_settings(layout, config)
 
             layout.prop(config, "use_tiles")
 
@@ -88,16 +72,22 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
                 if config.sampler == "SOBOL":
                     layout.prop(config, "sobol_adaptive_strength", slider=True)
+                elif config.sampler == "METROPOLIS":
+                    self.draw_metropolis_props(layout, config)
         else:
             # Bidir options
             row_depths = layout.row(align=True)
             row_depths.prop(config, "bidir_path_maxdepth")
             row_depths.prop(config, "bidir_light_maxdepth")
 
+            self.draw_clamp_settings(layout, config)
+
             row_sampler = layout.row()
             row_sampler.enabled = False
             row_sampler.label("Sampler:")
             row_sampler.prop(config, "bidir_sampler", expand=True)
+
+            self.draw_metropolis_props(layout, config)
 
         # Filter settings
         row = layout.row()
@@ -117,6 +107,31 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
         # Light strategy
         layout.prop(config, "light_strategy")
+
+    def draw_clamp_settings(self, layout, config):
+        split = layout.split()
+        split.prop(config.path, "use_clamping")
+        col = split.column()
+        col.enabled = config.path.use_clamping
+        col.prop(config.path, "clamping")
+
+        if config.path.suggested_clamping_value == -1:
+            # Optimal clamp value not yet found, need to start a render first
+            if config.path.use_clamping:
+                # Can't compute optimal value if clamping is enabled
+                layout.label("Render without clamping to get suggested clamp value", icon="INFO")
+            else:
+                layout.label("Start a render to get a suggested clamp value", icon="INFO")
+        else:
+            # Show a button that can be used to set the optimal clamp value
+            op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
+            layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
+
+    def draw_metropolis_props(self, layout, config):
+        col = layout.column(align=True)
+        col.prop(config, "metropolis_largesteprate", slider=True)
+        col.prop(config, "metropolis_maxconsecutivereject")
+        col.prop(config, "metropolis_imagemutationrate", slider=True)
 
 
 class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
