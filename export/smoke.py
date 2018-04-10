@@ -37,7 +37,8 @@ def convert(smoke_obj, channel):
     channeldata = list(grid)
     big_res = list(settings.domain_resolution)
 
-    if settings.use_high_resolution:
+    # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
+    if settings.use_high_resolution and channel not in {"velocity", "heat"}:
         for i in range(3):
             big_res[i] *= settings.amplify + 1
 
