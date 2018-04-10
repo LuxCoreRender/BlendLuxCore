@@ -55,7 +55,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             row = sub.row(align=True)
             if obj.active_material:
                 row.prop(obj.active_material, "name", text="")
-                # TODO fake user on/off toggle button if mat has more than one user
+                row.prop(obj.active_material, "use_fake_user", text="", toggle=True, icon="FONT_DATA")  # :^)
                 row.operator("luxcore.material_copy", text="", icon="COPY_ID")
                 text_new = ""
             else:
