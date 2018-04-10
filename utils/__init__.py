@@ -268,7 +268,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
             xaspect, yaspect = calc_aspect(width_raw, height_raw)
     else:
         #Final rendering
-        xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+        xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x, scene.render.resolution_y*scene.render.pixel_aspect_y)
         offset_x = 0
         offset_y = 0
 
