@@ -1,3 +1,5 @@
+import webbrowser
+
 import bpy
 from bpy.props import StringProperty, BoolProperty
 
@@ -167,4 +169,19 @@ class LUXCORE_OT_copy_error_to_clipboard(bpy.types.Operator):
 
     def execute(self, context):
         context.window_manager.clipboard = self.message
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_open_website(bpy.types.Operator):
+    bl_idname = "luxcore.open_website"
+    bl_label = ""
+    bl_description = "Open related website in the web browser"
+    # Note: use the "URL" icon and a custom text when using this operator:
+    # op = layout.operator("luxcore.open_website", text="Wiki Page", icon="URL")
+    # op.url = "https://www.example.com"
+
+    url = StringProperty()
+
+    def execute(self, context):
+        webbrowser.open(self.url)
         return {"FINISHED"}
