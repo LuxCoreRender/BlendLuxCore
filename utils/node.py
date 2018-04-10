@@ -58,7 +58,15 @@ def get_linked_node(socket):
 
 
 def find_nodes(node_tree, bl_idname):
-    return [node for node in node_tree.nodes if node.bl_idname == bl_idname]
+    result = []
+
+    for node in node_tree.nodes:
+        if node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
+            result += find_nodes(node.node_tree, bl_idname)
+        if node.bl_idname == bl_idname:
+            result.append(node)
+
+    return result
 
 
 def update_opengl_materials(_, context):
