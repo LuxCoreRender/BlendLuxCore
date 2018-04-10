@@ -110,7 +110,7 @@ class FrameBuffer(object):
 
         if context.region_data.view_perspective == "CAMERA" and context.scene.render.use_border:
             # Offset is only needed if viewport is in camera mode and uses border rendering
-            aspect_x, aspect_y = utils.calc_aspect(context.scene.render.resolution_x, context.scene.render.resolution_y)
+            aspect_x, aspect_y = utils.calc_aspect(context.scene.render.resolution_x*context.scene.render.pixel_aspect_x, context.scene.render.resolution_y*context.scene.render.pixel_aspect_y)
 
             base = 0.5 * zoom * max(width_raw, height_raw)
            
