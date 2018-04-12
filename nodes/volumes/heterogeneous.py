@@ -53,7 +53,6 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "multiscattering")
-        self.draw_common_buttons(context, layout)
 
         layout.prop(self, "auto_step_settings")
         if self.auto_step_settings:
@@ -66,6 +65,8 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
         else:
             layout.prop(self, "step_size")
             layout.prop(self, "maxcount")
+
+        self.draw_common_buttons(context, layout)
 
     def export(self, props, luxcore_name=None):
         definitions = {
