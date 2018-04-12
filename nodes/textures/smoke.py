@@ -1,7 +1,9 @@
 import bpy
 import mathutils
 import math
+from time import time
 from bpy.props import EnumProperty, PointerProperty, StringProperty
+from ...bin import pyluxcore
 from ...export import smoke
 from ... import utils
 from .. import LuxCoreNodeTexture
@@ -47,6 +49,10 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         col.prop(self, "wrap")
 
     def export(self, props, luxcore_name=None):
+        start_time = time()
+        print("[Node Tree: %s][Smoke Domain: %s] Beginning smoke export of channel %s"
+              % (self.id_data.name, self.domain.name, self.source))
+
         if not self.domain:
             error = "No Domain object selected."
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
@@ -92,10 +98,20 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
             "nx": nx,
             "ny": ny,
             "nz": nz,
-            "data": grid,
             # Mapping
             "mapping.type": mapping_type,
             "mapping.transformation": matrix_transformation,
         }
 
-        return self.base_export(props, definitions, luxcore_name)
+        luxcore_name = self.base_export(props, definitions, luxcore_name)
+        prefix = self.prefix + luxcore_name + "."
+
+        prop = pyluxcore.Property(prefix + "data", [])
+        prop.AddAllFloat(grid)
+        props.Set(prop)
+
+        elapsed_time = time() - start_time
+        print("[Node Tree: %s][Smoke Domain: %s] Smoke export of channel %s took %.3fs"
+              % (self.id_data.name, self.domain.name, self.source, elapsed_time))
+
+        return luxcore_name

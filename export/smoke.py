@@ -4,9 +4,6 @@ from time import time
 
 
 def convert(smoke_obj, channel):
-    print("[%s] Beginning smoke export (channel: %s)" % (smoke_obj.name, channel))
-    start_time = time()
-
     # Search smoke domain target for smoke modifiers
     smoke_domain_mod = utils.find_smoke_domain_modifier(smoke_obj)
 
@@ -40,8 +37,5 @@ def convert(smoke_obj, channel):
     if settings.use_high_resolution:
         for i in range(3):
             big_res[i] *= settings.amplify + 1
-
-    elapsed_time = time() - start_time
-    print("[%s] Smoke export of channel %s took %.3fs" % (smoke_obj.name, channel, elapsed_time))
 
     return big_res[0], big_res[1], big_res[2], channeldata
