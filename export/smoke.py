@@ -45,7 +45,8 @@ def convert(smoke_obj, channel):
     # The smoke resolution along the x, y, z axis
     resolution = list(settings.domain_resolution)
 
-    if settings.use_high_resolution:
+    # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
+    if settings.use_high_resolution and channel not in {"velocity", "heat"}:
         for i in range(3):
             resolution[i] *= settings.amplify + 1
 

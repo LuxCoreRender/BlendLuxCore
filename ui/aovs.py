@@ -1,6 +1,11 @@
 from bl_ui.properties_render_layer import RenderLayerButtonsPanel
 from bpy.types import Panel
 
+COMPATIBLE_WITH_BIDIR = {
+    "RADIANCE_GROUP", "SAMPLECOUNT",
+    "ALPHA", "RGBA", "RGB", "DEPTH"
+}
+
 
 class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
     bl_label = "LuxCore Arbitrary Output Variables (AOVs)"
@@ -11,6 +16,10 @@ class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
         layout = self.layout
         active_layer = context.scene.render.layers.active
         aovs = active_layer.luxcore.aovs
+        engine_is_path = context.scene.luxcore.config.engine == "PATH"
+
+        if not engine_is_path:
+            layout.label("The Bidir engine only supports a few AOVs", icon="INFO")
 
         split = layout.split()
         col = split.column(align=True)
@@ -21,34 +30,42 @@ class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
         col.prop(aovs, "alpha")
         col.prop(aovs, "depth")
 
-        col.label("Material/Object Information")
-        col.prop(aovs, "material_id")
-        col.prop(aovs, "object_id")
-        col.prop(aovs, "emission")
+        # All following AOVs are not supported by BIDIR, only by PATH
+        sub = col.column(align=True)
+        sub.active = engine_is_path
+        sub.label("Material/Object Information")
+        sub.prop(aovs, "material_id")
+        sub.prop(aovs, "object_id")
+        sub.prop(aovs, "emission")
 
-        col.label("Direct Light Information")
-        col.prop(aovs, "direct_diffuse")
-        col.prop(aovs, "direct_glossy")
+        sub.label("Direct Light Information")
+        sub.prop(aovs, "direct_diffuse")
+        sub.prop(aovs, "direct_glossy")
 
-        col.label("Indirect Light Information")
-        col.prop(aovs, "indirect_diffuse")
-        col.prop(aovs, "indirect_glossy")
-        col.prop(aovs, "indirect_specular")
+        sub.label("Indirect Light Information")
+        sub.prop(aovs, "indirect_diffuse")
+        sub.prop(aovs, "indirect_glossy")
+        sub.prop(aovs, "indirect_specular")
 
         col = split.column(align=True)
 
-        col.label("Geometry Information")
-        col.prop(aovs, "position")
-        col.prop(aovs, "shading_normal")
-        col.prop(aovs, "geometry_normal")
-        col.prop(aovs, "uv")
+        sub = col.column(align=True)
+        sub.active = engine_is_path
 
-        col.label("Shadow Information")
-        col.prop(aovs, "direct_shadow_mask")
-        col.prop(aovs, "indirect_shadow_mask")
+        sub.label("Geometry Information")
+        sub.prop(aovs, "position")
+        sub.prop(aovs, "shading_normal")
+        sub.prop(aovs, "geometry_normal")
+        sub.prop(aovs, "uv")
 
-        col.label("Render Information")
-        col.prop(aovs, "raycount")
+        sub.label("Shadow Information")
+        sub.prop(aovs, "direct_shadow_mask")
+        sub.prop(aovs, "indirect_shadow_mask")
+
+        sub.label("Render Information")
+        sub.prop(aovs, "irradiance")
+        sub.prop(aovs, "raycount")
+        sub.prop(aovs, "convergence")
+
+        # Samplecount is supported by BIDIR again
         col.prop(aovs, "samplecount")
-        col.prop(aovs, "convergence")
-        col.prop(aovs, "irradiance")

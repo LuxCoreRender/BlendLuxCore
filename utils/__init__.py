@@ -188,7 +188,7 @@ def calc_filmsize(scene, context=None):
         else:
             # Camera viewport
             if scene.render.use_border:
-                aspect_x, aspect_y = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+                aspect_x, aspect_y = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x, scene.render.resolution_y*scene.render.pixel_aspect_y)
                 zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
 
                 base = zoom*max(width_raw, height_raw)
@@ -254,7 +254,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
         if context.region_data.view_perspective == "CAMERA":
             # Camera view
             if scene.render.use_border:
-                xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+                xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x, scene.render.resolution_y * scene.render.pixel_aspect_y)
                 offset_x = 0
                 offset_y = 0
                 
@@ -268,7 +268,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
             xaspect, yaspect = calc_aspect(width_raw, height_raw)
     else:
         #Final rendering
-        xaspect, yaspect = calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+        xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x, scene.render.resolution_y*scene.render.pixel_aspect_y)
         offset_x = 0
         offset_y = 0
 
