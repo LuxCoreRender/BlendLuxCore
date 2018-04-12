@@ -16,11 +16,12 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
     domain = PointerProperty(name="Domain", type=bpy.types.Object)
 
     source_items = [
-        ("density", "Density", "Smoke density grid"),
-        ("fire", "Fire", "Fire grid"),
-        ("heat", "Heat", "Smoke heat grid"),
+        ("density", "Density", "Smoke density grid", 0),
+        ("fire", "Fire", "Fire grid", 1),
+        ("heat", "Heat", "Smoke heat grid", 2),
+        ("color", "Color", "Smoke color grid", 3),
         #ToDo implement velocity export
-        #("velocity", "Velocity", "Smoke velocity grid"),
+        #("velocity", "Velocity", "Smoke velocity grid", 4),
     ]
     source = EnumProperty(name="Source", items=source_items, default="density")
 
@@ -105,8 +106,9 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
 
         luxcore_name = self.base_export(props, definitions, luxcore_name)
         prefix = self.prefix + luxcore_name + "."
-
-        prop = pyluxcore.Property(prefix + "data", [])
+        # We use a fast path (AddAllFloat method) here to transfer the grid data to the properties
+        prop_name = "data3" if self.source == "color" else "data"
+        prop = pyluxcore.Property(prefix + prop_name, [])
         prop.AddAllFloat(grid)
         props.Set(prop)
 

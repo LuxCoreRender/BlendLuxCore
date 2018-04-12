@@ -1,9 +1,11 @@
-import bpy
 from .. import utils
-from time import time
+import array
 
 
 def convert(smoke_obj, channel):
+    from time import time
+    start = time()
+
     # Search smoke domain target for smoke modifiers
     smoke_domain_mod = utils.find_smoke_domain_modifier(smoke_obj)
 
@@ -19,6 +21,8 @@ def convert(smoke_obj, channel):
         grid = settings.flame_grid
     elif channel == "heat":
         grid = settings.heat_grid
+    elif channel == "color":
+        grid = settings.color_grid
     # ToDo: implement velocity grid export
     # velocity grid has 3 times more values => probably vector field
     #elif channel == "velocity":
@@ -32,10 +36,19 @@ def convert(smoke_obj, channel):
         raise Exception(msg)
 
     channeldata = list(grid)
-    big_res = list(settings.domain_resolution)
+
+    if channel == "color":
+        # Delete every 4th element because the color_grid contains 4 values per cell
+        # but LuxCore expects 3 values per cell (r, g, b)
+        del channeldata[3::4]
+
+    # The smoke resolution along the x, y, z axis
+    resolution = list(settings.domain_resolution)
 
     if settings.use_high_resolution:
         for i in range(3):
-            big_res[i] *= settings.amplify + 1
+            resolution[i] *= settings.amplify + 1
 
-    return big_res[0], big_res[1], big_res[2], channeldata
+    print("conversion to list took %.3fs" % (time() - start))
+
+    return resolution[0], resolution[1], resolution[2], channeldata
