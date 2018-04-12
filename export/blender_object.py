@@ -51,6 +51,8 @@ def convert(blender_obj, scene, context, luxcore_scene,
                 print(blender_obj.name + ": No mesh data after to_mesh()")
                 return props, None
 
+            # mesh.calc_normals_split()
+            # mesh.update(calc_edges=True, calc_tessface=True)
             mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
             bpy.data.meshes.remove(mesh, do_unlink=False)
         else:

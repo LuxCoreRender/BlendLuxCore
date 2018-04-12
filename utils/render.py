@@ -51,7 +51,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
 
     # Update progress bar if we have halt conditions
     halt = utils.get_halt_conditions(scene)
-    if halt.enable and (halt.use_time or halt.use_samples):
+    if halt.enable and (halt.use_time or halt.use_samples or halt.use_noise_thresh):
         rendered_samples = stats.Get("stats.renderengine.pass").GetInt()
         rendered_time = stats.Get("stats.renderengine.time").GetFloat()
         percent = 0
@@ -124,7 +124,11 @@ def get_pretty_stats(config, stats, scene):
     # Convergence (how many pixels are converged, in percent)
     convergence = stats.Get("stats.renderengine.convergence").GetFloat()
     if convergence > 0:
-        pretty.append("%d%% Pixels Converged" % round(convergence * 100))
+        if convergence < 0.95:
+            convergence_msg = "%d%% Pixels Converged" % round(convergence * 100)
+        else:
+            convergence_msg = "%.2f Pixels Converged" % (convergence * 100)
+        pretty.append(convergence_msg)
 
     # Errors and warnings
     error_str = ""
