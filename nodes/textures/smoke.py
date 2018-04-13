@@ -15,27 +15,34 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
     
     domain = PointerProperty(name="Domain", type=bpy.types.Object)
 
-    source_items = [
-        ("density", "Density", "Smoke density grid", 0),
-        ("fire", "Fire", "Fire grid", 1),
-        ("heat", "Heat", "Smoke heat grid", 2),
-        ("color", "Color", "Smoke color grid", 3),
-        #ToDo implement velocity export
-        #("velocity", "Velocity", "Smoke velocity grid", 4),
-    ]
-    source = EnumProperty(name="Source", items=source_items, default="density")
+    def update_source(self, context):
+        self.outputs["Value"].enabled = self.source in {"density", "fire", "heat"}
+        self.outputs["Color"].enabled = self.source == "color"
 
-    #ToDo: Descriptions
-    wrap_items = [
-        ("repeat", "Repeat", "", 0),
-        ("clamp", "Clamp", "", 3),
-        ("black", "Black", "", 1),
-        ("white", "White", "", 2),
+    source_items = [
+        ("density", "Density", "Smoke density grid, 1 value per voxel", 0),
+        ("fire", "Fire", "Fire grid, 1 value per voxel", 1),
+        ("heat", "Heat", "Smoke heat grid, 1 value per voxel", 2),
+        ("color", "Color", "Smoke color grid, 3 values per voxel (RGB)", 3),
+        # ToDo implement velocity export
+        # ("velocity", "Velocity", "Smoke velocity grid, 3 values per voxel", 4),
     ]
-    wrap = EnumProperty(name="Wrap", items=wrap_items, default="black")
+    source = EnumProperty(name="Grid Type", items=source_items, default="density", update=update_source)
+
+    precision_items = [
+        ("byte", "Byte", "Only 1 byte per value. Required memory is 1/2 of Half and 1/4 of Float", 0),
+        ("half", "Half", "2 bytes per value. Required memory is 1/2 of Float, but 2 times the size of Byte", 1),
+        ("float", "Float", "4 bytes per value. Required memory is 2 times the size of half and 4 times the size of Byte", 2),
+    ]
+    precision = EnumProperty(name="Precision", items=precision_items, default="half",
+                             description="How many bytes to use per value. The floating point precision "
+                                         "increases/decreases when more/less bytes are used. Low floating "
+                                         "point precision can lead to artifacts when the smoke resolution is low")
 
     def init(self, context):
         self.outputs.new("LuxCoreSocketFloatPositive", "Value")
+        color = self.outputs.new("LuxCoreSocketColor", "Color")
+        color.enabled = False
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "domain")
@@ -47,7 +54,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
 
         col = layout.column()
         col.prop(self, "source")
-        col.prop(self, "wrap")
+        col.prop(self, "precision")
 
     def export(self, props, luxcore_name=None):
         start_time = time()
@@ -95,7 +102,8 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
 
         definitions = {
             "type": "densitygrid",
-            "wrap": self.wrap,
+            "wrap": "black",
+            "storage": self.precision,
             "nx": nx,
             "ny": ny,
             "nz": nz,
