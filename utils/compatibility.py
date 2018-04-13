@@ -13,6 +13,7 @@ def run():
     update_output_nodes_volume_change()
     update_glossy_nodes_ior_change()
     update_volume_nodes_asymmetry_change()
+    update_smoke_nodes_add_color_output()
 
 
 def update_output_nodes_volume_change():
@@ -68,7 +69,7 @@ def update_glossy_nodes_ior_change():
         affected_nodes += find_nodes(node_tree, "LuxCoreNodeMatGlossyCoating")
 
         for node in affected_nodes:
-            if not "IOR" in node.inputs:
+            if "IOR" not in node.inputs:
                 # Note: the IOR input will be at the very bottom, but at least the export works
                 node.add_input("LuxCoreSocketIOR", "IOR", 1.5)
                 node.inputs["IOR"].enabled = False
@@ -93,4 +94,21 @@ def update_volume_nodes_asymmetry_change():
             if asymmetry_socket.bl_idname == "NodeSocketUndefined":
                 node.inputs.remove(asymmetry_socket)
                 node.add_input("LuxCoreSocketVolumeAsymmetry", "Asymmetry", (0, 0, 0))
+                print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_smoke_nodes_add_color_output():
+    # commit f31f3be5409df9866c9b7364ce79e8e7aee0e875
+
+    for node_tree in bpy.data.node_groups:
+        if node_tree.library:
+            continue
+
+        if node_tree.bl_idname != "luxcore_volume_nodes":
+            continue
+
+        for node in find_nodes(node_tree, "LuxCoreNodeTexSmoke"):
+            if "Color" not in node.outputs:
+                color = node.outputs.new("LuxCoreSocketColor", "Color")
+                color.enabled = False
                 print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
