@@ -10,8 +10,8 @@ class LuxCoreNodeTexUV(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
-    def export(self, props, luxcore_name=None):
-        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(props)
+    def export(self, exporter, props, luxcore_name=None):
+        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, props)
 
         definitions = {
             "type": "uv",

@@ -38,21 +38,21 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
         layout.prop(self, "use_ior")
         Roughness.draw(self, context, layout)
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "glossy2",
-            "kd": self.inputs["Diffuse Color"].export(props),
-            "ka": self.inputs["Absorption Color"].export(props),
-            "d": self.inputs["Absorption Depth (nm)"].export(props),
+            "kd": self.inputs["Diffuse Color"].export(exporter, props),
+            "ka": self.inputs["Absorption Color"].export(exporter, props),
+            "d": self.inputs["Absorption Depth (nm)"].export(exporter, props),
             "multibounce": self.multibounce,
         }
 
         if self.use_ior:
-            definitions["index"] = self.inputs["IOR"].export(props)
+            definitions["index"] = self.inputs["IOR"].export(exporter, props)
             definitions["ks"] = [1, 1, 1]
         else:
-            definitions["ks"] = self.inputs["Specular Color"].export(props)
+            definitions["ks"] = self.inputs["Specular Color"].export(exporter, props)
 
-        Roughness.export(self, props, definitions)
-        self.export_common_inputs(props, definitions)
+        Roughness.export(self, exporter, props, definitions)
+        self.export_common_inputs(exporter, props, definitions)
         return self.base_export(props, definitions, luxcore_name)

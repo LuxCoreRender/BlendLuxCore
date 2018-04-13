@@ -49,8 +49,8 @@ class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
         column.prop(self, "bright")
         column.prop(self, "contrast")
 
-    def export(self, props, luxcore_name=None):
-        mapping_type, transformation = self.inputs["3D Mapping"].export(props)
+    def export(self, exporter, props, luxcore_name=None):
+        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)
        
         definitions = {
             "type": "blender_voronoi",

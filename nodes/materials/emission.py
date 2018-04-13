@@ -87,7 +87,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         The export method is different because this is not a normal material node.
         It is called from LuxCoreNodeMaterial.export_common_props()
         """
-        definitions["emission"] = self.inputs["Color"].export(props)
+        definitions["emission"] = self.inputs["Color"].export(exporter, props)
         definitions["emission.gain"] = [self.gain] * 3
         definitions["emission.power"] = self.power
         definitions["emission.efficency"] = self.efficacy

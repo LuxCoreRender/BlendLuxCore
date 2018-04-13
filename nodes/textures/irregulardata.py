@@ -43,7 +43,7 @@ class LuxCoreNodeTexIrregularData(LuxCoreNodeTexture):
         if self.error:
             layout.label(self.error, icon="CANCEL")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "irregulardata",
             "wavelengths": convert(self.wavelengths),

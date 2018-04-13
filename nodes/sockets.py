@@ -73,13 +73,13 @@ class LuxCoreNodeSocket(NodeSocket):
         """
         return None
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         if self.is_linked:
             linked_node = self.links[0].from_node
             if luxcore_name:
-                return linked_node.export(props, luxcore_name)
+                return linked_node.export(exporter, props, luxcore_name)
             else:
-                return linked_node.export(props)
+                return linked_node.export(exporter, props)
         elif hasattr(self, "default_value"):
             return self.export_default()
         else:

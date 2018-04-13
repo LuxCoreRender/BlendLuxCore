@@ -19,8 +19,8 @@ class LuxCoreNodeTexOutput(LuxCoreNodeOutput):
         self.inputs["Color"].needs_link = True
         super().init(context)
 
-    def export(self, props, luxcore_name):
-        color = self.inputs["Color"].export(props, luxcore_name)
+    def export(self, exporter, props, luxcore_name):
+        color = self.inputs["Color"].export(exporter, props, luxcore_name)
 
         if not self.inputs["Color"].is_linked:
             # We need a helper texture

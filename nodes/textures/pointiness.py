@@ -22,7 +22,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "curvature_mode", expand=True)
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         # Pointiness is a hitpointalpha texture behind the scenes, just that it implicitly enables pointiness
         # calculation on the mesh (handled in luxcore object export) and has some nice wrapping to get only part of
         # the pointiness information (see code below)
@@ -82,7 +82,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
 
             luxcore_name = name_clamp
 
-        multiplier = self.inputs["Multiplier"].export(props)
+        multiplier = self.inputs["Multiplier"].export(exporter, props)
 
         if multiplier != 1:
             multiplier_name = luxcore_name + "_multiplier"

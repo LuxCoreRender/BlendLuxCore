@@ -7,7 +7,8 @@ from ..utils import node as utils_node
 from . import material
 from .light import convert_lamp
 
-def convert(blender_obj, scene, context, luxcore_scene,
+
+def convert(exporter, blender_obj, scene, context, luxcore_scene,
             exported_object=None, update_mesh=False, dupli_suffix=""):
 
     if not utils.is_obj_visible(blender_obj, scene, context, is_dupli=dupli_suffix):
@@ -66,12 +67,12 @@ def convert(blender_obj, scene, context, luxcore_scene,
         for lux_object_name, material_index in mesh_definitions:
             if not context and override_mat:
                 # Only use override material in final render
-                lux_mat_name, mat_props = material.convert(override_mat, scene, context)
+                lux_mat_name, mat_props = material.convert(exporter, override_mat, scene, context)
             else:
                 if material_index < len(blender_obj.material_slots):
                     mat = blender_obj.material_slots[material_index].material
                     # TODO material cache
-                    lux_mat_name, mat_props = material.convert(mat, scene, context)
+                    lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
 
                     if mat is None:
                         # Note: material.convert returned the fallback material in this case

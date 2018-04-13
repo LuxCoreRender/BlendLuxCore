@@ -40,15 +40,15 @@ class LuxCoreNodeTexBrick(LuxCoreNodeTexture):
         layout.prop(self, "brickrun")
         layout.prop(self, "brickbevel")
     
-    def export(self, props, luxcore_name=None):        
-        mapping_type, transformation = self.inputs["3D Mapping"].export(props)
+    def export(self, exporter, props, luxcore_name=None):        
+        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)
 
         definitions = {
             "type": "brick",
             "brickbond": self.brickbond,            
-            "bricktex": self.inputs["bricktex"].export(props),
-            "mortartex": self.inputs["mortartex"].export(props),
-            "brickmodtex": self.inputs["brickmodtex"].export(props),
+            "bricktex": self.inputs["bricktex"].export(exporter, props),
+            "mortartex": self.inputs["mortartex"].export(exporter, props),
+            "brickmodtex": self.inputs["brickmodtex"].export(exporter, props),
             "brickwidth": self.brickwidth,
             "brickheight": self.brickheight,
             "brickdepth": self.brickdepth,

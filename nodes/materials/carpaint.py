@@ -71,25 +71,25 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
         op.url = "https://wiki.luxcorerender.org/LuxCoreRender_Materials_Car_Paint"
         layout.prop(self, "preset")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "carpaint",
-            "kd": self.inputs["Diffuse Color"].export(props),
-            "ka": self.inputs["Absorption Color"].export(props),
-            "ks1": self.inputs["Specular Color 1"].export(props),
-            "ks2": self.inputs["Specular Color 2"].export(props),
-            "ks3": self.inputs["Specular Color 3"].export(props),
-            "d": self.inputs["Absorption Depth (nm)"].export(props),
-            "m1": self.inputs["M1"].export(props),
-            "m2": self.inputs["M2"].export(props),
-            "m3": self.inputs["M3"].export(props),
-            "r1": self.inputs["R1"].export(props),
-            "r2": self.inputs["R2"].export(props),
-            "r3": self.inputs["R3"].export(props),
+            "kd": self.inputs["Diffuse Color"].export(exporter, props),
+            "ka": self.inputs["Absorption Color"].export(exporter, props),
+            "ks1": self.inputs["Specular Color 1"].export(exporter, props),
+            "ks2": self.inputs["Specular Color 2"].export(exporter, props),
+            "ks3": self.inputs["Specular Color 3"].export(exporter, props),
+            "d": self.inputs["Absorption Depth (nm)"].export(exporter, props),
+            "m1": self.inputs["M1"].export(exporter, props),
+            "m2": self.inputs["M2"].export(exporter, props),
+            "m3": self.inputs["M3"].export(exporter, props),
+            "r1": self.inputs["R1"].export(exporter, props),
+            "r2": self.inputs["R2"].export(exporter, props),
+            "r3": self.inputs["R3"].export(exporter, props),
         }
 
         if self.preset != "manual":
             definitions["preset"] = self.preset
 
-        self.export_common_inputs(props, definitions)
+        self.export_common_inputs(exporter, props, definitions)
         return self.base_export(props, definitions, luxcore_name)

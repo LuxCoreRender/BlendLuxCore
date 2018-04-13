@@ -142,11 +142,11 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
                 # sub = split.row(align=True)
                 row.prop(item, "add_keyframe", toggle=True, icon="KEY_HLT")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "band",
             "interpolation": self.interpolation,
-            "amount": self.inputs["Amount"].export(props),
+            "amount": self.inputs["Amount"].export(exporter, props),
         }
         
         for index, item in enumerate(self.ramp_items):            

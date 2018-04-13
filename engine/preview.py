@@ -36,7 +36,8 @@ def render(engine, scene):
     preview_type, obj = _get_preview_settings(scene)
 
     if preview_type == PreviewType.MATERIAL:
-        engine.session = _export_mat_scene(obj, scene)
+        engine.exporter = export.Exporter()
+        engine.session = _export_mat_scene(engine.exporter, obj, scene)
     else:
         print("Unsupported preview type")
         return enable_log_output()
@@ -74,7 +75,7 @@ def enable_log_output():
     pyluxcore.Init()
 
 
-def _export_mat_scene(obj, scene):
+def _export_mat_scene(exporter, obj, scene):
     # The diameter that the preview objects should have, in meters
     size = obj.active_material.luxcore.preview.size
     worldscale = size / DEFAULT_SPHERE_SIZE
@@ -97,9 +98,9 @@ def _export_mat_scene(obj, scene):
     # Object
     is_plane_scene = obj.name == "preview"
     if is_plane_scene:
-        _export_plane_scene(scene, obj.active_material, scene_props, luxcore_scene)
+        _export_plane_scene(exporter, scene, obj.active_material, scene_props, luxcore_scene)
     else:
-        _convert_obj(obj, scene, luxcore_scene, scene_props)
+        _convert_obj(exporter, obj, scene, luxcore_scene, scene_props)
 
     # Lights (either two area lights or a sun+sky setup)
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
@@ -118,12 +119,12 @@ def _export_mat_scene(obj, scene):
     return session
 
 
-def _export_plane_scene(scene, mat, props, luxcore_scene):
+def _export_plane_scene(exporter, scene, mat, props, luxcore_scene):
     # The default plane from the Blender preview scene is ugly (wrong scale and UVs), so we make our own.
     # A quadratic texture (with UV mapping) is tiled exactly 2 times in horizontal directon on this plane,
     # so it's also a nice tiling preview
 
-    lux_mat_name, mat_props = export.material.convert(mat, scene, None)
+    lux_mat_name, mat_props = export.material.convert(exporter, mat, scene, None)
     props.Set(mat_props)
 
     worldscale = utils.get_worldscale(scene, as_scalematrix=False)
@@ -343,8 +344,8 @@ def _create_config(scene, is_world_sphere):
     return utils.create_props(prefix, definitions)
 
 
-def _convert_obj(obj, scene, luxcore_scene, props):
-    obj_props, exported_obj = export.blender_object.convert(obj, scene, None, luxcore_scene, update_mesh=True)
+def _convert_obj(exporter, obj, scene, luxcore_scene, props):
+    obj_props, exported_obj = export.blender_object.convert(exporter, obj, scene, None, luxcore_scene, update_mesh=True)
 
     for psys in obj.particle_systems:
         settings = psys.settings
@@ -352,7 +353,7 @@ def _convert_obj(obj, scene, luxcore_scene, props):
             # Make the strands in strand preview mode thicker so they are visible
             settings.luxcore.hair.hair_size = 0.05
             settings.luxcore.hair.tesseltype = "solid"
-            export.hair.convert_hair(obj, psys, luxcore_scene, scene)
+            export.hair.convert_hair(exporter, obj, psys, luxcore_scene, scene)
 
     props.Set(obj_props)
 

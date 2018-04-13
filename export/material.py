@@ -6,7 +6,7 @@ from ..nodes.output import get_active_output
 GLOBAL_FALLBACK_MAT = "__CLAY__"
 
 
-def convert(material, scene, context):
+def convert(exporter, material, scene, context):
     try:
         if material is None:
             return fallback()
@@ -29,7 +29,7 @@ def convert(material, scene, context):
             return fallback(luxcore_name)
 
         # Now export the material node tree, starting at the output node
-        active_output.export(props, luxcore_name)
+        active_output.export(exporter, props, luxcore_name)
 
         return luxcore_name, props
     except Exception as error:

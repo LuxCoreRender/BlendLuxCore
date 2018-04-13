@@ -22,9 +22,9 @@ class LuxCoreNodeTexfBM(LuxCoreNodeTexture):
         layout.prop(self, "octaves")
         layout.prop(self, "roughness")
     
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         
-        mapping_type, transformation = self.inputs["3D Mapping"].export(props)
+        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)
        
         definitions = {
             "type": "fbm",

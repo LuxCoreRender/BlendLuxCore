@@ -48,6 +48,10 @@ class Exporter(object):
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
 
+        # A set of exported luxcore names of nodes.
+        # Avoids re-exporting the same node multiple times.
+        self.node_cache = set()
+
     def create_session(self, scene, context=None, engine=None):
         # Notes:
         # In final render, context is None
@@ -239,12 +243,12 @@ class Exporter(object):
             old_exported_obj = self.exported_objects[key]
 
         # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
-        obj_props, exported_obj = blender_object.convert(obj, scene, context, luxcore_scene, old_exported_obj,
+        obj_props, exported_obj = blender_object.convert(self, obj, scene, context, luxcore_scene, old_exported_obj,
                                                          update_mesh, dupli_suffix)
 
         # Convert particles and dupliverts/faces
         if obj.is_duplicator:
-            duplis.convert(obj, scene, context, luxcore_scene, engine)
+            duplis.convert(self, obj, scene, context, luxcore_scene, engine)
 
         # When moving a duplicated object, update the parent, too (concerns dupliverts/faces)
         if obj.parent and obj.parent.is_duplicator:
@@ -255,7 +259,7 @@ class Exporter(object):
             settings = psys.settings
             # render_type OBJECT and GROUP are handled by duplis.convert() above
             if settings.type == "HAIR" and settings.render_type == "PATH":
-                hair.convert_hair(obj, psys, luxcore_scene, scene, context, engine)
+                hair.convert_hair(self, obj, psys, luxcore_scene, scene, context, engine)
                 
         if exported_obj is None:
             # Object is not visible or an error happened.
@@ -301,7 +305,7 @@ class Exporter(object):
 
         if changes & Change.MATERIAL:
             for mat in self.material_cache.changed_materials:
-                luxcore_name, mat_props = material.convert(mat, context.scene, context)
+                luxcore_name, mat_props = material.convert(exporter, mat, context.scene, context)
                 props.Set(mat_props)
 
         if changes & Change.VISIBILITY:

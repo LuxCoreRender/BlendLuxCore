@@ -14,10 +14,10 @@ class LuxCoreNodeMatMirror(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "mirror",
-            "kr": self.inputs["Reflection Color"].export(props),
+            "kr": self.inputs["Reflection Color"].export(exporter, props),
         }
-        self.export_common_inputs(props, definitions)
+        self.export_common_inputs(exporter, props, definitions)
         return self.base_export(props, definitions, luxcore_name)

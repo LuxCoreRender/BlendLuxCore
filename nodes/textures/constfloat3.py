@@ -23,7 +23,7 @@ class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
 
         layout.prop(self, "value")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "constfloat3",
             "value": list(self.value),

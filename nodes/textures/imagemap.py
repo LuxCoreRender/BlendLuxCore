@@ -129,7 +129,20 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         if self.is_normal_map:
             col.prop(self, "normal_map_scale")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
+
+
+
+        print("======= This is a proof of concept and should not end up in production ============")
+        lc_name = self.make_name()
+        if lc_name in exporter.node_cache:
+            print("Image node cached:", self.image.name)
+            return lc_name
+        print(lc_name, "not cached")
+
+
+
+
         if self.image is None:
             return [0, 0, 0]
 
@@ -148,13 +161,13 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             print(msg)
             return [0, 0, 0]
 
-        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(props)
+        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, props)
 
         definitions = {
             "type": "imagemap",
             "file": filepath,
-            "gamma": self.inputs["Gamma"].export(props),
-            "gain": self.inputs["Brightness"].export(props),
+            "gamma": self.inputs["Gamma"].export(exporter, props),
+            "gain": self.inputs["Brightness"].export(exporter, props),
             "channel": self.channel,
             "wrap": self.wrap,
             # Mapping
@@ -165,6 +178,17 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         }
 
         luxcore_name = self.base_export(props, definitions, luxcore_name)
+
+
+
+
+        print("======= This is a proof of concept and should not end up in production ============")
+        print(">>>>>>>>>>> exported imagemap:", self.image.name, luxcore_name)
+        exporter.node_cache.add(luxcore_name)
+
+
+
+
 
         if self.is_normal_map and self.normal_map_scale > 0:
             # Implicitly create a normalmap

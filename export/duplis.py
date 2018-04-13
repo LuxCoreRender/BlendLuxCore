@@ -16,7 +16,7 @@ class Duplis:
         self.count += 1
 
 
-def convert(blender_obj, scene, context, luxcore_scene, engine=None):
+def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
     """
     Converts particle systems and dupliverts/faces (everything apart from hair)
     """
@@ -56,7 +56,7 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
             if dupli.object.type == "LAMP" and not dupli.object.data.type == "AREA":
                 # It is a light
                 name_suffix = _get_name_suffix(name_prefix, dupli, context)
-                light_props, exported_light = blender_object.convert(dupli.object, scene, context, luxcore_scene,
+                light_props, exported_light = blender_object.convert(exporter, dupli.object, scene, context, luxcore_scene,
                                                                      update_mesh=True, dupli_suffix=name_suffix)
                 for luxcore_name in exported_light.luxcore_names:
                     key = "scene.lights." + luxcore_name + ".transformation"
@@ -71,7 +71,7 @@ def convert(blender_obj, scene, context, luxcore_scene, engine=None):
                 except KeyError:
                     # Not yet exported
                     name_suffix = _get_name_suffix(name_prefix, dupli, context)
-                    obj_props, exported_obj = blender_object.convert(dupli.object, scene, context, luxcore_scene,
+                    obj_props, exported_obj = blender_object.convert(exporter, dupli.object, scene, context, luxcore_scene,
                                                                      update_mesh=True, dupli_suffix=name_suffix)
                     dupli_props.Set(obj_props)
                     exported_duplis[name] = Duplis(exported_obj, matrix_list)

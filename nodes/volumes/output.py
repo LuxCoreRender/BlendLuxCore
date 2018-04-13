@@ -18,9 +18,9 @@ class LuxCoreNodeVolOutput(LuxCoreNodeOutput):
         self.inputs.new("LuxCoreSocketVolume", "Volume")
         super().init(context)
 
-    def export(self, props, luxcore_name):
+    def export(self, exporter, props, luxcore_name):
         if self.inputs["Volume"].is_linked:
-            self.inputs["Volume"].export(props, luxcore_name)
+            self.inputs["Volume"].export(exporter, props, luxcore_name)
         else:
             # We need a fallback (black volume)
             msg = 'Node "%s" in tree "%s": No volume attached' % (self.name, self.id_data.name)

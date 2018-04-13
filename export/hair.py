@@ -4,7 +4,8 @@ from .. import utils
 from time import time
 import math
 
-def convert_hair(blender_obj, psys, luxcore_scene, scene, context=None, engine=None):
+
+def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
 
@@ -222,7 +223,7 @@ def convert_hair(blender_obj, psys, luxcore_scene, scene, context=None, engine=N
         ## Convert material
         strandsProps = pyluxcore.Properties()
 
-        lux_mat_name, mat_props = material.convert(mat, scene, context)
+        lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
         strandsProps.Set(mat_props)
 
         # The hair shape is located at world origin and implicitly instanced, so we have to

@@ -14,7 +14,7 @@ class LuxCoreNodeTexConstfloat1(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "value")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "constfloat1",
             "value": self.value,

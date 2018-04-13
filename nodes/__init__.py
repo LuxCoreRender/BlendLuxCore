@@ -76,13 +76,13 @@ class LuxCoreNodeMaterial(LuxCoreNode):
         self.add_input("LuxCoreSocketBump", "Bump")
         self.add_input("LuxCoreSocketMatEmission", "Emission")
 
-    def export_common_inputs(self, props, definitions):
+    def export_common_inputs(self, exporter, props, definitions):
         """ Call from derived classes (in export method) """
-        transparency = self.inputs["Opacity"].export(props)
+        transparency = self.inputs["Opacity"].export(exporter, props)
         if transparency != 1.0:
             definitions["transparency"] = transparency
 
-        bump = self.inputs["Bump"].export(props)
+        bump = self.inputs["Bump"].export(exporter, props)
         if bump:
             definitions["bumptex"] = bump
 
@@ -118,11 +118,11 @@ class LuxCoreNodeVolume(LuxCoreNode):
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
         self.add_input("LuxCoreSocketColor", "Emission", (0, 0, 0))
         
-    def export_common_inputs(self, props, definitions):
+    def export_common_inputs(self, exporter, props, definitions):
         """ Call from derived classes (in export method) """
-        definitions["ior"] = self.inputs["IOR"].export(props)
+        definitions["ior"] = self.inputs["IOR"].export(exporter, props)
 
-        abs_col = self.inputs["Absorption"].export(props)
+        abs_col = self.inputs["Absorption"].export(exporter, props)
 
         if self.inputs["Absorption"].is_linked:
             # Implicitly create a colordepth texture with unique name
@@ -144,7 +144,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
             definitions["scattering"] = scattering_col
 
         definitions["absorption"] = abs_col
-        definitions["emission"] = self.inputs["Emission"].export(props)
+        definitions["emission"] = self.inputs["Emission"].export(exporter, props)
 
     def export_scattering(self, props):
         scattering_col_socket = self.inputs["Scattering"]
@@ -220,7 +220,7 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
         if self.node_tree == self.id_data:
             layout.label("Recursion!", icon="ERROR")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         if self.node_tree == self.id_data:
             raise Exception("Recursion (pointer referencing its own node tree)")
 
@@ -331,12 +331,12 @@ class Roughness:
             utils_node.draw_uv_info(context, layout)
 
     @staticmethod
-    def export(node, props, definitions):
+    def export(node, exporter, props, definitions):
         if node.use_anisotropy:
-            uroughness = node.inputs["U-Roughness"].export(props)
-            vroughness = node.inputs["V-Roughness"].export(props)
+            uroughness = node.inputs["U-Roughness"].export(exporter, props)
+            vroughness = node.inputs["V-Roughness"].export(exporter, props)
         else:
-            uroughness = node.inputs["Roughness"].export(props)
+            uroughness = node.inputs["Roughness"].export(exporter, props)
             vroughness = uroughness
 
         definitions["uroughness"] = uroughness
@@ -344,10 +344,10 @@ class Roughness:
 
         if Roughness.has_backface(node):
             if node.use_anisotropy:
-                uroughness = node.inputs["BF U-Roughness"].export(props)
-                vroughness = node.inputs["BF V-Roughness"].export(props)
+                uroughness = node.inputs["BF U-Roughness"].export(exporter, props)
+                vroughness = node.inputs["BF V-Roughness"].export(exporter, props)
             else:
-                uroughness = node.inputs["BF Roughness"].export(props)
+                uroughness = node.inputs["BF Roughness"].export(exporter, props)
                 vroughness = uroughness
 
             definitions["uroughness_bf"] = uroughness

@@ -51,16 +51,16 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
 
         layout.prop(self, "preset")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "cloth",
             "preset": self.preset,
-            "warp_kd": self.inputs["Wrap Diffuse Color"].export(props),
-            "warp_ks": self.inputs["Wrap Specular Color"].export(props),
-            "weft_kd": self.inputs["Weft Diffuse Color"].export(props),
-            "weft_ks": self.inputs["Weft Specular Color"].export(props),
-            "repeat_u": self.inputs["Repeat U"].export(props),
-            "repeat_v": self.inputs["Repeat V"].export(props)
+            "warp_kd": self.inputs["Wrap Diffuse Color"].export(exporter, props),
+            "warp_ks": self.inputs["Wrap Specular Color"].export(exporter, props),
+            "weft_kd": self.inputs["Weft Diffuse Color"].export(exporter, props),
+            "weft_ks": self.inputs["Weft Specular Color"].export(exporter, props),
+            "repeat_u": self.inputs["Repeat U"].export(exporter, props),
+            "repeat_v": self.inputs["Repeat V"].export(exporter, props)
         }
-        self.export_common_inputs(props, definitions)
+        self.export_common_inputs(exporter, props, definitions)
         return self.base_export(props, definitions, luxcore_name)

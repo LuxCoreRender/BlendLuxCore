@@ -22,11 +22,11 @@ class LuxCoreNodeMatMatte(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "roughmatte",
-            "kd": self.inputs["Diffuse Color"].export(props),
-            "sigma": self.inputs["Sigma"].export(props),
+            "kd": self.inputs["Diffuse Color"].export(exporter, props),
+            "sigma": self.inputs["Sigma"].export(exporter, props),
         }
-        self.export_common_inputs(props, definitions)
+        self.export_common_inputs(exporter, props, definitions)
         return self.base_export(props, definitions, luxcore_name)

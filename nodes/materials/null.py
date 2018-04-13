@@ -10,7 +10,7 @@ class LuxCoreNodeMatNull(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "null",
         }
@@ -18,7 +18,7 @@ class LuxCoreNodeMatNull(LuxCoreNodeMaterial):
         # This is a neat trick to get a colored transparent material:
         # Use a color or texture on the transparency property.
         # We only use it when we need it.
-        transparency = self.inputs["Transmission Color"].export(props)
+        transparency = self.inputs["Transmission Color"].export(exporter, props)
         if transparency != 1.0 and transparency != [1.0, 1.0, 1.0]:
             definitions["transparency"] = transparency
 

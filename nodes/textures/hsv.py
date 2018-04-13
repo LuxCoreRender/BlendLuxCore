@@ -12,12 +12,12 @@ class LuxCoreNodeTexHSV(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "hsv",
-            "texture": self.inputs["Color"].export(props),
-            "hue": self.inputs["Hue"].export(props),
-            "saturation": self.inputs["Saturation"].export(props),
-            "value": self.inputs["Value"].export(props),
+            "texture": self.inputs["Color"].export(exporter, props),
+            "hue": self.inputs["Hue"].export(exporter, props),
+            "saturation": self.inputs["Saturation"].export(exporter, props),
+            "value": self.inputs["Value"].export(exporter, props),
         }
         return self.base_export(props, definitions, luxcore_name)

@@ -60,23 +60,23 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
         layout.prop(self, "mode")
         layout.prop(self, "clamp_output")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": self.mode,
         }
         
         if self.mode == "abs":
-            definitions["texture"] = self.inputs["Color"].export(props)
+            definitions["texture"] = self.inputs["Color"].export(exporter, props)
         elif self.mode == "clamp":
-            definitions["texture"] = self.inputs["Color"].export(props)
-            definitions["min"] = self.inputs["Min"].export(props)
-            definitions["max"] = self.inputs["Max"].export(props)
+            definitions["texture"] = self.inputs["Color"].export(exporter, props)
+            definitions["min"] = self.inputs["Min"].export(exporter, props)
+            definitions["max"] = self.inputs["Max"].export(exporter, props)
         else:
-            definitions["texture1"] = self.inputs["Color 1"].export(props)
-            definitions["texture2"] = self.inputs["Color 2"].export(props)
+            definitions["texture1"] = self.inputs["Color 1"].export(exporter, props)
+            definitions["texture2"] = self.inputs["Color 2"].export(exporter, props)
 
             if self.mode == "mix":
-                definitions["amount"] = self.inputs["Fac"].export(props)
+                definitions["amount"] = self.inputs["Fac"].export(exporter, props)
 
         luxcore_name = self.base_export(props, definitions, luxcore_name)
 

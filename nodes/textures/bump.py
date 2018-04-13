@@ -22,13 +22,13 @@ class LuxCoreNodeTexBump(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketBump", "Bump")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "scale",
-            "texture1": self.inputs["Value"].export(props),
+            "texture1": self.inputs["Value"].export(exporter, props),
         }
 
-        bump_height = self.inputs["Bump Height"].export(props)
+        bump_height = self.inputs["Bump Height"].export(exporter, props)
         worldscale = utils.get_worldscale(bpy.context.scene, as_scalematrix=False)
 
         if self.inputs["Bump Height"].is_linked:

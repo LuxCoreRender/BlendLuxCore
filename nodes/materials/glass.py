@@ -78,7 +78,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         if self.get_interior_volume():
             layout.label("Using IOR of interior volume", icon="INFO")
 
-    def export(self, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None):
         if self.rough:
             type = "roughglass"
         elif self.architectural:
@@ -88,21 +88,21 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
 
         definitions = {
             "type": type,
-            "kt": self.inputs["Transmission Color"].export(props),
-            "kr": self.inputs["Reflection Color"].export(props),
+            "kt": self.inputs["Transmission Color"].export(exporter, props),
+            "kr": self.inputs["Reflection Color"].export(exporter, props),
         }
 
         # Only use the glass node IOR socket if there is no interior volume
         if not self.get_interior_volume():
-            definitions["interiorior"] = self.inputs["IOR"].export(props)
+            definitions["interiorior"] = self.inputs["IOR"].export(exporter, props)
 
-        cauchyc = self.inputs["Dispersion"].export(props)
+        cauchyc = self.inputs["Dispersion"].export(exporter, props)
         if self.inputs["Dispersion"].is_linked or cauchyc > 0:
             definitions["cauchyc"] = cauchyc
 
         if self.rough:
-            Roughness.export(self, props, definitions)
-        self.export_common_inputs(props, definitions)
+            Roughness.export(self, exporter, props, definitions)
+        self.export_common_inputs(exporter, props, definitions)
 
         return self.base_export(props, definitions, luxcore_name)
 

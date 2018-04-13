@@ -59,8 +59,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
                 layout.prop(pipeline, "transparent_film", text="Enable Transparent Film",
                             icon="CAMERA_DATA", emboss=True)
 
-
-    def export(self, props, luxcore_name):
+    def export(self, exporter, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."
 
         # We have to export volumes before the material definition because LuxCore properties
@@ -73,15 +72,15 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         interior_pointer = utils_node.get_linked_node(self.inputs["Interior Volume"])
         if interior_pointer:
             node_tree = interior_pointer.node_tree
-            interior_volume_name = self._convert_volume(node_tree, props)
+            interior_volume_name = self._convert_volume(exporter, node_tree, props)
 
         exterior_pointer = utils_node.get_linked_node(self.inputs["Exterior Volume"])
         if exterior_pointer:
             node_tree = exterior_pointer.node_tree
-            exterior_volume_name = self._convert_volume(node_tree, props)
+            exterior_volume_name = self._convert_volume(exporter, node_tree, props)
 
         # Export the material
-        exported_name = self.inputs["Material"].export(props, luxcore_name)
+        exported_name = self.inputs["Material"].export(exporter, props, luxcore_name)
 
         # Attach the volumes
         if interior_volume_name:
@@ -97,21 +96,20 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         props.Set(pyluxcore.Property(prefix + "id", self.id))
         props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
 
-    def _convert_volume(self, node_tree, props):
+    def _convert_volume(self, exporter, node_tree, props):
         if node_tree is None:
             return None
 
         try:
             luxcore_name = utils.get_luxcore_name(node_tree)
             active_output = get_active_output(node_tree)
-            active_output.export(props, luxcore_name)
+            active_output.export(exporter, props, luxcore_name)
             return luxcore_name
         except Exception as error:
             msg = 'Node Tree "%s": %s' % (node_tree.name, error)
             bpy.context.scene.luxcore.errorlog.add_warning(msg)
             return None
 
-    
     def _convert_fallback(self, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."
         props.Set(pyluxcore.Property(prefix + "type", "matte"))
