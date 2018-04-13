@@ -37,11 +37,6 @@ def convert(smoke_obj, channel):
 
     channeldata = list(grid)
 
-    if channel == "color":
-        # Delete every 4th element because the color_grid contains 4 values per cell
-        # but LuxCore expects 3 values per cell (r, g, b)
-        del channeldata[3::4]
-
     # The smoke resolution along the x, y, z axis
     resolution = list(settings.domain_resolution)
 
@@ -52,4 +47,4 @@ def convert(smoke_obj, channel):
 
     print("conversion to list took %.3fs" % (time() - start))
 
-    return resolution[0], resolution[1], resolution[2], channeldata
+    return resolution, channeldata

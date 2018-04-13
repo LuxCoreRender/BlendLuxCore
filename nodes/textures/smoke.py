@@ -72,8 +72,6 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
             }
             return self.base_export(props, definitions, luxcore_name)
 
-        nx, ny, nz, grid = smoke.convert(self.domain, self.source)
-
         scale = self.domain.dimensions
         translate = self.domain.matrix_world * mathutils.Vector([v for v in self.domain.bound_box[0]])
         rotate = self.domain.rotation_euler
@@ -100,6 +98,9 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
                                                      apply_worldscale=True,
                                                      invert=True)
 
+        resolution, grid = smoke.convert(self.domain, self.source)
+        nx, ny, nz = resolution
+
         definitions = {
             "type": "densitygrid",
             "wrap": "black",
@@ -115,9 +116,16 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         luxcore_name = self.base_export(props, definitions, luxcore_name)
         prefix = self.prefix + luxcore_name + "."
         # We use a fast path (AddAllFloat method) here to transfer the grid data to the properties
-        prop_name = "data3" if self.source == "color" else "data"
-        prop = pyluxcore.Property(prefix + prop_name, [])
-        prop.AddAllFloat(grid)
+
+        if self.source == "color":
+            prop = pyluxcore.Property(prefix + "data3", [])
+            # Omit every 4th element because the color_grid contains 4 values per cell
+            # but LuxCore expects 3 values per cell (r, g, b)
+            prop.AddAllFloat(grid, 3, 1)
+        else:
+            prop = pyluxcore.Property(prefix + "data", [])
+            prop.AddAllFloat(grid)
+
         props.Set(prop)
 
         elapsed_time = time() - start_time
