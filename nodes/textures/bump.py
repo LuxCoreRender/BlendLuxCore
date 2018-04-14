@@ -22,7 +22,7 @@ class LuxCoreNodeTexBump(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketBump", "Bump")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "scale",
             "texture1": self.inputs["Value"].export(exporter, props),
@@ -47,4 +47,4 @@ class LuxCoreNodeTexBump(LuxCoreNodeTexture):
             # Bump height is just a value, we can apply worldscale directly
             definitions["texture2"] = bump_height * worldscale
 
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

@@ -56,10 +56,29 @@ class LuxCoreNode(Node):
     def make_name(self):
         return utils.make_key(self)
 
-    def base_export(self, props, definitions, luxcore_name=None):
-        if luxcore_name is None:
-            luxcore_name = self.make_name()
+    def sub_export(self, exporter, props, luxcore_name=None):
+        raise NotImplementedError("Subclasses have to implement this method!")
 
+    def export(self, exporter, props, luxcore_name=None):
+        """ This method is an abstraction layer that handles the caching. """
+        cache_key = self.make_name()
+
+        if luxcore_name is None:
+            luxcore_name = cache_key
+
+        if cache_key in exporter.node_cache:
+            print("Node cached:", cache_key)
+            return exporter.node_cache[cache_key]
+        else:
+            # Nodes can return a different luxcore_name than the one that
+            # is passed in to sub_export, for example when an implicit scale
+            # texture is added.
+            print("Node not cached:", cache_key)
+            luxcore_name = self.sub_export(exporter, props, luxcore_name)
+            exporter.node_cache[cache_key] = luxcore_name
+            return luxcore_name
+
+    def create_props(self, props, definitions, luxcore_name):
         prefix = self.prefix + luxcore_name + "."
         props.Set(utils.create_props(prefix, definitions))
         return luxcore_name
@@ -220,7 +239,7 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
         if self.node_tree == self.id_data:
             layout.label("Recursion!", icon="ERROR")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         if self.node_tree == self.id_data:
             raise Exception("Recursion (pointer referencing its own node tree)")
 

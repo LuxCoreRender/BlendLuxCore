@@ -17,11 +17,11 @@ class LuxCoreNodeTexNormalmap(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "scale")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "normalmap",
             "texture": self.inputs["Color"].export(exporter, props),
             "scale": self.scale,
         }
 
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

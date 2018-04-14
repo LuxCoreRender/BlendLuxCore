@@ -71,7 +71,7 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
         op.url = "https://wiki.luxcorerender.org/LuxCoreRender_Materials_Car_Paint"
         layout.prop(self, "preset")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "carpaint",
             "kd": self.inputs["Diffuse Color"].export(exporter, props),
@@ -92,4 +92,4 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
             definitions["preset"] = self.preset
 
         self.export_common_inputs(exporter, props, definitions)
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

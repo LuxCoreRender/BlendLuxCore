@@ -68,7 +68,7 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
 
         self.draw_common_buttons(context, layout)
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "heterogeneous",
             "asymmetry": self.inputs["Asymmetry"].export(exporter, props),
@@ -110,4 +110,4 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
             definitions["steps.maxcount"] = self.maxcount
 
         self.export_common_inputs(exporter, props, definitions)
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

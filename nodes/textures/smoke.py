@@ -56,7 +56,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         col.prop(self, "source")
         col.prop(self, "precision")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         start_time = time()
         print("[Node Tree: %s][Smoke Domain: %s] Beginning smoke export of channel %s"
               % (self.id_data.name, self.domain.name, self.source))
@@ -70,7 +70,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
                 "type": "constfloat3",
                 "value": [0, 0, 0],
             }
-            return self.base_export(props, definitions, luxcore_name)
+            return self.create_props(props, definitions, luxcore_name)
 
         scale = self.domain.dimensions
         translate = self.domain.matrix_world * mathutils.Vector([v for v in self.domain.bound_box[0]])
@@ -113,7 +113,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
             "mapping.transformation": matrix_transformation,
         }
 
-        luxcore_name = self.base_export(props, definitions, luxcore_name)
+        luxcore_name = self.create_props(props, definitions, luxcore_name)
         prefix = self.prefix + luxcore_name + "."
         # We use a fast path (AddAllFloat method) here to transfer the grid data to the properties
 

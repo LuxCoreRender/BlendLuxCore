@@ -48,9 +48,13 @@ class Exporter(object):
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
 
-        # A set of exported luxcore names of nodes.
+        # A dictionary with the following mapping:
+        # {node_key: luxcore_name}
+        # Most of the time node_key == luxcore_name, but
+        # some nodes have to insert implicit textures
+        # in front of themselves which changes their luxcore_name.
         # Avoids re-exporting the same node multiple times.
-        self.node_cache = set()
+        self.node_cache = {}
 
     def create_session(self, scene, context=None, engine=None):
         # Notes:
@@ -304,8 +308,11 @@ class Exporter(object):
                 self._convert_object(props, obj, context.scene, context, luxcore_scene)
 
         if changes & Change.MATERIAL:
+            # Invalidate node cache
+            self.node_cache.clear()
+
             for mat in self.material_cache.changed_materials:
-                luxcore_name, mat_props = material.convert(exporter, mat, context.scene, context)
+                luxcore_name, mat_props = material.convert(self, mat, context.scene, context)
                 props.Set(mat_props)
 
         if changes & Change.VISIBILITY:

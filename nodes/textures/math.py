@@ -83,7 +83,7 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
             layout.prop(self, "mode_clamp_min")
             layout.prop(self, "mode_clamp_max")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": self.mode,
         }
@@ -102,7 +102,7 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
             definitions["texture1"] = self.inputs[0].export(exporter, props)
             definitions["texture2"] = self.inputs[1].export(exporter, props)
 
-        luxcore_name = self.base_export(props, definitions, luxcore_name)
+        luxcore_name = self.create_props(props, definitions, luxcore_name)
 
         if self.clamp_output and self.mode != "clamp":
             # Implicitly create a clamp texture with unique name

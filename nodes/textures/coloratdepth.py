@@ -19,7 +19,7 @@ class LuxCoreNodeTexColorAtDepth(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "color_depth")
     
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         abs_col = self.inputs["Absorption"].export(exporter, props)
 
         definitions = {
@@ -28,4 +28,4 @@ class LuxCoreNodeTexColorAtDepth(LuxCoreNodeTexture):
             "depth": self.color_depth,
         }
         
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

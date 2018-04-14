@@ -10,7 +10,7 @@ class LuxCoreNodeMatNull(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "null",
         }
@@ -22,4 +22,4 @@ class LuxCoreNodeMatNull(LuxCoreNodeMaterial):
         if transparency != 1.0 and transparency != [1.0, 1.0, 1.0]:
             definitions["transparency"] = transparency
 
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

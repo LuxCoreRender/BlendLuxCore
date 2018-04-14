@@ -51,7 +51,7 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
 
         layout.prop(self, "preset")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "cloth",
             "preset": self.preset,
@@ -63,4 +63,4 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
             "repeat_v": self.inputs["Repeat V"].export(exporter, props)
         }
         self.export_common_inputs(exporter, props, definitions)
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

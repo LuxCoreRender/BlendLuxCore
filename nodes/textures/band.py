@@ -142,7 +142,7 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
                 # sub = split.row(align=True)
                 row.prop(item, "add_keyframe", toggle=True, icon="KEY_HLT")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "band",
             "interpolation": self.interpolation,
@@ -153,4 +153,4 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
             definitions["offset%d" % index] = item.offset
             definitions["value%d" % index] = list(item.value)
 
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

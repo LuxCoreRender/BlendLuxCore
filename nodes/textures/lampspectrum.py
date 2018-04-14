@@ -210,7 +210,7 @@ class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
         elif self.lamp_category == "Absorption/Mixed":
             layout.prop(self, "lamp_spectrum_absorption")
     
-    def export(self, exporter, props, luxcore_name=None):        
+    def sub_export(self, exporter, props, luxcore_name=None):
         if self.lamp_category == "Natural":
             spectrum_name = self.lamp_spectrum_natural
         elif self.lamp_category == "Incandescent":
@@ -247,4 +247,4 @@ class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
             "name": spectrum_name,
         }       
         
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

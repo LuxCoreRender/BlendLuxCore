@@ -41,7 +41,7 @@ class LuxCoreNodeMatGlossyCoating(LuxCoreNodeMaterial):
         layout.prop(self, "use_ior")
         Roughness.draw(self, context, layout)
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         base = utils_node.export_material_input(self.inputs["Base Material"], exporter, props)
 
         definitions = {
@@ -60,4 +60,4 @@ class LuxCoreNodeMatGlossyCoating(LuxCoreNodeMaterial):
 
         Roughness.export(self, exporter, props, definitions)
         self.export_common_inputs(exporter, props, definitions)
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

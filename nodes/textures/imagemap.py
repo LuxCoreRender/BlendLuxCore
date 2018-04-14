@@ -129,20 +129,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         if self.is_normal_map:
             col.prop(self, "normal_map_scale")
 
-    def export(self, exporter, props, luxcore_name=None):
-
-
-
-        print("======= This is a proof of concept and should not end up in production ============")
-        lc_name = self.make_name()
-        if lc_name in exporter.node_cache:
-            print("Image node cached:", self.image.name)
-            return lc_name
-        print(lc_name, "not cached")
-
-
-
-
+    def sub_export(self, exporter, props, luxcore_name=None):
         if self.image is None:
             return [0, 0, 0]
 
@@ -177,18 +164,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             "mapping.uvdelta": uvdelta,
         }
 
-        luxcore_name = self.base_export(props, definitions, luxcore_name)
-
-
-
-
-        print("======= This is a proof of concept and should not end up in production ============")
-        print(">>>>>>>>>>> exported imagemap:", self.image.name, luxcore_name)
-        exporter.node_cache.add(luxcore_name)
-
-
-
-
+        luxcore_name = self.create_props(props, definitions, luxcore_name)
 
         if self.is_normal_map and self.normal_map_scale > 0:
             # Implicitly create a normalmap

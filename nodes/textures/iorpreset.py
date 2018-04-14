@@ -64,9 +64,9 @@ class LuxCoreNodeTexIORPreset(LuxCoreNodeTexture):
             operator.node_name = self.name
             operator.node_tree_index = tree_index
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "constfloat1",
             "value": self.ior_value_float,
         }
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

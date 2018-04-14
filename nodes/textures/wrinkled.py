@@ -22,7 +22,7 @@ class LuxCoreNodeTexWrinkled(LuxCoreNodeTexture):
         layout.prop(self, "octaves")
         layout.prop(self, "roughness")
     
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         
         mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)
        
@@ -35,4 +35,4 @@ class LuxCoreNodeTexWrinkled(LuxCoreNodeTexture):
             "mapping.transformation": utils.matrix_to_list(transformation),
         }
         
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)

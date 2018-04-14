@@ -43,10 +43,10 @@ class LuxCoreNodeTexIrregularData(LuxCoreNodeTexture):
         if self.error:
             layout.label(self.error, icon="CANCEL")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": "irregulardata",
             "wavelengths": convert(self.wavelengths),
             "data": convert(self.data),
         }
-        return self.base_export(props, definitions, luxcore_name)
+        return self.create_props(props, definitions, luxcore_name)
