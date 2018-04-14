@@ -68,7 +68,7 @@ class Exporter(object):
         scene_props = pyluxcore.Properties()
 
         # Camera (needs to be parsed first because it is needed for hair tesselation)
-        self.camera_cache.diff(scene, context)  # Init camera cache
+        self.camera_cache.diff(self, scene, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
 
         # Objects and lamps
@@ -101,13 +101,13 @@ class Exporter(object):
                 if cam_moving:
                     # Re-export the camera with motion blur enabled
                     # (This is fast and we only have to step through the scene once in total, not twice)
-                    camera_props = camera.convert(scene, context, cam_moving)
+                    camera_props = camera.convert(self, scene, context, cam_moving)
                     motion_blur_props.Set(camera_props)
 
                 scene_props.Set(motion_blur_props)
 
         # World
-        world_props = world.convert(scene)
+        world_props = world.convert(self, scene)
         scene_props.Set(world_props)
 
         luxcore_scene.Parse(scene_props)
@@ -166,7 +166,7 @@ class Exporter(object):
             if self.config_cache.diff(config_props):
                 changes |= Change.CONFIG
 
-            if self.camera_cache.diff(scene, context):
+            if self.camera_cache.diff(self, scene, context):
                 changes |= Change.CAMERA
 
             if self.object_cache.diff(scene):
@@ -348,7 +348,7 @@ class Exporter(object):
             if context.scene.world.luxcore.light == "none":
                 luxcore_scene.DeleteLight(WORLD_BACKGROUND_LIGHT_NAME)
 
-            world_props = world.convert(context.scene)
+            world_props = world.convert(self, context.scene)
             props.Set(world_props)
 
         return props

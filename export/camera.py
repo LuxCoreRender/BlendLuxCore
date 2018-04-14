@@ -5,7 +5,7 @@ from .. import utils
 from ..nodes.output import get_active_output
 
 
-def convert(scene, context=None, is_camera_moving=False):
+def convert(exporter, scene, context=None, is_camera_moving=False):
     try:
         prefix = "scene.camera."
         definitions = {}
@@ -32,7 +32,7 @@ def convert(scene, context=None, is_camera_moving=False):
         _motion_blur(scene, definitions, context, is_camera_moving)
 
         cam_props = utils.create_props(prefix, definitions)
-        cam_props.Set(_get_volume_props(scene))
+        cam_props.Set(_get_volume_props(exporter, scene))
         return cam_props
     except Exception as error:
         import traceback
@@ -255,7 +255,7 @@ def _calc_lookat(cam_matrix, scene):
     return lookat_orig, lookat_target, up_vector
 
 
-def _get_volume_props(scene):
+def _get_volume_props(exporter, scene):
     props = pyluxcore.Properties()
 
     if scene.camera is None:
@@ -270,7 +270,7 @@ def _get_volume_props(scene):
         active_output = get_active_output(volume_node_tree)
 
         try:
-            active_output.export(props, luxcore_name)
+            active_output.export(exporter, props, luxcore_name)
             props.Set(pyluxcore.Property("scene.camera.volume", luxcore_name))
         except Exception as error:
             msg = 'Camera: %s' % error
