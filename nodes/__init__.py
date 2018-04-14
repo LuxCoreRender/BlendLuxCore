@@ -109,11 +109,17 @@ class LuxCoreNodeMaterial(LuxCoreNode):
         # with special export methods
         self.inputs["Emission"].export_emission(props, definitions)
 
+    def sub_export(self, exporter, props, luxcore_name=None):
+        raise NotImplementedError("Subclasses have to implement this method!")
+
 
 class LuxCoreNodeTexture(LuxCoreNode):
     """Base class for texture nodes"""
     suffix = "tex"
     prefix = "scene.textures."
+
+    def sub_export(self, exporter, props, luxcore_name=None):
+        raise NotImplementedError("Subclasses have to implement this method!")
 
 
 class LuxCoreNodeVolume(LuxCoreNode):
@@ -159,18 +165,18 @@ class LuxCoreNodeVolume(LuxCoreNode):
             abs_col = utils.absorption_at_depth_scaled(abs_col, self.color_depth)
 
         if "Scattering" in self.inputs:
-            scattering_col = self.export_scattering(props)
+            scattering_col = self.export_scattering(exporter, props)
             definitions["scattering"] = scattering_col
 
         definitions["absorption"] = abs_col
         definitions["emission"] = self.inputs["Emission"].export(exporter, props)
 
-    def export_scattering(self, props):
+    def export_scattering(self, exporter, props):
         scattering_col_socket = self.inputs["Scattering"]
         scattering_scale_socket = self.inputs["Scattering Scale"]
 
-        scattering_col = scattering_col_socket.export(props)
-        scattering_scale = scattering_scale_socket.export(props)
+        scattering_col = scattering_col_socket.export(exporter, props)
+        scattering_scale = scattering_scale_socket.export(exporter, props)
 
         if scattering_scale_socket.is_linked or scattering_col_socket.is_linked:
             # Implicitly create a colordepth texture with unique name
@@ -189,6 +195,9 @@ class LuxCoreNodeVolume(LuxCoreNode):
                 scattering_col[i] *= scattering_scale
 
         return scattering_col
+
+    def sub_export(self, exporter, props, luxcore_name=None):
+        raise NotImplementedError("Subclasses have to implement this method!")
 
 
 class LuxCoreNodeTreePointer(LuxCoreNode):
