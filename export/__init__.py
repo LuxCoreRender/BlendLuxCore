@@ -36,8 +36,10 @@ class Change:
 
 
 class Exporter(object):
-    def __init__(self):
-        print("exporter init")
+    def __init__(self, blender_scene):
+        print("[Exporter] init")
+        self.scene = blender_scene
+
         self.config_cache = caches.StringCache()
         self.camera_cache = caches.CameraCache()
         self.object_cache = caches.ObjectCache()
@@ -56,13 +58,14 @@ class Exporter(object):
         # Avoids re-exporting the same node multiple times.
         self.node_cache = {}
 
-    def create_session(self, scene, context=None, engine=None):
+    def create_session(self, context=None, engine=None):
         # Notes:
         # In final render, context is None
         # In viewport render, engine is None (we can't show messages or check test_break() anyway)
 
-        print("create_session")
+        print("[Exporter] create_session")
         start = time()
+        scene = self.scene
         # Scene
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
@@ -157,7 +160,8 @@ class Exporter(object):
 
         return session
 
-    def get_changes(self, scene, context=None):
+    def get_changes(self, context=None):
+        scene = self.scene
         changes = Change.NONE
 
         if context:
@@ -281,7 +285,7 @@ class Exporter(object):
 
         renderconfig.Parse(config_props)
         if renderconfig is None:
-            print("ERROR: not a valid luxcore config")
+            print("[Exporter] ERROR: not a valid luxcore config")
             return
         session = pyluxcore.RenderSession(renderconfig)
         session.Start()

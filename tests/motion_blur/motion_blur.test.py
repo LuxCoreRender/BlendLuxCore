@@ -48,8 +48,8 @@ def assertAlmostEqual(test_case, value1, value2, places=3):
 def export(blender_scene):
     # Export the scene (with silenced pyluxcore)
     pyluxcore.Init(luxcore_logger)
-    exporter = Exporter()
-    session = exporter.create_session(blender_scene)
+    exporter = Exporter(blender_scene)
+    session = exporter.create_session()
 
     config = session.GetRenderConfig()
     luxcore_scene = config.GetScene()

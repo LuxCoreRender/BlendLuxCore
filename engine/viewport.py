@@ -13,10 +13,10 @@ def view_update(engine, context, changes=None):
         print("new session")
         try:
             engine.update_stats("Creating Render Session...", "")
-            engine.exporter = export.Exporter()
+            engine.exporter = export.Exporter(scene)
             # Note: in viewport render, the user can't cancel the
             # export (Blender limitation), so we don't pass engine here
-            engine.session = engine.exporter.create_session(scene, context)
+            engine.session = engine.exporter.create_session(context)
             engine.session.Start()
             return
         except Exception as error:
@@ -48,7 +48,7 @@ def view_draw(engine, context):
 
     # Check for changes because some actions in Blender (e.g. moving the viewport
     # camera) do not trigger a view_update() call, but only a view_draw() call.
-    changes = engine.exporter.get_changes(scene, context)
+    changes = engine.exporter.get_changes(context)
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
         engine.tag_redraw()

@@ -36,7 +36,7 @@ def render(engine, scene):
     preview_type, obj = _get_preview_settings(scene)
 
     if preview_type == PreviewType.MATERIAL:
-        engine.exporter = export.Exporter()
+        engine.exporter = export.Exporter(scene)
         engine.session = _export_mat_scene(engine.exporter, obj, scene)
     else:
         print("Unsupported preview type")

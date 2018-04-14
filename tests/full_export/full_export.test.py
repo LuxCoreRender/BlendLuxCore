@@ -42,9 +42,9 @@ class TestFullExport(unittest.TestCase):
             with redirect_stdout(log):
                 pyluxcore.Init(luxcore_logger)
                 # Test final render export from the engine's point of view
-                _exporter = export.Exporter()
+                _exporter = export.Exporter(bpy.context.scene)
                 engine = RenderEngineMockup()
-                _session = _exporter.create_session(bpy.context.scene, context=None, engine=engine)
+                _session = _exporter.create_session(context=None, engine=engine)
 
         print("test_final_export(): Export took %.1fs" % (time() - start))
 
@@ -58,9 +58,9 @@ class TestFullExport(unittest.TestCase):
             with redirect_stdout(log):
                 pyluxcore.Init(luxcore_logger)
                 # Test user aborting the export process
-                _exporter = export.Exporter()
+                _exporter = export.Exporter(bpy.context.scene)
                 engine = RenderEngineMockup(abort_immediately=True)
-                _session = _exporter.create_session(bpy.context.scene, context=None, engine=engine)
+                _session = _exporter.create_session(context=None, engine=engine)
 
         print("test_user_abort(): Export took %.1fs" % (time() - start))
 

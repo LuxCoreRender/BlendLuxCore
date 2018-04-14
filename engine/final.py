@@ -42,8 +42,8 @@ def render(engine, scene):
 
 def _render_layer(engine, scene):
     engine.aov_imagepipelines = {}
-    engine.exporter = export.Exporter()
-    engine.session = engine.exporter.create_session(scene, engine=engine)
+    engine.exporter = export.Exporter(scene)
+    engine.session = engine.exporter.create_session(engine=engine)
 
     if engine.session is None:
         # session is None, but no error was thrown
@@ -114,7 +114,7 @@ def _render_layer(engine, scene):
             draw_film = time_until_film_refresh <= 0
 
             # Do session update (imagepipeline, lightgroups)
-            changes = engine.exporter.get_changes(scene)
+            changes = engine.exporter.get_changes()
             engine.exporter.update_session(changes, engine.session)
             # Refresh quickly when user changed something
             draw_film |= changes
