@@ -29,7 +29,7 @@ class LuxCoreNodeTexBump(LuxCoreNodeTexture):
         }
 
         bump_height = self.inputs["Bump Height"].export(exporter, props)
-        worldscale = utils.get_worldscale(bpy.context.scene, as_scalematrix=False)
+        worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
 
         if self.inputs["Bump Height"].is_linked:
             # Bump height is textured, we need a scale texture to apply worldscale

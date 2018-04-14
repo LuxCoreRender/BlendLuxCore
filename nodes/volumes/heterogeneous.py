@@ -89,7 +89,7 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
             if settings.use_high_resolution:
                 resolutions = [res * (settings.amplify + 1) for res in resolutions]
 
-            worldscale = utils.get_worldscale(bpy.context.scene, as_scalematrix=False)
+            worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
             dimensions = [dim * worldscale for dim in self.domain.dimensions]
             # The optimal step size on each axis
             step_sizes = [dim / res for dim, res in zip(dimensions, resolutions)]

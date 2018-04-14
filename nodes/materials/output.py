@@ -107,7 +107,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             return luxcore_name
         except Exception as error:
             msg = 'Node Tree "%s": %s' % (node_tree.name, error)
-            bpy.context.scene.luxcore.errorlog.add_warning(msg)
+            exporter.scene.luxcore.errorlog.add_warning(msg)
             import traceback
             traceback.print_exc()
             return None

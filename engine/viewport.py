@@ -33,7 +33,7 @@ def view_update(engine, context, changes=None):
             return
 
     if changes is None:
-        changes = engine.exporter.get_changes(scene, context)
+        changes = engine.exporter.get_changes(context)
 
     if changes & export.Change.CONFIG:
         # Film resize requires a new framebuffer

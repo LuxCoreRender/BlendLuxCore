@@ -93,7 +93,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         definitions["emission.efficency"] = self.efficacy
         definitions["emission.importance"] = self.importance
         definitions["emission.theta"] = math.degrees(self.spread_angle)
-        lightgroups = bpy.context.scene.luxcore.lightgroups
+        lightgroups = exporter.scene.luxcore.lightgroups
         definitions["emission.id"] = lightgroups.get_id_by_name(self.lightgroup)
 
         if self.ies.use:
@@ -101,7 +101,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
                 light.export_ies(definitions, self.ies, self.id_data.library, is_meshlight=True)
             except OSError as error:
                 msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-                bpy.context.scene.luxcore.errorlog.add_warning(msg)
+                exporter.scene.luxcore.errorlog.add_warning(msg)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         raise NotImplementedError("This node uses a special export method.")

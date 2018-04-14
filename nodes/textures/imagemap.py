@@ -137,14 +137,14 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             filepath = ImageExporter.export(self.image)
         except OSError as error:
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-            bpy.context.scene.luxcore.errorlog.add_warning(msg)
+            exporter.scene.luxcore.errorlog.add_warning(msg)
             return [1, 0, 1]
 
         # TODO remove this in the future, e.g. after alpha2 or 3 release
         if "Brightness" not in self.inputs:
             error = "Outdated node! Replace with new imagemap node."
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-            bpy.context.scene.luxcore.errorlog.add_warning(msg)
+            exporter.scene.luxcore.errorlog.add_warning(msg)
             print(msg)
             return [0, 0, 0]
 

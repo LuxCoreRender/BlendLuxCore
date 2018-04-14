@@ -64,7 +64,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         if not self.domain:
             error = "No Domain object selected."
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-            bpy.context.scene.luxcore.errorlog.add_warning(msg)
+            exporter.scene.luxcore.errorlog.add_warning(msg)
 
             definitions = {
                 "type": "constfloat3",
@@ -94,7 +94,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         # combine transformations
         mapping_type = 'globalmapping3d'
         matrix_transformation = utils.matrix_to_list(tex_loc * tex_rot * tex_sca,
-                                                     scene=bpy.context.scene,
+                                                     scene=exporter.scene,
                                                      apply_worldscale=True,
                                                      invert=True)
 
