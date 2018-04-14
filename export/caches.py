@@ -29,9 +29,9 @@ class CameraCache(object):
     def props(self):
         return self.string_cache.props
 
-    def diff(self, scene, context):
+    def diff(self, exporter, scene, context):
         # String cache
-        camera_props = camera.convert(scene, context)
+        camera_props = camera.convert(exporter, scene, context)
         has_changes = self.string_cache.diff(camera_props)
 
         # Check camera object and data for changes

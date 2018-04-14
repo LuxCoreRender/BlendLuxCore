@@ -88,7 +88,7 @@ def _export_mat_scene(exporter, obj, scene):
     is_world_sphere = obj.name == "preview.004"
 
     # Camera
-    cam_props = export.camera.convert(scene)
+    cam_props = export.camera.convert(exporter, scene)
     # Apply zoom
     field_of_view = cam_props.Get("scene.camera.fieldofview").GetFloat()
     zoom = obj.active_material.luxcore.preview.zoom
