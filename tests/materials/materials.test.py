@@ -5,6 +5,7 @@ import BlendLuxCore
 from BlendLuxCore.bin import pyluxcore
 from BlendLuxCore import utils
 from BlendLuxCore.nodes.output import get_active_output
+from BlendLuxCore.export import Exporter
 import bpy
 
 
@@ -24,6 +25,9 @@ def assertAlmostEqual(test_case, value1, value2, places=3):
         test_case.assertAlmostEqual(value1, value2, places=places)
 
 
+exporter = Exporter()
+
+
 def export_first_mat(type_str):
     """
     Export material node tree on material slot 0.
@@ -38,7 +42,7 @@ def export_first_mat(type_str):
     props = pyluxcore.Properties()
 
     # Now export the material node tree, starting at the output node
-    active_output.export(props, luxcore_name)
+    active_output.export(exporter, props, luxcore_name)
     prefix = "scene.materials." + luxcore_name
 
     return props, luxcore_name, prefix

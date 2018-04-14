@@ -38,8 +38,8 @@ def draw_transmission_info(node, layout):
         layout.label("Transmitted: %.2f" % transmitted, icon="INFO")
 
 
-def export_material_input(input, props):
-    material_name = input.export(props)
+def export_material_input(input, exporter, props):
+    material_name = input.export(exporter, props)
 
     if material_name:
         return material_name

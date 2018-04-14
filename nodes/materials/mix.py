@@ -17,8 +17,8 @@ class LuxCoreNodeMatMix(LuxCoreNodeMaterial):
     def export(self, exporter, props, luxcore_name=None):
         # Material inputs need special export because their sockets can't
         # construct a black fallback material in their export method
-        material1 = utils_node.export_material_input(self.inputs["Material 1"], props)
-        material2 = utils_node.export_material_input(self.inputs["Material 2"], props)
+        material1 = utils_node.export_material_input(self.inputs["Material 1"], exporter, props)
+        material2 = utils_node.export_material_input(self.inputs["Material 2"], exporter, props)
 
         definitions = {
             "type": "mix",

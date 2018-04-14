@@ -42,7 +42,7 @@ class LuxCoreNodeMatGlossyCoating(LuxCoreNodeMaterial):
         Roughness.draw(self, context, layout)
 
     def export(self, exporter, props, luxcore_name=None):
-        base = utils_node.export_material_input(self.inputs["Base Material"], props)
+        base = utils_node.export_material_input(self.inputs["Base Material"], exporter, props)
 
         definitions = {
             "type": "glossycoating",
