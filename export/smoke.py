@@ -45,6 +45,6 @@ def convert(smoke_obj, channel):
         for i in range(3):
             resolution[i] *= settings.amplify + 1
 
-    print("conversion to list took %.3fs" % (time() - start))
+    print("conversion to list took %.3f s" % (time() - start))
 
     return resolution, channeldata

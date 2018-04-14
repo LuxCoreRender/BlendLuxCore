@@ -46,7 +46,7 @@ class TestFullExport(unittest.TestCase):
                 engine = RenderEngineMockup()
                 _session = _exporter.create_session(context=None, engine=engine)
 
-        print("test_final_export(): Export took %.1fs" % (time() - start))
+        print("test_final_export(): Export took %.1f s" % (time() - start))
 
         # TODO: We could check a lot more here
         self.assertIsNotNone(_session)
@@ -62,7 +62,7 @@ class TestFullExport(unittest.TestCase):
                 engine = RenderEngineMockup(abort_immediately=True)
                 _session = _exporter.create_session(context=None, engine=engine)
 
-        print("test_user_abort(): Export took %.1fs" % (time() - start))
+        print("test_user_abort(): Export took %.1f s" % (time() - start))
 
         self.assertIsNone(_session)
 

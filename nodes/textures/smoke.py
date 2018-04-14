@@ -129,7 +129,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         props.Set(prop)
 
         elapsed_time = time() - start_time
-        print("[Node Tree: %s][Smoke Domain: %s] Smoke export of channel %s took %.3fs"
+        print("[Node Tree: %s][Smoke Domain: %s] Smoke export of channel %s took %.3f s"
               % (self.id_data.name, self.domain.name, self.source, elapsed_time))
 
         return luxcore_name

@@ -142,7 +142,7 @@ class Exporter(object):
             return None
 
         export_time = time() - start
-        print("Export took %.1fs" % export_time)
+        print("Export took %.1f s" % export_time)
 
         if engine:
             if config_props.Get("renderengine.type").GetString().endswith("OCL"):
@@ -150,12 +150,12 @@ class Exporter(object):
             else:
                 message = "Creating RenderSession..."
 
-            engine.update_stats("Export Finished (%.1fs)" % export_time, message)
+            engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 
         # Create session (in case of OpenCL engines, render kernels are compiled here)
         start = time()
         session = pyluxcore.RenderSession(renderconfig)
-        elapsed_msg = "Session created in %.1fs" % (time() - start)
+        elapsed_msg = "Session created in %.1f s" % (time() - start)
         print(elapsed_msg)
 
         return session

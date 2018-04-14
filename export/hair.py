@@ -246,7 +246,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
             psys.set_resolution(scene, blender_obj, "PREVIEW")
 
         time_elapsed = time() - start_time
-        print("[%s: %s] Hair export finished (%.3fs)" % (blender_obj.name, psys.name, time_elapsed))
+        print("[%s: %s] Hair export finished (%.3f s)" % (blender_obj.name, psys.name, time_elapsed))
     except Exception as error:
         msg = "[%s: %s] %s" % (blender_obj.name, psys.name, error)
         scene.luxcore.errorlog.add_warning(msg)

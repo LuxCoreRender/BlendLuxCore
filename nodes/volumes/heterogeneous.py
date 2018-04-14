@@ -103,7 +103,7 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
             definitions["steps.maxcount"] = worst_case_maxcount
 
             print('INFO: "%s" in volume node tree "%s" Auto Step Settings:' % (self.name, self.id_data.name))
-            print("  Using steps.size =", step_size, "m")
+            print("  Using steps.size = %.3f m" % step_size)
             print("  Using steps.maxcount =", worst_case_maxcount)
         else:
             definitions["steps.size"] = self.step_size

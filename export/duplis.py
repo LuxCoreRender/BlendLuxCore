@@ -121,7 +121,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
                     luxcore_scene.DeleteObject(src_name)
 
 
-        print("Dupli export took %.3fs" % (time() - start))
+        print("Dupli export took %.3f s" % (time() - start))
     except Exception as error:
         msg = '[Duplicator "%s"] %s' % (blender_obj.name, error)
         scene.luxcore.errorlog.add_warning(msg)
