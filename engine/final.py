@@ -16,7 +16,7 @@ def render(engine, scene):
     _check_halt_conditions(engine, scene)
 
     for layer_index, layer in enumerate(scene.render.layers):
-        print('Rendering layer "%s"' % layer.name)
+        print('[Engine/Final] Rendering layer "%s"' % layer.name)
 
         dummy_result = engine.begin_result(0, 0, 1, 1, layer.name)
 
@@ -37,7 +37,7 @@ def render(engine, scene):
             # Blender skips the rest of the render layers anyway
             return
 
-        print('Finished rendering layer "%s"' % layer.name)
+        print('[Engine/Final] Finished rendering layer "%s"' % layer.name)
     
 
 def _render_layer(engine, scene):
@@ -47,7 +47,7 @@ def _render_layer(engine, scene):
 
     if engine.session is None:
         # session is None, but no error was thrown
-        print("Export cancelled by user.")
+        print("[Engine/Final] Export cancelled by user.")
         return
 
     engine.update_stats("Render", "Starting session...")

@@ -67,13 +67,11 @@ class LuxCoreNode(Node):
             luxcore_name = cache_key
 
         if cache_key in exporter.node_cache:
-            print("Node cached:", cache_key)
             return exporter.node_cache[cache_key]
         else:
             # Nodes can return a different luxcore_name than the one that
             # is passed in to sub_export, for example when an implicit scale
             # texture is added.
-            print("Node not cached:", cache_key)
             luxcore_name = self.sub_export(exporter, props, luxcore_name)
             exporter.node_cache[cache_key] = luxcore_name
             return luxcore_name

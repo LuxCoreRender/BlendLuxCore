@@ -10,7 +10,7 @@ def view_update(engine, context, changes=None):
     scene.luxcore.errorlog.clear()
 
     if engine.session is None:
-        print("new session")
+        print("[Engine/Viewport] New session")
         try:
             engine.update_stats("Creating Render Session...", "")
             engine.exporter = export.Exporter(scene)
@@ -69,7 +69,7 @@ def view_draw(engine, context):
     try:
         engine.session.UpdateStats()
     except RuntimeError as error:
-        print("Error during UpdateStats():", error)
+        print("[Engine/Viewport] Error during UpdateStats():", error)
     engine.session.WaitNewFrame()
     engine.framebuffer.update(engine.session)
 
@@ -86,7 +86,7 @@ def view_draw(engine, context):
 
     if rendered_time > halt_time:
         if not engine.session.IsInPause():
-            print("Pausing session")
+            print("[Engine/Viewport] Pausing session")
             engine.session.Pause()
         status_message += " (Paused)"
     else:

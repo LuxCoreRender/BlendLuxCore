@@ -12,7 +12,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_use_postprocess = True  # No idea what this does
 
     def __init__(self):
-        print("init")
+        print("[Engine] Init")
         self.framebuffer = None
         self.session = None
         self.exporter = None
@@ -21,9 +21,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
-        print("LuxCoreRenderEngine del")
+        print("[Engine] del")
         if hasattr(self, "_session") and self.session:
-            print("del: stopping session")
+            print("[Engine] del: stopping session")
             self.session.Stop()
             del self.session
 
