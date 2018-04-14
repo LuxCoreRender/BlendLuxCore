@@ -37,7 +37,7 @@ class Change:
 
 class Exporter(object):
     def __init__(self, blender_scene):
-        print("[Exporter] init")
+        print("[Exporter] Init")
         self.scene = blender_scene
 
         self.config_cache = caches.StringCache()
@@ -193,7 +193,7 @@ class Exporter(object):
         return changes
 
     def update(self, context, session, changes):
-        print("Update because of:", Change.to_string(changes))
+        print("[Exporter] Update because of:", Change.to_string(changes))
 
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
@@ -322,14 +322,14 @@ class Exporter(object):
         if changes & Change.VISIBILITY:
             for key in self.visibility_cache.objects_to_remove:
                 if key not in self.exported_objects:
-                    print('WARNING: Can not delete key "%s" from luxcore_scene' % key)
+                    print('[Exporter] WARNING: Can not delete key "%s" from luxcore_scene' % key)
                     print("The object was probably renamed")
                     continue
 
                 exported_thing = self.exported_objects[key]
 
                 if exported_thing is None:
-                    print('Value for key "%s" is None!' % key)
+                    print('[Exporter] Value for key "%s" is None!' % key)
                     continue
 
                 # exported_objects contains instances of ExportedObject and ExportedLight
@@ -339,7 +339,7 @@ class Exporter(object):
                     remove_func = luxcore_scene.DeleteLight
 
                 for luxcore_name in exported_thing.luxcore_names:
-                    print("Deleting", luxcore_name)
+                    print("[Exporter] Deleting", luxcore_name)
                     remove_func(luxcore_name)
 
                 del self.exported_objects[key]

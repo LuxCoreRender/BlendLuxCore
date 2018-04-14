@@ -36,7 +36,8 @@ class LuxCoreErrorLog(PropertyGroup):
             # are only visible after the user moves the mouse over the error log panel)
             utils_ui.tag_region_for_redraw(bpy.context, "PROPERTIES", "WINDOW")
         except AttributeError:
-            print("Can't tag errorlog for redraw in _RestrictContext")
+            # print("Can't tag errorlog for redraw in _RestrictContext")
+            pass
 
     def _add(self, prefix, collection, message):
         for elem in collection:
@@ -54,4 +55,5 @@ class LuxCoreErrorLog(PropertyGroup):
             # are only visible after the user moves the mouse over the error log panel)
             utils_ui.tag_region_for_redraw(bpy.context, "PROPERTIES", "WINDOW")
         except AttributeError:
-            print("Can't tag errorlog for redraw in _RestrictContext")
+            # print("Can't tag errorlog for redraw in _RestrictContext")
+            pass

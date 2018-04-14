@@ -5,7 +5,7 @@ from ..utils import render as utils_render
 
 def view_update(engine, context, changes=None):
     scene = context.scene
-    print("view_update")
+    print("[Engine/Viewport] view_update")
 
     scene.luxcore.errorlog.clear()
 
