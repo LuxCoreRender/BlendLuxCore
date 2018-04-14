@@ -107,7 +107,7 @@ class LuxCoreNodeMaterial(LuxCoreNode):
 
         # The emission socket and node are special cases
         # with special export methods
-        self.inputs["Emission"].export_emission(props, definitions)
+        self.inputs["Emission"].export_emission(exporter, props, definitions)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         raise NotImplementedError("Subclasses have to implement this method!")
@@ -263,7 +263,7 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
         if luxcore_name is None:
             luxcore_name = self.make_name()
 
-        output.export(props, luxcore_name)
+        output.export(exporter, props, luxcore_name)
         return luxcore_name
 
 

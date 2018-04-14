@@ -126,12 +126,12 @@ class LuxCoreSocketMatEmission(LuxCoreNodeSocket):
     default_node = "LuxCoreNodeMatEmission"
     # no default value
 
-    def export_emission(self, props, definitions):
+    def export_emission(self, exporter, props, definitions):
         if self.is_linked:
             linked_node = self.links[0].from_node
 
             if linked_node.bl_idname == "LuxCoreNodeMatEmission":
-                linked_node.export(props, definitions)
+                linked_node.export_emission(exporter, props, definitions)
             else:
                 print("ERROR: can't export emission; not an emission node")
 

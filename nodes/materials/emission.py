@@ -82,7 +82,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
             sub.prop(self.ies, "map_width")
             sub.prop(self.ies, "map_height")
 
-    def export(self, props, definitions):
+    def export_emission(self, exporter, props, definitions):
         """
         The export method is different because this is not a normal material node.
         It is called from LuxCoreNodeMaterial.export_common_props()
@@ -102,3 +102,6 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
             except OSError as error:
                 msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
                 bpy.context.scene.luxcore.errorlog.add_warning(msg)
+
+    def sub_export(self, exporter, props, luxcore_name=None):
+        raise NotImplementedError("This node uses a special export method.")
