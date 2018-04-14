@@ -7,6 +7,10 @@ from ... import utils
 from ...utils import ui as utils_ui
 
 
+NORMAL_MAP_DESC = (
+    "Enable if this image is a normal map. Only tangent space maps (the most common "
+    "normal maps) are supported. Brightness and gamma will be set to 1"
+)
 NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of the normal map"
 
 
@@ -37,7 +41,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
 
     wrap_items = [
         ("repeat", "Repeat", "", 0),
-        ("clamp", "Clamp", "", 3),
+        ("clamp", "Clamp", "Extend the pixels of the border", 3),
         ("black", "Black", "", 1),
         ("white", "White", "", 2),
     ]
@@ -46,9 +50,11 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     def update_is_normal_map(self, context):
         self.outputs["Color"].enabled = not self.is_normal_map
         self.outputs["Bump"].enabled = self.is_normal_map
+        self.inputs["Gamma"].enabled = not self.is_normal_map
+        self.inputs["Brightness"].enabled = not self.is_normal_map
 
     is_normal_map = BoolProperty(name="Normalmap", default=False, update=update_is_normal_map,
-                                 description="Might want to enable this if the image looks blue")
+                                 description=NORMAL_MAP_DESC)
     normal_map_scale = FloatProperty(name="Height", default=1, min=0, soft_max=5,
                                      description=NORMAL_SCALE_DESC)
 
@@ -117,7 +123,13 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         col = layout.column()
         col.active = self.image is not None
 
-        col.prop(self, "channel")
+        col.prop(self, "is_normal_map")
+
+        if self.is_normal_map:
+            col.prop(self, "normal_map_scale")
+        else:
+            col.prop(self, "channel")
+
         col.prop(self, "wrap")
 
         # Info about UV mapping (only show if default is used,
@@ -125,13 +137,12 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         if not self.inputs["2D Mapping"].is_linked:
             utils_node.draw_uv_info(context, col)
 
-        col.prop(self, "is_normal_map")
-        if self.is_normal_map:
-            col.prop(self, "normal_map_scale")
-
     def sub_export(self, exporter, props, luxcore_name=None):
         if self.image is None:
-            return [0, 0, 0]
+            if self.is_normal_map:
+                return [0.5, 0.5, 1.0]
+            else:
+                return [0, 0, 0]
 
         try:
             filepath = ImageExporter.export(self.image)
@@ -140,22 +151,11 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             exporter.scene.luxcore.errorlog.add_warning(msg)
             return [1, 0, 1]
 
-        # TODO remove this in the future, e.g. after alpha2 or 3 release
-        if "Brightness" not in self.inputs:
-            error = "Outdated node! Replace with new imagemap node."
-            msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-            exporter.scene.luxcore.errorlog.add_warning(msg)
-            print(msg)
-            return [0, 0, 0]
-
         uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, props)
 
         definitions = {
             "type": "imagemap",
             "file": filepath,
-            "gamma": self.inputs["Gamma"].export(exporter, props),
-            "gain": self.inputs["Brightness"].export(exporter, props),
-            "channel": self.channel,
             "wrap": self.wrap,
             # Mapping
             "mapping.type": "uvmapping2d",
@@ -164,9 +164,22 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             "mapping.uvdelta": uvdelta,
         }
 
+        if self.is_normal_map:
+            definitions.update({
+                "channel": "rgb",
+                "gamma": 1,
+                "gain": 1,
+            })
+        else:
+            definitions.update({
+                "channel": self.channel,
+                "gamma": self.inputs["Gamma"].export(exporter, props),
+                "gain": self.inputs["Brightness"].export(exporter, props),
+            })
+
         luxcore_name = self.create_props(props, definitions, luxcore_name)
 
-        if self.is_normal_map and self.normal_map_scale > 0:
+        if self.is_normal_map:
             # Implicitly create a normalmap
             tex_name = luxcore_name + "_normalmap"
             helper_prefix = "scene.textures." + tex_name + "."
