@@ -28,6 +28,9 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
         else:
             kwargs.update(start_new_session=True)
 
+        # Set the current working directory to the bin folder so pyluxcore is found
+        kwargs.update(cwd=bin_dir)
+
         if platform.system() == "Linux":
             zip_path = os.path.join(bin_dir, "pyluxcoretools.zip")
             command = ["python3", zip_path]
