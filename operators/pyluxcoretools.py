@@ -1,7 +1,7 @@
 import bpy
-import subprocess
 import os
 import platform
+from subprocess import Popen, PIPE
 
 
 class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
@@ -16,11 +16,19 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
         blendluxcore_dir = os.path.dirname(current_dir)
         bin_dir = os.path.join(blendluxcore_dir, "bin")
 
-        env = os.environ.copy()
+        # Set system/version dependent "start_new_session" analogs.
+        # This ensures that the pyluxcoretools process is not stopped
+        # when the parent process (Blender) is stopped.
+        # Adapted from https://stackoverflow.com/a/13256908
+        kwargs = {}
+        if platform.system() == "Windows":
+            CREATE_NEW_PROCESS_GROUP = 0x00000200  # note: could get it from subprocess
+            DETACHED_PROCESS = 0x00000008  # 0x8 | 0x200 == 0x208
+            kwargs.update(creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+        else:
+            kwargs.update(start_new_session=True)
 
         if platform.system() == "Linux":
-            env["LD_LIBRARY_PATH"] = os.path.dirname(bin_dir)
-
             zip_path = os.path.join(bin_dir, "pyluxcoretools.zip")
             command = ["python3", zip_path]
         elif platform.system() == "Windows":
@@ -29,8 +37,6 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
         else:
             raise NotImplementedError("Unsupported system: " + platform.system())
 
-        # - cwd specifies the current working directory
-        # - preexec_fn=os.setsid detaches the process from our process group
-        #   so it is not ended by Ctrl+C etc. to the parent process
-        subprocess.Popen(command, cwd=bin_dir, preexec_fn=os.setsid)
+        Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, **kwargs)
+
         return {"FINISHED"}
