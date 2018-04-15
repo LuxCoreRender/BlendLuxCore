@@ -16,10 +16,10 @@ class LuxCoreNodeMatVelvet(LuxCoreNodeMaterial):
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Diffuse Color", (1, 1, 1))
-        self.add_input("LuxCoreSocketFloatPositive", "Thickness", 0.1)
-        self.add_input("LuxCoreSocketFloatPositive", "p1", 2)
-        self.add_input("LuxCoreSocketFloatPositive", "p2", 10)
-        self.add_input("LuxCoreSocketFloatPositive", "p3", 2)
+        self.add_input("LuxCoreSocketFloat0to1", "Thickness", 0.1)
+        self.add_input("LuxCoreSocketFloatUnbounded", "p1", 2)
+        self.add_input("LuxCoreSocketFloatUnbounded", "p2", 10)
+        self.add_input("LuxCoreSocketFloatUnbounded", "p3", 2)
         self.inputs["p1"].enabled = False
         self.inputs["p2"].enabled = False
         self.inputs["p3"].enabled = False
