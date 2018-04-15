@@ -5,6 +5,17 @@ from shutil import copy2
 import platform
 import os
 
+LINUX_FILES = [
+    "libembree.so.2", "libtbb.so.2", "libtbbmalloc.so.2",
+    "pyluxcore.so", "luxcoreui", "pyluxcoretools.zip",
+]
+
+WINDOWS_FILES = [
+    "embree.dll", "tbb.dll", "tbbmalloc.dll",
+    "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe",
+    "pyluxcoretool.exe", "pyluxcoretools.zip",
+]
+
 
 def confirm(message):
     while True:
@@ -24,9 +35,9 @@ def main():
     args = parser.parse_args()
 
     if platform.system() == "Linux":
-        files = ["libembree.so.2", "libtbb.so.2", "libtbbmalloc.so.2", "pyluxcore.so", "luxcoreui"]
+        files = LINUX_FILES
     elif platform.system() == "Windows":
-        files = ["embree.dll", "tbb.dll", "tbbmalloc.dll", "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe"]
+        files = WINDOWS_FILES
     else:
         print("Unsupported system:", platform.system())
 

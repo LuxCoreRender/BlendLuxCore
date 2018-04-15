@@ -13,8 +13,16 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 
 # These are the same as in BlendLuxCore/bin/get_binaries.py
 # (apart from missing luxcoreui, that's only for developers)
-linux_binaries = ["libembree.so.2", "libtbb.so.2", "libtbbmalloc.so.2", "pyluxcore.so"]
-windows_binaries = ["embree.dll", "tbb.dll", "tbbmalloc.dll", "OpenImageIO.dll", "pyluxcore.pyd"]
+LINUX_FILES = [
+    "libembree.so.2", "libtbb.so.2", "libtbbmalloc.so.2",
+    "pyluxcore.so", "pyluxcoretools.zip",
+]
+
+WINDOWS_FILES = [
+    "embree.dll", "tbb.dll", "tbbmalloc.dll",
+    "OpenImageIO.dll", "pyluxcore.pyd",
+    "pyluxcoretool.exe", "pyluxcoretools.zip",
+]
 
 
 def print_divider():
@@ -153,7 +161,7 @@ def main():
         with tarfile.open(tar_name, "r:bz2") as tar:
             for member in tar.getmembers():
                 basename = os.path.basename(member.name)
-                if basename not in linux_binaries:
+                if basename not in LINUX_FILES:
                     continue
 
                 # have to use a temp dir (weird extract behaviour)
@@ -193,7 +201,7 @@ def main():
         with zipfile.ZipFile(zip_name, "r") as zip:
             for member in zip.namelist():
                 basename = os.path.basename(member)  # in zip case, member is just a string
-                if basename not in windows_binaries:
+                if basename not in WINDOWS_FILES:
                     continue
 
                 # have to use a temp dir (weird extract behaviour)

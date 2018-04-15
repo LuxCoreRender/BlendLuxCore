@@ -18,7 +18,7 @@ from .nodes import materials, volumes, textures
 from .ui import (
     aovs, blender_object, camera, config, display, errorlog,
     halt, light, lightgroups, material, mesh, particle, postpro,
-    render_layer, texture, units, world
+    render, render_layer, texture, units, world
 )
 
 bl_info = {

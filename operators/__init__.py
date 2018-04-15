@@ -6,8 +6,8 @@ from bpy.props import StringProperty, BoolProperty
 # Ensure initialization (note: no need to initialize utils)
 from . import (
     camera, camera_response_func, ior_presets, lightgroups,
-    material, node_tree_presets, pointer_node, texture,
-    update, world,
+    material, node_tree_presets, pointer_node, pyluxcoretools,
+    texture, update, world,
 )
 from .utils import init_vol_node_tree, poll_node
 
