@@ -48,10 +48,12 @@ class LuxCoreNode(Node):
         return tree.bl_idname in TREE_TYPES
 
     def add_input(self, type, name, default=None):
-        self.inputs.new(type, name)
+        input = self.inputs.new(type, name)
 
         if hasattr(self.inputs[name], "default_value"):
-            self.inputs[name].default_value = default
+            input.default_value = default
+
+        return input
 
     def make_name(self):
         return utils.make_key(self)
