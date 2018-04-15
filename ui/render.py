@@ -12,7 +12,12 @@ def luxcore_render_draw(panel, context):
     if scene.render.engine != "LUXCORE":
         return
 
-    layout.operator("luxcore.start_pyluxcoretools")
+    split = layout.split(percentage=0.66, align=True)
+    row = split.row(align=True)
+    row.operator("luxcore.start_pyluxcoretools")
+    row = split.row(align=True)
+    op = row.operator("luxcore.open_website", icon="URL", text="Wiki")
+    op.url = "https://wiki.luxcorerender.org/BlendLuxCore_Network_Rendering"
 
 
 # We append our draw function to the existing Blender render panel
