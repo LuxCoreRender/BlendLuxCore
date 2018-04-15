@@ -1,5 +1,6 @@
 from bpy.props import EnumProperty
 from .. import LuxCoreNodeTexture
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexHitpoint(LuxCoreNodeTexture):
@@ -7,8 +8,14 @@ class LuxCoreNodeTexHitpoint(LuxCoreNodeTexture):
     bl_label = "Vertex Color"
 
     def change_mode(self, context):
-        self.outputs["Color"].enabled = self.mode == "hitpointcolor"
-        self.outputs["Value"].enabled = self.mode == "hitpointgrey"
+        value_output = self.outputs["Value"]
+        color_output = self.outputs["Color"]
+        was_value_enabled = value_output.enabled
+
+        color_output.enabled = self.mode == "hitpointcolor"
+        value_output.enabled = self.mode == "hitpointgrey"
+
+        utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
 
     mode_items = [
         ("hitpointcolor", "Color", "Vertex Color", 0),

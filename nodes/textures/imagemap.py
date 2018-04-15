@@ -48,10 +48,16 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     wrap = EnumProperty(name="Wrap", items=wrap_items, default="repeat")
 
     def update_is_normal_map(self, context):
-        self.outputs["Color"].enabled = not self.is_normal_map
-        self.outputs["Bump"].enabled = self.is_normal_map
+        color_output = self.outputs["Color"]
+        bump_output = self.outputs["Bump"]
+        was_color_enabled = color_output.enabled
+
+        color_output.enabled = not self.is_normal_map
+        bump_output.enabled = self.is_normal_map
         self.inputs["Gamma"].enabled = not self.is_normal_map
         self.inputs["Brightness"].enabled = not self.is_normal_map
+
+        utils_node.copy_links_after_socket_swap(color_output, bump_output, was_color_enabled)
 
     is_normal_map = BoolProperty(name="Normalmap", default=False, update=update_is_normal_map,
                                  description=NORMAL_MAP_DESC)

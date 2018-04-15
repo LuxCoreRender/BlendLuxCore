@@ -6,6 +6,7 @@ from bpy.props import EnumProperty, PointerProperty, StringProperty
 from ...bin import pyluxcore
 from ...export import smoke
 from ... import utils
+from ...utils import node as utils_node
 from .. import LuxCoreNodeTexture
 
 
@@ -16,8 +17,14 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
     domain = PointerProperty(name="Domain", type=bpy.types.Object)
 
     def update_source(self, context):
-        self.outputs["Value"].enabled = self.source in {"density", "fire", "heat"}
-        self.outputs["Color"].enabled = self.source == "color"
+        value_output = self.outputs["Value"]
+        color_output = self.outputs["Color"]
+        was_value_enabled = value_output.enabled
+
+        value_output.enabled = self.source in {"density", "fire", "heat"}
+        color_output.enabled = self.source == "color"
+
+        utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
 
     source_items = [
         ("density", "Density", "Smoke density grid, 1 value per voxel", 0),

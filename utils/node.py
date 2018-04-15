@@ -103,3 +103,24 @@ def update_opengl_materials(_, context):
                 diffuse_color = socket.default_value
 
     mat.diffuse_color = diffuse_color
+
+
+def copy_links_after_socket_swap(socket1, socket2, was_socket1_enabled):
+    """
+    Copy socket links from the output socket that was disabled to the one that was enabled.
+    This function should be used on nodes that have two different output sockets which are
+    enabled or disabled in turn depending on settings of the node.
+    Example: the smoke node (color output when color grid is selected, value output otherwise).
+    """
+    node_tree = socket1.id_data
+    if was_socket1_enabled == socket1.enabled:
+        # Nothing changed
+        pass
+    elif was_socket1_enabled and not socket1.enabled:
+        # socket1 was disabled while socket2 was enabled
+        for link in socket1.links:
+            node_tree.links.new(socket2, link.to_socket)
+    else:
+        # socket2 was disabled while socket1 was enabled
+        for link in socket2.links:
+            node_tree.links.new(socket1, link.to_socket)
