@@ -209,6 +209,8 @@ class Exporter(object):
 
     def update(self, context, session, changes):
         print("[Exporter] Update because of:", Change.to_string(changes))
+        # Invalidate node cache
+        self.node_cache.clear()
 
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
@@ -329,9 +331,6 @@ class Exporter(object):
                 self._convert_object(props, obj, context.scene, context, luxcore_scene)
 
         if changes & Change.MATERIAL:
-            # Invalidate node cache
-            self.node_cache.clear()
-
             for mat in self.material_cache.changed_materials:
                 luxcore_name, mat_props = material.convert(self, mat, context.scene, context)
                 props.Set(mat_props)
