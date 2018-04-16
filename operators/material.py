@@ -118,6 +118,8 @@ class LuxCore_OT_material_select(bpy.types.Operator):
     bl_label = ""
     bl_property = "material"
 
+    callback_strings = []
+
     def callback(self, context):
         items = []
 
@@ -126,6 +128,10 @@ class LuxCore_OT_material_select(bpy.types.Operator):
             # We can not show descriptions or icons here unfortunately
             items.append((str(index), name, ""))
 
+        #  There is a known bug with using a callback,
+        # Python must keep a reference to the strings
+        # returned or Blender will misbehave or even crash.
+        LuxCore_OT_material_select.callback_strings = items
         return items
 
     material = EnumProperty(name="Materials", items=callback)
