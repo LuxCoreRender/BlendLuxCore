@@ -25,7 +25,7 @@ class LuxCoreNodeTexBlenderBlend(LuxCoreNodeTexture):
     ]
 
     progression_type = EnumProperty(name="Progression", description="progression", items=progression_items, default="linear")
-    direction = EnumProperty(name="Direction", items=direction_items)
+    direction = EnumProperty(name="Direction", items=direction_items, default="horizontal")
 
     bright = FloatProperty(name="Brightness", default=1.0, min=0)
     contrast = FloatProperty(name="Contrast", default=1.0, min=0)

@@ -62,6 +62,8 @@ def get_current_version():
     return version_string
 
 
+callback_strings = []
+
 def release_items_callback(scene, context):
     items = []
     current_version = get_current_version()
@@ -81,6 +83,12 @@ def release_items_callback(scene, context):
             icon = "NONE"
 
         items.append((version_string, version_string, description, icon, i))
+
+    # There is a known bug with using a callback,
+    # Python must keep a reference to the strings
+    # returned or Blender will misbehave or even crash.
+    global callback_strings
+    callback_strings = items
 
     return items
 

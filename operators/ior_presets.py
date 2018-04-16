@@ -137,8 +137,15 @@ class LUXCORE_OT_ior_preset_names(LuxCoreIORPresetBase,
     bl_description = "Index of Refraction presets sorted by name"
     bl_property = "ior_preset"
 
+    callback_strings = []
+
     def cb_ior_preset(self, context):
-        return LuxCoreIORPresetValues.get_sorted_list("name")
+        items = LuxCoreIORPresetValues.get_sorted_list("name")
+        # There is a known bug with using a callback,
+        # Python must keep a reference to the strings
+        # returned or Blender will misbehave or even crash.
+        LUXCORE_OT_ior_preset_names.callback_strings = items
+        return items
 
     ior_preset = EnumProperty(name="IOR Preset",
                               description="Index of Refraction Preset Values",
@@ -153,8 +160,15 @@ class LUXCORE_OT_ior_preset_values(LuxCoreIORPresetBase,
     bl_description = "Index of Refraction presets sorted by value"
     bl_property = "ior_preset"
 
+    callback_strings = []
+
     def cb_ior_preset(self, context):
-        return LuxCoreIORPresetValues.get_sorted_list("value")
+        items = LuxCoreIORPresetValues.get_sorted_list("value")
+        # There is a known bug with using a callback,
+        # Python must keep a reference to the strings
+        # returned or Blender will misbehave or even crash.
+        LUXCORE_OT_ior_preset_values.callback_strings = items
+        return items
 
     ior_preset = EnumProperty(name="IOR Preset",
                               description="Index of Refraction Preset Values",

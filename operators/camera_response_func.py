@@ -61,8 +61,15 @@ class LUXCORE_OT_select_crf(bpy.types.Operator):
     bl_description = "Camera Response Function presets"
     bl_property = "crf_preset"
 
+    callback_string = []
+
     def cb_crf_preset(self, context):
-        return [(name, name.replace("_", " "), "", i) for i, name in enumerate(crf_preset_names)]
+        items = [(name, name.replace("_", " "), "", i) for i, name in enumerate(crf_preset_names)]
+        # There is a known bug with using a callback,
+        # Python must keep a reference to the strings
+        # returned or Blender will misbehave or even crash.
+        LUXCORE_OT_select_crf.callback_strings = items
+        return items
 
     crf_preset = EnumProperty(name="CRF Preset",
                               description="Camera Response Function presets",
