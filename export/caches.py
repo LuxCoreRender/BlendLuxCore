@@ -3,6 +3,7 @@ from .. import utils
 from ..utils import node as utils_node
 from ..export import smoke, camera
 
+
 class StringCache(object):
     def __init__(self):
         self.props = None

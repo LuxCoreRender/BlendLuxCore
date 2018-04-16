@@ -3,7 +3,8 @@ from ..bin import pyluxcore
 from .. import utils
 from . import (
     blender_object, caches, camera, config, duplis,
-    imagepipeline, light, material, motion_blur, hair, world
+    imagepipeline, light, material, motion_blur, hair,
+    world, halt,
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 
@@ -18,10 +19,11 @@ class Change:
     VISIBILITY = 1 << 4
     WORLD = 1 << 5
     IMAGEPIPELINE = 1 << 6
+    HALT = 1 << 7
 
     REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | VISIBILITY | WORLD
     REQUIRES_VIEW_UPDATE = CONFIG
-    REQUIRES_SESSION_PARSE = IMAGEPIPELINE
+    REQUIRES_SESSION_PARSE = IMAGEPIPELINE | HALT
 
     @staticmethod
     def to_string(changes):
@@ -47,6 +49,7 @@ class Exporter(object):
         self.visibility_cache = caches.VisibilityCache()
         self.world_cache = caches.WorldCache()
         self.imagepipeline_cache = caches.StringCache()
+        self.halt_cache = caches.StringCache()
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
 
@@ -134,6 +137,11 @@ class Exporter(object):
         # Add imagepipeline to config props
         config_props.Set(imagepipeline_props)
 
+        # Halt conditions
+        halt_props = halt.convert(scene)
+        self.halt_cache.diff(halt_props)
+        config_props.Set(halt_props)
+
         # Create the renderconfig
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
@@ -163,8 +171,9 @@ class Exporter(object):
     def get_changes(self, context=None):
         scene = self.scene
         changes = Change.NONE
+        final = context is None
 
-        if context:
+        if not final:
             # Changes that only need to be checked in viewport render, not in final render
             config_props = config.convert(scene, context)
             if self.config_cache.diff(config_props):
@@ -189,6 +198,12 @@ class Exporter(object):
         imagepipeline_props = imagepipeline.convert(scene, context)
         if self.imagepipeline_cache.diff(imagepipeline_props):
             changes |= Change.IMAGEPIPELINE
+
+        if final:
+            # Halt conditions are only used during final render
+            halt_props = halt.convert(scene)
+            if self.halt_cache.diff(halt_props):
+                changes |= Change.HALT
 
         return changes
 
@@ -236,6 +251,8 @@ class Exporter(object):
     def update_session(self, changes, session):
         if changes & Change.IMAGEPIPELINE:
             session.Parse(self.imagepipeline_cache.props)
+        if changes & Change.HALT:
+            session.Parse(self.halt_cache.props)
 
     def _convert_object(self, props, obj, scene, context, luxcore_scene,
                         update_mesh=False, dupli_suffix="", engine=None):

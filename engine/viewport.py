@@ -95,5 +95,5 @@ def view_draw(engine, context):
 
     # Show formatted statistics in Blender UI
     config = engine.session.GetRenderConfig()
-    pretty_stats = utils_render.get_pretty_stats(config, stats, scene)
+    pretty_stats = utils_render.get_pretty_stats(config, stats, scene, context)
     engine.update_stats(pretty_stats, status_message)
