@@ -64,11 +64,13 @@ class FrameBuffer(object):
         # update texture
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
         if self._transparent:
-            mode = GL_RGBA
+            gl_format = GL_RGBA
+            internal_format = GL_RGBA32F
         else:
-            mode = GL_RGB
-        glTexImage2D(GL_TEXTURE_2D, 0, mode, self._width, self._height, 0, mode,
-                     GL_FLOAT, self.buffer)
+            gl_format = GL_RGB
+            internal_format = GL_RGB32F
+        glTexImage2D(GL_TEXTURE_2D, 0, internal_format, self._width, self._height,
+                     0, gl_format, GL_FLOAT, self.buffer)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
