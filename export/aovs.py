@@ -179,6 +179,11 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
         definitions[str(index) + ".sensitivity"] = tonemapper.sensitivity
     index += 1
 
+    if utils.use_filesaver(None, scene):
+        definitions[str(index) + ".type"] = "GAMMA_CORRECTION"
+        definitions[str(index) + ".value"] = 2.2
+        index += 1
+
     props.Set(utils.create_props(prefix, definitions))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
 
