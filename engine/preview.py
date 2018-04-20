@@ -4,7 +4,7 @@ from mathutils import Matrix
 from ..bin import pyluxcore
 from .. import utils
 from .. import export
-from ..draw import FrameBufferFinal
+from ..draw.final import FrameBufferFinal
 
 """
 Note: you can find the Blender preview scene in the sources at this path:

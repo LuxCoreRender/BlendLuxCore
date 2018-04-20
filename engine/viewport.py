@@ -1,5 +1,5 @@
 from .. import export
-from ..draw import FrameBuffer
+from ..draw.viewport import FrameBuffer
 from ..utils import render as utils_render
 
 

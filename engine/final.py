@@ -1,6 +1,6 @@
 from time import time, sleep
 from .. import export, utils
-from ..draw import FrameBufferFinal
+from ..draw.final import FrameBufferFinal
 from ..utils import render as utils_render
 
 
