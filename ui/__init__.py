@@ -161,7 +161,15 @@ def register():
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.add("LUXCORE")
 
+    from . import render, units
+    render.register()
+    units.register()
+
 
 def unregister():
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.remove("LUXCORE")
+
+    from . import render, units
+    render.unregister()
+    units.unregister()

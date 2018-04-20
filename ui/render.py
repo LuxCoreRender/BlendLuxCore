@@ -20,5 +20,10 @@ def luxcore_render_draw(panel, context):
     op.url = "https://wiki.luxcorerender.org/BlendLuxCore_Network_Rendering"
 
 
-# We append our draw function to the existing Blender render panel
-RENDER_PT_render.append(luxcore_render_draw)
+def register():
+    # We append our draw function to the existing Blender render panel
+    RENDER_PT_render.append(luxcore_render_draw)
+
+
+def unregister():
+    RENDER_PT_render.remove(luxcore_render_draw)

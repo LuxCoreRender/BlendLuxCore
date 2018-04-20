@@ -21,5 +21,10 @@ def luxcore_unit_draw(panel, context):
         col.label("Min epsilon should be smaller than max epsilon!", icon="ERROR")
 
 
-# We append our draw function to the existing Blender unit panel
-SCENE_PT_unit.append(luxcore_unit_draw)
+def register():
+    # We append our draw function to the existing Blender unit panel
+    SCENE_PT_unit.append(luxcore_unit_draw)
+
+
+def unregister():
+    SCENE_PT_unit.remove(luxcore_unit_draw)
