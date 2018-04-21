@@ -25,8 +25,9 @@ def convert(scene, context=None):
         if pipeline.tonemapper.enabled:
             index = _tonemapper(definitions, index, pipeline.tonemapper)
 
-        if pipeline.transparent_film and not use_filesaver:
-            # Blender expects premultiplied alpha, luxcoreui does not
+        # Note: Blender expects the alpha to be NOT premultiplied, so we only
+        # premultiply it when the backgroundimage plugin is used
+        if use_backgroundimage(context, scene):
             index = _premul_alpha(definitions, index)
 
         if use_backgroundimage(context, scene):
