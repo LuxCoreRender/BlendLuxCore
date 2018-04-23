@@ -23,7 +23,7 @@ def view_update(engine, context, changes=None):
             del engine.session
             engine.session = None
             # Reset the exporter to invalidate all caches
-            engine.exporter = export.Exporter()
+            engine.exporter = export.Exporter(scene)
 
             engine.update_stats("Error: ", str(error))
             scene.luxcore.errorlog.add_error(error)
