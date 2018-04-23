@@ -18,7 +18,7 @@ NEED_TONEMAPPING = {
 
 
 # Exported in config export
-def convert(scene, context=None, engine=None):
+def convert(exporter, scene, context=None, engine=None):
     try:
         prefix = "film.outputs."
         definitions = {}
@@ -83,16 +83,12 @@ def convert(scene, context=None, engine=None):
                                                              pipeline_index, definitions, engine)
 
             # Light groups
-            lightgroups = scene.luxcore.lightgroups
-            # Number of custom groups + default group
-            lightgroup_count = len(lightgroups.custom) + 1
-
-            for group_id in range(lightgroup_count):
+            for group_id in exporter.lightgroup_cache:
                 output_name = "RADIANCE_GROUP"
                 _add_output(definitions, output_name, output_id=group_id)
                 pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
                                                      pipeline_index, definitions, engine,
-                                                     group_id, lightgroup_count)
+                                                     group_id, exporter.lightgroup_cache)
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
@@ -138,7 +134,7 @@ def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, i
 
 
 def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine,
-                        output_id=-1, lightgroup_count=-1):
+                        output_id=-1, lightgroup_ids=set()):
     # TODO I think we need the full imagepipeline with all plugins here
 
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
@@ -158,7 +154,7 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     index = 0
 
     if output_name == "RADIANCE_GROUP":
-        for group_id in range(lightgroup_count):
+        for group_id in lightgroup_ids:
             # Disable all light groups except one per imagepipeline
             definitions["radiancescales." + str(group_id) + ".enabled"] = (output_id == group_id)
     else:
