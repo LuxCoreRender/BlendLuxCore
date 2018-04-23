@@ -96,6 +96,12 @@ def convert(scene, context=None, engine=None):
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
+
+        props.Set(pyluxcore.Property("film.imagepipelines." + str(pipeline_index) + ".0.type", "BCD_DENOISER"))
+        props.Set(pyluxcore.Property("film.imagepipelines." + str(pipeline_index) + ".1.type", "TONEMAP_AUTOLINEAR"))
+        props.Set(pyluxcore.Property("film.imagepipelines." + str(pipeline_index) + ".2.type", "GAMMA_CORRECTION"))
+        props.Set(pyluxcore.Property("film.imagepipelines." + str(pipeline_index) + ".2.value", 2.2))
+
         return props
     except Exception as error:
         import traceback
