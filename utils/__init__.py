@@ -187,11 +187,13 @@ def calc_filmsize(scene, context=None):
             height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
         else:
             # Camera viewport
+            zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
+            aspectratio, aspect_x, aspect_y = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x,
+                                                          scene.render.resolution_y*scene.render.pixel_aspect_y,
+                                                          scene.camera.data.sensor_fit)
+            
             if scene.render.use_border:
-                aspect_x, aspect_y = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x, scene.render.resolution_y*scene.render.pixel_aspect_y)
-                zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
-
-                base = zoom*max(width_raw, height_raw)
+                base = zoom * max(width_raw, height_raw)
                 width = int(base * aspect_x * border_max_x) - int(base * aspect_x * border_min_x)
                 height = int(base * aspect_y * border_max_y) - int(base * aspect_y *  border_min_y)
     else:
@@ -254,7 +256,9 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
         if context.region_data.view_perspective == "CAMERA":
             # Camera view
             if scene.render.use_border:
-                xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x, scene.render.resolution_y * scene.render.pixel_aspect_y)
+                aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x,
+                                                            scene.render.resolution_y * scene.render.pixel_aspect_y,
+                                                            scene.camera.data.sensor_fit)
                 offset_x = 0
                 offset_y = 0
                 
@@ -262,13 +266,13 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
                 if scene.camera and scene.camera.data.type == "ORTHO":
                     zoom = 0.5*scene.camera.data.ortho_scale
             else:
-                xaspect, yaspect = calc_aspect(width_raw, height_raw)
+                aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw, scene.camera.data.sensor_fit)
         else:
             # Normal viewport
-            xaspect, yaspect = calc_aspect(width_raw, height_raw)
+            aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw)
     else:
         #Final rendering
-        xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x, scene.render.resolution_y*scene.render.pixel_aspect_y)
+        aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x, scene.render.resolution_y*scene.render.pixel_aspect_y)
         offset_x = 0
         offset_y = 0
 
@@ -289,14 +293,25 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
     return screenwindow
 
 
-def calc_aspect(width, height):
-    if width > height:
+def calc_aspect(width, height, fit = "AUTO"):
+    aspect = 1.0
+
+    horizontal_fit = False
+    if fit == "AUTO":
+        horizontal_fit = (width > height)
+    elif fit == "HORIZONTAL":
+        horizontal_fit = True
+    
+    if horizontal_fit:
+        aspect = height / width
         xaspect = 1
-        yaspect = height / width
+        yaspect = aspect
     else:
-        xaspect = width / height
+        aspect = width / height
+        xaspect = aspect
         yaspect = 1
-    return xaspect, yaspect
+
+    return aspect, xaspect, yaspect
 
 
 def find_active_uv(uv_textures):
