@@ -28,7 +28,9 @@ def convert(exporter, scene, context=None, engine=None):
             return pyluxcore.Properties()
 
         pipeline = scene.camera.data.luxcore.imagepipeline
-        final = not context
+        # If we have a context, we are in viewport render.
+        # If engine.is_preview, we are in material preview. Both don't need AOVs.
+        final = not context and not (engine and engine.is_preview)
 
         if final:
             # This is the layer that is currently being exported, not the active layer in the UI!
