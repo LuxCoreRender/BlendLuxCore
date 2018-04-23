@@ -2,7 +2,7 @@ import unittest
 import sys
 
 import BlendLuxCore
-from BlendLuxCore.export import light
+from BlendLuxCore.export import Exporter, light
 from BlendLuxCore.bin import pyluxcore
 from BlendLuxCore import utils
 import bpy
@@ -14,7 +14,8 @@ class TestPointLight(unittest.TestCase):
         obj = bpy.data.objects["Point"]
         luxcore_scene = pyluxcore.Scene()
         context = bpy.context
-        props, exported_light = light.convert_lamp(obj, context.scene, context, luxcore_scene)
+        exporter = Exporter(context.scene)
+        props, exported_light = light.convert_lamp(exporter, obj, context.scene, context, luxcore_scene)
 
         # Check if export succeeded
         self.assertIsNotNone(exported_light)

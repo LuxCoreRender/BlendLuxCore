@@ -23,6 +23,7 @@ class RenderEngineMockup:
     """ Simulates a bpy.types.RenderEngine class """    
     def __init__(self, abort_immediately=False):
         self.abort_immediately = abort_immediately
+        self.is_preview = False
 
     def update_stats(self, arg1, arg2):
         pass
@@ -42,7 +43,9 @@ class TestFullExport(unittest.TestCase):
             with redirect_stdout(log):
                 pyluxcore.Init(luxcore_logger)
                 # Test final render export from the engine's point of view
-                _exporter = export.Exporter(bpy.context.scene)
+                scene = bpy.context.scene
+                scene.luxcore.active_layer_index = 0
+                _exporter = export.Exporter(scene)
                 engine = RenderEngineMockup()
                 _session = _exporter.create_session(context=None, engine=engine)
 
