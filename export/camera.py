@@ -102,9 +102,9 @@ def _view_camera(scene, context, definitions):
     view_camera_offset = list(context.region_data.view_camera_offset)
 
     if scene.render.use_border:
-        xaspect, yaspect = utils.calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+        aspectratio, xaspect, yaspect = utils.calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
     else:
-        xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
+        aspectratio, xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
 
 
     offset_x = 2 * (view_camera_offset[0] * xaspect * 2)
