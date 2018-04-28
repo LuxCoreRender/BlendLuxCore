@@ -29,6 +29,10 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
         else:
             obj.data.materials.append(mat)
 
+        # For viewport render, we have to update the luxcore object
+        # because the newly created material is not yet assigned there
+        obj.update_tag()
+
         return {"FINISHED"}
 
 
