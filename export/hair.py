@@ -220,7 +220,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
                 mat = None
                 print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, blender_obj.name))
 
-        ## Convert material
+        # Convert material
         strandsProps = pyluxcore.Properties()
 
         lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
@@ -240,6 +240,10 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
         strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
 
         luxcore_scene.Parse(strandsProps)
+
+        # We have to invalidate the node cache because we defined
+        # properties that will not end up in the main properties
+        exporter.node_cache.clear()
 
         if not context:
             # Resolution was changed to "RENDER" for final renders, change it back

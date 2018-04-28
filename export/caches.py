@@ -1,7 +1,7 @@
 import bpy
 from .. import utils
 from ..utils import node as utils_node
-from ..export import smoke, camera
+from ..export import camera
 
 
 class StringCache(object):
