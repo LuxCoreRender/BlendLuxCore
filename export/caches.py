@@ -110,28 +110,6 @@ class MaterialCache(object):
         return self.changed_materials
 
 
-class SmokeCache(object):
-    """
-    Only speeds up viewport updates that are not related to volume updates (e.g. when a material in the scene is edited,
-    this cache prevents that smoke is re-exported and pyluxcore.Properties are set just to check for volume updates.
-    The really expensive operation is *not* the smoke export, but the Property setting.)
-    """    
-    def __init__(self):
-        self.reset()
-    
-    def convert(self, smoke_obj, channel):
-        key = utils.get_luxcore_name(smoke_obj, context) + channel
-
-        if key not in cls.cache:
-            self.cache[key] = smoke.convert(smoke_obj, channel)
-
-        return self.cache[key]
-
-    def reset(self):
-        self.cache = {}
-
-
-
 class VisibilityCache(object):
     def __init__(self):
         # sets containing keys
