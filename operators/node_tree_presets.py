@@ -21,6 +21,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
 
     basic_mapping = OrderedDict([
         ("Mix", "LuxCoreNodeMatMix"),
+        ("Matte", "LuxCoreNodeMatMatte"),
         ("Glossy", "LuxCoreNodeMatGlossy2"),
         ("Glass", "LuxCoreNodeMatGlass"),
         ("Null (Transparent)", "LuxCoreNodeMatNull"),
@@ -94,6 +95,9 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
 
             if matte and output:
                 nodes.remove(matte)
+            else:
+                # We were wrong - do not use this output
+                output = None
 
         if output is None:
             # Add the new nodes below all other nodes
