@@ -71,8 +71,9 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
                 except KeyError:
                     # Not yet exported
                     name_suffix = _get_name_suffix(name_prefix, dupli, context)
-                    obj_props, exported_obj = blender_object.convert(exporter, dupli.object, scene, context, luxcore_scene,
-                                                                     update_mesh=True, dupli_suffix=name_suffix)
+                    obj_props, exported_obj = blender_object.convert(exporter, dupli.object, scene, context,
+                                                                     luxcore_scene, update_mesh=True,
+                                                                     dupli_suffix=name_suffix, duplicator=blender_obj)
                     dupli_props.Set(obj_props)
                     exported_duplis[name] = Duplis(exported_obj, matrix_list)
 

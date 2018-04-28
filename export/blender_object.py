@@ -9,7 +9,10 @@ from .light import convert_lamp
 
 
 def convert(exporter, blender_obj, scene, context, luxcore_scene,
-            exported_object=None, update_mesh=False, dupli_suffix=""):
+            exported_object=None, update_mesh=False, dupli_suffix="", duplicator=None):
+    """
+    duplicator: The duplicator object that created this dupli (e.g. the particle emitter object)
+    """
 
     if not utils.is_obj_visible(blender_obj, scene, context, is_dupli=dupli_suffix):
         return pyluxcore.Properties(), None
@@ -86,7 +89,8 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                     lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)
-            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform, blender_obj, scene, context)
+            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform,
+                                   blender_obj, scene, context, duplicator)
 
         return props, ExportedObject(mesh_definitions)
     except Exception as error:
@@ -116,7 +120,8 @@ def _handle_pointiness(props, luxcore_shape_name, blender_obj):
     return luxcore_shape_name
 
 
-def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform, blender_obj, scene, context):
+def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform,
+                           blender_obj, scene, context, duplicator):
     # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
     luxcore_shape_name = "Mesh-" + lux_object_name
     luxcore_shape_name = _handle_pointiness(props, luxcore_shape_name, blender_obj)
@@ -128,7 +133,9 @@ def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transf
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 
-    visible_to_cam = utils.is_obj_visible_to_cam(blender_obj, scene, context)
+    # In case of duplis, we have to check the camera visibility setting of the parent, not the dupli
+    vis_obj = duplicator if duplicator else blender_obj
+    visible_to_cam = utils.is_obj_visible_to_cam(vis_obj, scene, context)
     props.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
 
 
