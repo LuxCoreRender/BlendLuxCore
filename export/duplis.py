@@ -97,6 +97,12 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
         # Need to parse so we have the dupli objects available for DuplicateObject
         luxcore_scene.Parse(dupli_props)
 
+        # We have to invalidate the node cache because we have defined materials in
+        # the dupli_props which are not defined in the main scene props (so if
+        # another material tries to use the cached name, it will result in default
+        # grey matte because the name is not in the main properties)
+        exporter.node_cache.clear()
+
         for duplis in exported_duplis.values():
             # exported_obj sometimes is None, e.g. when instancing a group using an empty
             exported_obj = duplis.exported_obj
@@ -120,13 +126,13 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
                     # Delete the object we used for duplication, we don't want it to show up in the scene
                     luxcore_scene.DeleteObject(src_name)
 
-
         print("Dupli export took %.3f s" % (time() - start))
     except Exception as error:
         msg = '[Duplicator "%s"] %s' % (blender_obj.name, error)
         scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
+
 
 def _get_name_suffix(name_prefix, dupli, context):
     name_suffix = name_prefix + str(dupli.index)
