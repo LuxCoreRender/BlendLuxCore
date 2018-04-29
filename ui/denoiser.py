@@ -18,6 +18,8 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         layout = self.layout
         denoiser = context.scene.luxcore.denoiser
 
+        layout.prop(denoiser, "refresh_interval")
+
         col = layout.column(align=True)
         col.prop(denoiser, "scales")
         col.prop(denoiser, "hist_dist_thresh")

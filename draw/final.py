@@ -1,5 +1,6 @@
 from bgl import *  # Nah I'm not typing them all out
 import array
+from time import time
 from ..bin import pyluxcore
 from .. import utils
 
@@ -58,6 +59,8 @@ class FrameBufferFinal(object):
         self.combined_buffer = array.array("f", [0.0]) * (self._width * self._height * bufferdepth)
         self.aov_buffers = {}
 
+        self.last_denoiser_refresh = 0
+
     def draw(self, engine, session, scene):
         active_layer_index = scene.luxcore.active_layer_index
         scene_layer = scene.render.layers[active_layer_index]
@@ -92,6 +95,23 @@ class FrameBufferFinal(object):
                     self._import_aov(output_name, output_type, render_layer, session, engine, i, name)
                 except RuntimeError as error:
                     print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
+
+            refresh_denoised = (time() - self.last_denoiser_refresh) > scene.luxcore.denoiser.refresh_interval
+            if "DENOISED" in engine.aov_imagepipelines and refresh_denoised:
+                # TODO: What about alpha (RGBA)?
+                output_name = "DENOISED"
+                output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+
+                was_paused = session.IsInPause()
+                if not was_paused:
+                    session.Pause()
+
+                self._import_aov(output_name, output_type, render_layer, session, engine)
+
+                if not was_paused:
+                    session.Resume()
+
+                self.last_denoiser_refresh = time()
 
         engine.end_result(result)
 

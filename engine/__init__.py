@@ -138,3 +138,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
         for name in lightgroup_pass_names:
             self.register_pass(scene, renderlayer, name, 3, "RGB", "COLOR")
+
+        # Denoiser
+        if scene.luxcore.denoiser.enabled:
+            self.register_pass(scene, renderlayer, "DENOISED", 3, "RGB", "COLOR")

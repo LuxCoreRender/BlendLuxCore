@@ -10,6 +10,7 @@ class LuxCoreDenoiser(PropertyGroup):
     # TODO: find out which values we can kick out of the UI because they don't need adjustments (e.g. min eigen value)
 
     enabled = BoolProperty(name="", default=False, description="Enable/disable denoiser")
+    refresh_interval = IntProperty(name="Refresh Interval (s)", default=60, min=30)
 
     scales = IntProperty(name="Scales", default=3, min=1)
     hist_dist_thresh = FloatProperty(name="Histogram Distance Threshold", default=1, min=0)
