@@ -1,6 +1,6 @@
 from ..bin import pyluxcore
 from .. import utils
-from .imagepipeline import use_backgroundimage
+from .imagepipeline import use_backgroundimage, convert_tonemapper
 
 # set of channels that don"t use an HDR format
 LDR_CHANNELS = {
@@ -141,8 +141,6 @@ def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, i
 
 def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine,
                         output_id=-1, lightgroup_ids=set()):
-    # TODO I think we need the full imagepipeline with all plugins here
-
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
 
     if not tonemapper.enabled:
@@ -217,15 +215,7 @@ def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index, output_de
 def _define_tonemapper(scene, definitions, index):
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
 
-    definitions[str(index) + ".type"] = tonemapper.type
-
-    if tonemapper.type == "TONEMAP_LINEAR":
-        definitions[str(index) + ".scale"] = tonemapper.linear_scale
-    elif tonemapper.type == "TONEMAP_LUXLINEAR":
-        definitions[str(index) + ".fstop"] = tonemapper.fstop
-        definitions[str(index) + ".exposure"] = tonemapper.exposure
-        definitions[str(index) + ".sensitivity"] = tonemapper.sensitivity
-    index += 1
+    index = convert_tonemapper(definitions, index, tonemapper)
 
     if utils.use_filesaver(None, scene):
         definitions[str(index) + ".type"] = "GAMMA_CORRECTION"

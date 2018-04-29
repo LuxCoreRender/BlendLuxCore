@@ -23,7 +23,7 @@ def convert(scene, context=None):
         index += 1
 
         if pipeline.tonemapper.enabled:
-            index = _tonemapper(definitions, index, pipeline.tonemapper)
+            index = convert_tonemapper(definitions, index, pipeline.tonemapper)
 
         # Note: Blender expects the alpha to be NOT premultiplied, so we only
         # premultiply it when the backgroundimage plugin is used
@@ -89,7 +89,7 @@ def _fallback(definitions):
     definitions[str(index) + ".scale"] = 0.5
 
 
-def _tonemapper(definitions, index, tonemapper):
+def convert_tonemapper(definitions, index, tonemapper):
     # If "Auto Brightness" is enabled, put an autolinear tonemapper
     # in front of the linear tonemapper
     if tonemapper.type == "TONEMAP_LINEAR" and tonemapper.use_autolinear:
