@@ -63,6 +63,9 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             else:
                 obj.data.materials.append(mat)
 
+            # Flag the object for update, needed in viewport render
+            obj.update_tag()
+
         # We have a material, but maybe it has no node tree attached
         node_tree = mat.luxcore.node_tree
 
@@ -70,6 +73,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             tree_name = make_nodetree_name(mat.name)
             node_tree = self._add_node_tree(tree_name)
             mat.luxcore.node_tree = node_tree
+            # Flag the object for update, needed in viewport render
+            obj.update_tag()
 
         nodes = node_tree.nodes
         output = None
