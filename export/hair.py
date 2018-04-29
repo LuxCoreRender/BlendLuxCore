@@ -241,10 +241,6 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
 
         luxcore_scene.Parse(strandsProps)
 
-        # We have to invalidate the node cache because we defined
-        # properties that will not end up in the main properties
-        exporter.node_cache.clear()
-
         if not context:
             # Resolution was changed to "RENDER" for final renders, change it back
             psys.set_resolution(scene, blender_obj, "PREVIEW")

@@ -35,15 +35,6 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
         mode = 'VIEWPORT' if context else 'RENDER'
         duplicator.dupli_list_create(scene, settings=mode)
 
-        # We have to invalidate the node cache because we create props that are detached
-        # from the main properties. If we did not clear the cache, materials could use
-        # e.g. volume names without defining the rest of the volume properties, resulting
-        # in errors:
-        # "Reference to an undefined NamedObject name: <some_volume>"
-        # Note that this is only a problem here because we immediately parse these
-        # detached props into the scene.
-        exporter.node_cache.clear()
-
         name_prefix = utils.get_luxcore_name(duplicator, context)
         exported_duplis = {}
         non_invertible_count = 0
@@ -107,12 +98,6 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
         duplicator.dupli_list_clear()
         # Need to parse so we have the dupli objects available for DuplicateObject
         luxcore_scene.Parse(dupli_props)
-
-        # We have to invalidate the node cache because we have defined materials in
-        # the dupli_props which are not defined in the main scene props (so if
-        # another material tries to use the cached name, it will result in default
-        # grey matte because the name is not in the main properties)
-        exporter.node_cache.clear()
 
         for duplis in exported_duplis.values():
             # exported_obj sometimes is None, e.g. when instancing a group using an empty

@@ -271,9 +271,6 @@ def _get_volume_props(exporter, scene):
         try:
             active_output.export(exporter, props, luxcore_name)
             props.Set(pyluxcore.Property("scene.camera.volume", luxcore_name))
-            # We have to invalidate the node cache because we defined
-            # properties that will not end up in the main properties
-            exporter.node_cache.clear()
         except Exception as error:
             msg = 'Camera: %s' % error
             scene.luxcore.errorlog.add_warning(msg)

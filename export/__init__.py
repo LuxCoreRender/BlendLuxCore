@@ -58,6 +58,8 @@ class Exporter(object):
         # Most of the time node_key == luxcore_name, but some nodes have to insert
         # implicit textures n front of themselves which changes their luxcore_name.
         # Avoids re-exporting the same node multiple times.
+        # TODO: currently the node cache has to be cleared when an output node starts
+        # to export, because we don't have one global properties object.
         self.node_cache = {}
 
         # If a light/material uses a lightgroup, the id is stored here during export

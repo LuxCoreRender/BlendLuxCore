@@ -19,6 +19,10 @@ class LuxCoreNodeVolOutput(LuxCoreNodeOutput):
         super().init(context)
 
     def export(self, exporter, props, luxcore_name):
+        # Invalidate node cache
+        # TODO have one global properties object so this is no longer necessary
+        exporter.node_cache.clear()
+
         if self.inputs["Volume"].is_linked:
             self.inputs["Volume"].export(exporter, props, luxcore_name)
         else:

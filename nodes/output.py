@@ -79,7 +79,7 @@ class LuxCoreNodeOutput(LuxCoreNode):
             break
 
     def export(self, exporter, props, luxcore_name):
-        raise NotImplementedError("Derived classes have to override this method!")
+        raise NotImplementedError("Subclasses have to override this method!")
 
     def set_active(self, active):
         self["active"] = active
