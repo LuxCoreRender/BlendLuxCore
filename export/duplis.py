@@ -16,30 +16,40 @@ class Duplis:
         self.count += 1
 
 
-def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
+def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
     """
-    Converts particle systems and dupliverts/faces (everything apart from hair)
+    Converts particle systems and dupliverts/faces (everything apart from hair).
+    duplicator is the Blender object that emits particles or has dupliverts etc.
     """
     try:
-        assert blender_obj.is_duplicator
+        assert duplicator.is_duplicator
 
         dupli_props = pyluxcore.Properties()
 
-        if not utils.is_obj_visible(blender_obj, scene, context):
+        if not utils.is_obj_visible(duplicator, scene, context):
             # Emitter is not on a visible layer
             return
 
         start = time()
 
         mode = 'VIEWPORT' if context else 'RENDER'
-        blender_obj.dupli_list_create(scene, settings=mode)
+        duplicator.dupli_list_create(scene, settings=mode)
 
-        name_prefix = utils.get_luxcore_name(blender_obj, context)
+        # We have to invalidate the node cache because we create props that are detached
+        # from the main properties. If we did not clear the cache, materials could use
+        # e.g. volume names without defining the rest of the volume properties, resulting
+        # in errors:
+        # "Reference to an undefined NamedObject name: <some_volume>"
+        # Note that this is only a problem here because we immediately parse these
+        # detached props into the scene.
+        exporter.node_cache.clear()
+
+        name_prefix = utils.get_luxcore_name(duplicator, context)
         exported_duplis = {}
         non_invertible_count = 0
 
-        dupli_count = len(blender_obj.dupli_list)
-        for i, dupli in enumerate(blender_obj.dupli_list):
+        dupli_count = len(duplicator.dupli_list)
+        for i, dupli in enumerate(duplicator.dupli_list):
             # Metaballs are omitted from this loop, they cause glitches.
             if dupli.object.type == "META":
                 continue
@@ -73,7 +83,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
                     name_suffix = _get_name_suffix(name_prefix, dupli, context)
                     obj_props, exported_obj = blender_object.convert(exporter, dupli.object, scene, context,
                                                                      luxcore_scene, update_mesh=True,
-                                                                     dupli_suffix=name_suffix, duplicator=blender_obj)
+                                                                     dupli_suffix=name_suffix, duplicator=duplicator)
                     dupli_props.Set(obj_props)
                     exported_duplis[name] = Duplis(exported_obj, matrix_list)
 
@@ -81,20 +91,20 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
             # Note: in viewport render we can't do all this, so we don't pass the engine there
             if engine and i % 1000 == 0:
                 progress = (i / dupli_count) * 100
-                engine.update_stats("Export", "Object: %s (Duplis: %d%%)" % (blender_obj.name, progress))
+                engine.update_stats("Export", "Object: %s (Duplis: %d%%)" % (duplicator.name, progress))
 
                 if engine.test_break():
-                    blender_obj.dupli_list_clear()
+                    duplicator.dupli_list_clear()
                     return
 
         if non_invertible_count:
             msg = (
                 '%d duplis with non-invertible matrices on duplicator "%s". '
-                'This can happen if e.g. the scale is 0' % (non_invertible_count, blender_obj.name)
+                'This can happen if e.g. the scale is 0' % (non_invertible_count, duplicator.name)
             )
             scene.luxcore.errorlog.add_warning(msg)
 
-        blender_obj.dupli_list_clear()
+        duplicator.dupli_list_clear()
         # Need to parse so we have the dupli objects available for DuplicateObject
         luxcore_scene.Parse(dupli_props)
 
@@ -129,7 +139,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene, engine=None):
 
         print("Dupli export took %.3f s" % (time() - start))
     except Exception as error:
-        msg = '[Duplicator "%s"] %s' % (blender_obj.name, error)
+        msg = '[Duplicator "%s"] %s' % (duplicator.name, error)
         scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
