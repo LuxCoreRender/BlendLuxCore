@@ -20,6 +20,10 @@ class LuxCoreNodeTexOutput(LuxCoreNodeOutput):
         super().init(context)
 
     def export(self, exporter, props, luxcore_name):
+        # Invalidate node cache
+        # TODO have one global properties object so this is no longer necessary
+        exporter.node_cache.clear()
+
         color = self.inputs["Color"].export(exporter, props, luxcore_name)
 
         if not self.inputs["Color"].is_linked:

@@ -94,7 +94,9 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         definitions["emission.importance"] = self.importance
         definitions["emission.theta"] = math.degrees(self.spread_angle)
         lightgroups = exporter.scene.luxcore.lightgroups
-        definitions["emission.id"] = lightgroups.get_id_by_name(self.lightgroup)
+        lightgroup_id = lightgroups.get_id_by_name(self.lightgroup)
+        definitions["emission.id"] = lightgroup_id
+        exporter.lightgroup_cache.add(lightgroup_id)
 
         if self.ies.use:
             try:

@@ -2,7 +2,7 @@ import unittest
 import sys
 
 import BlendLuxCore
-from BlendLuxCore.export import config
+from BlendLuxCore.export import Exporter, config
 from BlendLuxCore.bin import pyluxcore
 from BlendLuxCore import utils
 import bpy
@@ -22,14 +22,24 @@ def check_resolution(testclass, props, expected_x, expected_y):
 
 class TestBorder(unittest.TestCase):
     def test_final_uncropped(self):
+        scene = bpy.context.scene
         # Blender expects a cropped image in all cases
-        bpy.context.scene.render.use_crop_to_border = False
-        props = config.convert(bpy.context.scene)
+        scene.render.use_crop_to_border = False
+
+        scene.luxcore.active_layer_index = 0
+        exporter = Exporter(scene)
+        
+        props = config.convert(exporter, scene)
         check_resolution(self, props, 30, 10)
         
     def test_final_cropped(self):
-        bpy.context.scene.render.use_crop_to_border = True
-        props = config.convert(bpy.context.scene)
+        scene = bpy.context.scene
+        scene.render.use_crop_to_border = True
+
+        scene.luxcore.active_layer_index = 0
+        exporter = Exporter(scene)
+
+        props = config.convert(exporter, scene)
         check_resolution(self, props, 30, 10)
 
     def test_different_resolution(self):
@@ -40,8 +50,11 @@ class TestBorder(unittest.TestCase):
 
         scene.render.resolution_x = 543
         scene.render.resolution_y = 789
-        bpy.context.scene.render.use_crop_to_border = False
-        props = config.convert(bpy.context.scene)
+        scene.render.use_crop_to_border = False
+
+        scene.luxcore.active_layer_index = 0
+        exporter = Exporter(scene)
+        props = config.convert(exporter, scene)
 
         # Restore original resolution
         scene.render.resolution_x = backup_x

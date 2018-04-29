@@ -102,10 +102,9 @@ def _view_camera(scene, context, definitions):
     view_camera_offset = list(context.region_data.view_camera_offset)
 
     if scene.render.use_border:
-        xaspect, yaspect = utils.calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
+        aspectratio, xaspect, yaspect = utils.calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
     else:
-        xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
-
+        aspectratio, xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
 
     offset_x = 2 * (view_camera_offset[0] * xaspect * 2)
     offset_y = 2 * (view_camera_offset[1] * yaspect * 2)
@@ -123,14 +122,14 @@ def _final(scene, definitions):
     zoom = 1
 
     if camera.data.type == "ORTHO":
-        type = "orthographic"
+        cam_type = "orthographic"
         zoom = camera.data.ortho_scale / 2
 
     elif camera.data.type == "PANO":
-        type = "environment"
+        cam_type = "environment"
     else:
-        type = "perspective"
-    definitions["type"] = type
+        cam_type = "perspective"
+    definitions["type"] = cam_type
 
     # Field of view
     # Correction for vertical fit sensor, must truncate the float to .1f precision and round down
@@ -141,7 +140,7 @@ def _final(scene, definitions):
     else:
         aspect_fix = 1.0
 
-    if type == "perspective":
+    if cam_type == "perspective":
         definitions["fieldofview"] = math.degrees(camera.data.angle * aspect_fix)
         _depth_of_field(scene, definitions)
 
@@ -278,5 +277,3 @@ def _get_volume_props(exporter, scene):
 
     props.Set(pyluxcore.Property("scene.camera.autovolume.enable", cam_settings.auto_volume))
     return props
-
-

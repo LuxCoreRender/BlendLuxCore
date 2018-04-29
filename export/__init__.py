@@ -55,11 +55,15 @@ class Exporter(object):
 
         # A dictionary with the following mapping:
         # {node_key: luxcore_name}
-        # Most of the time node_key == luxcore_name, but
-        # some nodes have to insert implicit textures
-        # in front of themselves which changes their luxcore_name.
+        # Most of the time node_key == luxcore_name, but some nodes have to insert
+        # implicit textures n front of themselves which changes their luxcore_name.
         # Avoids re-exporting the same node multiple times.
+        # TODO: currently the node cache has to be cleared when an output node starts
+        # to export, because we don't have one global properties object.
         self.node_cache = {}
+
+        # If a light/material uses a lightgroup, the id is stored here during export
+        self.lightgroup_cache = set()
 
     def create_session(self, context=None, engine=None):
         # Notes:
@@ -123,7 +127,7 @@ class Exporter(object):
             return None
 
         # Convert config at last because all lightgroups and passes have to be already defined
-        config_props = config.convert(scene, context, engine)
+        config_props = config.convert(self, scene, context, engine)
         if str(config_props) == "":
             # Config props are empty: there was a critical error in config export, we can't render
             raise Exception("Errors in config, check error log")
@@ -175,7 +179,7 @@ class Exporter(object):
 
         if not final:
             # Changes that only need to be checked in viewport render, not in final render
-            config_props = config.convert(scene, context)
+            config_props = config.convert(self, scene, context)
             if self.config_cache.diff(config_props):
                 changes |= Change.CONFIG
 

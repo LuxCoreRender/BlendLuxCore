@@ -11,7 +11,7 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
-def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
+def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
     try:
         assert isinstance(blender_obj, bpy.types.Object)
         assert blender_obj.type == "LAMP"
@@ -35,7 +35,7 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
 
         # Common light settings shared by all light types
         # Note: these variables are also passed to the area light export function
-        gain, importance, lightgroup_id = _convert_common_props(scene, lamp)
+        gain, importance, lightgroup_id = _convert_common_props(exporter, scene, lamp)
         definitions["gain"] = gain
         definitions["importance"] = importance
         definitions["id"] = lightgroup_id
@@ -179,14 +179,14 @@ def convert_lamp(blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
         return pyluxcore.Properties(), None
 
 
-def convert_world(world, scene):
+def convert_world(exporter, world, scene):
     try:
         assert isinstance(world, bpy.types.World)
         luxcore_name = WORLD_BACKGROUND_LIGHT_NAME
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
 
-        gain, importance, lightgroup_id = _convert_common_props(scene, world)
+        gain, importance, lightgroup_id = _convert_common_props(exporter, scene, world)
         definitions["gain"] = gain
         definitions["importance"] = importance
         definitions["id"] = lightgroup_id
@@ -240,10 +240,11 @@ def _calc_sun_dir(blender_obj):
     return [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
 
 
-def _convert_common_props(scene, lamp_or_world):
+def _convert_common_props(exporter, scene, lamp_or_world):
     gain = [x * lamp_or_world.luxcore.gain for x in lamp_or_world.luxcore.rgb_gain]
     importance = lamp_or_world.luxcore.importance
     lightgroup_id = scene.luxcore.lightgroups.get_id_by_name(lamp_or_world.luxcore.lightgroup)
+    exporter.lightgroup_cache.add(lightgroup_id)
     return gain, importance, lightgroup_id
 
 

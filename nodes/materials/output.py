@@ -62,6 +62,10 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     def export(self, exporter, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."
 
+        # Invalidate node cache
+        # TODO have one global properties object so this is no longer necessary
+        exporter.node_cache.clear()
+
         # We have to export volumes before the material definition because LuxCore properties
         # do not support forward declarations (the volume has to be already defined when it is
         # referenced in the material)

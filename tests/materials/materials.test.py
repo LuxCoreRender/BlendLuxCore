@@ -25,9 +25,6 @@ def assertAlmostEqual(test_case, value1, value2, places=3):
         test_case.assertAlmostEqual(value1, value2, places=places)
 
 
-exporter = Exporter()
-
-
 def export_first_mat(type_str):
     """
     Export material node tree on material slot 0.
@@ -42,6 +39,7 @@ def export_first_mat(type_str):
     props = pyluxcore.Properties()
 
     # Now export the material node tree, starting at the output node
+    exporter = Exporter(bpy.context.scene)
     active_output.export(exporter, props, luxcore_name)
     prefix = "scene.materials." + luxcore_name
 

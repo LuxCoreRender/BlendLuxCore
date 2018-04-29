@@ -7,7 +7,7 @@ from . import aovs
 from .imagepipeline import use_backgroundimage
 
 
-def convert(scene, context=None, engine=None):
+def convert(exporter, scene, context=None, engine=None):
     try:
         prefix = ""
         # We collect the properties in this dictionary.
@@ -135,7 +135,7 @@ def convert(scene, context=None, engine=None):
         config_props = utils.create_props(prefix, definitions)
 
         # Convert AOVs
-        aov_props = aovs.convert(scene, context, engine)
+        aov_props = aovs.convert(exporter, scene, context, engine)
         config_props.Set(aov_props)
 
         return config_props

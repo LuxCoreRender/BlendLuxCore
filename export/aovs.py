@@ -18,7 +18,7 @@ NEED_TONEMAPPING = {
 
 
 # Exported in config export
-def convert(scene, context=None, engine=None):
+def convert(exporter, scene, context=None, engine=None):
     try:
         prefix = "film.outputs."
         definitions = {}
@@ -28,7 +28,9 @@ def convert(scene, context=None, engine=None):
             return pyluxcore.Properties()
 
         pipeline = scene.camera.data.luxcore.imagepipeline
-        final = not context
+        # If we have a context, we are in viewport render.
+        # If engine.is_preview, we are in material preview. Both don't need AOVs.
+        final = not context and not (engine and engine.is_preview)
 
         if final:
             # This is the layer that is currently being exported, not the active layer in the UI!
@@ -83,16 +85,12 @@ def convert(scene, context=None, engine=None):
                                                              pipeline_index, definitions, engine)
 
             # Light groups
-            lightgroups = scene.luxcore.lightgroups
-            # Number of custom groups + default group
-            lightgroup_count = len(lightgroups.custom) + 1
-
-            for group_id in range(lightgroup_count):
+            for group_id in exporter.lightgroup_cache:
                 output_name = "RADIANCE_GROUP"
                 _add_output(definitions, output_name, output_id=group_id)
                 pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
                                                      pipeline_index, definitions, engine,
-                                                     group_id, lightgroup_count)
+                                                     group_id, exporter.lightgroup_cache)
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
@@ -144,7 +142,7 @@ def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, i
 
 
 def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine,
-                        output_id=-1, lightgroup_count=-1):
+                        output_id=-1, lightgroup_ids=set()):
     # TODO I think we need the full imagepipeline with all plugins here
 
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
@@ -164,7 +162,7 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     index = 0
 
     if output_name == "RADIANCE_GROUP":
-        for group_id in range(lightgroup_count):
+        for group_id in lightgroup_ids:
             # Disable all light groups except one per imagepipeline
             definitions["radiancescales." + str(group_id) + ".enabled"] = (output_id == group_id)
     else:
