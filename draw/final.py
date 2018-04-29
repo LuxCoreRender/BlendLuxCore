@@ -96,22 +96,32 @@ class FrameBufferFinal(object):
                 except RuntimeError as error:
                     print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
 
-            refresh_denoised = (time() - self.last_denoiser_refresh) > scene.luxcore.denoiser.refresh_interval
-            if "DENOISED" in engine.aov_imagepipelines and refresh_denoised:
-                # TODO: What about alpha (RGBA)?
-                output_name = "DENOISED"
-                output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+            # Denoiser result
+            output_name = "DENOISED"
+            if output_name in engine.aov_imagepipelines:
+                refresh_denoised = (time() - self.last_denoiser_refresh) > scene.luxcore.denoiser.refresh_interval
 
-                was_paused = session.IsInPause()
-                if not was_paused:
-                    session.Pause()
+                if refresh_denoised:
+                    # TODO: What about alpha (RGBA)?
+                    output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
-                self._import_aov(output_name, output_type, render_layer, session, engine)
+                    was_paused = session.IsInPause()
+                    if not was_paused:
+                        session.Pause()
 
-                if not was_paused:
-                    session.Resume()
+                    self._import_aov(output_name, output_type, render_layer, session, engine)
 
-                self.last_denoiser_refresh = time()
+                    if not was_paused and session.IsInPause():
+                        session.Resume()
+
+                    self.last_denoiser_refresh = time()
+                elif output_name in self.aov_buffers:
+                    # If we do not write something into the result, the image will be black.
+                    # So we re-use the result from the last denoiser run.
+                    buffer = self.aov_buffers[output_name]
+                    blender_pass = render_layer.passes[output_name]
+                    # TODO make this faster either in C++ or Python
+                    blender_pass.rect = [[buffer[i], buffer[i + 1], buffer[i + 2]] for i in range(0, len(buffer), 3)]
 
         engine.end_result(result)
 
