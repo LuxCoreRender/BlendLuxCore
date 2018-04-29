@@ -53,6 +53,8 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
             if mesh is None or len(mesh.tessfaces) == 0:
                 # This is not worth a warning in the errorlog
                 print(blender_obj.name + ": No mesh data after to_mesh()")
+                if mesh:
+                    bpy.data.meshes.remove(mesh, do_unlink=False)
                 return props, None
 
             # mesh.calc_normals_split()
