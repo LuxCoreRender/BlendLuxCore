@@ -93,7 +93,7 @@ def convert(exporter, scene, context=None, engine=None):
                                                      group_id, exporter.lightgroup_cache)
 
             if scene.luxcore.denoiser.enabled:
-                _make_denoiser_imagepipeline(scene, pipeline_props, engine, pipeline_index)
+                _make_denoiser_imagepipeline(scene, pipeline_props, engine, pipeline_index, definitions)
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
@@ -186,12 +186,7 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     return pipeline_index + 1
 
 
-def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index):
-    props.Set(pyluxcore.Property("film.imagepipelines." + str(pipeline_index) + ".0.type", "BCD_DENOISER"))
-    props.Set(pyluxcore.Property("film.imagepipelines." + str(pipeline_index) + ".1.type", "TONEMAP_AUTOLINEAR"))
-    props.Set(pyluxcore.Property("film.imagepipelines." + str(pipeline_index) + ".2.type", "GAMMA_CORRECTION"))
-    props.Set(pyluxcore.Property("film.imagepipelines." + str(pipeline_index) + ".2.value", 2.2))
-
+def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index, output_definitions):
     prefix = "film.imagepipelines." + str(pipeline_index) + "."
     definitions = {}
     index = 0
@@ -206,12 +201,14 @@ def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index):
     definitions[str(index) + ".userandompixelorder"] = denoiser.use_random_pixel_order
     definitions[str(index) + ".markedpixelsskippingprobability"] = denoiser.marked_pixels_skipping_prob
     definitions[str(index) + ".scales"] = denoiser.scales
-
     if scene.render.threads_mode == "FIXED":
         definitions[str(index) + ".threadcount"] = scene.render.threads
+    index += 1
 
     index = _define_tonemapper(scene, definitions, index)
 
+    props.Set(utils.create_props(prefix, definitions))
+    _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
     engine.aov_imagepipelines["DENOISED"] = pipeline_index
 
     return pipeline_index + 1

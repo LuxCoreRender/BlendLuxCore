@@ -59,7 +59,7 @@ class FrameBufferFinal(object):
         self.combined_buffer = array.array("f", [0.0]) * (self._width * self._height * bufferdepth)
         self.aov_buffers = {}
 
-        self.last_denoiser_refresh = 0
+        self.last_denoiser_refresh = time()
 
     def draw(self, engine, session, scene):
         active_layer_index = scene.luxcore.active_layer_index
@@ -101,7 +101,9 @@ class FrameBufferFinal(object):
             if output_name in engine.aov_imagepipelines:
                 refresh_denoised = (time() - self.last_denoiser_refresh) > scene.luxcore.denoiser.refresh_interval
 
-                if refresh_denoised:
+                # Refresh after a certain time has passed or when the user cancelled the render
+                if refresh_denoised or engine.test_break():
+                    print("Refreshing DENOISED")
                     # TODO: What about alpha (RGBA)?
                     output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
@@ -116,6 +118,7 @@ class FrameBufferFinal(object):
 
                     self.last_denoiser_refresh = time()
                 elif output_name in self.aov_buffers:
+                    print("Reusing buffer")
                     # If we do not write something into the result, the image will be black.
                     # So we re-use the result from the last denoiser run.
                     buffer = self.aov_buffers[output_name]
