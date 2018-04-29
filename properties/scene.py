@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
-from . import config, display, errorlog, halt, lightgroups, opencl
+from . import config, denoiser, display, errorlog, halt, lightgroups, opencl
 
 
 def init():
@@ -9,6 +9,7 @@ def init():
 
 class LuxCoreScene(bpy.types.PropertyGroup):
     config = PointerProperty(type=config.LuxCoreConfig)
+    denoiser = PointerProperty(type=denoiser.LuxCoreDenoiser)
     errorlog = PointerProperty(type=errorlog.LuxCoreErrorLog)
     halt = PointerProperty(type=halt.LuxCoreHaltConditions)
     display = PointerProperty(type=display.LuxCoreDisplaySettings)

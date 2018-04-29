@@ -16,7 +16,7 @@ from .bin import pyluxcore
 from . import engine, handlers, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
 from .ui import (
-    aovs, blender_object, camera, config, display, errorlog,
+    aovs, blender_object, camera, config, denoiser, display, errorlog,
     halt, light, lightgroups, material, mesh, particle, postpro,
     render, render_layer, texture, units, world
 )
