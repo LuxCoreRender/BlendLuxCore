@@ -126,4 +126,4 @@ utils_node.draw_uv_info(context, layout)
 
 * .gitignore - Rules for git to ignore some file types in the project folders
 * .travis.yml - Script for the automated tests, see the **tests** section above
-* __init__.py - The entry point of the whole addon. Responsible for registering and unregistering of classes, handlers etc.
+* `__init__.py` - The entry point of the whole addon. Responsible for registering and unregistering of classes, handlers etc.
