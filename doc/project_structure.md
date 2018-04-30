@@ -44,6 +44,12 @@ But it is not passed into the methods by the RenderEngine API in Blender.
 Note also that nodes are not exported here, they have their own 
 export methods in their classes (in the **nodes** directory, see below).
 
+### handlers
+
+Contains [handlers](https://docs.blender.org/api/2.79/bpy.app.handlers.html) for some special events.
+These are functions that are executed e.g. when a .blend file is loaded, when something in the scene
+is changed or when Blender is closed.
+
 ### nodes
 
 Contains everything node-related. 
@@ -89,9 +95,13 @@ node_tree = material.luxcore.node_tree
 print("Material", material.name, "has the following node tree:", node_tree.name)
 ```
 
+### release
+
+Scripts for creating release .zip packages. For more info see [doc/release.md](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/doc/release.md)
+
 ### tests
 
-Automated tests. See https://github.com/LuxCoreRender/BlendLuxCore/blob/master/tests/readme.md
+Automated tests. See [tests/readme.md](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/tests/readme.md).
 
 ### ui
 
@@ -111,3 +121,9 @@ from .utils import node as utils_node
 # Now use one of the functions
 utils_node.draw_uv_info(context, layout)
 ```
+
+### Files in the main directory
+
+* .gitignore - Rules for git to ignore some file types in the project folders
+* .travis.yml - Script for the automated tests, see the **tests** section above
+* __init__.py - The entry point of the whole addon. Responsible for registering and unregistering of classes, handlers etc.
