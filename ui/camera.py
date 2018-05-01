@@ -13,6 +13,17 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
         layout = self.layout
 
         cam = context.camera
+        obj = context.object
+        space = context.space_data
+
+        split = layout.split(percentage=0.65)
+        if obj:
+            split.template_ID(obj, "data")
+            split.separator()
+        elif cam:
+            split.template_ID(space, "pin_id")
+            split.separator()
+        layout.separator()
 
         layout.row().prop(cam, "type", expand=True)
 
