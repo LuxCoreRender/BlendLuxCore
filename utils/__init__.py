@@ -191,7 +191,7 @@ def calc_filmsize(scene, context=None):
             aspectratio, aspect_x, aspect_y = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x,
                                                           scene.render.resolution_y*scene.render.pixel_aspect_y,
                                                           scene.camera.data.sensor_fit)
-            
+
             if scene.render.use_border:
                 base = zoom * max(width_raw, height_raw)
                 width = int(base * aspect_x * border_max_x) - int(base * aspect_x * border_min_x)
@@ -255,16 +255,24 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
         # Viewport rendering
         if context.region_data.view_perspective == "CAMERA":
             # Camera view
+            
             if scene.render.use_border:
                 aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x,
                                                             scene.render.resolution_y * scene.render.pixel_aspect_y,
                                                             scene.camera.data.sensor_fit)
                 offset_x = 0
                 offset_y = 0
-                
-                zoom = 1
+
+                if scene.camera.data.sensor_fit == "AUTO":
+                    zoom = 1                    
+                elif scene.camera.data.sensor_fit == "HORIZONTAL":
+                    zoom = max(width_raw, height_raw)/width_raw
+                elif scene.camera.data.sensor_fit == "VERTICAL":
+                    zoom = max(width_raw, height_raw)/height_raw
+                    
                 if scene.camera and scene.camera.data.type == "ORTHO":
                     zoom = 0.5*scene.camera.data.ortho_scale
+                
             else:
                 aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw, scene.camera.data.sensor_fit)
         else:
