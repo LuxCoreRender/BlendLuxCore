@@ -50,7 +50,7 @@ class LuxCoreNode(Node):
     def add_input(self, type, name, default=None):
         input = self.inputs.new(type, name)
 
-        if hasattr(self.inputs[name], "default_value"):
+        if hasattr(input, "default_value"):
             input.default_value = default
 
         return input
