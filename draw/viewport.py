@@ -33,6 +33,7 @@ class FrameBuffer(object):
         filmsize = utils.calc_filmsize(context.scene, context)
         self._width = filmsize[0]
         self._height = filmsize[1]
+        # TODO seems like self._border is never used. Remove it?
         self._border = utils.calc_blender_border(context.scene, context)
 
         if context.scene.camera:
