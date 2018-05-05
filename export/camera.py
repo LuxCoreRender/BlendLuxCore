@@ -119,9 +119,6 @@ def _final(scene, definitions):
     definitions["type"] = cam_type
 
     # Field of view
-    # Correction for vertical fit sensor, must truncate the float to .1f precision and round down
-    width, height = utils.calc_filmsize_raw(scene)
-
     if cam_type == "perspective":
         definitions["fieldofview"] = math.degrees(camera.data.angle)
         _depth_of_field(scene, definitions)
