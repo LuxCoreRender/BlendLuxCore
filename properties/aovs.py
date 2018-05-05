@@ -19,8 +19,8 @@ class LuxCoreAOVSettings(PropertyGroup):
     alpha = BoolProperty(name="Alpha", default=False,
                        description="Alpha value [0..1]")
     depth = BoolProperty(name="Depth", default=False,
-                         description="Distance from camera (Z-Pass)",
-                         update=toggle_depth)
+                       description="Distance from camera (Z-Pass)",
+                       update=toggle_depth)
 
     # Material/Object Information
     material_id = BoolProperty(name="Material ID", default=False,
@@ -62,10 +62,10 @@ class LuxCoreAOVSettings(PropertyGroup):
 
     # Render Information
     raycount = BoolProperty(name="Raycount", default=False,
-                       description="Ray count per pixel")
+                       description="Ray count per pixel (normalized so the values range from 0 to 1)")
     samplecount = BoolProperty(name="Samplecount", default=False,
-                       description="Samples per pixel")
+                       description="Samples per pixel (normalized so the values range from 0 to 1)")
     convergence = BoolProperty(name="Convergence", default=False,
-                       description="")  # TODO description
+                       description="The noise amount per pixel. High values mean more noise, low value less noise")
     irradiance = BoolProperty(name="Irradiance", default=False,
                        description="Surface irradiance")
