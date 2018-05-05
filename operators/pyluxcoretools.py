@@ -16,13 +16,16 @@ class LUXCORE_OT_install_pyside(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        if not which("x-terminal-emulator"):
-            self.report({"ERROR"}, "Could not open terminal. Please install PySide by hand:")
-            self.report({"ERROR"}, 'sudo pip3 install --install-option="--jobs=%d" PySide')
-            return {"CANCELLED"}
-
         threadcount = context.scene.render.threads
         install_command = 'sudo pip3 install --install-option="--jobs=%d" PySide' % threadcount
+
+        if not which("x-terminal-emulator"):
+            self.report({"ERROR"}, "Could not open terminal. Please install PySide by hand:")
+            self.report({"ERROR"}, install_command)
+            self.report({"ERROR"}, "(You can copy the command from the terminal)")
+            print(install_command)
+            return {"CANCELLED"}
+
         script = (
             "'"
             + 'echo "This will install PySide (required by pyluxcoretools UI)";'
