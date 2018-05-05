@@ -9,15 +9,17 @@ def init():
 
 TESSEL_ITEMS = [
     ("ribbon", "Triangle Ribbon", "Render hair as ribbons of triangles facing the camera"),
-    ("ribbonadaptive", "Adaptive Triangle Ribbon", "Render hair as ribbons of triangles facing the camera, with adaptive tessellation"),
+    ("ribbonadaptive", "Adaptive Triangle Ribbon", "Render hair as ribbons of triangles facing the camera, "
+                                                   "using more triangles for hair close to the camera"),
     ("solid", "Solid", "Render hairs as solid mesh cylinders (memory intensive!)"),
-    ("solidadaptive", "Adaptive Solid", "Render hairs as solid mesh cylinders with adaptive tessellation"),
+    ("solidadaptive", "Adaptive Solid", "Render hairs as solid mesh cylinders, "
+                                        "using more subdivisions for hair close to the camera"),
 ]
 
 COLOREXPORT_ITEMS = [
-    ("vertex_color", "Vertex Color", "Use vertex color as hair color"),
-    ("uv_texture_map", "UV Texture Map", "Use UV texture map as hair color"),
-    ("none", "None", "none"),
+    ("vertex_color", "Vertex Color", "Use emitter vertex color as hair vertex color"),
+    ("uv_texture_map", "UV Texture Map", "Use emitter UV texture map as hair vertex color"),
+    ("none", "None", "Do not set the hair vertex colors (they will be white)"),
 ]
 
 
@@ -62,9 +64,10 @@ class LuxCoreHair(PropertyGroup):
                                    description="Maximum tessellation error for adaptive modes")
     
     export_color = EnumProperty(name="Color Export Mode", default="none", items=COLOREXPORT_ITEMS, 
-                                description="Mode of color export for the hair file")
+                                description="Choose which attributes of the emitter mesh "
+                                            "should be set for the hair vertex colors.\n"
+                                            "You can access them with the Vertex Color texture in the hair material")
 
 
 class LuxCoreParticlesProps(PropertyGroup):
-    # TODO descriptions
     hair = PointerProperty(type=LuxCoreHair)

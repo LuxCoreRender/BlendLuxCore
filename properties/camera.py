@@ -37,8 +37,12 @@ class LuxCoreMotionBlur(PropertyGroup):
 
 class LuxCoreCameraProps(PropertyGroup):
     # TODO descriptions
-    use_clipping = BoolProperty(name="Clipping:", default=False)
-    use_dof = BoolProperty(name="Use Depth of Field", default=False)
+    use_clipping = BoolProperty(name="Clipping:", default=False,
+                                description="Use near/far clipping for the LuxCore camera "
+                                            "(clipping still affects the Blender OpenGL viewport even if disabled)")
+    use_dof = BoolProperty(name="Use Depth of Field", default=False,
+                           description="Simulate the blurring happening in real-world cameras "
+                                       "when objects are out of focus")
     use_autofocus = BoolProperty(name="Use Autofocus", default=False,
                                  description="Focus on the surface in the center of the film")
     fstop = FloatProperty(name="F-stop", default=2.8, min=0.01, description=FSTOP_DESC)

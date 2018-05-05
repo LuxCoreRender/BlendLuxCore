@@ -18,6 +18,7 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup):
     )
     SENSITIVITY_DESC = "Camera sensitivity to light (ISO), lower values lead to a darker image"
 
+    # TODO
     REINHARD_PRESCALE_DESC = ""
     REINHARD_POSTSCALE_DESC = ""
     REINHARD_BURN_DESC = ""

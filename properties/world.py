@@ -8,7 +8,9 @@ from bpy.props import (
 from .light import (
     RGB_GAIN_DESC, IMPORTANCE_DESCRIPTION,
     GAMMA_DESCRIPTION, SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION,
-    VISIBILITYMAP_ENABLE_DESC, LIGHTGROUP_DESC,
+    VISIBILITYMAP_ENABLE_DESC, LIGHTGROUP_DESC, TURBIDITY_DESC,
+    VIS_INDIRECT_DIFFUSE_DESC, VIS_INDIRECT_GLOSSY_DESC,
+    VIS_INDIRECT_SPECULAR_DESC,
 )
 
 USE_SUN_GAIN_FOR_SKY_DESC = (
@@ -19,6 +21,19 @@ USE_SUN_GAIN_FOR_SKY_DESC = (
 SUN_DESC = (
     "If a sun is selected, the gain, turbidity and rotation from the sun are used for the sky"
 )
+
+GROUND_ALBEDO_DESC = (
+    'Color of the light that is "reflected" back into the sky '
+    'from the ground in the sky simulation. Only affects the sky color'
+)
+
+GROUND_ENABLE_DESC = (
+    "Replace the lower half of the sky sphere with a solid color.\n"
+    "Should be set to black if there are shadow catchers in the scene"
+)
+
+GROUND_COLOR_DESC = GROUND_ENABLE_DESC
+
 
 def init():
     bpy.types.World.luxcore = PointerProperty(type=LuxCoreWorldProps)
@@ -46,12 +61,16 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     # Only shown in UI when light is sky2 and a sun is attached
     use_sun_gain_for_sky = BoolProperty(name="Use Sun Gain", default=True,
                                         description=USE_SUN_GAIN_FOR_SKY_DESC)
-    turbidity = FloatProperty(name="Turbidity", default=2.2, min=0, max=30)
+    turbidity = FloatProperty(name="Turbidity", default=2.2, min=0, max=30,
+                              description=TURBIDITY_DESC)
     groundalbedo = FloatVectorProperty(name="Ground Albedo", default=(0.5, 0.5, 0.5),
-                                       min=0, max=1, subtype="COLOR")
-    ground_enable = BoolProperty(name="Use Ground Color", default=False)
+                                       min=0, max=1, subtype="COLOR",
+                                       description=GROUND_ALBEDO_DESC)
+    ground_enable = BoolProperty(name="Use Ground Color", default=False,
+                                 description=GROUND_ENABLE_DESC)
     ground_color = FloatVectorProperty(name="Ground Color", default=(0.5, 0.5, 0.5),
-                                       min=0, max=1, subtype="COLOR")
+                                       min=0, max=1, subtype="COLOR",
+                                       description=GROUND_COLOR_DESC)
 
     # infinite
     image = PointerProperty(name="Image", type=bpy.types.Image)
@@ -62,9 +81,9 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
                              subtype="ANGLE", unit="ROTATION")
 
     # sky2, sun, infinite, constantinfinite
-    visibility_indirect_diffuse = BoolProperty(name="Diffuse", default=True)
-    visibility_indirect_glossy = BoolProperty(name="Glossy", default=True)
-    visibility_indirect_specular = BoolProperty(name="Specular", default=True)
+    visibility_indirect_diffuse = BoolProperty(name="Diffuse", default=True, description=VIS_INDIRECT_DIFFUSE_DESC)
+    visibility_indirect_glossy = BoolProperty(name="Glossy", default=True, description=VIS_INDIRECT_GLOSSY_DESC)
+    visibility_indirect_specular = BoolProperty(name="Specular", default=True, description=VIS_INDIRECT_SPECULAR_DESC)
 
     # sky2, infinite, constantinfinite
     visibilitymap_enable = BoolProperty(name="Build Visibility Map", default=True,
