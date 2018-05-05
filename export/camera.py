@@ -57,7 +57,7 @@ def _view_ortho(scene, context, definitions):
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
 
-    definitions["screenwindow"] = utils.calc_screenwindow(zoom, 0, 0, 0, 0, scene, context)
+    definitions["screenwindow"] = utils.calc_screenwindow(zoom, 0, 0, scene, context)
 
 
 def _view_persp(scene, context, definitions):
