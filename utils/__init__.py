@@ -257,7 +257,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, offset_x, offset_y, scene, context
             # Camera view
             
             if scene.render.use_border:
-                aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x*scene.render.pixel_aspect_x,
+                aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x * scene.render.pixel_aspect_x,
                                                             scene.render.resolution_y * scene.render.pixel_aspect_y,
                                                             scene.camera.data.sensor_fit)
                 offset_x = 0
