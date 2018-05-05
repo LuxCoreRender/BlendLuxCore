@@ -1,7 +1,42 @@
 import bpy
 import os
 import platform
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, run
+from shutil import which
+
+
+class LUXCORE_OT_install_pyside(bpy.types.Operator):
+    bl_idname = "luxcore.install_pyside"
+    bl_label = "You need PySide. Install it now?"
+    bl_description = ""
+
+    def invoke(self, context, event):
+        print("invoke")
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def execute(self, context):
+        if not which("x-terminal-emulator"):
+            self.report({"ERROR"}, "Could not open terminal. Please install PySide by hand:")
+            self.report({"ERROR"}, 'sudo pip3 install --install-option="--jobs=%d" PySide')
+            return {"CANCELLED"}
+
+        threadcount = context.scene.render.threads
+        install_command = 'sudo pip3 install --install-option="--jobs=%d" PySide' % threadcount
+        script = (
+            "'"
+            + 'echo "This will install PySide (required by pyluxcoretools UI)";'
+            # Show which command will be used to install PySide
+            + 'echo "' + install_command.replace('"', '\\"') + '";'
+            # Execute the command to install PySide
+            + install_command + ';'
+            + 'echo "Done. You can close this window now.";'
+            # Keep the terminal open
+            + 'exec $SHELL'
+            + "'"
+        )
+        run(["x-terminal-emulator", "-e", "bash -c " + script])
+        return {"FINISHED"}
 
 
 class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
@@ -11,6 +46,17 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
                       "start and control network rendering sessions")
 
     def execute(self, context):
+        if platform.system() == "Linux":
+            # On Linux, PySide can not be bundled because of this bug:
+            # https://github.com/LuxCoreRender/LuxCore/issues/80#issuecomment-378223152
+            # So we need to check if PySide is installed, and install it if necessary
+            result = run(["pip3", "list"], stdout=PIPE)
+            installed_packages = result.stdout.decode()
+
+            if "PySide" not in installed_packages:
+                bpy.ops.luxcore.install_pyside("INVOKE_DEFAULT")
+                return {"CANCELLED"}
+
         current_dir = os.path.dirname(os.path.realpath(__file__))
         # Call dirname once to go up 1 level (from BlendLuxCore/operators/)
         blendluxcore_dir = os.path.dirname(current_dir)
