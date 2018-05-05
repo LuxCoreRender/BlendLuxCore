@@ -10,13 +10,15 @@ def draw_uv_info(context, layout):
     """
     obj = context.object
 
-    def warning_no_uvmap():
-        layout.label("No UV map", icon="ERROR")
+    def warning_no_uvmap(_layout):
+        _layout.label("No UV map", icon="ERROR")
 
     if obj and obj.data:
         if obj.type in {"CURVE", "SURFACE", "FONT"}:
             if not obj.data.use_uv_as_generated:
-                warning_no_uvmap()
+                row = layout.row()
+                warning_no_uvmap(row)
+                row.prop(obj.data, "use_uv_as_generated", toggle=True, text="Enable UV")
         elif obj.type == "MESH":
             if len(obj.data.uv_textures) > 1:
                 box = layout.box()
@@ -24,9 +26,11 @@ def draw_uv_info(context, layout):
                 active_uv = find_active_uv(obj.data.uv_textures)
                 box.label('Active: "%s"' % active_uv.name, icon="GROUP_UVS")
             elif len(obj.data.uv_textures) == 0:
-                warning_no_uvmap()
+                row = layout.row()
+                warning_no_uvmap(row)
+                row.operator("mesh.uv_texture_add")
         else:
-            warning_no_uvmap()
+            warning_no_uvmap(layout)
 
 
 def draw_transmission_info(node, layout):
