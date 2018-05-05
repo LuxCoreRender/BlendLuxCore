@@ -6,7 +6,6 @@ from .. import utils
 
 def draw_quad(offset_x, offset_y, width, height):
     glBegin(GL_QUADS)
-
     # 0, 0 (top left)
     glTexCoord2f(0, 0)
     glVertex2f(offset_x, offset_y)
@@ -116,12 +115,16 @@ class FrameBuffer(object):
                 context.scene.render.resolution_y * context.scene.render.pixel_aspect_y,
                 context.scene.camera.data.sensor_fit)
 
-            base = 0.5 * zoom * max(region_width, region_height)
+            base = 0.5 * zoom
+            if context.scene.camera.data.sensor_fit == "AUTO":
+                base *= max(region_width, region_height)
+            elif context.scene.camera.data.sensor_fit == "HORIZONTAL":
+                base *= region_width
+            elif context.scene.camera.data.sensor_fit == "VERTICAL":
+                base *= region_height
 
-            offset_x = ((0.5 - 2 * zoom * view_camera_offset[0])
-                        * region_width + aspect_x * base * (2 * border_min_x - 1))
-            offset_y = ((0.5 - 2 * zoom * view_camera_offset[1])
-                        * region_height + aspect_y * base * (2 * border_min_y - 1))
+            offset_x = ((0.5 - 2 * zoom * view_camera_offset[0]) * region_width + aspect_x * base * (2 * border_min_x - 1))
+            offset_y = ((0.5 - 2 * zoom * view_camera_offset[1]) * region_height + aspect_y * base * (2 * border_min_y - 1))
 
         else:
             offset_x = region_width * border_min_x + 1

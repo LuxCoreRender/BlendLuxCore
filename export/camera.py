@@ -69,11 +69,9 @@ def _view_persp(scene, context, definitions):
 
     definitions["type"] = "perspective"
     zoom = 2
-    # Magic stuff, found in Cycles export code
-    # TODO: non-standard sensor (is that where the 0.5 * 32 came from?)
     definitions["fieldofview"] = math.degrees(2 * math.atan(16 / context.space_data.lens))
 
-    definitions["screenwindow"] = utils.calc_screenwindow(zoom, 0, 0, 0, 0, scene, context)
+    definitions["screenwindow"] = utils.calc_screenwindow(zoom, 0, 0, scene, context)
 
 
 def _view_camera(scene, context, definitions):
@@ -88,7 +86,7 @@ def _view_camera(scene, context, definitions):
 
     if camera.data.type == "ORTHO":
         definitions["type"] = "orthographic"
-        zoom *= camera.data.ortho_scale / 2
+        zoom *= 0.5 * camera.data.ortho_scale
     elif camera.data.type == "PANO":
         definitions["type"] = "environment"
     elif camera.data.type == "PERSP":
@@ -99,18 +97,7 @@ def _view_camera(scene, context, definitions):
         raise NotImplementedError("Unknown camera.data.type")
 
     # Screenwindow
-    view_camera_offset = list(context.region_data.view_camera_offset)
-
-    if scene.render.use_border:
-        aspectratio, xaspect, yaspect = utils.calc_aspect(scene.render.resolution_x, scene.render.resolution_y)
-    else:
-        aspectratio, xaspect, yaspect = utils.calc_aspect(context.region.width, context.region.height)
-
-    offset_x = 2 * (view_camera_offset[0] * xaspect * 2)
-    offset_y = 2 * (view_camera_offset[1] * yaspect * 2)
-
-    definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y,
-                                                          offset_x, offset_y, scene, context)
+    definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, scene, context)
 
 
 def _final(scene, definitions):
@@ -123,7 +110,7 @@ def _final(scene, definitions):
 
     if camera.data.type == "ORTHO":
         cam_type = "orthographic"
-        zoom = camera.data.ortho_scale / 2
+        zoom = 0.5 * camera.data.ortho_scale
 
     elif camera.data.type == "PANO":
         cam_type = "environment"
@@ -135,17 +122,19 @@ def _final(scene, definitions):
     # Correction for vertical fit sensor, must truncate the float to .1f precision and round down
     width, height = utils.calc_filmsize_raw(scene)
 
-    if camera.data.sensor_fit == "VERTICAL" and width > height:
-        aspect_fix = round(width / height - 0.05, 1)  # make sure it rounds down
-    else:
-        aspect_fix = 1.0
+    #if camera.data.sensor_fit == "VERTICAL" and width > height:
+    #    aspect_fix = round(width / height - 0.05, 1)  # make sure it rounds down
+    #else:
+    #    aspect_fix = 1.0
 
     if cam_type == "perspective":
-        definitions["fieldofview"] = math.degrees(camera.data.angle * aspect_fix)
+        #definitions["fieldofview"] = math.degrees(camera.data.angle * aspect_fix)
+        definitions["fieldofview"] = math.degrees(camera.data.angle)
         _depth_of_field(scene, definitions)
 
+
     # screenwindow (for border rendering and camera shift)
-    definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, 0, 0, scene)
+    definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, scene)
 
 
 def _depth_of_field(scene, definitions):
