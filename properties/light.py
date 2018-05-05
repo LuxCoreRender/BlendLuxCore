@@ -50,6 +50,19 @@ VISIBILITYMAP_ENABLE_DESC = (
 
 LIGHTGROUP_DESC = "Add this light to a light group from the scene"
 
+TURBIDITY_DESC = (
+    "Amount of dust/fog/particles/smog in the air "
+    "(will only affect the sun/sky color, but not add volumetric fog)"
+)
+
+VIS_INDIRECT_BASE = (
+    "Visibility for indirect {type} rays. "
+    "If disabled, this light will appear black in indirect bounces on {type} materials"
+)
+VIS_INDIRECT_DIFFUSE_DESC = VIS_INDIRECT_BASE.format(type="diffuse") + " (e.g. matte)"
+VIS_INDIRECT_GLOSSY_DESC = VIS_INDIRECT_BASE.format(type="glossy") + " (e.g. glossy, roughglass, metal)"
+VIS_INDIRECT_SPECULAR_DESC = VIS_INDIRECT_BASE.format(type="specular") + " (e.g. glass, mirror)"
+
 
 def init():
     bpy.types.Lamp.luxcore = PointerProperty(type=LuxCoreLightProps)
@@ -92,7 +105,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # TODO: check min/max, add descriptions
 
     # sun, sky2
-    turbidity = FloatProperty(name="Turbidity", default=2.2, min=0, max=30)
+    turbidity = FloatProperty(name="Turbidity", default=2.2, min=0, max=30,
+                              description=TURBIDITY_DESC)
 
     # sun
     relsize = FloatProperty(name="Relative Size", default=1, min=0.05)
@@ -138,9 +152,9 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # Note: radius is set with default Blender properties (area light size)
 
     # sky2, sun, infinite, constantinfinite
-    visibility_indirect_diffuse = BoolProperty(name="Diffuse", default=True)
-    visibility_indirect_glossy = BoolProperty(name="Glossy", default=True)
-    visibility_indirect_specular = BoolProperty(name="Specular", default=True)
+    visibility_indirect_diffuse = BoolProperty(name="Diffuse", default=True, description=VIS_INDIRECT_DIFFUSE_DESC)
+    visibility_indirect_glossy = BoolProperty(name="Glossy", default=True, description=VIS_INDIRECT_GLOSSY_DESC)
+    visibility_indirect_specular = BoolProperty(name="Specular", default=True, description=VIS_INDIRECT_SPECULAR_DESC)
 
     # sky2, infinite, constantinfinite
     visibilitymap_enable = BoolProperty(name="Build Visibility Map", default=True,

@@ -98,3 +98,19 @@ class LUXCORE_OT_world_show_volume_node_tree(bpy.types.Operator):
 
         self.report({"ERROR"}, "Open a node editor first")
         return {"CANCELLED"}
+
+
+class LUXCORE_OT_world_set_ground_black(bpy.types.Operator):
+    bl_idname = "luxcore.world_set_ground_black"
+    bl_label = "Fix Sky Settings"
+    bl_description = "Set the sky ground color in the world settings to black"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.world
+
+    def execute(self, context):
+        context.scene.world.luxcore.ground_enable = True
+        context.scene.world.luxcore.ground_color = (0, 0, 0)
+        return {"FINISHED"}
