@@ -122,16 +122,9 @@ def _final(scene, definitions):
     # Correction for vertical fit sensor, must truncate the float to .1f precision and round down
     width, height = utils.calc_filmsize_raw(scene)
 
-    #if camera.data.sensor_fit == "VERTICAL" and width > height:
-    #    aspect_fix = round(width / height - 0.05, 1)  # make sure it rounds down
-    #else:
-    #    aspect_fix = 1.0
-
     if cam_type == "perspective":
-        #definitions["fieldofview"] = math.degrees(camera.data.angle * aspect_fix)
         definitions["fieldofview"] = math.degrees(camera.data.angle)
         _depth_of_field(scene, definitions)
-
 
     # screenwindow (for border rendering and camera shift)
     definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, scene)
