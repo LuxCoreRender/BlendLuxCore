@@ -69,7 +69,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
         draw(layout, context, halt)
 
         layers = context.scene.render.layers
-        overriding_layers = [layer for layer in layers if layer.luxcore.halt.enable]
+        overriding_layers = [layer for layer in layers if layer.use and layer.luxcore.halt.enable]
 
         if overriding_layers:
             layout.separator()

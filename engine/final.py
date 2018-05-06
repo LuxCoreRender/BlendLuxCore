@@ -20,6 +20,8 @@ def render(engine, scene):
 
         dummy_result = engine.begin_result(0, 0, 1, 1, layer.name)
 
+        # Check if the layer is disabled. Cycles does this the same way,
+        # to be honest I have no idea why they don't just check layer.use
         if layer.name not in dummy_result.layers:
             # The layer is disabled
             engine.end_result(dummy_result, cancel=True, do_merge_results=False)
@@ -148,24 +150,29 @@ def _render_layer(engine, scene):
 
 
 def _check_halt_conditions(engine, scene):
-    needs_halt_condition = len(scene.render.layers) > 1 or engine.is_animation
+    enabled_layers = [layer for layer in scene.render.layers if layer.use]
+    needs_halt_condition = len(enabled_layers) > 1 or engine.is_animation
 
-    # Global halt conditions
-    is_halt_enabled = scene.luxcore.halt.is_enabled()
+    is_halt_enabled = True
 
-    if len(scene.render.layers) > 1:
+    if len(enabled_layers) > 1:
         # When we have multiple render layers, we need a halt condition for each one
-        for layer in scene.render.layers:
+        for layer in enabled_layers:
             layer_halt = layer.luxcore.halt
             if layer_halt.enable:
                 # The layer overrides the global halt conditions
                 has_halt_condition = layer_halt.is_enabled()
+                is_halt_enabled &= has_halt_condition
 
                 if not has_halt_condition:
                     msg = 'Halt condition missing for render layer "%s"' % layer.name
                     scene.luxcore.errorlog.add_error(msg)
+            else:
+                is_halt_enabled = False
 
-                is_halt_enabled &= has_halt_condition
+    # Global halt conditions
+    if not is_halt_enabled:
+        is_halt_enabled = scene.luxcore.halt.is_enabled()
 
     if needs_halt_condition and not is_halt_enabled:
         raise Exception("Missing halt condition (check error log)")
