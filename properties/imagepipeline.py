@@ -35,6 +35,7 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup):
     use_autolinear = BoolProperty(name="Auto Brightness", default=True,
                                   description="Auto-detect the optimal image brightness")
     linear_scale = FloatProperty(name="Gain", default=0.5, min=0, soft_min=0.00001, soft_max=100,
+                                 precision=5,
                                  description="Image brightness is multiplied with this value")
 
     # Settings for TONEMAP_LUXLINEAR (camera settings)
