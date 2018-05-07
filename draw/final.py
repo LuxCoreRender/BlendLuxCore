@@ -1,5 +1,6 @@
 from bgl import *  # Nah I'm not typing them all out
 import array
+from time import time
 from ..bin import pyluxcore
 from .. import utils
 
@@ -58,6 +59,8 @@ class FrameBufferFinal(object):
         self.combined_buffer = array.array("f", [0.0]) * (self._width * self._height * bufferdepth)
         self.aov_buffers = {}
 
+        self.last_denoiser_refresh = time()
+
     def draw(self, engine, session, scene):
         active_layer_index = scene.luxcore.active_layer_index
         scene_layer = scene.render.layers[active_layer_index]
@@ -92,6 +95,36 @@ class FrameBufferFinal(object):
                     self._import_aov(output_name, output_type, render_layer, session, engine, i, name)
                 except RuntimeError as error:
                     print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
+
+            # Denoiser result
+            output_name = "DENOISED"
+            if output_name in engine.aov_imagepipelines:
+                refresh_denoised = (time() - self.last_denoiser_refresh) > scene.luxcore.denoiser.refresh_interval
+
+                # Refresh after a certain time has passed or when the user cancelled the render
+                if refresh_denoised or engine.test_break():
+                    print("Refreshing DENOISED")
+                    # TODO: What about alpha (RGBA)?
+                    output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+
+                    was_paused = session.IsInPause()
+                    if not was_paused:
+                        session.Pause()
+
+                    self._import_aov(output_name, output_type, render_layer, session, engine)
+
+                    if not was_paused and session.IsInPause():
+                        session.Resume()
+
+                    self.last_denoiser_refresh = time()
+                elif output_name in self.aov_buffers:
+                    print("Reusing buffer")
+                    # If we do not write something into the result, the image will be black.
+                    # So we re-use the result from the last denoiser run.
+                    buffer = self.aov_buffers[output_name]
+                    blender_pass = render_layer.passes[output_name]
+                    # TODO make this faster either in C++ or Python
+                    blender_pass.rect = [[buffer[i], buffer[i + 1], buffer[i + 2]] for i in range(0, len(buffer), 3)]
 
         engine.end_result(result)
 

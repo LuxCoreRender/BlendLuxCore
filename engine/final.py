@@ -237,3 +237,7 @@ def _add_passes(engine, layer, scene):
     lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
     for name in lightgroup_pass_names:
         engine.add_pass(name, 3, "RGB", layer.name)
+
+    # Denoiser
+    if scene.luxcore.denoiser.enabled:
+        engine.add_pass("DENOISED", 3, "RGB", layer.name)

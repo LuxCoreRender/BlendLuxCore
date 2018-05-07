@@ -256,6 +256,7 @@ class Exporter(object):
 
     def update_session(self, changes, session):
         if changes & Change.IMAGEPIPELINE:
+            print("Updating imagepipeline")
             session.Parse(self.imagepipeline_cache.props)
         if changes & Change.HALT:
             session.Parse(self.halt_cache.props)

@@ -1,6 +1,6 @@
 from ..bin import pyluxcore
 from .. import utils
-from .imagepipeline import use_backgroundimage
+from .imagepipeline import use_backgroundimage, convert_tonemapper
 
 # set of channels that don"t use an HDR format
 LDR_CHANNELS = {
@@ -92,8 +92,12 @@ def convert(exporter, scene, context=None, engine=None):
                                                      pipeline_index, definitions, engine,
                                                      group_id, exporter.lightgroup_cache)
 
+            if scene.luxcore.denoiser.enabled:
+                _make_denoiser_imagepipeline(scene, pipeline_props, engine, pipeline_index, definitions)
+
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
+
         return props
     except Exception as error:
         import traceback
@@ -137,8 +141,6 @@ def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, i
 
 def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine,
                         output_id=-1, lightgroup_ids=set()):
-    # TODO I think we need the full imagepipeline with all plugins here
-
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
 
     if not tonemapper.enabled:
@@ -167,20 +169,7 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
         index += 1
 
     # Tonemapper
-    definitions[str(index) + ".type"] = tonemapper.type
-
-    if tonemapper.type == "TONEMAP_LINEAR":
-        definitions[str(index) + ".scale"] = tonemapper.linear_scale
-    elif tonemapper.type == "TONEMAP_LUXLINEAR":
-        definitions[str(index) + ".fstop"] = tonemapper.fstop
-        definitions[str(index) + ".exposure"] = tonemapper.exposure
-        definitions[str(index) + ".sensitivity"] = tonemapper.sensitivity
-    index += 1
-
-    if utils.use_filesaver(None, scene):
-        definitions[str(index) + ".type"] = "GAMMA_CORRECTION"
-        definitions[str(index) + ".value"] = 2.2
-        index += 1
+    index = _define_tonemapper(scene, definitions, index)
 
     props.Set(utils.create_props(prefix, definitions))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
@@ -193,3 +182,44 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     engine.aov_imagepipelines[key] = pipeline_index
 
     return pipeline_index + 1
+
+
+def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index, output_definitions):
+    prefix = "film.imagepipelines." + str(pipeline_index) + "."
+    definitions = {}
+    index = 0
+
+    # Denoiser plugin
+    denoiser = scene.luxcore.denoiser
+    definitions[str(index) + ".type"] = "BCD_DENOISER"
+    definitions[str(index) + ".histdistthresh"] = denoiser.hist_dist_thresh
+    definitions[str(index) + ".patchradius"] = denoiser.patch_radius
+    definitions[str(index) + ".searchwindowradius"] = denoiser.search_window_radius
+    definitions[str(index) + ".mineigenvalue"] = denoiser.min_eigen_value
+    definitions[str(index) + ".userandompixelorder"] = denoiser.use_random_pixel_order
+    definitions[str(index) + ".markedpixelsskippingprobability"] = denoiser.marked_pixels_skipping_prob
+    definitions[str(index) + ".scales"] = denoiser.scales
+    if scene.render.threads_mode == "FIXED":
+        definitions[str(index) + ".threadcount"] = scene.render.threads
+    index += 1
+
+    index = _define_tonemapper(scene, definitions, index)
+
+    props.Set(utils.create_props(prefix, definitions))
+    _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
+    engine.aov_imagepipelines["DENOISED"] = pipeline_index
+
+    return pipeline_index + 1
+
+
+def _define_tonemapper(scene, definitions, index):
+    tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
+
+    index = convert_tonemapper(definitions, index, tonemapper)
+
+    if utils.use_filesaver(None, scene):
+        definitions[str(index) + ".type"] = "GAMMA_CORRECTION"
+        definitions[str(index) + ".value"] = 2.2
+        index += 1
+
+    return index
