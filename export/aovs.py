@@ -192,13 +192,10 @@ def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index, output_de
     # Denoiser plugin
     denoiser = scene.luxcore.denoiser
     definitions[str(index) + ".type"] = "BCD_DENOISER"
+    definitions[str(index) + ".scales"] = denoiser.scales
     definitions[str(index) + ".histdistthresh"] = denoiser.hist_dist_thresh
     definitions[str(index) + ".patchradius"] = denoiser.patch_radius
     definitions[str(index) + ".searchwindowradius"] = denoiser.search_window_radius
-    definitions[str(index) + ".mineigenvalue"] = denoiser.min_eigen_value
-    definitions[str(index) + ".userandompixelorder"] = denoiser.use_random_pixel_order
-    definitions[str(index) + ".markedpixelsskippingprobability"] = denoiser.marked_pixels_skipping_prob
-    definitions[str(index) + ".scales"] = denoiser.scales
     if scene.render.threads_mode == "FIXED":
         definitions[str(index) + ".threadcount"] = scene.render.threads
     index += 1
