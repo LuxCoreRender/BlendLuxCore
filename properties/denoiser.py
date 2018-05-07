@@ -10,7 +10,7 @@ class LuxCoreDenoiser(PropertyGroup):
 
     enabled = BoolProperty(name="", default=False, description="Enable/disable denoiser")
 
-    refresh = BoolProperty(name="Refresh", default=False,
+    refresh = BoolProperty(name="Run Denoiser", default=False,
                            description="Update the denoised image (takes a few seconds)")
 
     scales = IntProperty(name="Scales", default=3, min=1)

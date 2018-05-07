@@ -36,7 +36,10 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0, render_
     pretty_stats = get_pretty_stats(config, stats, scene)
 
     if draw_film:
-        refresh_message = "Refreshing film..."
+        if scene.luxcore.denoiser.refresh:
+            refresh_message = "Running denoiser and refreshing film..."
+        else:
+            refresh_message = "Refreshing film..."
     else:
         refresh_message = "Film refresh in %ds" % time_until_film_refresh
 

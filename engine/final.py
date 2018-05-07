@@ -108,7 +108,8 @@ def _render_layer(engine, scene):
 
     while not done:
         now = time()
-        refresh_requested = scene.luxcore.denoiser.refresh
+        # These two properties are shown as "buttons" in the UI
+        refresh_requested = scene.luxcore.display.refresh or scene.luxcore.denoiser.refresh
 
         if (now - last_stat_refresh > stat_refresh_interval) or refresh_requested:
             # We have to check the stats often to see if a halt condition is met

@@ -9,8 +9,11 @@ def draw(context, layout):
 
     sub = col.column()
     # The user should not be able to request a refresh when denoiser is disabled
+    # TODO disable the button when no final render is running
     sub.enabled = denoiser.enabled
     sub.prop(denoiser, "refresh", toggle=True, icon="FILE_REFRESH")
+    if denoiser.refresh:
+        sub.label("Running denoiser...")
     
     sub = col.column(align=True)
     # The user should be able to adjust settings even when denoiser is disabled

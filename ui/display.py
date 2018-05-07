@@ -19,4 +19,9 @@ class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
         layout.prop(display, "viewport_halt_time")
 
         layout.label("Final Render:")
-        layout.prop(display, "interval")
+        row = layout.row()
+        row.prop(display, "interval")
+        # TODO disable the button when no final render is running
+        row.prop(display, "refresh", toggle=True, icon="FILE_REFRESH")
+        if display.refresh:
+            layout.label("Refreshing film...")
