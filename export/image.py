@@ -18,15 +18,23 @@ class ImageExporter(object):
             # Image was already exported
             temp_image = cls.temp_images[key]
         else:
-            _, extension = os.path.splitext(image.filepath_raw)
+            if image.filepath_raw:
+                _, extension = os.path.splitext(image.filepath_raw)
+            else:
+                # Generated images do not have a filepath, fallback to file_format
+                extension = "." + image.file_format.lower()
+
             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=extension)
             cls.temp_images[key] = temp_image
 
             print('Unpacking image "%s" to temp file "%s"' % (image.name, temp_image.name))
             orig_filepath = image.filepath_raw
+            orig_source = image.source
             image.filepath_raw = temp_image.name
             image.save()
+            # This changes the source to "FILE", so we have to restore the original source
             image.filepath_raw = orig_filepath
+            image.source = orig_source
 
         return temp_image.name
 
