@@ -5,14 +5,20 @@ from bpy.types import Panel
 def draw(context, layout):
     denoiser = context.scene.luxcore.denoiser
 
-    # TODO replace with button
-    layout.prop(denoiser, "refresh_interval")
+    col = layout.column()
+
+    sub = col.column()
+    # The user should not be able to request a refresh when denoiser is disabled
+    sub.enabled = denoiser.enabled
+    sub.prop(denoiser, "refresh", toggle=True, icon="FILE_REFRESH")
     
-    col = layout.column(align=True)
-    col.prop(denoiser, "scales")
-    col.prop(denoiser, "hist_dist_thresh")
-    col.prop(denoiser, "patch_radius")
-    col.prop(denoiser, "search_window_radius")
+    sub = col.column(align=True)
+    # The user should be able to adjust settings even when denoiser is disabled
+    sub.active = denoiser.enabled
+    sub.prop(denoiser, "scales")
+    sub.prop(denoiser, "hist_dist_thresh")
+    sub.prop(denoiser, "patch_radius")
+    sub.prop(denoiser, "search_window_radius")
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):

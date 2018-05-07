@@ -108,8 +108,9 @@ def _render_layer(engine, scene):
 
     while not done:
         now = time()
+        refresh_requested = scene.luxcore.denoiser.refresh
 
-        if now - last_stat_refresh > stat_refresh_interval:
+        if (now - last_stat_refresh > stat_refresh_interval) or refresh_requested:
             # We have to check the stats often to see if a halt condition is met
             # But film drawing is expensive, so we don't do it every time we check stats
             time_until_film_refresh = scene.luxcore.display.interval - (now - last_film_refresh)
@@ -118,8 +119,8 @@ def _render_layer(engine, scene):
             # Do session update (imagepipeline, lightgroups)
             changes = engine.exporter.get_changes()
             engine.exporter.update_session(changes, engine.session)
-            # Refresh quickly when user changed something
-            draw_film |= changes
+            # Refresh quickly when user changed something or requested a refresh via button
+            draw_film |= changes or refresh_requested
 
             utils_render.refresh(engine, scene, config, draw_film, time_until_film_refresh)
             done = engine.test_break() or engine.session.HasDone()
@@ -141,7 +142,7 @@ def _render_layer(engine, scene):
 
     # User wants to stop or halt condition is reached
     # Update stats to refresh film and draw the final result
-    utils_render.refresh(engine, scene, config, draw_film=True)
+    utils_render.refresh(engine, scene, config, draw_film=True, render_stopped=True)
     engine.update_stats("Render", "Stopping session...")
     engine.session.Stop()
     # Clean up

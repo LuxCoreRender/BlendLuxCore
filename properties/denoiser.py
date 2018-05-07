@@ -9,7 +9,9 @@ class LuxCoreDenoiser(PropertyGroup):
     # TODO: maybe an easy mode or some presets
 
     enabled = BoolProperty(name="", default=False, description="Enable/disable denoiser")
-    refresh_interval = IntProperty(name="Refresh Interval (s)", default=60, min=30)
+
+    refresh = BoolProperty(name="Refresh", default=False,
+                           description="Update the denoised image (takes a few seconds)")
 
     scales = IntProperty(name="Scales", default=3, min=1)
     hist_dist_thresh = FloatProperty(name="Histogram Distance Threshold", default=1, min=0)

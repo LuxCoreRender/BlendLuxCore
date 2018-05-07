@@ -21,7 +21,7 @@ sampler_to_str = {
 }
 
 
-def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
+def refresh(engine, scene, config, draw_film, time_until_film_refresh=0, render_stopped=False):
     """ Stats and optional film refresh during final render """
     error_message = ""
     try:
@@ -47,7 +47,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0):
 
     if draw_film:
         # Show updated film (this operation is expensive)
-        engine.framebuffer.draw(engine, engine.session, scene)
+        engine.framebuffer.draw(engine, engine.session, scene, render_stopped)
 
     # Update progress bar if we have halt conditions
     halt = utils.get_halt_conditions(scene)

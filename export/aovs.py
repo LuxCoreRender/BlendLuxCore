@@ -93,7 +93,8 @@ def convert(exporter, scene, context=None, engine=None):
                                                      group_id, exporter.lightgroup_cache)
 
             if scene.luxcore.denoiser.enabled:
-                _make_denoiser_imagepipeline(scene, pipeline_props, engine, pipeline_index, definitions)
+                pipeline_index = _make_denoiser_imagepipeline(scene, pipeline_props, engine,
+                                                              pipeline_index, definitions)
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
@@ -184,7 +185,7 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     return pipeline_index + 1
 
 
-def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index, output_definitions):
+def get_denoiser_imgpipeline_props(scene, pipeline_index):
     prefix = "film.imagepipelines." + str(pipeline_index) + "."
     definitions = {}
     index = 0
@@ -202,7 +203,11 @@ def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index, output_de
 
     index = _define_tonemapper(scene, definitions, index)
 
-    props.Set(utils.create_props(prefix, definitions))
+    return utils.create_props(prefix, definitions)
+
+
+def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index, output_definitions):
+    props.Set(get_denoiser_imgpipeline_props(scene, pipeline_index))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
     engine.aov_imagepipelines["DENOISED"] = pipeline_index
 

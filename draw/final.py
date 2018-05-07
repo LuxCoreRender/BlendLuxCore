@@ -3,6 +3,7 @@ import array
 from time import time
 from ..bin import pyluxcore
 from .. import utils
+from ..export.aovs import get_denoiser_imgpipeline_props
 
 
 class AOV:
@@ -61,7 +62,7 @@ class FrameBufferFinal(object):
 
         self.last_denoiser_refresh = time()
 
-    def draw(self, engine, session, scene):
+    def draw(self, engine, session, scene, render_stopped):
         active_layer_index = scene.luxcore.active_layer_index
         scene_layer = scene.render.layers[active_layer_index]
 
@@ -99,11 +100,18 @@ class FrameBufferFinal(object):
             # Denoiser result
             output_name = "DENOISED"
             if output_name in engine.aov_imagepipelines:
-                refresh_denoised = (time() - self.last_denoiser_refresh) > scene.luxcore.denoiser.refresh_interval
+                refresh_denoised = render_stopped or scene.luxcore.denoiser.refresh
 
                 # Refresh after a certain time has passed or when the user cancelled the render
-                if refresh_denoised or engine.test_break():
+                if refresh_denoised:
                     print("Refreshing DENOISED")
+                    # Reset the refresh button
+                    scene.luxcore.denoiser.refresh = False
+                    # Update the imagepipeline
+                    denoiser_pipeline_index = engine.aov_imagepipelines[output_name]
+                    denoiser_pipeline_props = get_denoiser_imgpipeline_props(scene, denoiser_pipeline_index)
+                    session.Parse(denoiser_pipeline_props)
+
                     # TODO: What about alpha (RGBA)?
                     output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
