@@ -62,6 +62,13 @@ class FrameBufferFinal(object):
 
         self.last_denoiser_refresh = time()
 
+    def __del__(self):
+        print(">>> framebuffer del")
+        self.aov_buffers.clear()
+        del self.combined_buffer
+        import gc
+        gc.collect()
+
     def draw(self, engine, session, scene, render_stopped):
         active_layer_index = scene.luxcore.active_layer_index
         scene_layer = scene.render.layers[active_layer_index]
@@ -163,19 +170,19 @@ class FrameBufferFinal(object):
         width = self._width
         height = self._height
 
-        try:
-            # Try to get the existing buffer for this AOV
-            buffer = self.aov_buffers[output_name]
-        except KeyError:
-            # Buffer for this AOV does not exist yet, create it
-            buffer = array.array(array_type, [0]) * (width * height * channel_count)
-            self.aov_buffers[output_name] = buffer
+        # try:
+        #     # Try to get the existing buffer for this AOV
+        #     buffer = self.aov_buffers[output_name]
+        # except KeyError:
+        #     # Buffer for this AOV does not exist yet, create it
+        #     buffer = array.array(array_type, [0]) * (width * height * channel_count)
+        #     self.aov_buffers[output_name] = buffer
 
-        # Fill the buffer
-        if array_type == "I":
-            session.GetFilm().GetOutputUInt(output_type, buffer, index)
-        else:
-            session.GetFilm().GetOutputFloat(output_type, buffer, index)
+        # # Fill the buffer
+        # if array_type == "I":
+        #     session.GetFilm().GetOutputUInt(output_type, buffer, index)
+        # else:
+        #     session.GetFilm().GetOutputFloat(output_type, buffer, index)
 
         # Depth needs special treatment because it's pre-defined by Blender and not uppercase
         if output_name == "DEPTH":
@@ -187,5 +194,9 @@ class FrameBufferFinal(object):
 
         blender_pass = render_layer.passes[pass_name]
 
+        convert_func(session.GetFilm(), output_type, index,
+                     width, height, blender_pass.as_pointer(),
+                     aov.normalize)
+
         # Convert and copy the buffer into the blender_pass.rect
-        convert_func(width, height, buffer, blender_pass.as_pointer(), aov.normalize)
+        # convert_func(width, height, buffer, blender_pass.as_pointer(), aov.normalize)
