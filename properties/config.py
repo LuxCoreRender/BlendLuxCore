@@ -157,6 +157,7 @@ class LuxCoreConfig(PropertyGroup):
     samplers = [
         ("SOBOL", "Sobol", SIMPLE_DESC, 0),
         ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
+        ("RANDOM", "Random", "todo", 2),
     ]
     sampler = EnumProperty(name="Sampler", items=samplers, default="SOBOL")
     # A trick so we can show the user that bidir should only be used with Metropolis

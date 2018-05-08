@@ -26,8 +26,8 @@ def draw(layout, context, halt):
     split.prop(halt, "samples")
 
     config = context.scene.luxcore.config
-    is_sobol_sampler = config.engine == "PATH" and config.sampler == "SOBOL"
-    show_adaptive_sampling_props = halt.use_noise_thresh and is_sobol_sampler
+    is_adaptive_sampler = config.engine == "PATH" and config.sampler in {"SOBOL", "RANDOM"}
+    show_adaptive_sampling_props = halt.use_noise_thresh and is_adaptive_sampler
 
     if show_adaptive_sampling_props:
         thresh_layout = layout.box()

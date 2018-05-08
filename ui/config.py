@@ -70,7 +70,7 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                 row_sampler.label("Sampler:")
                 row_sampler.prop(config, "sampler", expand=True)
 
-                if config.sampler == "SOBOL":
+                if config.sampler in {"SOBOL", "RANDOM"}:
                     layout.prop(config, "sobol_adaptive_strength", slider=True)
                 elif config.sampler == "METROPOLIS":
                     self.draw_metropolis_props(layout, config)

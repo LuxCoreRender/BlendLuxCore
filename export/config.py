@@ -57,6 +57,7 @@ def convert(exporter, scene, context=None, engine=None):
                     luxcore_engine = "PATH"
                     sampler = config.sampler
                     definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
+                    definitions["sampler.random.adaptive.strength"] = config.sobol_adaptive_strength
                     _convert_metropolis_settings(definitions, config)
 
                 # Add CPU/OCL suffix
