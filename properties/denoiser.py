@@ -17,3 +17,6 @@ class LuxCoreDenoiser(PropertyGroup):
     hist_dist_thresh = FloatProperty(name="Histogram Distance Threshold", default=1, min=0)
     patch_radius = IntProperty(name="Patch Radius", default=1, min=1)
     search_window_radius = IntProperty(name="Search Window Radius", default=6, min=1)
+    filter_spikes = BoolProperty(name="Remove Fireflies", default=False)
+    # TODO min/max, description
+    spikes_std_dev = FloatProperty(name="Firefly Filter Factor", default=2)

@@ -22,6 +22,9 @@ def draw(context, layout):
     sub.prop(denoiser, "hist_dist_thresh")
     sub.prop(denoiser, "patch_radius")
     sub.prop(denoiser, "search_window_radius")
+    sub.prop(denoiser, "filter_spikes")
+    if denoiser.filter_spikes:
+        sub.prop(denoiser, "spikes_std_dev")
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):

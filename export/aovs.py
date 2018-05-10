@@ -197,6 +197,8 @@ def get_denoiser_imgpipeline_props(scene, pipeline_index):
     definitions[str(index) + ".histdistthresh"] = denoiser.hist_dist_thresh
     definitions[str(index) + ".patchradius"] = denoiser.patch_radius
     definitions[str(index) + ".searchwindowradius"] = denoiser.search_window_radius
+    definitions[str(index) + ".filterspikes"] = denoiser.filter_spikes
+    definitions[str(index) + ".spikestddev"] = denoiser.spikes_std_dev
     if scene.render.threads_mode == "FIXED":
         definitions[str(index) + ".threadcount"] = scene.render.threads
     index += 1
