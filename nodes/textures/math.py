@@ -83,6 +83,9 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
             layout.prop(self, "mode_clamp_min")
             layout.prop(self, "mode_clamp_max")
 
+            if self.mode_clamp_min > self.mode_clamp_max:
+                layout.label("Min should be smaller than max!", icon="ERROR")
+
     def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {
             "type": self.mode,

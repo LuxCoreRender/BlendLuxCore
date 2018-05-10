@@ -14,6 +14,7 @@ def run():
     update_glossy_nodes_ior_change()
     update_volume_nodes_asymmetry_change()
     update_smoke_nodes_add_color_output()
+    update_colormix_remove_min_max_sockets()
 
 
 def update_output_nodes_volume_change():
@@ -111,4 +112,20 @@ def update_smoke_nodes_add_color_output():
             if "Color" not in node.outputs:
                 color = node.outputs.new("LuxCoreSocketColor", "Color")
                 color.enabled = False
+                print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_colormix_remove_min_max_sockets():
+    # commit 432b1ba020b07f46758fd19b4b3af91cca0c90ff
+
+    for node_tree in bpy.data.node_groups:
+        if node_tree.library:
+            continue
+
+        for node in find_nodes(node_tree, "LuxCoreNodeTexColorMix"):
+            if node.mode == "clamp" and "Min" in node.inputs and "Max" in node.inputs:
+                node.mode_clamp_min = node.inputs["Min"].default_value
+                node.mode_clamp_max = node.inputs["Max"].default_value
+                node.inputs["Min"].enabled = False
+                node.inputs["Max"].enabled = False
                 print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
