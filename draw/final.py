@@ -49,15 +49,13 @@ class FrameBufferFinal(object):
         self._transparent = pipeline.transparent_film
 
         if self._transparent:
-            bufferdepth = 4
-            self._output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
+            self._combined_output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
             self._convert_combined = pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList
         else:
-            bufferdepth = 3
-            self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+            self._combined_output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
             self._convert_combined = pyluxcore.ConvertFilmChannelOutput_3xFloat_To_4xFloatList
 
-        self.combined_buffer = array.array("f", [0.0]) * (self._width * self._height * bufferdepth)
+        # This dict is only used by the denoiser
         self.aov_buffers = {}
 
         self.last_denoiser_refresh = time()
@@ -69,13 +67,13 @@ class FrameBufferFinal(object):
         # Reset the refresh button
         scene.luxcore.display.refresh = False
 
-        session.GetFilm().GetOutputFloat(self._output_type, self.combined_buffer)
         result = engine.begin_result(0, 0, self._width, self._height, scene_layer.name)
         # Regardless of the scene render layers, the result always only contains one layer
         render_layer = result.layers[0]
 
         combined = render_layer.passes["Combined"]
-        self._convert_combined(self._width, self._height, self.combined_buffer, combined.as_pointer(), False)
+        self._convert_combined(session.GetFilm(), self._combined_output_type, 0,
+                               self._width, self._height, combined.as_pointer(), False)
 
         # Import AOVs only in final render, not in material preview mode
         if not engine.is_preview:
@@ -100,42 +98,7 @@ class FrameBufferFinal(object):
                 except RuntimeError as error:
                     print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
 
-            # Denoiser result
-            output_name = "DENOISED"
-            if output_name in engine.aov_imagepipelines:
-                refresh_denoised = render_stopped or scene.luxcore.denoiser.refresh
-
-                # Refresh after a certain time has passed or when the user cancelled the render
-                if refresh_denoised:
-                    print("Refreshing DENOISED")
-                    # Reset the refresh button
-                    scene.luxcore.denoiser.refresh = False
-                    # Update the imagepipeline
-                    denoiser_pipeline_index = engine.aov_imagepipelines[output_name]
-                    denoiser_pipeline_props = get_denoiser_imgpipeline_props(scene, denoiser_pipeline_index)
-                    session.Parse(denoiser_pipeline_props)
-
-                    # TODO: What about alpha (RGBA)?
-                    output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
-
-                    was_paused = session.IsInPause()
-                    if not was_paused:
-                        session.Pause()
-
-                    self._import_aov(output_name, output_type, render_layer, session, engine)
-
-                    if not was_paused and session.IsInPause():
-                        session.Resume()
-
-                    self.last_denoiser_refresh = time()
-                elif output_name in self.aov_buffers:
-                    print("Reusing buffer")
-                    # If we do not write something into the result, the image will be black.
-                    # So we re-use the result from the last denoiser run.
-                    buffer = self.aov_buffers[output_name]
-                    blender_pass = render_layer.passes[output_name]
-                    # TODO make this faster either in C++ or Python
-                    blender_pass.rect = [[buffer[i], buffer[i + 1], buffer[i + 2]] for i in range(0, len(buffer), 3)]
+            self._refresh_denoiser(engine, session, scene, render_stopped)
 
         engine.end_result(result)
 
@@ -152,30 +115,9 @@ class FrameBufferFinal(object):
         if output_name in engine.aov_imagepipelines:
             index = engine.aov_imagepipelines[output_name]
             output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
-            channel_count = DEFAULT_AOV_SETTINGS.channel_count
-            array_type = DEFAULT_AOV_SETTINGS.array_type
             convert_func = DEFAULT_AOV_SETTINGS.convert_func
         else:
-            channel_count = aov.channel_count
-            array_type = aov.array_type
             convert_func = aov.convert_func
-
-        width = self._width
-        height = self._height
-
-        try:
-            # Try to get the existing buffer for this AOV
-            buffer = self.aov_buffers[output_name]
-        except KeyError:
-            # Buffer for this AOV does not exist yet, create it
-            buffer = array.array(array_type, [0]) * (width * height * channel_count)
-            self.aov_buffers[output_name] = buffer
-
-        # Fill the buffer
-        if array_type == "I":
-            session.GetFilm().GetOutputUInt(output_type, buffer, index)
-        else:
-            session.GetFilm().GetOutputFloat(output_type, buffer, index)
 
         # Depth needs special treatment because it's pre-defined by Blender and not uppercase
         if output_name == "DEPTH":
@@ -188,4 +130,52 @@ class FrameBufferFinal(object):
         blender_pass = render_layer.passes[pass_name]
 
         # Convert and copy the buffer into the blender_pass.rect
-        convert_func(width, height, buffer, blender_pass.as_pointer(), aov.normalize)
+        convert_func(session.GetFilm(), output_type, index,
+                     self._width, self._height, blender_pass.as_pointer(),
+                     aov.normalize)
+
+    def _refresh_denoiser(self, engine, session, scene, render_stopped):
+        # Denoiser result
+        output_name = "DENOISED"
+        if output_name not in engine.aov_imagepipelines:
+            # The denoiser is not enabled
+            return
+
+        # Refresh when ending the render (Esc/halt condition) or when the user presses the refresh button
+        refresh_denoised = render_stopped or scene.luxcore.denoiser.refresh
+
+        # Also check if a few seconds have passed since the last refresh
+        # ended, to prevent the user accidentally triggering another refresh
+        if refresh_denoised and time() - self.last_denoiser_refresh > 3:
+            print("Refreshing DENOISED")
+            # Reset the refresh button
+            scene.luxcore.denoiser.refresh = False
+            # Update the imagepipeline
+            denoiser_pipeline_index = engine.aov_imagepipelines[output_name]
+            denoiser_pipeline_props = get_denoiser_imgpipeline_props(scene, denoiser_pipeline_index)
+            session.Parse(denoiser_pipeline_props)
+
+            # TODO: What about alpha (RGBA)?
+            output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+
+            was_paused = session.IsInPause()
+            if not was_paused:
+                session.Pause()
+
+            try:
+                self._import_aov(output_name, output_type, render_layer, session, engine)
+            except RuntimeError as error:
+                print("Error on import of denoised result: %s" % error)
+
+            if not was_paused and session.IsInPause():
+                session.Resume()
+
+            self.last_denoiser_refresh = time()
+        elif output_name in self.aov_buffers:
+            print("Reusing buffer")
+            # If we do not write something into the result, the image will be black.
+            # So we re-use the result from the last denoiser run.
+            buffer = self.aov_buffers[output_name]
+            blender_pass = render_layer.passes[output_name]
+            # TODO make this faster either in C++ or Python
+            blender_pass.rect = [[buffer[i], buffer[i + 1], buffer[i + 2]] for i in range(0, len(buffer), 3)]
