@@ -58,7 +58,7 @@ class FrameBufferFinal(object):
         # This dict is only used by the denoiser
         self.aov_buffers = {}
 
-        self.last_denoiser_refresh = time()
+        self.last_denoiser_refresh = 0
 
     def draw(self, engine, session, scene, render_stopped):
         active_layer_index = scene.luxcore.active_layer_index
@@ -98,7 +98,7 @@ class FrameBufferFinal(object):
                 except RuntimeError as error:
                     print("Error on import of Lightgroup AOV of group %s: %s" % (name, error))
 
-            self._refresh_denoiser(engine, session, scene, render_stopped)
+            self._refresh_denoiser(engine, session, scene, render_layer, render_stopped)
 
         engine.end_result(result)
 
@@ -134,7 +134,7 @@ class FrameBufferFinal(object):
                      self._width, self._height, blender_pass.as_pointer(),
                      aov.normalize)
 
-    def _refresh_denoiser(self, engine, session, scene, render_stopped):
+    def _refresh_denoiser(self, engine, session, scene, render_layer, render_stopped):
         # Denoiser result
         output_name = "DENOISED"
         if output_name not in engine.aov_imagepipelines:
@@ -152,7 +152,7 @@ class FrameBufferFinal(object):
             scene.luxcore.denoiser.refresh = False
             # Update the imagepipeline
             denoiser_pipeline_index = engine.aov_imagepipelines[output_name]
-            denoiser_pipeline_props = get_denoiser_imgpipeline_props(scene, denoiser_pipeline_index)
+            denoiser_pipeline_props = get_denoiser_imgpipeline_props(None, scene, denoiser_pipeline_index)
             session.Parse(denoiser_pipeline_props)
 
             # TODO: What about alpha (RGBA)?
@@ -178,4 +178,4 @@ class FrameBufferFinal(object):
             buffer = self.aov_buffers[output_name]
             blender_pass = render_layer.passes[output_name]
             # TODO make this faster either in C++ or Python
-            blender_pass.rect = [[buffer[i], buffer[i + 1], buffer[i + 2]] for i in range(0, len(buffer), 3)]
+            blender_pass.rect = [(buffer[i], buffer[i + 1], buffer[i + 2]) for i in range(0, len(buffer), 3)]

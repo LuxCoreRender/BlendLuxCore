@@ -1,6 +1,7 @@
 from ..bin import pyluxcore
 from .. import utils
-from .imagepipeline import use_backgroundimage, convert_tonemapper
+from . import imagepipeline
+from .imagepipeline import use_backgroundimage
 
 # set of channels that don"t use an HDR format
 LDR_CHANNELS = {
@@ -81,19 +82,19 @@ def convert(exporter, scene, context=None, engine=None):
                     _add_output(definitions, output_name)
 
                     if output_name in NEED_TONEMAPPING:
-                        pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
+                        pipeline_index = _make_imagepipeline(pipeline_props, context, scene, output_name,
                                                              pipeline_index, definitions, engine)
 
             # Light groups
             for group_id in exporter.lightgroup_cache:
                 output_name = "RADIANCE_GROUP"
                 _add_output(definitions, output_name, output_id=group_id)
-                pipeline_index = _make_imagepipeline(pipeline_props, scene, output_name,
+                pipeline_index = _make_imagepipeline(pipeline_props, context, scene, output_name,
                                                      pipeline_index, definitions, engine,
                                                      group_id, exporter.lightgroup_cache)
 
             if scene.luxcore.denoiser.enabled:
-                pipeline_index = _make_denoiser_imagepipeline(scene, pipeline_props, engine,
+                pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,
                                                               pipeline_index, definitions)
 
         props = utils.create_props(prefix, definitions)
@@ -140,7 +141,7 @@ def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, i
     return index + 1
 
 
-def _make_imagepipeline(props, scene, output_name, pipeline_index, output_definitions, engine,
+def _make_imagepipeline(props, context, scene, output_name, pipeline_index, output_definitions, engine,
                         output_id=-1, lightgroup_ids=set()):
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
 
@@ -169,8 +170,10 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
             definitions[str(index) + ".index"] = output_id
         index += 1
 
-    # Tonemapper
-    index = _define_tonemapper(scene, definitions, index)
+    # Define the rest of the imagepipeline.
+    # When defining a lightgroup pipeline, do not override the radiancescales we defined above.
+    define_radiancescales = not lightgroup_ids
+    index = imagepipeline.convert_defs(context, scene, definitions, index, define_radiancescales)
 
     props.Set(utils.create_props(prefix, definitions))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
@@ -185,7 +188,7 @@ def _make_imagepipeline(props, scene, output_name, pipeline_index, output_defini
     return pipeline_index + 1
 
 
-def get_denoiser_imgpipeline_props(scene, pipeline_index):
+def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
     prefix = "film.imagepipelines." + str(pipeline_index) + "."
     definitions = {}
     index = 0
@@ -203,27 +206,13 @@ def get_denoiser_imgpipeline_props(scene, pipeline_index):
         definitions[str(index) + ".threadcount"] = scene.render.threads
     index += 1
 
-    index = _define_tonemapper(scene, definitions, index)
+    index = imagepipeline.convert_defs(context, scene, definitions, index)
 
     return utils.create_props(prefix, definitions)
 
 
-def _make_denoiser_imagepipeline(scene, props, engine, pipeline_index, output_definitions):
-    props.Set(get_denoiser_imgpipeline_props(scene, pipeline_index))
+def _make_denoiser_imagepipeline(context, scene, props, engine, pipeline_index, output_definitions):
+    props.Set(get_denoiser_imgpipeline_props(context, scene, pipeline_index))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
     engine.aov_imagepipelines["DENOISED"] = pipeline_index
-
     return pipeline_index + 1
-
-
-def _define_tonemapper(scene, definitions, index):
-    tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
-
-    index = convert_tonemapper(definitions, index, tonemapper)
-
-    if utils.use_filesaver(None, scene):
-        definitions[str(index) + ".type"] = "GAMMA_CORRECTION"
-        definitions[str(index) + ".value"] = 2.2
-        index += 1
-
-    return index
