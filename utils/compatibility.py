@@ -126,4 +126,6 @@ def update_colormix_remove_min_max_sockets():
             if node.mode == "clamp" and "Min" in node.inputs and "Max" in node.inputs:
                 node.mode_clamp_min = node.inputs["Min"].default_value
                 node.mode_clamp_max = node.inputs["Max"].default_value
+                node.inputs["Min"].enabled = False
+                node.inputs["Max"].enabled = False
                 print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
