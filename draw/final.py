@@ -181,7 +181,7 @@ class FrameBufferFinal(object):
                         last = "%d s" % self.denoiser_last_elapsed_time
                     else:
                         last = "unkown"
-                    engine.update_stats("Denoising", "Elapsed: {} s (last: {})".format(elapsed, last))
+                    engine.update_stats("Denoising...", "Elapsed: {} s (last: {})".format(elapsed, last))
                     sleep(1)
 
                 self.denoiser_last_elapsed_time = round(time() - start)

@@ -17,13 +17,13 @@ def draw(context, layout):
     sub = col.column(align=True)
     # The user should be able to adjust settings even when denoiser is disabled
     sub.active = denoiser.enabled
-    sub.prop(denoiser, "scales")
-    sub.prop(denoiser, "hist_dist_thresh")
-    sub.prop(denoiser, "patch_radius")
-    sub.prop(denoiser, "search_window_radius")
     sub.prop(denoiser, "filter_spikes")
-    if denoiser.filter_spikes:
-        sub.prop(denoiser, "spikes_std_dev")
+    sub.prop(denoiser, "scales")
+    sub.prop(denoiser, "show_advanced", toggle=True, icon=("TRIA_DOWN" if denoiser.show_advanced else "TRIA_RIGHT"))
+    if denoiser.show_advanced:
+        sub.prop(denoiser, "hist_dist_thresh")
+        sub.prop(denoiser, "patch_radius")
+        sub.prop(denoiser, "search_window_radius")
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
