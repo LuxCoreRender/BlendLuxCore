@@ -12,8 +12,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_use_postprocess = True  # No idea what this does
 
     def __init__(self):
-        self.framebuffer = None
         self.session = None
+        self.DENOISED_OUTPUT_NAME = "DENOISED"
+        self.reset()
+
+    def reset(self):
+        self.framebuffer = None
         self.exporter = None
         self.error = None
         self.aov_imagepipelines = {}
@@ -74,6 +78,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.update_stats("Error: ", str(error))
             import traceback
             traceback.print_exc()
+
+    def has_denoiser(self):
+        return self.DENOISED_OUTPUT_NAME in self.aov_imagepipelines
 
     def update_render_passes(self, scene=None, renderlayer=None):
         """

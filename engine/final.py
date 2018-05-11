@@ -43,7 +43,7 @@ def render(engine, scene):
     
 
 def _render_layer(engine, scene):
-    engine.aov_imagepipelines = {}
+    engine.reset()
     engine.exporter = export.Exporter(scene)
     engine.session = engine.exporter.create_session(engine=engine)
 

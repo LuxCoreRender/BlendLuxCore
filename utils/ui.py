@@ -58,6 +58,13 @@ def get_all_spaces(context, area_type, space_type):
     return spaces
 
 
+def template_refresh_button(data, property_name, layout, run_msg="Refreshing..."):
+    if getattr(data, property_name):
+        layout.label(run_msg)
+    else:
+        layout.prop(data, property_name, toggle=True, icon="FILE_REFRESH")
+
+
 def get_all_regions(context, area_type, region_type):
     """
     Get all regions of a specific area and region type.

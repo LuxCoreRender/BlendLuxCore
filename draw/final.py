@@ -55,17 +55,14 @@ class FrameBufferFinal(object):
             self._combined_output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
             self._convert_combined = pyluxcore.ConvertFilmChannelOutput_3xFloat_To_4xFloatList
 
-        # This dict is only used by the denoiser
-        self.aov_buffers = {}
+        # Buffer to keep the denoised image between refreshes, so we can write it into the render_result
+        self.denoised_buffer = array.array("f", [0.0]) * (self._width * self._height * 3)
 
         self.last_denoiser_refresh = 0
 
     def draw(self, engine, session, scene, render_stopped):
         active_layer_index = scene.luxcore.active_layer_index
         scene_layer = scene.render.layers[active_layer_index]
-
-        # Reset the refresh button
-        scene.luxcore.display.refresh = False
 
         result = engine.begin_result(0, 0, self._width, self._height, scene_layer.name)
         # Regardless of the scene render layers, the result always only contains one layer
@@ -78,7 +75,7 @@ class FrameBufferFinal(object):
         # Import AOVs only in final render, not in material preview mode
         if not engine.is_preview:
             for output_name, output_type in pyluxcore.FilmOutputType.names.items():
-                # Check if AOV is enabled by user
+                # Check if this AOV is enabled on this render layer
                 if getattr(scene_layer.luxcore.aovs, output_name.lower(), False):
                     try:
                         self._import_aov(output_name, output_type, render_layer, session, engine)
@@ -101,6 +98,8 @@ class FrameBufferFinal(object):
             self._refresh_denoiser(engine, session, scene, render_layer, render_stopped)
 
         engine.end_result(result)
+        # Reset the refresh button
+        self._reset_button(scene.luxcore.display, "refresh")
 
     def _import_aov(self, output_name, output_type, render_layer, session, engine, index=0, lightgroup_name=""):
         if output_name in AOVS:
@@ -135,27 +134,22 @@ class FrameBufferFinal(object):
                      aov.normalize)
 
     def _refresh_denoiser(self, engine, session, scene, render_layer, render_stopped):
-        # Denoiser result
-        output_name = "DENOISED"
-        if output_name not in engine.aov_imagepipelines:
-            # The denoiser is not enabled
+        if not engine.has_denoiser():
             return
+
+        output_name = engine.DENOISED_OUTPUT_NAME
 
         # Refresh when ending the render (Esc/halt condition) or when the user presses the refresh button
         refresh_denoised = render_stopped or scene.luxcore.denoiser.refresh
 
-        # Also check if a few seconds have passed since the last refresh
-        # ended, to prevent the user accidentally triggering another refresh
-        if refresh_denoised and time() - self.last_denoiser_refresh > 3:
+        if refresh_denoised:
             print("Refreshing DENOISED")
-            # Reset the refresh button
-            scene.luxcore.denoiser.refresh = False
+
             # Update the imagepipeline
             denoiser_pipeline_index = engine.aov_imagepipelines[output_name]
             denoiser_pipeline_props = get_denoiser_imgpipeline_props(None, scene, denoiser_pipeline_index)
             session.Parse(denoiser_pipeline_props)
 
-            # TODO: What about alpha (RGBA)?
             output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
             was_paused = session.IsInPause()
@@ -171,11 +165,23 @@ class FrameBufferFinal(object):
                 session.Resume()
 
             self.last_denoiser_refresh = time()
-        elif output_name in self.aov_buffers:
+            # Reset the refresh button
+            self._reset_button(scene.luxcore.denoiser, "refresh")
+        else:
             print("Reusing buffer")
             # If we do not write something into the result, the image will be black.
             # So we re-use the result from the last denoiser run.
-            buffer = self.aov_buffers[output_name]
+            buffer = self.denoised_buffer
             blender_pass = render_layer.passes[output_name]
             # TODO make this faster either in C++ or Python
             blender_pass.rect = [(buffer[i], buffer[i + 1], buffer[i + 2]) for i in range(0, len(buffer), 3)]
+
+    def _reset_button(self, data, property_name):
+        if getattr(data, property_name):
+            try:
+                setattr(data, property_name, False)
+            except AttributeError as error:
+                # Sometimes Blender raises this exception, not sure when and why:
+                # AttributeError: Writing to ID classes in this context is not allowed:
+                # Scene, Scene datablock, error setting LuxCoreDisplaySettings.refresh
+                print(error)
