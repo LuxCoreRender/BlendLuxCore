@@ -57,6 +57,7 @@ class FrameBufferFinal(object):
 
         # How long the last run of the denoiser took, in seconds
         self.denoiser_last_elapsed_time = 0
+        self.denoiser_last_samples = 0
 
     def draw(self, engine, session, scene, render_stopped):
         active_layer_index = scene.luxcore.active_layer_index
@@ -141,6 +142,21 @@ class FrameBufferFinal(object):
 
         # Refresh when ending the render (Esc/halt condition) or when the user presses the refresh button
         refresh_denoised = render_stopped or scene.luxcore.denoiser.refresh
+
+        try:
+            engine.session.UpdateStats()
+            stats = engine.session.GetStats()
+            samples = stats.Get("stats.renderengine.pass").GetInt()
+
+            if samples == self.denoiser_last_samples:
+                # No new samples, do not run the denoiser. Saves time when the user
+                # cancels the render wile the denoiser is running, for example.
+                print("No new samples since last denoiser run, skipping denoising.")
+                refresh_denoised = False
+
+            self.denoiser_last_samples = samples
+        except RuntimeError as error:
+            print("Error during UpdateStats():", error)
 
         if refresh_denoised:
             print("Refreshing DENOISED")
