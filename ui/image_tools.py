@@ -29,3 +29,9 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
 
     def draw(self, context):
         denoiser.draw(context, self.layout)
+
+        col = self.layout.column()
+        col.label("Change the pass to see the result", icon="INFO")
+        if context.space_data.image:
+            iuser = context.space_data.image_user
+            col.template_image_layers(context.space_data.image, iuser)

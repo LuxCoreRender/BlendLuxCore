@@ -40,3 +40,6 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
 
     def draw(self, context):
         draw(context, self.layout)
+
+        col = self.layout.column(align=True)
+        col.label("These settings are also available in the image editor tool shelf (press T)", icon="INFO")
