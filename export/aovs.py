@@ -88,11 +88,13 @@ def convert(exporter, scene, context=None, engine=None):
             # Light groups
             for group_id in exporter.lightgroup_cache:
                 output_name = "RADIANCE_GROUP"
-                _add_output(definitions, output_name, output_id=group_id)
+                # I don't think we need this output because we define an imagepipeline output anyway
+                # _add_output(definitions, output_name, output_id=group_id)
                 pipeline_index = _make_imagepipeline(pipeline_props, context, scene, output_name,
                                                      pipeline_index, definitions, engine,
                                                      group_id, exporter.lightgroup_cache)
 
+            # Denoiser imagepipeline
             if scene.luxcore.denoiser.enabled:
                 pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,
                                                               pipeline_index, definitions)
