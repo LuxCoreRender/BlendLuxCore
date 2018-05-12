@@ -57,7 +57,7 @@ def render(engine, scene):
         stats = engine.session.GetStats()
         samples = stats.Get("stats.renderengine.pass").GetInt()
         if (samples > 2 and samples < 10) or (samples > 0 and samples % 10 == 0):
-            engine.framebuffer.draw(engine, engine.session, scene)
+            engine.framebuffer.draw(engine, engine.session, scene, False)
         sleep(1 / 30)
 
         if engine.test_break():
@@ -65,7 +65,7 @@ def render(engine, scene):
             engine.session.Stop()
             return enable_log_output()
 
-    engine.framebuffer.draw(engine, engine.session, scene)
+    engine.framebuffer.draw(engine, engine.session, scene, True)
     engine.session.Stop()
     enable_log_output()
 
