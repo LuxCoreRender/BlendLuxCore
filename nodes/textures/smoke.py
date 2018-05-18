@@ -133,6 +133,12 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
             prop = pyluxcore.Property(prefix + "data", [])
             prop.AddAllFloat(grid)
 
+        # We have to free the memory manually because the grid can be VERY large
+        # and if we don't invoke the garbage collection, we use way more RAM than necessary
+        del grid
+        import gc
+        gc.collect()
+
         props.Set(prop)
 
         elapsed_time = time() - start_time
