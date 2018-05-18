@@ -1,5 +1,8 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
+from ..bin import pyluxcore
+
+NO_OPENCL_BUILD = pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool()
 
 
 class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
@@ -31,6 +34,10 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
         if config.engine == "PATH":
             row_device.prop(config, "device", expand=True)
+
+            if config.device == "OCL" and NO_OPENCL_BUILD:
+                # pyluxcore was compiled without OpenCL support
+                layout.label("No OpenCL support in this BlendLuxCore version", icon="CANCEL")
         else:
             row_device.prop(config, "bidir_device", expand=True)
 
@@ -170,6 +177,10 @@ class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
         opencl = context.scene.luxcore.opencl
 
         if config.engine == "PATH" and config.device == "OCL":
+            if NO_OPENCL_BUILD:
+                # pyluxcore was compiled without OpenCL support
+                layout.label("No OpenCL support in this BlendLuxCore version", icon="CANCEL")
+
             if not opencl.devices:
                 layout.label("No OpenCL Devices available.", icon="ERROR")
                 layout.operator("luxcore.update_opencl_devices")
