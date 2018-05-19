@@ -8,11 +8,8 @@ from ..export.aovs import get_denoiser_imgpipeline_props
 
 class AOV:
     """ Storage class for info about an Arbitrary Output Variable """
-    def __init__(self, channel_count, array_type, convert_func, normalize):
+    def __init__(self, channel_count, convert_func, normalize):
         self.channel_count = channel_count
-        # array_type is the type of the intermediate array.
-        # In the end, everything is converted to float for Blender.
-        self.array_type = array_type
         self.convert_func = convert_func
         self.normalize = normalize
 
@@ -21,19 +18,19 @@ class AOV:
 # are not imported along with the other AOVs (they have a special code path)
 # Note: AOVs with the default settings are not included in the aovs dictionary.
 AOVS = {
-    "RGBA": AOV(4, "f", pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList, False),
-    "ALPHA": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
-    "DEPTH": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
-    "DIRECT_SHADOW_MASK": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
-    "INDIRECT_SHADOW_MASK": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
-    "UV": AOV(2, "f", pyluxcore.ConvertFilmChannelOutput_UV_to_Blender_UV, False),
-    "RAYCOUNT": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, True),
-    "MATERIAL_ID": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
-    "OBJECT_ID": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
-    "SAMPLECOUNT": AOV(1, "I", pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, True),
-    "CONVERGENCE": AOV(1, "f", pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "RGBA": AOV(4, pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList, False),
+    "ALPHA": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "DEPTH": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "DIRECT_SHADOW_MASK": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "INDIRECT_SHADOW_MASK": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "UV": AOV(2, pyluxcore.ConvertFilmChannelOutput_UV_to_Blender_UV, False),
+    "RAYCOUNT": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, True),
+    "MATERIAL_ID": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
+    "OBJECT_ID": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
+    "SAMPLECOUNT": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, True),
+    "CONVERGENCE": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
 }
-DEFAULT_AOV_SETTINGS = AOV(3, "f", pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList, False)
+DEFAULT_AOV_SETTINGS = AOV(3, pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList, False)
 
 AOVS_WITH_ID = {"RADIANCE_GROUP", "BY_MATERIAL_ID", "BY_OBJECT_ID", "MATERIAL_ID_MASK", "OBJECT_ID_MASK"}
 
