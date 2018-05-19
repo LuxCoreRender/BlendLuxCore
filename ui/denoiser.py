@@ -5,11 +5,15 @@ from ..utils.ui import template_refresh_button
 
 def draw(context, layout):
     denoiser = context.scene.luxcore.denoiser
+    config = context.scene.luxcore.config
 
     col = layout.column()
 
-    if denoiser.enabled and context.scene.luxcore.config.sampler == "METROPOLIS":
-        col.label("Metropolis sampler can lead to artifacts!", icon="ERROR")
+    if denoiser.enabled:
+        if config.sampler == "METROPOLIS":
+            col.label("Metropolis sampler can lead to artifacts!", icon="ERROR")
+        if config.engine == "BIDIR" and config.filter != "NONE":
+            col.label('Set filter to "None" to reduce blurriness', icon="ERROR")
 
     sub = col.column()
     # The user should not be able to request a refresh when denoiser is disabled

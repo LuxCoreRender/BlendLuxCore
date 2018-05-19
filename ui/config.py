@@ -16,6 +16,7 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
     def draw(self, context):
         layout = self.layout
         config = context.scene.luxcore.config
+        denoiser = context.scene.luxcore.denoiser
 
         # Filesaver
         # TODO: we might want to move this to a more appropriate place later
@@ -89,12 +90,14 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             if config.sampler in {"SOBOL", "RANDOM"}:
                 layout.prop(config, "sobol_adaptive_strength", slider=True)
             elif config.sampler == "METROPOLIS":
-                if context.scene.luxcore.denoiser.enabled:
+                if denoiser.enabled:
                     layout.label("Can lead to artifacts in the denoiser!", icon="ERROR")
 
                 self.draw_metropolis_props(layout, config)
 
         # Filter settings
+        if denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE":
+            layout.label('Set filter to "None" to reduce blurriness when using the denoiser with Bidir', icon="ERROR")
         row = layout.row()
         row.prop(config, "filter")
         sub = row.row()
