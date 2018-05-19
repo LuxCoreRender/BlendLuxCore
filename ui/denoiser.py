@@ -8,6 +8,9 @@ def draw(context, layout):
 
     col = layout.column()
 
+    if denoiser.enabled and context.scene.luxcore.config.sampler == "METROPOLIS":
+        col.label("Metropolis sampler can lead to artifacts!", icon="ERROR")
+
     sub = col.column()
     # The user should not be able to request a refresh when denoiser is disabled
     # TODO disable the button when no final render is running - how can we detect this?
@@ -18,12 +21,12 @@ def draw(context, layout):
     # The user should be able to adjust settings even when denoiser is disabled
     sub.active = denoiser.enabled
     sub.prop(denoiser, "filter_spikes")
-    sub.prop(denoiser, "scales")
+    sub.prop(denoiser, "hist_dist_thresh")
+    sub.prop(denoiser, "search_window_radius")
     sub.prop(denoiser, "show_advanced", toggle=True, icon=("TRIA_DOWN" if denoiser.show_advanced else "TRIA_RIGHT"))
     if denoiser.show_advanced:
-        sub.prop(denoiser, "hist_dist_thresh")
+        sub.prop(denoiser, "scales")
         sub.prop(denoiser, "patch_radius")
-        sub.prop(denoiser, "search_window_radius")
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):

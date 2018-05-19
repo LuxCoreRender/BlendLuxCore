@@ -72,15 +72,6 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                     col.prop(config.tile, "multipass_convtest_threshold_reduction")
                     # TODO do we need to expose this? In LuxBlend we didn't
                     # layout.prop(config.tile, "multipass_convtest_warmup")
-            else:
-                row_sampler = layout.row()
-                row_sampler.label("Sampler:")
-                row_sampler.prop(config, "sampler", expand=True)
-
-                if config.sampler in {"SOBOL", "RANDOM"}:
-                    layout.prop(config, "sobol_adaptive_strength", slider=True)
-                elif config.sampler == "METROPOLIS":
-                    self.draw_metropolis_props(layout, config)
         else:
             # Bidir options
             row_depths = layout.row(align=True)
@@ -89,12 +80,19 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
             self.draw_clamp_settings(layout, config)
 
+        # Sampler settings
+        if not (config.engine == "PATH" and config.use_tiles):
             row_sampler = layout.row()
-            row_sampler.enabled = False
             row_sampler.label("Sampler:")
-            row_sampler.prop(config, "bidir_sampler", expand=True)
+            row_sampler.prop(config, "sampler", expand=True)
 
-            self.draw_metropolis_props(layout, config)
+            if config.sampler in {"SOBOL", "RANDOM"}:
+                layout.prop(config, "sobol_adaptive_strength", slider=True)
+            elif config.sampler == "METROPOLIS":
+                if context.scene.luxcore.denoiser.enabled:
+                    layout.label("Can lead to artifacts in the denoiser!", icon="ERROR")
+
+                self.draw_metropolis_props(layout, config)
 
         # Filter settings
         row = layout.row()

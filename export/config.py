@@ -39,8 +39,6 @@ def convert(exporter, scene, context=None, engine=None):
 
                 if config.use_tiles:
                     luxcore_engine = "TILEPATH"
-                    # TILEPATH needs exactly this sampler
-                    sampler = "TILEPATHSAMPLER"
                     # Tile specific settings
                     tile = config.tile
                     definitions["tilepath.sampling.aa.size"] = tile.path_sampling_aa_size
@@ -55,10 +53,6 @@ def convert(exporter, scene, context=None, engine=None):
                     # definitions["tile.multipass.convergencetest.warmup.count"] = warmup
                 else:
                     luxcore_engine = "PATH"
-                    sampler = config.sampler
-                    definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
-                    definitions["sampler.random.adaptive.strength"] = config.sobol_adaptive_strength
-                    _convert_metropolis_settings(definitions, config)
 
                 # Add CPU/OCL suffix
                 luxcore_engine += config.device
@@ -82,11 +76,18 @@ def convert(exporter, scene, context=None, engine=None):
             else:
                 # config.engine == BIDIR
                 luxcore_engine = "BIDIRCPU"
-                # SOBOL or RANDOM would be possible, but make little sense for BIDIR
-                sampler = "METROPOLIS"
-                _convert_metropolis_settings(definitions, config)
                 definitions["light.maxdepth"] = config.bidir_light_maxdepth
                 definitions["path.maxdepth"] = config.bidir_path_maxdepth
+
+            # Sampler
+            if config.engine == "PATH" and config.use_tiles:
+                # TILEPATH needs exactly this sampler
+                sampler = "TILEPATHSAMPLER"
+            else:
+                sampler = config.sampler
+                definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
+                definitions["sampler.random.adaptive.strength"] = config.sobol_adaptive_strength
+                _convert_metropolis_settings(definitions, config)
 
         # Common properties that should be set regardless of engine configuration.
         # We create them as variables and set them here because then the IDE can warn us

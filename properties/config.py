@@ -157,12 +157,9 @@ class LuxCoreConfig(PropertyGroup):
     samplers = [
         ("SOBOL", "Sobol", SIMPLE_DESC, 0),
         ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
-        ("RANDOM", "Random", "todo", 2),
+        ("RANDOM", "Random", "Recommended only if the denoiser is used", 2),
     ]
     sampler = EnumProperty(name="Sampler", items=samplers, default="SOBOL")
-    # A trick so we can show the user that bidir should only be used with Metropolis
-    bidir_sampler = EnumProperty(name="Sampler", items=samplers, default="METROPOLIS",
-                                 description="Only Metropolis makes sense for Bidir")
 
     # SOBOL properties
     sobol_adaptive_strength = FloatProperty(name="Adaptive Strength", default=0.7, min=0, max=0.95,

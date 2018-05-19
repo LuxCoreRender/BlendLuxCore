@@ -139,6 +139,8 @@ def _render_layer(engine, scene):
             computed_optimal_clamp = True
 
         # Don't use up too much CPU time for this refresh loop, but stay responsive
+        # Note: The engine Python code seems to be threaded by Blender,
+        # so the interface would not even hang if we slept for minutes here
         sleep(1 / 60)
 
     # User wants to stop or halt condition is reached
