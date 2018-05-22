@@ -78,10 +78,11 @@ class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial):
         # Back face
         self.add_input("LuxCoreSocketColor", "BF Specular Color", [0.05] * 3)
         self.add_input("LuxCoreSocketIOR", "BF IOR", 1.5)
-        self.inputs["BF IOR"].enabled = False
         self.add_input("LuxCoreSocketColor", "BF Absorption Color", [0] * 3)
         self.add_input("LuxCoreSocketFloatPositive", "BF Absorption Depth (nm)", 0)
         Roughness.init_backface(self, default_roughness, init_enabled=False)
+        # Back face sockets should be hidden by default
+        self.update_use_backface(context)
 
         self.add_common_inputs()
 
