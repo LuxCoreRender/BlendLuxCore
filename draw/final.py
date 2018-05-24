@@ -81,7 +81,7 @@ class FrameBufferFinal(object):
             lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
             for i, name in enumerate(lightgroup_pass_names):
                 if i not in engine.exporter.lightgroup_cache:
-                    # This light group is not used by any lights int the scene, so it was not defined
+                    # This light group is not used by any lights in the scene, so it was not defined
                     continue
 
                 output_name = "RADIANCE_GROUP"

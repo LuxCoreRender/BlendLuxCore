@@ -146,6 +146,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "IRRADIANCE", 3, "RGB", "COLOR")
 
         # Light groups
-        lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
-        for name in lightgroup_pass_names:
-            self.register_pass(scene, renderlayer, name, 3, "RGB", "COLOR")
+        lightgroups = scene.luxcore.lightgroups
+        lightgroup_pass_names = lightgroups.get_pass_names()
+        default_group_name = lightgroups.get_lightgroup_pass_name(is_default_group=True)
+        # If only the default group is in the list, it doesn't make sense to show lightgroups
+        # Note: this behaviour has to be the same as in the _add_passes() function in the engine/final.py file
+        if lightgroup_pass_names != [default_group_name]:
+            for name in lightgroup_pass_names:
+                self.register_pass(scene, renderlayer, name, 3, "RGB", "COLOR")

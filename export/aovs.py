@@ -86,6 +86,10 @@ def convert(exporter, scene, context=None, engine=None):
                                                              pipeline_index, definitions, engine)
 
             # Light groups
+            if exporter.lightgroup_cache == {0}:
+                # Only the default lightgroup in the cache, it doesn't make sense to export lightgroups
+                exporter.lightgroup_cache.clear()
+
             for group_id in exporter.lightgroup_cache:
                 output_name = "RADIANCE_GROUP"
                 # I don't think we need this output because we define an imagepipeline output anyway
