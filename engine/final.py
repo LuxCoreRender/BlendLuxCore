@@ -57,8 +57,6 @@ def _render_layer(engine, scene):
     engine.session.Start()
 
     config = engine.session.GetRenderConfig()
-    done = False
-    start = time()
 
     if scene.luxcore.config.use_filesaver:
         engine.session.Stop()
@@ -74,7 +72,7 @@ def _render_layer(engine, scene):
         engine.session = None
         return
 
-    # Main loop where we refresh according to user-specified interval
+    start = time()
     path_settings = scene.luxcore.config.path
     last_film_refresh = 0
     last_stat_refresh = 0
@@ -82,7 +80,7 @@ def _render_layer(engine, scene):
     stats = utils_render.update_stats(engine.session)
     FAST_REFRESH_DURATION = 0 if engine.is_animation else 5
 
-    while not done:
+    while True:
         now = time()
         # These two properties are shown as "buttons" in the UI
         refresh_requested = scene.luxcore.display.refresh or scene.luxcore.denoiser.refresh
