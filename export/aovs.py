@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from ..bin import pyluxcore
 from .. import utils
 from . import imagepipeline
@@ -22,7 +23,8 @@ NEED_TONEMAPPING = {
 def convert(exporter, scene, context=None, engine=None):
     try:
         prefix = "film.outputs."
-        definitions = {}
+        # Ordered because we sometimes need to read these for debugging
+        definitions = OrderedDict()
 
         if scene.camera is None:
             # Can not work without a camera
@@ -162,7 +164,7 @@ def _make_imagepipeline(props, context, scene, output_name, pipeline_index, outp
         return pipeline_index
 
     prefix = "film.imagepipelines." + str(pipeline_index) + "."
-    definitions = {}
+    definitions = OrderedDict()
     index = 0
 
     if output_name == "RADIANCE_GROUP":
@@ -196,7 +198,7 @@ def _make_imagepipeline(props, context, scene, output_name, pipeline_index, outp
 
 def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
     prefix = "film.imagepipelines." + str(pipeline_index) + "."
-    definitions = {}
+    definitions = OrderedDict()
     index = 0
 
     # Denoiser plugin

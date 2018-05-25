@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from ..bin import pyluxcore
 from .. import utils
 from .image import ImageExporter
@@ -6,7 +7,7 @@ from .image import ImageExporter
 def convert(scene, context=None, index=0):
     try:
         prefix = "film.imagepipelines.%d." % index
-        definitions = {}
+        definitions = OrderedDict()
 
         if scene.camera is None:
             # Can not work without a camera

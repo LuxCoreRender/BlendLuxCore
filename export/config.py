@@ -1,6 +1,7 @@
 import os
 import errno
 import bpy
+from collections import OrderedDict
 from ..bin import pyluxcore
 from .. import utils
 from . import aovs
@@ -10,11 +11,10 @@ from .imagepipeline import use_backgroundimage
 def convert(exporter, scene, context=None, engine=None):
     try:
         prefix = ""
-        # We collect the properties in this dictionary.
-        # Common props are set at the end of the function.
-        # Very specific props that are not needed every time are set in the if/else.
+        # We collect the properties in this dictionary (ordered because we sometimes
+        # need to read them for debugging).
         # The dictionary is converted to pyluxcore.Properties() in the return statement.
-        definitions = {}
+        definitions = OrderedDict()
 
         # See properties/config.py
         config = scene.luxcore.config
