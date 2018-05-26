@@ -369,7 +369,7 @@ class Exporter(object):
                 self._convert_object(props, obj, context.scene, context, luxcore_scene)
 
         if changes & Change.WORLD:
-            if context.scene.world.luxcore.light == "none":
+            if not context.scene.world or context.scene.world.luxcore.light == "none":
                 luxcore_scene.DeleteLight(WORLD_BACKGROUND_LIGHT_NAME)
 
             world_props = world.convert(self, context.scene)
