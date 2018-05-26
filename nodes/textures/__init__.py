@@ -3,6 +3,7 @@ from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_TEXTURE
+from ..nodeitems import Separator, NodeItemMultiImageImport
 
 # Import all texture nodes just so they get registered
 from .band import LuxCoreNodeTexBand
@@ -49,6 +50,7 @@ from .windy import LuxCoreNodeTexWindy
 # TODO: how to warn if some texture nodes are incompatible with materials/volumes
 # they are used in?
 
+
 class LuxCoreTextureNodeTree(NodeTree):
     bl_idname = "luxcore_texture_nodes"
     bl_label = "LuxCore Texture Nodes"
@@ -87,19 +89,21 @@ class LuxCoreNodeCategoryTexture(NodeCategory):
 # In general it is a good idea to put often used nodes near the top.
 luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_TEXTURE", "Texture", items=[
+        NodeItemMultiImageImport(),
+        NodeItem("LuxCoreNodeTexImagemap", label="Image"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
+        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        Separator(),
+        # Procedurals
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
-        NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
-        NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
         NodeItem("LuxCoreNodeTexCheckerboard2D", label="2D Checkerboard"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexMarble", label="Marble"),
-        NodeItem("LuxCoreNodeTexWindy", label="Windy"),
+        # NodeItem("LuxCoreNodeTexWindy", label="Windy"),  # Same as FBM -> unnecessary
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
-        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
-        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
-        NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_BLENDERTEXTURE", "Texture (Blender)", items=[
@@ -116,11 +120,13 @@ luxcore_node_categories_texture = [
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
-        NodeItem("LuxCoreNodeTexBump", label="Bump"),
-        NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
-        NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexBump", label="Bump"),
+        # Possibly confusing, better deactivate (only needed in very rare cases anyway)
+        # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
+        NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
@@ -132,6 +138,12 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
+    ]),
+
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_LIGHT", "Light", items=[
+        NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
+        NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
+        NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_POINTER", "Pointer", items=[
