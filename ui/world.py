@@ -59,8 +59,7 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        correct_light = context.world.luxcore.light == "sky2"
-        return context.world and engine == "LUXCORE" and correct_light
+        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "sky2"
 
     def draw(self, context):
         layout = self.layout
