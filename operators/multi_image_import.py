@@ -46,6 +46,6 @@ class LUXCORE_OT_import_multiple_images(bpy.types.Operator, ImportHelper):
             node.image = image
             node.location = location
             # Nodes are spawned in a vertical column
-            location.y -= 320
+            location.y -= 400
 
         return {'FINISHED'}
