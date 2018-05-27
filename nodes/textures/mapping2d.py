@@ -18,7 +18,7 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
     uscale = FloatProperty(name="U", default=1)
     vscale = FloatProperty(name="V", default=1)
     rotation = FloatProperty(name="Rotation", default=0, min=(-math.pi * 2),
-                                 max=(math.pi * 2), subtype="ANGLE", unit="ROTATION")
+                             max=(math.pi * 2), subtype="ANGLE", unit="ROTATION")
     udelta = FloatProperty(name="U", default=0)
     vdelta = FloatProperty(name="V", default=0)
     center_map = BoolProperty(name="Center Map", default=False)
