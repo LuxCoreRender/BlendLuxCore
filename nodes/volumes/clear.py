@@ -1,5 +1,6 @@
-from bpy.props import IntProperty, FloatProperty
+from bpy.props import IntProperty, FloatProperty, StringProperty
 from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
+from ...properties.light import LIGHTGROUP_DESC
 
 
 class LuxCoreNodeVolClear(LuxCoreNodeVolume):
@@ -12,6 +13,7 @@ class LuxCoreNodeVolClear(LuxCoreNodeVolume):
     color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
+    lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
 
     def init(self, context):
         self.add_common_inputs()

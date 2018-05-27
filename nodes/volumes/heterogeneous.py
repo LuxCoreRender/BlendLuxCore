@@ -1,8 +1,9 @@
 import math
 import bpy
-from bpy.props import IntProperty, BoolProperty, FloatProperty, PointerProperty
+from bpy.props import IntProperty, BoolProperty, FloatProperty, PointerProperty, StringProperty
 from ... import utils
 from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
+from ...properties.light import LIGHTGROUP_DESC
 
 
 STEP_SIZE_DESCRIPTION = (
@@ -28,6 +29,8 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
     color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
+    lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
+
     step_size = FloatProperty(name="Step Size", default=0.1, min=0.0001,
                               soft_min=0.01, soft_max=1,
                               subtype="DISTANCE", unit="LENGTH",
