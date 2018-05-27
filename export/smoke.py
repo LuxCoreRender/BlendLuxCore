@@ -23,10 +23,8 @@ def convert(smoke_obj, channel):
         grid = settings.heat_grid
     elif channel == "color":
         grid = settings.color_grid
-    # ToDo: implement velocity grid export
-    # velocity grid has 3 times more values => probably vector field
-    #elif channel == "velocity":
-    #    grid = settings.velocity_grid
+    elif channel == "velocity":
+        grid = settings.velocity_grid
     else:
         raise NotImplementedError("Unknown channel type " + channel)
 

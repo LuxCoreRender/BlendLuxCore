@@ -294,7 +294,6 @@ def calc_area_lamp_transformation(blender_obj):
 def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importance):
     """
     An area light is a plane object with emissive material in LuxCore
-    # TODO: check if we need to scale gain with area?
     """
     lamp = blender_obj.data
     luxcore_name = utils.get_luxcore_name(blender_obj, context)

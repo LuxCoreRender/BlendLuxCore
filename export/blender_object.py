@@ -76,7 +76,6 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
             else:
                 if material_index < len(blender_obj.material_slots):
                     mat = blender_obj.material_slots[material_index].material
-                    # TODO material cache
                     lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
 
                     if mat is None:
