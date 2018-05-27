@@ -138,3 +138,10 @@ def copy_links_after_socket_swap(socket1, socket2, was_socket1_enabled):
         # socket2 was disabled while socket1 was enabled
         for link in socket2.links:
             node_tree.links.new(socket1, link.to_socket)
+
+
+def get_links(node_tree, socket):
+    """List of node links from or to this socket"""
+    return tuple(link for link in node_tree.links
+                 if (link.from_socket == socket or
+                     link.to_socket == socket))
