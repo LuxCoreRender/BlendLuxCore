@@ -92,9 +92,6 @@ luxcore_node_categories_texture = [
         NodeItemMultiImageImport(),
         NodeItem("LuxCoreNodeTexImagemap", label="Image"),
         Separator(),
-        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
-        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
-        Separator(),
         # Procedurals
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
@@ -104,6 +101,9 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexMarble", label="Marble"),
         # NodeItem("LuxCoreNodeTexWindy", label="Windy"),  # Same as FBM -> unnecessary
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
+        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_BLENDERTEXTURE", "Texture (Blender)", items=[
