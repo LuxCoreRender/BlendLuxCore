@@ -180,8 +180,6 @@ class LuxCoreNodeVolume(LuxCoreNode):
         definitions["emission.id"] = lightgroup_id
         exporter.lightgroup_cache.add(lightgroup_id)
 
-        print(definitions)
-
     def export_scattering(self, exporter, props):
         scattering_col_socket = self.inputs["Scattering"]
         scattering_scale_socket = self.inputs["Scattering Scale"]
