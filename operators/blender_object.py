@@ -85,11 +85,9 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
                 vertexColors = vertex_color.data[0].as_pointer()
             else:
                 vertexColors = 0
-
-            transformation = utils.matrix_to_list(obj.matrix_world, context.scene, apply_worldscale=True)
             
             mesh_definitions = luxcore_scene.DefineBlenderMesh(obj.name, len(mesh.tessfaces), faces, len(mesh.vertices),
-                                           vertices, texCoords, vertexColors, transformation)
+                                           vertices, texCoords, vertexColors, None)
 
             bpy.ops.object.delete()
             

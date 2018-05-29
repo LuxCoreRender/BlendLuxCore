@@ -48,7 +48,9 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
         if update_mesh:
             if blender_obj.luxcore.use_proxy:
                 mesh_definitions = _convert_proxy_to_shapes(luxcore_name, blender_obj, luxcore_scene)
-                obj_transform = None
+                if not context:
+                    #TODO: Apply mesh_transformation to PLY files
+                    obj_transform = transformation
             else:
                 # print("converting mesh:", blender_obj.data.name)
                 modifier_mode = "PREVIEW" if context else "RENDER"
