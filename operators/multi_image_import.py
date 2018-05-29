@@ -90,7 +90,6 @@ class LUXCORE_OT_import_multiple_images(bpy.types.Operator, ImportHelper):
             # Nodes are spawned in a vertical column
             location.y -= 400
 
-            s = time.time()
             if image:
                 if self.detect_normalmaps_fast and "normal" in image.name:
                     node.is_normal_map = True
@@ -99,8 +98,5 @@ class LUXCORE_OT_import_multiple_images(bpy.types.Operator, ImportHelper):
             else:
                 self.report({"ERROR"}, "Failed: " + file_elem.name)
                 print("ERROR: Could not import", filepath)
-
-            print("normalmap check took %.3f s" % (time.time() - s))
-            print("image import took %.3f s" % (time.time() - s1))
 
         return {'FINISHED'}
