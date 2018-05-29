@@ -60,5 +60,10 @@ class LUXCORE_OBJECT_PT_proxy(ObjectButtonsPanel, Panel):
         if not obj.luxcore.use_proxy:
             col.operator("luxcore.proxy_new", text="Create Proxy")
         else:
-            col.prop(obj.luxcore, "proxy_filepath")
+            box = layout.box()
+            box.label("Proxies:")            
+            for proxy in obj.luxcore.proxies:                
+                box.prop(proxy, "filepath", text=proxy.name)
+            
+            box.prop(obj.luxcore, "proxies")
 
