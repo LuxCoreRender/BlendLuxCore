@@ -140,23 +140,18 @@ class FrameBufferFinal(object):
         # Refresh when ending the render (Esc/halt condition) or when the user presses the refresh button
         refresh_denoised = render_stopped or scene.luxcore.denoiser.refresh
 
-        try:
-            engine.session.UpdateStats()
-            stats = engine.session.GetStats()
-            samples = stats.Get("stats.renderengine.pass").GetInt()
+        stats = engine.session.GetStats()
+        samples = stats.Get("stats.renderengine.pass").GetInt()
 
-            if samples == self.denoiser_last_samples:
-                # No new samples, do not run the denoiser. Saves time when the user
-                # cancels the render wile the denoiser is running, for example.
-                print("No new samples since last denoiser run, skipping denoising.")
-                refresh_denoised = False
-
-            self.denoiser_last_samples = samples
-        except RuntimeError as error:
-            print("Error during UpdateStats():", error)
+        if refresh_denoised and samples == self.denoiser_last_samples:
+            # No new samples, do not run the denoiser. Saves time when the user
+            # cancels the render wile the denoiser is running, for example.
+            print("No new samples since last denoiser run, skipping denoising.")
+            refresh_denoised = False
 
         if refresh_denoised:
             print("Refreshing DENOISED")
+            self.denoiser_last_samples = samples
 
             # Update the imagepipeline
             denoiser_pipeline_index = engine.aov_imagepipelines[output_name]
@@ -195,7 +190,6 @@ class FrameBufferFinal(object):
             # Reset the refresh button
             self._reset_button(scene.luxcore.denoiser, "refresh")
         else:
-            print("Re-using buffer")
             # If we do not write something into the result, the image will be black.
             # So we re-use the result from the last denoiser run.
             self._import_aov(output_name, output_type, render_layer, session, engine,
