@@ -13,8 +13,6 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
     bl_label = "New"
     bl_description = "Create a new proxy object"
 
-
-
     # hidden properties
     directory = bpy.props.StringProperty(name = 'PLY directory')
     filter_glob = bpy.props.StringProperty(default = '*.ply', options = {'HIDDEN'})
@@ -25,6 +23,11 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         return poll_object(context)
 
     def invoke(self, context, event):
+        obj = context.active_object
+        if obj.data.users > 1:
+            context.scene.luxcore.errorlog.add_error("[Object: %s] Can't make proxy from multiuser mesh" % obj.name)
+            return {"FINISHED"}
+            
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}        
 
@@ -33,11 +36,8 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
 
         #TODO: Support other object types
         if obj.type in ['MESH']:
-            if obj.data.users > 1:
-                print("[Object: %s] Can't make proxy from multiuser mesh" % obj.name)
-                #TODO: Raise error in log
-                return {"FINISHED"}
-
+            #Copy object
+            print("Create Proxy: Copy object")
             proxy = obj
             obj = proxy.copy()
             obj.data = proxy.data.copy()
@@ -50,11 +50,12 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             # TODO: accept custom parameters for decimate modifier
             decimate = proxy.modifiers.new('proxy_decimate', 'DECIMATE')
             decimate.ratio = 0.005
-                        
+
+            # Create low res proxy object
+            print("Create Proxy: Create low res proxy object")
             proxy.select = True
             context.scene.objects.active = proxy
             bpy.ops.object.modifier_apply(apply_as='DATA', modifier=decimate.name)
-                        
             proxy.luxcore.use_proxy = True
 
             bpy.ops.object.select_all(action='DESELECT')
@@ -90,25 +91,19 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             mesh_definitions = luxcore_scene.DefineBlenderMesh(obj.name, len(mesh.tessfaces), faces, len(mesh.vertices),
                                            vertices, texCoords, vertexColors, transformation)
 
-            
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select = True
-            context.scene.objects.active = obj
             bpy.ops.object.delete()
             
-            print("Export high resolution geometry data into PLY files...")
+            print("Create Proxy: Export high resolution geometry data into PLY files...")
             for [name, mat] in mesh_definitions:
                 filepath = self.directory + name + ".ply"
                 luxcore_scene.SaveMesh("Mesh-"+name, filepath);                
-                proxy.luxcore.proxies.add()
-                new = proxy.luxcore.proxies[-1]
+                new = proxy.luxcore.proxies.add()
                 new.name = name
+                new.matIndex = mat
                 new.filepath = self.directory + name + ".ply"
                 print("Saved ", self.directory + name + ".ply")
             
-
             bpy.ops.object.select_all(action='DESELECT')
             proxy.select = True
             context.scene.objects.active = proxy
-        
         return {"FINISHED"}

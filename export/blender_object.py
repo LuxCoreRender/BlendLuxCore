@@ -44,23 +44,28 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
             obj_transform = None
             mesh_transform = transformation
 
+        mesh_definitions = []
         if update_mesh:
-            # print("converting mesh:", blender_obj.data.name)
-            modifier_mode = "PREVIEW" if context else "RENDER"
-            apply_modifiers = True
-            mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
+            if blender_obj.luxcore.use_proxy:
+                mesh_definitions = _convert_proxy_to_shapes(luxcore_name, blender_obj, luxcore_scene)
+                obj_transform = None
+            else:
+                # print("converting mesh:", blender_obj.data.name)
+                modifier_mode = "PREVIEW" if context else "RENDER"
+                apply_modifiers = True
+                mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
 
-            if mesh is None or len(mesh.tessfaces) == 0:
-                # This is not worth a warning in the errorlog
-                print(blender_obj.name + ": No mesh data after to_mesh()")
-                if mesh:
-                    bpy.data.meshes.remove(mesh, do_unlink=False)
-                return props, None
+                if mesh is None or len(mesh.tessfaces) == 0:
+                    # This is not worth a warning in the errorlog
+                    print(blender_obj.name + ": No mesh data after to_mesh()")
+                    if mesh:
+                        bpy.data.meshes.remove(mesh, do_unlink=False)
+                    return props, None
 
-            # mesh.calc_normals_split()
-            # mesh.update(calc_edges=True, calc_tessface=True)
-            mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
-            bpy.data.meshes.remove(mesh, do_unlink=False)
+                # mesh.calc_normals_split()
+                # mesh.update(calc_edges=True, calc_tessface=True)
+                mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
+                bpy.data.meshes.remove(mesh, do_unlink=False)
         else:
             assert exported_object is not None
             print(blender_obj.name + ": Using cached mesh")
@@ -130,8 +135,8 @@ def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transf
 
     prefix = "scene.objects." + lux_object_name + "."
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
-
     props.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 
@@ -160,3 +165,17 @@ def _convert_mesh_to_shapes(name, mesh, luxcore_scene, mesh_transform):
 
     return luxcore_scene.DefineBlenderMesh(name, len(mesh.tessfaces), faces, len(mesh.vertices),
                                            vertices, texCoords, vertexColors, mesh_transform)
+
+def _convert_proxy_to_shapes(name, obj, luxcore_scene):
+    props = pyluxcore.Properties()
+
+    mesh_definitions = []
+    for obj in obj.luxcore.proxies:
+        prefix = "scene.shapes."+ "Mesh-"+ obj.name + "."
+        props.Set(pyluxcore.Property(prefix + "type", "mesh"))
+        props.Set(pyluxcore.Property(prefix + "ply", obj.filepath))
+        mesh_definitions.append((obj.name, obj.matIndex))
+
+    luxcore_scene.Parse(props)
+    print(props)
+    return mesh_definitions

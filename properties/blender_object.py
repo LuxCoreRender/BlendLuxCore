@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import BoolProperty, PointerProperty, StringProperty, CollectionProperty
+from bpy.props import BoolProperty, IntProperty, PointerProperty, StringProperty, CollectionProperty
 from bpy.types import PropertyGroup
 
 DESC_VISIBLE_TO_CAM = (
@@ -12,6 +12,7 @@ DESC_PROXIES = "Filepath to the high res objects used in rendering"
 
 class LuxCoreProxyList(PropertyGroup):
     name = StringProperty()
+    matIndex = IntProperty()
     filepath = StringProperty(subtype='FILE_PATH')
 
 
