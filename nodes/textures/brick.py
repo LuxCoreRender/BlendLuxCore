@@ -3,6 +3,7 @@ from bpy.props import EnumProperty, FloatProperty
 from .. import LuxCoreNodeTexture
 from ... import utils
 
+
 class LuxCoreNodeTexBrick(LuxCoreNodeTexture):
     bl_label = "Brick"
     bl_width_default = 200   

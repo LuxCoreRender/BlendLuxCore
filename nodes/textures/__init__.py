@@ -32,6 +32,7 @@ from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
 from .hsv import LuxCoreNodeTexHSV
 from .imagemap import LuxCoreNodeTexImagemap
+from .invert import LuxCoreNodeTexInvert
 from .iorpreset import LuxCoreNodeTexIORPreset
 from .irregulardata import LuxCoreNodeTexIrregularData
 from .lampspectrum import LuxCoreNodeTexLampSpectrum
@@ -122,6 +123,7 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         Separator(),
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
         # Possibly confusing, better deactivate (only needed in very rare cases anyway)
