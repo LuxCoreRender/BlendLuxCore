@@ -1,6 +1,6 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from ..utils.ui import template_refresh_button
+from ..utils.refresh_button import template_refresh_button
 
 
 class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
@@ -22,5 +22,4 @@ class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
         layout.label("Final Render:")
         row = layout.row()
         row.prop(display, "interval")
-        # TODO disable the button when no final render is running
         template_refresh_button(display, "refresh", layout, "Refreshing film...")

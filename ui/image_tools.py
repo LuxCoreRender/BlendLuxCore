@@ -1,6 +1,6 @@
 from bpy.types import Panel
 from . import denoiser
-from ..utils.ui import template_refresh_button
+from ..utils.refresh_button import template_refresh_button
 
 
 class LuxCoreImagePanel:

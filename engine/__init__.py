@@ -11,6 +11,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_use_exclude_layers = True  # No idea what this does, but we support exclude layers
     bl_use_postprocess = True  # No idea what this does
 
+    final_running = False
+
     def __init__(self):
         self.session = None
         self.DENOISED_OUTPUT_NAME = "DENOISED"
@@ -37,6 +39,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def render_final(self, scene):
         try:
+            LuxCoreRenderEngine.final_running = True
             final.render(self, scene)
         except Exception as error:
             self.report({"ERROR"}, str(error))
@@ -51,6 +54,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.session = None
         finally:
             scene.luxcore.active_layer_index = -1
+            LuxCoreRenderEngine.final_running = False
 
     def render_preview(self, scene):
         try:
