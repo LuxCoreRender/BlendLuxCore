@@ -17,7 +17,7 @@ from . import engine, handlers, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
 from .ui import (
     aovs, blender_object, camera, config, denoiser, display, errorlog,
-    halt, image_tools, light, lightgroups, material, mesh, particle,
+    halt, image_tools, light, lightgroups, material, particle,
     postpro, render, render_layer, texture, units, world
 )
 
