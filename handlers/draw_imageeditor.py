@@ -1,7 +1,20 @@
 import bpy
 import blf
+from bgl import *
 
 handle = None
+
+
+class TileStats:
+    @classmethod
+    def reset(cls):
+        cls.width = 0
+        cls.height = 0
+        cls.film_width = 0
+        cls.film_height = 0
+        cls.pending_coords = []
+        cls.converged_coords = []
+        cls.notconverged_coords = []
 
 
 def handler():
@@ -10,11 +23,61 @@ def handler():
     if context.scene.render.engine != "LUXCORE":
         return
 
+    _tile_highlight(context)
     _denoiser_help_text(context)
+
+
+def _tile_highlight(context):
+    if context.space_data.image.type != "RENDER_RESULT":
+        return
+    from ..engine import LuxCoreRenderEngine
+    if not LuxCoreRenderEngine.final_running:
+        return
+
+    view_to_region = context.region.view2d.view_to_region
+    _draw_tiles(TileStats.converged_coords, (0, 1, 0, 1), view_to_region)
+    _draw_tiles(TileStats.notconverged_coords, (1, 0, 0, 1), view_to_region)
+    _draw_tiles(TileStats.pending_coords, (1, 1, 0, 1), view_to_region)
+
+
+def _draw_tiles(coords, color, view_to_region):
+    if not coords:
+        return
+
+    glColor4f(*color)
+
+    for i in range(0, len(coords), 2):
+        # Pixel coords
+        x = coords[i]
+        y = coords[i + 1]
+        width = min(TileStats.width, TileStats.film_width - x - 1)
+        height = min(TileStats.height, TileStats.film_height - y - 1)
+
+        # Relative coords in range 0..1
+        rel_x = x / TileStats.film_width
+        rel_y = y / TileStats.film_height
+        rel_width = width / TileStats.film_width
+        rel_height = height / TileStats.film_height
+
+        _draw_rect(rel_x, rel_y, rel_width, rel_height, view_to_region)
+
+    # Reset color
+    glColor4f(0, 0, 0, 1)
+
+
+def _draw_rect(x, y, width, height, view_to_region):
+    glBegin(GL_LINE_LOOP)
+    glVertex2f(*view_to_region(x, y, clip=False))
+    glVertex2f(*view_to_region(x + width, y, clip=False))
+    glVertex2f(*view_to_region(x + width, y + height, clip=False))
+    glVertex2f(*view_to_region(x, y + height, clip=False))
+    glEnd()
 
 
 def _denoiser_help_text(context):
     if not context.scene.luxcore.denoiser.enabled:
+        return
+    if context.space_data.image.type != "RENDER_RESULT":
         return
 
     # Only show the help text if the toolshelf is not visible

@@ -1,5 +1,6 @@
 import bpy
 from . import final, preview, viewport
+from ..handlers.draw_imageeditor import TileStats
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -40,6 +41,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def render_final(self, scene):
         try:
             LuxCoreRenderEngine.final_running = True
+            TileStats.reset()
             final.render(self, scene)
         except Exception as error:
             self.report({"ERROR"}, str(error))
@@ -55,6 +57,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         finally:
             scene.luxcore.active_layer_index = -1
             LuxCoreRenderEngine.final_running = False
+            TileStats.reset()
 
     def render_preview(self, scene):
         try:

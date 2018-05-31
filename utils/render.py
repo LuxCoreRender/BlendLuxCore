@@ -1,5 +1,6 @@
 from . import calc_filmsize
 from .. import utils
+from ..handlers.draw_imageeditor import TileStats
 
 engine_to_str = {
     "PATHCPU": "Path CPU",
@@ -67,6 +68,15 @@ def update_ui(stats, engine, scene, config, time_until_film_refresh):
     else:
         # Reset to 0 in case the user disables the halt conditions during render
         engine.update_progress(0)
+
+    if "TILE" in config.GetProperties().Get("renderengine.type").GetString():
+        TileStats.film_width, TileStats.film_height = utils.calc_filmsize(scene)
+        tile_w = stats.Get("stats.tilepath.tiles.size.x").GetInt()
+        tile_h = stats.Get("stats.tilepath.tiles.size.y").GetInt()
+        TileStats.width, TileStats.height = tile_w, tile_h
+        TileStats.pending_coords = stats.Get('stats.tilepath.tiles.pending.coords').GetInts()
+        TileStats.converged_coords = stats.Get('stats.tilepath.tiles.converged.coords').GetInts()
+        TileStats.notconverged_coords = stats.Get('stats.tilepath.tiles.notconverged.coords').GetInts()
 
 
 def get_pretty_stats(config, stats, scene, context=None):
