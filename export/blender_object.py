@@ -48,7 +48,9 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
             # print("converting mesh:", blender_obj.data.name)
             modifier_mode = "PREVIEW" if context else "RENDER"
             apply_modifiers = True
+            edge_split_mod = _begin_autosmooth_if_required(blender_obj)
             mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
+            _end_autosmooth_if_required(blender_obj, edge_split_mod)
 
             if mesh is None or len(mesh.tessfaces) == 0:
                 # This is not worth a warning in the errorlog
@@ -56,10 +58,6 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                 if mesh:
                     bpy.data.meshes.remove(mesh, do_unlink=False)
                 return props, None
-
-            if blender_obj.data.use_auto_smooth:
-                mesh = _handle_autosmooth(mesh, scene, modifier_mode,
-                                          blender_obj.data.auto_smooth_angle)
 
             mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
             bpy.data.meshes.remove(mesh, do_unlink=False)
@@ -104,23 +102,20 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
         return pyluxcore.Properties(), None
 
 
-def _handle_autosmooth(mesh, scene, modifier_mode, auto_smooth_angle):
-    """
-    Auto smooth support with an edge split modifier.
-    Note that this has two drawbacks:
-    - it is rather slow because of the to_mesh method call
-    - it does not respect custom normals, like auto smooth does in Blender
-    """
-    temp_obj = bpy.data.objects.new("__TEMP__", mesh)
+def _begin_autosmooth_if_required(blender_obj):
+    if not blender_obj.data.use_auto_smooth:
+        return None
+
     # We use an edge split modifier, it does the same as auto smooth
-    mod = temp_obj.modifiers.new("Edge Split", 'EDGE_SPLIT')
-    mod.split_angle = auto_smooth_angle
-    # Apply the edge split modifier
-    result_mesh = temp_obj.to_mesh(scene, True, modifier_mode)
-    # Clean up the original mesh and the temp object we needed for the modifier
-    bpy.data.objects.remove(temp_obj, do_unlink=False)
-    bpy.data.meshes.remove(mesh, do_unlink=False)
-    return result_mesh
+    # The only drawback is that it does not handle custom normals
+    mod = blender_obj.modifiers.new("__LUXCORE_AUTO_SMOOTH__", 'EDGE_SPLIT')
+    mod.split_angle = blender_obj.data.auto_smooth_angle
+    return mod
+
+
+def _end_autosmooth_if_required(blender_obj, mod):
+    if mod:
+        blender_obj.modifiers.remove(mod)
 
 
 def _handle_pointiness(props, luxcore_shape_name, blender_obj):
