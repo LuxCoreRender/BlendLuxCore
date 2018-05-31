@@ -105,3 +105,35 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             proxy.select = True
             context.scene.objects.active = proxy
         return {"FINISHED"}
+
+class LUXCORE_OT_proxy_add(bpy.types.Operator):
+    bl_idname = "luxcore.proxy_add"
+    bl_label = "Add"
+    bl_description = "Add an object to the proxy list"
+
+    @classmethod
+    def poll(cls, context):
+        return poll_object(context)
+
+    def execute(self, context):        
+        obj = context.active_object
+        new = obj.luxcore.proxies.add()
+        new.name = obj.name  
+        obj.luxcore.proxies.update()        
+        return {"FINISHED"}
+
+class LUXCORE_OT_proxy_remove(bpy.types.Operator):
+    bl_idname = "luxcore.proxy_remove"
+    bl_label = "Remove"
+    bl_description = "Remove an object from the proxy list"
+
+    @classmethod
+    def poll(cls, context):
+        return poll_object(context)
+
+    def execute(self, context):        
+        obj = context.active_object
+        obj.luxcore.proxies.remove(len(obj.luxcore.proxies)-1)
+        obj.luxcore.proxies.update()
+        
+        return {"FINISHED"}
