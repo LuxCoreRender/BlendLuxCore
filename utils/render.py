@@ -75,8 +75,11 @@ def update_ui(stats, engine, scene, config, time_until_film_refresh):
         tile_h = stats.Get("stats.tilepath.tiles.size.y").GetInt()
         TileStats.width, TileStats.height = tile_w, tile_h
         TileStats.pending_coords = stats.Get('stats.tilepath.tiles.pending.coords').GetInts()
+        TileStats.pending_passcounts = stats.Get('stats.tilepath.tiles.pending.pass').GetInts()
         TileStats.converged_coords = stats.Get('stats.tilepath.tiles.converged.coords').GetInts()
+        TileStats.converged_passcounts = stats.Get('stats.tilepath.tiles.converged.pass').GetInts()
         TileStats.notconverged_coords = stats.Get('stats.tilepath.tiles.notconverged.coords').GetInts()
+        TileStats.notconverged_passcounts = stats.Get('stats.tilepath.tiles.notconverged.pass').GetInts()
 
 
 def get_pretty_stats(config, stats, scene, context=None):
