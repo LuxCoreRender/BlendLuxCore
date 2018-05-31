@@ -44,7 +44,10 @@ def update_ui(stats, engine, scene, config, time_until_film_refresh):
     else:
         refresh_message = "Film refresh in %ds" % time_until_film_refresh
 
-    engine.update_stats(pretty_stats, refresh_message)
+    # Note: the first argument is only shown in the UI.
+    # The second argument is shown in the UI and printed in the console
+    # when rendering in batch mode, so we use this to show the stats.
+    engine.update_stats("", pretty_stats + " | " + refresh_message)
 
     # Update progress bar if we have halt conditions
     halt = utils.get_halt_conditions(scene)
