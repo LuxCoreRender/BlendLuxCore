@@ -15,11 +15,19 @@ class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
     def draw(self, context):
         layout = self.layout
         display = context.scene.luxcore.display
+        config = context.scene.luxcore.config
 
         layout.label("Viewport Render:")
         layout.prop(display, "viewport_halt_time")
 
         layout.label("Final Render:")
+        if config.engine == "PATH" and config.use_tiles:
+            col = layout.column()
+            row = col.row(align=True)
+            row.prop(display, "show_converged", toggle=True)
+            row.prop(display, "show_notconverged", toggle=True)
+            col.prop(display, "show_passcounts")
+
         row = layout.row()
         row.prop(display, "interval")
         template_refresh_button(display, "refresh", layout, "Refreshing film...")

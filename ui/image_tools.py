@@ -19,9 +19,16 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
     def draw(self, context):
         layout = self.layout
         display = context.scene.luxcore.display
+        config = context.scene.luxcore.config
 
         template_refresh_button(display, "refresh", layout, "Refreshing film...")
         layout.prop(display, "interval")
+
+        if config.engine == "PATH" and config.use_tiles:
+            col = layout.column(align=True)
+            col.prop(display, "show_converged", toggle=True)
+            col.prop(display, "show_notconverged", toggle=True)
+            layout.prop(display, "show_passcounts")
 
 
 class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):

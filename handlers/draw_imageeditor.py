@@ -39,9 +39,18 @@ def _tile_highlight(context):
 
     # This is a method that handles the correct translation and scale in the view
     view_to_region = context.region.view2d.view_to_region
-    _draw_tiles(TileStats.converged_coords, TileStats.converged_passcounts, (0, 1, 0, 1), view_to_region)
-    _draw_tiles(TileStats.notconverged_coords, TileStats.notconverged_passcounts, (1, 0, 0, 1), view_to_region)
-    _draw_tiles(TileStats.pending_coords, TileStats.pending_passcounts, (1, 1, 0, 1), view_to_region)
+    display = context.scene.luxcore.display
+
+    if display.show_converged:
+        passcounts = TileStats.converged_passcounts if display.show_passcounts else []
+        _draw_tiles(TileStats.converged_coords, passcounts, (0, 1, 0, 1), view_to_region)
+
+    if display.show_notconverged:
+        passcounts = TileStats.notconverged_passcounts if display.show_passcounts else []
+        _draw_tiles(TileStats.notconverged_coords, passcounts, (1, 0, 0, 1), view_to_region)
+
+    passcounts = TileStats.pending_passcounts if display.show_passcounts else []
+    _draw_tiles(TileStats.pending_coords, passcounts, (1, 1, 0, 1), view_to_region)
 
 
 def _draw_tiles(coords, passcounts, color, view_to_region):
@@ -64,7 +73,8 @@ def _draw_tiles(coords, passcounts, color, view_to_region):
         rel_height = height / TileStats.film_height
 
         _draw_rect(rel_x, rel_y, rel_width, rel_height, view_to_region)
-        _draw_text(str(passcounts[i]), rel_x, rel_y, view_to_region)
+        if passcounts:
+            _draw_text(str(passcounts[i]), rel_x, rel_y, view_to_region)
 
     # Reset color
     glColor4f(0, 0, 0, 1)
