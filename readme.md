@@ -2,12 +2,11 @@
 
 ## BlendLuxCore
 
-This is the new Blender integration addon for LuxCore, rewritten from scratch.
-It is still in early development, so expect bugs and missing features. You can find information and updates about the ongoing development in [this thread](https://forums.luxcorerender.org/viewtopic.php?f=5&t=9).
+This is the new Blender integration addon for LuxCore, rewritten from scratch. You can find information and updates about the ongoing development in [this thread](https://forums.luxcorerender.org/viewtopic.php?f=5&t=9).
 
 ### Important
 
-This addon requires the very latest stable version of Blender: 2.79**a**. [Download](https://www.blender.org/download/)
+This addon only works with Blender 2.79a or 2.79b. [Download](https://www.blender.org/download/)
 
 Custom Blender builds and buildbot builds are not supported.
 

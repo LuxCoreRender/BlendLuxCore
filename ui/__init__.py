@@ -23,7 +23,7 @@ def compatible_panels():
         "DATA_PT_context_lamp",
         # Mesh
         "DATA_PT_context_mesh",
-        # "DATA_PT_normals",  # We have our own copy of this in ui/mesh.py
+        "DATA_PT_normals",
         "DATA_PT_texture_space",
         "DATA_PT_vertex_groups",
         "DATA_PT_shape_keys",

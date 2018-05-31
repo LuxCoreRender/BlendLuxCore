@@ -14,7 +14,7 @@ class LuxCoreSocketBumpHeight(LuxCoreSocketFloat):
 class LuxCoreNodeTexBump(LuxCoreNodeTexture):
     """ A scale texture which applies worldscale """
     bl_label = "Bump"
-    bl_width_min = 180
+    bl_width_default = 180
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value", 0.0)

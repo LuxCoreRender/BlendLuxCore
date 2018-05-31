@@ -57,8 +57,6 @@ def _render_layer(engine, scene):
     engine.session.Start()
 
     config = engine.session.GetRenderConfig()
-    done = False
-    start = time()
 
     if scene.luxcore.config.use_filesaver:
         engine.session.Stop()
@@ -74,48 +72,26 @@ def _render_layer(engine, scene):
         engine.session = None
         return
 
-    # Fast refresh on startup so the user quickly sees an image forming.
-    # Not used during animation render to enhance performance.
-    if not engine.is_animation:
-        FAST_REFRESH_DURATION = 5
-        refresh_interval = utils_render.shortest_display_interval(scene)
-        last_refresh = 0
+    start = time()
+    path_settings = scene.luxcore.config.path
+    last_film_refresh = 0
+    last_stat_refresh = 0
+    optimal_clamp = None
+    stats = utils_render.update_stats(engine.session)
+    FAST_REFRESH_DURATION = 0 if engine.is_animation else 5
 
-        while not done:
-            now = time()
-
-            if now - last_refresh > refresh_interval:
-                utils_render.refresh(engine, scene, config, draw_film=True)
-                done = engine.test_break() or engine.session.HasDone()
-
-            if now - start > FAST_REFRESH_DURATION:
-                # It's time to switch to the loop with slow refresh below
-                break
-
-            # This is a measure to make cancelling more responsive in this phase
-            checks = 10
-            for i in range(checks):
-                if engine.test_break():
-                    done = True
-                    break
-                sleep(1 / 60 / checks)
-
-    # Main loop where we refresh according to user-specified interval
-    last_film_refresh = time()
-    stat_refresh_interval = 1
-    last_stat_refresh = time()
-    computed_optimal_clamp = False
-
-    while not done:
+    while True:
         now = time()
         # These two properties are shown as "buttons" in the UI
         refresh_requested = scene.luxcore.display.refresh or scene.luxcore.denoiser.refresh
+        update_stats = (now - last_stat_refresh) > _stat_refresh_interval(start, scene)
+        time_until_film_refresh = scene.luxcore.display.interval - (now - last_film_refresh)
+        fast_refresh = now - start < FAST_REFRESH_DURATION
 
-        if (now - last_stat_refresh > stat_refresh_interval) or refresh_requested:
+        if fast_refresh or update_stats or refresh_requested:
             # We have to check the stats often to see if a halt condition is met
             # But film drawing is expensive, so we don't do it every time we check stats
-            time_until_film_refresh = scene.luxcore.display.interval - (now - last_film_refresh)
-            draw_film = time_until_film_refresh <= 0
+            draw_film = fast_refresh or (time_until_film_refresh <= 0)
 
             # Do session update (imagepipeline, lightgroups)
             changes = engine.exporter.get_changes()
@@ -123,34 +99,62 @@ def _render_layer(engine, scene):
             # Refresh quickly when user changed something or requested a refresh via button
             draw_film |= changes or refresh_requested
 
-            utils_render.refresh(engine, scene, config, draw_film, time_until_film_refresh)
-            done = engine.test_break() or engine.session.HasDone()
+            stats = utils_render.update_stats(engine.session)
+            if draw_film:
+                time_until_film_refresh = 0
+            utils_render.update_ui(stats, engine, scene, config, time_until_film_refresh)
+
+            # Check if the user cancelled during the expensive stats update
+            if engine.test_break() or engine.session.HasDone():
+                break
 
             last_stat_refresh = now
             if draw_film:
+                # Show updated film (this operation is expensive)
+                engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
                 last_film_refresh = now
+
+        utils_render.update_ui(stats, engine, scene, config, time_until_film_refresh)
 
         # Compute and print the optimal clamp value. Done only once after a warmup phase.
         # Only do this if clamping is disabled, otherwise the value is meaningless.
-        path_settings = scene.luxcore.config.path
-        if not computed_optimal_clamp and not path_settings.use_clamping and time() - start > 10:
+        if not optimal_clamp and not path_settings.use_clamping and now - start > 10:
             optimal_clamp = utils_render.find_suggested_clamp_value(engine.session, scene)
             print("Recommended clamp value:", optimal_clamp)
-            computed_optimal_clamp = True
+
+        # Check before we sleep
+        if engine.test_break():
+            break
 
         # Don't use up too much CPU time for this refresh loop, but stay responsive
         # Note: The engine Python code seems to be threaded by Blender,
         # so the interface would not even hang if we slept for minutes here
-        sleep(1 / 60)
+        sleep(1 / 15)
+
+        # Check after we slept, before the next possible expensive operation
+        if engine.test_break():
+            break
 
     # User wants to stop or halt condition is reached
     # Update stats to refresh film and draw the final result
-    utils_render.refresh(engine, scene, config, draw_film=True, render_stopped=True)
+    stats = utils_render.update_stats(engine.session)
+    utils_render.update_ui(stats, engine, scene, config, time_until_film_refresh=0)
+    engine.framebuffer.draw(engine, engine.session, scene, render_stopped=True)
     engine.update_stats("Render", "Stopping session...")
     engine.session.Stop()
     # Clean up
     del engine.session
     engine.session = None
+
+
+def _stat_refresh_interval(start, scene):
+    width, height = utils_render.calc_filmsize(scene)
+    is_big_image = width * height > 2000 * 2000
+    minimum = 4 if is_big_image else 1
+    maximum = 16
+
+    minutes = (time() - start) / 60
+    return max(min(2**minutes, maximum), minimum)
 
 
 def _check_halt_conditions(engine, scene):

@@ -6,7 +6,7 @@ import platform
 import os
 
 LINUX_FILES = [
-    "libembree.so.2", "libtbb.so.2", "libtbbmalloc.so.2",
+    "libembree3.so.3", "libtbb.so.2", "libtbbmalloc.so.2",
     "pyluxcore.so", "luxcoreui", "pyluxcoretools.zip",
 ]
 

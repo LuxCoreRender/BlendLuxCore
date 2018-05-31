@@ -135,17 +135,23 @@ class VisibilityCache(object):
 
 
 class WorldCache(object):
+    def __init__(self):
+        self.world_name = None
+
     def diff(self, context):
         world = context.scene.world
+        world_updated = False
+
         if world:
-            world_updated = world.is_updated or world.is_updated_data
+            world_updated = world.is_updated or world.is_updated_data or self.world_name != world.name
 
             # The sun influcences the world, e.g. through direction and turbidity if sky2 is used
             sun = world.luxcore.sun
             if sun:
-                sun_updated = sun.is_updated or sun.is_updated_data or (sun.data and sun.data.is_updated)
-            else:
-                sun_updated = False
+                world_updated |= sun.is_updated or sun.is_updated_data or (sun.data and sun.data.is_updated)
+        elif self.world_name:
+            # We had a world, but it was deleted
+            world_updated = True
 
-            return world_updated or sun_updated
-        return False
+        self.world_name = world.name if world else None
+        return world_updated

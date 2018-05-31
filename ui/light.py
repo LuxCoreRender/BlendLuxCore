@@ -95,7 +95,7 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
 
             if lamp.luxcore.sun_type == "sun":
                 world = context.scene.world
-                if world.luxcore.light == "sky2" and world.luxcore.sun != context.object:
+                if world and world.luxcore.light == "sky2" and world.luxcore.sun != context.object:
                     layout.operator("luxcore.attach_sun_to_sky", icon="WORLD")
                 layout.prop(lamp.luxcore, "relsize")
                 layout.prop(lamp.luxcore, "turbidity")

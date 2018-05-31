@@ -1,6 +1,6 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from ..utils.ui import template_refresh_button
+from ..utils.refresh_button import template_refresh_button
 
 
 def draw(context, layout):
@@ -17,7 +17,6 @@ def draw(context, layout):
 
     sub = col.column()
     # The user should not be able to request a refresh when denoiser is disabled
-    # TODO disable the button when no final render is running - how can we detect this?
     sub.enabled = denoiser.enabled
     template_refresh_button(denoiser, "refresh", sub, "Running denoiser...")
     

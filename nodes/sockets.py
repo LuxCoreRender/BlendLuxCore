@@ -31,10 +31,13 @@ class LuxCoreNodeSocket(NodeSocket):
 
     def draw(self, context, layout, node, text):
         # Check if the socket linked to this socket is in the set of allowed input socket classes.
-        if self.is_linked and hasattr(self, "allowed_inputs"):
+        link = self._get_link()
+
+        if link and hasattr(self, "allowed_inputs"):
             is_allowed = False
+
             for allowed_class in self.allowed_inputs:
-                if isinstance(self.links[0].from_socket, allowed_class):
+                if isinstance(link.from_socket, allowed_class):
                     is_allowed = True
                     break
 
@@ -74,14 +77,37 @@ class LuxCoreNodeSocket(NodeSocket):
         return None
 
     def export(self, exporter, props, luxcore_name=None):
-        if self.is_linked:
-            linked_node = self.links[0].from_node
+        link = self._get_link()
+
+        if link:
+            linked_node = link.from_node
+
             if luxcore_name:
                 return linked_node.export(exporter, props, luxcore_name)
             else:
                 return linked_node.export(exporter, props)
         elif hasattr(self, "default_value"):
             return self.export_default()
+        else:
+            return None
+
+    def _get_link(self):
+        """
+        Returns the link if this socket is linked, None otherwise.
+        All reroute nodes between this socket and the next non-reroute node are skipped.
+        """
+
+        if self.is_linked:
+            link = self.links[0]
+
+            while link.from_node.bl_idname == "NodeReroute":
+                if link.from_node.inputs[0].is_linked:
+                    link = link.from_node.inputs[0].links[0]
+                else:
+                    # If the left-most reroute has no input, it is like self.is_linked == False
+                    return None
+
+            return link
         else:
             return None
 

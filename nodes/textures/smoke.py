@@ -22,7 +22,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         was_value_enabled = value_output.enabled
 
         value_output.enabled = self.source in {"density", "fire", "heat"}
-        color_output.enabled = self.source == "color"
+        color_output.enabled = self.source in {"color", "velocity"}
 
         utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
 
@@ -31,8 +31,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         ("fire", "Fire", "Fire grid, 1 value per voxel", 1),
         ("heat", "Heat", "Smoke heat grid, 1 value per voxel", 2),
         ("color", "Color", "Smoke color grid, 3 values per voxel (RGB)", 3),
-        # ToDo implement velocity export
-        # ("velocity", "Velocity", "Smoke velocity grid, 3 values per voxel", 4),
+        ("velocity", "Velocity", "Smoke velocity grid, 3 values per voxel", 4),
     ]
     source = EnumProperty(name="Grid Type", items=source_items, default="density", update=update_source)
 
@@ -84,7 +83,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         rotate = self.domain.rotation_euler
 
         # create a location matrix
-        tex_loc = mathutils.Matrix.Translation((translate))
+        tex_loc = mathutils.Matrix.Translation(translate)
 
         # create an identitiy matrix
         tex_sca = mathutils.Matrix()
@@ -129,6 +128,9 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
             # Omit every 4th element because the color_grid contains 4 values per cell
             # but LuxCore expects 3 values per cell (r, g, b)
             prop.AddAllFloat(grid, 3, 1)
+        elif self.source == "velocity":
+            prop = pyluxcore.Property(prefix + "data3", [])
+            prop.AddAllFloat(grid)
         else:
             prop = pyluxcore.Property(prefix + "data", [])
             prop.AddAllFloat(grid)

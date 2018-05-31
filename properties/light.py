@@ -63,6 +63,9 @@ VIS_INDIRECT_DIFFUSE_DESC = VIS_INDIRECT_BASE.format(type="diffuse") + " (e.g. m
 VIS_INDIRECT_GLOSSY_DESC = VIS_INDIRECT_BASE.format(type="glossy") + " (e.g. glossy, roughglass, metal)"
 VIS_INDIRECT_SPECULAR_DESC = VIS_INDIRECT_BASE.format(type="specular") + " (e.g. glass, mirror)"
 
+RELSIZE_DESC = "1.0 is the apparent size of the sun when observed from earth (at mean distance of 149,600,000 km)"
+THETA_DESC = "Half angle in degrees. Larger values make the light source appear larger and the shadows softer"
+
 
 def init():
     bpy.types.Lamp.luxcore = PointerProperty(type=LuxCoreLightProps)
@@ -109,12 +112,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
                               description=TURBIDITY_DESC)
 
     # sun
-    relsize = FloatProperty(name="Relative Size", default=1, min=0.05)
-
-    # sky2 (is in world propertys, not sure if it's necessary to have a sky2 light)
-    # groundalbedo = FloatVectorProperty(name="Ground Albedo", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
-    # ground_enable = BoolProperty(name="Use Ground Color", default=False)
-    # ground_color = FloatVectorProperty(name="Ground Color", default=(0.5, 0.5, 0.5), min=0, max=1, subtype="COLOR")
+    relsize = FloatProperty(name="Relative Size", default=1, min=0.05,
+                            description=RELSIZE_DESC)
 
     # The image property has different names on different lights:
     # infinite: file
@@ -146,7 +145,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # Note: fov is set with default Blender properties
 
     # distant
-    theta = FloatProperty(name="Size", default=10, min=0, soft_min=0.05)
+    theta = FloatProperty(name="Size", default=10, min=0, soft_min=0.05,
+                          description=THETA_DESC)
 
     # laser
     # Note: radius is set with default Blender properties (area light size)

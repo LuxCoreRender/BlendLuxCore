@@ -131,10 +131,14 @@ class LuxCoreNodeVolume(LuxCoreNode):
     # priority (IntProperty)
     # emission_id (IntProperty) (or maybe PointerProperty to light group later)
     # color_depth (FloatProperty) - for implicit colordepth texture
+    # lightgroup (StringProperty)
 
     def draw_common_buttons(self, context, layout):
         layout.prop(self, "priority")
-        # layout.prop(self, "emission_id")  # TODO correct lightgroup dropdown
+        lightgroups = context.scene.luxcore.lightgroups
+        layout.prop_search(self, "lightgroup",
+                           lightgroups, "custom",
+                           icon="OUTLINER_OB_LAMP", text="")
         layout.prop(self, "color_depth")
 
     def add_common_inputs(self):
@@ -170,6 +174,11 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
         definitions["absorption"] = abs_col
         definitions["emission"] = self.inputs["Emission"].export(exporter, props)
+
+        lightgroups = exporter.scene.luxcore.lightgroups
+        lightgroup_id = lightgroups.get_id_by_name(self.lightgroup)
+        definitions["emission.id"] = lightgroup_id
+        exporter.lightgroup_cache.add(lightgroup_id)
 
     def export_scattering(self, exporter, props):
         scattering_col_socket = self.inputs["Scattering"]

@@ -3,7 +3,7 @@ from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_VOLUME
-from ..output import get_active_output
+from ..nodeitems import Separator
 
 from .output import LuxCoreNodeVolOutput
 from .clear import LuxCoreNodeVolClear
@@ -100,9 +100,11 @@ luxcore_node_categories_volume = [
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_UTILS", "Utils", items=[
         # Note: 2D textures make no sense for volumes
-        NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexColorMix", label="Color Mix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexColorAtDepth", label="Color at depth"),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
@@ -129,6 +131,7 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeVolOutput", label="Output"),
     ]),
 ]
+
 
 def register():
     nodeitems_utils.register_node_categories("LUXCORE_VOLUME_TREE", luxcore_node_categories_volume)

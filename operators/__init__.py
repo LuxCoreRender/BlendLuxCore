@@ -5,9 +5,15 @@ from bpy.props import StringProperty, BoolProperty
 
 # Ensure initialization (note: no need to initialize utils)
 from . import (
+<<<<<<< HEAD
     blender_object, camera, camera_response_func, ior_presets, lightgroups,
     material, node_tree_presets, pointer_node, pyluxcoretools,
     texture, update, world,
+=======
+    camera, camera_response_func, ior_presets, lightgroups,
+    material, multi_image_import, node_tree_presets, pointer_node,
+    pyluxcoretools, texture, update, world,
+>>>>>>> master
 )
 from .utils import init_vol_node_tree, poll_node
 

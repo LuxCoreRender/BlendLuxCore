@@ -1,5 +1,6 @@
 from . import calc_filmsize
 from .. import utils
+from ..handlers.draw_imageeditor import TileStats
 
 engine_to_str = {
     "PATHCPU": "Path CPU",
@@ -21,21 +22,21 @@ sampler_to_str = {
 }
 
 
-def refresh(engine, scene, config, draw_film, time_until_film_refresh=0, render_stopped=False):
-    """ Stats and optional film refresh during final render """
-    error_message = ""
+def update_stats(session):
     try:
-        engine.session.UpdateStats()
+        # Note: this can be an expensive operation when the filmsize is large
+        session.UpdateStats()
     except RuntimeError as error:
         print("Error during UpdateStats():", error)
-        error_message = str(error)
 
-    stats = engine.session.GetStats()
+    return session.GetStats()
 
+
+def update_ui(stats, engine, scene, config, time_until_film_refresh):
     # Show stats string in UI
     pretty_stats = get_pretty_stats(config, stats, scene)
 
-    if draw_film:
+    if time_until_film_refresh <= 0:
         if engine.has_denoiser() and scene.luxcore.denoiser.refresh:
             refresh_message = "Running denoiser and refreshing film..."
         else:
@@ -43,14 +44,7 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0, render_
     else:
         refresh_message = "Film refresh in %ds" % time_until_film_refresh
 
-    if error_message:
-        refresh_message += " | " + error_message
-
     engine.update_stats(pretty_stats, refresh_message)
-
-    if draw_film:
-        # Show updated film (this operation is expensive)
-        engine.framebuffer.draw(engine, engine.session, scene, render_stopped)
 
     # Update progress bar if we have halt conditions
     halt = utils.get_halt_conditions(scene)
@@ -74,6 +68,15 @@ def refresh(engine, scene, config, draw_film, time_until_film_refresh=0, render_
     else:
         # Reset to 0 in case the user disables the halt conditions during render
         engine.update_progress(0)
+
+    if "TILE" in config.GetProperties().Get("renderengine.type").GetString():
+        TileStats.film_width, TileStats.film_height = utils.calc_filmsize(scene)
+        tile_w = stats.Get("stats.tilepath.tiles.size.x").GetInt()
+        tile_h = stats.Get("stats.tilepath.tiles.size.y").GetInt()
+        TileStats.width, TileStats.height = tile_w, tile_h
+        TileStats.pending_coords = stats.Get('stats.tilepath.tiles.pending.coords').GetInts()
+        TileStats.converged_coords = stats.Get('stats.tilepath.tiles.converged.coords').GetInts()
+        TileStats.notconverged_coords = stats.Get('stats.tilepath.tiles.notconverged.coords').GetInts()
 
 
 def get_pretty_stats(config, stats, scene, context=None):

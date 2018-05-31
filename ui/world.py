@@ -23,7 +23,6 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         layout.prop(world.luxcore, "light", expand=True)
 
         if world.luxcore.light != "none":
-            # TODO: id (light group)
             split = layout.split()
 
             col = split.column(align=True)
@@ -45,8 +44,8 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
             op.target = "SCENE"
             lightgroups = context.scene.luxcore.lightgroups
             col.prop_search(world.luxcore, "lightgroup",
-                              lightgroups, "custom",
-                              icon="OUTLINER_OB_LAMP", text="")
+                            lightgroups, "custom",
+                            icon="OUTLINER_OB_LAMP", text="")
 
 
 class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
@@ -59,8 +58,7 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        correct_light = context.world.luxcore.light == "sky2"
-        return context.world and engine == "LUXCORE" and correct_light
+        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "sky2"
 
     def draw(self, context):
         layout = self.layout

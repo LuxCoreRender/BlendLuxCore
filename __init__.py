@@ -17,7 +17,7 @@ from . import engine, handlers, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
 from .ui import (
     aovs, blender_object, camera, config, denoiser, display, errorlog,
-    halt, image_tools, light, lightgroups, material, mesh, particle,
+    halt, image_tools, light, lightgroups, material, particle,
     postpro, render, render_layer, texture, units, world
 )
 
@@ -29,7 +29,7 @@ bl_info = {
     "category": "Render",
     "location": "Info header, render engine menu",
     "description": "LuxCore integration for Blender",
-    "warning": "alpha0",
+    "warning": "alpha1",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }

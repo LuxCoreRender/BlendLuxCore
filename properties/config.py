@@ -97,9 +97,6 @@ class LuxCoreConfigPath(PropertyGroup):
     # This should only be set in the engine code after export. Only show a read-only label to the user.
     suggested_clamping_value = FloatProperty(name="", default=-1)
 
-    # TODO This will be set automatically on export when transparent film is used
-    # path.forceblackbackground.enable
-
     # We probably don't need to expose these properties because they have good
     # default values that should very rarely (or never?) need adjustment
     # path.russianroulette.depth

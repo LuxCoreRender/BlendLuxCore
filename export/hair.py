@@ -1,3 +1,4 @@
+import bpy
 from ..bin import pyluxcore
 from . import material
 from .. import utils
@@ -63,34 +64,37 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
         colors = []
         uv_coords = []
         total_segments_count = 0
-        uv_tex = None
+        has_vertex_colors = False
         colorflag = False
         uvflag = False
-        thicknessflag = 0
         image_width = 0
         image_height = 0
         image_pixels = []
+        image_valid = False
 
-        modifier_mode = "PREVIEW" if context else "RENDER"
-        mesh = blender_obj.to_mesh(scene, True, modifier_mode)
-        uv_textures = mesh.tessface_uv_textures
-        vertex_color = mesh.tessface_vertex_colors
+        if settings.export_color != "none":
+            modifier_mode = "PREVIEW" if context else "RENDER"
+            mesh = blender_obj.to_mesh(scene, True, modifier_mode)
+            uv_textures = mesh.tessface_uv_textures
+            vertex_color = mesh.tessface_vertex_colors
 
-        has_vertex_colors = True if (vertex_color.active and vertex_color.active.data) else False
-        has_uv_texture =  True if (uv_textures.active and uv_textures.active.data) else False
+            has_vertex_colors = vertex_color.active and vertex_color.active.data
+            has_uv_texture = uv_textures.active and uv_textures.active.data
 
-        if settings.export_color == "vertex_color" and has_vertex_colors:
-            colorflag = True
+            if settings.export_color == "vertex_color" and has_vertex_colors:
+                colorflag = True
 
-        if settings.export_color == "uv_texture_map":
-            if has_uv_texture:
-                uv_tex = uv_textures.active.data
-                if uv_tex[0].image:
-                    image_width = uv_tex[0].image.size[0]
-                    image_height = uv_tex[0].image.size[1]
-                    image_pixels = uv_tex[0].image.pixels[:]
-                    colorflag = True
-                uvflag = True
+            if settings.export_color == "uv_texture_map":
+                if has_uv_texture:
+                    uv_tex = uv_textures.active.data
+                    image = uv_tex[0].image
+                    if image:
+                        image_width = image.size[0]
+                        image_height = image.size[1]
+                        image_pixels = image.pixels[:]
+                        image_valid = len(image_pixels)
+                        colorflag = True
+                    uvflag = True
 
         transform = blender_obj.matrix_world.inverted()
         total_strand_count = 0
@@ -143,7 +147,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
 
                     point_count += 1
 
-                    if settings.export_color == 'uv_texture_map' and not len(image_pixels) == 0:
+                    if settings.export_color == 'uv_texture_map' and image_valid:
                         if uvflag:
                             if not uv_co:
                                 uv_co = psys.uv_on_emitter(mod, psys.particles[i], pindex, uv_textures.active_index)
@@ -177,6 +181,10 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
                 segments.append(point_count - 1)
                 total_strand_count += 1
                 total_segments_count = total_segments_count + point_count - 1
+
+        if settings.export_color != "none":
+            # Delete the temporary mesh we had to create
+            bpy.data.meshes.remove(mesh, do_unlink=False)
 
         # LuxCore needs tuples, not vectors
         points_as_tuples = [tuple(point) for point in points]

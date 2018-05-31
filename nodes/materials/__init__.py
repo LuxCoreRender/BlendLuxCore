@@ -4,6 +4,7 @@ import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_MATERIAL
 from ...utils import node as utils_node
+from ..nodeitems import Separator, NodeItemMultiImageImport
 
 # Import all material nodes just so they get registered
 from .emission import LuxCoreNodeMatEmission
@@ -95,19 +96,22 @@ luxcore_node_categories_material = [
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
-        NodeItem("LuxCoreNodeTexImagemap", label="Imagemap"),
-        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
-        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
-        NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
-        # Procedurals (TODO: add dividers)
+        NodeItemMultiImageImport(),
+        NodeItem("LuxCoreNodeTexImagemap", label="Image"),
+        Separator(),
+        # Procedurals
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
         NodeItem("LuxCoreNodeTexCheckerboard2D", label="2D Checkerboard"),
         NodeItem("LuxCoreNodeTexCheckerboard3D", label="3D Checkerboard"),
         NodeItem("LuxCoreNodeTexMarble", label="Marble"),
-        NodeItem("LuxCoreNodeTexWindy", label="Windy"),
+        # NodeItem("LuxCoreNodeTexWindy", label="Windy"),  # Same as FBM -> unnecessary
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
+        NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_BLENDERTEXTURE", "Texture (Blender)", items=[
@@ -126,8 +130,11 @@ luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
+        Separator(),
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
-        NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
+        # Possibly confusing, better deactivate (only needed in very rare cases anyway)
+        # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
         NodeItem("LuxCoreNodeTexBand", label="Band"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
@@ -144,6 +151,7 @@ luxcore_node_categories_material = [
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[
         NodeItem("LuxCoreNodeMatEmission", label="Light Emission"),
+        Separator(),
         NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
         NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
         NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
