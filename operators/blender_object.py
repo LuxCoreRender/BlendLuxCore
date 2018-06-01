@@ -7,6 +7,30 @@ from .utils import (
     LUXCORE_OT_set_node_tree, 
 )
 
+def LUXCORE_OT_use_proxy_switch(self, context):
+    obj = context.active_object
+    transformation = obj.matrix_world
+    
+    if not obj.luxcore.use_proxy:
+        if len(obj.luxcore.proxies) > 0:            
+            bpy.ops.object.select_all(action='DESELECT')
+
+            # Reload high res object
+            for p in obj.luxcore.proxies:
+                bpy.ops.import_mesh.ply(filepath=p.filepath)
+                
+            for s in context.selected_objects:
+                matIndex = obj.luxcore.proxies[s.name].matIndex
+                mat = obj.material_slots[matIndex].material
+                s.data.materials.append(mat)
+
+            bpy.ops.object.join()
+            context.active_object.matrix_world = transformation
+            context.active_object.name = context.active_object.name[:-3]
+
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select = True
+            bpy.ops.object.delete()
 
 class LUXCORE_OT_proxy_new(bpy.types.Operator):
     bl_idname = "luxcore.proxy_new"
@@ -49,13 +73,13 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
 
             # TODO: accept custom parameters for decimate modifier
             decimate = proxy.modifiers.new('proxy_decimate', 'DECIMATE')
-            decimate.ratio = 0.005
+            decimate.ratio = 0.05
 
             # Create low res proxy object
             print("Create Proxy: Create low res proxy object")
             proxy.select = True
             context.scene.objects.active = proxy
-            bpy.ops.object.modifier_apply(apply_as='DATA', modifier=decimate.name)
+            #bpy.ops.object.modifier_apply(apply_as='DATA', modifier=decimate.name)
             proxy.luxcore.use_proxy = True
 
             bpy.ops.object.select_all(action='DESELECT')

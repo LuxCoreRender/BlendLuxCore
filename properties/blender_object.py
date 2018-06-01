@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import BoolProperty, IntProperty, PointerProperty, StringProperty, CollectionProperty
 from bpy.types import PropertyGroup
+from ..operators.blender_object import LUXCORE_OT_use_proxy_switch
 
 DESC_VISIBLE_TO_CAM = (
     "If disabled, the object will not be visible to camera rays. "
@@ -23,5 +24,5 @@ def init():
 class LuxCoreObjectProps(PropertyGroup):
     visible_to_camera = BoolProperty(name="Visible to Camera", default=True, description=DESC_VISIBLE_TO_CAM)
     enable_motion_blur = BoolProperty(name="Motion Blur", default=True, description=DESC_MOTION_BLUR)
-    use_proxy = BoolProperty(name="Use Proxy", default=False, description=DESC_USE_PROXY)
+    use_proxy = BoolProperty(name="Use Proxy", default=False, update=LUXCORE_OT_use_proxy_switch,description=DESC_USE_PROXY)
     proxies = CollectionProperty(name="Proxy Files", type=LuxCoreProxyList, description=DESC_PROXIES)    
