@@ -88,39 +88,54 @@ def _render_layer(engine, scene):
         time_until_film_refresh = scene.luxcore.display.interval - (now - last_film_refresh)
         fast_refresh = now - start < FAST_REFRESH_DURATION
 
-        if fast_refresh or update_stats or refresh_requested:
-            # We have to check the stats often to see if a halt condition is met
-            # But film drawing is expensive, so we don't do it every time we check stats
-            draw_film = fast_refresh or (time_until_film_refresh <= 0)
-
-            # Do session update (imagepipeline, lightgroups)
-            changes = engine.exporter.get_changes()
-            engine.exporter.update_session(changes, engine.session)
-            # Refresh quickly when user changed something or requested a refresh via button
-            draw_film |= changes or refresh_requested
-
-            stats = utils_render.update_stats(engine.session)
-            if draw_film:
-                time_until_film_refresh = 0
-            utils_render.update_ui(stats, engine, scene, config, time_until_film_refresh)
-
-            # Check if the user cancelled during the expensive stats update
-            if engine.test_break() or engine.session.HasDone():
-                break
-
-            last_stat_refresh = now
-            if draw_film:
-                # Show updated film (this operation is expensive)
+        if scene.luxcore.display.paused:
+            if not engine.session.IsInPause():
+                engine.session.Pause()
+                utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh=0)
                 engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
-                last_film_refresh = now
+                engine.update_stats("", "Paused")
+        else:
+            if engine.session.IsInPause():
+                engine.session.Resume()
 
-        utils_render.update_ui(stats, engine, scene, config, time_until_film_refresh)
+        # Do session update (imagepipeline, lightgroups)
+        changes = engine.exporter.get_changes()
+        engine.exporter.update_session(changes, engine.session)
 
-        # Compute and print the optimal clamp value. Done only once after a warmup phase.
-        # Only do this if clamping is disabled, otherwise the value is meaningless.
-        if not optimal_clamp and not path_settings.use_clamping and now - start > 10:
-            optimal_clamp = utils_render.find_suggested_clamp_value(engine.session, scene)
-            print("Recommended clamp value:", optimal_clamp)
+        if engine.session.IsInPause():
+            if changes or refresh_requested:
+                engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
+        else:
+            if fast_refresh or update_stats or refresh_requested:
+                # We have to check the stats often to see if a halt condition is met
+                # But film drawing is expensive, so we don't do it every time we check stats
+                draw_film = fast_refresh or (time_until_film_refresh <= 0)
+
+                # Refresh quickly when user changed something or requested a refresh via button
+                draw_film |= changes or refresh_requested
+
+                stats = utils_render.update_stats(engine.session)
+                if draw_film:
+                    time_until_film_refresh = 0
+                utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh)
+
+                # Check if the user cancelled during the expensive stats update
+                if engine.test_break() or engine.session.HasDone():
+                    break
+
+                last_stat_refresh = now
+                if draw_film:
+                    # Show updated film (this operation is expensive)
+                    engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
+                    last_film_refresh = now
+
+            utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh)
+
+            # Compute and print the optimal clamp value. Done only once after a warmup phase.
+            # Only do this if clamping is disabled, otherwise the value is meaningless.
+            if not optimal_clamp and not path_settings.use_clamping and now - start > 10:
+                optimal_clamp = utils_render.find_suggested_clamp_value(engine.session, scene)
+                print("Recommended clamp value:", optimal_clamp)
 
         # Check before we sleep
         if engine.test_break():
@@ -129,7 +144,7 @@ def _render_layer(engine, scene):
         # Don't use up too much CPU time for this refresh loop, but stay responsive
         # Note: The engine Python code seems to be threaded by Blender,
         # so the interface would not even hang if we slept for minutes here
-        sleep(1 / 15)
+        sleep(1 / 5)
 
         # Check after we slept, before the next possible expensive operation
         if engine.test_break():
@@ -138,9 +153,11 @@ def _render_layer(engine, scene):
     # User wants to stop or halt condition is reached
     # Update stats to refresh film and draw the final result
     stats = utils_render.update_stats(engine.session)
-    utils_render.update_ui(stats, engine, scene, config, time_until_film_refresh=0)
+    utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh=0)
     engine.framebuffer.draw(engine, engine.session, scene, render_stopped=True)
     engine.update_stats("Render", "Stopping session...")
+    if engine.session.IsInPause():
+        engine.session.Resume()
     engine.session.Stop()
     # Clean up
     del engine.session

@@ -1,6 +1,7 @@
 from bpy.types import Panel
 from . import denoiser
 from ..utils.refresh_button import template_refresh_button
+from ..engine import LuxCoreRenderEngine
 
 
 class LuxCoreImagePanel:
@@ -20,6 +21,12 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
         layout = self.layout
         display = context.scene.luxcore.display
         config = context.scene.luxcore.config
+
+        text = "Resume" if display.paused else "Pause"
+        icon = "PLAY" if display.paused else "PAUSE"
+        row = layout.row()
+        row.enabled = LuxCoreRenderEngine.final_running
+        row.prop(display, "paused", text=text, icon=icon, toggle=True)
 
         template_refresh_button(display, "refresh", layout, "Refreshing film...")
         layout.prop(display, "interval")

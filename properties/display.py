@@ -3,6 +3,7 @@ from bpy.props import IntProperty, BoolProperty
 
 
 class LuxCoreDisplaySettings(bpy.types.PropertyGroup):
+    paused = BoolProperty(name="Pause", default=False)
     refresh = BoolProperty(name="Refresh Film", default=False,
                            description="Update the rendered image")
     interval = IntProperty(name="Refresh Interval (s)", default=10, min=5,

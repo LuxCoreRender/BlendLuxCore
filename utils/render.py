@@ -32,7 +32,7 @@ def update_stats(session):
     return session.GetStats()
 
 
-def update_ui(stats, engine, scene, config, time_until_film_refresh):
+def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
     # Show stats string in UI
     pretty_stats = get_pretty_stats(config, stats, scene)
 
