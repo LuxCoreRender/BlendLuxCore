@@ -68,7 +68,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
 
                 # mesh.calc_normals_split()
                 # mesh.update(calc_edges=True, calc_tessface=True)
-                mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
+                mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)                
                 bpy.data.meshes.remove(mesh, do_unlink=False)
         else:
             assert exported_object is not None
@@ -190,11 +190,10 @@ def _convert_proxy_to_shapes(name, obj, luxcore_scene):
 
     mesh_definitions = []
     for obj in obj.luxcore.proxies:
-        prefix = "scene.shapes."+ "Mesh-"+ obj.name + "."
+        prefix = "scene.shapes." + "Mesh-" + name + "%03d" % obj.matIndex + "."
         props.Set(pyluxcore.Property(prefix + "type", "mesh"))
         props.Set(pyluxcore.Property(prefix + "ply", obj.filepath))
-        mesh_definitions.append((obj.name, obj.matIndex))
+        mesh_definitions.append((name + "%03d" % obj.matIndex, obj.matIndex))
 
-    luxcore_scene.Parse(props)
-    print(props)
+    luxcore_scene.Parse(props)    
     return mesh_definitions

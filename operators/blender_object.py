@@ -84,7 +84,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             if vertex_color:
                 vertexColors = vertex_color.data[0].as_pointer()
             else:
-                vertexColors = 0
+                vertexColors = 0            
             
             mesh_definitions = luxcore_scene.DefineBlenderMesh(obj.name, len(mesh.tessfaces), faces, len(mesh.vertices),
                                            vertices, texCoords, vertexColors, None)
