@@ -143,7 +143,7 @@ class FrameBufferFinal(object):
         stats = engine.session.GetStats()
         samples = stats.Get("stats.renderengine.pass").GetInt()
 
-        if refresh_denoised and samples == self.denoiser_last_samples:
+        if render_stopped and samples == self.denoiser_last_samples:
             # No new samples, do not run the denoiser. Saves time when the user
             # cancels the render wile the denoiser is running, for example.
             print("No new samples since last denoiser run, skipping denoising.")

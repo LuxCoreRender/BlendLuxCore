@@ -32,7 +32,7 @@ def update_stats(session):
     return session.GetStats()
 
 
-def update_ui(stats, engine, scene, config, time_until_film_refresh):
+def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
     # Show stats string in UI
     pretty_stats = get_pretty_stats(config, stats, scene)
 
@@ -44,7 +44,10 @@ def update_ui(stats, engine, scene, config, time_until_film_refresh):
     else:
         refresh_message = "Film refresh in %ds" % time_until_film_refresh
 
-    engine.update_stats(pretty_stats, refresh_message)
+    # Note: the first argument is only shown in the UI.
+    # The second argument is shown in the UI and printed in the console
+    # when rendering in batch mode, so we use this to show the stats.
+    engine.update_stats("", pretty_stats + " | " + refresh_message)
 
     # Update progress bar if we have halt conditions
     halt = utils.get_halt_conditions(scene)
@@ -75,8 +78,11 @@ def update_ui(stats, engine, scene, config, time_until_film_refresh):
         tile_h = stats.Get("stats.tilepath.tiles.size.y").GetInt()
         TileStats.width, TileStats.height = tile_w, tile_h
         TileStats.pending_coords = stats.Get('stats.tilepath.tiles.pending.coords').GetInts()
+        TileStats.pending_passcounts = stats.Get('stats.tilepath.tiles.pending.pass').GetInts()
         TileStats.converged_coords = stats.Get('stats.tilepath.tiles.converged.coords').GetInts()
+        TileStats.converged_passcounts = stats.Get('stats.tilepath.tiles.converged.pass').GetInts()
         TileStats.notconverged_coords = stats.Get('stats.tilepath.tiles.notconverged.coords').GetInts()
+        TileStats.notconverged_passcounts = stats.Get('stats.tilepath.tiles.notconverged.pass').GetInts()
 
 
 def get_pretty_stats(config, stats, scene, context=None):

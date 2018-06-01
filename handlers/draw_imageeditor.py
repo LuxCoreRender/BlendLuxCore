@@ -13,8 +13,11 @@ class TileStats:
         cls.film_width = 0
         cls.film_height = 0
         cls.pending_coords = []
+        cls.pending_passcounts = []
         cls.converged_coords = []
+        cls.converged_passcounts = []
         cls.notconverged_coords = []
+        cls.notconverged_passcounts = []
 
 
 def handler():
@@ -34,24 +37,35 @@ def _tile_highlight(context):
     if not LuxCoreRenderEngine.final_running:
         return
 
+    # This is a method that handles the correct translation and scale in the view
     view_to_region = context.region.view2d.view_to_region
-    _draw_tiles(TileStats.converged_coords, (0, 1, 0, 1), view_to_region)
-    _draw_tiles(TileStats.notconverged_coords, (1, 0, 0, 1), view_to_region)
-    _draw_tiles(TileStats.pending_coords, (1, 1, 0, 1), view_to_region)
+    display = context.scene.luxcore.display
+
+    if display.show_converged:
+        passcounts = TileStats.converged_passcounts if display.show_passcounts else []
+        _draw_tiles(TileStats.converged_coords, passcounts, (0, 1, 0, 1), view_to_region)
+
+    if display.show_notconverged:
+        passcounts = TileStats.notconverged_passcounts if display.show_passcounts else []
+        _draw_tiles(TileStats.notconverged_coords, passcounts, (1, 0, 0, 1), view_to_region)
+
+    if display.show_pending:
+        passcounts = TileStats.pending_passcounts if display.show_passcounts else []
+        _draw_tiles(TileStats.pending_coords, passcounts, (1, 1, 0, 1), view_to_region)
 
 
-def _draw_tiles(coords, color, view_to_region):
+def _draw_tiles(coords, passcounts, color, view_to_region):
     if not coords:
         return
 
     glColor4f(*color)
 
-    for i in range(0, len(coords), 2):
+    for i in range(len(coords) // 2):
         # Pixel coords
-        x = coords[i]
-        y = coords[i + 1]
-        width = min(TileStats.width, TileStats.film_width - x - 1)
-        height = min(TileStats.height, TileStats.film_height - y - 1)
+        x = coords[i * 2]
+        y = coords[i * 2 + 1]
+        width = min(TileStats.width, TileStats.film_width - x)
+        height = min(TileStats.height, TileStats.film_height - y)
 
         # Relative coords in range 0..1
         rel_x = x / TileStats.film_width
@@ -60,6 +74,8 @@ def _draw_tiles(coords, color, view_to_region):
         rel_height = height / TileStats.film_height
 
         _draw_rect(rel_x, rel_y, rel_width, rel_height, view_to_region)
+        if passcounts:
+            _draw_text(str(passcounts[i]), rel_x, rel_y, view_to_region)
 
     # Reset color
     glColor4f(0, 0, 0, 1)
@@ -72,6 +88,18 @@ def _draw_rect(x, y, width, height, view_to_region):
     glVertex2f(*view_to_region(x + width, y + height, clip=False))
     glVertex2f(*view_to_region(x, y + height, clip=False))
     glEnd()
+
+
+def _draw_text(text, x, y, view_to_region):
+    font_id = 0
+    dpi = 72
+    text_size = 15
+    offset = 5
+    pixelpos_x, pixelpos_y = view_to_region(x, y, clip=False)
+
+    blf.position(font_id, pixelpos_x + offset, pixelpos_y + offset, 0)
+    blf.size(font_id, text_size, dpi)
+    blf.draw(font_id, text)
 
 
 def _denoiser_help_text(context):
