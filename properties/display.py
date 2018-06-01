@@ -16,5 +16,7 @@ class LuxCoreDisplaySettings(bpy.types.PropertyGroup):
                                   description="Mark tiles that are no longer rendered with green outline")
     show_notconverged = BoolProperty(name="Highlight Unconverged Tiles", default=False,
                                      description="Mark tiles that are still rendered with red outline")
-    show_passcounts = BoolProperty(name="Show Passes Per Tile", default=True,
+    show_pending = BoolProperty(name="Highlight Pending Tiles", default=True,
+                                description="Mark tiles that are currently being worked on with yellow outline")
+    show_passcounts = BoolProperty(name="Show Passes per Tile", default=True,
                                    description="Display how many passes were already done per tile")

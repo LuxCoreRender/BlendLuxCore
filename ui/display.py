@@ -22,11 +22,15 @@ class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
 
         layout.label("Final Render:")
         if config.engine == "PATH" and config.use_tiles:
-            col = layout.column()
-            row = col.row(align=True)
-            row.prop(display, "show_converged", toggle=True)
-            row.prop(display, "show_notconverged", toggle=True)
-            col.prop(display, "show_passcounts")
+            box = layout.box()
+            box.label("Tile Highlighting:")
+
+            row = box.row(align=True)
+            row.prop(display, "show_converged", text="Converged")
+            row.prop(display, "show_notconverged", text="Unconverged")
+            row.prop(display, "show_pending", text="Pending")
+
+            box.prop(display, "show_passcounts")
 
         row = layout.row()
         row.prop(display, "interval")

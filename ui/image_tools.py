@@ -33,8 +33,9 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
 
         if config.engine == "PATH" and config.use_tiles:
             col = layout.column(align=True)
-            col.prop(display, "show_converged", toggle=True)
-            col.prop(display, "show_notconverged", toggle=True)
+            col.prop(display, "show_converged")
+            col.prop(display, "show_notconverged")
+            col.prop(display, "show_pending")
             layout.prop(display, "show_passcounts")
 
 

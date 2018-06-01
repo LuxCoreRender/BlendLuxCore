@@ -49,8 +49,9 @@ def _tile_highlight(context):
         passcounts = TileStats.notconverged_passcounts if display.show_passcounts else []
         _draw_tiles(TileStats.notconverged_coords, passcounts, (1, 0, 0, 1), view_to_region)
 
-    passcounts = TileStats.pending_passcounts if display.show_passcounts else []
-    _draw_tiles(TileStats.pending_coords, passcounts, (1, 1, 0, 1), view_to_region)
+    if display.show_pending:
+        passcounts = TileStats.pending_passcounts if display.show_passcounts else []
+        _draw_tiles(TileStats.pending_coords, passcounts, (1, 1, 0, 1), view_to_region)
 
 
 def _draw_tiles(coords, passcounts, color, view_to_region):
