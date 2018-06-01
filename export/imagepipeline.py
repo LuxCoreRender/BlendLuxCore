@@ -126,6 +126,9 @@ def _premul_alpha(definitions, index):
 
 
 def _backgroundimage(definitions, index, backgroundimage, scene):
+    if backgroundimage.image is None:
+        return index
+
     try:
         filepath = ImageExporter.export(backgroundimage.image)
     except OSError as error:
