@@ -43,6 +43,7 @@ from .math import LuxCoreNodeTexMath
 from .normalmap import LuxCoreNodeTexNormalmap
 from .output import LuxCoreNodeTexOutput
 from .pointiness import LuxCoreNodeTexPointiness
+from .propertyaccess import LuxCoreNodeTexPropertyAccess
 from .smoke import LuxCoreNodeTexSmoke
 from .uv import LuxCoreNodeTexUV
 from .wrinkled import LuxCoreNodeTexWrinkled
@@ -135,6 +136,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
+        NodeItem("LuxCoreNodeTexPropertyAccess", label="Property Access"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[

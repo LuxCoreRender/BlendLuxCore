@@ -110,6 +110,7 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
+        NodeItem("LuxCoreNodeTexPropertyAccess", label="Property Access"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MAPPING", "Mapping", items=[

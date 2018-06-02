@@ -142,6 +142,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
+        NodeItem("LuxCoreNodeTexPropertyAccess", label="Property Access"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
