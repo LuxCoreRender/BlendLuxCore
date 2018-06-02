@@ -16,6 +16,7 @@ class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
 
     def draw_label(self):
         if self.datablock and self.attribute_path:
+            # TODO
             return self.datablock.name + "." + self.attribute_path
         else:
             return self.bl_label
@@ -25,30 +26,33 @@ class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
         layout.prop(self, "attribute_path")
         if self.error:
             row = layout.row()
-            row.label("", icon="CANCEL")
-            row.prop(self, "error")
+            row.label(self.error, icon="CANCEL")
+            op = row.operator("luxcore.copy_error_to_clipboard", icon="COPYDOWN")
+            op.message = self.error
+
+    def eval(self):
+        if self.datablock and self.attribute_path:
+            value = self.datablock
+            # Follow the chain of attributes
+            for attrib in self.attribute_path.split("."):
+                value = getattr(value, attrib)
+
+            try:
+                # Check if it is iterable (Color, Vector etc.)
+                return list(value)
+            except TypeError:
+                # Not iterable
+                return [value, value, value]
+        return [0, 0, 0]
 
     def sub_export(self, exporter, props, luxcore_name=None):
         self.error = ""
         utils_ui.tag_region_for_redraw(bpy.context, "NODE_EDITOR", "WINDOW")
 
         try:
-            if self.datablock and self.attribute_path:
-                value = self.datablock
-                for attrib in self.attribute_path.split("."):
-                    value = getattr(value, attrib)
-
-                try:
-                    value = list(value)
-                except TypeError:
-                    # Not iterable
-                    value = [value, value, value]
-            else:
-                value = [0, 0, 0]
-
             definitions = {
                 "type": "constfloat3",
-                "value": value,
+                "value": self.eval(),
             }
 
             return self.create_props(props, definitions, luxcore_name)
