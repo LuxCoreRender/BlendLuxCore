@@ -69,7 +69,7 @@ class LUXCORE_OT_import_multiple_images(bpy.types.Operator, ImportHelper):
     @classmethod
     def poll(cls, context):
         return (context.scene.render.engine == "LUXCORE"
-                and hasattr(context.space_data, "node_tree")
+                and getattr(context.space_data, "node_tree", None)
                 and context.space_data.node_tree.bl_idname in TREE_TYPES)
 
     def execute(self, context):
