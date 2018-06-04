@@ -4,6 +4,14 @@ from .. import LuxCoreNodeTexture
 from ...utils import ui as utils_ui
 
 
+def is_iterable(obj):
+    try:
+        iter(obj)
+        return True
+    except TypeError:
+        return False
+
+
 class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
     bl_label = "PropertyAccess"
 
@@ -30,12 +38,46 @@ class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
             op = row.operator("luxcore.copy_error_to_clipboard", icon="COPYDOWN")
             op.message = self.error
 
+    @staticmethod
+    def parse_indices(index_str):
+        indices = [int(s) for s in index_str.split(":")]
+        len_indices = len(indices)
+
+        if len_indices == 0:
+            raise IndexError("No index given")
+        elif len_indices == 1:
+            start, end, step = indices[0], indices[0] + 1, 1
+        elif len_indices == 2:
+            start, end, step = indices[0], indices[1], 1
+        elif len_indices == 3:
+            start, end, step = indices
+        else:
+            raise IndexError("Too many indices (only start, end, step allowed)")
+        return start, end, step, len_indices
+
     def eval(self):
         if self.datablock and self.attribute_path:
             value = self.datablock
             # Follow the chain of attributes
             for attrib in self.attribute_path.split("."):
-                value = getattr(value, attrib)
+                if "[" in attrib:
+                    # Indexed access of an iterable
+                    iter_attrib, index_str = attrib.split("[")
+                    index_str = index_str.replace("]", "")
+                    start, end, step, len_indices = self.parse_indices(index_str)
+
+                    iterable = getattr(value, iter_attrib)
+                    if not is_iterable(iterable):
+                        raise TypeError(iter_attrib + " is not iterable")
+
+                    if len_indices == 1:
+                        # Some iterables in Blender don't have slicing support,
+                        # so we don't use it if we don't have to
+                        value = iterable[start]
+                    else:
+                        value = iterable[start:end:step]
+                else:
+                    value = getattr(value, attrib)
 
             try:
                 # Check if it is iterable (Color, Vector etc.)
