@@ -1,5 +1,6 @@
 import bpy
-from bpy.props import StringProperty, PointerProperty
+from bpy.types import PropertyGroup
+from bpy.props import StringProperty, PointerProperty, EnumProperty
 from .. import LuxCoreNodeTexture
 from ...utils import ui as utils_ui
 from ...utils import node as utils_node
@@ -22,10 +23,22 @@ def pad_or_cutoff(_list, length, pad_value=0):
         return _list
 
 
+def get_ID_subclasses():
+    return [cls for cls in bpy.types.ID.__subclasses__()
+            if cls not in {bpy.types.Library, bpy.types.Group, bpy.types.Sound}]
+
+
+class LuxCorePropertyPointers(PropertyGroup):
+    pass
+
+for cls in get_ID_subclasses():
+    setattr(LuxCorePropertyPointers, cls.__name__, PointerProperty(type=cls))
+
+
 class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
     bl_label = "PropertyAccess"
 
-    def update_attribute_path(self, context):
+    def update_sockets(self, context):
         self.error = ""
         use_float_socket = True
         try:
@@ -45,8 +58,11 @@ class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
 
         utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
 
-    datablock = PointerProperty(name="Datablock", type=bpy.types.Object)
-    attribute_path = StringProperty(name="Attribute", update=update_attribute_path)
+    pointers = PointerProperty(type=LuxCorePropertyPointers)
+    datablock_types = [(cls.__name__, cls.__name__, "") for cls in get_ID_subclasses()]
+    datablock_type = EnumProperty(name="Datablock Type", items=datablock_types, default="Object",
+                                  update=update_sockets)
+    attribute_path = StringProperty(name="Attribute", update=update_sockets)
     error = StringProperty(name="Error")
 
     def init(self, context):
@@ -55,14 +71,15 @@ class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketFloatUnbounded", "Value")
 
     def draw_label(self):
-        if self.datablock and self.attribute_path:
-            # TODO
-            return self.datablock.name + "." + self.attribute_path
+        datablock = self.get_selected_datablock()
+        if datablock and self.attribute_path:
+            return datablock.name + "." + self.attribute_path
         else:
             return self.bl_label
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "datablock")
+        layout.prop(self, "datablock_type")
+        layout.prop(self.pointers, self.datablock_type)
         layout.prop(self, "attribute_path")
         if self.error:
             row = layout.row()
@@ -87,9 +104,14 @@ class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
             raise IndexError("Too many indices (only start, end, step allowed)")
         return start, end, step, len_indices
 
+    def get_selected_datablock(self):
+        return getattr(self.pointers, self.datablock_type)
+
     def eval(self):
-        if self.datablock and self.attribute_path:
-            value = self.datablock
+        datablock = self.get_selected_datablock()
+
+        if datablock and self.attribute_path:
+            value = datablock
             # Follow the chain of attributes
             for attrib in self.attribute_path.split("."):
                 if "[" in attrib:
