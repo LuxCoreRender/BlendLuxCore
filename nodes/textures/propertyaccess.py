@@ -6,6 +6,31 @@ from ...utils import ui as utils_ui
 from ...utils import node as utils_node
 
 
+datablock_icons = {
+    'Mesh': "MESH_DATA",
+    'Screen': "SPLITSCREEN",
+    'NodeTree': "NODETREE",
+    'ParticleSettings': "PARTICLE_DATA",
+    'WindowManager': "NONE",
+    'World': "WORLD",
+    'Lattice': "LATTICE_DATA",
+    'Object': "OBJECT_DATA",
+    'Brush': "BRUSH_DATA",
+    'Lamp': "LAMP_DATA",
+    'Armature': "ARMATURE_DATA",
+    'Image': "IMAGE_DATA",
+    'Camera': "CAMERA_DATA",
+    'Curve': "CURVE_DATA",
+    'MetaBall': "META_DATA",
+    'Material': "MATERIAL_DATA",
+    'FreestyleLineStyle': "LINE_DATA",
+    'Scene': "SCENE_DATA",
+    'Speaker': "SPEAKER",
+    'Text': "TEXT",
+    'Texture': "TEXTURE_DATA",
+}
+
+
 def is_iterable(obj):
     try:
         iter(obj)
@@ -59,7 +84,8 @@ class LuxCoreNodeTexPropertyAccess(LuxCoreNodeTexture):
         utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
 
     pointers = PointerProperty(type=LuxCorePropertyPointers)
-    datablock_types = [(cls.__name__, cls.__name__, "") for cls in get_ID_subclasses()]
+    datablock_types = [(cls.__name__, cls.__name__, "", datablock_icons[cls.__name__], i)
+                       for i, cls in enumerate(get_ID_subclasses())]
     datablock_type = EnumProperty(name="Datablock Type", items=datablock_types, default="Object",
                                   update=update_sockets)
     attribute_path = StringProperty(name="Attribute", update=update_sockets)
