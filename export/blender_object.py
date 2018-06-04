@@ -22,6 +22,8 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
 
     if blender_obj.type == "LAMP":
         return convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suffix)
+    elif blender_obj.type == "EMPTY":
+        return pyluxcore.Properties(), None
 
     try:
         # print("converting object:", blender_obj.name)
@@ -103,7 +105,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
 
 
 def _begin_autosmooth_if_required(blender_obj):
-    if not blender_obj.data.use_auto_smooth:
+    if not getattr(blender_obj.data, "use_auto_smooth", False):
         return None
 
     # We use an edge split modifier, it does the same as auto smooth

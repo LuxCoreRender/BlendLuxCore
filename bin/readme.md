@@ -2,7 +2,7 @@ Files that need to be copied from the binary SDK into this directory for release
 
 ## Linux
 
-* libembree.so.2
+* libembree3.so.3
 * libtbb.so.2
 * libtbbmalloc.so.2
 * pyluxcore.so
@@ -11,7 +11,7 @@ Files that need to be copied from the binary SDK into this directory for release
 
 * tbb.dll
 * tbbmalloc.dll
-* embree.dll
+* embree3.dll
 * OpenImageIO.dll
 * pyluxcore.pyd
 

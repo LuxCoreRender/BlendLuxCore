@@ -19,7 +19,7 @@ LINUX_FILES = [
 ]
 
 WINDOWS_FILES = [
-    "embree.dll", "tbb.dll", "tbbmalloc.dll",
+    "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
 ]
