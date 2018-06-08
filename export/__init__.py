@@ -81,40 +81,45 @@ class Exporter(object):
         self.camera_cache.diff(self, scene, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
 
-        # Objects and lamps
-        objs = context.visible_objects if context else scene.objects
-        len_objs = len(objs)
+        current_scene = scene
+        while current_scene:
+            print("exporting scene:", current_scene.name)
+            # Objects and lamps
+            objs = context.visible_objects if context else current_scene.objects
+            len_objs = len(objs)
 
-        for index, obj in enumerate(objs, start=1):
-            if obj.type in {"MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP", "EMPTY"}:
-                if engine:
-                    engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
-                self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine=engine)
+            for index, obj in enumerate(objs, start=1):
+                if obj.type in {"MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP", "EMPTY"}:
+                    if engine:
+                        engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
+                    self._convert_object(scene_props, obj, current_scene, context, luxcore_scene, engine=engine)
 
-                # Objects are the most expensive to export, so they dictate the progress
-                if engine:
-                    engine.update_progress(index / len_objs)
-            # Regularly check if we should abort the export (important in heavy scenes)
-            if engine and engine.test_break():
-                return None
+                    # Objects are the most expensive to export, so they dictate the progress
+                    if engine:
+                        engine.update_progress(index / len_objs)
+                # Regularly check if we should abort the export (important in heavy scenes)
+                if engine and engine.test_break():
+                    return None
 
-        # Motion blur
-        if scene.camera:
-            blur_settings = scene.camera.data.luxcore.motion_blur
-            # Don't export camera blur in viewport
-            camera_blur = blur_settings.camera_blur and not context
-            enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
+            # Motion blur
+            if current_scene.camera:
+                blur_settings = current_scene.camera.data.luxcore.motion_blur
+                # Don't export camera blur in viewport
+                camera_blur = blur_settings.camera_blur and not context
+                enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
 
-            if enabled and blur_settings.shutter > 0:
-                motion_blur_props, cam_moving = motion_blur.convert(context, scene, objs, self.exported_objects)
+                if enabled and blur_settings.shutter > 0:
+                    motion_blur_props, cam_moving = motion_blur.convert(context, current_scene, objs, self.exported_objects)
 
-                if cam_moving:
-                    # Re-export the camera with motion blur enabled
-                    # (This is fast and we only have to step through the scene once in total, not twice)
-                    camera_props = camera.convert(self, scene, context, cam_moving)
-                    motion_blur_props.Set(camera_props)
+                    if cam_moving:
+                        # Re-export the camera with motion blur enabled
+                        # (This is fast and we only have to step through the scene once in total, not twice)
+                        camera_props = camera.convert(self, current_scene, context, cam_moving)
+                        motion_blur_props.Set(camera_props)
 
-                scene_props.Set(motion_blur_props)
+                    scene_props.Set(motion_blur_props)
+
+            current_scene = current_scene.background_set
 
         # World
         world_props = world.convert(self, scene)
