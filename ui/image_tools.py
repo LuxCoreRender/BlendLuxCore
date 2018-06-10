@@ -1,6 +1,7 @@
 from bpy.types import Panel
 from . import denoiser
 from ..utils.refresh_button import template_refresh_button
+from ..utils import ui as utils_ui
 from ..engine import LuxCoreRenderEngine
 
 
@@ -43,10 +44,33 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
     bl_label = "Denoiser"
 
     def draw(self, context):
-        denoiser.draw(context, self.layout)
+        layout = self.layout
 
-        col = self.layout.column()
+        denoiser.draw(context, layout)
+
+        col = layout.column()
         col.label("Change the pass to see the result", icon="INFO")
         if context.space_data.image:
             iuser = context.space_data.image_user
             col.template_image_layers(context.space_data.image, iuser)
+
+        log_entries = context.scene.luxcore.denoiser_log.entries
+        if log_entries:
+            entry = log_entries[-1]
+            col = layout.column(align=True)
+            box = col.box()
+            box.label("Denoised Image Stats", icon="IMAGE_DATA")
+            box = col.box()
+            subcol = box.column()
+            subcol.label("Samples: %d" % entry.samples)
+            subcol.label("Render Time: " + utils_ui.humanize_time(entry.elapsed_render_time))
+            subcol.label("Denoising Duration: " + utils_ui.humanize_time(entry.elapsed_denoiser_time))
+
+            box = col.box()
+            subcol = box.column()
+            subcol.label("Last Denoiser Settings:", icon="UI")
+            subcol.label("Remove Fireflies: " + ("Enabled" if entry.filter_spikes else "Disabled"))
+            subcol.label("Histogram Distance Threshold: " + str(entry.hist_dist_thresh))
+            subcol.label("Search Window Radius: " + str(entry.search_window_radius))
+            subcol.label("Scales: " + str(entry.scales))
+            subcol.label("Patch Radius: " + str(entry.patch_radius))
