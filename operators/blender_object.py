@@ -90,12 +90,6 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         if obj.type in {'MESH'}:
             proxy = self.make_lowpoly_proxy(obj, context.scene, self.decimate_ratio / 100)
 
-            # Clear parent
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select = True
-            context.scene.objects.active = obj
-            bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-
             # Create high-resolution mesh with applied modifiers
             mesh = obj.to_mesh(context.scene, True, 'RENDER')
             mesh_name = utils.to_luxcore_name(obj.name)
@@ -119,10 +113,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
                 new.matIndex = mat
                 new.filepath = filepath
                 print("[Create Proxy] Saved", filepath)
-            
-            bpy.ops.object.select_all(action='DESELECT')
-            proxy.select = True
-            context.scene.objects.active = proxy
+
         return {"FINISHED"}
 
     def make_lowpoly_proxy(self, source_obj, scene, decimate_ratio):
