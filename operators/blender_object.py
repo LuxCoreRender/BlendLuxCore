@@ -10,6 +10,7 @@ from .utils import poll_object
 # - Support all surface types, not only MESH
 # - Test with all kinds of objects, curves, text, empty etc.
 # - Allow multiple selected objects to be converted
+# - fix crash in one scene
 
 
 def remove(data):
@@ -56,6 +57,11 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
     bl_label = "New"
     bl_description = "Create a new proxy object"
 
+    decimate_ratio = bpy.props.FloatProperty(name="Proxy Mesh Quality",
+                                             description="Decimate ratio that is applied to the preview mesh",
+                                             default=5, soft_min=0.1, soft_max=50, max=100,
+                                             subtype='PERCENTAGE')
+
     # hidden properties
     directory = bpy.props.StringProperty(name="PLY directory")
     filter_glob = bpy.props.StringProperty(default="*.ply", options={'HIDDEN'})
@@ -79,7 +85,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
 
         # TODO: Support other object types
         if obj.type in {'MESH'}:
-            proxy = self.make_lowpoly_proxy(obj, context.scene, decimate_ratio=0.05)
+            proxy = self.make_lowpoly_proxy(obj, context.scene, self.decimate_ratio / 100)
 
             # Clear parent
             bpy.ops.object.select_all(action='DESELECT')
@@ -100,7 +106,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             # Delete the temporary mesh (don't have to unlink because it was never "registered" in bpy.data)
             bpy.data.meshes.remove(mesh, do_unlink=False)
 
-            print("Create Proxy: Export high resolution geometry data into PLY files...")
+            print("[Create Proxy] Exporting high resolution geometry data into PLY files...")
             for name, mat in mesh_definitions:
                 filepath = self.directory + name + ".ply"
                 luxcore_scene.SaveMesh("Mesh-" + name, filepath)
@@ -122,7 +128,6 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         scene.objects.link(proxy)
         proxy.name = obj.name + "_lux_proxy"
 
-        # TODO: accept custom parameters for decimate modifier
         decimate = proxy.modifiers.new("proxy_decimate", 'DECIMATE')
         decimate.ratio = decimate_ratio
 
