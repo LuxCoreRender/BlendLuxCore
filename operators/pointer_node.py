@@ -7,6 +7,7 @@ class LUXCORE_OT_pointer_unlink_node_tree(bpy.types.Operator):
     bl_idname = "luxcore.pointer_unlink_node_tree"
     bl_label = "Unlink"
     bl_description = "Unlink this node tree"
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
