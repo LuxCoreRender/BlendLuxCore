@@ -1,16 +1,12 @@
 import bpy
-from bpy.props import IntProperty, StringProperty, EnumProperty
+from bpy.props import FloatProperty
 from .. import utils
 from ..bin import pyluxcore
-from .utils import (
-    poll_object, poll_material, init_mat_node_tree, make_nodetree_name,
-    LUXCORE_OT_set_node_tree, 
-)
+from .utils import poll_object
 
 # TODO:
 # - Undo handling
 # - Split into smaller functions
-# - Cleanup
 # - Decimate percentage option
 # - Support all surface types, not only MESH
 # - Test with all kinds of objects, curves, text, empty etc.
@@ -54,15 +50,16 @@ def LUXCORE_OT_use_proxy_switch(self, context):
             obj.select = True
             bpy.ops.object.delete()
 
+
 class LUXCORE_OT_proxy_new(bpy.types.Operator):
     bl_idname = "luxcore.proxy_new"
     bl_label = "New"
     bl_description = "Create a new proxy object"
 
     # hidden properties
-    directory = bpy.props.StringProperty(name = 'PLY directory')
-    filter_glob = bpy.props.StringProperty(default = '*.ply', options = {'HIDDEN'})
-    use_filter = bpy.props.BoolProperty(default = True, options = {'HIDDEN'})
+    directory = bpy.props.StringProperty(name="PLY directory")
+    filter_glob = bpy.props.StringProperty(default="*.ply", options={'HIDDEN'})
+    use_filter = bpy.props.BoolProperty(default=True, options={'HIDDEN'})
 
     @classmethod
     def poll(cls, context):
@@ -72,7 +69,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         obj = context.active_object
         if obj.data.users > 1:
             context.scene.luxcore.errorlog.add_error("[Object: %s] Can't make proxy from multiuser mesh" % obj.name)
-            return {"FINISHED"}
+            return {'CANCELLED'}
             
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}        
@@ -80,10 +77,10 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
     def execute(self, context):
         obj = context.active_object
 
-        #TODO: Support other object types
-        if obj.type in ['MESH']:
-            #Copy object
-            print("Create Proxy: Copy object")
+        # TODO: Support other object types
+        if obj.type in {'MESH'}:
+            # Copy object
+            print("[Create Proxy] Copy object")
             # TODO we need to make sure that we create a MESH object, even if source is e.g. a CURVE
             proxy = obj.copy()
             context.scene.objects.link(proxy)
@@ -92,11 +89,11 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             proxy.name = obj.name + "_lux_proxy"
 
             # TODO: accept custom parameters for decimate modifier
-            decimate = proxy.modifiers.new('proxy_decimate', 'DECIMATE')
+            decimate = proxy.modifiers.new("proxy_decimate", 'DECIMATE')
             decimate.ratio = 0.05
 
             # Create low res proxy object
-            print("Create Proxy: Create low res proxy object")
+            print("[Create Proxy] Create low res proxy object")
             proxy_mesh = proxy.to_mesh(context.scene, True, 'PREVIEW')
             proxy.modifiers.clear()
             proxy.data = proxy_mesh
@@ -106,7 +103,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             bpy.ops.object.select_all(action='DESELECT')
             obj.select = True
             context.scene.objects.active = obj
-            bpy.ops.object.parent_clear(type = 'CLEAR_KEEP_TRANSFORM')
+            bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
 
             mesh = obj.to_mesh(context.scene, True, 'RENDER')
             mesh_name = utils.to_luxcore_name(obj.name)
@@ -140,19 +137,20 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             bpy.data.meshes.remove(mesh, do_unlink=False)
 
             print("Create Proxy: Export high resolution geometry data into PLY files...")
-            for [name, mat] in mesh_definitions:
+            for name, mat in mesh_definitions:
                 filepath = self.directory + name + ".ply"
                 luxcore_scene.SaveMesh("Mesh-" + name, filepath)
                 new = proxy.luxcore.proxies.add()
                 new.name = name
                 new.matIndex = mat
-                new.filepath = self.directory + name + ".ply"
-                print("Saved ", self.directory + name + ".ply")
+                new.filepath = filepath
+                print("[Create Proxy] Saved", filepath)
             
             bpy.ops.object.select_all(action='DESELECT')
             proxy.select = True
             context.scene.objects.active = proxy
         return {"FINISHED"}
+
 
 class LUXCORE_OT_proxy_add(bpy.types.Operator):
     bl_idname = "luxcore.proxy_add"
@@ -169,6 +167,7 @@ class LUXCORE_OT_proxy_add(bpy.types.Operator):
         new.name = obj.name  
         obj.luxcore.proxies.update()        
         return {"FINISHED"}
+
 
 class LUXCORE_OT_proxy_remove(bpy.types.Operator):
     bl_idname = "luxcore.proxy_remove"
