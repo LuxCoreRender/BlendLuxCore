@@ -5,7 +5,6 @@ from ..bin import pyluxcore
 from .utils import poll_object
 
 # TODO:
-# - Undo handling
 # - Support all surface types, not only MESH
 # - Test with all kinds of objects, curves, text, empty etc.
 # - Allow multiple selected objects to be converted
@@ -59,6 +58,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
     bl_idname = "luxcore.proxy_new"
     bl_label = "New"
     bl_description = "Create a new proxy object"
+    bl_options = {"UNDO"}
 
     decimate_ratio = bpy.props.FloatProperty(name="Proxy Mesh Quality",
                                              description="Decimate ratio that is applied to the preview mesh",
