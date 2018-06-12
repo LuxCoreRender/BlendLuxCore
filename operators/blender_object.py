@@ -6,22 +6,25 @@ from .utils import poll_object
 
 # TODO:
 # - Undo handling
-# - Decimate percentage option
 # - Support all surface types, not only MESH
 # - Test with all kinds of objects, curves, text, empty etc.
 # - Allow multiple selected objects to be converted
-# - fix crash in one scene
 
 
 def remove(data):
+    if data is None:
+        return
+
+    if data.users:
+        print("Could not remove datablock %s because it has users (%d)" % (data.name, data.users))
+        return
+
     if type(data) == bpy.types.Mesh:
-        bpy.data.meshes.remove(data)
+        bpy.data.meshes.remove(data, do_unlink=False)
     elif type(data) in {bpy.types.Curve, bpy.types.TextCurve, bpy.types.SurfaceCurve}:
-        bpy.data.curves.remove(data)
+        bpy.data.curves.remove(data, do_unlink=False)
     elif type(data) == bpy.types.MetaBall:
-        bpy.data.metaballs.remove(data)
-    elif data is None:
-        pass
+        bpy.data.metaballs.remove(data, do_unlink=False)
     else:
         print("Could not remove datablock %s (type %s)" % (data.name, type(data)))
 
@@ -97,8 +100,9 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             mesh = obj.to_mesh(context.scene, True, 'RENDER')
             mesh_name = utils.to_luxcore_name(obj.name)
             # Delete the original object, we don't need it anymore
-            remove(obj.data)
+            obj_data = obj.data
             bpy.data.objects.remove(obj, do_unlink=True)
+            remove(obj_data)
 
             # Export object into PLY files via pyluxcore functions
             luxcore_scene = pyluxcore.Scene()
