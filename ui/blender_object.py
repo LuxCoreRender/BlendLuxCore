@@ -58,10 +58,10 @@ class LUXCORE_OBJECT_PT_proxy(ObjectButtonsPanel, Panel):
         col = row.column(align=True)
 
         if not obj.luxcore.use_proxy:
-            col.operator("luxcore.proxy_new", text="Create Proxy")
+            col.operator("luxcore.proxy_new", icon="EXPORT")
         else:
             box = row.box()
-            box.label("Proxies:")
+            box.label("PLY Meshes:")
             col = row.column(align=True)
 
             col.operator("luxcore.proxy_add", icon="ZOOMIN", text="")
@@ -71,4 +71,3 @@ class LUXCORE_OBJECT_PT_proxy(ObjectButtonsPanel, Panel):
                 box.prop(proxy, "filepath", text=proxy.name)
 
             box.prop(obj.luxcore, "proxies")
-

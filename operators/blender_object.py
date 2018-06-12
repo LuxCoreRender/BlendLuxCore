@@ -7,7 +7,6 @@ from .utils import poll_object
 # TODO:
 # - Support all surface types, not only MESH
 # - Test with all kinds of objects, curves, text, empty etc.
-# - Allow multiple selected objects to be converted
 
 
 def remove(data):
@@ -30,8 +29,9 @@ def remove(data):
 
 def LUXCORE_OT_use_proxy_switch(self, context):
     obj = context.active_object
-    transformation = obj.matrix_world
-    
+    if obj is None:
+        return
+
     if not obj.luxcore.use_proxy:
         if len(obj.luxcore.proxies) > 0:            
             bpy.ops.object.select_all(action='DESELECT')
@@ -45,8 +45,9 @@ def LUXCORE_OT_use_proxy_switch(self, context):
                 mat = obj.material_slots[matIndex].material
                 s.data.materials.append(mat)
 
+            # TODO restore parenting relations
             bpy.ops.object.join()
-            context.active_object.matrix_world = transformation
+            context.active_object.matrix_world = obj.matrix_world.copy()
             context.active_object.name = context.active_object.name[:-3]
 
             bpy.ops.object.select_all(action='DESELECT')
@@ -56,9 +57,13 @@ def LUXCORE_OT_use_proxy_switch(self, context):
 
 class LUXCORE_OT_proxy_new(bpy.types.Operator):
     bl_idname = "luxcore.proxy_new"
-    bl_label = "New"
-    bl_description = "Create a new proxy object"
+    bl_label = "Convert Selected to Proxy"
+    bl_description = ("Export the selected objects as PLY meshes and replace them with a lowpoly representation. " 
+                      "The original high-resolution mesh is only loaded at render time")
     bl_options = {"UNDO"}
+
+    # TODO: Support other object types
+    SUPPORTED_OBJ_TYPES = {'MESH'}
 
     decimate_ratio = bpy.props.FloatProperty(name="Proxy Mesh Quality",
                                              description="Decimate ratio that is applied to the preview mesh",
@@ -72,7 +77,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return poll_object(context)
+        return poll_object(context) and context.object.type in cls.SUPPORTED_OBJ_TYPES
 
     def invoke(self, context, event):
         obj = context.active_object
@@ -84,11 +89,20 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         return {'RUNNING_MODAL'}        
 
     def execute(self, context):
-        obj = context.active_object
+        active = context.active_object
+        selected_objs = context.selected_objects
 
-        # TODO: Support other object types
-        if obj.type in {'MESH'}:
+        for obj in selected_objs:
+            if obj.type not in self.SUPPORTED_OBJ_TYPES:
+                msg = "Skipped object %s because of unsupported type: %s" % (obj.name, obj.type)
+                self.report({"ERROR"}, msg)
+                print("[Create Proxy ERROR]", msg)
+                continue
+
             proxy = self.make_lowpoly_proxy(obj, context.scene, self.decimate_ratio / 100)
+            # Restoring the active object is just eyecandy
+            if obj == active:
+                context.scene.objects.active = proxy
 
             # Create high-resolution mesh with applied modifiers
             mesh = obj.to_mesh(context.scene, True, 'RENDER')
