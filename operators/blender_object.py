@@ -6,10 +6,10 @@ from .utils import poll_object
 
 # TODO:
 # - Undo handling
-# - Split into smaller functions
 # - Decimate percentage option
 # - Support all surface types, not only MESH
 # - Test with all kinds of objects, curves, text, empty etc.
+# - Allow multiple selected objects to be converted
 
 
 def remove(data):
@@ -81,40 +81,22 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         if obj.type in {'MESH'}:
             proxy = self.make_lowpoly_proxy(obj, context.scene, decimate_ratio=0.05)
 
-            # clear parent
+            # Clear parent
             bpy.ops.object.select_all(action='DESELECT')
             obj.select = True
             context.scene.objects.active = obj
             bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
 
+            # Create high-resolution mesh with applied modifiers
             mesh = obj.to_mesh(context.scene, True, 'RENDER')
             mesh_name = utils.to_luxcore_name(obj.name)
             # Delete the original object, we don't need it anymore
             remove(obj.data)
             bpy.data.objects.remove(obj, do_unlink=True)
-            
+
             # Export object into PLY files via pyluxcore functions
             luxcore_scene = pyluxcore.Scene()
-            
-            faces = mesh.tessfaces[0].as_pointer()
-            vertices = mesh.vertices[0].as_pointer()
-
-            uv_textures = mesh.tessface_uv_textures
-            active_uv = utils.find_active_uv(uv_textures)
-            if active_uv and active_uv.data:
-                texCoords = active_uv.data[0].as_pointer()
-            else:
-                texCoords = 0
-
-            vertex_color = mesh.tessface_vertex_colors.active
-            if vertex_color:
-                vertexColors = vertex_color.data[0].as_pointer()
-            else:
-                vertexColors = 0            
-            
-            mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_name, len(mesh.tessfaces), faces,
-                                                               len(mesh.vertices), vertices,
-                                                               texCoords, vertexColors, None)
+            mesh_definitions = self.define_mesh(luxcore_scene, mesh, mesh_name)
             # Delete the temporary mesh (don't have to unlink because it was never "registered" in bpy.data)
             bpy.data.meshes.remove(mesh, do_unlink=False)
 
@@ -153,6 +135,27 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
 
         proxy.luxcore.use_proxy = True
         return proxy
+
+    def define_mesh(self, luxcore_scene, mesh, name):
+        faces = mesh.tessfaces[0].as_pointer()
+        vertices = mesh.vertices[0].as_pointer()
+
+        uv_textures = mesh.tessface_uv_textures
+        active_uv = utils.find_active_uv(uv_textures)
+        if active_uv and active_uv.data:
+            texCoords = active_uv.data[0].as_pointer()
+        else:
+            texCoords = 0
+
+        vertex_color = mesh.tessface_vertex_colors.active
+        if vertex_color:
+            vertexColors = vertex_color.data[0].as_pointer()
+        else:
+            vertexColors = 0
+
+        return luxcore_scene.DefineBlenderMesh(name, len(mesh.tessfaces), faces,
+                                               len(mesh.vertices), vertices,
+                                               texCoords, vertexColors, None)
 
 
 class LUXCORE_OT_proxy_add(bpy.types.Operator):
