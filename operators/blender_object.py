@@ -79,25 +79,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
 
         # TODO: Support other object types
         if obj.type in {'MESH'}:
-            # Copy object
-            print("[Create Proxy] Copy object")
-            # TODO we need to make sure that we create a MESH object, even if source is e.g. a CURVE
-            proxy = obj.copy()
-            context.scene.objects.link(proxy)
-
-            # rename object
-            proxy.name = obj.name + "_lux_proxy"
-
-            # TODO: accept custom parameters for decimate modifier
-            decimate = proxy.modifiers.new("proxy_decimate", 'DECIMATE')
-            decimate.ratio = 0.05
-
-            # Create low res proxy object
-            print("[Create Proxy] Create low res proxy object")
-            proxy_mesh = proxy.to_mesh(context.scene, True, 'PREVIEW')
-            proxy.modifiers.clear()
-            proxy.data = proxy_mesh
-            proxy.luxcore.use_proxy = True
+            proxy = self.make_lowpoly_proxy(obj, context.scene, decimate_ratio=0.05)
 
             # clear parent
             bpy.ops.object.select_all(action='DESELECT')
@@ -150,6 +132,27 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             proxy.select = True
             context.scene.objects.active = proxy
         return {"FINISHED"}
+
+    def make_lowpoly_proxy(self, obj, scene, decimate_ratio):
+        print("[Create Proxy] Copying object", obj.name)
+        # TODO we need to make sure that we create a MESH object, even if source is e.g. a CURVE
+        proxy = obj.copy()
+        scene.objects.link(proxy)
+        proxy.name = obj.name + "_lux_proxy"
+
+        # TODO: accept custom parameters for decimate modifier
+        decimate = proxy.modifiers.new("proxy_decimate", 'DECIMATE')
+        decimate.ratio = decimate_ratio
+
+        print("[Create Proxy] Creating low resolution proxy object")
+        proxy_mesh = proxy.to_mesh(scene, True, 'PREVIEW')
+        # to_mesh has applied the modifiers, we don't need them anymore
+        proxy.modifiers.clear()
+        # Use the low res mesh with applied modifiers instead of the original high res mesh
+        proxy.data = proxy_mesh
+
+        proxy.luxcore.use_proxy = True
+        return proxy
 
 
 class LUXCORE_OT_proxy_add(bpy.types.Operator):
