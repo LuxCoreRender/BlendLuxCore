@@ -125,12 +125,12 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             context.scene.objects.active = proxy
         return {"FINISHED"}
 
-    def make_lowpoly_proxy(self, obj, scene, decimate_ratio):
-        print("[Create Proxy] Copying object", obj.name)
+    def make_lowpoly_proxy(self, source_obj, scene, decimate_ratio):
+        print("[Create Proxy] Copying object", source_obj.name)
         # TODO we need to make sure that we create a MESH object, even if source is e.g. a CURVE
-        proxy = obj.copy()
+        proxy = source_obj.copy()
         scene.objects.link(proxy)
-        proxy.name = obj.name + "_lux_proxy"
+        proxy.name = source_obj.name + "_lux_proxy"
 
         decimate = proxy.modifiers.new("proxy_decimate", 'DECIMATE')
         decimate.ratio = decimate_ratio
@@ -143,6 +143,14 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         proxy.data = proxy_mesh
 
         proxy.luxcore.use_proxy = True
+
+        # Find all objects parented to the source object and parent them to the proxy
+        for obj in scene.objects:
+            if obj.parent == source_obj:
+                old_matrix = obj.matrix_parent_inverse.copy()
+                obj.parent = proxy
+                obj.matrix_parent_inverse = old_matrix
+
         return proxy
 
     def define_mesh(self, luxcore_scene, mesh, name):
