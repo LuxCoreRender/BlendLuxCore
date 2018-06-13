@@ -518,3 +518,7 @@ def pluralize(format_str, amount):
     if amount != 1:
         formatted += "s"
     return formatted
+
+
+def is_opencl_build():
+    return not pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool()

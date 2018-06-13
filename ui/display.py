@@ -17,10 +17,6 @@ class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
         display = context.scene.luxcore.display
         config = context.scene.luxcore.config
 
-        layout.label("Viewport Render:")
-        layout.prop(display, "viewport_halt_time")
-
-        layout.label("Final Render:")
         if config.engine == "PATH" and config.use_tiles:
             box = layout.box()
             box.label("Tile Highlighting:")

@@ -81,7 +81,7 @@ def view_draw(engine, context):
     # Check if we need to pause the viewport render
     stats = engine.session.GetStats()
     rendered_time = stats.Get("stats.renderengine.time").GetFloat()
-    halt_time = scene.luxcore.display.viewport_halt_time
+    halt_time = scene.luxcore.viewport.halt_time
     status_message = "%d/%ds" % (rendered_time, halt_time)
 
     if rendered_time > halt_time:

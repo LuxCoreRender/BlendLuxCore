@@ -24,7 +24,11 @@ def convert(exporter, scene, context=None, engine=None):
             # Viewport render
             _convert_path(config, definitions)
 
-            use_cpu = True  # TODO
+            use_cpu = scene.luxcore.viewport.device == "CPU"
+            if not use_cpu and not utils.is_opencl_build():
+                msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
+                scene.luxcore.errorlog.add_warning(msg)
+                use_cpu = True
 
             if use_cpu:
                 luxcore_engine = "RTPATHCPU"
@@ -46,6 +50,7 @@ def convert(exporter, scene, context=None, engine=None):
                 # in order to reduce the per frame rendering time.
                 definitions["rtpath.resolutionreduction"] = 1
 
+                # Enable a bunch of often-used features to minimize the need for kernel recompilations
                 enabled_opencl_features = " ".join([
                     # Materials
                     "MATTE", "ROUGHMATTE", "MATTETRANSLUCENT", "ROUGHMATTETRANSLUCENT",
@@ -63,12 +68,14 @@ def convert(exporter, scene, context=None, engine=None):
                     # Lights
                     "INFINITE", "TRIANGLELIGHT", "SKY2", "SUN", "POINT", "MAPPOINT",
                     "SPOTLIGHT", "CONSTANTINFINITE", "PROJECTION", "SHARPDISTANT",
-                    "DISTANT", "LASER", "SPHERE",
-                    # "MAPSPHERE", # TODO currently there's a bug in MAPSPHERE OpenCL code
+                    "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
                 ])
                 definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
-                # definitions["opencl.cpu.use"] = True
-                # definitions["opencl.gpu.use"] = False
+
+                definitions["opencl.cpu.use"] = False
+                definitions["opencl.gpu.use"] = True
+                opencl = scene.luxcore.opencl
+                definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
         else:
             # Final render
             if config.engine == "PATH":
