@@ -21,16 +21,54 @@ def convert(exporter, scene, context=None, engine=None):
         width, height = utils.calc_filmsize(scene, context)
 
         if context:
-            # TODO: Support OpenCL in viewport?
             # Viewport render
-            luxcore_engine = "RTPATHCPU"
-            sampler = "RTPATHCPUSAMPLER"
-            # Size of the blocks right after a scene edit (in pixels)
-            definitions["rtpathcpu.zoomphase.size"] = 4
-            # How to blend new samples over old ones.
-            # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
-            definitions["rtpathcpu.zoomphase.weight"] = 0
             _convert_path(config, definitions)
+
+            use_cpu = True  # TODO
+
+            if use_cpu:
+                luxcore_engine = "RTPATHCPU"
+                sampler = "RTPATHCPUSAMPLER"
+                # Size of the blocks right after a scene edit (in pixels)
+                definitions["rtpathcpu.zoomphase.size"] = 4
+                # How to blend new samples over old ones.
+                # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
+                definitions["rtpathcpu.zoomphase.weight"] = 0
+            else:
+                luxcore_engine = "RTPATHOCL"
+                sampler = "TILEPATHSAMPLER"
+                # Render a sample every n x n pixels in the first passes.
+                # For instance 4x4 than 2x2 and then always 1x1.
+                definitions["rtpath.resolutionreduction.preview"] = 4
+                # Each preview step is rendered for n frames.
+                definitions["rtpath.resolutionreduction.step"] = 1
+                # Render a sample every n x n pixels, outside the preview phase,
+                # in order to reduce the per frame rendering time.
+                definitions["rtpath.resolutionreduction"] = 1
+
+                enabled_opencl_features = " ".join([
+                    # Materials
+                    "MATTE", "ROUGHMATTE", "MATTETRANSLUCENT", "ROUGHMATTETRANSLUCENT",
+                    "GLOSSY2", "GLOSSYTRANSLUCENT",
+                    "GLASS", "ARCHGLASS", "ROUGHGLASS",
+                    "MIRROR", "METAL2",
+                    "NULLMAT",
+                    # Material features
+                    "HAS_BUMPMAPS", "GLOSSY2_ABSORPTION", "GLOSSY2_MULTIBOUNCE",
+                    # Volumes
+                    "HOMOGENEOUS_VOL", "CLEAR_VOL",
+                    # Textures
+                    "IMAGEMAPS_BYTE_FORMAT", "IMAGEMAPS_HALF_FORMAT",
+                    "IMAGEMAPS_1xCHANNELS", "IMAGEMAPS_3xCHANNELS",
+                    # Lights
+                    "INFINITE", "TRIANGLELIGHT", "SKY2", "SUN", "POINT", "MAPPOINT",
+                    "SPOTLIGHT", "CONSTANTINFINITE", "PROJECTION", "SHARPDISTANT",
+                    "DISTANT", "LASER", "SPHERE",
+                    # "MAPSPHERE", # TODO currently there's a bug in MAPSPHERE OpenCL code
+                ])
+                definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
+                # definitions["opencl.cpu.use"] = True
+                # definitions["opencl.gpu.use"] = False
         else:
             # Final render
             if config.engine == "PATH":
