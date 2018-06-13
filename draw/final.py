@@ -1,9 +1,8 @@
-from bgl import *  # Nah I'm not typing them all out
-import array
 from time import time, sleep
 from ..bin import pyluxcore
 from .. import utils
 from ..export.aovs import get_denoiser_imgpipeline_props
+from ..properties.denoiser_log import DenoiserLogEntry
 
 
 class AOV:
@@ -187,8 +186,16 @@ class FrameBufferFinal(object):
             if not was_paused and session.IsInPause():
                 session.Resume()
 
+            # Add denoiser log entry
+            rendered_time = stats.Get("stats.renderengine.time").GetFloat()
+            settings = scene.luxcore.denoiser
+            elapsed = self.denoiser_last_elapsed_time
+            log_entry = DenoiserLogEntry(samples, rendered_time, elapsed, settings)
+            scene.luxcore.denoiser_log.add(log_entry)
+
             # Reset the refresh button
             self._reset_button(scene.luxcore.denoiser, "refresh")
+            engine.update_stats("Denoiser Done", "Elapsed: {} s".format(elapsed))
         else:
             # If we do not write something into the result, the image will be black.
             # So we re-use the result from the last denoiser run.

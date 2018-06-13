@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ..utils.refresh_button import template_refresh_button
+from ..engine import LuxCoreRenderEngine
 
 
 def draw(context, layout):
@@ -41,8 +42,9 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
-        denoiser = context.scene.luxcore.denoiser
-        self.layout.prop(denoiser, "enabled", text="")
+        row = self.layout.row()
+        row.enabled = not LuxCoreRenderEngine.final_running
+        row.prop(context.scene.luxcore.denoiser, "enabled", text="")
 
     def draw(self, context):
         draw(context, self.layout)

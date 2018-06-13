@@ -1,4 +1,5 @@
 from . import get_name_with_lib
+from . import pluralize
 
 
 def template_node_tree(layout, data, property, icon,
@@ -86,3 +87,16 @@ def tag_region_for_redraw(context, area_type, region_type):
     """
     for region in get_all_regions(context, area_type, region_type):
         region.tag_redraw()
+
+
+def humanize_time(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    strings = []
+    if hours:
+        strings.append(pluralize("%d hour", hours))
+    if minutes:
+        strings.append(pluralize("%d minute", minutes))
+    if seconds:
+        strings.append(pluralize("%d second", seconds))
+    return ", ".join(strings)

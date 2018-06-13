@@ -6,6 +6,7 @@ from ..utils import render as utils_render
 
 def render(engine, scene):
     scene.luxcore.errorlog.clear()
+    scene.luxcore.denoiser_log.clear()
 
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
     if len(scene.render.layers) > 1 and tonemapper.is_automatic():

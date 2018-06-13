@@ -6,6 +6,7 @@ class LUXCORE_OT_tex_nodetree_new(bpy.types.Operator):
     bl_idname = "luxcore.tex_nodetree_new"
     bl_label = "New"
     bl_description = "Create a texture node tree"
+    bl_options = {"UNDO"}
 
     def execute(self, context):
         name = "Texture Node Tree"

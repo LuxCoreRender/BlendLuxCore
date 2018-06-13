@@ -52,6 +52,7 @@ class LUXCORE_OT_import_multiple_images(bpy.types.Operator, ImportHelper):
     bl_idname = "luxcore.import_multiple_images"
     bl_label = "Import Multiple Images"
     bl_description = "Import multiple imagemaps into the node editor at once"
+    bl_options = {"UNDO"}
 
     detect_normalmaps_fast = BoolProperty(name="Auto-Detect Normalmaps (fast)", default=True,
                                           description='Check if the filename contains the string "normal"')
@@ -69,7 +70,7 @@ class LUXCORE_OT_import_multiple_images(bpy.types.Operator, ImportHelper):
     @classmethod
     def poll(cls, context):
         return (context.scene.render.engine == "LUXCORE"
-                and hasattr(context.space_data, "node_tree")
+                and getattr(context.space_data, "node_tree", None)
                 and context.space_data.node_tree.bl_idname in TREE_TYPES)
 
     def execute(self, context):

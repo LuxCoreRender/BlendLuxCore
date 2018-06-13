@@ -47,7 +47,8 @@ def recursive_overwrite(src, dest):
             # delete the old file (it is not in use anyway)
             if os.path.exists(dest_old):
                 os.remove(dest_old)
-            shutil.move(dest, dest + ".old")
+            if os.path.exists(dest):
+                shutil.move(dest, dest_old)
 
         shutil.copyfile(src, dest)
 

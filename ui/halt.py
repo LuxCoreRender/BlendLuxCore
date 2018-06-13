@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bl_ui.properties_render_layer import RenderLayerButtonsPanel
 from bpy.types import Panel
+from ..utils import ui as utils_ui
 
 
 def draw(layout, context, halt):
@@ -12,9 +13,7 @@ def draw(layout, context, halt):
     split.active = halt.use_time
     split.prop(halt, "time")
 
-    m, s = divmod(halt.time, 60)
-    h, m = divmod(m, 60)
-    time_humanized = "%d hours, %d minutes, %d seconds" % (h, m, s)
+    time_humanized = utils_ui.humanize_time(halt.time)
     row = layout.row()
     row.active = halt.use_time
     row.label(time_humanized, icon="TIME")

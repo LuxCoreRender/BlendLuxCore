@@ -94,6 +94,7 @@ class LUXCORE_OT_set_node_tree(bpy.types.Operator):
     bl_idname = "luxcore.set_node_tree"
     bl_label = ""
     bl_description = "Assign this node tree"
+    bl_options = {"UNDO"}
 
     def set_node_tree(self, datablock, target, prop, node_tree):
         setattr(target, prop, node_tree)
@@ -118,6 +119,7 @@ class LUXCORE_MT_node_tree(bpy.types.Menu):
     bl_idname = "LUXCORE_MT_node_tree"
     bl_label = "Select Node Tree"
     bl_description = "Select a node tree"
+    bl_options = {"UNDO"}
 
     def draw(self, context):
         # Has to be present for class registration
