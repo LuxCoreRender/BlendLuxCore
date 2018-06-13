@@ -43,25 +43,7 @@ def convert(exporter, material, scene, context):
 def fallback(luxcore_name=GLOBAL_FALLBACK_MAT):
     props = pyluxcore.Properties()
     props.SetFromString("""
-    scene.textures.__grid_10cm_1.type = checkerboard3d
-    scene.textures.__grid_10cm_1.texture1 = 0.4 0.4 0.4
-    scene.textures.__grid_10cm_1.texture2 = 0.3 0.3 0.3
-    scene.textures.__grid_10cm_1.mapping.type = globalmapping3d    
-    scene.textures.__grid_10cm_1.mapping.transformation = 10 0 0 0 0 10 0 0 0 0 10 0 0 0 0 1
-    
-    scene.textures.__grid_10cm_2.type = checkerboard3d
-    scene.textures.__grid_10cm_2.texture1 = 0.4 0.4 0.4
-    scene.textures.__grid_10cm_2.texture2 = 0.5 0.5 0.5
-    scene.textures.__grid_10cm_2.mapping.type = globalmapping3d    
-    scene.textures.__grid_10cm_2.mapping.transformation = 10 0 0 0 0 10 0 0 0 0 10 0 0 0 0 1
-    
-    scene.textures.__grid_1m.type = checkerboard3d
-    scene.textures.__grid_1m.texture1 = __grid_10cm_1
-    scene.textures.__grid_1m.texture2 = __grid_10cm_2
-    scene.textures.__grid_1m.mapping.type = globalmapping3d
-    scene.textures.__grid_1m.mapping.transformation = 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
-    
     scene.materials.{mat_name}.type = matte
-    scene.materials.{mat_name}.kd = __grid_1m    
+    scene.materials.{mat_name}.kd = 0.5
     """.format(mat_name=luxcore_name))
     return luxcore_name, props
