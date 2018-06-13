@@ -26,6 +26,14 @@ def remove(data):
         print("Could not remove datablock %s (type %s)" % (data.name, type(data)))
 
 
+def remove_obj_and_data(obj):
+    obj_data = obj.data
+    # We first have to remove the object because it is a user of the data
+    bpy.data.objects.remove(obj, do_unlink=True)
+    # Now obj_data.users is 0 and we can remove it
+    remove(obj_data)
+
+
 def LUXCORE_OT_use_proxy_switch(self, context):
     obj = context.active_object
     if obj is None:
@@ -61,8 +69,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
                       "The original high-resolution mesh is only loaded at render time")
     bl_options = {"UNDO"}
 
-    # TODO: Support other object types
-    SUPPORTED_OBJ_TYPES = {'MESH', 'CURVE', 'SURFACE', 'FONT'}
+    SUPPORTED_OBJ_TYPES = {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}
 
     decimate_ratio = bpy.props.FloatProperty(name="Proxy Mesh Quality",
                                              description="Decimate ratio that is applied to the preview mesh",
@@ -88,8 +95,8 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         return {'RUNNING_MODAL'}        
 
     def execute(self, context):
-        active = context.active_object
         selected_objs = context.selected_objects
+        delete_later = []
 
         for obj in selected_objs:
             if obj.type not in self.SUPPORTED_OBJ_TYPES:
@@ -99,23 +106,29 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
                 continue
 
             proxy = self.make_lowpoly_proxy(obj, context.scene, self.decimate_ratio / 100)
-            # Restoring the active object is just eyecandy
-            if obj == active:
-                context.scene.objects.active = proxy
 
             # Create high-resolution mesh with applied modifiers
             mesh = obj.to_mesh(context.scene, True, 'RENDER')
             mesh_name = utils.to_luxcore_name(obj.name)
+
+            if mesh is None or len(mesh.tessfaces) == 0:
+                print("[Create Proxy INFO] Skipping object %s because it has no faces" % obj.name)
+                remove(mesh)
+                remove_obj_and_data(proxy)
+                if obj.type == 'META':
+                    # The metaballs where to_mesh returns None would be "empty husks" after proxy creation.
+                    # However, we still need them in this loop, so we only mark them for deletion.
+                    delete_later.append(obj)
+                continue
+
             # Delete the original object, we don't need it anymore
-            obj_data = obj.data
-            bpy.data.objects.remove(obj, do_unlink=True)
-            remove(obj_data)
+            remove_obj_and_data(obj)
 
             # Export object into PLY files via pyluxcore functions
             luxcore_scene = pyluxcore.Scene()
             mesh_definitions = self.define_mesh(luxcore_scene, mesh, mesh_name)
             # Delete the temporary mesh (don't have to unlink because it was never "registered" in bpy.data)
-            bpy.data.meshes.remove(mesh, do_unlink=False)
+            remove(mesh)
 
             print("[Create Proxy] Exporting high resolution geometry data into PLY files...")
             for name, mat in mesh_definitions:
@@ -127,6 +140,8 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
                 new.filepath = filepath
                 print("[Create Proxy] Saved", filepath)
 
+        for obj in delete_later:
+            remove_obj_and_data(obj)
         return {"FINISHED"}
 
     def make_lowpoly_proxy(self, source_obj, scene, decimate_ratio):
