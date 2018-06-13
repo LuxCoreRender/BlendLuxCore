@@ -5,8 +5,7 @@ from ..bin import pyluxcore
 from .utils import poll_object
 
 # TODO:
-# - Support all surface types, not only MESH
-# - Test with all kinds of objects, curves, text, empty etc.
+# - Objects with particle systems
 
 
 def remove(data):
@@ -63,7 +62,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     # TODO: Support other object types
-    SUPPORTED_OBJ_TYPES = {'MESH'}
+    SUPPORTED_OBJ_TYPES = {'MESH', 'CURVE', 'SURFACE', 'FONT'}
 
     decimate_ratio = bpy.props.FloatProperty(name="Proxy Mesh Quality",
                                              description="Decimate ratio that is applied to the preview mesh",
@@ -132,9 +131,14 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
 
     def make_lowpoly_proxy(self, source_obj, scene, decimate_ratio):
         print("[Create Proxy] Copying object", source_obj.name)
-        # TODO we need to make sure that we create a MESH object, even if source is e.g. a CURVE
-        proxy = source_obj.copy()
-        scene.objects.link(proxy)
+        # We have to use bpy.ops.object.convert instead of to_mesh here
+        # because we want to copy all settings of the source object
+        bpy.ops.object.select_all(action='DESELECT')
+        scene.objects.active = source_obj
+        source_obj.select = True
+        bpy.ops.object.convert(target='MESH', keep_original=True)
+        proxy = scene.objects.active
+
         proxy.name = source_obj.name + "_lux_proxy"
 
         decimate = proxy.modifiers.new("proxy_decimate", 'DECIMATE')
@@ -145,7 +149,9 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         # to_mesh has applied the modifiers, we don't need them anymore
         proxy.modifiers.clear()
         # Use the low res mesh with applied modifiers instead of the original high res mesh
+        old_proxy_data = proxy.data
         proxy.data = proxy_mesh
+        remove(old_proxy_data)
 
         proxy.luxcore.use_proxy = True
 
