@@ -20,6 +20,7 @@ THRESH_REDUCT_DESC = (
     "Multiply noise level with this value after all tiles have converged, "
     "then continue with the lowered noise level"
 )
+THRESH_WARMUP_DESC = "How many samples to render before starting the convergence tests"
 
 SIMPLE_DESC = "Recommended for scenes with simple lighting (outdoors, studio setups, indoors with large windows)"
 COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoors with small windows)"
@@ -133,7 +134,9 @@ class LuxCoreConfigTile(PropertyGroup):
                                                            description=THRESH_REDUCT_DESC)
     # TODO do we need to expose this? In LuxBlend we didn't
     # tile.multipass.convergencetest.warmup.count
-    # multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0, soft_max=128)
+    multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0,
+                                            soft_min=8, soft_max=128,
+                                            description=THRESH_WARMUP_DESC)
 
 
 class LuxCoreConfig(PropertyGroup):

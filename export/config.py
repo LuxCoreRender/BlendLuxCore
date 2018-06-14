@@ -93,9 +93,8 @@ def convert(exporter, scene, context=None, engine=None):
                     definitions["tile.multipass.convergencetest.threshold"] = thresh
                     thresh_reduct = tile.multipass_convtest_threshold_reduction
                     definitions["tile.multipass.convergencetest.threshold.reduction"] = thresh_reduct
-                    # TODO do we need to expose this? In LuxBlend we didn't
-                    # warmup = tile.multipass_convtest_warmup
-                    # definitions["tile.multipass.convergencetest.warmup.count"] = warmup
+                    warmup = tile.multipass_convtest_warmup
+                    definitions["tile.multipass.convergencetest.warmup.count"] = warmup
                 else:
                     luxcore_engine = "PATH"
 

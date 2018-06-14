@@ -69,8 +69,7 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                     col = layout.column(align=True)
                     col.prop(config.tile, "multipass_convtest_threshold")
                     col.prop(config.tile, "multipass_convtest_threshold_reduction")
-                    # TODO do we need to expose this? In LuxBlend we didn't
-                    # layout.prop(config.tile, "multipass_convtest_warmup")
+                    col.prop(config.tile, "multipass_convtest_warmup")
         else:
             # Bidir options
             row_depths = layout.row(align=True)
