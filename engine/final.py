@@ -172,7 +172,10 @@ def _stat_refresh_interval(start, scene):
     maximum = 16
 
     minutes = (time() - start) / 60
-    return max(min(2**minutes, maximum), minimum)
+    if minutes < 4:
+        return max(2**minutes, minimum)
+    else:
+        return maximum
 
 
 def _check_halt_conditions(engine, scene):
