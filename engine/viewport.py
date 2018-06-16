@@ -86,13 +86,13 @@ def view_draw(engine, context):
     # (note: the LuxCore stat "stats.renderengine.time" is not reliable here)
     rendered_time = time() - engine.viewport_start_time
     halt_time = scene.luxcore.viewport.halt_time
-    status_message = "%d/%ds" % (rendered_time, halt_time)
+    status_message = ""
 
     if rendered_time > halt_time:
         if not engine.session.IsInPause():
             print("[Engine/Viewport] Pausing session")
             engine.session.Pause()
-        status_message += " (Paused)"
+        status_message = "(Paused)"
     else:
         # Not in pause yet, keep drawing
         engine.tag_redraw()
