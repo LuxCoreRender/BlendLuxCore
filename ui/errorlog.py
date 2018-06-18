@@ -18,24 +18,12 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
 
     def draw_header(self, context):
         errorlog = context.scene.luxcore.errorlog
-        text = "("
-        icon = "NONE"
+
+        row = self.layout.row(align=True)
         if errorlog.errors:
-            text += utils.pluralize("%d Error", len(errorlog.errors))
-            icon = ICON_ERROR
+            row.label(str(len(errorlog.errors)), icon=ICON_ERROR)
         if errorlog.warnings:
-            if text != "(":
-                text += ", "
-            text += utils.pluralize("%d Warning", len(errorlog.warnings))
-            if icon == "NONE":
-                icon = ICON_WARNING
-
-        if text == "(":
-            text = "(No Errors or Warnings)"
-        else:
-            text += ")"
-
-        self.layout.label(text, icon)
+            row.label(str(len(errorlog.warnings)), icon=ICON_WARNING)
 
     def draw(self, context):
         errorlog = context.scene.luxcore.errorlog

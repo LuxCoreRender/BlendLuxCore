@@ -1,3 +1,4 @@
+from time import time
 from .. import export
 from ..draw.viewport import FrameBuffer
 from ..utils import render as utils_render
@@ -18,6 +19,7 @@ def view_update(engine, context, changes=None):
             # export (Blender limitation), so we don't pass engine here
             engine.session = engine.exporter.create_session(context)
             engine.session.Start()
+            engine.viewport_start_time = time()
             return
         except Exception as error:
             del engine.session
@@ -41,6 +43,7 @@ def view_update(engine, context, changes=None):
 
     # We have to re-assign the session because it might have been replaced due to filmsize change
     engine.session = engine.exporter.update(context, engine.session, changes)
+    engine.viewport_start_time = time()
     
 
 def view_draw(engine, context):
@@ -60,6 +63,7 @@ def view_draw(engine, context):
         # We have to re-assign the session because it might have been
         # replaced due to filmsize change.
         engine.session = engine.exporter.update(context, engine.session, export.Change.CAMERA)
+        engine.viewport_start_time = time()
 
     # On startup we don't have a framebuffer yet
     if engine.framebuffer is None:
@@ -79,21 +83,22 @@ def view_draw(engine, context):
     engine.framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
 
     # Check if we need to pause the viewport render
-    stats = engine.session.GetStats()
-    rendered_time = stats.Get("stats.renderengine.time").GetFloat()
-    halt_time = scene.luxcore.display.viewport_halt_time
-    status_message = "%d/%ds" % (rendered_time, halt_time)
+    # (note: the LuxCore stat "stats.renderengine.time" is not reliable here)
+    rendered_time = time() - engine.viewport_start_time
+    halt_time = scene.luxcore.viewport.halt_time
+    status_message = ""
 
     if rendered_time > halt_time:
         if not engine.session.IsInPause():
             print("[Engine/Viewport] Pausing session")
             engine.session.Pause()
-        status_message += " (Paused)"
+        status_message = "(Paused)"
     else:
         # Not in pause yet, keep drawing
         engine.tag_redraw()
 
     # Show formatted statistics in Blender UI
     config = engine.session.GetRenderConfig()
+    stats = engine.session.GetStats()
     pretty_stats = utils_render.get_pretty_stats(config, stats, scene, context)
     engine.update_stats(pretty_stats, status_message)

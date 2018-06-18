@@ -103,7 +103,7 @@ def get_pretty_stats(config, stats, scene, context=None):
     if context:
         # In viewport, the usual halt conditions are irrelevant, only the time counts
         rendered_time = stats.Get("stats.renderengine.time").GetFloat()
-        viewport_halt_time = scene.luxcore.display.viewport_halt_time
+        viewport_halt_time = scene.luxcore.viewport.halt_time
         if rendered_time > viewport_halt_time:
             # This is only a UI issue, the render always pauses
             rendered_time = viewport_halt_time
@@ -122,16 +122,6 @@ def get_pretty_stats(config, stats, scene, context=None):
         else:
             pretty.append("%d Samples" % samples)
 
-        # Samples/Sec
-        samples_per_sec = stats.Get("stats.renderengine.total.samplesec").GetFloat()
-
-        if samples_per_sec > 10 ** 6 - 1:
-            # Use megasamples as unit
-            pretty.append("Samples/Sec %.1f M" % (samples_per_sec / 10 ** 6))
-        else:
-            # Use kilosamples as unit
-            pretty.append("Samples/Sec %d k" % (samples_per_sec / 10 ** 3))
-
         # Convergence (how many pixels are converged, in percent)
         convergence = stats.Get("stats.renderengine.convergence").GetFloat()
         if convergence > 0:
@@ -140,6 +130,16 @@ def get_pretty_stats(config, stats, scene, context=None):
             else:
                 convergence_msg = "%.2f Pixels Converged" % (convergence * 100)
             pretty.append(convergence_msg)
+
+    # Samples/Sec
+    samples_per_sec = stats.Get("stats.renderengine.total.samplesec").GetFloat()
+
+    if samples_per_sec > 10 ** 6 - 1:
+        # Use megasamples as unit
+        pretty.append("Samples/Sec %.1f M" % (samples_per_sec / 10 ** 6))
+    else:
+        # Use kilosamples as unit
+        pretty.append("Samples/Sec %d k" % (samples_per_sec / 10 ** 3))
 
     # Engine + Sampler
     engine = config.GetProperties().Get("renderengine.type").GetString()

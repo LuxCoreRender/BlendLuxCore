@@ -21,16 +21,61 @@ def convert(exporter, scene, context=None, engine=None):
         width, height = utils.calc_filmsize(scene, context)
 
         if context:
-            # TODO: Support OpenCL in viewport?
             # Viewport render
-            luxcore_engine = "RTPATHCPU"
-            sampler = "RTPATHCPUSAMPLER"
-            # Size of the blocks right after a scene edit (in pixels)
-            definitions["rtpathcpu.zoomphase.size"] = 4
-            # How to blend new samples over old ones.
-            # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
-            definitions["rtpathcpu.zoomphase.weight"] = 0
             _convert_path(config, definitions)
+
+            use_cpu = scene.luxcore.viewport.device == "CPU"
+            if not use_cpu and not utils.is_opencl_build():
+                msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
+                scene.luxcore.errorlog.add_warning(msg)
+                use_cpu = True
+
+            if use_cpu:
+                luxcore_engine = "RTPATHCPU"
+                sampler = "RTPATHCPUSAMPLER"
+                # Size of the blocks right after a scene edit (in pixels)
+                definitions["rtpathcpu.zoomphase.size"] = 4
+                # How to blend new samples over old ones.
+                # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
+                definitions["rtpathcpu.zoomphase.weight"] = 0
+            else:
+                luxcore_engine = "RTPATHOCL"
+                sampler = "TILEPATHSAMPLER"
+                # Render a sample every n x n pixels in the first passes.
+                # For instance 4x4 than 2x2 and then always 1x1.
+                definitions["rtpath.resolutionreduction.preview"] = 4
+                # Each preview step is rendered for n frames.
+                definitions["rtpath.resolutionreduction.step"] = 1
+                # Render a sample every n x n pixels, outside the preview phase,
+                # in order to reduce the per frame rendering time.
+                definitions["rtpath.resolutionreduction"] = 1
+
+                # Enable a bunch of often-used features to minimize the need for kernel recompilations
+                enabled_opencl_features = " ".join([
+                    # Materials
+                    "MATTE", "ROUGHMATTE", "MATTETRANSLUCENT", "ROUGHMATTETRANSLUCENT",
+                    "GLOSSY2", "GLOSSYTRANSLUCENT",
+                    "GLASS", "ARCHGLASS", "ROUGHGLASS",
+                    "MIRROR", "METAL2",
+                    "NULLMAT",
+                    # Material features
+                    "HAS_BUMPMAPS", "GLOSSY2_ABSORPTION", "GLOSSY2_MULTIBOUNCE",
+                    # Volumes
+                    "HOMOGENEOUS_VOL", "CLEAR_VOL",
+                    # Textures
+                    "IMAGEMAPS_BYTE_FORMAT", "IMAGEMAPS_HALF_FORMAT",
+                    "IMAGEMAPS_1xCHANNELS", "IMAGEMAPS_3xCHANNELS",
+                    # Lights
+                    "INFINITE", "TRIANGLELIGHT", "SKY2", "SUN", "POINT", "MAPPOINT",
+                    "SPOTLIGHT", "CONSTANTINFINITE", "PROJECTION", "SHARPDISTANT",
+                    "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
+                ])
+                definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
+
+                definitions["opencl.cpu.use"] = False
+                definitions["opencl.gpu.use"] = True
+                opencl = scene.luxcore.opencl
+                definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
         else:
             # Final render
             if config.engine == "PATH":
@@ -48,9 +93,8 @@ def convert(exporter, scene, context=None, engine=None):
                     definitions["tile.multipass.convergencetest.threshold"] = thresh
                     thresh_reduct = tile.multipass_convtest_threshold_reduction
                     definitions["tile.multipass.convergencetest.threshold.reduction"] = thresh_reduct
-                    # TODO do we need to expose this? In LuxBlend we didn't
-                    # warmup = tile.multipass_convtest_warmup
-                    # definitions["tile.multipass.convergencetest.warmup.count"] = warmup
+                    warmup = tile.multipass_convtest_warmup
+                    definitions["tile.multipass.convergencetest.warmup.count"] = warmup
                 else:
                     luxcore_engine = "PATH"
 

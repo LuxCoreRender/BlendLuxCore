@@ -31,7 +31,8 @@ def handler():
 
 
 def _tile_highlight(context):
-    if context.space_data.image.type != "RENDER_RESULT":
+    current_image = context.space_data.image
+    if current_image is None or current_image.type != "RENDER_RESULT":
         return
     from ..engine import LuxCoreRenderEngine
     if not LuxCoreRenderEngine.final_running:
@@ -105,7 +106,8 @@ def _draw_text(text, x, y, view_to_region):
 def _denoiser_help_text(context):
     if not context.scene.luxcore.denoiser.enabled:
         return
-    if context.space_data.image.type != "RENDER_RESULT":
+    current_image = context.space_data.image
+    if current_image is None or current_image.type != "RENDER_RESULT":
         return
 
     # Only show the help text if the toolshelf is not visible
