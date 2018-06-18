@@ -44,12 +44,13 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
             self.inputs[i].enabled = current_settings[i][1]
 
     mode_items = [
-        ("scale", "Multiply", "Value 1 * Value 2"),
-        ("add", "Add", "Value 1 + Value 2"),
-        ("subtract", "Subtract", "Value 1 - Value 2"),
-        ("mix", "Mix", MIX_DESCRIPTION),
-        ("clamp", "Clamp", "Clamp the input so it is between min and max values"),
-        ("abs", "Absolute", "Take the absolute value (remove minus sign)"),
+        ("scale", "Multiply", "Value 1 * Value 2", 0),
+        ("divide", "Divide", "Value 1 / Value 2", 6),
+        ("add", "Add", "Value 1 + Value 2", 1),
+        ("subtract", "Subtract", "Value 1 - Value 2", 2),
+        ("mix", "Mix", MIX_DESCRIPTION, 3),
+        ("clamp", "Clamp", "Clamp the input so it is between min and max values", 4),
+        ("abs", "Absolute", "Take the absolute value (remove minus sign)", 5),
     ]
     mode = EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
