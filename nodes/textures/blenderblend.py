@@ -53,7 +53,7 @@ class LuxCoreNodeTexBlenderBlend(LuxCoreNodeTexture):
             "contrast": self.contrast,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation),
+            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
         }
         
         return self.create_props(props, definitions, luxcore_name)

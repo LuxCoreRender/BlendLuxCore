@@ -64,7 +64,7 @@ class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
             "contrast": self.contrast,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation),
+            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
         }
         if self.dist_metric == "minkovsky":
             definitions["exponent"] = self.minkowsky_exp
