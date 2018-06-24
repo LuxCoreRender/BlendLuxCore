@@ -45,9 +45,10 @@ def convert(exporter, scene, context=None, is_camera_moving=False):
 def _view_ortho(scene, context, definitions):
     cam_matrix = Matrix(context.region_data.view_matrix).inverted()
     lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix, scene)
+    world_scale = utils.get_worldscale(scene, False)
 
     definitions["type"] = "orthographic"
-    zoom = 0.915 * context.region_data.view_distance*35/context.space_data.lens
+    zoom = 0.915 * world_scale * context.region_data.view_distance*35/context.space_data.lens
 
     # Move the camera origin away from the viewport center to avoid clipping
     origin = Vector(lookat_orig)
@@ -77,16 +78,18 @@ def _view_persp(scene, context, definitions):
 def _view_camera(scene, context, definitions):
     camera = scene.camera
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
+    world_scale = utils.get_worldscale(scene, False)
+    
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
     
     # Magic zoom formula for camera viewport zoom from Cycles export code
-    zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
+    zoom = 4 / ((math.sqrt(2) + (context.region_data.view_camera_zoom * world_scale) / 50) ** 2)
 
     if camera.data.type == "ORTHO":
         definitions["type"] = "orthographic"
-        zoom *= 0.5 * camera.data.ortho_scale
+        zoom *= 0.5 * world_scale * camera.data.ortho_scale
     elif camera.data.type == "PANO":
         definitions["type"] = "environment"
     elif camera.data.type == "PERSP":
@@ -103,6 +106,7 @@ def _view_camera(scene, context, definitions):
 def _final(scene, definitions):
     camera = scene.camera
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
+    world_scale = utils.get_worldscale(scene, False)
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
@@ -110,7 +114,7 @@ def _final(scene, definitions):
 
     if camera.data.type == "ORTHO":
         cam_type = "orthographic"
-        zoom = 0.5 * camera.data.ortho_scale
+        zoom = 0.5 * world_scale * camera.data.ortho_scale
 
     elif camera.data.type == "PANO":
         cam_type = "environment"

@@ -177,6 +177,7 @@ def calc_filmsize_raw(scene, context=None):
 def calc_filmsize(scene, context=None):
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
     width_raw, height_raw = calc_filmsize_raw(scene, context)
+    world_scale = get_worldscale(scene, False)
     
     if context:
         # Viewport render        
@@ -187,7 +188,7 @@ def calc_filmsize(scene, context=None):
             height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
         else:
             # Camera viewport
-            zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
+            zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom * world_scale / 50) ** 2)
             aspectratio, aspect_x, aspect_y = calc_aspect(scene.render.resolution_x * scene.render.pixel_aspect_x,
                                                           scene.render.resolution_y * scene.render.pixel_aspect_y,
                                                           scene.camera.data.sensor_fit)
@@ -252,11 +253,12 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
+    world_scale = get_worldscale(scene, False)
 
     # Following: Black Magic
     scale = 1
     if scene.camera and scene.camera.data.type == "ORTHO":
-        scale = 0.5 * scene.camera.data.ortho_scale
+        scale = 0.5 * scene.camera.data.ortho_scale * world_scale
 
     offset_x = 0
     offset_y = 0
@@ -275,7 +277,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
                                                             scene.camera.data.sensor_fit)
                     
                 if scene.camera and scene.camera.data.type == "ORTHO":
-                    zoom = 0.5 * scene.camera.data.ortho_scale
+                    zoom = 0.5 * scene.camera.data.ortho_scale * world_scale
             else:
                 # No border
                 aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw, scene.camera.data.sensor_fit)
