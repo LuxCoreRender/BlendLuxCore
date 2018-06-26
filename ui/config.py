@@ -113,6 +113,19 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         # Light strategy
         layout.prop(config, "light_strategy")
 
+        if config.light_strategy == "DLS_CACHE":
+            dls_cache = config.dls_cache
+            box = layout.box()
+            box.prop(dls_cache, "entry_radius")
+            box.prop(dls_cache, "entry_normalangle")
+            box.prop(dls_cache, "entry_maxpasses")
+            box.prop(dls_cache, "entry_convergencethreshold")
+            box.prop(dls_cache, "entry_volumes_enable")
+            box.prop(dls_cache, "lightthreshold")
+            box.prop(dls_cache, "targetcachehitratio")
+            box.prop(dls_cache, "maxdepth")
+            box.prop(dls_cache, "maxsamplescount")
+
     def draw_clamp_settings(self, layout, config):
         split = layout.split()
         split.prop(config.path, "use_clamping")

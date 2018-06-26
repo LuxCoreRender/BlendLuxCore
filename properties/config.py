@@ -139,6 +139,31 @@ class LuxCoreConfigTile(PropertyGroup):
                                             description=THRESH_WARMUP_DESC)
 
 
+class LuxCoreConfigDLSCache(PropertyGroup):
+    # TODO remove this comment
+    # Property("lightstrategy.entry.radius")(.15f) <<
+    # +			Property("lightstrategy.entry.normalangle")(10.f) <<
+    # +			Property("lightstrategy.entry.maxpasses")(1024) <<
+    # +			Property("lightstrategy.entry.convergencethreshold")(.01f) <<
+    # ("lightstrategy.entry.volumes.enable")(false)
+    # +			Property("lightstrategy.lightthreshold")(.01f) <<
+    # +			Property("lightstrategy.targetcachehitratio")(99.5f) <<
+    # +			Property("lightstrategy.maxdepth")(4) <<
+    # +			Property("lightstrategy.maxsamplescount")(10000000);
+
+    # TODO names, min/max, percentage-type, descriptions
+    entry_radius = FloatProperty(default=0.15)
+    entry_normalangle = FloatProperty(default=10)
+    entry_maxpasses = IntProperty(default=1024)
+    entry_convergencethreshold = FloatProperty(default=0.01)
+    entry_volumes_enable = BoolProperty(default=False)
+
+    lightthreshold = FloatProperty(default=0.01)
+    targetcachehitratio = FloatProperty(default=99.5)
+    maxdepth = IntProperty(default=4)
+    maxsamplescount = IntProperty(default=10000000)
+
+
 class LuxCoreConfig(PropertyGroup):
     """
     Main config storage class.
@@ -222,6 +247,9 @@ class LuxCoreConfig(PropertyGroup):
     ]
     light_strategy = EnumProperty(name="Light Strategy", items=light_strategy_items, default="LOG_POWER",
                                   description="Decides how the lights in the scene are sampled")
+
+    # Special properties of the direct light sampling cache
+    dls_cache = PointerProperty(type=LuxCoreConfigDLSCache)
 
     # FILESAVER options
     use_filesaver = BoolProperty(name="Only write LuxCore scene", default=False)
