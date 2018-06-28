@@ -1,6 +1,7 @@
 import bpy
 from . import final, preview, viewport
 from ..handlers.draw_imageeditor import TileStats
+from ..utils.log import LuxCoreLog
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -33,6 +34,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.session.Stop()
             del self.session
 
+    def log_listener(self, msg):
+        if "Direct light sampling cache entries" in msg:
+            self.update_stats("", msg)
+        # elif "BCD progress" in msg:  # TODO For some weird reason this does not work
+        #     self.update_stats("", msg)
+
     def render(self, scene):
         if self.is_preview:
             self.render_preview(scene)
@@ -42,7 +49,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def render_final(self, scene):
         try:
             LuxCoreRenderEngine.final_running = True
+            scene.luxcore.display.paused = False
             TileStats.reset()
+            LuxCoreLog.add_listener(self.log_listener)
             final.render(self, scene)
         except Exception as error:
             self.report({"ERROR"}, str(error))
@@ -59,6 +68,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             scene.luxcore.active_layer_index = -1
             LuxCoreRenderEngine.final_running = False
             TileStats.reset()
+            LuxCoreLog.remove_listener(self.log_listener)
 
     def render_preview(self, scene):
         try:

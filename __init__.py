@@ -20,6 +20,7 @@ from .ui import (
     halt, image_tools, light, lightgroups, material, particle, postpro, render,
     render_layer, scene, texture, units, viewport, world,
 )
+from .utils.log import LuxCoreLog
 
 bl_info = {
     "name": "LuxCore",
@@ -29,7 +30,7 @@ bl_info = {
     "category": "Render",
     "location": "Info header, render engine menu",
     "description": "LuxCore integration for Blender",
-    "warning": "alpha1",
+    "warning": "alpha2",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
@@ -46,7 +47,7 @@ def register():
     properties.init()
 
     # Has to be called at least once, can be called multiple times
-    pyluxcore.Init()
+    pyluxcore.Init(LuxCoreLog.add)
     print("pyluxcore version:", pyluxcore.Version())
 
 
