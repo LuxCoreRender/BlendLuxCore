@@ -4,6 +4,7 @@ from bpy.props import (
     EnumProperty, BoolProperty, IntProperty, FloatProperty,
     PointerProperty, StringProperty,
 )
+from math import radians
 
 
 TILED_DESCRIPTION = (
@@ -140,28 +141,22 @@ class LuxCoreConfigTile(PropertyGroup):
 
 
 class LuxCoreConfigDLSCache(PropertyGroup):
-    # TODO remove this comment
-    # Property("lightstrategy.entry.radius")(.15f) <<
-    # +			Property("lightstrategy.entry.normalangle")(10.f) <<
-    # +			Property("lightstrategy.entry.maxpasses")(1024) <<
-    # +			Property("lightstrategy.entry.convergencethreshold")(.01f) <<
-    # ("lightstrategy.entry.volumes.enable")(false)
-    # +			Property("lightstrategy.lightthreshold")(.01f) <<
-    # +			Property("lightstrategy.targetcachehitratio")(99.5f) <<
-    # +			Property("lightstrategy.maxdepth")(4) <<
-    # +			Property("lightstrategy.maxsamplescount")(10000000);
+    show_advanced = BoolProperty(name="Show Advanced", default=False)
 
     # TODO names, min/max, percentage-type, descriptions
-    entry_radius = FloatProperty(default=0.15)
-    entry_normalangle = FloatProperty(default=10)
-    entry_maxpasses = IntProperty(default=1024)
-    entry_convergencethreshold = FloatProperty(default=0.01)
-    entry_volumes_enable = BoolProperty(default=False)
+    entry_radius = FloatProperty(name="Entry Radius", default=0.15, subtype="DISTANCE")
+    entry_normalangle = FloatProperty(name="Normal Angle",
+                                      default=radians(10), min=0, max=radians(90), subtype="ANGLE")
+    entry_maxpasses = IntProperty(name="Max. Passes", default=1024)
+    entry_convergencethreshold = FloatProperty(name="Convergence Threshold",
+                                               default=1, min=0, max=100, subtype="PERCENTAGE")
+    entry_volumes_enable = BoolProperty(name="Place Entries in Volumes", default=False,
+                                        description="Enable/disable placement of entries in volumes")
 
-    lightthreshold = FloatProperty(default=0.01)
-    targetcachehitratio = FloatProperty(default=99.5)
-    maxdepth = IntProperty(default=4)
-    maxsamplescount = IntProperty(default=10000000)
+    lightthreshold = FloatProperty(name="Light Threshold", default=1, min=0, max=100, subtype="PERCENTAGE")
+    targetcachehitratio = FloatProperty(name="Target Cache Hit Ratio", default=99.5, min=0, max=100, subtype="PERCENTAGE")
+    maxdepth = IntProperty(name="Max. Depth", default=4)
+    maxsamplescount = IntProperty(name="Max. Samples", default=10000000)
 
 
 class LuxCoreConfig(PropertyGroup):

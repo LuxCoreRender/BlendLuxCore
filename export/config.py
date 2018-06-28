@@ -1,5 +1,6 @@
 import os
 import errno
+from math import degrees
 import bpy
 from collections import OrderedDict
 from ..bin import pyluxcore
@@ -149,7 +150,7 @@ def convert(exporter, scene, context=None, engine=None):
         })
 
         if config.light_strategy == "DLS_CACHE":
-            _convert_dlscache_settings(definitions, config)
+            _convert_dlscache_settings(scene, definitions, config)
 
         if config.path.use_clamping:
             definitions["path.clamping.variance.maxvalue"] = config.path.clamping
@@ -270,17 +271,18 @@ def _convert_metropolis_settings(definitions, config):
     definitions["sampler.metropolis.imagemutationrate"] = config.metropolis_imagemutationrate / 100
 
 
-def _convert_dlscache_settings(definitions, config):
+def _convert_dlscache_settings(scene, definitions, config):
     dls_cache = config.dls_cache
+    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
     definitions.update({
-        "lightstrategy.entry.radius": dls_cache.entry_radius,
-        "lightstrategy.entry.normalangle": dls_cache.entry_normalangle,
+        "lightstrategy.entry.radius": dls_cache.entry_radius * worldscale,
+        "lightstrategy.entry.normalangle": degrees(dls_cache.entry_normalangle),
         "lightstrategy.entry.maxpasses": dls_cache.entry_maxpasses,
-        "lightstrategy.entry.convergencethreshold": dls_cache.entry_convergencethreshold,
+        "lightstrategy.entry.convergencethreshold": dls_cache.entry_convergencethreshold / 100,
         "lightstrategy.entry.volumes.enable": dls_cache.entry_volumes_enable,
 
-        "lightstrategy.lightthreshold": dls_cache.lightthreshold,
-        "lightstrategy.targetcachehitratio": dls_cache.targetcachehitratio,
+        "lightstrategy.lightthreshold": dls_cache.lightthreshold / 100,
+        "lightstrategy.targetcachehitratio": dls_cache.targetcachehitratio,  # TODO maybe divide by 100 later if Dade changes it
         "lightstrategy.maxdepth": dls_cache.maxdepth,
         "lightstrategy.maxsamplescount": dls_cache.maxsamplescount,
     })
