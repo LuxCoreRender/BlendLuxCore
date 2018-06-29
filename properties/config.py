@@ -143,7 +143,7 @@ class LuxCoreConfigTile(PropertyGroup):
 class LuxCoreConfigDLSCache(PropertyGroup):
     show_advanced = BoolProperty(name="Show Advanced", default=False)
 
-    # TODO names, min/max, percentage-type, descriptions
+    # TODO min/max, descriptions
     entry_radius = FloatProperty(name="Entry Radius", default=0.15, subtype="DISTANCE")
     entry_normalangle = FloatProperty(name="Normal Angle",
                                       default=radians(10), min=0, max=radians(90), subtype="ANGLE")
@@ -154,7 +154,8 @@ class LuxCoreConfigDLSCache(PropertyGroup):
                                         description="Enable/disable placement of entries in volumes")
 
     lightthreshold = FloatProperty(name="Light Threshold", default=1, min=0, max=100, subtype="PERCENTAGE")
-    targetcachehitratio = FloatProperty(name="Target Cache Hit Ratio", default=99.5, min=0, max=100, subtype="PERCENTAGE")
+    targetcachehitratio = FloatProperty(name="Target Cache Hit Ratio",
+                                        default=99.5, min=0, max=100, subtype="PERCENTAGE")
     maxdepth = IntProperty(name="Max. Depth", default=4)
     maxsamplescount = IntProperty(name="Max. Samples", default=10000000)
 
