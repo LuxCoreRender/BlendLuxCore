@@ -319,6 +319,7 @@ class Roughness:
                 node.inputs[socket].enabled = node.rough
             except KeyError:
                 pass
+        Roughness.update_anisotropy(node, context)
 
     @staticmethod
     def update_anisotropy(node, context):
