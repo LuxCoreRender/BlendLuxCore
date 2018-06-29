@@ -282,7 +282,7 @@ def _convert_dlscache_settings(scene, definitions, config):
         "lightstrategy.entry.volumes.enable": dls_cache.entry_volumes_enable,
 
         "lightstrategy.lightthreshold": dls_cache.lightthreshold / 100,
-        "lightstrategy.targetcachehitratio": dls_cache.targetcachehitratio,  # TODO maybe divide by 100 later if Dade changes it
+        "lightstrategy.targetcachehitratio": dls_cache.targetcachehitratio / 100,
         "lightstrategy.maxdepth": dls_cache.maxdepth,
         "lightstrategy.maxsamplescount": dls_cache.maxsamplescount,
     })
