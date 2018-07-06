@@ -29,7 +29,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
-        if hasattr(self, "_session") and self.session:
+        if getattr(self, "session", None):
             print("[Engine] del: stopping session")
             self.session.Stop()
             del self.session
