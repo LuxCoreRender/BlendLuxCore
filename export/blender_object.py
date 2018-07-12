@@ -4,8 +4,9 @@ from .. import utils
 from ..utils import ExportedObject
 from ..utils import node as utils_node
 
-from . import material
+from . import material, mesh_converter
 from .light import convert_lamp
+from .meshcache import MeshCache
 
 
 def convert(exporter, blender_obj, scene, context, luxcore_scene,
@@ -48,21 +49,13 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
 
         if update_mesh:
             # print("converting mesh:", blender_obj.data.name)
-            modifier_mode = "PREVIEW" if context else "RENDER"
-            apply_modifiers = True
-            edge_split_mod = _begin_autosmooth_if_required(blender_obj)
-            mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
-            _end_autosmooth_if_required(blender_obj, edge_split_mod)
-
-            if mesh is None or len(mesh.tessfaces) == 0:
-                # This is not worth a warning in the errorlog
-                print(blender_obj.name + ": No mesh data after to_mesh()")
-                if mesh:
-                    bpy.data.meshes.remove(mesh, do_unlink=False)
-                return props, None
-
-            mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
-            bpy.data.meshes.remove(mesh, do_unlink=False)
+            with mesh_converter.convert(blender_obj, context, scene) as mesh:
+                if mesh and mesh.tessfaces:
+                    mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
+                else:
+                    # This is not worth a warning in the errorlog
+                    print(blender_obj.name + ": No mesh data after to_mesh()")
+                    return props, None
         else:
             assert exported_object is not None
             print(blender_obj.name + ": Using cached mesh")
@@ -102,22 +95,6 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None
-
-
-def _begin_autosmooth_if_required(blender_obj):
-    if not getattr(blender_obj.data, "use_auto_smooth", False):
-        return None
-
-    # We use an edge split modifier, it does the same as auto smooth
-    # The only drawback is that it does not handle custom normals
-    mod = blender_obj.modifiers.new("__LUXCORE_AUTO_SMOOTH__", 'EDGE_SPLIT')
-    mod.split_angle = blender_obj.data.auto_smooth_angle
-    return mod
-
-
-def _end_autosmooth_if_required(blender_obj, mod):
-    if mod:
-        blender_obj.modifiers.remove(mod)
 
 
 def _handle_pointiness(props, luxcore_shape_name, blender_obj):
