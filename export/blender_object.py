@@ -6,7 +6,6 @@ from ..utils import node as utils_node
 
 from . import material, mesh_converter
 from .light import convert_lamp
-from .meshcache import MeshCache
 
 
 def convert(exporter, blender_obj, scene, context, luxcore_scene,
