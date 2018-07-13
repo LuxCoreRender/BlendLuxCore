@@ -146,6 +146,11 @@ class Exporter(object):
         self.halt_cache.diff(halt_props)
         config_props.Set(halt_props)
 
+        light_count = luxcore_scene.GetLightCount()
+        if light_count > 1000:
+            msg = "The scene contains a lot of light sources (%d), performance might suffer" % light_count
+            scene.luxcore.errorlog.add_warning(msg)
+
         # Create the renderconfig
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
