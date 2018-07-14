@@ -68,7 +68,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                     # This is not worth a warning in the errorlog
                     print(blender_obj.name + ": No mesh data after to_mesh()")
                     return props, None
-        elif update_shared_mesh:
+        elif not is_shared_mesh or update_shared_mesh:
             assert exported_object is not None
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
