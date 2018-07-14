@@ -5,6 +5,8 @@ import re
 import os
 from ..bin import pyluxcore
 
+NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
+
 
 class ExportedObject(object):
     def __init__(self, mesh_definitions):
@@ -452,6 +454,11 @@ def use_obj_motion_blur(obj, scene):
     return object_blur and obj.luxcore.enable_motion_blur
 
 
+def can_share_mesh(obj):
+    modified = any([mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers])
+    return not modified and obj.data and obj.data.users > 1
+
+
 def use_instancing(obj, scene, context):
     if context:
         # Always instance in viewport so we can move the object/light around
@@ -461,7 +468,9 @@ def use_instancing(obj, scene, context):
         # When using object motion blur, we export all objects as instances
         return True
 
-    # TODO: more checks, e.g. Alt+D copies without modifiers or with equal modifier stacks
+    # Alt+D copies without deforming modifiers
+    if can_share_mesh(obj):
+        return True
 
     return False
 

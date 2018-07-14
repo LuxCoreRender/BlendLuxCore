@@ -52,6 +52,7 @@ class Exporter(object):
         self.halt_cache = caches.StringCache()
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
+        self.shared_meshes = {}
 
         # A dictionary with the following mapping:
         # {node_key: luxcore_name}
@@ -220,6 +221,7 @@ class Exporter(object):
         print("[Exporter] Update because of:", Change.to_string(changes))
         # Invalidate node cache
         self.node_cache.clear()
+        self.shared_meshes.clear()
 
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them

@@ -19,7 +19,8 @@ def convert(obj, context, scene):
     temporary = False
 
     try:
-        if obj.modifiers or obj.type != "MESH":
+        in_editmode = obj.mode == "EDIT" or obj.data.is_editmode
+        if obj.modifiers or obj.type != "MESH" or in_editmode:
             # We have to apply modifiers and/or convert to mesh
             apply_modifiers = True
             modifier_mode = "PREVIEW" if context else "RENDER"

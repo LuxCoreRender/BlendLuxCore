@@ -46,6 +46,19 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
             obj_transform = None
             mesh_transform = transformation
 
+        is_shared_mesh = utils.can_share_mesh(blender_obj)
+        update_shared_mesh = False
+        mesh_key = utils.make_key(blender_obj.data)
+
+        if is_shared_mesh:
+            try:
+                mesh_definitions = exporter.shared_meshes[mesh_key]
+                update_mesh = False
+                print(">>> got shared mesh from cache", blender_obj.data.name)
+            except KeyError:
+                update_shared_mesh = True
+                print(">>>>>> could not get shared mesh from cache", blender_obj.data.name)
+
         if update_mesh:
             # print("converting mesh:", blender_obj.data.name)
             with mesh_converter.convert(blender_obj, context, scene) as mesh:
@@ -55,7 +68,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                     # This is not worth a warning in the errorlog
                     print(blender_obj.name + ": No mesh data after to_mesh()")
                     return props, None
-        else:
+        elif update_shared_mesh:
             assert exported_object is not None
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
@@ -84,8 +97,18 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                     lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)
-            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform,
+
+            # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
+            lux_shape_name = "Mesh-" + lux_object_name
+            if is_shared_mesh:
+                # The object name saved in the mesh_definitons is incorrect
+                lux_object_name = luxcore_name + "%03d" % material_index
+
+            _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_mat_name, obj_transform,
                                    blender_obj, scene, context, duplicator)
+
+        if update_shared_mesh:
+            exporter.shared_meshes[mesh_key] = mesh_definitions
 
         return props, ExportedObject(mesh_definitions)
     except Exception as error:
@@ -96,7 +119,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
         return pyluxcore.Properties(), None
 
 
-def _handle_pointiness(props, luxcore_shape_name, blender_obj):
+def _handle_pointiness(props, lux_shape_name, blender_obj):
     use_pointiness = False
 
     for mat_slot in blender_obj.material_slots:
@@ -106,25 +129,22 @@ def _handle_pointiness(props, luxcore_shape_name, blender_obj):
             use_pointiness = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")
 
     if use_pointiness:
-        pointiness_shape = luxcore_shape_name + "_pointiness"
+        pointiness_shape = lux_shape_name + "_pointiness"
         prefix = "scene.shapes." + pointiness_shape + "."
         props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
-        props.Set(pyluxcore.Property(prefix + "source", luxcore_shape_name))
-        luxcore_shape_name = pointiness_shape
+        props.Set(pyluxcore.Property(prefix + "source", lux_shape_name))
+        lux_shape_name = pointiness_shape
 
-    return luxcore_shape_name
+    return lux_shape_name
 
 
-def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform,
+def _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_material_name, obj_transform,
                            blender_obj, scene, context, duplicator):
-    # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
-    luxcore_shape_name = "Mesh-" + lux_object_name
-    luxcore_shape_name = _handle_pointiness(props, luxcore_shape_name, blender_obj)
-
+    lux_shape_name = _handle_pointiness(props, lux_shape_name, blender_obj)
     prefix = "scene.objects." + lux_object_name + "."
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
 
-    props.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+    props.Set(pyluxcore.Property(prefix + "shape", lux_shape_name))
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 
