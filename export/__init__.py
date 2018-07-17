@@ -160,6 +160,9 @@ class Exporter(object):
 
         export_time = time() - start
         print("Export took %.1f s" % export_time)
+        if not context:
+            stats = scene.luxcore.statistics.get_active()
+            stats.export_time = export_time
 
         if engine:
             if config_props.Get("renderengine.type").GetString().endswith("OCL"):

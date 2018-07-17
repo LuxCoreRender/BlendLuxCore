@@ -1,3 +1,4 @@
+import math
 from . import get_name_with_lib
 from . import pluralize
 
@@ -89,7 +90,7 @@ def tag_region_for_redraw(context, area_type, region_type):
         region.tag_redraw()
 
 
-def humanize_time(seconds):
+def humanize_time(seconds, show_subseconds=False, subsecond_places=3):
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
     strings = []
@@ -97,6 +98,13 @@ def humanize_time(seconds):
         strings.append(pluralize("%d hour", hours))
     if minutes:
         strings.append(pluralize("%d minute", minutes))
-    if seconds:
+
+    if show_subseconds and seconds > 0:
+        strings.append("%s seconds" % str(round(seconds, subsecond_places)))
+    elif seconds:
         strings.append(pluralize("%d second", seconds))
-    return ", ".join(strings)
+
+    if strings:
+        return ", ".join(strings)
+    else:
+        return "0 seconds"
