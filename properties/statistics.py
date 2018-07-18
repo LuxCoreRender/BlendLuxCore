@@ -11,10 +11,26 @@ def greater_is_better(first, second):
     return first > second
 
 
-def time_to_string(value):
-    return utils_ui.humanize_time(value,
+def time_to_string(seconds):
+    return utils_ui.humanize_time(seconds,
                                   show_subseconds=True,
                                   subsecond_places=1)
+
+
+def samples_per_sec_to_string(samples_per_sec):
+    if samples_per_sec >= 10 ** 6:
+        # Use megasamples as unit
+        return "%.1f M" % (samples_per_sec / 10 ** 6)
+    else:
+        # Use kilosamples as unit
+        return "%d k" % (samples_per_sec / 10 ** 3)
+
+
+def triangle_count_to_string(triangle_count):
+    if triangle_count >= 10 ** 6:
+        return "%.1f M" % (triangle_count / 10 ** 6)
+    else:
+        return "{:,}".format(triangle_count)
 
 
 class Stat:
@@ -47,10 +63,10 @@ class LuxCoreRenderStats:
         self.session_init_time = Stat("Session Init Time", 0, smaller_is_better, time_to_string)
         self.render_time = Stat("Render Time", 0, greater_is_better, time_to_string)
         self.samples = Stat("Samples", 0, greater_is_better)
-        self.samples_per_sec = Stat("Samples/Sec", 0, greater_is_better)
+        self.samples_per_sec = Stat("Samples/Sec", 0, greater_is_better, samples_per_sec_to_string)
         self.light_count = Stat("Lights", 0)
         self.object_count = Stat("Objects", 0)
-        self.triangle_count = Stat("Triangles", 0)
+        self.triangle_count = Stat("Triangles", 0, string_func=triangle_count_to_string)
 
         # TODO more:
         # Rays/Sample

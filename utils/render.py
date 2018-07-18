@@ -1,6 +1,7 @@
 from . import calc_filmsize
 from .. import utils
 from ..handlers.draw_imageeditor import TileStats
+from ..properties.statistics import samples_per_sec_to_string, triangle_count_to_string
 
 engine_to_str = {
     "PATHCPU": "Path CPU",
@@ -136,13 +137,7 @@ def get_pretty_stats(config, stats, scene, context=None):
 
     # Samples/Sec
     samples_per_sec = stats.Get("stats.renderengine.total.samplesec").GetFloat()
-
-    if samples_per_sec > 10 ** 6 - 1:
-        # Use megasamples as unit
-        pretty.append("Samples/Sec %.1f M" % (samples_per_sec / 10 ** 6))
-    else:
-        # Use kilosamples as unit
-        pretty.append("Samples/Sec %d k" % (samples_per_sec / 10 ** 3))
+    pretty.append("Samples/Sec " + samples_per_sec_to_string(samples_per_sec))
 
     # Engine + Sampler
     engine = config.GetProperties().Get("renderengine.type").GetString()
@@ -152,7 +147,7 @@ def get_pretty_stats(config, stats, scene, context=None):
 
     # Triangle count
     triangle_count = stats.Get("stats.dataset.trianglecount").GetUnsignedLongLong()
-    pretty.append("{:,} Tris".format(triangle_count))
+    pretty.append(triangle_count_to_string(triangle_count) + " Tris")
 
     # Errors and warnings
     error_str = ""
