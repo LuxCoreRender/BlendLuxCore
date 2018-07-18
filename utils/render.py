@@ -35,6 +35,9 @@ def update_stats(session):
 def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
     # Show stats string in UI
     pretty_stats = get_pretty_stats(config, stats, scene)
+    # Update the stats that are shown in the image tools area
+    render_slot_stats = scene.luxcore.statistics.get_active()
+    render_slot_stats.update_from_luxcore_stats(stats)
 
     if time_until_film_refresh <= 0:
         if engine.has_denoiser() and scene.luxcore.denoiser.refresh:

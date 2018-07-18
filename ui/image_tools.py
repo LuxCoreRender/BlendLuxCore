@@ -84,12 +84,85 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
     # TODO idea: comparison mode, select another slot index,
     # values will be side by side and the better ones are green/worse are red
 
+    # TODO idea: comparison with the stats of the last run in this slot (keep them around for this purpose)
+
+    # split = layout.split()
+    # name = split.column()
+    # name.label()
+    # name.label("Export Time:")
+    # name.label("Render Time:")
+    # name.label("Samples:")
+    # name.label("MSamples/Sec:")
+    #
+    # a = split.column()
+    # a.label("slot 1")
+    # a.label("10 seconds", icon="COLOR_GREEN")
+    # a.label("10 seconds", icon="COLOR_RED")
+    # a.label("50", icon="COLOR_RED")
+    # a.label("3.4", icon="COLOR_BLUE")
+    #
+    #
+    # b = split.column()
+    # b.label("slot 4")
+    # b.label("34.5 seconds", icon="COLOR_RED")
+    # b.label("40 seconds", icon="COLOR_GREEN")
+    # b.label("400", icon="COLOR_GREEN")
+    # b.label("3.4", icon="COLOR_BLUE")
+
     def draw(self, context):
         layout = self.layout
         image = context.space_data.image
         slot_index = image.render_slots.active_index
         stats = context.scene.luxcore.statistics[slot_index]
 
-        layout.label("Export Time: " + utils_ui.humanize_time(stats.export_time,
-                                                              show_subseconds=True,
-                                                              subsecond_places=1))
+        test_stats = context.scene.luxcore.statistics[4]
+
+        # layout.label("Export Time: " + utils_ui.humanize_time(stats.export_time,
+        #                                                       show_subseconds=True,
+        #                                                       subsecond_places=1))
+
+        self.draw_stats(stats, layout)
+        layout.separator()
+        self.draw_stat_comparison(stats, test_stats, layout)
+
+    @staticmethod
+    def icon(stat, other_stat):
+        if not stat.can_compare():
+            return "NONE"
+
+        if stat.is_better(other_stat):
+            return "COLOR_GREEN"
+        elif stat.is_equal(other_stat):
+            return "COLOR_BLUE"
+        else:
+            return "COLOR_RED"
+
+    def draw_stats(self, stats, layout):
+        stat_list = stats.to_list()
+
+        split = layout.split()
+
+        col = split.column()
+        for stat in stat_list:
+            col.label(stat.name)
+
+        col = split.column()
+        for stat in stat_list:
+            col.label(str(stat))
+
+    def draw_stat_comparison(self, stats, other_stats, layout):
+        comparison_stat_list = tuple(zip(stats.to_list(), other_stats.to_list()))
+
+        split = layout.split()
+
+        col = split.column()
+        for stat, _ in comparison_stat_list:
+            col.label(stat.name)
+
+        col = split.column()
+        for stat, other_stat in comparison_stat_list:
+            col.label(str(stat), icon=self.icon(stat, other_stat))
+
+        col = split.column()
+        for stat, other_stat in comparison_stat_list:
+            col.label(str(other_stat), icon=self.icon(other_stat, stat))

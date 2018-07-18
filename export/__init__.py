@@ -73,6 +73,13 @@ class Exporter(object):
         print("[Exporter] create_session")
         start = time()
         scene = self.scene
+        if context:
+            # No statistics logging in viewport render
+            stats = None
+        else:
+            stats = scene.luxcore.statistics.get_active()
+            stats.reset()
+
         # Scene
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
@@ -150,6 +157,9 @@ class Exporter(object):
         if light_count > 1000:
             msg = "The scene contains a lot of light sources (%d), performance might suffer" % light_count
             scene.luxcore.errorlog.add_warning(msg)
+        if stats:
+            stats.light_count.value = light_count
+            stats.object_count.value = luxcore_scene.GetObjectCount()
 
         # Create the renderconfig
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
@@ -160,9 +170,8 @@ class Exporter(object):
 
         export_time = time() - start
         print("Export took %.1f s" % export_time)
-        if not context:
-            stats = scene.luxcore.statistics.get_active()
-            stats.export_time = export_time
+        if stats:
+            stats.export_time.value = export_time
 
         if engine:
             if config_props.Get("renderengine.type").GetString().endswith("OCL"):
@@ -175,8 +184,11 @@ class Exporter(object):
         # Create session (in case of OpenCL engines, render kernels are compiled here)
         start = time()
         session = pyluxcore.RenderSession(renderconfig)
-        elapsed_msg = "Session created in %.1f s" % (time() - start)
+        session_init_time = time() - start
+        elapsed_msg = "Session created in %.1f s" % session_init_time
         print(elapsed_msg)
+        if stats:
+            stats.session_init_time.value = session_init_time
 
         return session
 
