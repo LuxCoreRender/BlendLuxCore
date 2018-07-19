@@ -18,6 +18,10 @@ def time_to_string(seconds):
                                   subsecond_places=1)
 
 
+def get_rounded(value):
+    return round(value, 1)
+
+
 def samples_per_sec_to_string(samples_per_sec):
     if samples_per_sec >= 10 ** 6:
         # Use megasamples as unit
@@ -58,12 +62,30 @@ def clamping_to_string(clamping):
 
 
 class Stat:
-    def __init__(self, name, init_value, better_func=None, string_func=str):
+    id = 0
+
+    def __init__(self, name, init_value, better_func=None, string_func=str, get_value_func=None):
         self.name = name
         self.init_value = init_value
-        self.value = init_value
+        self._value = init_value
         self.better_func = better_func
         self.string_func = string_func
+        self.get_value_func = get_value_func
+
+        # ID for sorting of the stats in the UI
+        self.id = Stat.id
+        Stat.id += 1
+
+    @property
+    def value(self):
+        if self.get_value_func:
+            return self.get_value_func(self._value)
+        else:
+            return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
 
     def reset(self):
         self.value = self.init_value
@@ -83,9 +105,11 @@ class Stat:
 
 class LuxCoreRenderStats:
     def __init__(self):
-        self.export_time = Stat("Export Time", 0, smaller_is_better, time_to_string)
-        self.session_init_time = Stat("Session Init Time", 0, smaller_is_better, time_to_string)
-        self.render_time = Stat("Render Time", 0, greater_is_better, time_to_string)
+        # Some stats use rounding getter functions, because it is better for the user
+        # if values that only differ by a very small amount appear as equal in the UI.
+        self.export_time = Stat("Export Time", 0, smaller_is_better, time_to_string, get_rounded)
+        self.session_init_time = Stat("Session Init Time", 0, smaller_is_better, time_to_string, get_rounded)
+        self.render_time = Stat("Render Time", 0, greater_is_better, time_to_string, get_rounded)
         self.samples = Stat("Samples", 0, greater_is_better)
         self.samples_per_sec = Stat("Samples/Sec", 0, greater_is_better, samples_per_sec_to_string)
         self.light_count = Stat("Lights", 0)
@@ -105,9 +129,12 @@ class LuxCoreRenderStats:
         # put denoiser settings/stats also here?
         # etc.
 
+        # TODO some sort of categories, e.g. settings and statistics
+
     def to_list(self):
-        # TODO how to get stable sorted list?
-        members = [getattr(self, attr) for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
+        members = [getattr(self, attr) for attr in dir(self)
+                   if not callable(getattr(self, attr)) and not attr.startswith("__")]
+        members.sort(key=lambda stat: stat.id)
         return members
 
     def reset(self):
