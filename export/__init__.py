@@ -160,7 +160,6 @@ class Exporter(object):
             scene.luxcore.errorlog.add_warning(msg)
         if stats:
             stats.light_count.value = light_count
-            stats.object_count.value = luxcore_scene.GetObjectCount()
 
         # Create the renderconfig
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)

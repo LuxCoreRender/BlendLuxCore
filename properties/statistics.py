@@ -113,7 +113,6 @@ class LuxCoreRenderStats:
         self.samples = Stat("Samples", 0, greater_is_better)
         self.samples_per_sec = Stat("Samples/Sec", 0, greater_is_better, samples_per_sec_to_string)
         self.light_count = Stat("Lights", 0)
-        self.object_count = Stat("Objects", 0)
         self.triangle_count = Stat("Triangles", 0, string_func=triangle_count_to_string)
         self.render_engine = Stat("Engine", "")
         self.sampler = Stat("Sampler", "")
@@ -183,9 +182,9 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
         LuxCoreRenderStatsCollection.second_slot_callback_strings = items
         return items
 
-    first_slot = EnumProperty(name="Slot", description="The first slot",
+    first_slot = EnumProperty(name="First Slot", description="The first slot",
                               items=first_slot_items_callback)
-    second_slot = EnumProperty(name="Slot", description="The other slot to compare with",
+    second_slot = EnumProperty(name="Second Slot", description="The other slot to compare with",
                                items=second_slot_items_callback)
 
     def __getitem__(self, slot_index):
