@@ -72,8 +72,14 @@ class LuxCoreRenderStats:
         self.sampler = Stat("Sampler", "")
 
         # TODO more:
+        # clamping (value or "disabled")
+        # custom props (e.g. from config)?
+        # path depths
+        # light strategy
         # Rays/Sample
+        # VRAM usage (OpenCL only)
         # a custom string?
+        # put denoiser settings/stats also here?
         # etc.
 
     def to_list(self):
@@ -99,22 +105,38 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
     compare = BoolProperty(name="Compare", default=False,
                            description="Compare the statistics of two slots")
 
-    def slot_items_callback(self, context):
+    def generate_slot_items(self, index_offset=0):
         render_result = self._get_render_result()
         if not render_result:
             return
 
-        slot_names = [(slot.name if slot.name else "Slot %d" % (i + 1))
+        slot_names = [(slot.name or "Slot %d" % (i + 1))
                       for i, slot in enumerate(render_result.render_slots)]
-        items = [(str(i), name, "", i) for i, name in enumerate(slot_names)]
+        items = [(str(i), name, "", i + index_offset) for i, name in enumerate(slot_names)]
+        return items
+
+    def first_slot_items_callback(self, context):
+        # The special "current" entry should be the default, so we give it index 0
+        items = self.generate_slot_items(index_offset=1)
+        items.insert(0, ("current", "Current", "Use the currently selected slot", 0))
         # There is a known bug with using a callback,
         # Python must keep a reference to the strings
         # returned or Blender will misbehave or even crash.
-        LuxCoreRenderStatsCollection.callback_strings = items
+        LuxCoreRenderStatsCollection.first_slot_callback_strings = items
         return items
 
-    comparison_slot = EnumProperty(name="Slot", description="The other slot to compare with",
-                                   items=slot_items_callback)
+    def second_slot_items_callback(self, context):
+        items = self.generate_slot_items()
+        # There is a known bug with using a callback,
+        # Python must keep a reference to the strings
+        # returned or Blender will misbehave or even crash.
+        LuxCoreRenderStatsCollection.second_slot_callback_strings = items
+        return items
+
+    first_slot = EnumProperty(name="Slot", description="The first slot",
+                              items=first_slot_items_callback)
+    second_slot = EnumProperty(name="Slot", description="The other slot to compare with",
+                               items=second_slot_items_callback)
 
     def __getitem__(self, slot_index):
         return self.slots[slot_index]

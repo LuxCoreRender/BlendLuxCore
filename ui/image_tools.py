@@ -90,17 +90,22 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
         layout = self.layout
         image = context.space_data.image
         statistics_collection = context.scene.luxcore.statistics
-
         active_index = image.render_slots.active_index
-        stats = statistics_collection[active_index]
 
         layout.prop(statistics_collection, "compare")
 
         if statistics_collection.compare:
-            other_index = int(statistics_collection.comparison_slot)
+            if statistics_collection.first_slot == "current":
+                first_index = active_index
+            else:
+                first_index = int(statistics_collection.first_slot)
+            stats = statistics_collection[first_index]
+
+            other_index = int(statistics_collection.second_slot)
             other_stats = statistics_collection[other_index]
             self.draw_stat_comparison(context, stats, other_stats, layout)
         else:
+            stats = statistics_collection[active_index]
             self.draw_stats(stats, layout)
 
     @staticmethod
@@ -130,10 +135,6 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
     def draw_stat_comparison(self, context, stats, other_stats, layout):
         statistics_collection = context.scene.luxcore.statistics
-        image = context.space_data.image
-        active_index = image.render_slots.active_index
-        slot = image.render_slots.active
-        active_slot_name = slot.name if slot.name else "Slot %d" % (active_index + 1)
 
         comparison_stat_list = tuple(zip(stats.to_list(), other_stats.to_list()))
 
@@ -147,12 +148,12 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
         # The column for the first stats
         col = split.column()
-        col.label(active_slot_name)
+        col.prop(statistics_collection, "first_slot", text="")
         for stat, other_stat in comparison_stat_list:
             col.label(str(stat), icon=self.icon(stat, other_stat))
 
         # The column for the other stats
         col = split.column()
-        col.prop(statistics_collection, "comparison_slot", text="")
+        col.prop(statistics_collection, "second_slot", text="")
         for stat, other_stat in comparison_stat_list:
             col.label(str(other_stat), icon=self.icon(other_stat, stat))
