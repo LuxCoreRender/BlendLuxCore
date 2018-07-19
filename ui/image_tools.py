@@ -86,44 +86,22 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
     # TODO idea: comparison with the stats of the last run in this slot (keep them around for this purpose)
 
-    # split = layout.split()
-    # name = split.column()
-    # name.label()
-    # name.label("Export Time:")
-    # name.label("Render Time:")
-    # name.label("Samples:")
-    # name.label("MSamples/Sec:")
-    #
-    # a = split.column()
-    # a.label("slot 1")
-    # a.label("10 seconds", icon="COLOR_GREEN")
-    # a.label("10 seconds", icon="COLOR_RED")
-    # a.label("50", icon="COLOR_RED")
-    # a.label("3.4", icon="COLOR_BLUE")
-    #
-    #
-    # b = split.column()
-    # b.label("slot 4")
-    # b.label("34.5 seconds", icon="COLOR_RED")
-    # b.label("40 seconds", icon="COLOR_GREEN")
-    # b.label("400", icon="COLOR_GREEN")
-    # b.label("3.4", icon="COLOR_BLUE")
-
     def draw(self, context):
         layout = self.layout
         image = context.space_data.image
-        slot_index = image.render_slots.active_index
-        stats = context.scene.luxcore.statistics[slot_index]
+        statistics_collection = context.scene.luxcore.statistics
 
-        test_stats = context.scene.luxcore.statistics[4]
+        active_index = image.render_slots.active_index
+        stats = statistics_collection[active_index]
 
-        # layout.label("Export Time: " + utils_ui.humanize_time(stats.export_time,
-        #                                                       show_subseconds=True,
-        #                                                       subsecond_places=1))
+        layout.prop(statistics_collection, "compare")
 
-        self.draw_stats(stats, layout)
-        layout.separator()
-        self.draw_stat_comparison(stats, test_stats, layout)
+        if statistics_collection.compare:
+            other_index = int(statistics_collection.comparison_slot)
+            other_stats = statistics_collection[other_index]
+            self.draw_stat_comparison(context, stats, other_stats, layout)
+        else:
+            self.draw_stats(stats, layout)
 
     @staticmethod
     def icon(stat, other_stat):
@@ -150,19 +128,31 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
         for stat in stat_list:
             col.label(str(stat))
 
-    def draw_stat_comparison(self, stats, other_stats, layout):
+    def draw_stat_comparison(self, context, stats, other_stats, layout):
+        statistics_collection = context.scene.luxcore.statistics
+        image = context.space_data.image
+        active_index = image.render_slots.active_index
+        slot = image.render_slots.active
+        active_slot_name = slot.name if slot.name else "Slot %d" % (active_index + 1)
+
         comparison_stat_list = tuple(zip(stats.to_list(), other_stats.to_list()))
 
         split = layout.split()
 
+        # The column for the labels
         col = split.column()
+        col.label()
         for stat, _ in comparison_stat_list:
             col.label(stat.name)
 
+        # The column for the first stats
         col = split.column()
+        col.label(active_slot_name)
         for stat, other_stat in comparison_stat_list:
             col.label(str(stat), icon=self.icon(stat, other_stat))
 
+        # The column for the other stats
         col = split.column()
+        col.prop(statistics_collection, "comparison_slot", text="")
         for stat, other_stat in comparison_stat_list:
             col.label(str(other_stat), icon=self.icon(other_stat, stat))

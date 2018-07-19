@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import PropertyGroup
+from bpy.props import BoolProperty, EnumProperty
 from ..utils import ui as utils_ui
 
 
@@ -95,6 +96,26 @@ class LuxCoreRenderStats:
 class LuxCoreRenderStatsCollection(PropertyGroup):
     slots = [LuxCoreRenderStats() for i in range(8)]
 
+    compare = BoolProperty(name="Compare", default=False,
+                           description="Compare the statistics of two slots")
+
+    def slot_items_callback(self, context):
+        render_result = self._get_render_result()
+        if not render_result:
+            return
+
+        slot_names = [(slot.name if slot.name else "Slot %d" % (i + 1))
+                      for i, slot in enumerate(render_result.render_slots)]
+        items = [(str(i), name, "", i) for i, name in enumerate(slot_names)]
+        # There is a known bug with using a callback,
+        # Python must keep a reference to the strings
+        # returned or Blender will misbehave or even crash.
+        LuxCoreRenderStatsCollection.callback_strings = items
+        return items
+
+    comparison_slot = EnumProperty(name="Slot", description="The other slot to compare with",
+                                   items=slot_items_callback)
+
     def __getitem__(self, slot_index):
         return self.slots[slot_index]
 
@@ -102,14 +123,15 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
         self.slots[slot_index].reset()
 
     def get_active(self):
-        render_result = None
-
-        for image in bpy.data.images:
-            if image.type == "RENDER_RESULT":
-                render_result = image
-
+        render_result = self._get_render_result()
         if not render_result:
             return None
 
         slot_index = render_result.render_slots.active_index
         return self.slots[slot_index]
+
+    def _get_render_result(self):
+        for image in bpy.data.images:
+            if image.type == "RENDER_RESULT":
+                return image
+        return None
