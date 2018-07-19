@@ -34,6 +34,20 @@ def triangle_count_to_string(triangle_count):
         return "{:,}".format(triangle_count)
 
 
+def path_depths_to_string(depths):
+    if not depths:
+        return ""
+
+    if len(depths) == 2:
+        # Bidir (eye/light)
+        return "Eye %d, Light %d" % depths
+    elif len(depths) == 4:
+        # Path (total/diffuse/glossy/specular)
+        return "T %d (D %d, G %d, S %d)" % depths
+    else:
+        raise NotImplementedError("Unkown number of depth values")
+
+
 class Stat:
     def __init__(self, name, init_value, better_func=None, string_func=str):
         self.name = name
@@ -70,12 +84,12 @@ class LuxCoreRenderStats:
         self.triangle_count = Stat("Triangles", 0, string_func=triangle_count_to_string)
         self.render_engine = Stat("Engine", "")
         self.sampler = Stat("Sampler", "")
+        self.light_strategy = Stat("Light Strategy", "")
+        self.path_depths = Stat("Path Depths", tuple(), string_func=path_depths_to_string)
 
         # TODO more:
         # clamping (value or "disabled")
         # custom props (e.g. from config)?
-        # path depths
-        # light strategy
         # Rays/Sample
         # VRAM usage (OpenCL only)
         # a custom string?

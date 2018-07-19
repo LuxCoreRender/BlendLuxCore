@@ -19,7 +19,14 @@ SAMPLER_TO_STR = {
     "SOBOL": "Sobol",
     "METROPOLIS": "Metropolis",
     "RTPATHCPUSAMPLER": "RT Path Sampler",
-    "TILEPATHSAMPLER": "Tile Path Sampler"
+    "TILEPATHSAMPLER": "Tile Path Sampler",
+}
+
+LIGHT_STRATEGY_TO_STR = {
+    "LOG_POWER": "Log Power",
+    "POWER": "Power",
+    "UNIFORM": "Uniform",
+    "DLS_CACHE": "Direct Light Cache",
 }
 
 
@@ -33,6 +40,13 @@ def engine_to_str(engine):
 def sampler_to_str(sampler):
     try:
         return SAMPLER_TO_STR[sampler]
+    except KeyError:
+        return "Unkown"
+
+
+def light_strategy_to_str(light_strategy):
+    try:
+        return LIGHT_STRATEGY_TO_STR[light_strategy]
     except KeyError:
         return "Unkown"
 

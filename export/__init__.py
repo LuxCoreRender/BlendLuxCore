@@ -173,10 +173,7 @@ class Exporter(object):
         print("Export took %.1f s" % export_time)
         if stats:
             stats.export_time.value = export_time
-            render_engine = config_props.Get("renderengine.type").GetString()
-            stats.render_engine.value = utils_render.engine_to_str(render_engine)
-            sampler = config_props.Get("sampler.type").GetString()
-            stats.sampler.value = utils_render.sampler_to_str(sampler)
+            self._init_stats(stats, config_props, scene)
 
         if engine:
             if config_props.Get("renderengine.type").GetString().endswith("OCL"):
@@ -402,3 +399,27 @@ class Exporter(object):
             props.Set(world_props)
 
         return props
+
+    def _init_stats(self, stats, config_props, scene):
+        render_engine = config_props.Get("renderengine.type").GetString()
+        stats.render_engine.value = utils_render.engine_to_str(render_engine)
+        sampler = config_props.Get("sampler.type").GetString()
+        stats.sampler.value = utils_render.sampler_to_str(sampler)
+
+        config_settings = scene.luxcore.config
+        stats.light_strategy.value = utils_render.light_strategy_to_str(config_settings.light_strategy)
+
+        if render_engine == "BIDIRCPU":
+            path_depths = (
+                config_settings.bidir_light_maxdepth,
+                config_settings.bidir_path_maxdepth,
+            )
+        else:
+            path_settings = config_settings.path
+            path_depths = (
+                path_settings.depth_total,
+                path_settings.depth_diffuse,
+                path_settings.depth_glossy,
+                path_settings.depth_specular,
+            )
+        stats.path_depths.value = path_depths
