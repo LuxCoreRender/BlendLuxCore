@@ -3,7 +3,7 @@ from .. import utils
 from ..handlers.draw_imageeditor import TileStats
 from ..properties.statistics import samples_per_sec_to_string, triangle_count_to_string
 
-engine_to_str = {
+ENGINE_TO_STR = {
     "PATHCPU": "Path CPU",
     "PATHOCL": "Path OpenCL",
     "TILEPATHCPU": "Tile Path CPU",
@@ -14,13 +14,27 @@ engine_to_str = {
     "RTPATHCPU": "RT Path CPU",
 }
 
-sampler_to_str = {
+SAMPLER_TO_STR = {
     "RANDOM": "Random",
     "SOBOL": "Sobol",
     "METROPOLIS": "Metropolis",
     "RTPATHCPUSAMPLER": "RT Path Sampler",
     "TILEPATHSAMPLER": "Tile Path Sampler"
 }
+
+
+def engine_to_str(engine):
+    try:
+        return ENGINE_TO_STR[engine]
+    except KeyError:
+        return "Unkown"
+
+
+def sampler_to_str(sampler):
+    try:
+        return SAMPLER_TO_STR[sampler]
+    except KeyError:
+        return "Unkown"
 
 
 def update_stats(session):
@@ -142,8 +156,7 @@ def get_pretty_stats(config, stats, scene, context=None):
     # Engine + Sampler
     engine = config.GetProperties().Get("renderengine.type").GetString()
     sampler = config.GetProperties().Get("sampler.type").GetString()
-    if engine in engine_to_str and sampler in sampler_to_str:
-        pretty.append(engine_to_str[engine] + " + " + sampler_to_str[sampler])
+    pretty.append(engine_to_str(engine) + " + " + sampler_to_str(sampler))
 
     # Triangle count
     triangle_count = stats.Get("stats.dataset.trianglecount").GetUnsignedLongLong()

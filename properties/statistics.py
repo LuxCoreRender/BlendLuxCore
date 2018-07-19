@@ -68,11 +68,11 @@ class LuxCoreRenderStats:
         self.light_count = Stat("Lights", 0)
         self.object_count = Stat("Objects", 0)
         self.triangle_count = Stat("Triangles", 0, string_func=triangle_count_to_string)
+        self.render_engine = Stat("Engine", "")
+        self.sampler = Stat("Sampler", "")
 
         # TODO more:
         # Rays/Sample
-        # engine
-        # sampler
         # a custom string?
         # etc.
 

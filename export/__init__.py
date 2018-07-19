@@ -1,6 +1,7 @@
 from time import time
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import render as utils_render
 from . import (
     blender_object, caches, camera, config, duplis,
     imagepipeline, light, material, motion_blur, hair,
@@ -172,6 +173,10 @@ class Exporter(object):
         print("Export took %.1f s" % export_time)
         if stats:
             stats.export_time.value = export_time
+            render_engine = config_props.Get("renderengine.type").GetString()
+            stats.render_engine.value = utils_render.engine_to_str(render_engine)
+            sampler = config_props.Get("sampler.type").GetString()
+            stats.sampler.value = utils_render.sampler_to_str(sampler)
 
         if engine:
             if config_props.Get("renderengine.type").GetString().endswith("OCL"):
