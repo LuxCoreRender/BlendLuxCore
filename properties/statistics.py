@@ -48,6 +48,15 @@ def path_depths_to_string(depths):
         raise NotImplementedError("Unkown number of depth values")
 
 
+def clamping_to_string(clamping):
+    if clamping == 0:
+        return "Disabled"
+    elif clamping < 1:
+        return str(round(clamping, 5))
+    else:
+        return str(round(clamping, 1))
+
+
 class Stat:
     def __init__(self, name, init_value, better_func=None, string_func=str):
         self.name = name
@@ -86,9 +95,9 @@ class LuxCoreRenderStats:
         self.sampler = Stat("Sampler", "")
         self.light_strategy = Stat("Light Strategy", "")
         self.path_depths = Stat("Path Depths", tuple(), string_func=path_depths_to_string)
+        self.clamping = Stat("Clamping", 0, string_func=clamping_to_string)
 
         # TODO more:
-        # clamping (value or "disabled")
         # custom props (e.g. from config)?
         # Rays/Sample
         # VRAM usage (OpenCL only)

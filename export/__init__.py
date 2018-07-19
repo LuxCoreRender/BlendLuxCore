@@ -407,6 +407,8 @@ class Exporter(object):
         stats.sampler.value = utils_render.sampler_to_str(sampler)
 
         config_settings = scene.luxcore.config
+        path_settings = config_settings.path
+
         stats.light_strategy.value = utils_render.light_strategy_to_str(config_settings.light_strategy)
 
         if render_engine == "BIDIRCPU":
@@ -415,7 +417,6 @@ class Exporter(object):
                 config_settings.bidir_path_maxdepth,
             )
         else:
-            path_settings = config_settings.path
             path_depths = (
                 path_settings.depth_total,
                 path_settings.depth_diffuse,
@@ -423,3 +424,8 @@ class Exporter(object):
                 path_settings.depth_specular,
             )
         stats.path_depths.value = path_depths
+
+        if path_settings.use_clamping:
+            stats.clamping.value = path_settings.clamping
+        else:
+            stats.clamping.value = 0
