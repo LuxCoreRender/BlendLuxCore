@@ -72,13 +72,47 @@ def rays_per_sample_to_string(rays_per_sample):
     return "%.1f" % rays_per_sample
 
 
-def calc_rays_per_sample(stat_props):
+def get_rays_per_sample(stat_props):
     samples_per_sec = stat_props.Get("stats.renderengine.total.samplesec").GetFloat()
     rays = stat_props.Get("stats.renderengine.performance.total").GetFloat()
     if samples_per_sec > 0:
         return rays / samples_per_sec
     else:
         return 0
+
+
+def get_vram_usage(stat_props):
+    device_names = stat_props.Get("stats.renderengine.devices")
+
+    max_memory = float('inf')
+    used_memory = 0
+
+    for i in range(device_names.GetSize()):
+        device_name = device_names.GetString(i)
+
+        # Max memory available is limited by the device with least amount of memory
+        device_max_memory = stat_props.Get("stats.renderengine.devices." + device_name + ".memory.total").GetFloat()
+        device_max_memory = int(device_max_memory / (1024 * 1024))
+        if device_max_memory < max_memory:
+            max_memory = device_max_memory
+
+        device_used_memory = stat_props.Get("stats.renderengine.devices." + device_name + ".memory.used").GetFloat()
+        device_used_memory = int(device_used_memory / (1024 * 1024))
+        if device_used_memory > used_memory:
+            used_memory = device_used_memory
+
+    return used_memory, max_memory
+
+
+def vram_usage_to_string(usage_tuple):
+    used_memory, max_memory = usage_tuple
+    return "%d MB/%d MB" % (used_memory, max_memory)
+
+
+def vram_better(first_usage_tuple, second_usage_tuple):
+    first_used_memory, _ = first_usage_tuple
+    second_used_memory, _ = second_usage_tuple
+    return first_used_memory < second_used_memory
 
 
 class Stat:
@@ -141,11 +175,9 @@ class LuxCoreRenderStats:
         self.light_strategy = Stat("Light Strategy", "?")
         self.path_depths = Stat("Path Depths", tuple(), string_func=path_depths_to_string)
         self.clamping = Stat("Clamping", 0, string_func=clamping_to_string)
+        self.vram = Stat("VRAM", (0, 0), vram_better, vram_usage_to_string)
 
-        # TODO more:
-        # VRAM usage (OpenCL only)
-        # put denoiser settings/stats also here?
-        # etc.
+        # TODO: put denoiser settings/stats also here?
 
         self.members = [getattr(self, attr) for attr in dir(self)
                         if not callable(getattr(self, attr)) and not attr.startswith("__")]
@@ -164,7 +196,8 @@ class LuxCoreRenderStats:
         self.samples.value = stat_props.Get("stats.renderengine.pass").GetInt()
         self.samples_per_sec.value = stat_props.Get("stats.renderengine.total.samplesec").GetFloat()
         self.triangle_count.value = stat_props.Get("stats.dataset.trianglecount").GetUnsignedLongLong()
-        self.rays_per_sample.value = calc_rays_per_sample(stat_props)
+        self.rays_per_sample.value = get_rays_per_sample(stat_props)
+        self.vram.value = get_vram_usage(stat_props)
 
 
 class LuxCoreRenderStatsCollection(PropertyGroup):

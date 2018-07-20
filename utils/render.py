@@ -6,7 +6,7 @@ from ..properties.statistics import (
     triangle_count_to_string,
     convergence_to_string,
     rays_per_sample_to_string,
-    calc_rays_per_sample,
+    get_rays_per_sample,
 )
 
 ENGINE_TO_STR = {
@@ -170,7 +170,7 @@ def get_pretty_stats(config, stats, scene, context=None):
     pretty.append("Samples/Sec " + samples_per_sec_to_string(samples_per_sec))
 
     # Rays/Sample
-    pretty.append("Rays/Sample " + rays_per_sample_to_string(calc_rays_per_sample(stats)))
+    pretty.append("Rays/Sample " + rays_per_sample_to_string(get_rays_per_sample(stats)))
 
     # Engine + Sampler
     engine = config.GetProperties().Get("renderengine.type").GetString()
