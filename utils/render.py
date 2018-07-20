@@ -1,7 +1,12 @@
 from . import calc_filmsize
 from .. import utils
 from ..handlers.draw_imageeditor import TileStats
-from ..properties.statistics import samples_per_sec_to_string, triangle_count_to_string
+from ..properties.statistics import (
+    samples_per_sec_to_string,
+    triangle_count_to_string,
+    rays_per_sample_to_string,
+    calc_rays_per_sample,
+)
 
 ENGINE_TO_STR = {
     "PATHCPU": "Path CPU",
@@ -166,6 +171,9 @@ def get_pretty_stats(config, stats, scene, context=None):
     # Samples/Sec
     samples_per_sec = stats.Get("stats.renderengine.total.samplesec").GetFloat()
     pretty.append("Samples/Sec " + samples_per_sec_to_string(samples_per_sec))
+
+    # Rays/Sample
+    pretty.append("Rays/Sample " + rays_per_sample_to_string(calc_rays_per_sample(stats)))
 
     # Engine + Sampler
     engine = config.GetProperties().Get("renderengine.type").GetString()

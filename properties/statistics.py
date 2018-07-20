@@ -61,6 +61,19 @@ def clamping_to_string(clamping):
         return str(round(clamping, 1))
 
 
+def rays_per_sample_to_string(rays_per_sample):
+    return "%.1f" % rays_per_sample
+
+
+def calc_rays_per_sample(stat_props):
+    samples_per_sec = stat_props.Get("stats.renderengine.total.samplesec").GetFloat()
+    rays = stat_props.Get("stats.renderengine.performance.total").GetFloat()
+    if samples_per_sec > 0:
+        return rays / samples_per_sec
+    else:
+        return 0
+
+
 class Stat:
     id = 0
 
@@ -111,41 +124,39 @@ class LuxCoreRenderStats:
         self.session_init_time = Stat("Session Init Time", 0, smaller_is_better, time_to_string, get_rounded)
         self.render_time = Stat("Render Time", 0, greater_is_better, time_to_string, get_rounded)
         self.samples = Stat("Samples", 0, greater_is_better)
-        self.samples_per_sec = Stat("Samples/Sec", 0, greater_is_better, samples_per_sec_to_string)
+        self.samples_per_sec = Stat("Samples/Sec", 0, greater_is_better, samples_per_sec_to_string, get_rounded)
+        self.rays_per_sample = Stat("Rays/Sample", 0, smaller_is_better, rays_per_sample_to_string, get_rounded)
         self.light_count = Stat("Lights", 0)
         self.triangle_count = Stat("Triangles", 0, string_func=triangle_count_to_string)
-        self.render_engine = Stat("Engine", "")
-        self.sampler = Stat("Sampler", "")
-        self.light_strategy = Stat("Light Strategy", "")
+        self.render_engine = Stat("Engine", "?")
+        self.sampler = Stat("Sampler", "?")
+        self.light_strategy = Stat("Light Strategy", "?")
         self.path_depths = Stat("Path Depths", tuple(), string_func=path_depths_to_string)
         self.clamping = Stat("Clamping", 0, string_func=clamping_to_string)
 
         # TODO more:
-        # custom props (e.g. from config)?
-        # Rays/Sample
         # VRAM usage (OpenCL only)
-        # a custom string?
         # put denoiser settings/stats also here?
         # etc.
 
-        # TODO some sort of categories, e.g. settings and statistics
+        self.members = [getattr(self, attr) for attr in dir(self)
+                        if not callable(getattr(self, attr)) and not attr.startswith("__")]
+        self.members.sort(key=lambda stat: stat.id)
 
     def to_list(self):
-        members = [getattr(self, attr) for attr in dir(self)
-                   if not callable(getattr(self, attr)) and not attr.startswith("__")]
-        members.sort(key=lambda stat: stat.id)
-        return members
+        return self.members
 
     def reset(self):
         for stat in self.to_list():
             stat.reset()
 
-    def update_from_luxcore_stats(self, stats):
-        self.render_time.value = stats.Get("stats.renderengine.time").GetFloat()
-        self.samples.value = stats.Get("stats.renderengine.pass").GetInt()
+    def update_from_luxcore_stats(self, stat_props):
+        self.render_time.value = stat_props.Get("stats.renderengine.time").GetFloat()
+        self.samples.value = stat_props.Get("stats.renderengine.pass").GetInt()
         # TODO convergence
-        self.samples_per_sec.value = stats.Get("stats.renderengine.total.samplesec").GetFloat()
-        self.triangle_count.value = stats.Get("stats.dataset.trianglecount").GetUnsignedLongLong()
+        self.samples_per_sec.value = stat_props.Get("stats.renderengine.total.samplesec").GetFloat()
+        self.triangle_count.value = stat_props.Get("stats.dataset.trianglecount").GetUnsignedLongLong()
+        self.rays_per_sample.value = calc_rays_per_sample(stat_props)
 
 
 class LuxCoreRenderStatsCollection(PropertyGroup):
