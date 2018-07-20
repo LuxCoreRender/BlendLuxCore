@@ -40,7 +40,6 @@ class Change:
 
 class Exporter(object):
     def __init__(self, blender_scene):
-        print("[Exporter] Init")
         self.scene = blender_scene
 
         self.config_cache = caches.StringCache()
@@ -79,7 +78,9 @@ class Exporter(object):
             stats = None
         else:
             stats = scene.luxcore.statistics.get_active()
-            stats.reset()
+            # If no render result image exists yet, stats is None
+            if stats:
+                stats.reset()
 
         # Scene
         luxcore_scene = pyluxcore.Scene()

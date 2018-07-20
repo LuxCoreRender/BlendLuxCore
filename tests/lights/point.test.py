@@ -42,4 +42,5 @@ class TestPointLight(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPointLight)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())

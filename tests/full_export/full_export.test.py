@@ -74,4 +74,5 @@ class TestFullExport(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestFullExport)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())
