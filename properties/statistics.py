@@ -163,11 +163,7 @@ class LuxCoreRenderStats:
         # Some stats use rounding getter functions, because it is better for the user
         # if values that only differ by a very small amount appear as equal in the UI.
 
-        categories = ["Startup"]
-        self.export_time = Stat("Export Time", categories[-1],
-                                0, smaller_is_better, time_to_string, get_rounded)
-        self.session_init_time = Stat("Session Init Time", categories[-1],
-                                      0, smaller_is_better, time_to_string, get_rounded)
+        categories = []
         categories.append("Statistics")
         self.render_time = Stat("Render Time", categories[-1],
                                 0, greater_is_better, time_to_string, get_rounded)
@@ -179,6 +175,11 @@ class LuxCoreRenderStats:
                                     0, greater_is_better, samples_per_sec_to_string, get_rounded)
         self.rays_per_sample = Stat("Rays/Sample", categories[-1],
                                     0, smaller_is_better, rays_per_sample_to_string, get_rounded)
+        categories.append("Startup")
+        self.export_time = Stat("Export Time", categories[-1],
+                                0, smaller_is_better, time_to_string, get_rounded)
+        self.session_init_time = Stat("Session Init Time", categories[-1],
+                                      0, smaller_is_better, time_to_string, get_rounded)
         categories.append("Scene")
         self.light_count = Stat("Lights", categories[-1], 0)
         self.triangle_count = Stat("Triangles", categories[-1], 0, string_func=triangle_count_to_string)
