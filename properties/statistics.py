@@ -264,7 +264,7 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
     def get_active(self):
         render_result = self._get_render_result()
         if not render_result:
-            return None
+            return self.slots[0]
 
         slot_index = render_result.render_slots.active_index
         return self.slots[slot_index]

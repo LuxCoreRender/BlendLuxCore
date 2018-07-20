@@ -78,9 +78,7 @@ class Exporter(object):
             stats = None
         else:
             stats = scene.luxcore.statistics.get_active()
-            # If no render result image exists yet, stats is None
-            if stats:
-                stats.reset()
+            stats.reset()
 
         # Scene
         luxcore_scene = pyluxcore.Scene()
