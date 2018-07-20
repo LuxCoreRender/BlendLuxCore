@@ -118,8 +118,9 @@ def vram_better(first_usage_tuple, second_usage_tuple):
 class Stat:
     id = 0
 
-    def __init__(self, name, init_value, better_func=None, string_func=str, get_value_func=None):
+    def __init__(self, name, category, init_value, better_func=None, string_func=str, get_value_func=None):
         self.name = name
+        self.category = category
         self.init_value = init_value
         self._value = init_value
         self.better_func = better_func
@@ -161,27 +162,41 @@ class LuxCoreRenderStats:
     def __init__(self):
         # Some stats use rounding getter functions, because it is better for the user
         # if values that only differ by a very small amount appear as equal in the UI.
-        self.export_time = Stat("Export Time", 0, smaller_is_better, time_to_string, get_rounded)
-        self.session_init_time = Stat("Session Init Time", 0, smaller_is_better, time_to_string, get_rounded)
-        self.render_time = Stat("Render Time", 0, greater_is_better, time_to_string, get_rounded)
-        self.convergence = Stat("Convergence", 0, greater_is_better, convergence_to_string)
-        self.samples = Stat("Samples", 0, greater_is_better)
-        self.samples_per_sec = Stat("Samples/Sec", 0, greater_is_better, samples_per_sec_to_string, get_rounded)
-        self.rays_per_sample = Stat("Rays/Sample", 0, smaller_is_better, rays_per_sample_to_string, get_rounded)
-        self.light_count = Stat("Lights", 0)
-        self.triangle_count = Stat("Triangles", 0, string_func=triangle_count_to_string)
-        self.render_engine = Stat("Engine", "?")
-        self.sampler = Stat("Sampler", "?")
-        self.light_strategy = Stat("Light Strategy", "?")
-        self.path_depths = Stat("Path Depths", tuple(), string_func=path_depths_to_string)
-        self.clamping = Stat("Clamping", 0, string_func=clamping_to_string)
-        self.vram = Stat("VRAM", (0, 0), vram_better, vram_usage_to_string)
+
+        categories = ["Startup"]
+        self.export_time = Stat("Export Time", categories[-1],
+                                0, smaller_is_better, time_to_string, get_rounded)
+        self.session_init_time = Stat("Session Init Time", categories[-1],
+                                      0, smaller_is_better, time_to_string, get_rounded)
+        categories.append("Statistics")
+        self.render_time = Stat("Render Time", categories[-1],
+                                0, greater_is_better, time_to_string, get_rounded)
+        self.convergence = Stat("Convergence", categories[-1],
+                                0, greater_is_better, convergence_to_string)
+        self.samples = Stat("Samples", categories[-1], 0, greater_is_better)
+        categories.append("Performance")
+        self.samples_per_sec = Stat("Samples/Sec", categories[-1],
+                                    0, greater_is_better, samples_per_sec_to_string, get_rounded)
+        self.rays_per_sample = Stat("Rays/Sample", categories[-1],
+                                    0, smaller_is_better, rays_per_sample_to_string, get_rounded)
+        categories.append("Scene")
+        self.light_count = Stat("Lights", categories[-1], 0)
+        self.triangle_count = Stat("Triangles", categories[-1], 0, string_func=triangle_count_to_string)
+        self.vram = Stat("VRAM", categories[-1], (0, 0), vram_better, vram_usage_to_string)
+        categories.append("Settings")
+        self.render_engine = Stat("Engine", categories[-1], "?")
+        self.sampler = Stat("Sampler", categories[-1], "?")
+        self.clamping = Stat("Clamping", categories[-1], 0, string_func=clamping_to_string)
+        self.light_strategy = Stat("Light Strategy", categories[-1], "?")
+        self.path_depths = Stat("Path Depths", categories[-1], tuple(), string_func=path_depths_to_string)
 
         # TODO: put denoiser settings/stats also here?
 
         self.members = [getattr(self, attr) for attr in dir(self)
                         if not callable(getattr(self, attr)) and not attr.startswith("__")]
         self.members.sort(key=lambda stat: stat.id)
+
+        self.categories = categories
 
     def to_list(self):
         return self.members

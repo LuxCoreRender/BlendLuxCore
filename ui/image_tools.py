@@ -81,11 +81,6 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
 class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
     bl_label = "Statistics"
 
-    # TODO idea: comparison mode, select another slot index,
-    # values will be side by side and the better ones are green/worse are red
-
-    # TODO idea: comparison with the stats of the last run in this slot (keep them around for this purpose)
-
     def draw(self, context):
         layout = self.layout
         image = context.space_data.image
@@ -120,40 +115,61 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
         else:
             return "COLOR_RED"
 
+    def stat_lists_by_category(self, stats):
+        stat_lists = []
+        for category in stats.categories:
+            stat_lists.append([s for s in stats.to_list() if s.category == category])
+        return stat_lists
+
     def draw_stats(self, stats, layout):
-        stat_list = stats.to_list()
+        stat_lists = self.stat_lists_by_category(stats)
 
-        split = layout.split()
+        parentcol = layout.column(align=True)
+        for stat_list in stat_lists:
+            box = parentcol.box()
+            split = box.split()
 
-        col = split.column()
-        for stat in stat_list:
-            col.label(stat.name)
+            col = split.column()
+            for stat in stat_list:
+                col.label(stat.name)
 
-        col = split.column()
-        for stat in stat_list:
-            col.label(str(stat))
+            col = split.column()
+            for stat in stat_list:
+                col.label(str(stat))
 
     def draw_stat_comparison(self, context, stats, other_stats, layout):
         statistics_collection = context.scene.luxcore.statistics
 
-        comparison_stat_list = tuple(zip(stats.to_list(), other_stats.to_list()))
+        stat_lists = self.stat_lists_by_category(stats)
+        other_stat_lists = self.stat_lists_by_category(other_stats)
 
+        # Header
         split = layout.split()
+        split.label()
+        split.prop(statistics_collection, "first_slot", text="")
+        split.prop(statistics_collection, "second_slot", text="")
 
-        # The column for the labels
-        col = split.column()
-        col.label()
-        for stat, _ in comparison_stat_list:
-            col.label(stat.name)
+        parentcol = layout.column(align=True)
+        for stat_list, other_stat_list in zip(stat_lists, other_stat_lists):
+            comparison_stat_list = tuple(zip(stat_list, other_stat_list))
 
-        # The column for the first stats
-        col = split.column()
-        col.prop(statistics_collection, "first_slot", text="")
-        for stat, other_stat in comparison_stat_list:
-            col.label(str(stat), icon=self.icon(stat, other_stat))
+            box = parentcol.box()
+            split = box.split()
 
-        # The column for the other stats
-        col = split.column()
-        col.prop(statistics_collection, "second_slot", text="")
-        for stat, other_stat in comparison_stat_list:
-            col.label(str(other_stat), icon=self.icon(other_stat, stat))
+            # The column for the labels
+            col = split.column()
+            # col.label()
+            for stat, _ in comparison_stat_list:
+                col.label(stat.name)
+
+            # The column for the first stats
+            col = split.column()
+            # col.prop(statistics_collection, "first_slot", text="")
+            for stat, other_stat in comparison_stat_list:
+                col.label(str(stat), icon=self.icon(stat, other_stat))
+
+            # The column for the other stats
+            col = split.column()
+            # col.prop(statistics_collection, "second_slot", text="")
+            for stat, other_stat in comparison_stat_list:
+                col.label(str(other_stat), icon=self.icon(other_stat, stat))
