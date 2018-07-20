@@ -4,6 +4,7 @@ from ..handlers.draw_imageeditor import TileStats
 from ..properties.statistics import (
     samples_per_sec_to_string,
     triangle_count_to_string,
+    convergence_to_string,
     rays_per_sample_to_string,
     calc_rays_per_sample,
 )
@@ -162,11 +163,7 @@ def get_pretty_stats(config, stats, scene, context=None):
         # Convergence (how many pixels are converged, in percent)
         convergence = stats.Get("stats.renderengine.convergence").GetFloat()
         if convergence > 0:
-            if convergence < 0.95:
-                convergence_msg = "%d%% Pixels Converged" % round(convergence * 100)
-            else:
-                convergence_msg = "%.2f Pixels Converged" % (convergence * 100)
-            pretty.append(convergence_msg)
+            pretty.append(convergence_to_string(convergence) + " Pixels Converged")
 
     # Samples/Sec
     samples_per_sec = stats.Get("stats.renderengine.total.samplesec").GetFloat()

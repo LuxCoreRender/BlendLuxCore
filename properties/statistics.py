@@ -61,6 +61,13 @@ def clamping_to_string(clamping):
         return str(round(clamping, 1))
 
 
+def convergence_to_string(convergence):
+    if convergence < 0.95:
+        return "%d%%" % round(convergence * 100)
+    else:
+        return "%.2f%%" % (convergence * 100)
+
+
 def rays_per_sample_to_string(rays_per_sample):
     return "%.1f" % rays_per_sample
 
@@ -123,6 +130,7 @@ class LuxCoreRenderStats:
         self.export_time = Stat("Export Time", 0, smaller_is_better, time_to_string, get_rounded)
         self.session_init_time = Stat("Session Init Time", 0, smaller_is_better, time_to_string, get_rounded)
         self.render_time = Stat("Render Time", 0, greater_is_better, time_to_string, get_rounded)
+        self.convergence = Stat("Convergence", 0, greater_is_better, convergence_to_string)
         self.samples = Stat("Samples", 0, greater_is_better)
         self.samples_per_sec = Stat("Samples/Sec", 0, greater_is_better, samples_per_sec_to_string, get_rounded)
         self.rays_per_sample = Stat("Rays/Sample", 0, smaller_is_better, rays_per_sample_to_string, get_rounded)
@@ -152,8 +160,8 @@ class LuxCoreRenderStats:
 
     def update_from_luxcore_stats(self, stat_props):
         self.render_time.value = stat_props.Get("stats.renderengine.time").GetFloat()
+        self.convergence.value = stat_props.Get("stats.renderengine.convergence").GetFloat()
         self.samples.value = stat_props.Get("stats.renderengine.pass").GetInt()
-        # TODO convergence
         self.samples_per_sec.value = stat_props.Get("stats.renderengine.total.samplesec").GetFloat()
         self.triangle_count.value = stat_props.Get("stats.dataset.trianglecount").GetUnsignedLongLong()
         self.rays_per_sample.value = calc_rays_per_sample(stat_props)
