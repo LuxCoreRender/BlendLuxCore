@@ -48,7 +48,7 @@ def _view_ortho(scene, context, definitions):
     world_scale = utils.get_worldscale(scene, False)
 
     definitions["type"] = "orthographic"
-    zoom = 0.915 * world_scale * context.region_data.view_distance*35/context.space_data.lens
+    zoom = 0.915 * world_scale * context.region_data.view_distance * 35 / context.space_data.lens
 
     # Move the camera origin away from the viewport center to avoid clipping
     origin = Vector(lookat_orig)
@@ -85,7 +85,7 @@ def _view_camera(scene, context, definitions):
     definitions["up"] = up_vector
     
     # Magic zoom formula for camera viewport zoom from Cycles export code
-    zoom = 4 / ((math.sqrt(2) + (context.region_data.view_camera_zoom * world_scale) / 50) ** 2)
+    zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
 
     if camera.data.type == "ORTHO":
         definitions["type"] = "orthographic"
