@@ -89,6 +89,9 @@ def get_vram_usage(stat_props):
 
     for i in range(device_names.GetSize()):
         device_name = device_names.GetString(i)
+        if device_name.startswith("NativeIntersect"):
+            # CPU cores do not report their memory usage, ignore them
+            continue
 
         # Max memory available is limited by the device with least amount of memory
         device_max_memory = stat_props.Get("stats.renderengine.devices." + device_name + ".memory.total").GetFloat()
