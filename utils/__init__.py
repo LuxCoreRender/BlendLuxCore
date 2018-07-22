@@ -178,7 +178,6 @@ def calc_filmsize(scene, context=None):
     render = scene.render
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
     width_raw, height_raw = calc_filmsize_raw(scene, context)
-    world_scale = get_worldscale(scene, False)
     
     if context:
         # Viewport render        
@@ -189,7 +188,7 @@ def calc_filmsize(scene, context=None):
             height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
         else:
             # Camera viewport
-            zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom * world_scale / 50) ** 2)
+            zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
             aspectratio, aspect_x, aspect_y = calc_aspect(render.resolution_x * render.pixel_aspect_x,
                                                           render.resolution_y * render.pixel_aspect_y,
                                                           scene.camera.data.sensor_fit)

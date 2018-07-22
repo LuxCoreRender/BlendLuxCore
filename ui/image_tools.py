@@ -158,7 +158,6 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
             # The column for the labels
             col = split.column()
-            # col.label()
             for stat, _ in comparison_stat_list:
                 col.label(stat.name)
 
