@@ -181,15 +181,7 @@ class Exporter(object):
 
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 
-        # Create session (in case of OpenCL engines, render kernels are compiled here)
-        start = time()
         session = pyluxcore.RenderSession(renderconfig)
-        session_init_time = time() - start
-        elapsed_msg = "Session created in %.1f s" % session_init_time
-        print(elapsed_msg)
-        if stats:
-            stats.session_init_time.value = session_init_time
-
         return session
 
     def get_changes(self, context=None):

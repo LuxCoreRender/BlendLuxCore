@@ -109,7 +109,7 @@ def get_vram_usage(stat_props):
 
 def vram_usage_to_string(usage_tuple):
     used_memory, max_memory = usage_tuple
-    return "%d MB/%d MB" % (used_memory, max_memory)
+    return "%d MiB/%d MiB" % (used_memory, max_memory)
 
 
 def vram_better(first_usage_tuple, second_usage_tuple):
