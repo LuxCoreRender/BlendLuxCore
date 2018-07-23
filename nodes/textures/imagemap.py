@@ -23,15 +23,12 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     bl_width_default = 200
 
     def update_image(self, context):
+        self.image_user.update(self.image)
         if self.image:
             # Seems like we still need this.
             # User counting does not work reliably with Python PointerProperty.
             # Sometimes, this node is not counted as user.
             self.image.use_fake_user = True
-
-            if self.image.source == "SEQUENCE":
-                # Find out how many frames are in the sequence (unfortunately Blender doesn't tell us)
-                self.image_user.frame_duration = len(utils.image_sequence_resolve_all(self.image))
 
     image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
     image_user = PointerProperty(type=LuxCoreImageUser)
@@ -152,14 +149,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         if not self.inputs["2D Mapping"].is_linked:
             utils_node.draw_uv_info(context, col)
 
-        if self.image and self.image.source == "SEQUENCE":
-            box = col.box()
-            box.label("Frame: %d" % self.image_user.get_frame(context.scene))
-            sub = box.column(align=True)
-            sub.prop(self.image_user, "frame_duration")
-            sub.prop(self.image_user, "frame_start")
-            sub.prop(self.image_user, "frame_offset")
-            sub.prop(self.image_user, "use_cyclic")
+        self.image_user.draw(col, context.scene)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         if self.image is None:

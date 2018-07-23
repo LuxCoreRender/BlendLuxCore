@@ -56,11 +56,12 @@ class ImageExporter(object):
                     raise OSError('Could not find image "%s" at path "%s" (%s)'
                                   % (image.name, image.filepath, error))
         elif image.source == "SEQUENCE":
+            # Note: image sequences can never be packed
             frame = image_user.get_frame(scene)
-            print("> Frame:", frame)
-            filepaths = utils.image_sequence_resolve_all(image)
+            indexed_filepaths = utils.image_sequence_resolve_all(image)
             try:
-                return filepaths[frame - 1]
+                index, filepath = indexed_filepaths[frame - 1]
+                return filepath
             except IndexError:
                 raise OSError('Frame %d in image sequence "%s" does not exist'
                               % (frame, image.name))

@@ -527,7 +527,11 @@ def is_opencl_build():
 
 
 def image_sequence_resolve_all(image):
-    """ From https://blender.stackexchange.com/a/21093/29401 """
+    """
+    From https://blender.stackexchange.com/a/21093/29401
+    Returns a list of tuples: (index, filepath)
+    index is the frame number, parsed from the filepath
+    """
     filepath = get_abspath(image.filepath, image.library)
     basedir, filename = os.path.split(filepath)
     filename_noext, ext = os.path.splitext(filename)
@@ -538,14 +542,18 @@ def image_sequence_resolve_all(image):
     filename_nodigits = filename_noext.rstrip(digits)
 
     if len(filename_nodigits) == len(filename_noext):
-        # input isn't from a sequence
+        # Input isn't from a sequence
         return []
 
-    return sorted([
-        f.path
-        for f in os.scandir(basedir)
-        if f.is_file() and
-           f.name.startswith(filename_nodigits) and
-           f.name.endswith(ext) and
-           f.name[len(filename_nodigits):-len(ext) if ext else -1].isdigit()
-    ])
+    indexed_filepaths = []
+    for f in os.scandir(basedir):
+        index_str = f.name[len(filename_nodigits):-len(ext) if ext else -1]
+
+        if (f.is_file()
+                and f.name.startswith(filename_nodigits)
+                and f.name.endswith(ext)
+                and index_str.isdigit()):
+            elem = (int(index_str), f.path)
+            indexed_filepaths.append(elem)
+
+    return sorted(indexed_filepaths, key=lambda elem: elem[0])
