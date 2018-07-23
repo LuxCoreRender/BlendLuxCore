@@ -1,11 +1,11 @@
 import bpy
-from bpy.types import PropertyGroup
 from bpy.props import (
-    PointerProperty, EnumProperty, BoolProperty,
-    FloatProperty, IntProperty,
+    PointerProperty, EnumProperty,
+    BoolProperty, FloatProperty,
 )
 from .. import LuxCoreNodeTexture
 from ...export.image import ImageExporter
+from ...properties.image_user import LuxCoreImageUser
 from ... import utils
 from ...utils import node as utils_node
 from ...utils import ui as utils_ui
@@ -16,44 +16,6 @@ NORMAL_MAP_DESC = (
     "normal maps) are supported. Brightness and gamma will be set to 1"
 )
 NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of the normal map"
-
-
-class LuxCoreImageUser(PropertyGroup):
-    """
-    We can't use Blender's ImageUser class, so we have to create our own.
-    The ImageUser contains information about how an image is used by a datablock.
-    For example, the same image sequence can be used with offset 5 by a pointlight
-    and with offset 2 by an imagemap node, so the pointlight and the imagemap node
-    each have their own ImageUser instance that saves this information.
-    """
-
-    frame_duration = IntProperty(name="Frames", min=1, default=1,
-                                 description="Number of frames of a sequence to use")
-    frame_start = IntProperty(name="Start Frame", default=0,
-                              description="Global starting frame of the sequence, assuming first picture has a #1")
-    frame_offset = IntProperty(name="Offset", default=0,
-                               description="Offset the number of the frame to use in the animation")
-    use_cyclic = BoolProperty(name="Cyclic", default=False,
-                              description="Cycle the images in the sequence")
-
-    def get_frame(self, scene):
-        frame_current = scene.frame_current
-        frame_current -= self.frame_start + 1
-
-        if self.use_cyclic:
-            frame_current = frame_current % self.frame_duration
-            if frame_current < 0:
-                frame_current += self.frame_duration
-            if frame_current == 0:
-                frame_current = self.frame_duration
-
-        if frame_current < 0:
-            frame_current = 0
-        elif frame_current > self.frame_duration:
-            frame_current = self.frame_duration
-
-        frame_current += self.frame_offset
-        return frame_current
 
 
 class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
@@ -207,7 +169,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
                 return [0, 0, 0]
 
         try:
-            filepath = ImageExporter.export(self.image)
+            filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
         except OSError as error:
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
             exporter.scene.luxcore.errorlog.add_warning(msg)

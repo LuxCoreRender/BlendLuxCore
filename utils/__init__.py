@@ -541,11 +541,11 @@ def image_sequence_resolve_all(image):
         # input isn't from a sequence
         return []
 
-    return [
+    return sorted([
         f.path
         for f in os.scandir(basedir)
         if f.is_file() and
            f.name.startswith(filename_nodigits) and
            f.name.endswith(ext) and
            f.name[len(filename_nodigits):-len(ext) if ext else -1].isdigit()
-    ]
+    ])
