@@ -47,7 +47,9 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
 
                 if lamp.luxcore.image:
                     try:
-                        filepath = ImageExporter.export(lamp.luxcore.image)
+                        filepath = ImageExporter.export(lamp.luxcore.image,
+                                                        lamp.luxcore.image_user,
+                                                        scene)
                         definitions["mapfile"] = filepath
                         definitions["gamma"] = lamp.luxcore.gamma
                     except OSError as error:
@@ -109,7 +111,9 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
             if lamp.luxcore.image:
                 # projection
                 try:
-                    definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image)
+                    definitions["mapfile"] = ImageExporter.export(lamp.luxcore.image,
+                                                                  lamp.luxcore.image_user,
+                                                                  scene)
                     definitions["type"] = "projection"
                     definitions["fov"] = coneangle * 2
                     definitions["gamma"] = lamp.luxcore.gamma
@@ -252,7 +256,9 @@ def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
     assert lamp_or_world.luxcore.image is not None
 
     try:
-        filepath = ImageExporter.export(lamp_or_world.luxcore.image)
+        filepath = ImageExporter.export(lamp_or_world.luxcore.image,
+                                        lamp_or_world.luxcore.image_user,
+                                        scene)
     except OSError as error:
         error_context = "Lamp" if isinstance(lamp_or_world, bpy.types.Lamp) else "World"
         msg = '%s "%s": %s' % (error_context, lamp_or_world.name, error)

@@ -39,8 +39,7 @@ class ImageExporter(object):
         return temp_image.name
 
     @classmethod
-    # TODO always require image_user and scene
-    def export(cls, image, image_user=None, scene=None):
+    def export(cls, image, image_user, scene):
         if image.source == "GENERATED":
             return cls._save_to_temp_file(image)
         elif image.source == "FILE":

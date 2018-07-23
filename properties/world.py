@@ -12,6 +12,7 @@ from .light import (
     VIS_INDIRECT_DIFFUSE_DESC, VIS_INDIRECT_GLOSSY_DESC,
     VIS_INDIRECT_SPECULAR_DESC,
 )
+from .image_user import LuxCoreImageUser
 
 USE_SUN_GAIN_FOR_SKY_DESC = (
     "Use the gain setting of the attached sun "
@@ -73,7 +74,11 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
                                        description=GROUND_COLOR_DESC)
 
     # infinite
-    image = PointerProperty(name="Image", type=bpy.types.Image)
+    def update_image(self, context):
+        self.image_user.update(self.image)
+
+    image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
+    image_user = PointerProperty(type=LuxCoreImageUser)
     gamma = FloatProperty(name="Gamma", default=1, min=0, description=GAMMA_DESCRIPTION)
     sampleupperhemisphereonly = BoolProperty(name="Sample Upper Hemisphere Only", default=False,
                                              description=SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION)
