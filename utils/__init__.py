@@ -524,3 +524,28 @@ def pluralize(format_str, amount):
 
 def is_opencl_build():
     return not pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool()
+
+
+def image_sequence_resolve_all(image):
+    """ From https://blender.stackexchange.com/a/21093/29401 """
+    filepath = get_abspath(image.filepath, image.library)
+    basedir, filename = os.path.split(filepath)
+    filename_noext, ext = os.path.splitext(filename)
+
+    from string import digits
+    if isinstance(filepath, bytes):
+        digits = digits.encode()
+    filename_nodigits = filename_noext.rstrip(digits)
+
+    if len(filename_nodigits) == len(filename_noext):
+        # input isn't from a sequence
+        return []
+
+    return [
+        f.path
+        for f in os.scandir(basedir)
+        if f.is_file() and
+           f.name.startswith(filename_nodigits) and
+           f.name.endswith(ext) and
+           f.name[len(filename_nodigits):-len(ext) if ext else -1].isdigit()
+    ]

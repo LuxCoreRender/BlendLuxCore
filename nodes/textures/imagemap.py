@@ -1,9 +1,13 @@
 import bpy
-from bpy.props import PointerProperty, EnumProperty, BoolProperty, FloatProperty
+from bpy.types import PropertyGroup
+from bpy.props import (
+    PointerProperty, EnumProperty, BoolProperty,
+    FloatProperty, IntProperty,
+)
 from .. import LuxCoreNodeTexture
 from ...export.image import ImageExporter
-from ...utils import node as utils_node
 from ... import utils
+from ...utils import node as utils_node
 from ...utils import ui as utils_ui
 
 
@@ -12,6 +16,44 @@ NORMAL_MAP_DESC = (
     "normal maps) are supported. Brightness and gamma will be set to 1"
 )
 NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of the normal map"
+
+
+class LuxCoreImageUser(PropertyGroup):
+    """
+    We can't use Blender's ImageUser class, so we have to create our own.
+    The ImageUser contains information about how an image is used by a datablock.
+    For example, the same image sequence can be used with offset 5 by a pointlight
+    and with offset 2 by an imagemap node, so the pointlight and the imagemap node
+    each have their own ImageUser instance that saves this information.
+    """
+
+    frame_duration = IntProperty(name="Frames", min=1, default=1,
+                                 description="Number of frames of a sequence to use")
+    frame_start = IntProperty(name="Start Frame", default=0,
+                              description="Global starting frame of the sequence, assuming first picture has a #1")
+    frame_offset = IntProperty(name="Offset", default=0,
+                               description="Offset the number of the frame to use in the animation")
+    use_cyclic = BoolProperty(name="Cyclic", default=False,
+                              description="Cycle the images in the sequence")
+
+    def get_frame(self, scene):
+        frame_current = scene.frame_current
+        frame_current -= self.frame_start + 1
+
+        if self.use_cyclic:
+            frame_current = frame_current % self.frame_duration
+            if frame_current < 0:
+                frame_current += self.frame_duration
+            if frame_current == 0:
+                frame_current = self.frame_duration
+
+        if frame_current < 0:
+            frame_current = 0
+        elif frame_current > self.frame_duration:
+            frame_current = self.frame_duration
+
+        frame_current += self.frame_offset
+        return frame_current
 
 
 class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
@@ -25,7 +67,12 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             # Sometimes, this node is not counted as user.
             self.image.use_fake_user = True
 
+            if self.image.source == "SEQUENCE":
+                # Find out how many frames are in the sequence (unfortunately Blender doesn't tell us)
+                self.image_user.frame_duration = len(utils.image_sequence_resolve_all(self.image))
+
     image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
+    image_user = PointerProperty(type=LuxCoreImageUser)
 
     channel_items = [
         ("default", "Default", "Do not convert the image cannels", 0),
@@ -142,6 +189,15 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         # when no mapping node is linked)
         if not self.inputs["2D Mapping"].is_linked:
             utils_node.draw_uv_info(context, col)
+
+        if self.image and self.image.source == "SEQUENCE":
+            box = col.box()
+            box.label("Frame: %d" % self.image_user.get_frame(context.scene))
+            sub = box.column(align=True)
+            sub.prop(self.image_user, "frame_duration")
+            sub.prop(self.image_user, "frame_start")
+            sub.prop(self.image_user, "frame_offset")
+            sub.prop(self.image_user, "use_cyclic")
 
     def sub_export(self, exporter, props, luxcore_name=None):
         if self.image is None:
