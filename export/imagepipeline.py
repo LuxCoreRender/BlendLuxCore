@@ -130,7 +130,9 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
         return index
 
     try:
-        filepath = ImageExporter.export(backgroundimage.image)
+        filepath = ImageExporter.export(backgroundimage.image,
+                                        backgroundimage.image_user,
+                                        scene)
     except OSError as error:
         msg = "Imagepipeline: %s" % error
         scene.luxcore.errorlog.add_warning(msg)

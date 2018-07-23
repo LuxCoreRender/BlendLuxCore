@@ -158,6 +158,7 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         if box:
             box.template_ID(backgroundimage, "image", open="image.open")
             box.prop(backgroundimage, "gamma")
+            backgroundimage.image_user.draw(box, context.scene)
 
         camera_response_func = pipeline.camera_response_func
         box = self.draw_plugin_box(camera_response_func)
