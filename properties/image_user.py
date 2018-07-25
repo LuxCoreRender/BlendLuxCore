@@ -5,6 +5,20 @@ from bpy.props import IntProperty, BoolProperty, PointerProperty, EnumProperty
 from .. import utils
 
 
+FIRST_FRAME_DESC = (
+    "Raise this value if you want to leave out frames from the beginning of the sequence"
+)
+
+LAST_FRAME_DESC = (
+    "Lower this value if you want to leave out frames from the end of the sequence"
+)
+
+SEED_DESC = (
+    "Seed of the random number. Change to get a different sequence of random numbers "
+    "(e.g. if you have two image sequences and they should not pick the same frame, "
+    "use a different seed on each imagemap node)"
+)
+
 WRAP_NONE_DESC = (
     "No wrapping is performed. If the image sequence does not contain enough "
     "frames to cover the whole animation, some frames will be missing. "
@@ -24,20 +38,22 @@ class LuxCoreImageUser(PropertyGroup):
     # This image reference is just for internal bookkeeping
     image = PointerProperty(type=bpy.types.Image)
 
-    # TODO descriptions
-    first_frame = IntProperty(name="First Frame", default=1, min=1)
-    last_frame = IntProperty(name="Last Frame", default=2, min=1)
+    first_frame = IntProperty(name="First Frame", default=1, min=1,  description=FIRST_FRAME_DESC)
+    last_frame = IntProperty(name="Last Frame", default=2, min=1, description=LAST_FRAME_DESC)
+    # TODO description?
     frame_offset = IntProperty(name="Offset", default=0)
 
-    pick_random = BoolProperty(name="Pick Random", default=False)
-    seed = IntProperty(name="Seed", default=0)
-    reverse = BoolProperty(name="Reverse", default=False)
+    pick_random = BoolProperty(name="Pick Random", default=False,
+                               description="Pick a random frame n so that: First Frame <= n <= Last Frame")
+    seed = IntProperty(name="Seed", default=0, description=SEED_DESC)
+    reverse = BoolProperty(name="Reverse", default=False,
+                           description="Reverse the number of frames in the sequence")
 
     wrap_modes = [
         ("none", "None", WRAP_NONE_DESC, 0),
-        ("clamp", "Clamp", "Use the first (or last) frame of the sequence", 1),
-        ("repeat", "Repeat", "Loop the sequence", 2),
-        ("pingpong", "Ping-Pong", "Loop the sequence reversed", 3),
+        ("clamp", "Clamp", "Use the first (or last) frame of the sequence: 111 12345 555", 1),
+        ("repeat", "Repeat", "Loop the sequence: 12345 12345 12345", 2),
+        ("pingpong", "Ping-Pong", "Like repeat, but every second repetition is reversed: 12345 54321 12345", 3),
     ]
     wrap_mode = EnumProperty(name="Wrap", items=wrap_modes, default="clamp",
                              description="How to handle the case of being outside of the sequence range")
@@ -82,6 +98,11 @@ class LuxCoreImageUser(PropertyGroup):
             frame += 1
             frame += self.first_frame - 1
         elif self.wrap_mode == "pingpong":
+            # Ping-Pong is like repeat, but every second repetition is reversed.
+            # Note that this means that the first and last frame appear to be doubled.
+            # E.g. with 5 frames:
+            # Repeat:    12345 12345 12345
+            # Ping-Pong: 12345 54321 12345
             frame %= frame_count * 2
             temp = frame
             frame = frame_count - abs(frame - frame_count)
@@ -93,6 +114,7 @@ class LuxCoreImageUser(PropertyGroup):
             frame = utils.clamp(frame, self.first_frame, self.last_frame)
 
         if self.reverse:
+            # We have to undo the first frame offset before reversing, then add it again
             frame -= self.first_frame - 1
             frame = frame_count - frame + 1
             frame += self.first_frame - 1
