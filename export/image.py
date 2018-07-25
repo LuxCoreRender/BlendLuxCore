@@ -56,9 +56,15 @@ class ImageExporter(object):
                                   % (image.name, image.filepath, error))
         elif image.source == "SEQUENCE":
             # Note: image sequences can never be packed
-            frame = image_user.get_frame(scene)
+            try:
+                frame = image_user.get_frame(scene)
+            except ValueError as error:
+                raise OSError(str(error))
+
             indexed_filepaths = utils.image_sequence_resolve_all(image)
             try:
+                if frame < 1:
+                    raise IndexError
                 index, filepath = indexed_filepaths[frame - 1]
                 return filepath
             except IndexError:

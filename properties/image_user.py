@@ -25,8 +25,8 @@ class LuxCoreImageUser(PropertyGroup):
     image = PointerProperty(type=bpy.types.Image)
 
     # TODO descriptions
-    first_frame = IntProperty(name="First Frame", default=1)
-    last_frame = IntProperty(name="Last Frame", default=2)
+    first_frame = IntProperty(name="First Frame", default=1, min=1)
+    last_frame = IntProperty(name="Last Frame", default=2, min=1)
     frame_offset = IntProperty(name="Offset", default=0)
 
     pick_random = BoolProperty(name="Pick Random", default=False)
@@ -59,13 +59,20 @@ class LuxCoreImageUser(PropertyGroup):
         self.image = image
 
     def get_frame(self, scene):
+        """
+        Calculate the current frame in the sequence.
+        Note that the frame numbering starts at 1 and ends at frame_count (see below).
+        """
         frame = scene.frame_current + self.frame_offset
+
+        if self.first_frame > self.last_frame:
+            raise ValueError("First frame greater than last frame")
 
         if self.pick_random:
             random.seed(self.seed ^ frame)
             return random.randint(self.first_frame, self.last_frame)
 
-        frame_count = self.last_frame - (self.first_frame - 1)
+        frame_count = self.last_frame - self.first_frame + 1
 
         if self.wrap_mode == "clamp":
             frame = utils.clamp(frame, self.first_frame, self.last_frame)
@@ -93,14 +100,18 @@ class LuxCoreImageUser(PropertyGroup):
             box = layout.box()
             sub = box.column(align=True)
 
-            frame = self.get_frame(scene)
-            sub.label("Frame: %d" % frame)
-            if frame < self.first_frame or frame > self.last_frame:
-                sub.label("Out of range", icon="ERROR")
+            try:
+                frame = self.get_frame(scene)
+                sub.label("Frame: %d" % frame)
+                if frame < self.first_frame or frame > self.last_frame:
+                    sub.label("Out of range", icon="ERROR")
+            except ValueError as error:
+                sub.label(str(error), icon="CANCEL")
 
             sub.prop(self, "first_frame")
             sub.prop(self, "last_frame")
             sub.prop(self, "frame_offset")
+
             sub.prop(self, "pick_random")
             if self.pick_random:
                 sub.prop(self, "seed")
