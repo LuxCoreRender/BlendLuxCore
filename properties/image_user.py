@@ -80,6 +80,7 @@ class LuxCoreImageUser(PropertyGroup):
             frame -= 1
             frame %= frame_count
             frame += 1
+            frame += self.first_frame - 1
         elif self.wrap_mode == "pingpong":
             frame %= frame_count * 2
             temp = frame
@@ -88,10 +89,13 @@ class LuxCoreImageUser(PropertyGroup):
             if temp > frame_count:
                 frame += 1
 
+            frame += self.first_frame - 1
             frame = utils.clamp(frame, self.first_frame, self.last_frame)
 
         if self.reverse:
+            frame -= self.first_frame - 1
             frame = frame_count - frame + 1
+            frame += self.first_frame - 1
 
         return frame
 

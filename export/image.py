@@ -68,8 +68,8 @@ class ImageExporter(object):
                 index, filepath = indexed_filepaths[frame - 1]
                 return filepath
             except IndexError:
-                raise OSError('Frame %d in image sequence "%s" does not exist'
-                              % (frame, image.name))
+                raise OSError('Frame %d in image sequence "%s" does not exist (contains only %d frames)'
+                              % (frame, image.name, len(indexed_filepaths)))
         else:
             raise Exception('Unsupported image source "%s" in image "%s"' % (image.source, image.name))
 
