@@ -40,7 +40,7 @@ for blend_file in glob.glob("./**/*.test.blend"):
         # Log the error, but continue testing
         status = return_code
         failed.append(test_name)
-        print(ANSI_RED + "Test " + test_name + " failed!" + ANSI_RESET)
+        print(ANSI_RED + "Test " + test_name + " failed! (returned " + str(return_code) + ")" + ANSI_RESET)
 
 # Show summary
 print("\n\n")

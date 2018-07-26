@@ -1,6 +1,7 @@
 from time import time
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import render as utils_render
 from . import (
     blender_object, caches, camera, config, duplis,
     imagepipeline, light, material, motion_blur, hair,
@@ -39,7 +40,6 @@ class Change:
 
 class Exporter(object):
     def __init__(self, blender_scene):
-        print("[Exporter] Init")
         self.scene = blender_scene
 
         self.config_cache = caches.StringCache()
@@ -74,6 +74,13 @@ class Exporter(object):
         print("[Exporter] create_session")
         start = time()
         scene = self.scene
+        if context:
+            # No statistics logging in viewport render
+            stats = None
+        else:
+            stats = scene.luxcore.statistics.get_active()
+            stats.reset()
+
         # Scene
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
@@ -151,6 +158,8 @@ class Exporter(object):
         if light_count > 1000:
             msg = "The scene contains a lot of light sources (%d), performance might suffer" % light_count
             scene.luxcore.errorlog.add_warning(msg)
+        if stats:
+            stats.light_count.value = light_count
 
         # Create the renderconfig
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
@@ -161,6 +170,9 @@ class Exporter(object):
 
         export_time = time() - start
         print("Export took %.1f s" % export_time)
+        if stats:
+            stats.export_time.value = export_time
+            self._init_stats(stats, config_props, scene)
 
         if engine:
             if config_props.Get("renderengine.type").GetString().endswith("OCL"):
@@ -170,12 +182,7 @@ class Exporter(object):
 
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 
-        # Create session (in case of OpenCL engines, render kernels are compiled here)
-        start = time()
         session = pyluxcore.RenderSession(renderconfig)
-        elapsed_msg = "Session created in %.1f s" % (time() - start)
-        print(elapsed_msg)
-
         return session
 
     def get_changes(self, context=None):
@@ -384,3 +391,33 @@ class Exporter(object):
             props.Set(world_props)
 
         return props
+
+    def _init_stats(self, stats, config_props, scene):
+        render_engine = config_props.Get("renderengine.type").GetString()
+        stats.render_engine.value = utils_render.engine_to_str(render_engine)
+        sampler = config_props.Get("sampler.type").GetString()
+        stats.sampler.value = utils_render.sampler_to_str(sampler)
+
+        config_settings = scene.luxcore.config
+        path_settings = config_settings.path
+
+        stats.light_strategy.value = utils_render.light_strategy_to_str(config_settings.light_strategy)
+
+        if render_engine == "BIDIRCPU":
+            path_depths = (
+                config_settings.bidir_light_maxdepth,
+                config_settings.bidir_path_maxdepth,
+            )
+        else:
+            path_depths = (
+                path_settings.depth_total,
+                path_settings.depth_diffuse,
+                path_settings.depth_glossy,
+                path_settings.depth_specular,
+            )
+        stats.path_depths.value = path_depths
+
+        if path_settings.use_clamping:
+            stats.clamping.value = path_settings.clamping
+        else:
+            stats.clamping.value = 0

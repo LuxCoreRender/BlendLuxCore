@@ -204,4 +204,5 @@ class TestMaterials(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMaterials)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())

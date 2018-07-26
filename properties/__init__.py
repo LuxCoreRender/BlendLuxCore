@@ -1,6 +1,6 @@
 from . import (
     addon_preferences, blender_object, camera, light,
-    material, hair, render_layer, scene, world
+    material, hair, image_user, render_layer, scene, world
 )
 
 

@@ -1,9 +1,13 @@
 import bpy
-from bpy.props import PointerProperty, EnumProperty, BoolProperty, FloatProperty
+from bpy.props import (
+    PointerProperty, EnumProperty,
+    BoolProperty, FloatProperty,
+)
 from .. import LuxCoreNodeTexture
 from ...export.image import ImageExporter
-from ...utils import node as utils_node
+from ...properties.image_user import LuxCoreImageUser
 from ... import utils
+from ...utils import node as utils_node
 from ...utils import ui as utils_ui
 
 
@@ -19,6 +23,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     bl_width_default = 200
 
     def update_image(self, context):
+        self.image_user.update(self.image)
         if self.image:
             # Seems like we still need this.
             # User counting does not work reliably with Python PointerProperty.
@@ -26,6 +31,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             self.image.use_fake_user = True
 
     image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
+    image_user = PointerProperty(type=LuxCoreImageUser)
 
     channel_items = [
         ("default", "Default", "Do not convert the image cannels", 0),
@@ -143,6 +149,8 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         if not self.inputs["2D Mapping"].is_linked:
             utils_node.draw_uv_info(context, col)
 
+        self.image_user.draw(col, context.scene)
+
     def sub_export(self, exporter, props, luxcore_name=None):
         if self.image is None:
             if self.is_normal_map:
@@ -151,7 +159,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
                 return [0, 0, 0]
 
         try:
-            filepath = ImageExporter.export(self.image)
+            filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
         except OSError as error:
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
             exporter.scene.luxcore.errorlog.add_warning(msg)

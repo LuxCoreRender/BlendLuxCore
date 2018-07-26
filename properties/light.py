@@ -5,6 +5,7 @@ from bpy.props import (
 )
 import math
 from .ies import LuxCoreIESProps
+from .image_user import LuxCoreImageUser
 
 
 RGB_GAIN_DESC = (
@@ -73,6 +74,8 @@ def init():
 
 class LuxCoreLightProps(bpy.types.PropertyGroup):
     def update_image(self, context):
+        self.image_user.update(self.image)
+
         if getattr(context, "lamp", None):
             # For spot lamp (toggle projection mode)
             if context.lamp.type == "SPOT":
@@ -120,6 +123,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # mappoint: mapfile
     # projection: mapfile
     image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
+    image_user = PointerProperty(type=LuxCoreImageUser)
     gamma = FloatProperty(name="Gamma", default=1, min=0, description=GAMMA_DESCRIPTION)
 
     # infinite

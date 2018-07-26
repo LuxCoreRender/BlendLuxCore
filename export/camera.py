@@ -48,7 +48,7 @@ def _view_ortho(scene, context, definitions):
     world_scale = utils.get_worldscale(scene, False)
 
     definitions["type"] = "orthographic"
-    zoom = 0.915 * world_scale * context.region_data.view_distance*35/context.space_data.lens
+    zoom = 0.915 * world_scale * context.region_data.view_distance * 35 / context.space_data.lens
 
     # Move the camera origin away from the viewport center to avoid clipping
     origin = Vector(lookat_orig)
@@ -85,7 +85,7 @@ def _view_camera(scene, context, definitions):
     definitions["up"] = up_vector
     
     # Magic zoom formula for camera viewport zoom from Cycles export code
-    zoom = 4 / ((math.sqrt(2) + (context.region_data.view_camera_zoom * world_scale) / 50) ** 2)
+    zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
 
     if camera.data.type == "ORTHO":
         definitions["type"] = "orthographic"
@@ -194,10 +194,11 @@ def _clipping_plane(scene, definitions):
     if cam_settings.use_clipping_plane and cam_settings.clipping_plane:
         plane = cam_settings.clipping_plane
         normal = plane.rotation_euler.to_matrix() * Vector((0, 0, 1))
+        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
         definitions.update({
             "clippingplane.enable": cam_settings.use_clipping_plane,
-            "clippingplane.center": list(plane.location),
+            "clippingplane.center": list(plane.location * worldscale),
             "clippingplane.normal": list(normal),
         })
     else:

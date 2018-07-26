@@ -177,9 +177,9 @@ def calc_filmsize_raw(scene, context=None):
 
 
 def calc_filmsize(scene, context=None):
+    render = scene.render
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
     width_raw, height_raw = calc_filmsize_raw(scene, context)
-    world_scale = get_worldscale(scene, False)
     
     if context:
         # Viewport render        
@@ -190,12 +190,12 @@ def calc_filmsize(scene, context=None):
             height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
         else:
             # Camera viewport
-            zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom * world_scale / 50) ** 2)
-            aspectratio, aspect_x, aspect_y = calc_aspect(scene.render.resolution_x * scene.render.pixel_aspect_x,
-                                                          scene.render.resolution_y * scene.render.pixel_aspect_y,
+            zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
+            aspectratio, aspect_x, aspect_y = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                          render.resolution_y * render.pixel_aspect_y,
                                                           scene.camera.data.sensor_fit)
 
-            if scene.render.use_border:
+            if render.use_border:
                 base = zoom
                 if scene.camera.data.sensor_fit == "AUTO":
                     base *= max(width, height)
@@ -220,6 +220,8 @@ def calc_filmsize(scene, context=None):
 
 
 def calc_blender_border(scene, context=None):
+    render = scene.render
+
     if context and context.region_data.view_perspective in ("ORTHO", "PERSP"):
         # Viewport camera
         border_max_x = context.space_data.render_border_max_x
@@ -228,15 +230,15 @@ def calc_blender_border(scene, context=None):
         border_min_y = context.space_data.render_border_min_y
     else:
         # Final camera
-        border_max_x = scene.render.border_max_x
-        border_max_y = scene.render.border_max_y
-        border_min_x = scene.render.border_min_x
-        border_min_y = scene.render.border_min_y
+        border_max_x = render.border_max_x
+        border_max_y = render.border_max_y
+        border_min_x = render.border_min_x
+        border_min_y = render.border_min_y
 
     if context and context.region_data.view_perspective in ("ORTHO", "PERSP"):
         use_border = context.space_data.use_render_border
     else:
-        use_border = scene.render.use_border
+        use_border = render.use_border
 
     if use_border:
         blender_border = [border_min_x, border_max_x, border_min_y, border_max_y]
@@ -252,6 +254,7 @@ def calc_blender_border(scene, context=None):
 def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     # shift is in range -2..2
     # offset is in range -4..4
+    render = scene.render
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
@@ -270,12 +273,12 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
         if context.region_data.view_perspective == "CAMERA":
             offset_x, offset_y = context.region_data.view_camera_offset
             # Camera view            
-            if scene.render.use_border:
+            if render.use_border:
                 offset_x = 0
                 offset_y = 0
                 zoom = 1
-                aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x * scene.render.pixel_aspect_x,
-                                                            scene.render.resolution_y * scene.render.pixel_aspect_y,
+                aspectratio, xaspect, yaspect = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                            render.resolution_y * render.pixel_aspect_y,
                                                             scene.camera.data.sensor_fit)
                     
                 if scene.camera and scene.camera.data.type == "ORTHO":
@@ -288,10 +291,9 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
             aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw)
     else:
         # Final rendering
-        aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x * scene.render.pixel_aspect_x,
-                                                    scene.render.resolution_y * scene.render.pixel_aspect_y,
+        aspectratio, xaspect, yaspect = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                    render.resolution_y * render.pixel_aspect_y,
                                                     scene.camera.data.sensor_fit)
-
 
     dx = scale * 2 * (shift_x + 2 * xaspect * offset_x)
     dy = scale * 2 * (shift_y + 2 * yaspect * offset_y)
@@ -313,9 +315,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     return screenwindow
 
 
-def calc_aspect(width, height, fit = "AUTO"):
-    aspect = 1.0
-
+def calc_aspect(width, height, fit="AUTO"):
     horizontal_fit = False
     if fit == "AUTO":
         horizontal_fit = (width > height)
@@ -533,3 +533,36 @@ def pluralize(format_str, amount):
 
 def is_opencl_build():
     return not pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool()
+
+
+def image_sequence_resolve_all(image):
+    """
+    From https://blender.stackexchange.com/a/21093/29401
+    Returns a list of tuples: (index, filepath)
+    index is the frame number, parsed from the filepath
+    """
+    filepath = get_abspath(image.filepath, image.library)
+    basedir, filename = os.path.split(filepath)
+    filename_noext, ext = os.path.splitext(filename)
+
+    from string import digits
+    if isinstance(filepath, bytes):
+        digits = digits.encode()
+    filename_nodigits = filename_noext.rstrip(digits)
+
+    if len(filename_nodigits) == len(filename_noext):
+        # Input isn't from a sequence
+        return []
+
+    indexed_filepaths = []
+    for f in os.scandir(basedir):
+        index_str = f.name[len(filename_nodigits):-len(ext) if ext else -1]
+
+        if (f.is_file()
+                and f.name.startswith(filename_nodigits)
+                and f.name.endswith(ext)
+                and index_str.isdigit()):
+            elem = (int(index_str), f.path)
+            indexed_filepaths.append(elem)
+
+    return sorted(indexed_filepaths, key=lambda elem: elem[0])

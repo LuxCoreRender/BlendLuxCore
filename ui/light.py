@@ -26,6 +26,7 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
         col.template_ID(lamp.luxcore, "image", open="image.open")
         if lamp.luxcore.image:
             col.prop(lamp.luxcore, "gamma")
+        lamp.luxcore.image_user.draw(layout, context.scene)
 
     def draw_ies_controls(self, context):
         layout = self.layout

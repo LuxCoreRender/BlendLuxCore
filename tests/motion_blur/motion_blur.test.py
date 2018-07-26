@@ -227,4 +227,5 @@ class TestMotionBlur(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMotionBlur)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())
