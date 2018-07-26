@@ -104,6 +104,9 @@ def get_vram_usage(stat_props):
         if device_used_memory > used_memory:
             used_memory = device_used_memory
 
+    if max_memory == float('inf'):
+        max_memory = 0
+
     return used_memory, max_memory
 
 
