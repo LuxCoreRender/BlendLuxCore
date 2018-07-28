@@ -46,21 +46,26 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
             obj_transform = None
             mesh_transform = transformation
 
-        is_shared_mesh = utils.can_share_mesh(blender_obj)
+        is_shared_mesh = utils.can_share_mesh(blender_obj) and not dupli_suffix
         update_shared_mesh = False
         mesh_key = utils.make_key(blender_obj.data)
+        mesh_definitions = None
 
         if is_shared_mesh:
             try:
+                # Try to use the mesh_definitions created during the first export of this shared mesh
                 mesh_definitions = exporter.shared_meshes[mesh_key]
                 update_mesh = False
-                print(">>> got shared mesh from cache", blender_obj.data.name)
+                print("Object %s, Mesh %s: Got mesh_definitions from cache (original object: %s)"
+                      % (blender_obj.name, blender_obj.data.name, mesh_definitions[0]))
             except KeyError:
+                # The shared mesh was not exported yet, this is the first time
                 update_shared_mesh = True
-                print(">>>>>> could not get shared mesh from cache", blender_obj.data.name)
+                print("Object %s, Mesh %s: Shared mesh not in cache yet"
+                      % (blender_obj.name, blender_obj.data.name))
 
         if update_mesh:
-            # print("converting mesh:", blender_obj.data.name)
+            print("converting mesh:", blender_obj.data.name)
             with mesh_converter.convert(blender_obj, context, scene) as mesh:
                 if mesh and mesh.tessfaces:
                     mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
@@ -68,7 +73,9 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                     # This is not worth a warning in the errorlog
                     print(blender_obj.name + ": No mesh data after to_mesh()")
                     return props, None
-        elif not is_shared_mesh or update_shared_mesh:
+
+        if mesh_definitions is None:
+            # This is the case if (not is_shared_mesh or update_shared_mesh)
             assert exported_object is not None
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
@@ -101,7 +108,8 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
             # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
             lux_shape_name = "Mesh-" + lux_object_name
             if is_shared_mesh:
-                # The object name saved in the mesh_definitons is incorrect
+                # The object name saved in the mesh_definitons is incorrect, we have to replace it
+                # (it's the one from the first time this mesh was exported)
                 lux_object_name = luxcore_name + "%03d" % material_index
 
             _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_mat_name, obj_transform,

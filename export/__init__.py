@@ -52,6 +52,8 @@ class Exporter(object):
         self.halt_cache = caches.StringCache()
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
+        # Contains mesh_definitions for multi-user meshes.
+        # Keys are made with utils.make_key(blender_obj.data)
         self.shared_meshes = {}
 
         # A dictionary with the following mapping:
