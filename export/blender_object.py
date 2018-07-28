@@ -56,8 +56,8 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                 # Try to use the mesh_definitions created during the first export of this shared mesh
                 mesh_definitions = exporter.shared_meshes[mesh_key]
                 update_mesh = False
-                print("Object %s, Mesh %s: Got mesh_definitions from cache (original object: %s)"
-                      % (blender_obj.name, blender_obj.data.name, mesh_definitions[0]))
+                print("Object %s, Mesh %s: Got mesh_definitions from cache"
+                      % (blender_obj.name, blender_obj.data.name))
             except KeyError:
                 # The shared mesh was not exported yet, this is the first time
                 update_shared_mesh = True

@@ -52,26 +52,42 @@ class ObjectCache(object):
         self.changed_mesh = []
         self.lamps = []
 
+    def _check(self, obj):
+        if obj.is_updated_data:
+            if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT"]:
+                self.changed_mesh.append(obj)
+            elif obj.type in ["LAMP"]:
+                self.lamps.append(obj)
+
+        if obj.is_updated:
+            if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"]:
+                # check if a new material was assigned
+                if obj.data and obj.data.is_updated:
+                    self.changed_mesh.append(obj)
+                else:
+                    self.changed_transform.append(obj)
+            elif obj.type == "LAMP":
+                self.lamps.append(obj)
+
+        return obj.is_updated_data or obj.is_updated
+
     def diff(self, scene):
         self._reset()
 
         if bpy.data.objects.is_updated:
             for obj in scene.objects:
-                if obj.is_updated_data:
-                    if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT"]:
-                        self.changed_mesh.append(obj)
-                    elif obj.type in ["LAMP"]:
-                        self.lamps.append(obj)
+                self._check(obj)
 
-                if obj.is_updated:
-                    if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"]:
-                        # check if a new material was assigned
-                        if obj.data and obj.data.is_updated:
-                            self.changed_mesh.append(obj)
-                        else:
-                            self.changed_transform.append(obj)
-                    elif obj.type == "LAMP":
-                        self.lamps.append(obj)
+                if obj.dupli_group:
+                    # It is an empty used to instance a group
+                    child_obj_changed = False
+
+                    for child_obj in obj.dupli_group.objects:
+                        child_obj_changed |= self._check(child_obj)
+
+                    if child_obj_changed:
+                        # Flag the duplicator object (empty) for update
+                        self.changed_mesh.append(obj)
 
         return self.changed_transform or self.changed_mesh or self.lamps
 
