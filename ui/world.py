@@ -106,6 +106,7 @@ class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
         sub = layout.column()
         sub.enabled = world.luxcore.image is not None
         sub.prop(world.luxcore, "gamma")
+        world.luxcore.image_user.draw(sub, context.scene)
         sub.prop(world.luxcore, "rotation")
         sub.label("For free transformation use a hemi lamp", icon="INFO")
         sub.prop(world.luxcore, "sampleupperhemisphereonly")

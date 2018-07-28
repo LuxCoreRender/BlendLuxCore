@@ -60,7 +60,7 @@ TODO: These do not contain .blend files yet.
 * [x] AOVs (aka render passes)
 * [x] Render layers
 * [x] Material preview
-* [ ] Image sequences
+* [x] Image sequences
 * [ ] Saving a resumable film
 * [ ] Periodic film saving
 * And more...

@@ -4,7 +4,7 @@ from .. import utils
 from ..utils import ExportedObject
 from ..utils import node as utils_node
 
-from . import material
+from . import material, mesh_converter
 from .light import convert_lamp
 
 
@@ -46,33 +46,42 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
             obj_transform = None
             mesh_transform = transformation
 
-        mesh_definitions = []
+        is_shared_mesh = utils.can_share_mesh(blender_obj) and not dupli_suffix
+        update_shared_mesh = False
+        mesh_key = utils.make_key(blender_obj.data)
+        mesh_definitions = None
+
+        if is_shared_mesh:
+            try:
+                # Try to use the mesh_definitions created during the first export of this shared mesh
+                mesh_definitions = exporter.shared_meshes[mesh_key]
+                update_mesh = False
+                print("Object %s, Mesh %s: Got mesh_definitions from cache"
+                      % (blender_obj.name, blender_obj.data.name))
+            except KeyError:
+                # The shared mesh was not exported yet, this is the first time
+                update_shared_mesh = True
+                print("Object %s, Mesh %s: Shared mesh not in cache yet"
+                      % (blender_obj.name, blender_obj.data.name))
+
         if update_mesh:
             if blender_obj.luxcore.use_proxy:
                 mesh_definitions = _convert_proxy_to_shapes(luxcore_name, blender_obj, luxcore_scene)
                 if not context:
-                    #TODO: Apply mesh_transformation to PLY files
+                    # TODO: Apply mesh_transformation to PLY files
                     obj_transform = transformation
             else:
                 # print("converting mesh:", blender_obj.data.name)
-                modifier_mode = "PREVIEW" if context else "RENDER"
-                apply_modifiers = True
-                edge_split_mod = _begin_autosmooth_if_required(blender_obj)
-                mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
-                _end_autosmooth_if_required(blender_obj, edge_split_mod)
+                with mesh_converter.convert(blender_obj, context, scene) as mesh:
+                    if mesh and mesh.tessfaces:
+                        mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
+                    else:
+                        # This is not worth a warning in the errorlog
+                        print(blender_obj.name + ": No mesh data after to_mesh()")
+                        return props, None
 
-                if mesh is None or len(mesh.tessfaces) == 0:
-                    # This is not worth a warning in the errorlog
-                    print(blender_obj.name + ": No mesh data after to_mesh()")
-                    if mesh:
-                        bpy.data.meshes.remove(mesh, do_unlink=False)
-                    return props, None
-
-                # mesh.calc_normals_split()
-                # mesh.update(calc_edges=True, calc_tessface=True)
-                mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)                
-                bpy.data.meshes.remove(mesh, do_unlink=False)
-        else:
+        if mesh_definitions is None:
+            # This is the case if (not is_shared_mesh or update_shared_mesh)
             assert exported_object is not None
             print(blender_obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
@@ -101,8 +110,19 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                     lux_mat_name, mat_props = material.fallback()
 
             props.Set(mat_props)
-            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform,
+
+            # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
+            lux_shape_name = "Mesh-" + lux_object_name
+            if is_shared_mesh:
+                # The object name saved in the mesh_definitons is incorrect, we have to replace it
+                # (it's the one from the first time this mesh was exported)
+                lux_object_name = luxcore_name + "%03d" % material_index
+
+            _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_mat_name, obj_transform,
                                    blender_obj, scene, context, duplicator)
+
+        if update_shared_mesh:
+            exporter.shared_meshes[mesh_key] = mesh_definitions
 
         return props, ExportedObject(mesh_definitions)
     except Exception as error:
@@ -113,23 +133,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
         return pyluxcore.Properties(), None
 
 
-def _begin_autosmooth_if_required(blender_obj):
-    if not getattr(blender_obj.data, "use_auto_smooth", False):
-        return None
-
-    # We use an edge split modifier, it does the same as auto smooth
-    # The only drawback is that it does not handle custom normals
-    mod = blender_obj.modifiers.new("__LUXCORE_AUTO_SMOOTH__", 'EDGE_SPLIT')
-    mod.split_angle = blender_obj.data.auto_smooth_angle
-    return mod
-
-
-def _end_autosmooth_if_required(blender_obj, mod):
-    if mod:
-        blender_obj.modifiers.remove(mod)
-
-
-def _handle_pointiness(props, luxcore_shape_name, blender_obj):
+def _handle_pointiness(props, lux_shape_name, blender_obj):
     use_pointiness = False
 
     for mat_slot in blender_obj.material_slots:
@@ -139,24 +143,21 @@ def _handle_pointiness(props, luxcore_shape_name, blender_obj):
             use_pointiness = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")
 
     if use_pointiness:
-        pointiness_shape = luxcore_shape_name + "_pointiness"
+        pointiness_shape = lux_shape_name + "_pointiness"
         prefix = "scene.shapes." + pointiness_shape + "."
         props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
-        props.Set(pyluxcore.Property(prefix + "source", luxcore_shape_name))
-        luxcore_shape_name = pointiness_shape
+        props.Set(pyluxcore.Property(prefix + "source", lux_shape_name))
+        lux_shape_name = pointiness_shape
 
-    return luxcore_shape_name
+    return lux_shape_name
 
 
-def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform,
+def _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_material_name, obj_transform,
                            blender_obj, scene, context, duplicator):
-    # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
-    luxcore_shape_name = "Mesh-" + lux_object_name
-    luxcore_shape_name = _handle_pointiness(props, luxcore_shape_name, blender_obj)
-
+    lux_shape_name = _handle_pointiness(props, lux_shape_name, blender_obj)
     prefix = "scene.objects." + lux_object_name + "."
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
-    props.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+    props.Set(pyluxcore.Property(prefix + "shape", lux_shape_name))
 
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
@@ -186,6 +187,7 @@ def _convert_mesh_to_shapes(name, mesh, luxcore_scene, mesh_transform):
 
     return luxcore_scene.DefineBlenderMesh(name, len(mesh.tessfaces), faces, len(mesh.vertices),
                                            vertices, texCoords, vertexColors, mesh_transform)
+
 
 def _convert_proxy_to_shapes(name, obj, luxcore_scene):
     props = pyluxcore.Properties()

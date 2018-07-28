@@ -1,8 +1,15 @@
 from . import calc_filmsize
 from .. import utils
 from ..handlers.draw_imageeditor import TileStats
+from ..properties.statistics import (
+    samples_per_sec_to_string,
+    triangle_count_to_string,
+    convergence_to_string,
+    rays_per_sample_to_string,
+    get_rays_per_sample,
+)
 
-engine_to_str = {
+ENGINE_TO_STR = {
     "PATHCPU": "Path CPU",
     "PATHOCL": "Path OpenCL",
     "TILEPATHCPU": "Tile Path CPU",
@@ -13,13 +20,41 @@ engine_to_str = {
     "RTPATHCPU": "RT Path CPU",
 }
 
-sampler_to_str = {
+SAMPLER_TO_STR = {
     "RANDOM": "Random",
     "SOBOL": "Sobol",
     "METROPOLIS": "Metropolis",
     "RTPATHCPUSAMPLER": "RT Path Sampler",
-    "TILEPATHSAMPLER": "Tile Path Sampler"
+    "TILEPATHSAMPLER": "Tile Path Sampler",
 }
+
+LIGHT_STRATEGY_TO_STR = {
+    "LOG_POWER": "Log Power",
+    "POWER": "Power",
+    "UNIFORM": "Uniform",
+    "DLS_CACHE": "Direct Light Cache",
+}
+
+
+def engine_to_str(engine):
+    try:
+        return ENGINE_TO_STR[engine]
+    except KeyError:
+        return "Unkown"
+
+
+def sampler_to_str(sampler):
+    try:
+        return SAMPLER_TO_STR[sampler]
+    except KeyError:
+        return "Unkown"
+
+
+def light_strategy_to_str(light_strategy):
+    try:
+        return LIGHT_STRATEGY_TO_STR[light_strategy]
+    except KeyError:
+        return "Unkown"
 
 
 def update_stats(session):
@@ -35,6 +70,9 @@ def update_stats(session):
 def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
     # Show stats string in UI
     pretty_stats = get_pretty_stats(config, stats, scene)
+    # Update the stats that are shown in the image tools area
+    render_slot_stats = scene.luxcore.statistics.get_active()
+    render_slot_stats.update_from_luxcore_stats(stats)
 
     if time_until_film_refresh <= 0:
         if engine.has_denoiser() and scene.luxcore.denoiser.refresh:
@@ -125,31 +163,23 @@ def get_pretty_stats(config, stats, scene, context=None):
         # Convergence (how many pixels are converged, in percent)
         convergence = stats.Get("stats.renderengine.convergence").GetFloat()
         if convergence > 0:
-            if convergence < 0.95:
-                convergence_msg = "%d%% Pixels Converged" % round(convergence * 100)
-            else:
-                convergence_msg = "%.2f Pixels Converged" % (convergence * 100)
-            pretty.append(convergence_msg)
+            pretty.append(convergence_to_string(convergence) + " Pixels Converged")
 
     # Samples/Sec
     samples_per_sec = stats.Get("stats.renderengine.total.samplesec").GetFloat()
+    pretty.append("Samples/Sec " + samples_per_sec_to_string(samples_per_sec))
 
-    if samples_per_sec > 10 ** 6 - 1:
-        # Use megasamples as unit
-        pretty.append("Samples/Sec %.1f M" % (samples_per_sec / 10 ** 6))
-    else:
-        # Use kilosamples as unit
-        pretty.append("Samples/Sec %d k" % (samples_per_sec / 10 ** 3))
+    # Rays/Sample
+    pretty.append("Rays/Sample " + rays_per_sample_to_string(get_rays_per_sample(stats)))
 
     # Engine + Sampler
     engine = config.GetProperties().Get("renderengine.type").GetString()
     sampler = config.GetProperties().Get("sampler.type").GetString()
-    if engine in engine_to_str and sampler in sampler_to_str:
-        pretty.append(engine_to_str[engine] + " + " + sampler_to_str[sampler])
+    pretty.append(engine_to_str(engine) + " + " + sampler_to_str(sampler))
 
     # Triangle count
     triangle_count = stats.Get("stats.dataset.trianglecount").GetUnsignedLongLong()
-    pretty.append("{:,} Tris".format(triangle_count))
+    pretty.append(triangle_count_to_string(triangle_count) + " Tris")
 
     # Errors and warnings
     error_str = ""

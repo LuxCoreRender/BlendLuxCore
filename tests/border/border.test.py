@@ -66,4 +66,5 @@ class TestBorder(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestBorder)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())

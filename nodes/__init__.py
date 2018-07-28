@@ -152,6 +152,8 @@ class LuxCoreNodeVolume(LuxCoreNode):
         definitions["ior"] = self.inputs["IOR"].export(exporter, props)
 
         abs_col = self.inputs["Absorption"].export(exporter, props)
+        worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
+        abs_depth = self.color_depth * worldscale
 
         if self.inputs["Absorption"].is_linked:
             # Implicitly create a colordepth texture with unique name
@@ -160,13 +162,13 @@ class LuxCoreNodeVolume(LuxCoreNode):
             helper_defs = {
                 "type": "colordepth",
                 "kt": abs_col,
-                "depth": self.color_depth,
+                "depth": abs_depth,
             }
             props.Set(utils.create_props(helper_prefix, helper_defs))
             abs_col = tex_name
         else:
             # Do not occur the overhead of the colordepth texture
-            abs_col = utils.absorption_at_depth_scaled(abs_col, self.color_depth)
+            abs_col = utils.absorption_at_depth_scaled(abs_col, abs_depth)
 
         if "Scattering" in self.inputs:
             scattering_col = self.export_scattering(exporter, props)
@@ -317,6 +319,7 @@ class Roughness:
                 node.inputs[socket].enabled = node.rough
             except KeyError:
                 pass
+        Roughness.update_anisotropy(node, context)
 
     @staticmethod
     def update_anisotropy(node, context):

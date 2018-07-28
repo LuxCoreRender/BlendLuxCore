@@ -22,6 +22,6 @@ class LuxCoreNodeTexCheckerboard3D(LuxCoreNodeTexture):
             "texture2": self.inputs["Color 2"].export(exporter, props),
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation),
+            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
         }
         return self.create_props(props, definitions, luxcore_name)

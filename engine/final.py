@@ -53,9 +53,14 @@ def _render_layer(engine, scene):
         print("[Engine/Final] Export cancelled by user.")
         return
 
-    engine.update_stats("Render", "Starting session...")
     engine.framebuffer = FrameBufferFinal(scene)
+
+    # Create session (in case of OpenCL engines, render kernels are compiled here)
+    start = time()
     engine.session.Start()
+    session_init_time = time() - start
+    print("Session started in %.1f s" % session_init_time)
+    scene.luxcore.statistics.get_active().session_init_time.value = session_init_time
 
     config = engine.session.GetRenderConfig()
 

@@ -110,4 +110,5 @@ class TestParticles(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestParticles)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())
