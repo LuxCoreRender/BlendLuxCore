@@ -47,37 +47,27 @@ class ObjectCache(object):
     def __init__(self):
         self._reset()
 
-    def get_changed_transform(self):
-        # Return as a set to eliminate duplicates
-        return set(self.changed_transform)
-
-    def get_changed_mesh(self):
-        return set(self.changed_mesh)
-
-    def get_changed_lamps(self):
-        return set(self.changed_lamps)
-
     def _reset(self):
-        self.changed_transform = []
-        self.changed_mesh = []
-        self.changed_lamps = []
+        self.changed_transform = set()
+        self.changed_mesh = set()
+        self.changed_lamps = set()
 
     def _check(self, obj):
         if obj.is_updated_data:
             if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT"]:
-                self.changed_mesh.append(obj)
+                self.changed_mesh.add(obj)
             elif obj.type in ["LAMP"]:
-                self.changed_lamps.append(obj)
+                self.changed_lamps.add(obj)
 
         if obj.is_updated:
             if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"]:
                 # check if a new material was assigned
                 if obj.data and obj.data.is_updated:
-                    self.changed_mesh.append(obj)
+                    self.changed_mesh.add(obj)
                 else:
-                    self.changed_transform.append(obj)
+                    self.changed_transform.add(obj)
             elif obj.type == "LAMP":
-                self.changed_lamps.append(obj)
+                self.changed_lamps.add(obj)
 
         return obj.is_updated_data or obj.is_updated
 
@@ -89,7 +79,7 @@ class ObjectCache(object):
 
         if child_obj_changed:
             # Flag the duplicator object for update
-            self.changed_mesh.append(duplicator_obj)
+            self.changed_mesh.add(duplicator_obj)
 
     def diff(self, scene):
         self._reset()
@@ -107,7 +97,7 @@ class ObjectCache(object):
 
                     # TODO: if the object or group are only transformed, do not flag the duplicator for update
                     if settings.render_type == "OBJECT" and self._check(settings.dupli_object):
-                        self.changed_mesh.append(obj)
+                        self.changed_mesh.add(obj)
                     elif settings.render_type == "GROUP":
                         self._check_group(obj, settings.dupli_group)
 
@@ -119,7 +109,7 @@ class MaterialCache(object):
         self._reset()
 
     def _reset(self):
-        self.changed_materials = []
+        self.changed_materials = set()
 
     def diff(self):
         self._reset()
@@ -143,7 +133,7 @@ class MaterialCache(object):
                             mat_updated = True
 
                 if mat_updated:
-                    self.changed_materials.append(mat)
+                    self.changed_materials.add(mat)
 
         return self.changed_materials
 
