@@ -106,7 +106,7 @@ def create_props(prefix, definitions):
 def get_worldscale(scene, as_scalematrix=True):
     unit_settings = scene.unit_settings
 
-    if unit_settings.system in ["METRIC", "IMPERIAL"]:
+    if unit_settings.system in {"METRIC", "IMPERIAL"}:
         # The units used in modelling are for display only. behind
         # the scenes everything is in meters
         ws = unit_settings.scale_length
@@ -363,7 +363,6 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         exclude_layers = [False] * 20
 
     on_visible_layer = False
-    # for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, render_layers)]:
     for lv in [ol and sl and not el for ol, sl, el in zip(obj.layers, scene.layers, exclude_layers)]:
         on_visible_layer |= lv
 
