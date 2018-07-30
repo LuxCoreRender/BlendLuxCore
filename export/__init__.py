@@ -339,15 +339,15 @@ class Exporter(object):
             props.Set(self.camera_cache.props)
 
         if changes & Change.OBJECT:
-            for obj in self.object_cache.changed_transform:
+            for obj in self.object_cache.get_changed_transform():
                 print("transformed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False)
 
-            for obj in self.object_cache.changed_mesh:
+            for obj in self.object_cache.get_changed_mesh():
                 print("mesh changed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True)
 
-            for obj in self.object_cache.lamps:
+            for obj in self.object_cache.get_changed_lamps():
                 print("lamp changed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene)
 

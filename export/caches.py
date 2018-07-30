@@ -47,17 +47,27 @@ class ObjectCache(object):
     def __init__(self):
         self._reset()
 
+    def get_changed_transform(self):
+        # Return as a set to eliminate duplicates
+        return set(self.changed_transform)
+
+    def get_changed_mesh(self):
+        return set(self.changed_mesh)
+
+    def get_changed_lamps(self):
+        return set(self.changed_lamps)
+
     def _reset(self):
         self.changed_transform = []
         self.changed_mesh = []
-        self.lamps = []
+        self.changed_lamps = []
 
     def _check(self, obj):
         if obj.is_updated_data:
             if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT"]:
                 self.changed_mesh.append(obj)
             elif obj.type in ["LAMP"]:
-                self.lamps.append(obj)
+                self.changed_lamps.append(obj)
 
         if obj.is_updated:
             if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"]:
@@ -67,7 +77,7 @@ class ObjectCache(object):
                 else:
                     self.changed_transform.append(obj)
             elif obj.type == "LAMP":
-                self.lamps.append(obj)
+                self.changed_lamps.append(obj)
 
         return obj.is_updated_data or obj.is_updated
 
@@ -89,7 +99,7 @@ class ObjectCache(object):
                         # Flag the duplicator object (empty) for update
                         self.changed_mesh.append(obj)
 
-        return self.changed_transform or self.changed_mesh or self.lamps
+        return self.changed_transform or self.changed_mesh or self.changed_lamps
 
 
 class MaterialCache(object):
