@@ -81,6 +81,16 @@ class ObjectCache(object):
 
         return obj.is_updated_data or obj.is_updated
 
+    def _check_group(self, duplicator_obj, dupli_group):
+        child_obj_changed = False
+
+        for child_obj in dupli_group.objects:
+            child_obj_changed |= self._check(child_obj)
+
+        if child_obj_changed:
+            # Flag the duplicator object for update
+            self.changed_mesh.append(duplicator_obj)
+
     def diff(self, scene):
         self._reset()
 
@@ -90,14 +100,16 @@ class ObjectCache(object):
 
                 if obj.dupli_group:
                     # It is an empty used to instance a group
-                    child_obj_changed = False
+                    self._check_group(obj, obj.dupli_group)
 
-                    for child_obj in obj.dupli_group.objects:
-                        child_obj_changed |= self._check(child_obj)
+                for particle_system in obj.particle_systems:
+                    settings = particle_system.settings
 
-                    if child_obj_changed:
-                        # Flag the duplicator object (empty) for update
+                    # TODO: if the object or group are only transformed, do not flag the duplicator for update
+                    if settings.render_type == "OBJECT" and self._check(settings.dupli_object):
                         self.changed_mesh.append(obj)
+                    elif settings.render_type == "GROUP":
+                        self._check_group(obj, settings.dupli_group)
 
         return self.changed_transform or self.changed_mesh or self.changed_lamps
 
