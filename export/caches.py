@@ -98,11 +98,17 @@ class ObjectCache(object):
 
         return child_obj_changes
 
-    def diff(self, scene):
+    def diff(self, scene, objs_updated_by_export):
         self._reset()
 
         if bpy.data.objects.is_updated:
             for obj in scene.objects:
+                # Skip the object if it was touched by our previous export, for
+                # example because tessfaces for the mesh were generated.
+                # This prevents unnecessary updates when starting the viewport render.
+                if obj in objs_updated_by_export:
+                    continue
+
                 self._check(obj)
 
                 if obj.dupli_group:
