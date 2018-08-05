@@ -5,6 +5,7 @@ from ..bin import pyluxcore
 from .. import utils
 from .. import export
 from ..draw.final import FrameBufferFinal
+from ..utils.log import LuxCoreLog
 
 """
 Note: you can find the Blender preview scene in the sources at this path:
@@ -72,7 +73,7 @@ def render(engine, scene):
 
 def enable_log_output():
     # Re-enable the log output
-    pyluxcore.Init()
+    pyluxcore.Init(LuxCoreLog.add)
 
 
 def _export_mat_scene(exporter, obj, scene):
