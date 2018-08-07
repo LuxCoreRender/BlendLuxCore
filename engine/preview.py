@@ -33,7 +33,7 @@ def render(engine, scene):
         # We do not render thumbnails
         return
 
-    pyluxcore.Init(no_log_output)
+    pyluxcore.SetLogHandler(no_log_output)
     preview_type, obj = _get_preview_settings(scene)
 
     if preview_type == PreviewType.MATERIAL:
@@ -73,7 +73,7 @@ def render(engine, scene):
 
 def enable_log_output():
     # Re-enable the log output
-    pyluxcore.Init(LuxCoreLog.add)
+    pyluxcore.SetLogHandler(LuxCoreLog.add)
 
 
 def _export_mat_scene(exporter, obj, scene):
