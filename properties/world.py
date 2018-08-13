@@ -82,7 +82,7 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     gamma = FloatProperty(name="Gamma", default=1, min=0, description=GAMMA_DESCRIPTION)
     sampleupperhemisphereonly = BoolProperty(name="Sample Upper Hemisphere Only", default=False,
                                              description=SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION)
-    rotation = FloatProperty(name="Z Axis Rotation", default=0, min=0, max=(math.pi * 2),
+    rotation = FloatProperty(name="Z Axis Rotation", default=0,
                              subtype="ANGLE", unit="ROTATION")
 
     # sky2, sun, infinite, constantinfinite
