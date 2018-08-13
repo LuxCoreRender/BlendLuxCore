@@ -49,6 +49,7 @@ def find_updated_objects(scene):
 
     return updated_datablocks
 
+
 class Exporter(object):
     def __init__(self, blender_scene):
         self.scene = blender_scene
