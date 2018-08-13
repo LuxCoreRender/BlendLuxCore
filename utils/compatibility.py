@@ -15,6 +15,7 @@ def run():
     update_volume_nodes_asymmetry_change()
     update_smoke_nodes_add_color_output()
     update_colormix_remove_min_max_sockets()
+    update_imagemap_remove_gamma_brightness_sockets()
 
 
 def update_output_nodes_volume_change():
@@ -131,3 +132,24 @@ def update_colormix_remove_min_max_sockets():
                 node.inputs.remove(socket_min)
                 node.inputs.remove(socket_max)
                 print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_imagemap_remove_gamma_brightness_sockets():
+    # commit 428110b2c1bdbf8c54a54030939b3c76cb018644
+
+    for node_tree in bpy.data.node_groups:
+        if node_tree.library:
+            continue
+
+        for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap"):
+            if "Gamma" in node.inputs:
+                socket_gamma = node.inputs["Gamma"]
+                node.gamma = socket_gamma.default_value
+                node.inputs.remove(socket_gamma)
+
+            if "Brightness" in node.inputs:
+                socket_brightness = node.inputs["Brightness"]
+                node.gamma = socket_brightness.default_value
+                node.inputs.remove(socket_brightness)
+
+            print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
