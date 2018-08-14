@@ -149,7 +149,7 @@ def update_imagemap_remove_gamma_brightness_sockets():
 
             if "Brightness" in node.inputs:
                 socket_brightness = node.inputs["Brightness"]
-                node.gamma = socket_brightness.default_value
+                node.brightness = socket_brightness.default_value
                 node.inputs.remove(socket_brightness)
 
             print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
