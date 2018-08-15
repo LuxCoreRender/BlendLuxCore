@@ -1,3 +1,4 @@
+import bpy
 from time import time
 from ..bin import pyluxcore
 from .. import utils
@@ -38,6 +39,17 @@ class Change:
         return s
 
 
+def find_updated_objects(scene):
+    updated_datablocks = set()
+
+    if bpy.data.objects.is_updated:
+        for obj in scene.objects:
+            if obj.is_updated_data:
+                updated_datablocks.add(obj)
+
+    return updated_datablocks
+
+
 class Exporter(object):
     def __init__(self, blender_scene):
         self.scene = blender_scene
@@ -68,6 +80,8 @@ class Exporter(object):
         # If a light/material uses a lightgroup, the id is stored here during export
         self.lightgroup_cache = set()
 
+        self.objs_updated_by_export = set()
+
     def create_session(self, context=None, engine=None):
         # Notes:
         # In final render, context is None
@@ -76,6 +90,8 @@ class Exporter(object):
         print("[Exporter] create_session")
         start = time()
         scene = self.scene
+        updated_objs_pre = find_updated_objects(scene)
+
         if context:
             # No statistics logging in viewport render
             stats = None
@@ -166,6 +182,11 @@ class Exporter(object):
         # Create the renderconfig
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
+        # Check which objects were flagged for update by our own export,
+        # these should not be considered for the next viewport update.
+        updated_objs_post = find_updated_objects(scene)
+        self.objs_updated_by_export = updated_objs_post - updated_objs_pre
+
         # Regularly check if we should abort the export (important in heavy scenes)
         if engine and engine.test_break():
             return None
@@ -201,7 +222,7 @@ class Exporter(object):
             if self.camera_cache.diff(self, scene, context):
                 changes |= Change.CAMERA
 
-            if self.object_cache.diff(scene):
+            if self.object_cache.diff(scene, self.objs_updated_by_export):
                 changes |= Change.OBJECT
 
             if self.material_cache.diff():
@@ -265,6 +286,8 @@ class Exporter(object):
 
         if changes & Change.REQUIRES_SESSION_PARSE:
             self.update_session(changes, session)
+
+        self.objs_updated_by_export.clear()
 
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()
@@ -347,7 +370,7 @@ class Exporter(object):
                 print("mesh changed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True)
 
-            for obj in self.object_cache.lamps:
+            for obj in self.object_cache.changed_lamps:
                 print("lamp changed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene)
 

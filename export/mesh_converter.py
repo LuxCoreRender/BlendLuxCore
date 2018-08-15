@@ -20,7 +20,11 @@ def convert(obj, context, scene):
 
     try:
         in_editmode = obj.mode == "EDIT" or obj.data.is_editmode
-        if obj.modifiers or obj.type != "MESH" or in_editmode:
+        # Use gettattr with fallback because not every datablock
+        # has the use_auto_smooth attribute
+        needs_autosmooth = getattr(obj.data, "use_auto_smooth", False)
+
+        if obj.modifiers or obj.type != "MESH" or in_editmode or needs_autosmooth:
             # We have to apply modifiers and/or convert to mesh
             apply_modifiers = True
             modifier_mode = "PREVIEW" if context else "RENDER"

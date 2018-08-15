@@ -106,7 +106,7 @@ def create_props(prefix, definitions):
 def get_worldscale(scene, as_scalematrix=True):
     unit_settings = scene.unit_settings
 
-    if unit_settings.system in ["METRIC", "IMPERIAL"]:
+    if unit_settings.system in {"METRIC", "IMPERIAL"}:
         # The units used in modelling are for display only. behind
         # the scenes everything is in meters
         ws = unit_settings.scale_length
@@ -152,9 +152,6 @@ def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
     if matrix.determinant() == 0:
         # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
         # Prevent a RuntimeError from LuxCore by adding a small random epsilon.
-        msg = "Non-invertible matrix. Can happen if e.g. an object has scale 0"
-        bpy.context.scene.luxcore.errorlog.add_warning(msg)
-
         # TODO maybe look for a better way to handle this
         from random import random
         return [float(i) + (1e-5 + random() * 1e-5) for i in l]
@@ -363,7 +360,6 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         exclude_layers = [False] * 20
 
     on_visible_layer = False
-    # for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, render_layers)]:
     for lv in [ol and sl and not el for ol, sl, el in zip(obj.layers, scene.layers, exclude_layers)]:
         on_visible_layer |= lv
 

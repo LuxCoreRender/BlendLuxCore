@@ -15,7 +15,7 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
     try:
         assert isinstance(blender_obj, bpy.types.Object)
         assert blender_obj.type == "LAMP"
-        print("converting lamp:", blender_obj.name)
+        # print("converting lamp:", blender_obj.name)
 
         luxcore_name = utils.get_luxcore_name(blender_obj, context) + dupli_suffix
 

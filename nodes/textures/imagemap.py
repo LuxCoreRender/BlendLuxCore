@@ -53,6 +53,12 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     ]
     wrap = EnumProperty(name="Wrap", items=wrap_items, default="repeat")
 
+    gamma = FloatProperty(name="Gamma", default=2.2, soft_min=0, soft_max=5,
+                          description="Most LDR images with sRgb colors use gamma 2.2, "
+                                      "while most HDR images with linear colors use gamma 1")
+    brightness = FloatProperty(name="Brightness", default=1,
+                               description="Brightness multiplier")
+
     def update_is_normal_map(self, context):
         color_output = self.outputs["Color"]
         bump_output = self.outputs["Bump"]
@@ -109,8 +115,6 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     show_thumbnail = BoolProperty(name="", default=True, description="Show thumbnail")
 
     def init(self, context):
-        self.add_input("LuxCoreSocketFloatPositive", "Gamma", 2.2)
-        self.add_input("LuxCoreSocketFloatPositive", "Brightness", 1)
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
 
         self.outputs.new("LuxCoreSocketColor", "Color")
@@ -143,6 +147,10 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             col.prop(self, "channel")
 
         col.prop(self, "wrap")
+
+        if not self.is_normal_map:
+            col.prop(self, "gamma")
+            col.prop(self, "brightness")
 
         # Info about UV mapping (only show if default is used,
         # when no mapping node is linked)
@@ -187,8 +195,8 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         else:
             definitions.update({
                 "channel": self.channel,
-                "gamma": self.inputs["Gamma"].export(exporter, props),
-                "gain": self.inputs["Brightness"].export(exporter, props),
+                "gamma": self.gamma,
+                "gain": self.brightness,
             })
 
         luxcore_name = self.create_props(props, definitions, luxcore_name)

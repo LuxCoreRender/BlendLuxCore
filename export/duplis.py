@@ -128,6 +128,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
         scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
+        duplicator.dupli_list_clear()
 
 
 def _get_name_suffix(name_prefix, dupli, context):
