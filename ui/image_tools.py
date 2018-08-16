@@ -87,6 +87,9 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
         statistics_collection = context.scene.luxcore.statistics
         active_index = image.render_slots.active_index
 
+        if len(context.scene.render.layers) > 1:
+            layout.label("Only stats of last rendered render layer are shown", icon="ERROR")
+
         layout.prop(statistics_collection, "compare")
 
         if statistics_collection.compare:

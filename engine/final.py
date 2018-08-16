@@ -7,6 +7,7 @@ from ..utils import render as utils_render
 def render(engine, scene):
     scene.luxcore.errorlog.clear()
     scene.luxcore.denoiser_log.clear()
+    render_slot_stats = scene.luxcore.statistics.get_active()
 
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
     if len(scene.render.layers) > 1 and tonemapper.is_automatic():
@@ -34,7 +35,7 @@ def render(engine, scene):
         scene.luxcore.active_layer_index = layer_index
 
         _add_passes(engine, layer, scene)
-        _render_layer(engine, scene)
+        _render_layer(engine, scene, render_slot_stats)
 
         if engine.test_break():
             # Blender skips the rest of the render layers anyway
@@ -43,9 +44,9 @@ def render(engine, scene):
         print('[Engine/Final] Finished rendering layer "%s"' % layer.name)
     
 
-def _render_layer(engine, scene):
+def _render_layer(engine, scene, render_slot_stats):
     engine.reset()
-    engine.exporter = export.Exporter(scene)
+    engine.exporter = export.Exporter(scene, render_slot_stats)
     engine.session = engine.exporter.create_session(engine=engine)
 
     if engine.session is None:
@@ -60,7 +61,7 @@ def _render_layer(engine, scene):
     engine.session.Start()
     session_init_time = time() - start
     print("Session started in %.1f s" % session_init_time)
-    scene.luxcore.statistics.get_active().session_init_time.value = session_init_time
+    render_slot_stats.session_init_time.value = session_init_time
 
     config = engine.session.GetRenderConfig()
 
