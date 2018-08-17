@@ -147,6 +147,7 @@ def convert(exporter, scene, context=None, engine=None):
             "lightstrategy.type": config.light_strategy,
             "scene.epsilon.min": config.min_epsilon,
             "scene.epsilon.max": config.max_epsilon,
+            "film.opencl.enable": config.film_opencl_enable,
         })
 
         if config.light_strategy == "DLS_CACHE":
