@@ -142,14 +142,18 @@ def update_imagemap_remove_gamma_brightness_sockets():
             continue
 
         for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap"):
+            updated = False
             if "Gamma" in node.inputs:
                 socket_gamma = node.inputs["Gamma"]
                 node.gamma = socket_gamma.default_value
                 node.inputs.remove(socket_gamma)
+                updated = True
 
             if "Brightness" in node.inputs:
                 socket_brightness = node.inputs["Brightness"]
                 node.brightness = socket_brightness.default_value
                 node.inputs.remove(socket_brightness)
+                updated = True
 
-            print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+            if updated:
+                print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
