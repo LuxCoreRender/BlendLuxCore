@@ -203,6 +203,10 @@ def calc_filmsize(scene, context=None):
 
                 width = int(base * aspect_x * border_max_x) - int(base * aspect_x * border_min_x)
                 height = int(base * aspect_y * border_max_y) - int(base * aspect_y * border_min_y)
+
+        pixel_size = int(scene.luxcore.viewport.pixel_size)
+        width //= pixel_size
+        height //= pixel_size
     else:
         # Final render
         width = int(width_raw * border_max_x) - int(width_raw * border_min_x)

@@ -25,3 +25,9 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         if viewport.device == "OCL" and not utils.is_opencl_build():
             layout.label("No OpenCL support in this BlendLuxCore version", icon="CANCEL")
             layout.label("(Falling back to CPU realtime engine)")
+
+        col = layout.column()
+        col.prop(viewport, "pixel_size")
+        sub = col.column()
+        sub.active = viewport.pixel_size != "1"
+        sub.prop(viewport, "mag_filter")
