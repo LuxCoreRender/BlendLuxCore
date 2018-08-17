@@ -163,7 +163,7 @@ def convert(exporter, scene, context=None, engine=None):
 
         # Transparent film settings
         black_background = False
-        if scene.camera:
+        if utils.is_valid_camera(scene.camera):
             pipeline = scene.camera.data.luxcore.imagepipeline
 
             if (pipeline.transparent_film or use_backgroundimage(context, scene)) and not use_filesaver:

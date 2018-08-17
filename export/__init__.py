@@ -122,7 +122,7 @@ class Exporter(object):
                 return None
 
         # Motion blur
-        if scene.camera:
+        if utils.is_valid_camera(scene.camera):
             blur_settings = scene.camera.data.luxcore.motion_blur
             # Don't export camera blur in viewport
             camera_blur = blur_settings.camera_blur and not context

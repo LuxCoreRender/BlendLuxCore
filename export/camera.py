@@ -6,40 +6,33 @@ from ..nodes.output import get_active_output
 
 
 def convert(exporter, scene, context=None, is_camera_moving=False):
-    try:
-        prefix = "scene.camera."
-        definitions = {}
+    prefix = "scene.camera."
+    definitions = {}
 
-        if context:
-            # Viewport render
-            view_cam_type = context.region_data.view_perspective
+    if context:
+        # Viewport render
+        view_cam_type = context.region_data.view_perspective
 
-            if view_cam_type == "ORTHO":
-                _view_ortho(scene, context, definitions)
-            elif view_cam_type == "PERSP":
-                _view_persp(scene, context, definitions)
-            elif view_cam_type == "CAMERA":
-                _view_camera(scene, context, definitions)
-                _clipping(scene, definitions)
-            else:
-                raise NotImplementedError("Unknown context.region_data.view_perspective")
-        else:
-            # Final render
-            _final(scene, definitions)
+        if view_cam_type == "ORTHO":
+            _view_ortho(scene, context, definitions)
+        elif view_cam_type == "PERSP":
+            _view_persp(scene, context, definitions)
+        elif view_cam_type == "CAMERA":
+            _view_camera(scene, context, definitions)
             _clipping(scene, definitions)
+        else:
+            raise NotImplementedError("Unknown context.region_data.view_perspective")
+    else:
+        # Final render
+        _final(scene, definitions)
+        _clipping(scene, definitions)
 
-        _clipping_plane(scene, definitions)
-        _motion_blur(scene, definitions, context, is_camera_moving)
+    _clipping_plane(scene, definitions)
+    _motion_blur(scene, definitions, context, is_camera_moving)
 
-        cam_props = utils.create_props(prefix, definitions)
-        cam_props.Set(_get_volume_props(exporter, scene))
-        return cam_props
-    except Exception as error:
-        import traceback
-        traceback.print_exc()
-        msg = 'Camera: %s' % error
-        scene.luxcore.errorlog.add_warning(msg)
-        return pyluxcore.Properties()
+    cam_props = utils.create_props(prefix, definitions)
+    cam_props.Set(_get_volume_props(exporter, scene))
+    return cam_props
 
 
 def _view_ortho(scene, context, definitions):
@@ -77,6 +70,10 @@ def _view_persp(scene, context, definitions):
 
 def _view_camera(scene, context, definitions):
     camera = scene.camera
+
+    if camera.type != "CAMERA":
+        raise Exception("%s Objects as cameras are not supported, use a CAMERA object" % camera.type)
+
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
     world_scale = utils.get_worldscale(scene, False)
     
@@ -105,6 +102,10 @@ def _view_camera(scene, context, definitions):
 
 def _final(scene, definitions):
     camera = scene.camera
+
+    if camera.type != "CAMERA":
+        raise Exception("%s Objects as cameras are not supported, use a CAMERA object" % camera.type)
+
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
     world_scale = utils.get_worldscale(scene, False)
     definitions["lookat.orig"] = lookat_orig
@@ -161,7 +162,7 @@ def _depth_of_field(scene, definitions):
 
 def _clipping(scene, definitions):
     camera = scene.camera
-    if camera is None:
+    if not utils.is_valid_camera(camera):
         # Viewport render should work without camera
         return
 
@@ -186,7 +187,7 @@ def _clipping(scene, definitions):
 
 
 def _clipping_plane(scene, definitions):
-    if scene.camera is None:
+    if not utils.is_valid_camera(scene.camera):
         # Viewport render should work without camera
         return
     cam_settings = scene.camera.data.luxcore
@@ -206,7 +207,7 @@ def _clipping_plane(scene, definitions):
 
 
 def _motion_blur(scene, definitions, context, is_camera_moving):
-    if scene.camera is None:
+    if not utils.is_valid_camera(scene.camera):
         # Viewport render should work without camera
         return
 
@@ -241,7 +242,7 @@ def _calc_lookat(cam_matrix, scene):
 def _get_volume_props(exporter, scene):
     props = pyluxcore.Properties()
 
-    if scene.camera is None:
+    if not utils.is_valid_camera(scene.camera):
         # Viewport render should work without camera
         return props
 

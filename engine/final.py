@@ -9,11 +9,12 @@ def render(engine, scene):
     scene.luxcore.denoiser_log.clear()
     render_slot_stats = scene.luxcore.statistics.get_active()
 
-    tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
-    if len(scene.render.layers) > 1 and tonemapper.is_automatic():
-        msg = ("Using an automatic tonemapper with multiple "
-               "renderlayers will result in brightness differences")
-        scene.luxcore.errorlog.add_warning(msg)
+    if utils.is_valid_camera(scene.camera):
+        tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
+        if len(scene.render.layers) > 1 and tonemapper.is_automatic():
+            msg = ("Using an automatic tonemapper with multiple "
+                   "renderlayers will result in brightness differences")
+            scene.luxcore.errorlog.add_warning(msg)
 
     _check_halt_conditions(engine, scene)
 

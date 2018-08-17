@@ -259,9 +259,6 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
 
     # Following: Black Magic
     scale = 1
-    if scene.camera and scene.camera.data.type == "ORTHO":
-        scale = 0.5 * scene.camera.data.ortho_scale * world_scale
-
     offset_x = 0
     offset_y = 0
     
@@ -280,6 +277,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
                     
                 if scene.camera and scene.camera.data.type == "ORTHO":
                     zoom = 0.5 * scene.camera.data.ortho_scale * world_scale
+                    scale = zoom
             else:
                 # No border
                 aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw, scene.camera.data.sensor_fit)
@@ -347,7 +345,7 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         return True
 
     # Check if object is used as camera clipping plane
-    if scene.camera and obj == scene.camera.data.luxcore.clipping_plane:
+    if is_valid_camera(scene.camera) and obj == scene.camera.data.luxcore.clipping_plane:
         return False
 
     render_layer = get_current_render_layer(scene)
@@ -562,3 +560,7 @@ def image_sequence_resolve_all(image):
             indexed_filepaths.append(elem)
 
     return sorted(indexed_filepaths, key=lambda elem: elem[0])
+
+
+def is_valid_camera(obj):
+    return obj and hasattr(obj, "type") and obj.type == "CAMERA"

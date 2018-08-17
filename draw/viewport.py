@@ -34,7 +34,7 @@ class FrameBuffer(object):
         self._height = filmsize[1]
         self._border = utils.calc_blender_border(context.scene, context)
 
-        if context.scene.camera:
+        if utils.is_valid_camera(context.scene.camera):
             pipeline = context.scene.camera.data.luxcore.imagepipeline
             self._transparent = pipeline.transparent_film
         else:
