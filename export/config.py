@@ -31,11 +31,13 @@ def convert(exporter, scene, context=None, engine=None):
                 scene.luxcore.errorlog.add_warning(msg)
                 use_cpu = True
 
+            resolutionreduction = 4 if scene.luxcore.viewport.reduce_resolution_on_edit else 1
+
             if use_cpu:
                 luxcore_engine = "RTPATHCPU"
                 sampler = "RTPATHCPUSAMPLER"
                 # Size of the blocks right after a scene edit (in pixels)
-                definitions["rtpathcpu.zoomphase.size"] = 4
+                definitions["rtpathcpu.zoomphase.size"] = resolutionreduction
                 # How to blend new samples over old ones.
                 # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
                 definitions["rtpathcpu.zoomphase.weight"] = 0
@@ -43,8 +45,8 @@ def convert(exporter, scene, context=None, engine=None):
                 luxcore_engine = "RTPATHOCL"
                 sampler = "TILEPATHSAMPLER"
                 # Render a sample every n x n pixels in the first passes.
-                # For instance 4x4 than 2x2 and then always 1x1.
-                definitions["rtpath.resolutionreduction.preview"] = 4
+                # For instance 4x4 then 2x2 and then always 1x1.
+                definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
                 # Each preview step is rendered for n frames.
                 definitions["rtpath.resolutionreduction.step"] = 1
                 # Render a sample every n x n pixels, outside the preview phase,

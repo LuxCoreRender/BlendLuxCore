@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import IntProperty, EnumProperty
+from bpy.props import IntProperty, EnumProperty, BoolProperty
 
 DESC_CPU = "Usually better suited for viewport rendering than OpenCL."
 DESC_OCL = (
@@ -33,4 +33,8 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
         ("LINEAR", "Linear (smooth)", "", 1),
     ]
     mag_filter = EnumProperty(name="Filter", items=mag_filters, default="NEAREST",
-                                        description="Upscaling filter used when pixel size is larger than 1")
+                              description="Upscaling filter used when pixel size is larger than 1")
+
+    reduce_resolution_on_edit = BoolProperty(name="Reduce first sample resolution", default=True,
+                                             description="Render the first sample after editing the scene "
+                                                         "with reduced resolution to provide a quicker response")

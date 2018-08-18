@@ -36,7 +36,8 @@ class Change:
                 if s:
                     s += " | "
                 s += changetype
-        return s
+
+        return s if changes else "Nothing at all"
 
 
 def find_updated_objects(scene):
