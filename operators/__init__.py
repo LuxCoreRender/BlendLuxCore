@@ -5,7 +5,7 @@ from bpy.props import StringProperty, BoolProperty
 
 # Ensure initialization (note: no need to initialize utils)
 from . import (
-    blender_mesh, camera, camera_response_func, ior_presets, lightgroups,
+    blender_object, camera, camera_response_func, ior_presets, lightgroups,
     material, node_tree_presets, pointer_node, pyluxcoretools,
     texture, update, world,
 )
