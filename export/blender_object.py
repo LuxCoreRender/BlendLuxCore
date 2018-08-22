@@ -65,7 +65,7 @@ def convert(exporter, blender_obj, scene, context, luxcore_scene,
                 #       % (blender_obj.name, blender_obj.data.name))
 
         if update_mesh:
-            if blender_obj.luxcore.use_proxy:
+            if blender_obj.data.luxcore.use_proxy:
                 mesh_definitions = _convert_proxy_to_shapes(luxcore_name, blender_obj, luxcore_scene)
                 if not context:
                     # TODO: Apply mesh_transformation to PLY files
@@ -193,7 +193,7 @@ def _convert_proxy_to_shapes(name, obj, luxcore_scene):
     props = pyluxcore.Properties()
 
     mesh_definitions = []
-    for obj in obj.luxcore.proxies:
+    for obj in obj.data.luxcore.proxies:
         prefix = "scene.shapes." + "Mesh-" + name + "%03d" % obj.matIndex + "."
         props.Set(pyluxcore.Property(prefix + "type", "mesh"))
         props.Set(pyluxcore.Property(prefix + "ply", obj.filepath))
