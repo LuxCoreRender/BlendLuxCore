@@ -268,6 +268,11 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
         self.slots[slot_index].reset()
 
     def get_active(self):
+        """
+        Returns the slot currently selected for viewing by the user.
+        Note that this is not necessarily the slot currently being
+        rendered (only at the very beginning of the rendering).
+        """
         render_result = self._get_render_result()
         if not render_result:
             return self.slots[0]

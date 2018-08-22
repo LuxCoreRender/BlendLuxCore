@@ -17,6 +17,13 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         viewport = context.scene.luxcore.viewport
 
         layout.prop(viewport, "halt_time")
+        layout.prop(viewport, "reduce_resolution_on_edit")
+
+        col = layout.column()
+        col.prop(viewport, "pixel_size")
+        sub = col.column()
+        sub.active = viewport.pixel_size != "1"
+        sub.prop(viewport, "mag_filter")
 
         row = layout.row()
         row.label("Device:")

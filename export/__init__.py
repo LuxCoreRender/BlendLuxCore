@@ -36,7 +36,8 @@ class Change:
                 if s:
                     s += " | "
                 s += changetype
-        return s
+
+        return s if changes else "Nothing at all"
 
 
 def find_updated_objects(scene):
@@ -51,8 +52,9 @@ def find_updated_objects(scene):
 
 
 class Exporter(object):
-    def __init__(self, blender_scene):
+    def __init__(self, blender_scene, stats=None):
         self.scene = blender_scene
+        self.stats = stats
 
         self.config_cache = caches.StringCache()
         self.camera_cache = caches.CameraCache()
@@ -90,14 +92,10 @@ class Exporter(object):
         print("[Exporter] create_session")
         start = time()
         scene = self.scene
-        updated_objs_pre = find_updated_objects(scene)
-
-        if context:
-            # No statistics logging in viewport render
-            stats = None
-        else:
-            stats = scene.luxcore.statistics.get_active()
+        stats = self.stats
+        if stats:
             stats.reset()
+        updated_objs_pre = find_updated_objects(scene)
 
         # Scene
         luxcore_scene = pyluxcore.Scene()
@@ -125,7 +123,7 @@ class Exporter(object):
                 return None
 
         # Motion blur
-        if scene.camera:
+        if utils.is_valid_camera(scene.camera):
             blur_settings = scene.camera.data.luxcore.motion_blur
             # Don't export camera blur in viewport
             camera_blur = blur_settings.camera_blur and not context

@@ -34,7 +34,7 @@ class FrameBuffer(object):
         self._height = filmsize[1]
         self._border = utils.calc_blender_border(context.scene, context)
 
-        if context.scene.camera:
+        if utils.is_valid_camera(context.scene.camera):
             pipeline = context.scene.camera.data.luxcore.imagepipeline
             self._transparent = pipeline.transparent_film
         else:
@@ -56,7 +56,7 @@ class FrameBuffer(object):
         glGenTextures(1, self.texture)
         self.texture_id = self.texture[0]
 
-    def update(self, luxcore_session):
+    def update(self, luxcore_session, context):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
 
         # update texture
@@ -69,10 +69,11 @@ class FrameBuffer(object):
             internal_format = GL_RGB32F
         glTexImage2D(GL_TEXTURE_2D, 0, internal_format, self._width, self._height,
                      0, gl_format, GL_FLOAT, self.buffer)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        mag_filter = GL_NEAREST if context.scene.luxcore.viewport.mag_filter == "NEAREST" else GL_LINEAR
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter)
 
     def draw(self, region_size, view_camera_offset, view_camera_zoom, engine, context):
         if self._transparent:
@@ -89,7 +90,8 @@ class FrameBuffer(object):
             # This is the fragment shader that applies Blender color management
             engine.bind_display_space_shader(context.scene)
 
-        draw_quad(offset_x, offset_y, self._width, self._height)
+        pixel_size = int(context.scene.luxcore.viewport.pixel_size)
+        draw_quad(offset_x, offset_y, self._width * pixel_size, self._height * pixel_size)
 
         if engine.support_display_space_shader(context.scene):
             engine.unbind_display_space_shader()

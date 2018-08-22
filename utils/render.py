@@ -68,10 +68,13 @@ def update_stats(session):
 
 
 def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
-    # Show stats string in UI
+    """
+    Show stats string in UI.
+    This function is only used for final renders, not viewport renders.
+    """
     pretty_stats = get_pretty_stats(config, stats, scene)
     # Update the stats that are shown in the image tools area
-    render_slot_stats = scene.luxcore.statistics.get_active()
+    render_slot_stats = engine.exporter.stats
     render_slot_stats.update_from_luxcore_stats(stats)
 
     if time_until_film_refresh <= 0:

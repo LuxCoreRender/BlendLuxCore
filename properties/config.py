@@ -272,3 +272,10 @@ class LuxCoreConfig(PropertyGroup):
                                 precision=10000,
                                 description="Might need adjustment along with the min epsilon to avoid "
                                             "artifacts due to floating point precision issues")
+
+    film_opencl_enable = BoolProperty(name="Use OpenCL", default=True,
+                                      description="Use OpenCL to accelerate tonemapping and other imagepipeline "
+                                                  "operations (applies to viewport and final render). "
+                                                  "Disabling this option will save a bit of RAM, especially if "
+                                                  "the render resolution is large. "
+                                                  "This option is ignored in Non-OpenCL builds")

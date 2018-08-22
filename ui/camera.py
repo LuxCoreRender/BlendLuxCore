@@ -95,7 +95,9 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         pipeline = cam.luxcore.imagepipeline
 
         # General settings
-        layout.prop(pipeline, "transparent_film")
+        row = layout.row()
+        row.prop(pipeline, "transparent_film")
+        row.prop(context.scene.luxcore.config, "film_opencl_enable")
 
         # Tonemapper settings
         tonemapper = pipeline.tonemapper

@@ -67,7 +67,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             col.label("Not supported by Bidir engine", icon="INFO")
         elif self.is_shadow_catcher:
             # Some settings that should be used with shadow catcher
-            if context.scene.camera:
+            if utils.is_valid_camera(context.scene.camera):
                 pipeline = context.scene.camera.data.luxcore.imagepipeline
                 if not pipeline.transparent_film:
                     layout.prop(pipeline, "transparent_film", text="Enable Transparent Film",

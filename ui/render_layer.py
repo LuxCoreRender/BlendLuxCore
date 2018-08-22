@@ -1,5 +1,6 @@
 from bl_ui.properties_render_layer import RenderLayerButtonsPanel
 from bpy.types import Panel
+from .. import utils
 
 
 class LUXCORE_RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
@@ -23,7 +24,7 @@ class LUXCORE_RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
         sub.operator("scene.render_layer_remove", icon='ZOOMOUT', text="")
         col.prop(rd, "use_single_layer", icon_only=True)
 
-        if scene.camera:
+        if utils.is_valid_camera(scene.camera):
             tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
             if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
                 msg = "Auto tonemapper will cause brightness difference!"

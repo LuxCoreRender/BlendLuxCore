@@ -26,7 +26,7 @@ def convert(exporter, scene, context=None, engine=None):
         # Ordered because we sometimes need to read these for debugging
         definitions = OrderedDict()
 
-        if scene.camera is None:
+        if not utils.is_valid_camera(scene.camera):
             # Can not work without a camera
             return pyluxcore.Properties()
 
