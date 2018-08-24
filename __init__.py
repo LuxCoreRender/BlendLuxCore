@@ -9,9 +9,20 @@ if luxblend_is_enabled:
                     "and restart Blender before you can enable the "
                     "new addon.")
 
-import bpy
-from .bin import pyluxcore
+try:
+    from .bin import pyluxcore
+except ImportError as error:
+    msg = "\n\nCould not import pyluxcore."
+    import platform
+    if platform.system() == "Windows":
+        msg += ("\nYou probably forgot to install one of the "
+                "redistributable packages.\n"
+                "They are listed in the release announcement post.")
+    # Raise from None to suppress the unhelpful
+    # "during handling of the above exception, ..."
+    raise Exception(msg + "\n\nImportError: %s" % error) from None
 
+import bpy
 # Have to import everything with classes which need to be registered
 from . import engine, handlers, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
