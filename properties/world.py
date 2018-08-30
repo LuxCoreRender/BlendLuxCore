@@ -50,7 +50,7 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     light = EnumProperty(name="Background", items=lights, default="sky2")
 
     # Generic properties shared by all background light types
-    gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
+    gain = FloatProperty(name="Gain", default=1, min=0, precision=4, description="Brightness multiplier")
     rgb_gain = FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
                                    description=RGB_GAIN_DESC)
     importance = FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
