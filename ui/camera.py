@@ -137,6 +137,10 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         mist = pipeline.mist
         box = self.draw_plugin_box(mist)
         if box:
+            col = box.column(align=True)
+            col.scale_y = 0.8
+            col.label("Note: the mist is not anti-aliased.", icon="ERROR")
+            col.label("This causes jagged edges if the effect is too strong.")
             row = box.row()
             row.prop(mist, "color", text="")
             row.prop(mist, "amount", slider=True)
