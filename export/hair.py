@@ -4,16 +4,184 @@ from . import material
 from .. import utils
 from time import time
 import math
+import numpy as np
 
 
-def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None, engine=None):
+def find_psys_modifier(obj, psys):
+    for mod in obj.modifiers:
+        if mod.type == "PARTICLE_SYSTEM" and mod.particle_system.name == psys.name:
+            return mod
+    return None
+
+
+def is_psys_visible(obj, psys_modifier, scene, context):
+    if psys_modifier is None:
+        return False
+
+    if not utils.is_obj_visible(obj, scene, context):
+        # Emitter is not on a visible layer
+        return False
+
+    visible = (context and psys_modifier.show_viewport) or (not context and psys_modifier.show_render)
+    return visible
+
+
+def cleanup(scene, obj, psys, final_render):
+    if final_render:
+        # Resolution was changed to "RENDER" for final renders, change it back
+        psys.set_resolution(scene, obj, "PREVIEW")
+
+
+def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
 
-        if not blender_obj.modifiers:
+        mod = find_psys_modifier(obj, psys)
+        if not is_psys_visible(obj, mod, scene, context):
             return
 
-        for mod in blender_obj.modifiers:
+        print("[%s: %s] Exporting hair" % (obj.name, psys.name))
+        start_time = time()
+        final_render = not context
+
+        settings = psys.settings.luxcore.hair
+        hair_size = settings.hair_size
+        root_width = settings.root_width / 100
+        tip_width = settings.tip_width / 100
+        width_offset = settings.width_offset / 100
+
+        if final_render:
+            psys.set_resolution(scene, obj, "RENDER")
+            steps = 2 ** psys.settings.render_step
+        else:
+            steps = 2 ** psys.settings.draw_step
+
+        num_parents = len(psys.particles)
+        num_children = len(psys.child_particles)
+        dupli_count = num_parents + num_children
+        transform = utils.matrix_to_list(obj.matrix_world.inverted())
+
+        if num_children == 0:
+            start = 0
+        else:
+            # Number of virtual parents reduces the number of exported children
+            num_virtual_parents = math.trunc(0.3 * psys.settings.virtual_parents
+                                             * psys.settings.child_nbr * num_parents)
+            start = num_parents + num_virtual_parents
+
+        ##########
+        # Stuff I need to collect from Blender:
+        # - co = psys.co_hair(obj, pindex, step)
+        # - uv_co = psys.uv_on_emitter(mod, psys.particles[i], pindex, uv_textures.active_index)
+        # - col = psys.mcol_on_emitter(mod, psys.particles[i], pindex, vertex_color.active_index)
+
+        collection_start = time()
+        # Point coordinates as a flattened numpy array
+        elem_count = 3
+        # TODO maybe it would be faster to generate pindex and step permutations with itertools
+        points = np.fromiter((elem
+                              for pindex in range(start, dupli_count)
+                              for step in range(0, steps + 1)
+                              for elem in psys.co_hair(obj, pindex, step)),
+                             dtype=np.float32,
+                             count=(dupli_count - start) * steps * elem_count)
+
+        print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
+
+        total_strand_count = 0
+        segments = []
+        thickness = []
+        transparency = 0  # TODO do we need this?
+        colors = []
+        uvs_as_tuples = []
+        use_camera_position = True
+        print("testing...", len(points))
+        print(points[0], points[1], points[2])
+
+        luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
+        if engine:
+            engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
+        luxcore_scene.DefineBlenderStrands(luxcore_shape_name, steps, points, transform,
+                                           colors, uvs_as_tuples,
+                                           settings.tesseltype, settings.adaptive_maxdepth, settings.adaptive_error,
+                                           settings.solid_sidecount, settings.solid_capbottom, settings.solid_captop,
+                                           use_camera_position)
+
+        # For some reason this index is not starting at 0 but at 1 (Blender is strange)
+        material_index = psys.settings.material - 1
+
+        render_layer = utils.get_current_render_layer(scene)
+        override_mat = render_layer.material_override if render_layer else None
+
+        if not context and override_mat:
+            # Only use override material in final render
+            mat = override_mat
+        else:
+            try:
+                mat = obj.material_slots[material_index].material
+            except IndexError:
+                mat = None
+                print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, obj.name))
+
+        # Convert material
+        strandsProps = pyluxcore.Properties()
+
+        lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
+        strandsProps.Set(mat_props)
+
+        # The hair shape is located at world origin and implicitly instanced, so we have to
+        # move it to the correct position
+        transform = utils.matrix_to_list(obj.matrix_world, scene, apply_worldscale=True)
+
+        prefix = "scene.objects." + luxcore_shape_name + "."
+
+        strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
+        strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+        strandsProps.Set(pyluxcore.Property(prefix + "transformation", transform))
+
+        visible_to_cam = utils.is_obj_visible_to_cam(obj, scene, context)
+        strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
+
+        luxcore_scene.Parse(strandsProps)
+
+        # testing area
+
+        # points = []
+        # segments = []
+        # strandsCount = 30
+        # import random
+        # for i in range(strandsCount):
+        #     x = random.random() * 2.0 - 1.0
+        #     y = random.random() * 2.0 - 1.0
+        #     points.append((x, y, 0.0))
+        #     points.append((x, y, 1.0))
+        #     segments.append(1)
+        #
+        # import numpy
+        # segsNumpy = numpy.array(segments, dtype=numpy.uint16)
+        #
+        # luxcore_scene.DefineStrands("strands_shape", strandsCount, 2 * strandsCount, points, segsNumpy,
+        #                             0.025, 0.0, (1.0, 1.0, 1.0), None, "ribbon",
+        #                             0, 0, 0, False, False, True)
+
+        cleanup(scene, obj, psys, final_render)
+        time_elapsed = time() - start_time
+        print("[%s: %s] New Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
+    except Exception as error:
+        msg = "[%s: %s] %s" % (obj.name, psys.name, error)
+        scene.luxcore.errorlog.add_warning(msg)
+        import traceback
+        traceback.print_exc()
+
+
+def convert_hair_old(exporter, obj, psys, luxcore_scene, scene, context=None, engine=None):
+    try:
+        assert psys.settings.render_type == "PATH"
+
+        if not obj.modifiers:
+            return
+
+        for mod in obj.modifiers:
             if mod.type == "PARTICLE_SYSTEM":
                 if mod.particle_system.name == psys.name:
                     break
@@ -23,7 +191,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
         elif not mod.particle_system.name == psys.name:
             return
 
-        if not utils.is_obj_visible(blender_obj, scene, context):
+        if not utils.is_obj_visible(obj, scene, context):
             # Emitter is not on a visible layer
             return
 
@@ -31,7 +199,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
         if not visible:
             return
 
-        print("[%s: %s] Exporting hair" % (blender_obj.name, psys.name))
+        print("[%s: %s] Exporting hair" % (obj.name, psys.name))
         start_time = time()
 
         settings = psys.settings.luxcore.hair
@@ -44,7 +212,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
         steps = 2 ** psys.settings.draw_step
 
         if not context:
-            psys.set_resolution(scene, blender_obj, "RENDER")
+            psys.set_resolution(scene, obj, "RENDER")
             steps = 2 ** psys.settings.render_step
 
         num_parents = len(psys.particles)
@@ -74,7 +242,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
 
         if settings.export_color != "none":
             modifier_mode = "PREVIEW" if context else "RENDER"
-            mesh = blender_obj.to_mesh(scene, True, modifier_mode)
+            mesh = obj.to_mesh(scene, True, modifier_mode)
             uv_textures = mesh.tessface_uv_textures
             vertex_color = mesh.tessface_vertex_colors
 
@@ -96,7 +264,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
                         colorflag = True
                     uvflag = True
 
-        transform = blender_obj.matrix_world.inverted()
+        transform = obj.matrix_world.inverted()
         total_strand_count = 0
 
         if root_width == tip_width:
@@ -115,7 +283,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
             # Make it possible to interrupt the export process
             if engine and pindex % 1000 == 0:
                 progress = (pindex / dupli_count) * 100
-                engine.update_stats("Export", "Object: %s (Hair Particles: %d%%)" % (blender_obj.name, progress))
+                engine.update_stats("Export", "Object: %s (Hair Particles: %d%%)" % (obj.name, progress))
 
                 if engine.test_break():
                     return
@@ -128,9 +296,11 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
             point_count = 0
 
             for step in range(0, steps+1):
-                co = psys.co_hair(blender_obj, pindex, step)
+                co = psys.co_hair(obj, pindex, step)
+                # type(co) is Vector (with 3 elements)
+
                 if step > 0 and points:
-                    seg_length = (co - blender_obj.matrix_world * points[-1]).length_squared
+                    seg_length = (co - obj.matrix_world * points[-1]).length_squared
 
                 if not (co.length_squared == 0 or seg_length == 0):
                     points.append(transform * co)
@@ -151,6 +321,8 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
                         if uvflag:
                             if not uv_co:
                                 uv_co = psys.uv_on_emitter(mod, psys.particles[i], pindex, uv_textures.active_index)
+                                # print("uv_co:", type(uv_co))
+                                # type(uv_co) is Vector (with 2 elements)
 
                             uv_coords.append(uv_co)
                         if not col:
@@ -168,6 +340,8 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
                     elif settings.export_color == "vertex_color" and has_vertex_colors:
                         if not col:
                             col = psys.mcol_on_emitter(mod, psys.particles[i], pindex, vertex_color.active_index)
+                            # print("col:", type(col))
+                            # type(col) is "tuple" (with 3 elements)
 
                         colors.append(col)
 
@@ -201,7 +375,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
             # LuxCore needs tuples, not vectors
             uvs_as_tuples = [tuple(uv) for uv in uv_coords]
 
-        luxcore_shape_name = utils.get_luxcore_name(blender_obj, context) + "_" + utils.get_luxcore_name(psys)
+        luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
 
         if engine:
             engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
@@ -223,10 +397,10 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
             mat = override_mat
         else:
             try:
-                mat = blender_obj.material_slots[material_index].material
+                mat = obj.material_slots[material_index].material
             except IndexError:
                 mat = None
-                print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, blender_obj.name))
+                print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, obj.name))
 
         # Convert material
         strandsProps = pyluxcore.Properties()
@@ -236,7 +410,7 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
 
         # The hair shape is located at world origin and implicitly instanced, so we have to
         # move it to the correct position
-        transform = utils.matrix_to_list(blender_obj.matrix_world, scene, apply_worldscale=True)
+        transform = utils.matrix_to_list(obj.matrix_world, scene, apply_worldscale=True)
 
         prefix = "scene.objects." + luxcore_shape_name + "."
 
@@ -244,19 +418,19 @@ def convert_hair(exporter, blender_obj, psys, luxcore_scene, scene, context=None
         strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
         strandsProps.Set(pyluxcore.Property(prefix + "transformation", transform))
 
-        visible_to_cam = utils.is_obj_visible_to_cam(blender_obj, scene, context)
+        visible_to_cam = utils.is_obj_visible_to_cam(obj, scene, context)
         strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
 
         luxcore_scene.Parse(strandsProps)
 
         if not context:
             # Resolution was changed to "RENDER" for final renders, change it back
-            psys.set_resolution(scene, blender_obj, "PREVIEW")
+            psys.set_resolution(scene, obj, "PREVIEW")
 
         time_elapsed = time() - start_time
-        print("[%s: %s] Hair export finished (%.3f s)" % (blender_obj.name, psys.name, time_elapsed))
+        print("[%s: %s] Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
     except Exception as error:
-        msg = "[%s: %s] %s" % (blender_obj.name, psys.name, error)
+        msg = "[%s: %s] %s" % (obj.name, psys.name, error)
         scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
