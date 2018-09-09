@@ -52,14 +52,13 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
 
         if final_render:
             psys.set_resolution(scene, obj, "RENDER")
-            steps = 2 ** psys.settings.render_step
+            points_per_strand = 2 ** psys.settings.render_step + 1
         else:
-            steps = 2 ** psys.settings.draw_step
+            points_per_strand = 2 ** psys.settings.draw_step + 1
 
         num_parents = len(psys.particles)
         num_children = len(psys.child_particles)
         dupli_count = num_parents + num_children
-        transform = utils.matrix_to_list(obj.matrix_world.inverted())
 
         if num_children == 0:
             start = 0
@@ -81,27 +80,23 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         # TODO maybe it would be faster to generate pindex and step permutations with itertools
         points = np.fromiter((elem
                               for pindex in range(start, dupli_count)
-                              for step in range(0, steps + 1)
+                              for step in range(0, points_per_strand)
                               for elem in psys.co_hair(obj, pindex, step)),
                              dtype=np.float32,
-                             count=(dupli_count - start) * steps * elem_count)
+                             count=(dupli_count - start) * points_per_strand * elem_count)
 
         print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
 
-        total_strand_count = 0
-        segments = []
-        thickness = []
-        transparency = 0  # TODO do we need this?
         colors = []
         uvs_as_tuples = []
         use_camera_position = True
-        print("testing...", len(points))
-        print(points[0], points[1], points[2])
+        print("Num. points passed from Python:", len(points) / 3, "dupli_count:", dupli_count - start,
+              "points_per_strand:", points_per_strand)
 
         luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
         if engine:
             engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
-        luxcore_scene.DefineBlenderStrands(luxcore_shape_name, steps, points, transform,
+        luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand, points,
                                            colors, uvs_as_tuples,
                                            settings.tesseltype, settings.adaptive_maxdepth, settings.adaptive_error,
                                            settings.solid_sidecount, settings.solid_capbottom, settings.solid_captop,
@@ -129,15 +124,10 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
         strandsProps.Set(mat_props)
 
-        # The hair shape is located at world origin and implicitly instanced, so we have to
-        # move it to the correct position
-        transform = utils.matrix_to_list(obj.matrix_world, scene, apply_worldscale=True)
-
         prefix = "scene.objects." + luxcore_shape_name + "."
 
         strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
         strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
-        strandsProps.Set(pyluxcore.Property(prefix + "transformation", transform))
 
         visible_to_cam = utils.is_obj_visible_to_cam(obj, scene, context)
         strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
