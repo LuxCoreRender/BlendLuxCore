@@ -87,15 +87,16 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
                              dtype=np.float32,
                              count=(dupli_count - start) * points_per_strand * elem_count)
 
-        print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
+        colors = []  # TODO
+        uvs_as_tuples = []  # TODO
 
-        colors = []
-        uvs_as_tuples = []
-        use_camera_position = True
-        print("Num. points passed from Python:", len(points) / 3, "dupli_count:", dupli_count - start,
-              "points_per_strand:", points_per_strand)
+        print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
+        if engine and engine.test_break():
+            cleanup(scene, obj, psys, final_render)
+            return
 
         luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
+        use_camera_position = True
         if engine:
             engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
         success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand, points,
@@ -124,7 +125,6 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
                     mat = None
                     print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, obj.name))
 
-            # Convert material
             strandsProps = pyluxcore.Properties()
 
             lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
@@ -139,26 +139,6 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
             strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
 
             luxcore_scene.Parse(strandsProps)
-
-        # testing area
-
-        # points = []
-        # segments = []
-        # strandsCount = 30
-        # import random
-        # for i in range(strandsCount):
-        #     x = random.random() * 2.0 - 1.0
-        #     y = random.random() * 2.0 - 1.0
-        #     points.append((x, y, 0.0))
-        #     points.append((x, y, 1.0))
-        #     segments.append(1)
-        #
-        # import numpy
-        # segsNumpy = numpy.array(segments, dtype=numpy.uint16)
-        #
-        # luxcore_scene.DefineStrands("strands_shape", strandsCount, 2 * strandsCount, points, segsNumpy,
-        #                             0.025, 0.0, (1.0, 1.0, 1.0), None, "ribbon",
-        #                             0, 0, 0, False, False, True)
 
         cleanup(scene, obj, psys, final_render)
         time_elapsed = time() - start_time
