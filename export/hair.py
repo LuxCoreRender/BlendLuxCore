@@ -43,18 +43,20 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         print("[%s: %s] Exporting hair" % (obj.name, psys.name))
         start_time = time()
         final_render = not context
+        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
         settings = psys.settings.luxcore.hair
-        hair_size = settings.hair_size
+        strand_diameter = settings.hair_size * worldscale
         root_width = settings.root_width / 100
         tip_width = settings.tip_width / 100
         width_offset = settings.width_offset / 100
 
         if final_render:
             psys.set_resolution(scene, obj, "RENDER")
-            points_per_strand = 2 ** psys.settings.render_step + 1
+            steps = 2 ** psys.settings.render_step
         else:
-            points_per_strand = 2 ** psys.settings.draw_step + 1
+            steps = 2 ** psys.settings.draw_step
+        points_per_strand = steps + 1
 
         num_parents = len(psys.particles)
         num_children = len(psys.child_particles)
@@ -80,7 +82,7 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         # TODO maybe it would be faster to generate pindex and step permutations with itertools
         points = np.fromiter((elem
                               for pindex in range(start, dupli_count)
-                              for step in range(0, points_per_strand)
+                              for step in range(points_per_strand)
                               for elem in psys.co_hair(obj, pindex, step)),
                              dtype=np.float32,
                              count=(dupli_count - start) * points_per_strand * elem_count)
@@ -96,43 +98,47 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
         if engine:
             engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
-        luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand, points,
-                                           colors, uvs_as_tuples,
-                                           settings.tesseltype, settings.adaptive_maxdepth, settings.adaptive_error,
-                                           settings.solid_sidecount, settings.solid_capbottom, settings.solid_captop,
-                                           use_camera_position)
+        success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand, points,
+                                                     colors, uvs_as_tuples, worldscale,
+                                                     strand_diameter, root_width, tip_width, width_offset,
+                                                     settings.tesseltype, settings.adaptive_maxdepth, settings.adaptive_error,
+                                                     settings.solid_sidecount, settings.solid_capbottom, settings.solid_captop,
+                                                     use_camera_position)
 
-        # For some reason this index is not starting at 0 but at 1 (Blender is strange)
-        material_index = psys.settings.material - 1
+        # Sometimes no hair shape could be created, e.g. if the length
+        # of all hairs is 0 (can happen e.g. during animations or if hair length is textured)
+        if success:
+            # For some reason this index is not starting at 0 but at 1 (Blender is strange)
+            material_index = psys.settings.material - 1
 
-        render_layer = utils.get_current_render_layer(scene)
-        override_mat = render_layer.material_override if render_layer else None
+            render_layer = utils.get_current_render_layer(scene)
+            override_mat = render_layer.material_override if render_layer else None
 
-        if not context and override_mat:
-            # Only use override material in final render
-            mat = override_mat
-        else:
-            try:
-                mat = obj.material_slots[material_index].material
-            except IndexError:
-                mat = None
-                print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, obj.name))
+            if not context and override_mat:
+                # Only use override material in final render
+                mat = override_mat
+            else:
+                try:
+                    mat = obj.material_slots[material_index].material
+                except IndexError:
+                    mat = None
+                    print('WARNING: material slot %d on object "%s" is unassigned!' % (material_index + 1, obj.name))
 
-        # Convert material
-        strandsProps = pyluxcore.Properties()
+            # Convert material
+            strandsProps = pyluxcore.Properties()
 
-        lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
-        strandsProps.Set(mat_props)
+            lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
+            strandsProps.Set(mat_props)
 
-        prefix = "scene.objects." + luxcore_shape_name + "."
+            prefix = "scene.objects." + luxcore_shape_name + "."
 
-        strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
-        strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+            strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
+            strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
 
-        visible_to_cam = utils.is_obj_visible_to_cam(obj, scene, context)
-        strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
+            visible_to_cam = utils.is_obj_visible_to_cam(obj, scene, context)
+            strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
 
-        luxcore_scene.Parse(strandsProps)
+            luxcore_scene.Parse(strandsProps)
 
         # testing area
 
