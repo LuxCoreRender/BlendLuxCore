@@ -35,13 +35,17 @@ def cleanup(scene, obj, psys, final_render):
 def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
+        start_time = time()
 
         mod = find_psys_modifier(obj, psys)
         if not is_psys_visible(obj, mod, scene, context):
             return
 
-        print("[%s: %s] Exporting hair" % (obj.name, psys.name))
-        start_time = time()
+        msg = "[%s: %s] Exporting hair" % (obj.name, psys.name)
+        print(msg)
+        if engine:
+            engine.update_stats('Exporting...', msg)
+
         final_render = not context
         worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
@@ -52,7 +56,13 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         width_offset = settings.width_offset / 100
 
         if final_render:
+            set_res_start = time()
             psys.set_resolution(scene, obj, "RENDER")
+            print("Changing resolution to RENDER took %.3f s" % (time() - set_res_start))
+            if engine and engine.test_break():
+                cleanup(scene, obj, psys, final_render)
+                return
+
             steps = 2 ** psys.settings.render_step
         else:
             steps = 2 ** psys.settings.draw_step
@@ -79,7 +89,6 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         collection_start = time()
         # Point coordinates as a flattened numpy array
         elem_count = 3
-        # TODO maybe it would be faster to generate pindex and step permutations with itertools
         points = np.fromiter((elem
                               for pindex in range(start, dupli_count)
                               for step in range(points_per_strand)
