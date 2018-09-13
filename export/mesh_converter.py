@@ -19,12 +19,7 @@ def convert(obj, context, scene):
     temporary = False
 
     try:
-        in_editmode = obj.mode == "EDIT" or obj.data.is_editmode
-        # Use gettattr with fallback because not every datablock
-        # has the use_auto_smooth attribute
-        needs_autosmooth = getattr(obj.data, "use_auto_smooth", False)
-
-        if obj.modifiers or obj.type != "MESH" or in_editmode or needs_autosmooth:
+        if _need_to_convert_mesh(obj):
             # We have to apply modifiers and/or convert to mesh
             apply_modifiers = True
             modifier_mode = "PREVIEW" if context else "RENDER"
@@ -42,6 +37,17 @@ def convert(obj, context, scene):
     finally:
         if mesh and temporary:
             bpy.data.meshes.remove(mesh, do_unlink=False)
+
+
+def _need_to_convert_mesh(obj):
+    in_editmode = obj.mode == "EDIT" or obj.data.is_editmode
+    # Use gettattr with fallback because not every datablock
+    # has the use_auto_smooth attribute
+    needs_autosmooth = getattr(obj.data, "use_auto_smooth", False)
+
+    return (in_editmode or needs_autosmooth
+            or obj.modifiers or obj.type != "MESH"
+            or obj.data.shape_keys)
 
 
 def _begin_autosmooth_if_required(blender_obj):
