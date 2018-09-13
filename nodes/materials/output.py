@@ -107,7 +107,9 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             # Define a black material that signals an unconnected material socket
             self._convert_fallback(props, luxcore_name)
 
-        props.Set(pyluxcore.Property(prefix + "id", self.id))
+        if self.id != -1:
+            # LuxCore only assigns a random ID if the ID is not set at all
+            props.Set(pyluxcore.Property(prefix + "id", self.id))
         props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
 
     def _convert_volume(self, exporter, node_tree, props):
