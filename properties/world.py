@@ -57,7 +57,11 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
 
     # sky2 settings
+    def poll_sun(self, obj):
+        return obj.type == "LAMP" and obj.data and obj.data.type == "SUN"
+
     sun = PointerProperty(name="Sun", type=bpy.types.Object,
+                          poll=poll_sun,  # The poll method filters the objects in the scene
                           description=SUN_DESC)
     # Only shown in UI when light is sky2 and a sun is attached
     use_sun_gain_for_sky = BoolProperty(name="Use Sun Gain", default=True,
