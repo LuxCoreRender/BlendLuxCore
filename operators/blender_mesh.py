@@ -29,6 +29,12 @@ def remove_obj_and_data(obj):
     # Now obj_data.users is 0 and we can remove it
     remove(obj_data)
 
+def LUXCORE_OT_update_name(self, context):
+    if not self.filepath == '':
+        abs_path = bpy.path.abspath(self.filepath)
+        self.name = abs_path.split('\\')[-1].split('.')[0]
+    
+
 def LUXCORE_OT_use_proxy_switch(self, context):
     obj = context.active_object
     if obj is None:
@@ -42,24 +48,25 @@ def LUXCORE_OT_use_proxy_switch(self, context):
         if len(mesh.luxcore.proxies) > 0:
             bpy.ops.object.select_all(action='DESELECT')
 
+            
+
             # Reload high res object
             for p in mesh.luxcore.proxies:
-                bpy.ops.import_mesh.ply(filepath=p.filepath)
+                bpy.ops.import_mesh.ply(filepath=bpy.path.abspath(p.filepath))
                 
             for s in context.selected_objects:
                 matIndex = mesh.luxcore.proxies[s.name].matIndex
                 mat = obj.material_slots[matIndex].material
                 s.data.materials.append(mat)
 
-            # TODO restore parenting relations
             bpy.ops.object.join()
-            #context.active_object.matrix_world = obj.matrix_world.copy()
             highres_mesh = context.active_object.data
             highres_mesh.name = context.active_object.name[:-3]
-            bpy.ops.object.delete()
+            #bpy.ops.object.delete()
+            bpy.data.objects.remove(context.active_object, do_unlink=True)
 
             if mesh.users > 1:                
-                print("Multiuser mesh: %d users" % obj.data.users)
+                #print("Multiuser mesh: %d users" % obj.data.users)
                 for o in context.scene.objects:
                     if o.data == mesh:
                         o.data = highres_mesh
@@ -78,7 +85,9 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
                       "The original high-resolution mesh is only loaded at render time")
     bl_options = {"UNDO"}
 
-    SUPPORTED_OBJ_TYPES = {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}
+    SUPPORTED_OBJ_TYPES = {'MESH', 'CURVE', 'SURFACE', 'FONT'}
+    #SUPPORTED_OBJ_TYPES = {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}
+    #ToDo: Store Position of meta objects for restoring original data after unchecking 'Use as Proxy'
 
     decimate_ratio = bpy.props.FloatProperty(name="Proxy Mesh Quality",
                                              description="Decimate ratio that is applied to the preview mesh",
@@ -94,12 +103,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
     def poll(cls, context):
         return poll_object(context) and context.object.type in cls.SUPPORTED_OBJ_TYPES
 
-    def invoke(self, context, event):
-        #obj = context.active_object
-        #if obj.data.users > 1:
-            #context.scene.luxcore.errorlog.add_error("[Object: %s] Can't make proxy from multiuser mesh" % obj.name)
-            # return {'CANCELLED'}
-            
+    def invoke(self, context, event):            
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}        
 
@@ -125,7 +129,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
             if mesh is None or len(mesh.tessfaces) == 0:
                 print("[Create Proxy INFO] Skipping object %s because it has no faces" % obj.name)
                 remove(mesh)
-                remove_data(proxy)
+                #remove_obj_and_data(proxy)
                 if obj.type == 'META':
                     # The metaballs where to_mesh returns None would be "empty husks" after proxy creation.
                     # However, we still need them in this loop, so we only mark them for deletion.
@@ -146,7 +150,7 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
 
             print("[Create Proxy] Exporting high resolution geometry data into PLY files...")
             for name, mat in mesh_definitions:
-                filepath = self.directory + name + ".ply"
+                filepath = bpy.path.abspath(self.directory + name + ".ply")
                 luxcore_scene.SaveMesh("Mesh-" + name, filepath)
                 new = proxy.data.luxcore.proxies.add()
                 new.name = name
@@ -199,13 +203,6 @@ class LUXCORE_OT_proxy_new(bpy.types.Operator):
         proxy.data.luxcore.use_proxy = True
         proxy.data.name = source_obj.data.name + "_lux_proxy"
 
-        # Find all objects parented to the source object and parent them to the proxy
-        #for obj in scene.objects:
-        #    if obj.parent == source_obj:
-        #        old_matrix = obj.matrix_parent_inverse.copy()
-        #        obj.parent = proxy
-        #        obj.matrix_parent_inverse = old_matrix
-
         return proxy
 
     def define_mesh(self, luxcore_scene, mesh, name):
@@ -240,10 +237,11 @@ class LUXCORE_OT_proxy_add(bpy.types.Operator):
         return poll_object(context)
 
     def execute(self, context):        
-        obj = context.active_object
-        new = obj.data.luxcore.proxies.add()
-        new.name = obj.data.name
-        obj.data.luxcore.proxies.update()        
+        mesh = context.active_object.data
+        new = mesh.luxcore.proxies.add()
+        new.name = mesh.name
+        new.matIndex = len(mesh.luxcore.proxies)-1
+        mesh.luxcore.proxies.update()        
         return {"FINISHED"}
 
 
@@ -258,7 +256,7 @@ class LUXCORE_OT_proxy_remove(bpy.types.Operator):
 
     def execute(self, context):        
         obj = context.active_object
-        obj.data.luxcore.proxies.remove(len(obj.luxcore.proxies)-1)
+        obj.data.luxcore.proxies.remove(len(obj.data.luxcore.proxies)-1)
         obj.data.luxcore.proxies.update()
         
         return {"FINISHED"}

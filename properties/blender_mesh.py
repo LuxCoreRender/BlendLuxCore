@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import BoolProperty, IntProperty, PointerProperty, StringProperty, CollectionProperty
 from bpy.types import PropertyGroup
-from ..operators.blender_mesh import LUXCORE_OT_use_proxy_switch
+from ..operators.blender_mesh import LUXCORE_OT_use_proxy_switch, LUXCORE_OT_update_name
 
 DESC_USE_PROXY = "Use the mesh as a proxy for quick viewport response"
 DESC_PROXIES = "Filepath to the high res meshes used in rendering"
@@ -17,7 +17,7 @@ def init():
 class LuxCoreProxyList(PropertyGroup):
     name = StringProperty()
     matIndex = IntProperty()
-    filepath = StringProperty(subtype='FILE_PATH', description=DESC_FILEPATH)
+    filepath = StringProperty(subtype='FILE_PATH', update=LUXCORE_OT_update_name, description=DESC_FILEPATH)
 
 
 class LuxCoreMeshProps(PropertyGroup):

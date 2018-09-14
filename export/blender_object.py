@@ -194,9 +194,11 @@ def _convert_proxy_to_shapes(name, obj, luxcore_scene):
 
     mesh_definitions = []
     for obj in obj.data.luxcore.proxies:
+        if obj.filepath == '':
+            continue
         prefix = "scene.shapes." + "Mesh-" + name + "%03d" % obj.matIndex + "."
         props.Set(pyluxcore.Property(prefix + "type", "mesh"))
-        props.Set(pyluxcore.Property(prefix + "ply", obj.filepath))
+        props.Set(pyluxcore.Property(prefix + "ply", bpy.path.abspath(obj.filepath)))
         mesh_definitions.append((name + "%03d" % obj.matIndex, obj.matIndex))
 
     luxcore_scene.Parse(props)    

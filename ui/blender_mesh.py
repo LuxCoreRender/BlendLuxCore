@@ -4,8 +4,7 @@ from .. import utils
 
 
 class LUXCORE_DATA_PT_proxy(MeshButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    #bl_context = "object"
+    COMPAT_ENGINES = {"LUXCORE"}    
     bl_label = "LuxCore Proxy Settings"
 
     @classmethod
@@ -29,9 +28,9 @@ class LUXCORE_DATA_PT_proxy(MeshButtonsPanel, Panel):
             col = row.column(align=True)
 
             col.operator("luxcore.proxy_add", icon="ZOOMIN", text="")
-            col.operator("luxcore.proxy_remove", icon="ZOOMOUT", text="")
+            col.operator("luxcore.proxy_remove", icon="ZOOMOUT", text="")            
             
-            for proxy in mesh.luxcore.proxies:                
-                box.prop(proxy, "filepath", text=proxy.name)
+            for proxy in mesh.luxcore.proxies:                                
+                box.prop(proxy, "filepath", text=str(proxy.matIndex))
 
             box.prop(mesh.luxcore, "proxies")
