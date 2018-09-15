@@ -1,5 +1,8 @@
 import bpy
-from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty, EnumProperty
+from bpy.props import (
+    PointerProperty, BoolProperty, FloatProperty, IntProperty,
+    EnumProperty, StringProperty,
+)
 from bpy.types import PropertyGroup
 
 
@@ -47,7 +50,7 @@ class LuxCoreHair(PropertyGroup):
     tesseltype = EnumProperty(name="Tessellation Type", default="ribbonadaptive", items=TESSEL_ITEMS, 
                               description="Tessellation method for hair strands")
     
-    adaptive_maxdepth = IntProperty(name="Max Tessellation Depth",
+    adaptive_maxdepth = IntProperty(name="Max Depth",
                                     default=8, min=1, soft_min=2, soft_max=12, max=24,
                                     description="Maximum tessellation depth for adaptive modes")
     
@@ -60,13 +63,26 @@ class LuxCoreHair(PropertyGroup):
     solid_captop = BoolProperty(name="Cap Top", default=False,
                                 description="Add an end cap to each hair cylinder")
     
-    adaptive_error = FloatProperty(name="Max Tessellation Error", default=0.1, min=0.001, max=0.9, 
+    adaptive_error = FloatProperty(name="Max Error", default=0.1, min=0.001, max=0.9,
                                    description="Maximum tessellation error for adaptive modes")
     
     export_color = EnumProperty(name="Color Export Mode", default="none", items=COLOREXPORT_ITEMS, 
                                 description="Choose which attributes of the emitter mesh "
                                             "should be set for the hair vertex colors.\n"
                                             "You can access them with the Vertex Color texture in the hair material")
+
+    use_active_uv_map = BoolProperty(name="Use Active UV Map", default=True)
+    # Only shown if use_active_uv_map is False.
+    # Note: unfortunately we can't use a PointerProperty here because
+    # bpy.types.MeshUVLoopLayer inherits from bpy_struct instead of bpy.types.ID
+    uv_map_name = StringProperty(name="UV Map", default="",
+                                 description="UV Map to use. If empty, the active UV Map is used")
+
+    # TODO: image selection for UV -> vertex color mode
+    # TODO: dropdown for UV mapping to use
+    # TODO: dropdown for vertex colors to use
+    # TODO: new advanced material preset: "Hair", with vertex color wired into a glossytranslucent node or so
+    # TODO: improve tesselation max. descriptions
 
 
 class LuxCoreParticlesProps(PropertyGroup):

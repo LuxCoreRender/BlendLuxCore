@@ -26,10 +26,13 @@ def is_psys_visible(obj, psys_modifier, scene, context):
     return visible
 
 
-def cleanup(scene, obj, psys, final_render):
+def cleanup(scene, obj, psys, final_render, emitter_mesh):
     if final_render:
         # Resolution was changed to "RENDER" for final renders, change it back
         psys.set_resolution(scene, obj, "PREVIEW")
+
+    if emitter_mesh:
+        bpy.data.meshes.remove(emitter_mesh, do_unlink=False)
 
 
 def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine=None):
@@ -48,6 +51,7 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
 
         final_render = not context
         worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+        emitter_mesh = None
 
         settings = psys.settings.luxcore.hair
         strand_diameter = settings.hair_size * worldscale
@@ -60,7 +64,7 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
             psys.set_resolution(scene, obj, "RENDER")
             print("Changing resolution to RENDER took %.3f s" % (time() - set_res_start))
             if engine and engine.test_break():
-                cleanup(scene, obj, psys, final_render)
+                cleanup(scene, obj, psys, final_render, emitter_mesh)
                 return
 
             steps = 2 ** psys.settings.render_step
@@ -87,29 +91,61 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         # - col = psys.mcol_on_emitter(mod, psys.particles[i], pindex, vertex_color.active_index)
 
         collection_start = time()
+        strands_count = dupli_count - start
         # Point coordinates as a flattened numpy array
-        elem_count = 3
+        point_count = strands_count * points_per_strand
+        if engine:
+            engine.update_stats("Exporting...", "[%s: %s] Preparing %d points"
+                                % (obj.name, psys.name, point_count))
         points = np.fromiter((elem
                               for pindex in range(start, dupli_count)
                               for step in range(points_per_strand)
                               for elem in psys.co_hair(obj, pindex, step)),
                              dtype=np.float32,
-                             count=(dupli_count - start) * points_per_strand * elem_count)
+                             count=point_count * 3)
 
-        colors = []  # TODO
-        uvs_as_tuples = []  # TODO
+        colors = np.empty(shape=0, dtype=np.float32)
+        uvs = np.empty(shape=0, dtype=np.float32)
+
+        if settings.export_color != "none":
+            modifier_mode = "RENDER" if final_render else "PREVIEW"
+            emitter_mesh = obj.to_mesh(scene, True, modifier_mode)
+            uv_textures = emitter_mesh.tessface_uv_textures
+            vertex_colors = emitter_mesh.tessface_vertex_colors
+
+            if settings.export_color == "uv_texture_map":
+                if settings.use_active_uv_map or settings.uv_map_name not in obj.data.uv_layers:
+                    active_uv = utils.find_active_uv(uv_textures)
+                    uv_index = uv_textures.find(active_uv.name)
+                else:
+                    uv_index = uv_textures.find(settings.uv_map_name)
+
+                if uv_textures[uv_index].data:
+                    if engine:
+                        engine.update_stats("Exporting...", "[%s: %s] Preparing %d uvs"
+                                            % (obj.name, psys.name, strands_count))
+                    uvs = np.fromiter((elem
+                                       for pindex in range(start, dupli_count)
+                                       for elem in psys.uv_on_emitter(mod, psys.particles[pindex], pindex, uv_index)),
+                                      dtype=np.float32,
+                                      count=strands_count * 2)
+
+            elif settings.export_color == "vertex_color":
+                ...
+
+            # TODO cleanup mesh directly here?
 
         print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
         if engine and engine.test_break():
-            cleanup(scene, obj, psys, final_render)
+            cleanup(scene, obj, psys, final_render, emitter_mesh)
             return
 
         luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
         use_camera_position = True
         if engine:
-            engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
+            engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)
         success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand, points,
-                                                     colors, uvs_as_tuples, worldscale,
+                                                     colors, uvs, worldscale,
                                                      strand_diameter, root_width, tip_width, width_offset,
                                                      settings.tesseltype, settings.adaptive_maxdepth, settings.adaptive_error,
                                                      settings.solid_sidecount, settings.solid_capbottom, settings.solid_captop,
@@ -149,7 +185,7 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
 
             luxcore_scene.Parse(strandsProps)
 
-        cleanup(scene, obj, psys, final_render)
+        cleanup(scene, obj, psys, final_render, emitter_mesh)
         time_elapsed = time() - start_time
         print("[%s: %s] New Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
     except Exception as error:
@@ -302,7 +338,7 @@ def convert_hair_old(exporter, obj, psys, luxcore_scene, scene, context=None, en
 
                     point_count += 1
 
-                    if settings.export_color == 'uv_texture_map' and image_valid:
+                    if settings.export_color == "uv_texture_map" and image_valid:
                         if uvflag:
                             if not uv_co:
                                 uv_co = psys.uv_on_emitter(mod, psys.particles[i], pindex, uv_textures.active_index)
@@ -363,7 +399,7 @@ def convert_hair_old(exporter, obj, psys, luxcore_scene, scene, context=None, en
         luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
 
         if engine:
-            engine.update_stats('Exporting...', 'Refining Hair System %s' % psys.name)
+            engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)
         # Documentation: http://www.luxrender.net/forum/viewtopic.php?f=8&t=12116&sid=03a16c5c345db3ee0f8126f28f1063c8#p112819
 
         luxcore_scene.DefineStrands(luxcore_shape_name, total_strand_count, len(points), points_as_tuples, segments,

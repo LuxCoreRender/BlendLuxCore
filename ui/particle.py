@@ -1,5 +1,6 @@
 from bl_ui.properties_particle import ParticleButtonsPanel
 from bpy.types import Panel
+from .. import utils
 
 
 class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
@@ -31,7 +32,7 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
 
         row = layout.row(align=True)
         row.prop(settings, "root_width")
-        row.prop(settings, "tip_width")        
+        row.prop(settings, "tip_width")
         row.prop(settings, "width_offset")
 
         layout.prop(settings, "tesseltype")
@@ -45,10 +46,39 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
             layout.prop(settings, "solid_sidecount")
 
             row = layout.row()
-            row.prop(settings, "solid_capbottom")            
+            row.prop(settings, "solid_capbottom")
             row.prop(settings, "solid_captop")
 
-        layout.prop(settings, "export_color")
+        box = layout.box()
+        box.label("Hair Vertex Colors:")
+        box.prop(settings, "export_color")
+
+        if settings.export_color == "vertex_color":
+            ...
+        elif settings.export_color == "uv_texture_map":
+            col = box.column()
+            col.prop(settings, "use_active_uv_map")
+
+            obj = context.object
+            # Note: we can always assume that obj.data has the attribute uv_textures,
+            # because objects that don't have it can't have a particle system in Blender.
+            # We can also assume that obj.data exists, because otherwise this panel is not visible.
+
+            if settings.use_active_uv_map:
+                def warning_no_uvmap(_layout):
+                    _layout.label("No UV map", icon="ERROR")
+
+                if obj.data.uv_textures:
+                    active_uv = utils.find_active_uv(obj.data.uv_textures)
+                    col.label('Active: "%s"' % active_uv.name, icon="GROUP_UVS")
+                else:
+                    row = col.row()
+                    warning_no_uvmap(row)
+                    row.operator("mesh.uv_texture_add")
+            else:
+                col.prop_search(settings, "uv_map_name",
+                                obj.data, "uv_textures",
+                                icon="GROUP_UVS", text="")
 
 
 class LUXCORE_PARTICLE_PT_textures(ParticleButtonsPanel, Panel):
