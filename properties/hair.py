@@ -21,10 +21,18 @@ TESSEL_ITEMS = [
 ]
 
 COLOREXPORT_ITEMS = [
-    ("vertex_color", "Vertex Color", "Use emitter vertex color as hair vertex color"),
-    ("uv_texture_map", "UV Texture Map", "Use emitter UV texture map as hair vertex color"),
+    ("vertex_color", "From Vertex Color", "Copy emitter vertex colors to hair vertex colors. "
+                                          "This option increases the memory usage of the hair"),
+    ("uv_texture_map", "From UV Texture Map", "Copy colors from an image texture to hair vertex colors. "
+                                              "This option increases the memory usage of the hair"),
     ("none", "None", "Do not set the hair vertex colors (they will be white)"),
 ]
+
+COPY_UV_COORDS_DESC = (
+    "Create UV coordinates for the hair, using a UV mapping of the emitter mesh. "
+    "This option will allow you to control the hair color with any UV mapped texture. "
+    "This option increases the memory usage of the hair, but slightly less than using vertex colors"
+)
 
 
 class LuxCoreHair(PropertyGroup):
@@ -67,9 +75,9 @@ class LuxCoreHair(PropertyGroup):
     adaptive_error = FloatProperty(name="Max Error", default=0.1, min=0.001, max=0.9,
                                    description="Maximum tessellation error for adaptive modes")
     
-    export_color = EnumProperty(name="Color Export Mode", default="none", items=COLOREXPORT_ITEMS, 
+    export_color = EnumProperty(name="Vertex Colors", default="none", items=COLOREXPORT_ITEMS,
                                 description="Choose which attributes of the emitter mesh "
-                                            "should be set for the hair vertex colors.\n"
+                                            "should be copied to the hair vertex colors.\n"
                                             "You can access them with the Vertex Color texture in the hair material")
 
     use_active_uv_map = BoolProperty(name="Use Active UV Map", default=True)
@@ -83,11 +91,11 @@ class LuxCoreHair(PropertyGroup):
     image_user = PointerProperty(type=LuxCoreImageUser)
     # gamma = FloatProperty(name="Gamma", default=1, min=0, description=GAMMA_DESCRIPTION)
 
-    # TODO: image + image sequence support
+    # TODO actually implement this
+    copy_uv_coords = BoolProperty(name="Copy UV Coordinates", default=False,
+                                  description=COPY_UV_COORDS_DESC)
 
-    # TODO: image selection for UV -> vertex color mode
-    # TODO: dropdown for UV mapping to use
-    # TODO: dropdown for vertex colors to use
+    # TODO: dropdown for vertex color layer to use
     # TODO: new advanced material preset: "Hair", with vertex color wired into a glossytranslucent node or so
     # TODO: improve tesselation max. descriptions
 
