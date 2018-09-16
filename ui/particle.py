@@ -28,6 +28,11 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
         layout = self.layout
         settings = context.particle_settings.luxcore.hair
 
+        # Note: we can always assume that obj.data has the attribute uv_textures,
+        # because objects that don't have it can't have a particle system in Blender.
+        # We can also assume that obj.data exists, because otherwise this panel is not visible.
+        obj = context.object
+
         layout.prop(settings, "hair_size")
 
         row = layout.row(align=True)
@@ -50,40 +55,57 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
             row.prop(settings, "solid_captop")
 
         box = layout.box()
-        box.label("Hair Vertex Colors:")
+        box.prop(settings, "copy_uv_coords")
+
+        col = box.column()
+        col.prop(settings, "use_active_uv_map")
+
+        if settings.use_active_uv_map:
+            if obj.data.uv_textures:
+                active_uv = utils.find_active_uv(obj.data.uv_textures)
+                if active_uv:
+                    row = col.row()
+                    row.label("UV Map:")
+                    row.label(active_uv.name, icon="GROUP_UVS")
+                else:
+                    col.label("No UV map", icon="ERROR")
+            else:
+                row = col.row()
+                row.label("No UV map", icon="ERROR")
+                row.operator("mesh.uv_texture_add")
+        else:
+            col.prop_search(settings, "uv_map_name",
+                            obj.data, "uv_textures",
+                            icon="GROUP_UVS")
+
+        box = layout.box()
         box.prop(settings, "export_color")
 
         if settings.export_color == "vertex_color":
-            ...
-        elif settings.export_color == "uv_texture_map":
             col = box.column()
-            col.prop(settings, "use_active_uv_map")
+            col.prop(settings, "use_active_vertex_color_layer")
 
-            obj = context.object
-            # Note: we can always assume that obj.data has the attribute uv_textures,
-            # because objects that don't have it can't have a particle system in Blender.
-            # We can also assume that obj.data exists, because otherwise this panel is not visible.
-
-            if settings.use_active_uv_map:
-                def warning_no_uvmap(_layout):
-                    _layout.label("No UV map", icon="ERROR")
-
-                if obj.data.uv_textures:
-                    active_uv = utils.find_active_uv(obj.data.uv_textures)
-                    col.label('Active: "%s"' % active_uv.name, icon="GROUP_UVS")
+            if settings.use_active_vertex_color_layer:
+                if obj.data.vertex_colors:
+                    active_vcol_layer = utils.find_active_vertex_color_layer(obj.data.vertex_colors)
+                    if active_vcol_layer:
+                        row = col.row()
+                        row.label("Vertex Colors:")
+                        row.label(active_vcol_layer.name, icon="GROUP_VCOL")
+                    else:
+                        col.label("No vertex colors", icon="ERROR")
                 else:
-                    row = col.row()
-                    warning_no_uvmap(row)
-                    row.operator("mesh.uv_texture_add")
+                    col.label("No vertex colors", icon="ERROR")
             else:
-                col.prop_search(settings, "uv_map_name",
-                                obj.data, "uv_textures",
-                                icon="GROUP_UVS", text="")
+                col.prop_search(settings, "vertex_color_layer_name",
+                                obj.data, "vertex_colors",
+                                icon="GROUP_VCOL", text="Vertex Colors")
 
-            col.template_ID(settings, "image", open="image.open")
+        elif settings.export_color == "uv_texture_map":
+            box.template_ID(settings, "image", open="image.open")
             # if settings.image:
             #     col.prop(settings, "gamma")
-            settings.image_user.draw(layout, context.scene)
+            settings.image_user.draw(box, context.scene)
 
 
 class LUXCORE_PARTICLE_PT_textures(ParticleButtonsPanel, Panel):

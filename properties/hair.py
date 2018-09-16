@@ -86,16 +86,18 @@ class LuxCoreHair(PropertyGroup):
     # bpy.types.MeshUVLoopLayer inherits from bpy_struct instead of bpy.types.ID
     uv_map_name = StringProperty(name="UV Map", default="",
                                  description="UV Map to use. If empty, the active UV Map is used")
-
     image = PointerProperty(name="Image", type=bpy.types.Image)
     image_user = PointerProperty(type=LuxCoreImageUser)
     # gamma = FloatProperty(name="Gamma", default=1, min=0, description=GAMMA_DESCRIPTION)
+
+    use_active_vertex_color_layer = BoolProperty(name="Use Active Vertex Color Layer", default=True)
+    vertex_color_layer_name = StringProperty(name="Vertex Color Layer", default="",
+                                             description="Vertex color layer to use. If empty, the active one is used")
 
     # TODO actually implement this
     copy_uv_coords = BoolProperty(name="Copy UV Coordinates", default=False,
                                   description=COPY_UV_COORDS_DESC)
 
-    # TODO: dropdown for vertex color layer to use
     # TODO: new advanced material preset: "Hair", with vertex color wired into a glossytranslucent node or so
     # TODO: improve tesselation max. descriptions
 

@@ -27,13 +27,81 @@ def is_psys_visible(obj, psys_modifier, scene, context):
     return visible
 
 
-def cleanup(scene, obj, psys, final_render, emitter_mesh):
+def restore_resolution(scene, obj, psys, final_render):
     if final_render:
         # Resolution was changed to "RENDER" for final renders, change it back
         psys.set_resolution(scene, obj, "PREVIEW")
 
-    if emitter_mesh:
-        bpy.data.meshes.remove(emitter_mesh, do_unlink=False)
+
+def convert_uvs(obj, psys, scene, settings, uv_textures, engine, strands_count, start, dupli_count, mod, num_children):
+    failure = np.empty(shape=0, dtype=np.float32), ""
+    image_filename = ""
+
+    try:
+        image_filename = ImageExporter.export(settings.image, settings.image_user, scene)
+    except OSError as error:
+        msg = "%s (Object: %s, Particle System: %s)" % (error, obj.name, psys.name)
+        scene.luxcore.errorlog.add_warning(msg)
+
+    # If the image was invalid/not found, we should not collect UV data
+    if not image_filename:
+        return failure
+
+    if settings.use_active_uv_map or settings.uv_map_name not in obj.data.uv_layers:
+        active_uv = utils.find_active_uv(uv_textures)
+        if active_uv:
+            uv_index = uv_textures.find(active_uv.name)
+        else:
+            uv_index = -1
+    else:
+        uv_index = uv_textures.find(settings.uv_map_name)
+
+    if uv_index == -1 or not uv_textures[uv_index].data:
+        return failure
+
+    if engine:
+        engine.update_stats("Exporting...", "[%s: %s] Preparing %d UV coordinates"
+                            % (obj.name, psys.name, strands_count))
+
+    first_particle = psys.particles[0]
+    f = psys.uv_on_emitter
+    uvs = np.fromiter((elem
+                       for i in range(start, dupli_count)
+                       for elem in f(mod, psys.particles[i - start] if num_children == 0 else first_particle,
+                                     i - start, uv_index)),
+                      dtype=np.float32,
+                      count=(dupli_count - start) * 2)
+    return uvs, image_filename
+
+
+def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, start, dupli_count, mod, num_children):
+    failure = np.empty(shape=0, dtype=np.float32)
+
+    if settings.use_active_vertex_color_layer or settings.vertex_color_layer_name not in vertex_colors:
+        active_vertex_color_layer = utils.find_active_vertex_color_layer(vertex_colors)
+        if active_vertex_color_layer:
+            vertex_color_index = vertex_colors.find(active_vertex_color_layer.name)
+        else:
+            vertex_color_index = -1
+    else:
+        vertex_color_index = vertex_colors.find(settings.vertex_color_layer_name)
+
+    if vertex_color_index == -1 or not vertex_colors[vertex_color_index].data:
+        return failure
+
+    if engine:
+        engine.update_stats("Exporting...", "[%s: %s] Preparing %d vertex colors"
+                            % (obj.name, psys.name, strands_count))
+
+    first_particle = psys.particles[0]
+    f = psys.mcol_on_emitter
+    colors = np.fromiter((elem
+                          for i in range(start, dupli_count)
+                          for elem in f(mod, psys.particles[i - start] if num_children == 0 else first_particle,
+                                        i - start, vertex_color_index)),
+                         dtype=np.float32,
+                         count=(dupli_count - start) * 3)
+    return colors
 
 
 def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine=None):
@@ -57,7 +125,6 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
 
         final_render = not context
         worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-        emitter_mesh = None
 
         settings = psys.settings.luxcore.hair
         strand_diameter = settings.hair_size * worldscale
@@ -70,7 +137,7 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
             psys.set_resolution(scene, obj, "RENDER")
             print("Changing resolution to RENDER took %.3f s" % (time() - set_res_start))
             if engine and engine.test_break():
-                cleanup(scene, obj, psys, final_render, emitter_mesh)
+                restore_resolution(scene, obj, psys, final_render)
                 return
 
             steps = 2 ** psys.settings.render_step
@@ -103,10 +170,11 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
         if engine:
             engine.update_stats("Exporting...", "[%s: %s] Preparing %d points"
                                 % (obj.name, psys.name, point_count))
+        co_hair = psys.co_hair
         points = np.fromiter((elem
                               for pindex in range(start, dupli_count)
                               for step in range(points_per_strand)
-                              for elem in psys.co_hair(obj, pindex, step)),
+                              for elem in co_hair(obj, pindex, step)),
                              dtype=np.float32,
                              count=point_count * 3)
 
@@ -121,66 +189,18 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
             vertex_colors = emitter_mesh.tessface_vertex_colors
 
             if settings.export_color == "uv_texture_map":
-                try:
-                    image_filename = ImageExporter.export(settings.image, settings.image_user, scene)
-                except OSError as error:
-                    msg = "%s (Object: %s, Particle System: %s)" % (error, obj.name, psys.name)
-                    scene.luxcore.errorlog.add_warning(msg)
-
-                # If the image was invalid/not found, we should not collect UV data
-                if image_filename:
-                    if settings.use_active_uv_map or settings.uv_map_name not in obj.data.uv_layers:
-                        active_uv = utils.find_active_uv(uv_textures)
-                        uv_index = uv_textures.find(active_uv.name)
-                    else:
-                        uv_index = uv_textures.find(settings.uv_map_name)
-
-                    if uv_textures[uv_index].data:
-                        if engine:
-                            engine.update_stats("Exporting...", "[%s: %s] Preparing %d uvs"
-                                                % (obj.name, psys.name, strands_count))
-
-                        ###############
-                        # Blender reference implementation, not optimized
-                        # i = 0
-                        # uvs = np.array([0] * (dupli_count * 2), dtype=np.float32)
-                        #
-                        # pa_no = 0
-                        # if num_children == 0:
-                        #     pa_no = num_parents
-                        #
-                        # b_pa_index = 0
-                        # b_pa = psys.particles[b_pa_index]
-                        # while pa_no < num_parents + num_children:
-                        #     uv = psys.uv_on_emitter(mod, b_pa, pa_no, uv_index)
-                        #     uvs[i] = uv[0]
-                        #     i += 1
-                        #     uvs[i] = uv[1]
-                        #     i += 1
-                        #
-                        #     if pa_no < num_parents:
-                        #         b_pa_index += 1
-                        #         if b_pa_index < num_parents:
-                        #             b_pa = psys.particles[b_pa_index]
-                        #
-                        #     pa_no += 1
-                        ###############
-
-                        uvs = np.fromiter((elem
-                                           for i in range(start, dupli_count)
-                                           for elem in psys.uv_on_emitter(mod, psys.particles[(i - start if num_children == 0 else 0)],
-                                                                          i - start, uv_index)),
-                                          dtype=np.float32,
-                                          count=(dupli_count - start) * 2)
+                uvs, image_filename = convert_uvs(obj, psys, scene, settings, uv_textures, engine,
+                                                  strands_count, start, dupli_count, mod, num_children)
 
             elif settings.export_color == "vertex_color":
-                ...
+                colors = convert_colors(obj, psys, settings, vertex_colors, engine,
+                                        strands_count, start, dupli_count, mod, num_children)
 
-            # TODO cleanup mesh directly here?
+            bpy.data.meshes.remove(emitter_mesh, do_unlink=False)
 
+        restore_resolution(scene, obj, psys, final_render)
         print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
         if engine and engine.test_break():
-            cleanup(scene, obj, psys, final_render, emitter_mesh)
             return
 
         luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
@@ -228,7 +248,6 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
 
             luxcore_scene.Parse(strandsProps)
 
-        cleanup(scene, obj, psys, final_render, emitter_mesh)
         time_elapsed = time() - start_time
         print("[%s: %s] New Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
     except Exception as error:
