@@ -31,8 +31,7 @@ COLOREXPORT_ITEMS = [
 
 COPY_UV_COORDS_DESC = (
     "Create UV coordinates for the hair, using a UV mapping of the emitter mesh. "
-    "This option will allow you to control the hair color with any UV mapped texture. "
-    "This option increases the memory usage of the hair, but slightly less than using vertex colors"
+    "This option will allow you to control the hair color with any UV mapped texture, just like a normal mesh"
 )
 
 
