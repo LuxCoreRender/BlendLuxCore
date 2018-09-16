@@ -54,9 +54,11 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
             row.prop(settings, "solid_capbottom")
             row.prop(settings, "solid_captop")
 
-        box = layout.box()
-        box.prop(settings, "copy_uv_coords")
+        layout.prop(settings, "copy_uv_coords")
 
+        # UV map selection
+        box = layout.box()
+        box.active = settings.copy_uv_coords or settings.export_color == "uv_texture_map"
         col = box.column()
         col.prop(settings, "use_active_uv_map")
 
@@ -67,17 +69,17 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
                     row = col.row()
                     row.label("UV Map:")
                     row.label(active_uv.name, icon="GROUP_UVS")
-                else:
-                    col.label("No UV map", icon="ERROR")
-            else:
-                row = col.row()
-                row.label("No UV map", icon="ERROR")
-                row.operator("mesh.uv_texture_add")
         else:
             col.prop_search(settings, "uv_map_name",
                             obj.data, "uv_textures",
                             icon="GROUP_UVS")
 
+        if not obj.data.uv_textures:
+                row = col.row()
+                row.label("No UV map", icon="ERROR")
+                row.operator("mesh.uv_texture_add", icon="ZOOMIN")
+
+        # Vertex color settings
         box = layout.box()
         box.prop(settings, "export_color")
 
@@ -92,14 +94,15 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
                         row = col.row()
                         row.label("Vertex Colors:")
                         row.label(active_vcol_layer.name, icon="GROUP_VCOL")
-                    else:
-                        col.label("No vertex colors", icon="ERROR")
-                else:
-                    col.label("No vertex colors", icon="ERROR")
             else:
                 col.prop_search(settings, "vertex_color_layer_name",
                                 obj.data, "vertex_colors",
                                 icon="GROUP_VCOL", text="Vertex Colors")
+
+            if not obj.data.vertex_colors:
+                row = col.row()
+                row.label("No Vertex Colors", icon="ERROR")
+                row.operator("mesh.vertex_color_add", icon="ZOOMIN")
 
         elif settings.export_color == "uv_texture_map":
             box.template_ID(settings, "image", open="image.open")

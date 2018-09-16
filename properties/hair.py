@@ -21,8 +21,8 @@ TESSEL_ITEMS = [
 ]
 
 COLOREXPORT_ITEMS = [
-    ("vertex_color", "From Vertex Color", "Copy emitter vertex colors to hair vertex colors. "
-                                          "This option increases the memory usage of the hair"),
+    ("vertex_color", "From Emitter Vertex Colors", "Copy emitter vertex colors to hair vertex colors. "
+                                                   "This option increases the memory usage of the hair"),
     ("uv_texture_map", "From UV Texture Map", "Copy colors from an image texture to hair vertex colors. "
                                               "This option increases the memory usage of the hair"),
     ("none", "None", "Do not set the hair vertex colors (they will be white)"),
