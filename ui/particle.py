@@ -106,8 +106,8 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
 
         elif settings.export_color == "uv_texture_map":
             box.template_ID(settings, "image", open="image.open")
-            # if settings.image:
-            #     col.prop(settings, "gamma")
+            if settings.image:
+                box.prop(settings, "gamma")
             settings.image_user.draw(box, context.scene)
 
 

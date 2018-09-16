@@ -33,19 +33,8 @@ def restore_resolution(scene, obj, psys, final_render):
         psys.set_resolution(scene, obj, "PREVIEW")
 
 
-def convert_uvs(obj, psys, scene, settings, uv_textures, engine, strands_count, start, dupli_count, mod, num_children):
-    failure = np.empty(shape=0, dtype=np.float32), ""
-    image_filename = ""
-
-    try:
-        image_filename = ImageExporter.export(settings.image, settings.image_user, scene)
-    except OSError as error:
-        msg = "%s (Object: %s, Particle System: %s)" % (error, obj.name, psys.name)
-        scene.luxcore.errorlog.add_warning(msg)
-
-    # If the image was invalid/not found, we should not collect UV data
-    if not image_filename:
-        return failure
+def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, dupli_count, mod, num_children):
+    failure = np.empty(shape=0, dtype=np.float32)
 
     if settings.use_active_uv_map or settings.uv_map_name not in obj.data.uv_layers:
         active_uv = utils.find_active_uv(uv_textures)
@@ -71,7 +60,7 @@ def convert_uvs(obj, psys, scene, settings, uv_textures, engine, strands_count, 
                                      i - start, uv_index)),
                       dtype=np.float32,
                       count=(dupli_count - start) * 2)
-    return uvs, image_filename
+    return uvs
 
 
 def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, start, dupli_count, mod, num_children):
@@ -157,11 +146,8 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
                                              * psys.settings.child_nbr * num_parents)
             start = num_parents + num_virtual_parents
 
-        ##########
-        # Stuff I need to collect from Blender:
-        # - co = psys.co_hair(obj, pindex, step)
-        # - uv_co = psys.uv_on_emitter(mod, psys.particles[i], pindex, uv_textures.active_index)
-        # - col = psys.mcol_on_emitter(mod, psys.particles[i], pindex, vertex_color.active_index)
+        # Collect point/color/uv information from Blender
+        # (unfortunately this can't be accelerated in C++)
 
         collection_start = time()
         strands_count = dupli_count - start
@@ -181,22 +167,34 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
         colors = np.empty(shape=0, dtype=np.float32)
         uvs = np.empty(shape=0, dtype=np.float32)
         image_filename = ""
+        uvs_needed = settings.copy_uv_coords
+        copy_uvs = settings.copy_uv_coords
 
-        if settings.export_color != "none":
+        if settings.export_color != "none" or uvs_needed:
             modifier_mode = "RENDER" if final_render else "PREVIEW"
             emitter_mesh = obj.to_mesh(scene, True, modifier_mode)
             uv_textures = emitter_mesh.tessface_uv_textures
             vertex_colors = emitter_mesh.tessface_vertex_colors
 
             if settings.export_color == "uv_texture_map":
-                uvs, image_filename = convert_uvs(obj, psys, scene, settings, uv_textures, engine,
-                                                  strands_count, start, dupli_count, mod, num_children)
-
+                try:
+                    image_filename = ImageExporter.export(settings.image, settings.image_user, scene)
+                    uvs_needed = True
+                except OSError as error:
+                    msg = "%s (Object: %s, Particle System: %s)" % (error, obj.name, psys.name)
+                    scene.luxcore.errorlog.add_warning(msg)
             elif settings.export_color == "vertex_color":
                 colors = convert_colors(obj, psys, settings, vertex_colors, engine,
                                         strands_count, start, dupli_count, mod, num_children)
 
+            if uvs_needed:
+                uvs = convert_uvs(obj, psys, settings, uv_textures, engine,
+                                  strands_count, start, dupli_count, mod, num_children)
+
             bpy.data.meshes.remove(emitter_mesh, do_unlink=False)
+
+        if len(uvs) == 0:
+            copy_uvs = False
 
         restore_resolution(scene, obj, psys, final_render)
         print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
@@ -207,9 +205,9 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
         if engine:
             engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)
         success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand,
-                                                     points, colors, uvs, image_filename,
-                                                     worldscale, strand_diameter, root_width,
-                                                     tip_width, width_offset,
+                                                     points, colors, uvs, image_filename, settings.gamma,
+                                                     copy_uvs, worldscale, strand_diameter,
+                                                     root_width, tip_width, width_offset,
                                                      settings.tesseltype, settings.adaptive_maxdepth,
                                                      settings.adaptive_error, settings.solid_sidecount,
                                                      settings.solid_capbottom, settings.solid_captop)
