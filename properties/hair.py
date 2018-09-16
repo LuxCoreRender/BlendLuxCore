@@ -4,6 +4,7 @@ from bpy.props import (
     EnumProperty, StringProperty,
 )
 from bpy.types import PropertyGroup
+from .image_user import LuxCoreImageUser
 
 
 def init():
@@ -77,6 +78,12 @@ class LuxCoreHair(PropertyGroup):
     # bpy.types.MeshUVLoopLayer inherits from bpy_struct instead of bpy.types.ID
     uv_map_name = StringProperty(name="UV Map", default="",
                                  description="UV Map to use. If empty, the active UV Map is used")
+
+    image = PointerProperty(name="Image", type=bpy.types.Image)
+    image_user = PointerProperty(type=LuxCoreImageUser)
+    # gamma = FloatProperty(name="Gamma", default=1, min=0, description=GAMMA_DESCRIPTION)
+
+    # TODO: image + image sequence support
 
     # TODO: image selection for UV -> vertex color mode
     # TODO: dropdown for UV mapping to use

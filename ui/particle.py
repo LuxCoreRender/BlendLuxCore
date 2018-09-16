@@ -80,6 +80,11 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
                                 obj.data, "uv_textures",
                                 icon="GROUP_UVS", text="")
 
+            col.template_ID(settings, "image", open="image.open")
+            # if settings.image:
+            #     col.prop(settings, "gamma")
+            settings.image_user.draw(layout, context.scene)
+
 
 class LUXCORE_PARTICLE_PT_textures(ParticleButtonsPanel, Panel):
     bl_label = "Textures"

@@ -1,5 +1,6 @@
 import bpy
 from ..bin import pyluxcore
+from .image import ImageExporter
 from . import material
 from .. import utils
 from time import time
@@ -36,6 +37,11 @@ def cleanup(scene, obj, psys, final_render, emitter_mesh):
 
 
 def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine=None):
+    # convert_hair_old(exporter, obj, psys, luxcore_scene, scene, context, engine)
+    convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context, engine)
+
+
+def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
         start_time = time()
@@ -106,6 +112,7 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
 
         colors = np.empty(shape=0, dtype=np.float32)
         uvs = np.empty(shape=0, dtype=np.float32)
+        image_filename = ""
 
         if settings.export_color != "none":
             modifier_mode = "RENDER" if final_render else "PREVIEW"
@@ -114,21 +121,57 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
             vertex_colors = emitter_mesh.tessface_vertex_colors
 
             if settings.export_color == "uv_texture_map":
-                if settings.use_active_uv_map or settings.uv_map_name not in obj.data.uv_layers:
-                    active_uv = utils.find_active_uv(uv_textures)
-                    uv_index = uv_textures.find(active_uv.name)
-                else:
-                    uv_index = uv_textures.find(settings.uv_map_name)
+                try:
+                    image_filename = ImageExporter.export(settings.image, settings.image_user, scene)
+                except OSError as error:
+                    msg = "%s (Object: %s, Particle System: %s)" % (error, obj.name, psys.name)
+                    scene.luxcore.errorlog.add_warning(msg)
 
-                if uv_textures[uv_index].data:
-                    if engine:
-                        engine.update_stats("Exporting...", "[%s: %s] Preparing %d uvs"
-                                            % (obj.name, psys.name, strands_count))
-                    uvs = np.fromiter((elem
-                                       for pindex in range(start, dupli_count)
-                                       for elem in psys.uv_on_emitter(mod, psys.particles[pindex], pindex, uv_index)),
-                                      dtype=np.float32,
-                                      count=strands_count * 2)
+                # If the image was invalid/not found, we should not collect UV data
+                if image_filename:
+                    if settings.use_active_uv_map or settings.uv_map_name not in obj.data.uv_layers:
+                        active_uv = utils.find_active_uv(uv_textures)
+                        uv_index = uv_textures.find(active_uv.name)
+                    else:
+                        uv_index = uv_textures.find(settings.uv_map_name)
+
+                    if uv_textures[uv_index].data:
+                        if engine:
+                            engine.update_stats("Exporting...", "[%s: %s] Preparing %d uvs"
+                                                % (obj.name, psys.name, strands_count))
+
+                        ###############
+                        # Blender reference implementation, not optimized
+                        # i = 0
+                        # uvs = np.array([0] * (dupli_count * 2), dtype=np.float32)
+                        #
+                        # pa_no = 0
+                        # if num_children == 0:
+                        #     pa_no = num_parents
+                        #
+                        # b_pa_index = 0
+                        # b_pa = psys.particles[b_pa_index]
+                        # while pa_no < num_parents + num_children:
+                        #     uv = psys.uv_on_emitter(mod, b_pa, pa_no, uv_index)
+                        #     uvs[i] = uv[0]
+                        #     i += 1
+                        #     uvs[i] = uv[1]
+                        #     i += 1
+                        #
+                        #     if pa_no < num_parents:
+                        #         b_pa_index += 1
+                        #         if b_pa_index < num_parents:
+                        #             b_pa = psys.particles[b_pa_index]
+                        #
+                        #     pa_no += 1
+                        ###############
+
+                        uvs = np.fromiter((elem
+                                           for i in range(start, dupli_count)
+                                           for elem in psys.uv_on_emitter(mod, psys.particles[(i - start if num_children == 0 else 0)],
+                                                                          i - start, uv_index)),
+                                          dtype=np.float32,
+                                          count=(dupli_count - start) * 2)
 
             elif settings.export_color == "vertex_color":
                 ...
@@ -141,15 +184,15 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
             return
 
         luxcore_shape_name = utils.get_luxcore_name(obj, context) + "_" + utils.get_luxcore_name(psys)
-        use_camera_position = True
         if engine:
             engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)
-        success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand, points,
-                                                     colors, uvs, worldscale,
-                                                     strand_diameter, root_width, tip_width, width_offset,
-                                                     settings.tesseltype, settings.adaptive_maxdepth, settings.adaptive_error,
-                                                     settings.solid_sidecount, settings.solid_capbottom, settings.solid_captop,
-                                                     use_camera_position)
+        success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand,
+                                                     points, colors, uvs, image_filename,
+                                                     worldscale, strand_diameter, root_width,
+                                                     tip_width, width_offset,
+                                                     settings.tesseltype, settings.adaptive_maxdepth,
+                                                     settings.adaptive_error, settings.solid_sidecount,
+                                                     settings.solid_capbottom, settings.solid_captop)
 
         # Sometimes no hair shape could be created, e.g. if the length
         # of all hairs is 0 (can happen e.g. during animations or if hair length is textured)
