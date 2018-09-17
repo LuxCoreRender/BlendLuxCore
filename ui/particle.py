@@ -20,11 +20,6 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
         return is_hair and is_path and engine == "LUXCORE"
         
     def draw(self, context):
-        # TODO: image selection for UV -> vertex color mode
-        # TODO: dropdown for UV mapping to use
-        # TODO: new advanced material preset: "Hair", with vertex color wired into a glossytranslucent node or so
-        # TODO: rename tesselation parameters to be better readable and improve their descriptions
-
         layout = self.layout
         settings = context.particle_settings.luxcore.hair
 
@@ -113,6 +108,8 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
         row = box.row()
         row.prop(settings, "root_color")
         row.prop(settings, "tip_color")
+
+        layout.prop(settings, "instancing")
 
 
 class LUXCORE_PARTICLE_PT_textures(ParticleButtonsPanel, Panel):

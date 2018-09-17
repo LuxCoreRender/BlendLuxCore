@@ -236,6 +236,11 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
 
             strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
             strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+            if settings.instancing == "enabled":
+                # We don't actually need to transform anything, just set an identity matrix so the mesh is instanced
+                from mathutils import Matrix
+                transform = utils.matrix_to_list(Matrix.Identity(4))
+                strandsProps.Set(pyluxcore.Property(prefix + "transformation", transform))
 
             visible_to_cam = utils.is_obj_visible_to_cam(obj, scene, context)
             strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))

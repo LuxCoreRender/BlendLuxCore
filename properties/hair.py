@@ -30,6 +30,13 @@ COLOREXPORT_ITEMS = [
                       "increase the memory usage of the hair (if both color multipliers are left at white)"),
 ]
 
+INSTANCING_TYPES = [
+    ("enabled", "Save Memory", "Instance the hair mesh to save memory "
+                               "(reduces rendering performance of the hair)", 0),
+    ("disabled", "Improve Performance", "Do not instance the mesh, this increasees the rendering "
+                                        "performance of the hair, but costs more memory", 1),
+]
+
 COPY_UV_COORDS_DESC = (
     "Create UV coordinates for the hair, using a UV mapping of the emitter mesh. "
     "This option will allow you to control the hair color with any UV mapped texture, just like a normal mesh"
@@ -108,6 +115,9 @@ class LuxCoreHair(PropertyGroup):
                                      description=VERTEX_COL_MULTIPLIERS_DESC)
     tip_color = FloatVectorProperty(name="Tip", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
                                     description=VERTEX_COL_MULTIPLIERS_DESC)
+
+    instancing = EnumProperty(name="Optimization", default="disabled", items=INSTANCING_TYPES,
+                              description="Note: Only affects CPU rendering")
 
 
 class LuxCoreParticlesProps(PropertyGroup):
