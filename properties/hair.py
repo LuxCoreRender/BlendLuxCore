@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import (
     PointerProperty, BoolProperty, FloatProperty, IntProperty,
-    EnumProperty, StringProperty,
+    EnumProperty, StringProperty, FloatVectorProperty,
 )
 from bpy.types import PropertyGroup
 from .image_user import LuxCoreImageUser
@@ -26,12 +26,19 @@ COLOREXPORT_ITEMS = [
                                                    "This option increases the memory usage of the hair"),
     ("uv_texture_map", "From UV Texture Map", "Copy colors from an image texture to hair vertex colors. "
                                               "This option increases the memory usage of the hair"),
-    ("none", "None", "Do not set the hair vertex colors (they will be white)"),
+    ("none", "White", "Do not set the hair vertex colors (they will be white). This option does not "
+                      "increase the memory usage of the hair (if both color multipliers are left at white)"),
 ]
 
 COPY_UV_COORDS_DESC = (
     "Create UV coordinates for the hair, using a UV mapping of the emitter mesh. "
     "This option will allow you to control the hair color with any UV mapped texture, just like a normal mesh"
+)
+
+VERTEX_COL_MULTIPLIERS_DESC = (
+    "Vertex color multiplier. If root and tip colors are white (1, 1, 1), they will not be used. "
+    "Otherwise, they will be interpolated over each hair strand and multiplied with the vertex colors "
+    "from the emitter or texture map, if used"
 )
 
 
@@ -97,8 +104,10 @@ class LuxCoreHair(PropertyGroup):
     copy_uv_coords = BoolProperty(name="Copy UV Coordinates", default=True,
                                   description=COPY_UV_COORDS_DESC)
 
-    # TODO: root/tip color
-    # TODO: new advanced material preset: "Hair", with vertex color wired into a glossytranslucent node or so
+    root_color = FloatVectorProperty(name="Root", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
+                                     description=VERTEX_COL_MULTIPLIERS_DESC)
+    tip_color = FloatVectorProperty(name="Tip", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
+                                    description=VERTEX_COL_MULTIPLIERS_DESC)
 
 
 class LuxCoreParticlesProps(PropertyGroup):

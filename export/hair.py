@@ -210,7 +210,8 @@ def convert_hair_new(exporter, obj, psys, luxcore_scene, scene, context=None, en
                                                      root_width, tip_width, width_offset,
                                                      settings.tesseltype, settings.adaptive_maxdepth,
                                                      settings.adaptive_error, settings.solid_sidecount,
-                                                     settings.solid_capbottom, settings.solid_captop)
+                                                     settings.solid_capbottom, settings.solid_captop,
+                                                     list(settings.root_color), list(settings.tip_color))
 
         # Sometimes no hair shape could be created, e.g. if the length
         # of all hairs is 0 (can happen e.g. during animations or if hair length is textured)

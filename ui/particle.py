@@ -110,6 +110,10 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
                 box.prop(settings, "gamma")
             settings.image_user.draw(box, context.scene)
 
+        row = box.row()
+        row.prop(settings, "root_color")
+        row.prop(settings, "tip_color")
+
 
 class LUXCORE_PARTICLE_PT_textures(ParticleButtonsPanel, Panel):
     bl_label = "Textures"
