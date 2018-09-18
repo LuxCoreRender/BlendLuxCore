@@ -1,19 +1,5 @@
-Files that need to be copied from the binary SDK into this directory for releases:
-
-## Linux
-
-* libembree3.so.3
-* libtbb.so.2
-* libtbbmalloc.so.2
-* pyluxcore.so
-
-## Windows
-
-* tbb.dll
-* tbbmalloc.dll
-* embree3.dll
-* OpenImageIO.dll
-* pyluxcore.pyd
+To see the lists of files that need to be copied from the binary SDK into this directory for releases, look at line 8 in the get_binaries.py script:
+https://github.com/LuxCoreRender/BlendLuxCore/blob/master/bin/get_binaries.py#L8
 
 ## get_binaries.py
 
