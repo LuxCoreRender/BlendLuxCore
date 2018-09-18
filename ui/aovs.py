@@ -35,6 +35,7 @@ class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
         sub.active = engine_is_path
         sub.label("Material/Object Information")
         sub.prop(aovs, "material_id")
+        sub.prop(aovs, "material_id_color")
         sub.prop(aovs, "object_id")
         sub.prop(aovs, "emission")
 

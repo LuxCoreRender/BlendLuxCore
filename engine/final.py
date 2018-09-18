@@ -237,6 +237,8 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("ALPHA", 1, "A", layer.name)
     if aovs.material_id:
         engine.add_pass("MATERIAL_ID", 1, "X", layer.name)
+    if aovs.material_id_color:
+        engine.add_pass("MATERIAL_ID_COLOR", 3, "RGB", layer.name)
     if aovs.object_id:
         engine.add_pass("OBJECT_ID", 1, "X", layer.name)
     if aovs.emission:
