@@ -173,6 +173,7 @@ def _convert_mesh_to_shapes(name, mesh, luxcore_scene, mesh_transform):
     else:
         texCoords = 0
 
+    # TODO use the active_render setting like for UVs
     vertex_color = mesh.tessface_vertex_colors.active
     if vertex_color:
         vertexColors = vertex_color.data[0].as_pointer()
