@@ -171,7 +171,7 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
             uv_textures = emitter_mesh.tessface_uv_textures
             vertex_colors = emitter_mesh.tessface_vertex_colors
 
-            if settings.export_color == "uv_texture_map":
+            if settings.export_color == "uv_texture_map" and settings.image:
                 try:
                     image_filename = ImageExporter.export(settings.image, settings.image_user, scene)
                     uvs_needed = True
