@@ -128,6 +128,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "Depth", 1, "Z", "VALUE")
         if aovs.material_id:
             self.register_pass(scene, renderlayer, "MATERIAL_ID", 1, "X", "VALUE")
+        if aovs.material_id_color:
+            self.register_pass(scene, renderlayer, "MATERIAL_ID_COLOR", 3, "RGB", "COLOR")
         if aovs.object_id:
             self.register_pass(scene, renderlayer, "OBJECT_ID", 1, "X", "VALUE")
         if aovs.emission:

@@ -24,9 +24,13 @@ class LuxCoreAOVSettings(PropertyGroup):
 
     # Material/Object Information
     material_id = BoolProperty(name="Material ID", default=False,
-                       description="Material ID (1 color per material)")
+                       description="Material ID (1 value per material, use the ID Mask Node "
+                                   "in compositing nodes to extract a mask)")
+    material_id_color = BoolProperty(name="Material ID Color", default=False,
+                       description="Material ID (1 color per material, anti-aliased)")
     object_id = BoolProperty(name="Object ID", default=False,
-                       description="Object ID (1 color per object)")
+                       description="Object ID (1 value per object, use the ID Mask Node "
+                                   "in compositing nodes to extract a mask)")
     emission = BoolProperty(name="Emission", default=False,
                        description="Emission R, G, B")
 

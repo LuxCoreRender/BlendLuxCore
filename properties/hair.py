@@ -1,6 +1,11 @@
 import bpy
-from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty, EnumProperty
+from bpy.props import (
+    PointerProperty, BoolProperty, FloatProperty, IntProperty,
+    EnumProperty, StringProperty, FloatVectorProperty,
+)
 from bpy.types import PropertyGroup
+from .image_user import LuxCoreImageUser
+from .light import GAMMA_DESCRIPTION
 
 
 def init():
@@ -17,10 +22,31 @@ TESSEL_ITEMS = [
 ]
 
 COLOREXPORT_ITEMS = [
-    ("vertex_color", "Vertex Color", "Use emitter vertex color as hair vertex color"),
-    ("uv_texture_map", "UV Texture Map", "Use emitter UV texture map as hair vertex color"),
-    ("none", "None", "Do not set the hair vertex colors (they will be white)"),
+    ("vertex_color", "From Emitter Vertex Colors", "Copy emitter vertex colors to hair vertex colors. "
+                                                   "This option increases the memory usage of the hair"),
+    ("uv_texture_map", "From UV Texture Map", "Copy colors from an image texture to hair vertex colors. "
+                                              "This option increases the memory usage of the hair"),
+    ("none", "White", "Do not set the hair vertex colors (they will be white). This option does not "
+                      "increase the memory usage of the hair (if both color multipliers are left at white)"),
 ]
+
+INSTANCING_TYPES = [
+    ("enabled", "Save Memory", "Instance the hair mesh to save memory "
+                               "(reduces rendering performance of the hair)", 0),
+    ("disabled", "Improve Performance", "Do not instance the mesh, this increasees the rendering "
+                                        "performance of the hair, but costs more memory", 1),
+]
+
+COPY_UV_COORDS_DESC = (
+    "Create UV coordinates for the hair, using a UV mapping of the emitter mesh. "
+    "This option will allow you to control the hair color with any UV mapped texture, just like a normal mesh"
+)
+
+VERTEX_COL_MULTIPLIERS_DESC = (
+    "Vertex color multiplier. If root and tip colors are white (1, 1, 1), they will not be used. "
+    "Otherwise, they will be interpolated over each hair strand and multiplied with the vertex colors "
+    "from the emitter or texture map, if used"
+)
 
 
 class LuxCoreHair(PropertyGroup):
@@ -47,7 +73,7 @@ class LuxCoreHair(PropertyGroup):
     tesseltype = EnumProperty(name="Tessellation Type", default="ribbonadaptive", items=TESSEL_ITEMS, 
                               description="Tessellation method for hair strands")
     
-    adaptive_maxdepth = IntProperty(name="Max Tessellation Depth",
+    adaptive_maxdepth = IntProperty(name="Max Depth",
                                     default=8, min=1, soft_min=2, soft_max=12, max=24,
                                     description="Maximum tessellation depth for adaptive modes")
     
@@ -60,13 +86,38 @@ class LuxCoreHair(PropertyGroup):
     solid_captop = BoolProperty(name="Cap Top", default=False,
                                 description="Add an end cap to each hair cylinder")
     
-    adaptive_error = FloatProperty(name="Max Tessellation Error", default=0.1, min=0.001, max=0.9, 
+    adaptive_error = FloatProperty(name="Max Error", default=0.1, min=0.001, max=0.9,
                                    description="Maximum tessellation error for adaptive modes")
     
-    export_color = EnumProperty(name="Color Export Mode", default="none", items=COLOREXPORT_ITEMS, 
+    export_color = EnumProperty(name="Vertex Colors", default="none", items=COLOREXPORT_ITEMS,
                                 description="Choose which attributes of the emitter mesh "
-                                            "should be set for the hair vertex colors.\n"
+                                            "should be copied to the hair vertex colors.\n"
                                             "You can access them with the Vertex Color texture in the hair material")
+
+    use_active_uv_map = BoolProperty(name="Use Active UV Map", default=True)
+    # Only shown if use_active_uv_map is False.
+    # Note: unfortunately we can't use a PointerProperty here because
+    # bpy.types.MeshUVLoopLayer inherits from bpy_struct instead of bpy.types.ID
+    uv_map_name = StringProperty(name="UV Map", default="",
+                                 description="UV Map to use. If empty, the active UV Map is used")
+    image = PointerProperty(name="Image", type=bpy.types.Image)
+    image_user = PointerProperty(type=LuxCoreImageUser)
+    gamma = FloatProperty(name="Gamma", default=2.2, min=0, description=GAMMA_DESCRIPTION)
+
+    use_active_vertex_color_layer = BoolProperty(name="Use Active Vertex Color Layer", default=True)
+    vertex_color_layer_name = StringProperty(name="Vertex Color Layer", default="",
+                                             description="Vertex color layer to use. If empty, the active one is used")
+
+    copy_uv_coords = BoolProperty(name="Copy UV Coordinates", default=True,
+                                  description=COPY_UV_COORDS_DESC)
+
+    root_color = FloatVectorProperty(name="Root", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
+                                     description=VERTEX_COL_MULTIPLIERS_DESC)
+    tip_color = FloatVectorProperty(name="Tip", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
+                                    description=VERTEX_COL_MULTIPLIERS_DESC)
+
+    instancing = EnumProperty(name="Optimization", default="disabled", items=INSTANCING_TYPES,
+                              description="Note: Only affects CPU rendering")
 
 
 class LuxCoreParticlesProps(PropertyGroup):

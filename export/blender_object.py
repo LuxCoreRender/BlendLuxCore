@@ -179,9 +179,10 @@ def _convert_mesh_to_shapes(name, mesh, luxcore_scene, mesh_transform):
     else:
         texCoords = 0
 
-    vertex_color = mesh.tessface_vertex_colors.active
-    if vertex_color:
-        vertexColors = vertex_color.data[0].as_pointer()
+    vertex_colors = mesh.tessface_vertex_colors
+    active_vertcol = utils.find_active_vertex_color_layer(vertex_colors)
+    if active_vertcol and active_vertcol.data:
+        vertexColors = active_vertcol.data[0].as_pointer()
     else:
         vertexColors = 0
 

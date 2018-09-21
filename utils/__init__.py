@@ -340,6 +340,13 @@ def find_active_uv(uv_textures):
     return None
 
 
+def find_active_vertex_color_layer(vertex_colors):
+    for layer in vertex_colors:
+        if layer.active_render:
+            return layer
+    return None
+
+
 def is_obj_visible(obj, scene, context=None, is_dupli=False):
     """
     Find out if an object is visible.
