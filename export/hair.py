@@ -56,8 +56,8 @@ def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, 
     f = psys.uv_on_emitter
     uvs = np.fromiter((elem
                        for i in range(start, dupli_count)
-                       for elem in f(mod, psys.particles[i - start] if num_children == 0 else first_particle,
-                                     i - start, uv_index)),
+                       for elem in f(mod, psys.particles[i] if num_children == 0 else first_particle,
+                                     i, uv_index)),
                       dtype=np.float32,
                       count=(dupli_count - start) * 2)
     return uvs
