@@ -1,11 +1,10 @@
-import bpy
 from bpy.props import EnumProperty, FloatProperty
 from .. import LuxCoreNodeTexture
 
 from .. import NOISE_BASIS_ITEMS
 
-from .. import sockets
 from ... import utils
+
 
 class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
     bl_label = "Blender Distorted Noise"
@@ -27,9 +26,11 @@ class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "noise_basis")
         layout.prop(self, "noise_type")
-        layout.prop(self, "noise_size")
-        layout.prop(self, "dist_amount")        
-        layout.separator()
+
+        col = layout.column(align=True)
+        col.prop(self, "noise_size")
+        col.prop(self, "dist_amount")
+
         column = layout.column(align=True)
         column.prop(self, "bright")
         column.prop(self, "contrast")

@@ -38,21 +38,24 @@ class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "musgrave_type")
         layout.prop(self, "noise_basis")
-        layout.prop(self, "noise_size")
-        layout.prop(self, "h")
-        layout.prop(self, "lacu")
-        layout.prop(self, "octs")
+
+        col = layout.column(align=True)
+        col.prop(self, "noise_size")
+        col.prop(self, "h")
+        col.prop(self, "lacu")
+        col.prop(self, "octs")
+
+        col = layout.column(align=True)
 
         if self.musgrave_type in ("ridged_multifractal", "hybrid_multifractal", "hetero_terrain"):
-            layout.prop(self, "offset")
+            col.prop(self, "offset")
 
         if self.musgrave_type in ("ridged_multifractal", "hybrid_multifractal"):
-            layout.prop(self, "gain")
+            col.prop(self, "gain")
 
         if self.musgrave_type != "fbm":
-            layout.prop(self, "iscale")
+            col.prop(self, "iscale")
 
-        layout.separator()
         column = layout.column(align=True)
         column.prop(self, "bright")
         column.prop(self, "contrast")

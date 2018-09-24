@@ -1,9 +1,8 @@
-import bpy
 from bpy.props import BoolProperty, EnumProperty, FloatProperty
 from .. import LuxCoreNodeTexture
 
-from .. import sockets
 from ... import utils
+
 
 class LuxCoreNodeTexBlenderBlend(LuxCoreNodeTexture):
     bl_label = "Blender Blend"
@@ -37,10 +36,10 @@ class LuxCoreNodeTexBlenderBlend(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "direction", expand=True)
         layout.prop(self, "progression_type")
-        layout.separator()
-        column = layout.column(align=True)
-        column.prop(self, "bright")
-        column.prop(self, "contrast")
+
+        col = layout.column(align=True)
+        col.prop(self, "bright")
+        col.prop(self, "contrast")
 
     def sub_export(self, exporter, props, luxcore_name=None):
         mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)

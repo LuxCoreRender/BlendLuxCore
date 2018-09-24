@@ -2,6 +2,7 @@ from bpy.props import EnumProperty, FloatProperty, IntProperty
 from .. import LuxCoreNodeTexture
 from ... import utils
 
+
 class LuxCoreNodeTexBlenderNoise(LuxCoreNodeTexture):
     bl_label = "Blender Noise"
     bl_width_default = 200    

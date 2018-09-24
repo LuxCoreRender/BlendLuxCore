@@ -1,12 +1,11 @@
-import bpy
 from bpy.props import EnumProperty, IntProperty, FloatProperty
 from .. import LuxCoreNodeTexture
 
 from .. import NOISE_BASIS_ITEMS
 from .. import NOISE_TYPE_ITEMS
 
-from .. import sockets
 from ... import utils
+
 
 class LuxCoreNodeTexBlenderMarble(LuxCoreNodeTexture):
     bl_label = "Blender Marble"
@@ -37,7 +36,6 @@ class LuxCoreNodeTexBlenderMarble(LuxCoreNodeTexture):
     bright = FloatProperty(name="Brightness", default=1.0, min=0)
     contrast = FloatProperty(name="Contrast", default=1.0, min=0)
 
-    
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")
         self.outputs.new("LuxCoreSocketColor", "Color")
@@ -50,8 +48,8 @@ class LuxCoreNodeTexBlenderMarble(LuxCoreNodeTexture):
         column = layout.column(align=True)
         column.prop(self, "noise_size")
         column.prop(self, "noise_depth")
-        layout.prop(self, "turbulence")
-        layout.separator()
+        column.prop(self, "turbulence")
+
         column = layout.column(align=True)
         column.prop(self, "bright")
         column.prop(self, "contrast")

@@ -1,9 +1,8 @@
-import bpy
 from bpy.props import EnumProperty, FloatProperty
 from .. import LuxCoreNodeTexture
 
-from .. import sockets
 from ... import utils
+
 
 class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
     bl_label = "Blender Voronoi"
@@ -44,7 +43,7 @@ class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
         column.prop(self, "w2")
         column.prop(self, "w3")
         column.prop(self, "w4")
-        layout.separator()
+
         column = layout.column(align=True)
         column.prop(self, "bright")
         column.prop(self, "contrast")
