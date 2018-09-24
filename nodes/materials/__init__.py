@@ -153,6 +153,11 @@ luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_OUTPUT", "Output", items=[
         NodeItem("LuxCoreNodeMatOutput", label="Output"),
     ]),
+
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LAYOUT", "Layout", items=[
+        NodeItem("NodeFrame", label="Frame"),
+        NodeItem("NodeReroute", label="Reroute"),
+    ]),
 ]
 
 

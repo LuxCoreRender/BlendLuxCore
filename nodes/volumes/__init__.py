@@ -89,6 +89,11 @@ luxcore_node_categories_volume = [
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_OUTPUT", "Output", items=[
         NodeItem("LuxCoreNodeVolOutput", label="Output"),
     ]),
+
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_LAYOUT", "Layout", items=[
+        NodeItem("NodeFrame", label="Frame"),
+        NodeItem("NodeReroute", label="Reroute"),
+    ]),
 ]
 
 

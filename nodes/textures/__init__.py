@@ -135,6 +135,11 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_OUTPUT", "Output", items=[
         NodeItem("LuxCoreNodeTexOutput", label="Output"),
     ]),
+
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_LAYOUT", "Layout", items=[
+        NodeItem("NodeFrame", label="Frame"),
+        NodeItem("NodeReroute", label="Reroute"),
+    ]),
 ]
 
 
