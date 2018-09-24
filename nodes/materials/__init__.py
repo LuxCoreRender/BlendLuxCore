@@ -5,6 +5,7 @@ from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_MATERIAL
 from ...utils import node as utils_node
 from ..nodeitems import Separator, NodeItemMultiImageImport
+from .. import LuxCoreNodeTree
 
 # Import all material nodes just so they get registered
 from .emission import LuxCoreNodeMatEmission
@@ -24,14 +25,10 @@ from .null import LuxCoreNodeMatNull
 from .output import LuxCoreNodeMatOutput
 
 
-class LuxCoreMaterialNodeTree(NodeTree):
+class LuxCoreMaterialNodeTree(LuxCoreNodeTree, NodeTree):
     bl_idname = "luxcore_material_nodes"
     bl_label = "LuxCore Material Nodes"
     bl_icon = ICON_MATERIAL
-
-    @classmethod
-    def poll(cls, context):
-        return context.scene.render.engine == "LUXCORE"
 
     @classmethod
     def get_from_context(cls, context):
@@ -54,19 +51,11 @@ class LuxCoreMaterialNodeTree(NodeTree):
 
     # This block updates the preview, when socket links change
     def update(self):
-        self.refresh = True
+        super().update()
 
         # Update opengl materials in case the node linked to the
         # output has changed
         utils_node.update_opengl_materials(None, bpy.context)
-
-    def acknowledge_connection(self, context):
-        # Set refresh to False without triggering acknowledge_connection again
-        self["refresh"] = False
-
-    refresh = bpy.props.BoolProperty(name="Links Changed",
-                                     default=False,
-                                     update=acknowledge_connection)
 
 
 class LuxCoreNodeCategoryMaterial(NodeCategory):

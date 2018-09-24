@@ -39,6 +39,34 @@ NOISE_TYPE_ITEMS = [
 COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color."
 
 
+class LuxCoreNodeTree:
+    """Base class for LuxCore node trees"""
+    requested_links = set()
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE"
+
+    def update(self):
+        # Create all links that were requested by insert_link method calls of nodes
+        # (this happens when a link is dragged onto an existing link and the node
+        # has other suitable sockets where the original link can be moved to)
+        for from_socket, to_socket in self.requested_links:
+            self.links.new(from_socket, to_socket)
+        self.requested_links.clear()
+
+        # We have to force an update through a Blender property, otherwise the
+        # material preview, the viewport render etc. do not update
+        self.refresh = True
+
+    def acknowledge_connection(self, context):
+        # Set refresh to False without triggering acknowledge_connection again
+        self["refresh"] = False
+
+    refresh = bpy.props.BoolProperty(default=False,
+                                     update=acknowledge_connection)
+
+
 class LuxCoreNode(Node):
     """Base class for LuxCore nodes (material, volume and texture)"""
     bl_label = ""
@@ -46,6 +74,22 @@ class LuxCoreNode(Node):
     @classmethod
     def poll(cls, tree):
         return tree.bl_idname in TREE_TYPES
+
+    def insert_link(self, link):
+        # Note that this function is called BEFORE the new link is inserted into the node tree.
+        node_tree = self.id_data
+
+        for old_link in node_tree.links:
+            # Check if an old link is deleted by this new link
+            if old_link.to_socket == link.to_socket:
+                # Try to find a suitable replacement socket (e.g. switch from "Material 1"
+                # to "Material 2" on the Mix node, if "Material 2" is free)
+                for socket in link.to_node.inputs:
+                    if socket.bl_idname == link.to_socket.bl_idname and not socket.is_linked:
+                        # We can not create the new link directly in this method, instead
+                        # the node_tree will create all requested links in its update method
+                        node_tree.requested_links.add((old_link.from_socket, socket))
+                        break
 
     def add_input(self, type, name, default=None):
         input = self.inputs.new(type, name)
