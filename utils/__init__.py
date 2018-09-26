@@ -482,8 +482,9 @@ def use_instancing(obj, scene, context):
 
 def find_smoke_domain_modifier(obj):
     for mod in obj.modifiers:
-        if mod.name == "Smoke" and mod.smoke_type == "DOMAIN":
+        if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
             return mod
+    return None
 
 
 def get_name_with_lib(datablock):
