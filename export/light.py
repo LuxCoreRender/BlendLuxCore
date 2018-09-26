@@ -11,13 +11,12 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
-def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suffix=""):
+def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix=""):
     try:
-        assert isinstance(blender_obj, bpy.types.Object)
-        assert blender_obj.type == "LAMP"
-        # print("converting lamp:", blender_obj.name)
+        assert isinstance(obj, bpy.types.Object)
+        assert obj.type == "LAMP"
 
-        luxcore_name = utils.get_luxcore_name(blender_obj, context) + dupli_suffix
+        luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
 
         # If this light was previously defined as an area lamp, delete the area lamp mesh
         luxcore_scene.DeleteObject(luxcore_name)
@@ -28,10 +27,10 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
         definitions = {}
         exported_light = ExportedLight(luxcore_name)
 
-        lamp = blender_obj.data
+        lamp = obj.data
 
-        matrix = blender_obj.matrix_world
-        sun_dir = _calc_sun_dir(blender_obj)
+        matrix = obj.matrix_world
+        sun_dir = _calc_sun_dir(obj)
 
         # Common light settings shared by all light types
         # Note: these variables are also passed to the area light export function
@@ -53,7 +52,7 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
                         definitions["mapfile"] = filepath
                         definitions["gamma"] = lamp.luxcore.gamma
                     except OSError as error:
-                        msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+                        msg = 'Lamp "%s": %s' % (obj.name, error)
                         scene.luxcore.errorlog.add_warning(msg)
                         # Fallback
                         definitions["type"] = "point" if lamp.luxcore.radius == 0 else "sphere"
@@ -64,7 +63,7 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
                 try:
                     has_ies = export_ies(definitions, lamp.luxcore.ies, lamp.library)
                 except OSError as error:
-                    msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+                    msg = 'Lamp "%s": %s' % (obj.name, error)
                     scene.luxcore.errorlog.add_warning(msg)
                 finally:
                     if not has_ies:
@@ -118,7 +117,7 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
                     definitions["fov"] = coneangle * 2
                     definitions["gamma"] = lamp.luxcore.gamma
                 except OSError as error:
-                    msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+                    msg = 'Lamp "%s": %s' % (obj.name, error)
                     scene.luxcore.errorlog.add_warning(msg)
                     # Fallback
                     definitions["type"] = "spot"
@@ -164,11 +163,11 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
                 definitions["transformation"] = transformation
             else:
                 # area (mesh light)
-                return _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importance)
+                return _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance)
 
         else:
             # Can only happen if Blender changes its lamp types
-            raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % blender_obj.name)
+            raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % obj.name)
 
         _indirect_light_visibility(definitions, lamp)
         _visibilitymap(definitions, lamp)
@@ -176,7 +175,7 @@ def convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suf
         props = utils.create_props(prefix, definitions)
         return props, exported_light
     except Exception as error:
-        msg = 'Light "%s": %s' % (blender_obj.name, error)
+        msg = 'Light "%s": %s' % (obj.name, error)
         scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
@@ -239,8 +238,8 @@ def convert_world(exporter, world, scene):
         return pyluxcore.Properties()
 
 
-def _calc_sun_dir(blender_obj):
-    matrix_inv = blender_obj.matrix_world.inverted()
+def _calc_sun_dir(obj):
+    matrix_inv = obj.matrix_world.inverted()
     return [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
 
 
@@ -281,10 +280,10 @@ def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
         definitions["transformation"] = transformation
 
 
-def calc_area_lamp_transformation(blender_obj):
-    lamp = blender_obj.data
+def calc_area_lamp_transformation(obj):
+    lamp = obj.data
 
-    transform_matrix = blender_obj.matrix_world.copy()
+    transform_matrix = obj.matrix_world.copy()
     scale_x = Matrix.Scale(lamp.size / 2, 4, (1, 0, 0))
     if lamp.shape == "RECTANGLE":
         scale_y = Matrix.Scale(lamp.size_y / 2, 4, (0, 1, 0))
@@ -297,12 +296,12 @@ def calc_area_lamp_transformation(blender_obj):
     return transform_matrix
 
 
-def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importance):
+def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance):
     """
     An area light is a plane object with emissive material in LuxCore
     """
-    lamp = blender_obj.data
-    luxcore_name = utils.get_luxcore_name(blender_obj, context)
+    lamp = obj.data
+    luxcore_name = utils.get_luxcore_name(obj, context)
     props = pyluxcore.Properties()
 
     # Light emitting material
@@ -331,7 +330,7 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importa
         try:
             export_ies(mat_definitions, lamp.luxcore.ies, lamp.library, is_meshlight=True)
         except OSError as error:
-            msg = 'Lamp "%s": %s' % (blender_obj.name, error)
+            msg = 'Lamp "%s": %s' % (obj.name, error)
             scene.luxcore.errorlog.add_warning(msg)
 
     mat_props = utils.create_props(mat_prefix, mat_definitions)
@@ -340,7 +339,7 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importa
     # LuxCore object
 
     # Copy transformation of area lamp object
-    transform_matrix = calc_area_lamp_transformation(blender_obj)
+    transform_matrix = calc_area_lamp_transformation(obj)
 
     if transform_matrix.determinant() == 0:
         # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)
@@ -352,7 +351,7 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importa
     # is needed for viewport render so we can move the light object)
 
     # Instancing just means that we transform the object instead of the mesh
-    if utils.use_instancing(blender_obj, scene, context):
+    if utils.use_instancing(obj, scene, context):
         obj_transform = transform
         mesh_transform = None
     else:
@@ -379,7 +378,7 @@ def _convert_area_lamp(blender_obj, scene, context, luxcore_scene, gain, importa
     obj_definitions = {
         "material": mat_name,
         "shape": shape_name,
-        "camerainvisible": not blender_obj.luxcore.visible_to_camera,
+        "camerainvisible": not obj.luxcore.visible_to_camera,
     }
     if obj_transform:
         # Use instancing for viewport render so we can interactively move the light

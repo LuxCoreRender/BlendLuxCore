@@ -9,7 +9,7 @@ def convert(obj, context, scene):
     If the mesh is temporary, it is guaranteed to be removed when the calling block ends.
     Use it like this:
 
-    with mesh_converter.convert(blender_obj, context, scene) as mesh:
+    with mesh_converter.convert(obj, context, scene) as mesh:
         if mesh:
             print(mesh.name)
             ...
@@ -50,17 +50,17 @@ def _need_to_convert_mesh(obj):
             or obj.data.shape_keys)
 
 
-def _begin_autosmooth_if_required(blender_obj):
-    if not getattr(blender_obj.data, "use_auto_smooth", False):
+def _begin_autosmooth_if_required(obj):
+    if not getattr(obj.data, "use_auto_smooth", False):
         return None
 
     # We use an edge split modifier, it does the same as auto smooth
     # The only drawback is that it does not handle custom normals
-    mod = blender_obj.modifiers.new("__LUXCORE_AUTO_SMOOTH__", 'EDGE_SPLIT')
-    mod.split_angle = blender_obj.data.auto_smooth_angle
+    mod = obj.modifiers.new("__LUXCORE_AUTO_SMOOTH__", 'EDGE_SPLIT')
+    mod.split_angle = obj.data.auto_smooth_angle
     return mod
 
 
-def _end_autosmooth_if_required(blender_obj, mod):
+def _end_autosmooth_if_required(obj, mod):
     if mod:
-        blender_obj.modifiers.remove(mod)
+        obj.modifiers.remove(mod)
