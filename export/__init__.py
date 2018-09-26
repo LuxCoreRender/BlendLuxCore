@@ -5,8 +5,8 @@ from .. import utils
 from ..utils import render as utils_render
 from . import (
     blender_object, caches, camera, config, duplis,
-    imagepipeline, light, material, motion_blur, hair,
-    world, halt,
+    group_instance, imagepipeline, light, material,
+    motion_blur, hair, halt, world,
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 
@@ -69,6 +69,8 @@ class Exporter(object):
         # Contains mesh_definitions for multi-user meshes.
         # Keys are made with utils.make_key(blender_obj.data)
         self.shared_meshes = {}
+
+        self.dupli_groups = {}
 
         # A dictionary with the following mapping:
         # {node_key: luxcore_name}
@@ -250,6 +252,7 @@ class Exporter(object):
         # Invalidate node cache
         self.node_cache.clear()
         self.shared_meshes.clear()
+        self.dupli_groups.clear()
 
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
@@ -316,7 +319,10 @@ class Exporter(object):
 
         # Convert particles and dupliverts/faces
         if obj.is_duplicator:
-            duplis.convert(self, obj, scene, context, luxcore_scene, engine)
+            if obj.dupli_type == "GROUP":
+                group_instance.convert(self, obj, scene, context, luxcore_scene, props)
+            else:
+                duplis.convert(self, obj, scene, context, luxcore_scene, engine)
 
         # When moving a duplicated object, update the parent, too (concerns dupliverts/faces)
         if obj.parent and obj.parent.is_duplicator:

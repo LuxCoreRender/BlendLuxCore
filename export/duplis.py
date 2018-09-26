@@ -23,6 +23,8 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
     """
     try:
         assert duplicator.is_duplicator
+        # Groups are handled in export/group_instance.py
+        assert duplicator.dupli_type != "GROUP"
 
         dupli_props = pyluxcore.Properties()
 

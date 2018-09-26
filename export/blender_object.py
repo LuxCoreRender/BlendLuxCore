@@ -72,40 +72,8 @@ def convert(exporter, obj, scene, context, luxcore_scene,
             print(obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
 
-        render_layer = utils.get_current_render_layer(scene)
-        override_mat = render_layer.material_override if render_layer else None
-
-        for lux_object_name, material_index in mesh_definitions:
-            if not context and override_mat:
-                # Only use override material in final render
-                lux_mat_name, mat_props = material.convert(exporter, override_mat, scene, context)
-            else:
-                if material_index < len(obj.material_slots):
-                    mat = obj.material_slots[material_index].material
-                    lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
-
-                    if mat is None:
-                        # Note: material.convert returned the fallback material in this case
-                        msg = 'Object "%s": No material attached to slot %d' % (obj.name, material_index)
-                        scene.luxcore.errorlog.add_warning(msg)
-                else:
-                    # The object has no material slots
-                    msg = 'Object "%s": No material defined' % obj.name
-                    scene.luxcore.errorlog.add_warning(msg)
-                    # Use fallback material
-                    lux_mat_name, mat_props = material.fallback()
-
-            props.Set(mat_props)
-
-            # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
-            lux_shape_name = "Mesh-" + lux_object_name
-            if is_shared_mesh:
-                # The object name saved in the mesh_definitons is incorrect, we have to replace it
-                # (it's the one from the first time this mesh was exported)
-                lux_object_name = luxcore_name + "%03d" % material_index
-
-            _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_mat_name, obj_transform,
-                                   obj, scene, context, duplicator)
+        define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props,
+                              is_shared_mesh, luxcore_name, obj_transform, duplicator)
 
         if update_shared_mesh:
             exporter.shared_meshes[mesh_key] = mesh_definitions
@@ -117,6 +85,44 @@ def convert(exporter, obj, scene, context, luxcore_scene,
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None
+
+
+def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props,
+                          is_shared_mesh, luxcore_name, obj_transform, duplicator):
+    render_layer = utils.get_current_render_layer(scene)
+    override_mat = render_layer.material_override if render_layer else None
+
+    for lux_object_name, material_index in mesh_definitions:
+        if not context and override_mat:
+            # Only use override material in final render
+            lux_mat_name, mat_props = material.convert(exporter, override_mat, scene, context)
+        else:
+            if material_index < len(obj.material_slots):
+                mat = obj.material_slots[material_index].material
+                lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
+
+                if mat is None:
+                    # Note: material.convert returned the fallback material in this case
+                    msg = 'Object "%s": No material attached to slot %d' % (obj.name, material_index)
+                    scene.luxcore.errorlog.add_warning(msg)
+            else:
+                # The object has no material slots
+                msg = 'Object "%s": No material defined' % obj.name
+                scene.luxcore.errorlog.add_warning(msg)
+                # Use fallback material
+                lux_mat_name, mat_props = material.fallback()
+
+        props.Set(mat_props)
+
+        # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
+        lux_shape_name = "Mesh-" + lux_object_name
+        if is_shared_mesh:
+            # The object name saved in the mesh_definitons is incorrect, we have to replace it
+            # (it's the one from the first time this mesh was exported)
+            lux_object_name = luxcore_name + "%03d" % material_index
+
+        _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_mat_name, obj_transform,
+                               obj, scene, context, duplicator)
 
 
 def _handle_pointiness(props, lux_shape_name, obj):
