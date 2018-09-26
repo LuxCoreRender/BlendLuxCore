@@ -6,11 +6,10 @@ from ..utils import render as utils_render
 
 def view_update(engine, context, changes=None):
     scene = context.scene
-    print("[Engine/Viewport] view_update")
-
     scene.luxcore.errorlog.clear()
 
     if engine.session is None:
+        print("=" * 50)
         print("[Engine/Viewport] New session")
         try:
             engine.update_stats("Creating Render Session...", "")

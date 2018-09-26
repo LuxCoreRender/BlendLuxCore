@@ -37,7 +37,7 @@ class Change:
                     s += " | "
                 s += changetype
 
-        return s if changes else "Nothing at all"
+        return s if changes else "NONE"
 
 
 def find_updated_objects(scene):
@@ -89,7 +89,7 @@ class Exporter(object):
         # In final render, context is None
         # In viewport render, engine is None (we can't show messages or check test_break() anyway)
 
-        print("[Exporter] create_session")
+        print("[Exporter] Creating session")
         start = time()
         scene = self.scene
         stats = self.stats
@@ -293,7 +293,6 @@ class Exporter(object):
 
     def update_session(self, changes, session):
         if changes & Change.IMAGEPIPELINE:
-            print("Updating imagepipeline")
             session.Parse(self.imagepipeline_cache.props)
         if changes & Change.HALT:
             session.Parse(self.halt_cache.props)

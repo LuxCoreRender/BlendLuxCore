@@ -5,6 +5,7 @@ from ..utils import render as utils_render
 
 
 def render(engine, scene):
+    print("=" * 50)
     scene.luxcore.errorlog.clear()
     scene.luxcore.denoiser_log.clear()
     render_slot_stats = scene.luxcore.statistics.get_active()

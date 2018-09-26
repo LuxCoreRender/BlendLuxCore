@@ -63,8 +63,7 @@ def convert(exporter, obj, scene, context, luxcore_scene,
                 if mesh and mesh.tessfaces:
                     mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
                 else:
-                    # This is not worth a warning in the errorlog
-                    print(obj.name + ": No mesh data after to_mesh()")
+                    # No mesh data. Happens e.g. on helper curves, so it is completely normal, don't warn about it.
                     return props, None
 
         if mesh_definitions is None:

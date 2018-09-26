@@ -122,7 +122,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
                     # Delete the object we used for duplication, we don't want it to show up in the scene
                     luxcore_scene.DeleteObject(src_name)
 
-        print("Dupli export took %.3f s" % (time() - start))
+        print("[%s] Dupli export took %.3f s" % (duplicator.name, time() - start))
     except Exception as error:
         msg = '[Duplicator "%s"] %s' % (duplicator.name, error)
         scene.luxcore.errorlog.add_warning(msg)
