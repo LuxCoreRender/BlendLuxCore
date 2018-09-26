@@ -56,18 +56,16 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
             name = name_prefix + utils.get_luxcore_name(dupli.object, context)
             matrix_list = utils.matrix_to_list(dupli.matrix, scene, apply_worldscale=True)
 
-            if dupli.object.type == "LAMP" and not dupli.object.data.type == "AREA":
+            if dupli.object.type == "LAMP":
                 # It is a light
                 name_suffix = _get_name_suffix(name_prefix, dupli, context)
-                light_props, exported_light = blender_object.convert(exporter, dupli.object, scene, context, luxcore_scene,
-                                                                     update_mesh=True, dupli_suffix=name_suffix)
-                for luxcore_name in exported_light.luxcore_names:
-                    key = "scene.lights." + luxcore_name + ".transformation"
-                    light_props.Set(pyluxcore.Property(key, matrix_list))
-
+                light_props, exported_light = blender_object.convert(exporter, dupli.object, scene, context,
+                                                                     luxcore_scene, update_mesh=True,
+                                                                     dupli_suffix=name_suffix,
+                                                                     dupli_matrix=dupli.matrix)
                 dupli_props.Set(light_props)
             else:
-                # It is an object or area light
+                # It is an object
                 try:
                     # Already exported, just update the Duplis info
                     exported_duplis[name].add(matrix_list)
