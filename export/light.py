@@ -11,7 +11,7 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
-def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix=""):
+def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", dupli_matrix=None):
     try:
         assert isinstance(obj, bpy.types.Object)
         assert obj.type == "LAMP"
@@ -29,7 +29,7 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix=""):
 
         lamp = obj.data
 
-        matrix = obj.matrix_world
+        transform_matrix = dupli_matrix if dupli_matrix else obj.matrix_world
         sun_dir = _calc_sun_dir(obj)
 
         # Common light settings shared by all light types
@@ -77,7 +77,7 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix=""):
             definitions["power"] = lamp.luxcore.power
             # Position is set by transformation property
             definitions["position"] = [0, 0, 0]
-            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
+            transformation = utils.matrix_to_list(transform_matrix, scene, apply_worldscale=True)
             definitions["transformation"] = transformation
 
             if lamp.luxcore.radius > 0:
@@ -136,12 +136,12 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix=""):
             definitions["target"] = [0, 0, -1]
 
             spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-            transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
+            transformation = utils.matrix_to_list(transform_matrix * spot_fix, scene, apply_worldscale=True)
             definitions["transformation"] = transformation
 
         elif lamp.type == "HEMI":
             if lamp.luxcore.image:
-                _convert_infinite(definitions, lamp, scene, matrix)
+                _convert_infinite(definitions, lamp, scene, transform_matrix)
             else:
                 # Fallback
                 definitions["type"] = "constantinfinite"
@@ -159,11 +159,12 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix=""):
                 definitions["target"] = [0, 0, -1]
 
                 spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-                transformation = utils.matrix_to_list(matrix * spot_fix, scene, apply_worldscale=True)
+                transformation = utils.matrix_to_list(transform_matrix * spot_fix, scene, apply_worldscale=True)
                 definitions["transformation"] = transformation
             else:
                 # area (mesh light)
-                return _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance)
+                return _convert_area_lamp(obj, scene, context, luxcore_scene, gain,
+                                          importance, luxcore_name, dupli_matrix)
 
         else:
             # Can only happen if Blender changes its lamp types
@@ -280,10 +281,7 @@ def _convert_infinite(definitions, lamp_or_world, scene, transformation=None):
         definitions["transformation"] = transformation
 
 
-def calc_area_lamp_transformation(obj):
-    lamp = obj.data
-
-    transform_matrix = obj.matrix_world.copy()
+def calc_area_lamp_transformation(lamp, transform_matrix):
     scale_x = Matrix.Scale(lamp.size / 2, 4, (1, 0, 0))
     if lamp.shape == "RECTANGLE":
         scale_y = Matrix.Scale(lamp.size_y / 2, 4, (0, 1, 0))
@@ -291,17 +289,17 @@ def calc_area_lamp_transformation(obj):
         # basically scale_x, but for the y axis (note the last tuple argument)
         scale_y = Matrix.Scale(lamp.size / 2, 4, (0, 1, 0))
 
+    transform_matrix = transform_matrix.copy()
     transform_matrix *= scale_x
     transform_matrix *= scale_y
     return transform_matrix
 
 
-def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance):
+def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance, luxcore_name, dupli_matrix):
     """
     An area light is a plane object with emissive material in LuxCore
     """
     lamp = obj.data
-    luxcore_name = utils.get_luxcore_name(obj, context)
     props = pyluxcore.Properties()
 
     # Light emitting material
@@ -339,7 +337,8 @@ def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance):
     # LuxCore object
 
     # Copy transformation of area lamp object
-    transform_matrix = calc_area_lamp_transformation(obj)
+    input_matrix = dupli_matrix if dupli_matrix else obj.matrix_world
+    transform_matrix = calc_area_lamp_transformation(obj.data, input_matrix)
 
     if transform_matrix.determinant() == 0:
         # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)

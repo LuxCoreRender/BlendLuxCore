@@ -8,7 +8,8 @@ from .light import convert_lamp
 
 
 def convert(exporter, obj, scene, context, luxcore_scene,
-            exported_object=None, update_mesh=False, dupli_suffix="", duplicator=None):
+            exported_object=None, update_mesh=False,
+            dupli_suffix="", dupli_matrix=None, duplicator=None):
     """
     duplicator: The duplicator object that created this dupli (e.g. the particle emitter object)
     """
@@ -20,7 +21,7 @@ def convert(exporter, obj, scene, context, luxcore_scene,
         return pyluxcore.Properties(), None
 
     if obj.type == "LAMP":
-        return convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix)
+        return convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix, dupli_matrix)
     elif obj.type == "EMPTY":
         return pyluxcore.Properties(), None
 
