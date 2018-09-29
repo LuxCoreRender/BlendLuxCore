@@ -1,6 +1,7 @@
 import bpy
 from . import final, preview, viewport
 from ..handlers.draw_imageeditor import TileStats
+from ..utils.log import LuxCoreLog
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -28,10 +29,17 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
-        if hasattr(self, "_session") and self.session:
-            print("[Engine] del: stopping session")
+        if getattr(self, "session", None):
+            if not self.is_preview:
+                print("[Engine] del: stopping session")
             self.session.Stop()
             del self.session
+
+    def log_listener(self, msg):
+        if "Direct light sampling cache entries" in msg:
+            self.update_stats("", msg)
+        # elif "BCD progress" in msg:  # TODO For some weird reason this does not work
+        #     self.update_stats("", msg)
 
     def render(self, scene):
         if self.is_preview:
@@ -42,7 +50,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def render_final(self, scene):
         try:
             LuxCoreRenderEngine.final_running = True
+            scene.luxcore.display.paused = False
             TileStats.reset()
+            LuxCoreLog.add_listener(self.log_listener)
             final.render(self, scene)
         except Exception as error:
             self.report({"ERROR"}, str(error))
@@ -59,6 +69,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             scene.luxcore.active_layer_index = -1
             LuxCoreRenderEngine.final_running = False
             TileStats.reset()
+            LuxCoreLog.remove_listener(self.log_listener)
 
     def render_preview(self, scene):
         try:
@@ -117,6 +128,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "Depth", 1, "Z", "VALUE")
         if aovs.material_id:
             self.register_pass(scene, renderlayer, "MATERIAL_ID", 1, "X", "VALUE")
+        if aovs.material_id_color:
+            self.register_pass(scene, renderlayer, "MATERIAL_ID_COLOR", 3, "RGB", "COLOR")
         if aovs.object_id:
             self.register_pass(scene, renderlayer, "OBJECT_ID", 1, "X", "VALUE")
         if aovs.emission:

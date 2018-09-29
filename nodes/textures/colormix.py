@@ -18,7 +18,7 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
     ]
 
     def change_mode(self, context):
-        if self.mode in ["scale", "add", "subtract", "mix"]:
+        if self.mode in {"scale", "add", "subtract", "mix"}:
             self.inputs[1].name = "Color 1"
             self.inputs["Color 2"].enabled = True
         else:

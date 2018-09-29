@@ -1,9 +1,13 @@
 import bpy
-from bpy.props import PointerProperty, EnumProperty, BoolProperty, FloatProperty
+from bpy.props import (
+    PointerProperty, EnumProperty,
+    BoolProperty, FloatProperty,
+)
 from .. import LuxCoreNodeTexture
 from ...export.image import ImageExporter
-from ...utils import node as utils_node
+from ...properties.image_user import LuxCoreImageUser
 from ... import utils
+from ...utils import node as utils_node
 from ...utils import ui as utils_ui
 
 
@@ -19,6 +23,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     bl_width_default = 200
 
     def update_image(self, context):
+        self.image_user.update(self.image)
         if self.image:
             # Seems like we still need this.
             # User counting does not work reliably with Python PointerProperty.
@@ -26,6 +31,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             self.image.use_fake_user = True
 
     image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
+    image_user = PointerProperty(type=LuxCoreImageUser)
 
     channel_items = [
         ("default", "Default", "Do not convert the image cannels", 0),
@@ -46,6 +52,12 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         ("white", "White", "", 2),
     ]
     wrap = EnumProperty(name="Wrap", items=wrap_items, default="repeat")
+
+    gamma = FloatProperty(name="Gamma", default=2.2, soft_min=0, soft_max=5,
+                          description="Most LDR images with sRgb colors use gamma 2.2, "
+                                      "while most HDR images with linear colors use gamma 1")
+    brightness = FloatProperty(name="Brightness", default=1,
+                               description="Brightness multiplier")
 
     def update_is_normal_map(self, context):
         color_output = self.outputs["Color"]
@@ -103,8 +115,6 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     show_thumbnail = BoolProperty(name="", default=True, description="Show thumbnail")
 
     def init(self, context):
-        self.add_input("LuxCoreSocketFloatPositive", "Gamma", 2.2)
-        self.add_input("LuxCoreSocketFloatPositive", "Brightness", 1)
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
 
         self.outputs.new("LuxCoreSocketColor", "Color")
@@ -138,10 +148,16 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
 
         col.prop(self, "wrap")
 
+        if not self.is_normal_map:
+            col.prop(self, "gamma")
+            col.prop(self, "brightness")
+
         # Info about UV mapping (only show if default is used,
         # when no mapping node is linked)
         if not self.inputs["2D Mapping"].is_linked:
             utils_node.draw_uv_info(context, col)
+
+        self.image_user.draw(col, context.scene)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         if self.image is None:
@@ -151,7 +167,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
                 return [0, 0, 0]
 
         try:
-            filepath = ImageExporter.export(self.image)
+            filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
         except OSError as error:
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
             exporter.scene.luxcore.errorlog.add_warning(msg)
@@ -179,8 +195,8 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         else:
             definitions.update({
                 "channel": self.channel,
-                "gamma": self.inputs["Gamma"].export(exporter, props),
-                "gain": self.inputs["Brightness"].export(exporter, props),
+                "gamma": self.gamma,
+                "gain": self.brightness,
             })
 
         luxcore_name = self.create_props(props, definitions, luxcore_name)

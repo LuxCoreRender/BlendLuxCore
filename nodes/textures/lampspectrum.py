@@ -1,7 +1,5 @@
-import bpy
 from bpy.props import EnumProperty
 from .. import LuxCoreNodeTexture
-from ... import utils
 
 CATEGORY_ITEMS = [
     ("Natural", "Natural", ""),
@@ -137,7 +135,7 @@ ABSORPTION_ITEMS = [
 
 class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
     bl_label = "Lamp Spectrum"
-    bl_width_default = 200
+    bl_width_default = 310
 
     lamp_category = EnumProperty(name="Lamp Category", description="Lamp Preset Category", items=CATEGORY_ITEMS,
                                         default="Natural")
@@ -209,6 +207,8 @@ class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
             layout.prop(self, "lamp_spectrum_mercury_uv")            
         elif self.lamp_category == "Absorption/Mixed":
             layout.prop(self, "lamp_spectrum_absorption")
+        else:
+            raise NotImplementedError("Unknown lamp category")
     
     def sub_export(self, exporter, props, luxcore_name=None):
         if self.lamp_category == "Natural":
@@ -241,6 +241,8 @@ class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
             spectrum_name = self.lamp_spectrum_mercury_uv
         elif self.lamp_category == "Absorption/Mixed":
             spectrum_name = self.lamp_spectrum_absorption
+        else:
+            raise NotImplementedError("Unknown lamp category")
 
         definitions = {
             "type": "lampspectrum",

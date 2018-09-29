@@ -111,7 +111,28 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         row.prop(config, "use_animated_seed", icon="TIME", toggle=True)
 
         # Light strategy
-        layout.prop(config, "light_strategy")
+        ls_layout = layout.box() if config.light_strategy == "DLS_CACHE" else layout
+        ls_layout.prop(config, "light_strategy")
+
+        if config.light_strategy == "DLS_CACHE":
+            dls_cache = config.dls_cache
+            ls_layout.prop(dls_cache, "entry_radius")
+            ls_layout.prop(dls_cache, "show_advanced", toggle=True)
+
+            if dls_cache.show_advanced:
+                col = ls_layout.column(align=True)
+                col.label("Entry Settings:")
+                col.prop(dls_cache, "entry_normalangle")
+                col.prop(dls_cache, "entry_maxpasses")
+                col.prop(dls_cache, "entry_convergencethreshold")
+                col.prop(dls_cache, "entry_volumes_enable")
+
+                col = ls_layout.column(align=True)
+                col.label("General Cache Settings:")
+                col.prop(dls_cache, "lightthreshold")
+                col.prop(dls_cache, "targetcachehitratio")
+                col.prop(dls_cache, "maxdepth")
+                col.prop(dls_cache, "maxsamplescount")
 
     def draw_clamp_settings(self, layout, config):
         split = layout.split()

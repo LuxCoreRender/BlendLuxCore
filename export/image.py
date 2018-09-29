@@ -39,7 +39,7 @@ class ImageExporter(object):
         return temp_image.name
 
     @classmethod
-    def export(cls, image):
+    def export(cls, image, image_user, scene):
         if image.source == "GENERATED":
             return cls._save_to_temp_file(image)
         elif image.source == "FILE":
@@ -47,15 +47,29 @@ class ImageExporter(object):
                 return cls._save_to_temp_file(image)
             else:
                 try:
-                    filepath = utils.get_abspath(image.filepath, library=image.library, must_exist=True, must_be_existing_file=True)
+                    filepath = utils.get_abspath(image.filepath, library=image.library,
+                                                 must_exist=True, must_be_existing_file=True)
                     return filepath
                 except OSError as error:
                     # Make the error message more precise
                     raise OSError('Could not find image "%s" at path "%s" (%s)'
                                   % (image.name, image.filepath, error))
         elif image.source == "SEQUENCE":
-            # TODO
-            raise NotImplementedError("Sequence not supported yet")
+            # Note: image sequences can never be packed
+            try:
+                frame = image_user.get_frame(scene)
+            except ValueError as error:
+                raise OSError(str(error))
+
+            indexed_filepaths = utils.image_sequence_resolve_all(image)
+            try:
+                if frame < 1:
+                    raise IndexError
+                index, filepath = indexed_filepaths[frame - 1]
+                return filepath
+            except IndexError:
+                raise OSError('Frame %d in image sequence "%s" does not exist (contains only %d frames)'
+                              % (frame, image.name, len(indexed_filepaths)))
         else:
             raise Exception('Unsupported image source "%s" in image "%s"' % (image.source, image.name))
 

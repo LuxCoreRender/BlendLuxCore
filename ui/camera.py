@@ -95,7 +95,9 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         pipeline = cam.luxcore.imagepipeline
 
         # General settings
-        layout.prop(pipeline, "transparent_film")
+        row = layout.row()
+        row.prop(pipeline, "transparent_film")
+        row.prop(context.scene.luxcore.config, "film_opencl_enable")
 
         # Tonemapper settings
         tonemapper = pipeline.tonemapper
@@ -135,6 +137,10 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         mist = pipeline.mist
         box = self.draw_plugin_box(mist)
         if box:
+            col = box.column(align=True)
+            col.scale_y = 0.8
+            col.label("Note: the mist is not anti-aliased.", icon="ERROR")
+            col.label("This causes jagged edges if the effect is too strong.")
             row = box.row()
             row.prop(mist, "color", text="")
             row.prop(mist, "amount", slider=True)
@@ -158,6 +164,7 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         if box:
             box.template_ID(backgroundimage, "image", open="image.open")
             box.prop(backgroundimage, "gamma")
+            backgroundimage.image_user.draw(box, context.scene)
 
         camera_response_func = pipeline.camera_response_func
         box = self.draw_plugin_box(camera_response_func)

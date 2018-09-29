@@ -4,6 +4,7 @@ import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_TEXTURE
 from ..nodeitems import Separator, NodeItemMultiImageImport
+from .. import LuxCoreNodeTree
 
 # Import all texture nodes just so they get registered
 from .band import LuxCoreNodeTexBand
@@ -52,31 +53,10 @@ from .windy import LuxCoreNodeTexWindy
 # they are used in?
 
 
-class LuxCoreTextureNodeTree(NodeTree):
+class LuxCoreTextureNodeTree(LuxCoreNodeTree, NodeTree):
     bl_idname = "luxcore_texture_nodes"
     bl_label = "LuxCore Texture Nodes"
     bl_icon = ICON_TEXTURE
-
-    @classmethod
-    def poll(cls, context):
-        return context.scene.render.engine == "LUXCORE"
-
-    # TODO figure out if we even can choose the texture node tree for the user
-    # @classmethod
-    # def get_from_context(cls, context):
-    #     return None, None, None
-
-    # This block updates the preview, when socket links change
-    def update(self):
-        self.refresh = True
-
-    def acknowledge_connection(self, context):
-        # Set refresh to False without triggering acknowledge_connection again
-        self["refresh"] = False
-
-    refresh = bpy.props.BoolProperty(name="Links Changed",
-                                     default=False,
-                                     update=acknowledge_connection)
 
 
 class LuxCoreNodeCategoryTexture(NodeCategory):
@@ -154,6 +134,11 @@ luxcore_node_categories_texture = [
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_OUTPUT", "Output", items=[
         NodeItem("LuxCoreNodeTexOutput", label="Output"),
+    ]),
+
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_LAYOUT", "Layout", items=[
+        NodeItem("NodeFrame", label="Frame"),
+        NodeItem("NodeReroute", label="Reroute"),
     ]),
 ]
 

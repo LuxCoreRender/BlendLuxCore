@@ -3,6 +3,7 @@ import sys
 
 # import the already loaded addon
 import BlendLuxCore
+from BlendLuxCore.bin import pyluxcore
 
 
 class TestAddon(unittest.TestCase):
@@ -15,4 +16,5 @@ class TestAddon(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestAddon)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())

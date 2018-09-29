@@ -1,5 +1,6 @@
 from bl_ui.properties_particle import ParticleButtonsPanel
 from bpy.types import Panel
+from .. import utils
 
 
 class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
@@ -22,11 +23,16 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
         layout = self.layout
         settings = context.particle_settings.luxcore.hair
 
+        # Note: we can always assume that obj.data has the attribute uv_textures,
+        # because objects that don't have it can't have a particle system in Blender.
+        # We can also assume that obj.data exists, because otherwise this panel is not visible.
+        obj = context.object
+
         layout.prop(settings, "hair_size")
 
         row = layout.row(align=True)
         row.prop(settings, "root_width")
-        row.prop(settings, "tip_width")        
+        row.prop(settings, "tip_width")
         row.prop(settings, "width_offset")
 
         layout.prop(settings, "tesseltype")
@@ -40,10 +46,70 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
             layout.prop(settings, "solid_sidecount")
 
             row = layout.row()
-            row.prop(settings, "solid_capbottom")            
+            row.prop(settings, "solid_capbottom")
             row.prop(settings, "solid_captop")
 
-        layout.prop(settings, "export_color")
+        layout.prop(settings, "copy_uv_coords")
+
+        # UV map selection
+        box = layout.box()
+        box.active = settings.copy_uv_coords or settings.export_color == "uv_texture_map"
+        col = box.column()
+        col.prop(settings, "use_active_uv_map")
+
+        if settings.use_active_uv_map:
+            if obj.data.uv_textures:
+                active_uv = utils.find_active_uv(obj.data.uv_textures)
+                if active_uv:
+                    row = col.row()
+                    row.label("UV Map:")
+                    row.label(active_uv.name, icon="GROUP_UVS")
+        else:
+            col.prop_search(settings, "uv_map_name",
+                            obj.data, "uv_textures",
+                            icon="GROUP_UVS")
+
+        if not obj.data.uv_textures:
+                row = col.row()
+                row.label("No UV map", icon="ERROR")
+                row.operator("mesh.uv_texture_add", icon="ZOOMIN")
+
+        # Vertex color settings
+        box = layout.box()
+        box.prop(settings, "export_color")
+
+        if settings.export_color == "vertex_color":
+            col = box.column()
+            col.prop(settings, "use_active_vertex_color_layer")
+
+            if settings.use_active_vertex_color_layer:
+                if obj.data.vertex_colors:
+                    active_vcol_layer = utils.find_active_vertex_color_layer(obj.data.vertex_colors)
+                    if active_vcol_layer:
+                        row = col.row()
+                        row.label("Vertex Colors:")
+                        row.label(active_vcol_layer.name, icon="GROUP_VCOL")
+            else:
+                col.prop_search(settings, "vertex_color_layer_name",
+                                obj.data, "vertex_colors",
+                                icon="GROUP_VCOL", text="Vertex Colors")
+
+            if not obj.data.vertex_colors:
+                row = col.row()
+                row.label("No Vertex Colors", icon="ERROR")
+                row.operator("mesh.vertex_color_add", icon="ZOOMIN")
+
+        elif settings.export_color == "uv_texture_map":
+            box.template_ID(settings, "image", open="image.open")
+            if settings.image:
+                box.prop(settings, "gamma")
+            settings.image_user.draw(box, context.scene)
+
+        row = box.row()
+        row.prop(settings, "root_color")
+        row.prop(settings, "tip_color")
+
+        layout.prop(settings, "instancing")
 
 
 class LUXCORE_PARTICLE_PT_textures(ParticleButtonsPanel, Panel):

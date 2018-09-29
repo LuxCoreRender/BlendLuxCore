@@ -41,7 +41,7 @@ class TestFullExport(unittest.TestCase):
 
         with open("./full_export/log.txt", "w") as log:
             with redirect_stdout(log):
-                pyluxcore.Init(luxcore_logger)
+                pyluxcore.SetLogHandler(luxcore_logger)
                 # Test final render export from the engine's point of view
                 scene = bpy.context.scene
                 scene.luxcore.active_layer_index = 0
@@ -59,7 +59,7 @@ class TestFullExport(unittest.TestCase):
 
         with open("./full_export/log.txt", "w") as log:
             with redirect_stdout(log):
-                pyluxcore.Init(luxcore_logger)
+                pyluxcore.SetLogHandler(luxcore_logger)
                 # Test user aborting the export process
                 _exporter = export.Exporter(bpy.context.scene)
                 engine = RenderEngineMockup(abort_immediately=True)
@@ -74,4 +74,5 @@ class TestFullExport(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestFullExport)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())

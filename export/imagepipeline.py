@@ -9,7 +9,7 @@ def convert(scene, context=None, index=0):
         prefix = "film.imagepipelines.%d." % index
         definitions = OrderedDict()
 
-        if scene.camera is None:
+        if not utils.is_valid_camera(scene.camera):
             # Can not work without a camera
             _fallback(definitions)
             return utils.create_props(prefix, definitions)
@@ -130,7 +130,9 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
         return index
 
     try:
-        filepath = ImageExporter.export(backgroundimage.image)
+        filepath = ImageExporter.export(backgroundimage.image,
+                                        backgroundimage.image_user,
+                                        scene)
     except OSError as error:
         msg = "Imagepipeline: %s" % error
         scene.luxcore.errorlog.add_warning(msg)

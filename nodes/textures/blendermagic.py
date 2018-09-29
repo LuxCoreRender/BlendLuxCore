@@ -1,12 +1,8 @@
-import bpy
 from bpy.props import FloatProperty, IntProperty
 from .. import LuxCoreNodeTexture
 
-from .. import NOISE_BASIS_ITEMS
-from .. import NOISE_TYPE_ITEMS
-
-from .. import sockets
 from ... import utils
+
 
 class LuxCoreNodeTexBlenderMagic(LuxCoreNodeTexture):
     bl_label = "Blender Magic"
@@ -22,9 +18,10 @@ class LuxCoreNodeTexBlenderMagic(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "noise_depth")
-        layout.prop(self, "turbulence")
-        layout.separator()
+        col = layout.column(align=True)
+        col.prop(self, "noise_depth")
+        col.prop(self, "turbulence")
+
         column = layout.column(align=True)
         column.prop(self, "bright")
         column.prop(self, "contrast")
@@ -40,7 +37,7 @@ class LuxCoreNodeTexBlenderMagic(LuxCoreNodeTexture):
             "contrast": self.contrast,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation),
+            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
         }
         
         return self.create_props(props, definitions, luxcore_name)

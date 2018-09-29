@@ -44,36 +44,90 @@ class CameraCache(object):
 
 
 class ObjectCache(object):
+    class ChangeType:
+        # Types of object changes
+        NONE = 0
+        TRANSFORM = 1 << 0
+        MESH = 1 << 1
+        LAMP = 1 << 2
+
     def __init__(self):
         self._reset()
 
     def _reset(self):
-        self.changed_transform = []
-        self.changed_mesh = []
-        self.lamps = []
+        # We use sets to make duplicates impossible
+        self.changed_transform = set()
+        self.changed_mesh = set()
+        self.changed_lamps = set()
 
-    def diff(self, scene):
+    def _check(self, obj):
+        changes = self.ChangeType.NONE
+
+        if obj.is_updated_data:
+            if obj.type in {"MESH", "CURVE", "SURFACE", "META", "FONT"}:
+                self.changed_mesh.add(obj)
+                changes |= self.ChangeType.MESH
+            elif obj.type == "LAMP":
+                self.changed_lamps.add(obj)
+                changes |= self.ChangeType.LAMP
+
+        if obj.is_updated:
+            if obj.type in {"MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"}:
+                # check if a new material was assigned
+                if obj.data and obj.data.is_updated:
+                    self.changed_mesh.add(obj)
+                    changes |= self.ChangeType.MESH
+                else:
+                    self.changed_transform.add(obj)
+                    changes |= self.ChangeType.TRANSFORM
+            elif obj.type == "LAMP":
+                self.changed_lamps.add(obj)
+                changes |= self.ChangeType.LAMP
+
+        return changes
+
+    def _check_group(self, duplicator_obj, dupli_group):
+        child_obj_changes = self.ChangeType.NONE
+
+        for child_obj in dupli_group.objects:
+            child_obj_changes |= self._check(child_obj)
+
+        if child_obj_changes & (self.ChangeType.MESH | self.ChangeType.LAMP):
+            # Flag the duplicator object for update
+            self.changed_mesh.add(duplicator_obj)
+
+        return child_obj_changes
+
+    def diff(self, scene, objs_updated_by_export):
         self._reset()
 
         if bpy.data.objects.is_updated:
             for obj in scene.objects:
-                if obj.is_updated_data:
-                    if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT"]:
-                        self.changed_mesh.append(obj)
-                    elif obj.type in ["LAMP"]:
-                        self.lamps.append(obj)
+                # Skip the object if it was touched by our previous export, for
+                # example because tessfaces for the mesh were generated.
+                # This prevents unnecessary updates when starting the viewport render.
+                if obj in objs_updated_by_export:
+                    continue
 
-                if obj.is_updated:
-                    if obj.type in ["MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"]:
-                        # check if a new material was assigned
-                        if obj.data and obj.data.is_updated:
-                            self.changed_mesh.append(obj)
-                        else:
-                            self.changed_transform.append(obj)
-                    elif obj.type == "LAMP":
-                        self.lamps.append(obj)
+                self._check(obj)
 
-        return self.changed_transform or self.changed_mesh or self.lamps
+                if obj.dupli_group:
+                    # It is an empty used to instance a group
+                    self._check_group(obj, obj.dupli_group)
+
+                for particle_system in obj.particle_systems:
+                    settings = particle_system.settings
+
+                    if settings.render_type == "OBJECT":
+                        changes = self._check(settings.dupli_object)
+                        if changes & (self.ChangeType.MESH | self.ChangeType.LAMP):
+                            # The data of the source object was modified,
+                            # flag the duplicator for update
+                            self.changed_mesh.add(obj)
+                    elif settings.render_type == "GROUP":
+                        self._check_group(obj, settings.dupli_group)
+
+        return self.changed_transform or self.changed_mesh or self.changed_lamps
 
 
 class MaterialCache(object):
@@ -81,7 +135,7 @@ class MaterialCache(object):
         self._reset()
 
     def _reset(self):
-        self.changed_materials = []
+        self.changed_materials = set()
 
     def diff(self):
         self._reset()
@@ -105,7 +159,7 @@ class MaterialCache(object):
                             mat_updated = True
 
                 if mat_updated:
-                    self.changed_materials.append(mat)
+                    self.changed_materials.add(mat)
 
         return self.changed_materials
 

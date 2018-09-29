@@ -12,6 +12,17 @@ from ...properties.light import (
 from ...properties.ies import LuxCoreIESProps
 from ...export import light
 
+DLS_AUTO_DESC = "Direct light sampling is disabled if the mesh has more than 256 triangles"
+DLS_ENABLED_DESC = (
+    "Enable direct light sampling: "
+    "Trace a shadow ray for each triangle of this mesh (expensive if mesh has many faces). "
+    "Use this option if the mesh has more than 256 triangles and is the primary light source in the scene"
+)
+DLS_DISABLED_DESC = (
+    "Disable direct light sampling: "
+    "Improves rendering performance of highpoly light emitters if they contribute only little light to the scene"
+)
+
 
 class LuxCoreNodeMatEmission(LuxCoreNode):
     """
@@ -35,6 +46,13 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
                                  max=math.pi / 2, subtype="ANGLE", unit="ROTATION",
                                  description=SPREAD_ANGLE_DESCRIPTION)
     lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
+    dls_type_items = [
+        ("AUTO", "Auto", DLS_AUTO_DESC, 0),
+        ("ENABLED", "Enabled", DLS_ENABLED_DESC, 1),
+        ("DISABLED", "Disabled", DLS_DISABLED_DESC, 2),
+    ]
+    dls_type = EnumProperty(name="DLS", description="Direct Light Sampling Type",
+                            items=dls_type_items, default="AUTO")
     # TODO: mapfile and gamma?
 
     def init(self, context):
@@ -82,6 +100,8 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
             sub.prop(self.ies, "map_width")
             sub.prop(self.ies, "map_height")
 
+        layout.prop(self, "dls_type")
+
     def export_emission(self, exporter, props, definitions):
         """
         The export method is different because this is not a normal material node.
@@ -97,6 +117,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         lightgroup_id = lightgroups.get_id_by_name(self.lightgroup)
         definitions["emission.id"] = lightgroup_id
         exporter.lightgroup_cache.add(lightgroup_id)
+        definitions["emission.directlightsampling.type"] = self.dls_type
 
         if self.ies.use:
             try:

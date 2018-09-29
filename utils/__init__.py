@@ -5,6 +5,8 @@ import re
 import os
 from ..bin import pyluxcore
 
+NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
+
 
 class ExportedObject(object):
     def __init__(self, mesh_definitions):
@@ -104,7 +106,7 @@ def create_props(prefix, definitions):
 def get_worldscale(scene, as_scalematrix=True):
     unit_settings = scene.unit_settings
 
-    if unit_settings.system in ["METRIC", "IMPERIAL"]:
+    if unit_settings.system in {"METRIC", "IMPERIAL"}:
         # The units used in modelling are for display only. behind
         # the scenes everything is in meters
         ws = unit_settings.scale_length
@@ -150,9 +152,6 @@ def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
     if matrix.determinant() == 0:
         # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
         # Prevent a RuntimeError from LuxCore by adding a small random epsilon.
-        msg = "Non-invertible matrix. Can happen if e.g. an object has scale 0"
-        bpy.context.scene.luxcore.errorlog.add_warning(msg)
-
         # TODO maybe look for a better way to handle this
         from random import random
         return [float(i) + (1e-5 + random() * 1e-5) for i in l]
@@ -175,6 +174,7 @@ def calc_filmsize_raw(scene, context=None):
 
 
 def calc_filmsize(scene, context=None):
+    render = scene.render
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     
@@ -188,11 +188,11 @@ def calc_filmsize(scene, context=None):
         else:
             # Camera viewport
             zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
-            aspectratio, aspect_x, aspect_y = calc_aspect(scene.render.resolution_x * scene.render.pixel_aspect_x,
-                                                          scene.render.resolution_y * scene.render.pixel_aspect_y,
+            aspectratio, aspect_x, aspect_y = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                          render.resolution_y * render.pixel_aspect_y,
                                                           scene.camera.data.sensor_fit)
 
-            if scene.render.use_border:
+            if render.use_border:
                 base = zoom
                 if scene.camera.data.sensor_fit == "AUTO":
                     base *= max(width, height)
@@ -203,6 +203,10 @@ def calc_filmsize(scene, context=None):
 
                 width = int(base * aspect_x * border_max_x) - int(base * aspect_x * border_min_x)
                 height = int(base * aspect_y * border_max_y) - int(base * aspect_y * border_min_y)
+
+        pixel_size = int(scene.luxcore.viewport.pixel_size)
+        width //= pixel_size
+        height //= pixel_size
     else:
         # Final render
         width = int(width_raw * border_max_x) - int(width_raw * border_min_x)
@@ -217,6 +221,8 @@ def calc_filmsize(scene, context=None):
 
 
 def calc_blender_border(scene, context=None):
+    render = scene.render
+
     if context and context.region_data.view_perspective in ("ORTHO", "PERSP"):
         # Viewport camera
         border_max_x = context.space_data.render_border_max_x
@@ -225,15 +231,15 @@ def calc_blender_border(scene, context=None):
         border_min_y = context.space_data.render_border_min_y
     else:
         # Final camera
-        border_max_x = scene.render.border_max_x
-        border_max_y = scene.render.border_max_y
-        border_min_x = scene.render.border_min_x
-        border_min_y = scene.render.border_min_y
+        border_max_x = render.border_max_x
+        border_max_y = render.border_max_y
+        border_min_x = render.border_min_x
+        border_min_y = render.border_min_y
 
     if context and context.region_data.view_perspective in ("ORTHO", "PERSP"):
         use_border = context.space_data.use_render_border
     else:
-        use_border = scene.render.use_border
+        use_border = render.use_border
 
     if use_border:
         blender_border = [border_min_x, border_max_x, border_min_y, border_max_y]
@@ -249,15 +255,14 @@ def calc_blender_border(scene, context=None):
 def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     # shift is in range -2..2
     # offset is in range -4..4
+    render = scene.render
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
+    world_scale = get_worldscale(scene, False)
 
     # Following: Black Magic
     scale = 1
-    if scene.camera and scene.camera.data.type == "ORTHO":
-        scale = 0.5 * scene.camera.data.ortho_scale
-
     offset_x = 0
     offset_y = 0
     
@@ -266,16 +271,17 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
         if context.region_data.view_perspective == "CAMERA":
             offset_x, offset_y = context.region_data.view_camera_offset
             # Camera view            
-            if scene.render.use_border:
+            if render.use_border:
                 offset_x = 0
                 offset_y = 0
                 zoom = 1
-                aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x * scene.render.pixel_aspect_x,
-                                                            scene.render.resolution_y * scene.render.pixel_aspect_y,
+                aspectratio, xaspect, yaspect = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                            render.resolution_y * render.pixel_aspect_y,
                                                             scene.camera.data.sensor_fit)
                     
                 if scene.camera and scene.camera.data.type == "ORTHO":
-                    zoom = 0.5 * scene.camera.data.ortho_scale
+                    zoom = 0.5 * scene.camera.data.ortho_scale * world_scale
+                    scale = zoom
             else:
                 # No border
                 aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw, scene.camera.data.sensor_fit)
@@ -284,10 +290,9 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
             aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw)
     else:
         # Final rendering
-        aspectratio, xaspect, yaspect = calc_aspect(scene.render.resolution_x * scene.render.pixel_aspect_x,
-                                                    scene.render.resolution_y * scene.render.pixel_aspect_y,
+        aspectratio, xaspect, yaspect = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                    render.resolution_y * render.pixel_aspect_y,
                                                     scene.camera.data.sensor_fit)
-
 
     dx = scale * 2 * (shift_x + 2 * xaspect * offset_x)
     dy = scale * 2 * (shift_y + 2 * yaspect * offset_y)
@@ -309,9 +314,7 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     return screenwindow
 
 
-def calc_aspect(width, height, fit = "AUTO"):
-    aspect = 1.0
-
+def calc_aspect(width, height, fit="AUTO"):
     horizontal_fit = False
     if fit == "AUTO":
         horizontal_fit = (width > height)
@@ -337,6 +340,13 @@ def find_active_uv(uv_textures):
     return None
 
 
+def find_active_vertex_color_layer(vertex_colors):
+    for layer in vertex_colors:
+        if layer.active_render:
+            return layer
+    return None
+
+
 def is_obj_visible(obj, scene, context=None, is_dupli=False):
     """
     Find out if an object is visible.
@@ -346,7 +356,7 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         return True
 
     # Check if object is used as camera clipping plane
-    if scene.camera and obj == scene.camera.data.luxcore.clipping_plane:
+    if is_valid_camera(scene.camera) and obj == scene.camera.data.luxcore.clipping_plane:
         return False
 
     render_layer = get_current_render_layer(scene)
@@ -359,7 +369,6 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         exclude_layers = [False] * 20
 
     on_visible_layer = False
-    # for lv in [ol and sl and rl for ol, sl, rl in zip(obj.layers, scene.layers, render_layers)]:
     for lv in [ol and sl and not el for ol, sl, el in zip(obj.layers, scene.layers, exclude_layers)]:
         on_visible_layer |= lv
 
@@ -450,6 +459,11 @@ def use_obj_motion_blur(obj, scene):
     return object_blur and obj.luxcore.enable_motion_blur
 
 
+def can_share_mesh(obj):
+    modified = any([mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers])
+    return not modified and obj.data and obj.data.users > 1
+
+
 def use_instancing(obj, scene, context):
     if context:
         # Always instance in viewport so we can move the object/light around
@@ -459,15 +473,18 @@ def use_instancing(obj, scene, context):
         # When using object motion blur, we export all objects as instances
         return True
 
-    # TODO: more checks, e.g. Alt+D copies without modifiers or with equal modifier stacks
+    # Alt+D copies without deforming modifiers
+    if can_share_mesh(obj):
+        return True
 
     return False
 
 
 def find_smoke_domain_modifier(obj):
     for mod in obj.modifiers:
-        if mod.name == "Smoke" and mod.smoke_type == "DOMAIN":
+        if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
             return mod
+    return None
 
 
 def get_name_with_lib(datablock):
@@ -522,3 +539,40 @@ def pluralize(format_str, amount):
 
 def is_opencl_build():
     return not pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool()
+
+
+def image_sequence_resolve_all(image):
+    """
+    From https://blender.stackexchange.com/a/21093/29401
+    Returns a list of tuples: (index, filepath)
+    index is the frame number, parsed from the filepath
+    """
+    filepath = get_abspath(image.filepath, image.library)
+    basedir, filename = os.path.split(filepath)
+    filename_noext, ext = os.path.splitext(filename)
+
+    from string import digits
+    if isinstance(filepath, bytes):
+        digits = digits.encode()
+    filename_nodigits = filename_noext.rstrip(digits)
+
+    if len(filename_nodigits) == len(filename_noext):
+        # Input isn't from a sequence
+        return []
+
+    indexed_filepaths = []
+    for f in os.scandir(basedir):
+        index_str = f.name[len(filename_nodigits):-len(ext) if ext else -1]
+
+        if (f.is_file()
+                and f.name.startswith(filename_nodigits)
+                and f.name.endswith(ext)
+                and index_str.isdigit()):
+            elem = (int(index_str), f.path)
+            indexed_filepaths.append(elem)
+
+    return sorted(indexed_filepaths, key=lambda elem: elem[0])
+
+
+def is_valid_camera(obj):
+    return obj and hasattr(obj, "type") and obj.type == "CAMERA"

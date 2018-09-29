@@ -1,5 +1,6 @@
 import os
 import errno
+from math import degrees
 import bpy
 from collections import OrderedDict
 from ..bin import pyluxcore
@@ -30,11 +31,13 @@ def convert(exporter, scene, context=None, engine=None):
                 scene.luxcore.errorlog.add_warning(msg)
                 use_cpu = True
 
+            resolutionreduction = 4 if scene.luxcore.viewport.reduce_resolution_on_edit else 1
+
             if use_cpu:
                 luxcore_engine = "RTPATHCPU"
                 sampler = "RTPATHCPUSAMPLER"
                 # Size of the blocks right after a scene edit (in pixels)
-                definitions["rtpathcpu.zoomphase.size"] = 4
+                definitions["rtpathcpu.zoomphase.size"] = resolutionreduction
                 # How to blend new samples over old ones.
                 # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
                 definitions["rtpathcpu.zoomphase.weight"] = 0
@@ -42,8 +45,8 @@ def convert(exporter, scene, context=None, engine=None):
                 luxcore_engine = "RTPATHOCL"
                 sampler = "TILEPATHSAMPLER"
                 # Render a sample every n x n pixels in the first passes.
-                # For instance 4x4 than 2x2 and then always 1x1.
-                definitions["rtpath.resolutionreduction.preview"] = 4
+                # For instance 4x4 then 2x2 and then always 1x1.
+                definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
                 # Each preview step is rendered for n frames.
                 definitions["rtpath.resolutionreduction.step"] = 1
                 # Render a sample every n x n pixels, outside the preview phase,
@@ -146,7 +149,11 @@ def convert(exporter, scene, context=None, engine=None):
             "lightstrategy.type": config.light_strategy,
             "scene.epsilon.min": config.min_epsilon,
             "scene.epsilon.max": config.max_epsilon,
+            "film.opencl.enable": config.film_opencl_enable,
         })
+
+        if config.light_strategy == "DLS_CACHE":
+            _convert_dlscache_settings(scene, definitions, config)
 
         if config.path.use_clamping:
             definitions["path.clamping.variance.maxvalue"] = config.path.clamping
@@ -159,7 +166,7 @@ def convert(exporter, scene, context=None, engine=None):
 
         # Transparent film settings
         black_background = False
-        if scene.camera:
+        if utils.is_valid_camera(scene.camera):
             pipeline = scene.camera.data.luxcore.imagepipeline
 
             if (pipeline.transparent_film or use_backgroundimage(context, scene)) and not use_filesaver:
@@ -265,3 +272,20 @@ def _convert_metropolis_settings(definitions, config):
     definitions["sampler.metropolis.largesteprate"] = config.metropolis_largesteprate / 100
     definitions["sampler.metropolis.maxconsecutivereject"] = config.metropolis_maxconsecutivereject
     definitions["sampler.metropolis.imagemutationrate"] = config.metropolis_imagemutationrate / 100
+
+
+def _convert_dlscache_settings(scene, definitions, config):
+    dls_cache = config.dls_cache
+    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+    definitions.update({
+        "lightstrategy.entry.radius": dls_cache.entry_radius * worldscale,
+        "lightstrategy.entry.normalangle": degrees(dls_cache.entry_normalangle),
+        "lightstrategy.entry.maxpasses": dls_cache.entry_maxpasses,
+        "lightstrategy.entry.convergencethreshold": dls_cache.entry_convergencethreshold / 100,
+        "lightstrategy.entry.volumes.enable": dls_cache.entry_volumes_enable,
+
+        "lightstrategy.lightthreshold": dls_cache.lightthreshold / 100,
+        "lightstrategy.targetcachehitratio": dls_cache.targetcachehitratio / 100,
+        "lightstrategy.maxdepth": dls_cache.maxdepth,
+        "lightstrategy.maxsamplescount": dls_cache.maxsamplescount,
+    })

@@ -6,11 +6,10 @@ from ..utils import render as utils_render
 
 def view_update(engine, context, changes=None):
     scene = context.scene
-    print("[Engine/Viewport] view_update")
-
     scene.luxcore.errorlog.clear()
 
     if engine.session is None:
+        print("=" * 50)
         print("[Engine/Viewport] New session")
         try:
             engine.update_stats("Creating Render Session...", "")
@@ -43,7 +42,9 @@ def view_update(engine, context, changes=None):
 
     # We have to re-assign the session because it might have been replaced due to filmsize change
     engine.session = engine.exporter.update(context, engine.session, changes)
-    engine.viewport_start_time = time()
+
+    if changes:
+        engine.viewport_start_time = time()
     
 
 def view_draw(engine, context):
@@ -75,7 +76,7 @@ def view_draw(engine, context):
     except RuntimeError as error:
         print("[Engine/Viewport] Error during UpdateStats():", error)
     engine.session.WaitNewFrame()
-    engine.framebuffer.update(engine.session)
+    engine.framebuffer.update(engine.session, context)
 
     region_size = context.region.width, context.region.height
     view_camera_offset = list(context.region_data.view_camera_offset)

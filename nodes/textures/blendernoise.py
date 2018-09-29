@@ -2,6 +2,7 @@ from bpy.props import EnumProperty, FloatProperty, IntProperty
 from .. import LuxCoreNodeTexture
 from ... import utils
 
+
 class LuxCoreNodeTexBlenderNoise(LuxCoreNodeTexture):
     bl_label = "Blender Noise"
     bl_width_default = 200    
@@ -31,7 +32,7 @@ class LuxCoreNodeTexBlenderNoise(LuxCoreNodeTexture):
             "contrast": self.contrast,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation),
+            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
         }
         
         return self.create_props(props, definitions, luxcore_name)

@@ -38,10 +38,15 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
     maxcount = IntProperty(name="Max. Steps", default=1024, min=0,
                            description="Maximum Step Count for Volume Integration")
     auto_step_settings = BoolProperty(name="Auto Step Settings", default=False,
-                                      description="Enable when using a smoke domain."
-                                                  "Automatically calculates the correct step size and max. steps")
-    domain = PointerProperty(name="Domain", type=bpy.types.Object,
-                             description="Domain object to take the step size and max. steps settings from")
+                                      description="Enable when using a smoke domain. "
+                                                  "Automatically calculates the correct step size and maximum steps")
+
+    def poll_domain(self, obj):
+        # Only allow objects with a smoke modifier in domain mode to be picked
+        return utils.find_smoke_domain_modifier(obj)
+
+    domain = PointerProperty(name="Domain", type=bpy.types.Object, poll=poll_domain,
+                             description="Domain object for calculating the step size and maximum steps settings")
 
     multiscattering = BoolProperty(name="Multiscattering", default=False,
                                    description=MULTISCATTERING_DESC)

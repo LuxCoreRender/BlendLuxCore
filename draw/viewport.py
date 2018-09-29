@@ -34,7 +34,7 @@ class FrameBuffer(object):
         self._height = filmsize[1]
         self._border = utils.calc_blender_border(context.scene, context)
 
-        if context.scene.camera:
+        if utils.is_valid_camera(context.scene.camera):
             pipeline = context.scene.camera.data.luxcore.imagepipeline
             self._transparent = pipeline.transparent_film
         else:
@@ -56,7 +56,7 @@ class FrameBuffer(object):
         glGenTextures(1, self.texture)
         self.texture_id = self.texture[0]
 
-    def update(self, luxcore_session):
+    def update(self, luxcore_session, context):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
 
         # update texture
@@ -69,10 +69,11 @@ class FrameBuffer(object):
             internal_format = GL_RGB32F
         glTexImage2D(GL_TEXTURE_2D, 0, internal_format, self._width, self._height,
                      0, gl_format, GL_FLOAT, self.buffer)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        mag_filter = GL_NEAREST if context.scene.luxcore.viewport.mag_filter == "NEAREST" else GL_LINEAR
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter)
 
     def draw(self, region_size, view_camera_offset, view_camera_zoom, engine, context):
         if self._transparent:
@@ -89,7 +90,8 @@ class FrameBuffer(object):
             # This is the fragment shader that applies Blender color management
             engine.bind_display_space_shader(context.scene)
 
-        draw_quad(offset_x, offset_y, self._width, self._height)
+        pixel_size = int(context.scene.luxcore.viewport.pixel_size)
+        draw_quad(offset_x, offset_y, self._width * pixel_size, self._height * pixel_size)
 
         if engine.support_display_space_shader(context.scene):
             engine.unbind_display_space_shader()
@@ -105,26 +107,29 @@ class FrameBuffer(object):
             glDisable(GL_BLEND)
 
     def _calc_offset(self, context, region_size, view_camera_offset, zoom):
+        render = context.scene.render
         region_width, region_height = region_size
         border_min_x, border_max_x, border_min_y, border_max_y = self._border
 
-        if context.region_data.view_perspective == "CAMERA" and context.scene.render.use_border:
+        if context.region_data.view_perspective == "CAMERA" and render.use_border:
             # Offset is only needed if viewport is in camera mode and uses border rendering
+            sensor_fit = context.scene.camera.data.sensor_fit
+
             aspectratio, aspect_x, aspect_y = utils.calc_aspect(
-                context.scene.render.resolution_x * context.scene.render.pixel_aspect_x,
-                context.scene.render.resolution_y * context.scene.render.pixel_aspect_y,
-                context.scene.camera.data.sensor_fit)
+                render.resolution_x * render.pixel_aspect_x,
+                render.resolution_y * render.pixel_aspect_y,
+                sensor_fit)
 
             base = 0.5 * zoom
-            if context.scene.camera.data.sensor_fit == "AUTO":
+            if sensor_fit == "AUTO":
                 base *= max(region_width, region_height)
-            elif context.scene.camera.data.sensor_fit == "HORIZONTAL":
+            elif sensor_fit == "HORIZONTAL":
                 base *= region_width
-            elif context.scene.camera.data.sensor_fit == "VERTICAL":
+            elif sensor_fit == "VERTICAL":
                 base *= region_height
 
-            offset_x = ((0.5 - 2 * zoom * view_camera_offset[0]) * region_width + aspect_x * base * (2 * border_min_x - 1))
-            offset_y = ((0.5 - 2 * zoom * view_camera_offset[1]) * region_height + aspect_y * base * (2 * border_min_y - 1))
+            offset_x = self._cam_border_offset(aspect_x, base, border_min_x, region_width, view_camera_offset[0], zoom)
+            offset_y = self._cam_border_offset(aspect_y, base, border_min_y, region_height, view_camera_offset[1], zoom)
 
         else:
             offset_x = region_width * border_min_x + 1
@@ -132,3 +137,6 @@ class FrameBuffer(object):
 
         # offset_x, offset_y are in pixels
         return int(offset_x), int(offset_y)
+
+    def _cam_border_offset(self, aspect, base, border_min, region_width, view_camera_offset, zoom):
+        return (0.5 - 2 * zoom * view_camera_offset) * region_width + aspect * base * (2 * border_min - 1)

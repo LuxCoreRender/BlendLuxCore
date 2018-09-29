@@ -45,7 +45,7 @@ def assertAlmostEqual(test_case, value1, value2, places=3):
 
 def export(blender_scene):
     # Export the scene (with silenced pyluxcore)
-    pyluxcore.Init(luxcore_logger)
+    pyluxcore.SetLogHandler(luxcore_logger)
     blender_scene.luxcore.active_layer_index = 0
     exporter = Exporter(blender_scene)
     session = exporter.create_session()
@@ -110,4 +110,5 @@ class TestParticles(unittest.TestCase):
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestParticles)
 result = unittest.TextTestRunner().run(suite)
 
+pyluxcore.SetLogHandler(None)
 sys.exit(not result.wasSuccessful())

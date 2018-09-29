@@ -1,159 +1,162 @@
-import bpy
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import ExportedObject
 from ..utils import node as utils_node
 
-from . import material
+from . import material, mesh_converter
 from .light import convert_lamp
 
 
-def convert(exporter, blender_obj, scene, context, luxcore_scene,
-            exported_object=None, update_mesh=False, dupli_suffix="", duplicator=None):
+def convert(exporter, obj, scene, context, luxcore_scene,
+            exported_object=None, update_mesh=False,
+            dupli_suffix="", dupli_matrix=None, duplicator=None):
     """
     duplicator: The duplicator object that created this dupli (e.g. the particle emitter object)
     """
 
-    if not utils.is_obj_visible(blender_obj, scene, context, is_dupli=dupli_suffix):
+    if not utils.is_obj_visible(obj, scene, context, is_dupli=dupli_suffix):
         return pyluxcore.Properties(), None
 
-    if blender_obj.is_duplicator and not utils.is_duplicator_visible(blender_obj):
+    if obj.is_duplicator and not utils.is_duplicator_visible(obj):
         return pyluxcore.Properties(), None
 
-    if blender_obj.type == "LAMP":
-        return convert_lamp(exporter, blender_obj, scene, context, luxcore_scene, dupli_suffix)
-    elif blender_obj.type == "EMPTY":
+    if obj.type == "LAMP":
+        return convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix, dupli_matrix)
+    elif obj.type == "EMPTY":
         return pyluxcore.Properties(), None
 
     try:
-        # print("converting object:", blender_obj.name)
         # Note that his is not the final luxcore_name, as the object may be split by DefineBlenderMesh()
-        luxcore_name = utils.get_luxcore_name(blender_obj, context) + dupli_suffix
+        luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
         props = pyluxcore.Properties()
 
-        if blender_obj.data is None:
+        if obj.data is None:
             # This is not worth a warning in the errorlog
-            print(blender_obj.name + ": No mesh data")
+            print(obj.name + ": No mesh data")
             return props, None
 
-        transformation = utils.matrix_to_list(blender_obj.matrix_world, scene, apply_worldscale=True)
+        transformation = utils.matrix_to_list(obj.matrix_world, scene, apply_worldscale=True)
 
         # Instancing just means that we transform the object instead of the mesh
-        if utils.use_instancing(blender_obj, scene, context) or dupli_suffix:
+        if utils.use_instancing(obj, scene, context) or dupli_suffix:
             obj_transform = transformation
             mesh_transform = None
         else:
             obj_transform = None
             mesh_transform = transformation
 
+        is_shared_mesh = utils.can_share_mesh(obj) and not dupli_suffix
+        update_shared_mesh = False
+        mesh_key = utils.make_key(obj.data)
+        mesh_definitions = None
+
+        if is_shared_mesh:
+            try:
+                # Try to use the mesh_definitions created during the first export of this shared mesh
+                mesh_definitions = exporter.shared_meshes[mesh_key]
+                update_mesh = False
+            except KeyError:
+                # The shared mesh was not exported yet, this is the first time
+                update_shared_mesh = True
+
         if update_mesh:
-            # print("converting mesh:", blender_obj.data.name)
-            modifier_mode = "PREVIEW" if context else "RENDER"
-            apply_modifiers = True
-            edge_split_mod = _begin_autosmooth_if_required(blender_obj)
-            mesh = blender_obj.to_mesh(scene, apply_modifiers, modifier_mode)
-            _end_autosmooth_if_required(blender_obj, edge_split_mod)
+            with mesh_converter.convert(obj, context, scene) as mesh:
+                if mesh and mesh.tessfaces:
+                    mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
+                else:
+                    # No mesh data. Happens e.g. on helper curves, so it is completely normal, don't warn about it.
+                    return props, None
 
-            if mesh is None or len(mesh.tessfaces) == 0:
-                # This is not worth a warning in the errorlog
-                print(blender_obj.name + ": No mesh data after to_mesh()")
-                if mesh:
-                    bpy.data.meshes.remove(mesh, do_unlink=False)
-                return props, None
-
-            mesh_definitions = _convert_mesh_to_shapes(luxcore_name, mesh, luxcore_scene, mesh_transform)
-            bpy.data.meshes.remove(mesh, do_unlink=False)
-        else:
+        if mesh_definitions is None:
+            # This is the case if (not is_shared_mesh or update_shared_mesh)
             assert exported_object is not None
-            print(blender_obj.name + ": Using cached mesh")
+            print(obj.name + ": Using cached mesh")
             mesh_definitions = exported_object.mesh_definitions
 
-        render_layer = utils.get_current_render_layer(scene)
-        override_mat = render_layer.material_override if render_layer else None
+        define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props,
+                              is_shared_mesh, luxcore_name, obj_transform, duplicator)
 
-        for lux_object_name, material_index in mesh_definitions:
-            if not context and override_mat:
-                # Only use override material in final render
-                lux_mat_name, mat_props = material.convert(exporter, override_mat, scene, context)
-            else:
-                if material_index < len(blender_obj.material_slots):
-                    mat = blender_obj.material_slots[material_index].material
-                    lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
-
-                    if mat is None:
-                        # Note: material.convert returned the fallback material in this case
-                        msg = 'Object "%s": No material attached to slot %d' % (blender_obj.name, material_index)
-                        scene.luxcore.errorlog.add_warning(msg)
-                else:
-                    # The object has no material slots
-                    msg = 'Object "%s": No material defined' % blender_obj.name
-                    scene.luxcore.errorlog.add_warning(msg)
-                    # Use fallback material
-                    lux_mat_name, mat_props = material.fallback()
-
-            props.Set(mat_props)
-            _define_luxcore_object(props, lux_object_name, lux_mat_name, obj_transform,
-                                   blender_obj, scene, context, duplicator)
+        if update_shared_mesh:
+            exporter.shared_meshes[mesh_key] = mesh_definitions
 
         return props, ExportedObject(mesh_definitions)
     except Exception as error:
-        msg = 'Object "%s": %s' % (blender_obj.name, error)
+        msg = 'Object "%s": %s' % (obj.name, error)
         scene.luxcore.errorlog.add_warning(msg)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None
 
 
-def _begin_autosmooth_if_required(blender_obj):
-    if not getattr(blender_obj.data, "use_auto_smooth", False):
-        return None
+def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props,
+                          is_shared_mesh, luxcore_name, obj_transform, duplicator):
+    render_layer = utils.get_current_render_layer(scene)
+    override_mat = render_layer.material_override if render_layer else None
 
-    # We use an edge split modifier, it does the same as auto smooth
-    # The only drawback is that it does not handle custom normals
-    mod = blender_obj.modifiers.new("__LUXCORE_AUTO_SMOOTH__", 'EDGE_SPLIT')
-    mod.split_angle = blender_obj.data.auto_smooth_angle
-    return mod
+    for lux_object_name, material_index in mesh_definitions:
+        if not context and override_mat:
+            # Only use override material in final render
+            lux_mat_name, mat_props = material.convert(exporter, override_mat, scene, context)
+        else:
+            if material_index < len(obj.material_slots):
+                mat = obj.material_slots[material_index].material
+                lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
+
+                if mat is None:
+                    # Note: material.convert returned the fallback material in this case
+                    msg = 'Object "%s": No material attached to slot %d' % (obj.name, material_index)
+                    scene.luxcore.errorlog.add_warning(msg)
+            else:
+                # The object has no material slots
+                msg = 'Object "%s": No material defined' % obj.name
+                scene.luxcore.errorlog.add_warning(msg)
+                # Use fallback material
+                lux_mat_name, mat_props = material.fallback()
+
+        props.Set(mat_props)
+
+        # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
+        lux_shape_name = "Mesh-" + lux_object_name
+        if is_shared_mesh:
+            # The object name saved in the mesh_definitons is incorrect, we have to replace it
+            # (it's the one from the first time this mesh was exported)
+            lux_object_name = luxcore_name + "%03d" % material_index
+
+        _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_mat_name, obj_transform,
+                               obj, scene, context, duplicator)
 
 
-def _end_autosmooth_if_required(blender_obj, mod):
-    if mod:
-        blender_obj.modifiers.remove(mod)
-
-
-def _handle_pointiness(props, luxcore_shape_name, blender_obj):
+def _handle_pointiness(props, lux_shape_name, obj):
     use_pointiness = False
 
-    for mat_slot in blender_obj.material_slots:
+    for mat_slot in obj.material_slots:
         mat = mat_slot.material
         if mat and mat.luxcore.node_tree:
             # Material with nodetree, check the nodes for pointiness node
             use_pointiness = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")
 
     if use_pointiness:
-        pointiness_shape = luxcore_shape_name + "_pointiness"
+        pointiness_shape = lux_shape_name + "_pointiness"
         prefix = "scene.shapes." + pointiness_shape + "."
         props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
-        props.Set(pyluxcore.Property(prefix + "source", luxcore_shape_name))
-        luxcore_shape_name = pointiness_shape
+        props.Set(pyluxcore.Property(prefix + "source", lux_shape_name))
+        lux_shape_name = pointiness_shape
 
-    return luxcore_shape_name
+    return lux_shape_name
 
 
-def _define_luxcore_object(props, lux_object_name, lux_material_name, obj_transform,
-                           blender_obj, scene, context, duplicator):
-    # The "Mesh-" prefix is hardcoded in Scene_DefineBlenderMesh1 in the LuxCore API
-    luxcore_shape_name = "Mesh-" + lux_object_name
-    luxcore_shape_name = _handle_pointiness(props, luxcore_shape_name, blender_obj)
-
+def _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_material_name, obj_transform,
+                           obj, scene, context, duplicator):
+    lux_shape_name = _handle_pointiness(props, lux_shape_name, obj)
     prefix = "scene.objects." + lux_object_name + "."
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
 
-    props.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+    props.Set(pyluxcore.Property(prefix + "shape", lux_shape_name))
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 
     # In case of duplis, we have to check the camera visibility setting of the parent, not the dupli
-    vis_obj = duplicator if duplicator else blender_obj
+    vis_obj = duplicator if duplicator else obj
     visible_to_cam = utils.is_obj_visible_to_cam(vis_obj, scene, context)
     props.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_cam))
 
@@ -169,9 +172,10 @@ def _convert_mesh_to_shapes(name, mesh, luxcore_scene, mesh_transform):
     else:
         texCoords = 0
 
-    vertex_color = mesh.tessface_vertex_colors.active
-    if vertex_color:
-        vertexColors = vertex_color.data[0].as_pointer()
+    vertex_colors = mesh.tessface_vertex_colors
+    active_vertcol = utils.find_active_vertex_color_layer(vertex_colors)
+    if active_vertcol and active_vertcol.data:
+        vertexColors = active_vertcol.data[0].as_pointer()
     else:
         vertexColors = 0
 

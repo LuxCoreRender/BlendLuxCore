@@ -4,6 +4,7 @@ from bpy.props import (
     EnumProperty, BoolProperty, IntProperty, FloatProperty,
     PointerProperty, StringProperty,
 )
+from math import radians
 
 
 TILED_DESCRIPTION = (
@@ -139,6 +140,26 @@ class LuxCoreConfigTile(PropertyGroup):
                                             description=THRESH_WARMUP_DESC)
 
 
+class LuxCoreConfigDLSCache(PropertyGroup):
+    show_advanced = BoolProperty(name="Show Advanced", default=False)
+
+    # TODO min/max, descriptions
+    entry_radius = FloatProperty(name="Entry Radius", default=0.15, subtype="DISTANCE")
+    entry_normalangle = FloatProperty(name="Normal Angle",
+                                      default=radians(10), min=0, max=radians(90), subtype="ANGLE")
+    entry_maxpasses = IntProperty(name="Max. Passes", default=1024)
+    entry_convergencethreshold = FloatProperty(name="Convergence Threshold",
+                                               default=1, min=0, max=100, subtype="PERCENTAGE")
+    entry_volumes_enable = BoolProperty(name="Place Entries in Volumes", default=False,
+                                        description="Enable/disable placement of entries in volumes")
+
+    lightthreshold = FloatProperty(name="Light Threshold", default=1, min=0, max=100, subtype="PERCENTAGE")
+    targetcachehitratio = FloatProperty(name="Target Cache Hit Ratio",
+                                        default=99.5, min=0, max=100, subtype="PERCENTAGE")
+    maxdepth = IntProperty(name="Max. Depth", default=4)
+    maxsamplescount = IntProperty(name="Max. Samples", default=10000000)
+
+
 class LuxCoreConfig(PropertyGroup):
     """
     Main config storage class.
@@ -217,9 +238,14 @@ class LuxCoreConfig(PropertyGroup):
         ("LOG_POWER", "Log Power", LOG_POWER_DESC, 0),
         ("POWER", "Power", POWER_DESC, 1),
         ("UNIFORM", "Uniform", UNIFORM_DESC, 2),
+        # TODO description
+        ("DLS_CACHE", "Direct Light Cache", "", 3)
     ]
     light_strategy = EnumProperty(name="Light Strategy", items=light_strategy_items, default="LOG_POWER",
                                   description="Decides how the lights in the scene are sampled")
+
+    # Special properties of the direct light sampling cache
+    dls_cache = PointerProperty(type=LuxCoreConfigDLSCache)
 
     # FILESAVER options
     use_filesaver = BoolProperty(name="Only write LuxCore scene", default=False)
@@ -246,3 +272,10 @@ class LuxCoreConfig(PropertyGroup):
                                 precision=10000,
                                 description="Might need adjustment along with the min epsilon to avoid "
                                             "artifacts due to floating point precision issues")
+
+    film_opencl_enable = BoolProperty(name="Use OpenCL", default=True,
+                                      description="Use OpenCL to accelerate tonemapping and other imagepipeline "
+                                                  "operations (applies to viewport and final render). "
+                                                  "Disabling this option will save a bit of RAM, especially if "
+                                                  "the render resolution is large. "
+                                                  "This option is ignored in Non-OpenCL builds")

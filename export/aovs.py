@@ -6,8 +6,8 @@ from .imagepipeline import use_backgroundimage
 
 # set of channels that don"t use an HDR format
 LDR_CHANNELS = {
-    "RGB_IMAGEPIPELINE", "RGBA_IMAGEPIPELINE", "ALPHA", "MATERIAL_ID", "OBJECT_ID",
-    "DIRECT_SHADOW_MASK", "INDIRECT_SHADOW_MASK", "MATERIAL_ID_MASK"
+    "RGB_IMAGEPIPELINE", "RGBA_IMAGEPIPELINE", "ALPHA", "MATERIAL_ID", "MATERIAL_ID_COLOR",
+    "OBJECT_ID", "DIRECT_SHADOW_MASK", "INDIRECT_SHADOW_MASK", "MATERIAL_ID_MASK"
 }
 
 # set of channels that should be tonemapped the same way as the RGB_IMAGEPIPELINE
@@ -26,7 +26,7 @@ def convert(exporter, scene, context=None, engine=None):
         # Ordered because we sometimes need to read these for debugging
         definitions = OrderedDict()
 
-        if scene.camera is None:
+        if not utils.is_valid_camera(scene.camera):
             # Can not work without a camera
             return pyluxcore.Properties()
 

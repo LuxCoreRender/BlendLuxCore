@@ -1,10 +1,12 @@
+import bpy
 from time import time
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import render as utils_render
 from . import (
     blender_object, caches, camera, config, duplis,
-    imagepipeline, light, material, motion_blur, hair,
-    world, halt,
+    group_instance, imagepipeline, light, material,
+    motion_blur, hair, halt, world,
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 
@@ -34,13 +36,25 @@ class Change:
                 if s:
                     s += " | "
                 s += changetype
-        return s
+
+        return s if changes else "NONE"
+
+
+def find_updated_objects(scene):
+    updated_datablocks = set()
+
+    if bpy.data.objects.is_updated:
+        for obj in scene.objects:
+            if obj.is_updated_data:
+                updated_datablocks.add(obj)
+
+    return updated_datablocks
 
 
 class Exporter(object):
-    def __init__(self, blender_scene):
-        print("[Exporter] Init")
+    def __init__(self, blender_scene, stats=None):
         self.scene = blender_scene
+        self.stats = stats
 
         self.config_cache = caches.StringCache()
         self.camera_cache = caches.CameraCache()
@@ -52,6 +66,11 @@ class Exporter(object):
         self.halt_cache = caches.StringCache()
         # This dict contains ExportedObject and ExportedLight instances
         self.exported_objects = {}
+        # Contains mesh_definitions for multi-user meshes.
+        # Keys are made with utils.make_key(blender_obj.data)
+        self.shared_meshes = {}
+
+        self.dupli_groups = {}
 
         # A dictionary with the following mapping:
         # {node_key: luxcore_name}
@@ -65,14 +84,21 @@ class Exporter(object):
         # If a light/material uses a lightgroup, the id is stored here during export
         self.lightgroup_cache = set()
 
+        self.objs_updated_by_export = set()
+
     def create_session(self, context=None, engine=None):
         # Notes:
         # In final render, context is None
         # In viewport render, engine is None (we can't show messages or check test_break() anyway)
 
-        print("[Exporter] create_session")
+        print("[Exporter] Creating session")
         start = time()
         scene = self.scene
+        stats = self.stats
+        if stats:
+            stats.reset()
+        updated_objs_pre = find_updated_objects(scene)
+
         # Scene
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
@@ -99,7 +125,7 @@ class Exporter(object):
                 return None
 
         # Motion blur
-        if scene.camera:
+        if utils.is_valid_camera(scene.camera):
             blur_settings = scene.camera.data.luxcore.motion_blur
             # Don't export camera blur in viewport
             camera_blur = blur_settings.camera_blur and not context
@@ -146,8 +172,20 @@ class Exporter(object):
         self.halt_cache.diff(halt_props)
         config_props.Set(halt_props)
 
+        light_count = luxcore_scene.GetLightCount()
+        if light_count > 1000:
+            msg = "The scene contains a lot of light sources (%d), performance might suffer" % light_count
+            scene.luxcore.errorlog.add_warning(msg)
+        if stats:
+            stats.light_count.value = light_count
+
         # Create the renderconfig
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
+
+        # Check which objects were flagged for update by our own export,
+        # these should not be considered for the next viewport update.
+        updated_objs_post = find_updated_objects(scene)
+        self.objs_updated_by_export = updated_objs_post - updated_objs_pre
 
         # Regularly check if we should abort the export (important in heavy scenes)
         if engine and engine.test_break():
@@ -155,6 +193,9 @@ class Exporter(object):
 
         export_time = time() - start
         print("Export took %.1f s" % export_time)
+        if stats:
+            stats.export_time.value = export_time
+            self._init_stats(stats, config_props, scene)
 
         if engine:
             if config_props.Get("renderengine.type").GetString().endswith("OCL"):
@@ -164,12 +205,7 @@ class Exporter(object):
 
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 
-        # Create session (in case of OpenCL engines, render kernels are compiled here)
-        start = time()
         session = pyluxcore.RenderSession(renderconfig)
-        elapsed_msg = "Session created in %.1f s" % (time() - start)
-        print(elapsed_msg)
-
         return session
 
     def get_changes(self, context=None):
@@ -186,7 +222,7 @@ class Exporter(object):
             if self.camera_cache.diff(self, scene, context):
                 changes |= Change.CAMERA
 
-            if self.object_cache.diff(scene):
+            if self.object_cache.diff(scene, self.objs_updated_by_export):
                 changes |= Change.OBJECT
 
             if self.material_cache.diff():
@@ -215,6 +251,8 @@ class Exporter(object):
         print("[Exporter] Update because of:", Change.to_string(changes))
         # Invalidate node cache
         self.node_cache.clear()
+        self.shared_meshes.clear()
+        self.dupli_groups.clear()
 
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
@@ -250,13 +288,14 @@ class Exporter(object):
         if changes & Change.REQUIRES_SESSION_PARSE:
             self.update_session(changes, session)
 
+        self.objs_updated_by_export.clear()
+
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()
         return session
 
     def update_session(self, changes, session):
         if changes & Change.IMAGEPIPELINE:
-            print("Updating imagepipeline")
             session.Parse(self.imagepipeline_cache.props)
         if changes & Change.HALT:
             session.Parse(self.halt_cache.props)
@@ -280,7 +319,10 @@ class Exporter(object):
 
         # Convert particles and dupliverts/faces
         if obj.is_duplicator:
-            duplis.convert(self, obj, scene, context, luxcore_scene, engine)
+            if obj.dupli_type == "GROUP":
+                group_instance.convert(self, obj, scene, context, luxcore_scene, props)
+            else:
+                duplis.convert(self, obj, scene, context, luxcore_scene, engine)
 
         # When moving a duplicated object, update the parent, too (concerns dupliverts/faces)
         if obj.parent and obj.parent.is_duplicator:
@@ -331,7 +373,7 @@ class Exporter(object):
                 print("mesh changed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True)
 
-            for obj in self.object_cache.lamps:
+            for obj in self.object_cache.changed_lamps:
                 print("lamp changed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene)
 
@@ -377,3 +419,33 @@ class Exporter(object):
             props.Set(world_props)
 
         return props
+
+    def _init_stats(self, stats, config_props, scene):
+        render_engine = config_props.Get("renderengine.type").GetString()
+        stats.render_engine.value = utils_render.engine_to_str(render_engine)
+        sampler = config_props.Get("sampler.type").GetString()
+        stats.sampler.value = utils_render.sampler_to_str(sampler)
+
+        config_settings = scene.luxcore.config
+        path_settings = config_settings.path
+
+        stats.light_strategy.value = utils_render.light_strategy_to_str(config_settings.light_strategy)
+
+        if render_engine == "BIDIRCPU":
+            path_depths = (
+                config_settings.bidir_light_maxdepth,
+                config_settings.bidir_path_maxdepth,
+            )
+        else:
+            path_depths = (
+                path_settings.depth_total,
+                path_settings.depth_diffuse,
+                path_settings.depth_glossy,
+                path_settings.depth_specular,
+            )
+        stats.path_depths.value = path_depths
+
+        if path_settings.use_clamping:
+            stats.clamping.value = path_settings.clamping
+        else:
+            stats.clamping.value = 0

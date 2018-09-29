@@ -5,14 +5,17 @@ from ..utils import render as utils_render
 
 
 def render(engine, scene):
+    print("=" * 50)
     scene.luxcore.errorlog.clear()
     scene.luxcore.denoiser_log.clear()
+    render_slot_stats = scene.luxcore.statistics.get_active()
 
-    tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
-    if len(scene.render.layers) > 1 and tonemapper.is_automatic():
-        msg = ("Using an automatic tonemapper with multiple "
-               "renderlayers will result in brightness differences")
-        scene.luxcore.errorlog.add_warning(msg)
+    if utils.is_valid_camera(scene.camera):
+        tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
+        if len(scene.render.layers) > 1 and tonemapper.is_automatic():
+            msg = ("Using an automatic tonemapper with multiple "
+                   "renderlayers will result in brightness differences")
+            scene.luxcore.errorlog.add_warning(msg)
 
     _check_halt_conditions(engine, scene)
 
@@ -34,7 +37,7 @@ def render(engine, scene):
         scene.luxcore.active_layer_index = layer_index
 
         _add_passes(engine, layer, scene)
-        _render_layer(engine, scene)
+        _render_layer(engine, scene, render_slot_stats)
 
         if engine.test_break():
             # Blender skips the rest of the render layers anyway
@@ -43,9 +46,9 @@ def render(engine, scene):
         print('[Engine/Final] Finished rendering layer "%s"' % layer.name)
     
 
-def _render_layer(engine, scene):
+def _render_layer(engine, scene, render_slot_stats):
     engine.reset()
-    engine.exporter = export.Exporter(scene)
+    engine.exporter = export.Exporter(scene, render_slot_stats)
     engine.session = engine.exporter.create_session(engine=engine)
 
     if engine.session is None:
@@ -53,9 +56,14 @@ def _render_layer(engine, scene):
         print("[Engine/Final] Export cancelled by user.")
         return
 
-    engine.update_stats("Render", "Starting session...")
     engine.framebuffer = FrameBufferFinal(scene)
+
+    # Create session (in case of OpenCL engines, render kernels are compiled here)
+    start = time()
     engine.session.Start()
+    session_init_time = time() - start
+    print("Session started in %.1f s" % session_init_time)
+    render_slot_stats.session_init_time.value = session_init_time
 
     config = engine.session.GetRenderConfig()
 
@@ -230,6 +238,8 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("ALPHA", 1, "A", layer.name)
     if aovs.material_id:
         engine.add_pass("MATERIAL_ID", 1, "X", layer.name)
+    if aovs.material_id_color:
+        engine.add_pass("MATERIAL_ID_COLOR", 3, "RGB", layer.name)
     if aovs.object_id:
         engine.add_pass("OBJECT_ID", 1, "X", layer.name)
     if aovs.emission:

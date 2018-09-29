@@ -4,6 +4,7 @@ import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import ICON_VOLUME
 from ..nodeitems import Separator
+from .. import LuxCoreNodeTree
 
 from .output import LuxCoreNodeVolOutput
 from .clear import LuxCoreNodeVolClear
@@ -11,52 +12,10 @@ from .homogeneous import LuxCoreNodeVolHomogeneous
 from .heterogeneous import LuxCoreNodeVolHeterogeneous
 
 
-class LuxCoreVolumeNodeTree(NodeTree):
+class LuxCoreVolumeNodeTree(LuxCoreNodeTree, NodeTree):
     bl_idname = "luxcore_volume_nodes"
     bl_label = "LuxCore Volume Nodes"
     bl_icon = ICON_VOLUME
-
-    # last_node_tree = None
-
-    @classmethod
-    def poll(cls, context):
-        return context.scene.render.engine == "LUXCORE"
-
-    # TODO figure out if we even can choose the volume node tree for the user
-    # @classmethod
-    # def get_from_context(cls, context):
-    #     obj = context.active_object
-    #
-    #     if obj and obj.type not in {"LAMP", "CAMERA"}:
-    #         mat = obj.active_material
-    #
-    #         if mat:
-    #             mat_node_tree = mat.luxcore.node_tree
-    #             if mat_node_tree is None:
-    #                 return cls.last_node_tree, mat, mat
-    #
-    #             output = get_active_output(mat_node_tree)
-    #             interior = output.interior_volume
-    #             exterior = output.exterior_volume
-    #
-    #             if interior:
-    #                 cls.last_node_tree = interior
-    #             if exterior:
-    #                 cls.last_node_tree = exterior
-    #
-    #     return cls.last_node_tree, None, None
-
-    # This block updates the preview, when socket links change
-    def update(self):
-        self.refresh = True
-
-    def acknowledge_connection(self, context):
-        # Set refresh to False without triggering acknowledge_connection again
-        self["refresh"] = False
-
-    refresh = bpy.props.BoolProperty(name='Links Changed',
-                                     default=False,
-                                     update=acknowledge_connection)
 
 
 class LuxCoreNodeCategoryVolume(NodeCategory):
@@ -129,6 +88,11 @@ luxcore_node_categories_volume = [
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_OUTPUT", "Output", items=[
         NodeItem("LuxCoreNodeVolOutput", label="Output"),
+    ]),
+
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_LAYOUT", "Layout", items=[
+        NodeItem("NodeFrame", label="Frame"),
+        NodeItem("NodeReroute", label="Reroute"),
     ]),
 ]
 

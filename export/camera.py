@@ -6,48 +6,42 @@ from ..nodes.output import get_active_output
 
 
 def convert(exporter, scene, context=None, is_camera_moving=False):
-    try:
-        prefix = "scene.camera."
-        definitions = {}
+    prefix = "scene.camera."
+    definitions = {}
 
-        if context:
-            # Viewport render
-            view_cam_type = context.region_data.view_perspective
+    if context:
+        # Viewport render
+        view_cam_type = context.region_data.view_perspective
 
-            if view_cam_type == "ORTHO":
-                _view_ortho(scene, context, definitions)
-            elif view_cam_type == "PERSP":
-                _view_persp(scene, context, definitions)
-            elif view_cam_type == "CAMERA":
-                _view_camera(scene, context, definitions)
-                _clipping(scene, definitions)
-            else:
-                raise NotImplementedError("Unknown context.region_data.view_perspective")
-        else:
-            # Final render
-            _final(scene, definitions)
+        if view_cam_type == "ORTHO":
+            _view_ortho(scene, context, definitions)
+        elif view_cam_type == "PERSP":
+            _view_persp(scene, context, definitions)
+        elif view_cam_type == "CAMERA":
+            _view_camera(scene, context, definitions)
             _clipping(scene, definitions)
+        else:
+            raise NotImplementedError("Unknown context.region_data.view_perspective")
+    else:
+        # Final render
+        _final(scene, definitions)
+        _clipping(scene, definitions)
 
-        _clipping_plane(scene, definitions)
-        _motion_blur(scene, definitions, context, is_camera_moving)
+    _clipping_plane(scene, definitions)
+    _motion_blur(scene, definitions, context, is_camera_moving)
 
-        cam_props = utils.create_props(prefix, definitions)
-        cam_props.Set(_get_volume_props(exporter, scene))
-        return cam_props
-    except Exception as error:
-        import traceback
-        traceback.print_exc()
-        msg = 'Camera: %s' % error
-        scene.luxcore.errorlog.add_warning(msg)
-        return pyluxcore.Properties()
+    cam_props = utils.create_props(prefix, definitions)
+    cam_props.Set(_get_volume_props(exporter, scene))
+    return cam_props
 
 
 def _view_ortho(scene, context, definitions):
     cam_matrix = Matrix(context.region_data.view_matrix).inverted()
     lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix, scene)
+    world_scale = utils.get_worldscale(scene, False)
 
     definitions["type"] = "orthographic"
-    zoom = 0.915 * context.region_data.view_distance*35/context.space_data.lens
+    zoom = 0.915 * world_scale * context.region_data.view_distance * 35 / context.space_data.lens
 
     # Move the camera origin away from the viewport center to avoid clipping
     origin = Vector(lookat_orig)
@@ -76,7 +70,13 @@ def _view_persp(scene, context, definitions):
 
 def _view_camera(scene, context, definitions):
     camera = scene.camera
+
+    if camera.type != "CAMERA":
+        raise Exception("%s Objects as cameras are not supported, use a CAMERA object" % camera.type)
+
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
+    world_scale = utils.get_worldscale(scene, False)
+    
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
@@ -86,7 +86,7 @@ def _view_camera(scene, context, definitions):
 
     if camera.data.type == "ORTHO":
         definitions["type"] = "orthographic"
-        zoom *= 0.5 * camera.data.ortho_scale
+        zoom *= 0.5 * world_scale * camera.data.ortho_scale
     elif camera.data.type == "PANO":
         definitions["type"] = "environment"
     elif camera.data.type == "PERSP":
@@ -102,7 +102,12 @@ def _view_camera(scene, context, definitions):
 
 def _final(scene, definitions):
     camera = scene.camera
+
+    if camera.type != "CAMERA":
+        raise Exception("%s Objects as cameras are not supported, use a CAMERA object" % camera.type)
+
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
+    world_scale = utils.get_worldscale(scene, False)
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
@@ -110,7 +115,7 @@ def _final(scene, definitions):
 
     if camera.data.type == "ORTHO":
         cam_type = "orthographic"
-        zoom = 0.5 * camera.data.ortho_scale
+        zoom = 0.5 * world_scale * camera.data.ortho_scale
 
     elif camera.data.type == "PANO":
         cam_type = "environment"
@@ -147,8 +152,8 @@ def _depth_of_field(scene, definitions):
             lookat_orig = cam_matrix.to_translation()
             lookat_target = cam_matrix * Vector((0, 0, -1))
 
-            lookat_dir = lookat_target.normalized()
-            dof_dir = lookat_orig - dof_obj.matrix_world.to_translation()
+            lookat_dir = (lookat_target - lookat_orig).normalized()
+            dof_dir = dof_obj.matrix_world.to_translation() - lookat_orig
 
             definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir)) * worldscale
         else:
@@ -157,7 +162,7 @@ def _depth_of_field(scene, definitions):
 
 def _clipping(scene, definitions):
     camera = scene.camera
-    if camera is None:
+    if not utils.is_valid_camera(camera):
         # Viewport render should work without camera
         return
 
@@ -182,7 +187,7 @@ def _clipping(scene, definitions):
 
 
 def _clipping_plane(scene, definitions):
-    if scene.camera is None:
+    if not utils.is_valid_camera(scene.camera):
         # Viewport render should work without camera
         return
     cam_settings = scene.camera.data.luxcore
@@ -190,10 +195,11 @@ def _clipping_plane(scene, definitions):
     if cam_settings.use_clipping_plane and cam_settings.clipping_plane:
         plane = cam_settings.clipping_plane
         normal = plane.rotation_euler.to_matrix() * Vector((0, 0, 1))
+        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
         definitions.update({
             "clippingplane.enable": cam_settings.use_clipping_plane,
-            "clippingplane.center": list(plane.location),
+            "clippingplane.center": list(plane.location * worldscale),
             "clippingplane.normal": list(normal),
         })
     else:
@@ -201,7 +207,7 @@ def _clipping_plane(scene, definitions):
 
 
 def _motion_blur(scene, definitions, context, is_camera_moving):
-    if scene.camera is None:
+    if not utils.is_valid_camera(scene.camera):
         # Viewport render should work without camera
         return
 
@@ -236,7 +242,7 @@ def _calc_lookat(cam_matrix, scene):
 def _get_volume_props(exporter, scene):
     props = pyluxcore.Properties()
 
-    if scene.camera is None:
+    if not utils.is_valid_camera(scene.camera):
         # Viewport render should work without camera
         return props
 

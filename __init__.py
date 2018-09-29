@@ -9,9 +9,20 @@ if luxblend_is_enabled:
                     "and restart Blender before you can enable the "
                     "new addon.")
 
-import bpy
-from .bin import pyluxcore
+try:
+    from .bin import pyluxcore
+except ImportError as error:
+    msg = "\n\nCould not import pyluxcore."
+    import platform
+    if platform.system() == "Windows":
+        msg += ("\nYou probably forgot to install one of the "
+                "redistributable packages.\n"
+                "They are listed in the release announcement post.")
+    # Raise from None to suppress the unhelpful
+    # "during handling of the above exception, ..."
+    raise Exception(msg + "\n\nImportError: %s" % error) from None
 
+import bpy
 # Have to import everything with classes which need to be registered
 from . import engine, handlers, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
@@ -20,6 +31,7 @@ from .ui import (
     halt, image_tools, light, lightgroups, material, particle, postpro, render,
     render_layer, scene, texture, units, viewport, world,
 )
+from .utils.log import LuxCoreLog
 
 bl_info = {
     "name": "LuxCore",
@@ -29,7 +41,7 @@ bl_info = {
     "category": "Render",
     "location": "Info header, render engine menu",
     "description": "LuxCore integration for Blender",
-    "warning": "alpha1",
+    "warning": "alpha4",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
@@ -46,7 +58,7 @@ def register():
     properties.init()
 
     # Has to be called at least once, can be called multiple times
-    pyluxcore.Init()
+    pyluxcore.Init(LuxCoreLog.add)
     print("pyluxcore version:", pyluxcore.Version())
 
 
