@@ -44,6 +44,7 @@ from .math import LuxCoreNodeTexMath
 from .normalmap import LuxCoreNodeTexNormalmap
 from .output import LuxCoreNodeTexOutput
 from .pointiness import LuxCoreNodeTexPointiness
+from .remap import LuxCoreNodeTexRemap
 from .smoke import LuxCoreNodeTexSmoke
 from .uv import LuxCoreNodeTexUV
 from .wrinkled import LuxCoreNodeTexWrinkled
@@ -103,6 +104,7 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexRemap", label="Remap"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         Separator(),
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
