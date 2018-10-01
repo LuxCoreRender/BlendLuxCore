@@ -1,7 +1,9 @@
 *.so*
 *.dll
+*.dylib
 *.pyd
 pyluxcoretools.zip
 pyluxcoretool.exe
 luxcoreui
 luxcoreui.exe
+

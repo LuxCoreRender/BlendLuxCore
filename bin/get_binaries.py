@@ -16,6 +16,12 @@ WINDOWS_FILES = [
     "pyluxcoretool.exe", "pyluxcoretools.zip",
 ]
 
+MAC_FILES = [
+    "libembree3.dylib", "libembree3.3.dylib", "libtbb.dylib",
+    "libtbbmalloc.dylib", "pyluxcore.so", "luxcoreui",
+    "pyluxcoretools.zip", "libomp.dylib",
+]
+
 
 def confirm(message):
     while True:
@@ -38,6 +44,8 @@ def main():
         files = LINUX_FILES
     elif platform.system() == "Windows":
         files = WINDOWS_FILES
+    elif platform.system() == "Darwin":
+        files = MAC_FILES
     else:
         print("Unsupported system:", platform.system())
 
