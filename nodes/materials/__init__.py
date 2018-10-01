@@ -130,6 +130,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
+        NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
     ]),
