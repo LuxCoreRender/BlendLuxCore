@@ -126,6 +126,7 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
         system_mapping = {
             "Linux": "linux64",
             "Windows": "win64",
+            "Darwin": "mac64"
         }
         try:
             current_system = system_mapping[platform.system()]
