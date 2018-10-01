@@ -111,7 +111,7 @@ class LuxCoreConfigTile(PropertyGroup):
     Stored in LuxCoreConfig, accesss with scene.luxcore.config.tile
     """
     # tilepath.sampling.aa.size
-    path_sampling_aa_size = IntProperty(name="AA Samples", default=3, min=1, soft_max=13,
+    path_sampling_aa_size = IntProperty(name="Samples per Pass", default=3, min=1, soft_max=13,
                                         description=AA_SAMPLE_DESC)
 
     # tile.size

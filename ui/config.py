@@ -62,7 +62,10 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                 layout.label("Tiled path uses special sampler", icon="INFO")
                 row = layout.row(align=True)
                 row.prop(config.tile, "size")
-                row.prop(config.tile, "path_sampling_aa_size")
+                if denoiser.enabled:
+                    layout.label("Using 1 sample per pass (required by denoiser)", icon="INFO")
+                else:
+                    row.prop(config.tile, "path_sampling_aa_size")
 
                 layout.prop(config.tile, "multipass_enable")
                 if config.tile.multipass_enable:
