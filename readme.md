@@ -21,20 +21,21 @@ See the [Blender 2.79 release notes](https://wiki.blender.org/index.php/Dev:Ref/
 
 So if you want to render an important scene with LuxCore, please save it as a copy.
 
-### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
-
-Before reporting a bug, take a look at the [reported issues](https://github.com/LuxCoreRender/BlendLuxCore/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Abug) to make sure it was not already reported.
-
 ### [Download](https://luxcorerender.org/download/)
 
-[How to install or update](https://wiki.luxcorerender.org/BlendLuxCore_Installation)
+### [Installation/Update](https://wiki.luxcorerender.org/BlendLuxCore_Installation)
 
-BlendLuxCore releases are fully self-contained. 
-Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addons.html#header), enable the addon, switch to the "LuxCore" engine and you're done.
+BlendLuxCore releases are fully self-contained.<br>
+Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addons.html#header), enable the addon, switch to the "LuxCore" engine and you are done.<br>
+You do not need to install the standalone release of LuxCoreRender.
 
 ### [Example Scenes](https://luxcorerender.org/download/#ExampleScenes)
 
-TODO: These do not contain .blend files yet.
+### [Manual](https://wiki.luxcorerender.org/Category:BlendLuxCore)
+
+The manual is not finished yet.
+
+### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
 
 ### Features
 
@@ -44,6 +45,7 @@ TODO: These do not contain .blend files yet.
 * [x] IES lighting
 * [x] Shadow catcher
 * [x] Light groups
+* [x] Visibility map for environment lights [(automatic portals)](https://wiki.luxcorerender.org/Visibility_Map)
 * [x] Cameras (perspective, ortographic, panoramic)
 * [x] Depth of field
 * [x] Arbitrary clipping plane
@@ -63,7 +65,7 @@ TODO: These do not contain .blend files yet.
 * [x] Image sequences
 * [ ] Saving a resumable film
 * [ ] Periodic film saving
-* And more...
+* And more ...
 
 ### Great new features
 
