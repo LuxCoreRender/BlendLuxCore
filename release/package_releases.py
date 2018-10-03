@@ -24,6 +24,12 @@ WINDOWS_FILES = [
     "pyluxcoretool.exe", "pyluxcoretools.zip",
 ]
 
+MAC_FILES = [
+    "libembree3.dylib", "libembree3.3.dylib", "libtbb.dylib",
+    "libtbbmalloc.dylib", "pyluxcore.so",
+    "pyluxcoretools.zip", "libomp.dylib",
+]
+
 
 def print_divider():
     print("=" * 60)
@@ -35,6 +41,47 @@ def build_name(prefix, version_string, suffix):
 
 def build_zip_name(version_string, suffix):
     return "BlendLuxCore-" + version_string + suffix.split(".")[0]
+
+def extract_tar_files(prefix, platform_suffixes, file_names, version_string):
+    for suffix in platform_suffixes:
+        dst_name = build_zip_name(version_string, suffix)
+        destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
+
+        print()
+        print_divider()
+        print("Extracting tar to", dst_name)
+        print_divider()
+
+        # have to use a temp dir (weird extract behaviour)
+        temp_dir = os.path.join(script_dir, "temp")
+        # Make sure we don't delete someone's beloved temp folder later
+        while os.path.exists(temp_dir):
+            temp_dir += "_"
+        os.mkdir(temp_dir)
+
+        tar_name = build_name(prefix, version_string, suffix)
+        print("Reading tar file:", tar_name)
+        print("(This will take a while)")
+
+        tar_type = os.path.splitext(tar_name)[1][1:]
+        with tarfile.open(tar_name, "r:" + tar_type) as tar:
+            for member in tar.getmembers():
+                basename = os.path.basename(member.name)
+                if basename not in file_names:
+                    continue
+
+                # have to use a temp dir (weird extract behaviour)
+                print('Extracting "%s" to "%s"' % (basename, temp_dir))
+                tar.extract(member, path=temp_dir)
+                src = os.path.join(temp_dir, member.name)
+
+                # move to real target directory
+                dst = os.path.join(destination, basename)
+                print('Moving "%s" to "%s"' % (src, dst))
+                if not os.path.isfile(dst):
+                    shutil.move(src, dst)
+
+        shutil.rmtree(temp_dir)
 
 
 def main():
@@ -51,6 +98,8 @@ def main():
         "-linux64-opencl.tar.bz2",
         "-win64.zip",
         "-win64-opencl.zip",
+        "-mac64.tar.gz",
+        "-mac64-opencl.tar.gz",
     ]
 
     # Download LuxCore binaries for all platforms
@@ -138,44 +187,11 @@ def main():
 
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if suffix.startswith("-linux")]
-    for suffix in linux_suffixes:
-        dst_name = build_zip_name(args.version_string, suffix)
-        destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
+    extract_tar_files(prefix, linux_suffixes, LINUX_FILES, args.version_string)
 
-        print()
-        print_divider()
-        print("Extracting tar to", dst_name)
-        print_divider()
-
-        # have to use a temp dir (weird extract behaviour)
-        temp_dir = os.path.join(script_dir, "temp")
-        # Make sure we don't delete someone's beloved temp folder later
-        while os.path.exists(temp_dir):
-            temp_dir += "_"
-        os.mkdir(temp_dir)
-
-        tar_name = build_name(prefix, args.version_string, suffix)
-        print("Reading tar file:", tar_name)
-        print("(This will take a while)")
-
-        with tarfile.open(tar_name, "r:bz2") as tar:
-            for member in tar.getmembers():
-                basename = os.path.basename(member.name)
-                if basename not in LINUX_FILES:
-                    continue
-
-                # have to use a temp dir (weird extract behaviour)
-                print('Extracting "%s" to "%s"' % (basename, temp_dir))
-                tar.extract(member, path=temp_dir)
-                src = os.path.join(temp_dir, member.name)
-
-                # move to real target directory
-                dst = os.path.join(destination, basename)
-                print('Moving "%s" to "%s"' % (src, dst))
-                if not os.path.isfile(dst):
-                    shutil.move(src, dst)
-
-        shutil.rmtree(temp_dir)
+    # Mac archives are tar.gz
+    mac_suffixes = [suffix for suffix in suffixes if suffix.startswith("-mac")]
+    extract_tar_files(prefix, mac_suffixes, MAC_FILES, args.version_string)
 
     # Windows archives are zip
     windows_suffixes = [suffix for suffix in suffixes if suffix.startswith("-win")]
