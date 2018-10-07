@@ -4,7 +4,7 @@ from .. import LuxCoreNodeMaterial, Roughness
 from ...utils import node as utils_node
 
 
-IOR_DESCRIPTION = "Specify index of refraction to control reflection brightness."
+IOR_DESCRIPTION = "Specify index of refraction to control reflection brightness"
 
 MULTIBOUNCE_DESCRIPTION = (
     "Gives the material a fuzzy sheen and makes it look "

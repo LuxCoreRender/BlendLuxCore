@@ -15,7 +15,7 @@ STEP_SIZE_DESCRIPTION = (
 MULTISCATTERING_DESC = (
     "Simulate multiple scattering events per ray. "
     "Makes volumes with high scattering scale appear more realistic, "
-    "but leads to slower rendering performance."
+    "but leads to slower rendering performance"
 )
 
 

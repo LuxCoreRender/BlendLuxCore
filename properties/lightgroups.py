@@ -24,7 +24,7 @@ class LuxCoreLightGroup(PropertyGroup):
                                    description=RGB_GAIN_DESC)
     use_temperature = BoolProperty(name="Temperature:", default=False,
                                    description="Use temperature multiplier")
-    temperature = FloatProperty(name="Kelvin", default=4000, min=1000, max=10000, precision=0, step=10000,
+    temperature = FloatProperty(name="Kelvin", default=4000, min=1000, max=10000, precision=0,
                                 description=TEMP_DESC)
 
 
