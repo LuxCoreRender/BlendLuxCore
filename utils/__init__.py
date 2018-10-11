@@ -400,7 +400,11 @@ def is_duplicator_visible(obj):
         if psys.settings.use_render_emitter:
             return True
 
-    # Duplicators (Dupliverts/faces/frames) are always hidden
+    # Dupliframes duplicate the original object, so it must be visible
+    if obj.dupli_type == "FRAMES":
+        return True
+
+    # Duplicators (Dupliverts/faces) are always hidden
     return False
 
 

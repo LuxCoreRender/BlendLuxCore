@@ -20,131 +20,14 @@ def convert(exporter, scene, context=None, engine=None):
         # See properties/config.py
         config = scene.luxcore.config
         width, height = utils.calc_filmsize(scene, context)
+        use_bidir_in_viewport = config.engine == "BIDIR" and scene.luxcore.viewport.use_bidir
 
-        if context:
+        if context and not use_bidir_in_viewport:
             # Viewport render
-            _convert_path(config, definitions)
-
-            use_cpu = scene.luxcore.viewport.device == "CPU"
-            if not use_cpu and not utils.is_opencl_build():
-                msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
-                scene.luxcore.errorlog.add_warning(msg)
-                use_cpu = True
-
-            resolutionreduction = 4 if scene.luxcore.viewport.reduce_resolution_on_edit else 1
-
-            if use_cpu:
-                luxcore_engine = "RTPATHCPU"
-                sampler = "RTPATHCPUSAMPLER"
-                # Size of the blocks right after a scene edit (in pixels)
-                definitions["rtpathcpu.zoomphase.size"] = resolutionreduction
-                # How to blend new samples over old ones.
-                # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
-                definitions["rtpathcpu.zoomphase.weight"] = 0
-            else:
-                luxcore_engine = "RTPATHOCL"
-                sampler = "TILEPATHSAMPLER"
-                # Render a sample every n x n pixels in the first passes.
-                # For instance 4x4 then 2x2 and then always 1x1.
-                definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
-                # Each preview step is rendered for n frames.
-                definitions["rtpath.resolutionreduction.step"] = 1
-                # Render a sample every n x n pixels, outside the preview phase,
-                # in order to reduce the per frame rendering time.
-                definitions["rtpath.resolutionreduction"] = 1
-
-                # Enable a bunch of often-used features to minimize the need for kernel recompilations
-                enabled_opencl_features = " ".join([
-                    # Materials
-                    "MATTE", "ROUGHMATTE", "MATTETRANSLUCENT", "ROUGHMATTETRANSLUCENT",
-                    "GLOSSY2", "GLOSSYTRANSLUCENT",
-                    "GLASS", "ARCHGLASS", "ROUGHGLASS",
-                    "MIRROR", "METAL2",
-                    "NULLMAT",
-                    # Material features
-                    "HAS_BUMPMAPS", "GLOSSY2_ABSORPTION", "GLOSSY2_MULTIBOUNCE",
-                    # Volumes
-                    "HOMOGENEOUS_VOL", "CLEAR_VOL",
-                    # Textures
-                    "IMAGEMAPS_BYTE_FORMAT", "IMAGEMAPS_HALF_FORMAT",
-                    "IMAGEMAPS_1xCHANNELS", "IMAGEMAPS_3xCHANNELS",
-                    # Lights
-                    "INFINITE", "TRIANGLELIGHT", "SKY2", "SUN", "POINT", "MAPPOINT",
-                    "SPOTLIGHT", "CONSTANTINFINITE", "PROJECTION", "SHARPDISTANT",
-                    "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
-                ])
-                definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
-
-                definitions["opencl.cpu.use"] = False
-                definitions["opencl.gpu.use"] = True
-                opencl = scene.luxcore.opencl
-                definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
+            luxcore_engine, sampler = _convert_viewport_engine(scene, definitions, config)
         else:
             # Final render
-            if config.engine == "PATH":
-                # Specific settings for PATH and TILEPATH
-                _convert_path(config, definitions)
-
-                if config.use_tiles:
-                    luxcore_engine = "TILEPATH"
-                    # Tile specific settings
-                    tile = config.tile
-                    denoiser = scene.luxcore.denoiser
-
-                    if denoiser.enabled:
-                        # The denoiser warmup period in LuxCore is hardcoded to end when 2 samples per pixel
-                        # have been rendered. This makes it necessary to use exactly 1 AA sample per pass
-                        # when the denoiser is enabled, otherwise the warmup period finishes too early,
-                        # leading to completely wrong brightness in the denoised image.
-                        aa_samples = 1
-                    else:
-                        aa_samples = tile.path_sampling_aa_size
-                    definitions["tilepath.sampling.aa.size"] = aa_samples
-                    definitions["tile.size"] = tile.size
-                    definitions["tile.multipass.enable"] = tile.multipass_enable
-                    thresh = tile.multipass_convtest_threshold
-                    definitions["tile.multipass.convergencetest.threshold"] = thresh
-                    thresh_reduct = tile.multipass_convtest_threshold_reduction
-                    definitions["tile.multipass.convergencetest.threshold.reduction"] = thresh_reduct
-                    warmup = tile.multipass_convtest_warmup
-                    definitions["tile.multipass.convergencetest.warmup.count"] = warmup
-                else:
-                    luxcore_engine = "PATH"
-
-                # Add CPU/OCL suffix
-                luxcore_engine += config.device
-
-                if config.device == "OCL":
-                    # OpenCL specific settings
-                    opencl = scene.luxcore.opencl
-                    definitions["opencl.cpu.use"] = False
-                    definitions["opencl.gpu.use"] = True
-                    definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
-
-                    # OpenCL CPU (hybrid render) thread settings (we use the properties from Blender here)
-                    if opencl.use_native_cpu:
-                        if scene.render.threads_mode == "FIXED":
-                            # Explicitly set the number of threads
-                            definitions["opencl.native.threads.count"] = scene.render.threads
-                        # If no thread count is specified, LuxCore automatically uses all available cores
-                    else:
-                        # Disable hybrid rendering
-                        definitions["opencl.native.threads.count"] = 0
-            else:
-                # config.engine == BIDIR
-                luxcore_engine = "BIDIRCPU"
-                definitions["light.maxdepth"] = config.bidir_light_maxdepth
-                definitions["path.maxdepth"] = config.bidir_path_maxdepth
-
-            # Sampler
-            if config.engine == "PATH" and config.use_tiles:
-                # TILEPATH needs exactly this sampler
-                sampler = "TILEPATHSAMPLER"
-            else:
-                sampler = config.sampler
-                definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
-                definitions["sampler.random.adaptive.strength"] = config.sobol_adaptive_strength
-                _convert_metropolis_settings(definitions, config)
+            luxcore_engine, sampler = _convert_final_engine(scene, definitions, config)
 
         # Common properties that should be set regardless of engine configuration.
         # We create them as variables and set them here because then the IDE can warn us
@@ -207,6 +90,136 @@ def convert(exporter, scene, context=None, engine=None):
         # Note: Exceptions in the config are critical, we can't render without a config
         scene.luxcore.errorlog.add_error(msg)
         return pyluxcore.Properties()
+
+
+def _convert_viewport_engine(scene, definitions, config):
+    _convert_path(config, definitions)
+
+    use_cpu = scene.luxcore.viewport.device == "CPU"
+    if not use_cpu and not utils.is_opencl_build():
+        msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
+        scene.luxcore.errorlog.add_warning(msg)
+        use_cpu = True
+
+    resolutionreduction = 4 if scene.luxcore.viewport.reduce_resolution_on_edit else 1
+
+    if use_cpu:
+        luxcore_engine = "RTPATHCPU"
+        sampler = "RTPATHCPUSAMPLER"
+        # Size of the blocks right after a scene edit (in pixels)
+        definitions["rtpathcpu.zoomphase.size"] = resolutionreduction
+        # How to blend new samples over old ones.
+        # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
+        definitions["rtpathcpu.zoomphase.weight"] = 0
+    else:
+        luxcore_engine = "RTPATHOCL"
+        sampler = "TILEPATHSAMPLER"
+        # Render a sample every n x n pixels in the first passes.
+        # For instance 4x4 then 2x2 and then always 1x1.
+        definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
+        # Each preview step is rendered for n frames.
+        definitions["rtpath.resolutionreduction.step"] = 1
+        # Render a sample every n x n pixels, outside the preview phase,
+        # in order to reduce the per frame rendering time.
+        definitions["rtpath.resolutionreduction"] = 1
+
+        # Enable a bunch of often-used features to minimize the need for kernel recompilations
+        enabled_opencl_features = " ".join([
+            # Materials
+            "MATTE", "ROUGHMATTE", "MATTETRANSLUCENT", "ROUGHMATTETRANSLUCENT",
+            "GLOSSY2", "GLOSSYTRANSLUCENT",
+            "GLASS", "ARCHGLASS", "ROUGHGLASS",
+            "MIRROR", "METAL2",
+            "NULLMAT",
+            # Material features
+            "HAS_BUMPMAPS", "GLOSSY2_ABSORPTION", "GLOSSY2_MULTIBOUNCE",
+            # Volumes
+            "HOMOGENEOUS_VOL", "CLEAR_VOL",
+            # Textures
+            "IMAGEMAPS_BYTE_FORMAT", "IMAGEMAPS_HALF_FORMAT",
+            "IMAGEMAPS_1xCHANNELS", "IMAGEMAPS_3xCHANNELS",
+            # Lights
+            "INFINITE", "TRIANGLELIGHT", "SKY2", "SUN", "POINT", "MAPPOINT",
+            "SPOTLIGHT", "CONSTANTINFINITE", "PROJECTION", "SHARPDISTANT",
+            "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
+        ])
+        definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
+
+        definitions["opencl.cpu.use"] = False
+        definitions["opencl.gpu.use"] = True
+        opencl = scene.luxcore.opencl
+        definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
+
+    return luxcore_engine, sampler
+
+
+def _convert_final_engine(scene, definitions, config):
+    if config.engine == "PATH":
+        # Specific settings for PATH and TILEPATH
+        _convert_path(config, definitions)
+
+        if config.use_tiles:
+            luxcore_engine = "TILEPATH"
+            # Tile specific settings
+            tile = config.tile
+            denoiser = scene.luxcore.denoiser
+
+            if denoiser.enabled:
+                # The denoiser warmup period in LuxCore is hardcoded to end when 2 samples per pixel
+                # have been rendered. This makes it necessary to use exactly 1 AA sample per pass
+                # when the denoiser is enabled, otherwise the warmup period finishes too early,
+                # leading to completely wrong brightness in the denoised image.
+                aa_samples = 1
+            else:
+                aa_samples = tile.path_sampling_aa_size
+            definitions["tilepath.sampling.aa.size"] = aa_samples
+            definitions["tile.size"] = tile.size
+            definitions["tile.multipass.enable"] = tile.multipass_enable
+            thresh = tile.multipass_convtest_threshold
+            definitions["tile.multipass.convergencetest.threshold"] = thresh
+            thresh_reduct = tile.multipass_convtest_threshold_reduction
+            definitions["tile.multipass.convergencetest.threshold.reduction"] = thresh_reduct
+            warmup = tile.multipass_convtest_warmup
+            definitions["tile.multipass.convergencetest.warmup.count"] = warmup
+        else:
+            luxcore_engine = "PATH"
+
+        # Add CPU/OCL suffix
+        luxcore_engine += config.device
+
+        if config.device == "OCL":
+            # OpenCL specific settings
+            opencl = scene.luxcore.opencl
+            definitions["opencl.cpu.use"] = False
+            definitions["opencl.gpu.use"] = True
+            definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
+
+            # OpenCL CPU (hybrid render) thread settings (we use the properties from Blender here)
+            if opencl.use_native_cpu:
+                if scene.render.threads_mode == "FIXED":
+                    # Explicitly set the number of threads
+                    definitions["opencl.native.threads.count"] = scene.render.threads
+                # If no thread count is specified, LuxCore automatically uses all available cores
+            else:
+                # Disable hybrid rendering
+                definitions["opencl.native.threads.count"] = 0
+    else:
+        # config.engine == BIDIR
+        luxcore_engine = "BIDIRCPU"
+        definitions["light.maxdepth"] = config.bidir_light_maxdepth
+        definitions["path.maxdepth"] = config.bidir_path_maxdepth
+
+    # Sampler
+    if config.engine == "PATH" and config.use_tiles:
+        # TILEPATH needs exactly this sampler
+        sampler = "TILEPATHSAMPLER"
+    else:
+        sampler = config.sampler
+        definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
+        definitions["sampler.random.adaptive.strength"] = config.sobol_adaptive_strength
+        _convert_metropolis_settings(definitions, config)
+
+    return luxcore_engine, sampler
 
 
 def _convert_path(config, definitions):

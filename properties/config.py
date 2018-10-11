@@ -63,7 +63,7 @@ POWER_DESC = (
 UNIFORM_DESC = "Sample all lights equally, not according to their brightness"
 
 LARGE_STEP_RATE_DESC = (
-    "Probability of generating a large sample mutation."
+    "Probability of generating a large sample mutation. "
     "Low values cause the sampler to focus more on "
     "caustics and other hotspots it found, while high "
     "values make the sampler behave more like a pure "
@@ -231,7 +231,7 @@ class LuxCoreConfig(PropertyGroup):
     filter_width = FloatProperty(name="Filter Width", default=1.5, min=0.5, soft_max=3,
                                  description=FILTER_WIDTH_DESC, subtype="PIXEL")
     gaussian_alpha = FloatProperty(name="Gaussian Filter Alpha", default=2, min=0.1, max=10,
-                                   description="Gaussian rate of falloff. Lower values give blurrier images.")
+                                   description="Gaussian rate of falloff. Lower values give blurrier images")
 
     # Light strategy
     light_strategy_items = [
@@ -265,11 +265,11 @@ class LuxCoreConfig(PropertyGroup):
                                     description="Show/Hide advanced LuxCore features. "
                                                 "Only change them if you know what you are doing")
     min_epsilon = FloatProperty(name="Min. Epsilon", default=1e-5, soft_min=1e-6, soft_max=1e-1,
-                                precision=10000,
+                                precision=5,
                                 description="User higher values when artifacts due to floating point precision "
                                             "issues appear in the rendered image")
     max_epsilon = FloatProperty(name="Max. Epsilon", default=1e-1, soft_min=1e-3, soft_max=1e+2,
-                                precision=10000,
+                                precision=5,
                                 description="Might need adjustment along with the min epsilon to avoid "
                                             "artifacts due to floating point precision issues")
 

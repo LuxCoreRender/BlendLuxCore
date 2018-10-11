@@ -25,10 +25,16 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         sub.active = viewport.pixel_size != "1"
         sub.prop(viewport, "mag_filter")
 
-        row = layout.row()
-        row.label("Device:")
-        row.prop(viewport, "device", expand=True)
+        luxcore_engine = context.scene.luxcore.config.engine
 
-        if viewport.device == "OCL" and not utils.is_opencl_build():
-            layout.label("No OpenCL support in this BlendLuxCore version", icon="CANCEL")
-            layout.label("(Falling back to CPU realtime engine)")
+        if luxcore_engine == "BIDIR":
+            layout.prop(viewport, "use_bidir")
+
+        if not (luxcore_engine == "BIDIR" and viewport.use_bidir):
+            row = layout.row()
+            row.label("Device:")
+            row.prop(viewport, "device", expand=True)
+
+            if viewport.device == "OCL" and not utils.is_opencl_build():
+                layout.label("No OpenCL support in this BlendLuxCore version", icon="CANCEL")
+                layout.label("(Falling back to CPU realtime engine)")

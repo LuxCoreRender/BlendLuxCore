@@ -36,7 +36,7 @@ NOISE_TYPE_ITEMS = [
     ("hard_noise", "Hard", "")
 ]
 
-COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color."
+COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color"
 
 
 class LuxCoreNodeTree:

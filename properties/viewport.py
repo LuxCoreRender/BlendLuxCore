@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import IntProperty, EnumProperty, BoolProperty
 
-DESC_CPU = "Usually better suited for viewport rendering than OpenCL."
+DESC_CPU = "Usually better suited for viewport rendering than OpenCL"
 DESC_OCL = (
     "Use the GPUs specified in the device panel. Note that rendering on the GPU leads to "
     "higher latency and sometimes requires kernel recompilations when editing the scene"
@@ -10,7 +10,7 @@ DESC_OCL = (
 
 class LuxCoreViewportSettings(bpy.types.PropertyGroup):
     halt_time = IntProperty(name="Viewport Halt Time (s)", default=10, min=1,
-                            description="How long to render in the viewport."
+                            description="How long to render in the viewport. "
                                         "When this time is reached, the render is paused")
 
     devices = [
@@ -38,3 +38,9 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
     reduce_resolution_on_edit = BoolProperty(name="Reduce first sample resolution", default=True,
                                              description="Render the first sample after editing the scene "
                                                          "with reduced resolution to provide a quicker response")
+
+    use_bidir = BoolProperty(name="Use Bidir in Viewport", default=True,
+                             description="Enable if your scene requires Bidir for complex light paths and "
+                                         "you need to preview them in the viewport render. If disabled, "
+                                         "the RT Path engine is used in the viewport, which is optimized "
+                                         "for quick feedback but can't handle complex light paths")

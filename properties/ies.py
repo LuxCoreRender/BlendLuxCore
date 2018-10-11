@@ -6,9 +6,9 @@ from bpy.props import (
 
 
 USE_IES_DESCRIPTION = "Use an IES file to control the shape of the emitted light"
-IES_FILE_DESCRIPTION = "Specify path to IES file. Only portable if a relative path is used."
+IES_FILE_DESCRIPTION = "Specify path to IES file. Only portable if a relative path is used"
 IES_TEXT_DESCRIPTION = (
-    "Use Blender text block as IES file. Recommended if you plan to append/link this light later."
+    "Use Blender text block as IES file. Recommended if you plan to append/link this light later"
 )
 iesfile_type_items = [
     ("PATH", "File", IES_FILE_DESCRIPTION, 0),
