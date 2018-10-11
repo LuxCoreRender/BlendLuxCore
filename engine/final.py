@@ -87,7 +87,7 @@ def _render_layer(engine, scene, render_slot_stats):
     last_stat_refresh = 0
     optimal_clamp = None
     stats = utils_render.update_stats(engine.session)
-    FAST_REFRESH_DURATION = 0 if engine.is_animation else 5
+    FAST_REFRESH_DURATION = 1 if engine.is_animation else 5
 
     while True:
         now = time()
