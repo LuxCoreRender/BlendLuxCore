@@ -55,6 +55,9 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
             # Use the utils functions to build names so linked objects work (libraries)
             name = name_prefix + utils.get_luxcore_name(dupli.object, context)
             matrix_list = utils.matrix_to_list(dupli.matrix, scene, apply_worldscale=True)
+            # TODO: we can get a random object ID per dupli with the following:
+            # dupli_id = min(dupli.random_id & 0xffffffff, 0xffffffff - 1)
+            # pass a list of IDs to DuplicateObject?
 
             if dupli.object.type == "LAMP":
                 # It is a light

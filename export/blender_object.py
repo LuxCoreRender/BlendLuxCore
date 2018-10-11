@@ -74,7 +74,7 @@ def convert(exporter, obj, scene, context, luxcore_scene,
             mesh_definitions = exported_object.mesh_definitions
 
         define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props,
-                              is_shared_mesh, luxcore_name, obj_transform, duplicator)
+                              is_shared_mesh, luxcore_name, obj_transform, duplicator, dupli_suffix)
 
         if update_shared_mesh:
             exporter.shared_meshes[mesh_key] = mesh_definitions
@@ -89,7 +89,7 @@ def convert(exporter, obj, scene, context, luxcore_scene,
 
 
 def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props,
-                          is_shared_mesh, luxcore_name, obj_transform, duplicator):
+                          is_shared_mesh, luxcore_name, obj_transform, duplicator, dupli_suffix):
     render_layer = utils.get_current_render_layer(scene)
     override_mat = render_layer.material_override if render_layer else None
 
@@ -123,7 +123,7 @@ def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props
             lux_object_name = luxcore_name + "%03d" % material_index
 
         _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_mat_name, obj_transform,
-                               obj, scene, context, duplicator)
+                               obj, scene, context, duplicator, dupli_suffix)
 
 
 def _handle_pointiness(props, lux_shape_name, obj):
@@ -146,12 +146,14 @@ def _handle_pointiness(props, lux_shape_name, obj):
 
 
 def _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_material_name, obj_transform,
-                           obj, scene, context, duplicator):
+                           obj, scene, context, duplicator, dupli_suffix):
     lux_shape_name = _handle_pointiness(props, lux_shape_name, obj)
     prefix = "scene.objects." + lux_object_name + "."
-    props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
 
+    props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
     props.Set(pyluxcore.Property(prefix + "shape", lux_shape_name))
+    props.Set(pyluxcore.Property(prefix + "id", utils.make_object_id(obj.name + dupli_suffix)))
+
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 

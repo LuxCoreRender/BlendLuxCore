@@ -3,6 +3,7 @@ import mathutils
 import math
 import re
 import os
+import hashlib
 from ..bin import pyluxcore
 
 NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
@@ -86,6 +87,15 @@ def obj_from_key(key, objects):
         if key == make_key(obj):
             return obj
     return None
+
+
+def make_object_id(name):
+    # We do this similar to Cycles: hash the object's name to get a "stable" object ID
+    digest = hashlib.md5(name.encode("utf-8")).digest()
+    as_int = int.from_bytes(digest, byteorder="little")
+    # Truncate to 4 bytes because LuxCore uses unsigned int for the object ID.
+    # Make sure it's not exactly 0xffffffff because that's LuxCore's Null index for object IDs.
+    return min(as_int & 0xffffffff, 0xffffffff - 1)
 
 
 def create_props(prefix, definitions):
