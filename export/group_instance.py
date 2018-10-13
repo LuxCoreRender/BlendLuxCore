@@ -8,6 +8,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, props):
         assert duplicator.dupli_type == "GROUP"
 
         dupli_suffix = utils.get_luxcore_name(duplicator, context)
+        dupli_suffix_raw = duplicator.name
 
         duplicator.dupli_list_create(scene)
 
@@ -41,8 +42,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, props):
                     luxcore_name = utils.make_key(obj) + dupli_suffix
                     transform = utils.matrix_to_list(dupli_obj.matrix, scene, apply_worldscale=True)
                     blender_object.define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props,
-                                                         is_shared_mesh, luxcore_name, transform, duplicator,
-                                                         dupli_suffix)
+                                                         is_shared_mesh, luxcore_name, transform, duplicator)
     except Exception as error:
         msg = '[Dupli group "%s"] %s' % (duplicator.dupli_group.name, error)
         scene.luxcore.errorlog.add_warning(msg)
