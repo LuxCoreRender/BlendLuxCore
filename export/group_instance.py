@@ -8,7 +8,6 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, props):
         assert duplicator.dupli_type == "GROUP"
 
         dupli_suffix = utils.get_luxcore_name(duplicator, context)
-        dupli_suffix_raw = duplicator.name
 
         duplicator.dupli_list_create(scene)
 
