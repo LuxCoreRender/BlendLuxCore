@@ -20,7 +20,7 @@ class LuxCoreNodeTexObjectID(LuxCoreNodeTexture):
     mode_items = [
         ("objectidcolor", "Color", "Object ID interpreted as color", 0),
         ("objectidnormalized", "Normalized", "Object ID converted into 0..1 range", 1),
-        ("objectid", "Raw", "Raw object ID (range: 0 to 0xffffff)", 2),
+        ("objectid", "Raw", "Raw object ID (range: 0 to 0xffffffff)", 2),
     ]
     mode = EnumProperty(name="Mode", items=mode_items, default="objectidcolor",
                         update=change_mode)

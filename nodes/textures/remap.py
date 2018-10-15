@@ -3,6 +3,7 @@ from .. import LuxCoreNodeTexture
 
 class LuxCoreNodeTexRemap(LuxCoreNodeTexture):
     bl_label = "Remap"
+    bl_width_default = 160
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value", 0.5)
