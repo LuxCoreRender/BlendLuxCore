@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
 from . import (
-    config, denoiser, denoiser_log, display, errorlog,
+    config, debug, denoiser, denoiser_log, display, errorlog,
     halt, lightgroups, opencl, statistics, viewport,
 )
 
@@ -21,6 +21,7 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     lightgroups = PointerProperty(type=lightgroups.LuxCoreLightGroupSettings)
     viewport = PointerProperty(type=viewport.LuxCoreViewportSettings)
     statistics = PointerProperty(type=statistics.LuxCoreRenderStatsCollection)
+    debug = PointerProperty(type=debug.LuxCoreDebugSettings)
 
     # Set during render and used during export
     # TODO does this have to be an IntProperty? why not active_layer_index = -1

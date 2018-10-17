@@ -13,7 +13,7 @@ if system() == "Darwin":
 
 # Ensure initialization (note: no need to initialize utils)
 from . import (
-    camera, camera_response_func, ior_presets, lightgroups,
+    camera, camera_response_func, debug, ior_presets, lightgroups,
     material, multi_image_import, node_tree_presets, pointer_node,
     pyluxcoretools, texture, update, world,
 )

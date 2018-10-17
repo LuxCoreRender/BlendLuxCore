@@ -42,8 +42,10 @@ from .mapping3d import LuxCoreNodeTexMapping3D
 from .marble import LuxCoreNodeTexMarble
 from .math import LuxCoreNodeTexMath
 from .normalmap import LuxCoreNodeTexNormalmap
+from .objectid import LuxCoreNodeTexObjectID
 from .output import LuxCoreNodeTexOutput
 from .pointiness import LuxCoreNodeTexPointiness
+from .remap import LuxCoreNodeTexRemap
 from .smoke import LuxCoreNodeTexSmoke
 from .uv import LuxCoreNodeTexUV
 from .wrinkled import LuxCoreNodeTexWrinkled
@@ -103,6 +105,7 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexRemap", label="Remap"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         Separator(),
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
@@ -113,6 +116,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
+        NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
     ]),

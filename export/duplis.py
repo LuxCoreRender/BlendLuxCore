@@ -6,13 +6,15 @@ from array import array
 
 
 class Duplis:
-    def __init__(self, exported_obj, matrix):
+    def __init__(self, exported_obj, matrix, object_id):
         self.exported_obj = exported_obj
         self.matrices = matrix
+        self.object_ids = [object_id]
         self.count = 1
 
-    def add(self, matrix):
+    def add(self, matrix, object_id):
         self.matrices += matrix
+        self.object_ids.append(object_id)
         self.count += 1
 
 
@@ -65,10 +67,13 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
                                                                      dupli_matrix=dupli.matrix)
                 dupli_props.Set(light_props)
             else:
-                # It is an object
+                # Get a random object ID per dupli (note: must not be exactly 0xffffffff
+                # because this is LuxCore's Null index for object IDs)
+                object_id = min(dupli.random_id & 0xffffffff, 0xffffffff - 1)
+
                 try:
                     # Already exported, just update the Duplis info
-                    exported_duplis[name].add(matrix_list)
+                    exported_duplis[name].add(matrix_list, object_id)
                 except KeyError:
                     # Not yet exported
                     name_suffix = _get_name_suffix(name_prefix, dupli, context)
@@ -76,7 +81,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
                                                                      luxcore_scene, update_mesh=True,
                                                                      dupli_suffix=name_suffix, duplicator=duplicator)
                     dupli_props.Set(obj_props)
-                    exported_duplis[name] = Duplis(exported_obj, matrix_list)
+                    exported_duplis[name] = Duplis(exported_obj, matrix_list, object_id)
 
             # Report progress and check if user wants to cancel export
             # Note: in viewport render we can't do all this, so we don't pass the engine there
@@ -112,7 +117,8 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
                     dst_name = src_name + "dupli"
                     count = duplis.count
                     transformations = array("f", duplis.matrices)
-                    luxcore_scene.DuplicateObject(src_name, dst_name, count, transformations)
+                    object_ids = array("I", duplis.object_ids)
+                    luxcore_scene.DuplicateObject(src_name, dst_name, count, transformations, object_ids)
 
                     # TODO: support steps and times (motion blur)
                     # steps = 0 # TODO

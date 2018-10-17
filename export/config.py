@@ -92,6 +92,32 @@ def convert(exporter, scene, context=None, engine=None):
         return pyluxcore.Properties()
 
 
+def _convert_opencl_settings(scene, definitions, is_final_render):
+    if scene.luxcore.debug.enabled and scene.luxcore.debug.use_opencl_cpu:
+        # This is a mode for debugging OpenCL problems.
+        # If the problem shows up in this mode, it is most
+        # likely a bug in LuxCore and not an OpenCL compiler bug.
+        definitions["opencl.cpu.use"] = True
+        definitions["opencl.gpu.use"] = False
+        definitions["opencl.native.threads.count"] = 0
+    else:
+        opencl = scene.luxcore.opencl
+        definitions["opencl.cpu.use"] = False
+        definitions["opencl.gpu.use"] = True
+        definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
+
+        # OpenCL CPU (hybrid render) thread settings. Only enabled in final render.
+        if opencl.use_native_cpu and is_final_render:
+            # We use the properties from Blender here
+            if scene.render.threads_mode == "FIXED":
+                # Explicitly set the number of threads
+                definitions["opencl.native.threads.count"] = scene.render.threads
+            # If no thread count is specified, LuxCore automatically uses all available cores
+        else:
+            # Disable hybrid rendering
+            definitions["opencl.native.threads.count"] = 0
+
+
 def _convert_viewport_engine(scene, definitions, config):
     _convert_path(config, definitions)
 
@@ -144,11 +170,7 @@ def _convert_viewport_engine(scene, definitions, config):
             "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
         ])
         definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
-
-        definitions["opencl.cpu.use"] = False
-        definitions["opencl.gpu.use"] = True
-        opencl = scene.luxcore.opencl
-        definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
+        _convert_opencl_settings(scene, definitions, False)
 
     return luxcore_engine, sampler
 
@@ -189,20 +211,7 @@ def _convert_final_engine(scene, definitions, config):
 
         if config.device == "OCL":
             # OpenCL specific settings
-            opencl = scene.luxcore.opencl
-            definitions["opencl.cpu.use"] = False
-            definitions["opencl.gpu.use"] = True
-            definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
-
-            # OpenCL CPU (hybrid render) thread settings (we use the properties from Blender here)
-            if opencl.use_native_cpu:
-                if scene.render.threads_mode == "FIXED":
-                    # Explicitly set the number of threads
-                    definitions["opencl.native.threads.count"] = scene.render.threads
-                # If no thread count is specified, LuxCore automatically uses all available cores
-            else:
-                # Disable hybrid rendering
-                definitions["opencl.native.threads.count"] = 0
+            _convert_opencl_settings(scene, definitions, False)
     else:
         # config.engine == BIDIR
         luxcore_engine = "BIDIRCPU"

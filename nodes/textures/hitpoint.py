@@ -6,6 +6,7 @@ from ...utils import node as utils_node
 class LuxCoreNodeTexHitpoint(LuxCoreNodeTexture):
     """ Node for hitpointcolor and hitpointgrey textures """
     bl_label = "Vertex Color"
+    bl_width_default = 150
 
     def change_mode(self, context):
         value_output = self.outputs["Value"]
@@ -39,10 +40,10 @@ class LuxCoreNodeTexHitpoint(LuxCoreNodeTexture):
         self.outputs["Value"].enabled = False
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "mode")
+        layout.prop(self, "mode", expand=True)
 
         if self.mode == "hitpointgrey":
-            layout.prop(self, "channel")
+            layout.prop(self, "channel", expand=True)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {

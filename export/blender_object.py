@@ -149,9 +149,17 @@ def _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_material_
                            obj, scene, context, duplicator):
     lux_shape_name = _handle_pointiness(props, lux_shape_name, obj)
     prefix = "scene.objects." + lux_object_name + "."
-    props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
 
+    props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
     props.Set(pyluxcore.Property(prefix + "shape", lux_shape_name))
+
+    # We calculate the "random" object ID from the object name and, in case of dupli groups,
+    # add the duplicator name so different group instances get different IDs
+    object_id_source = obj.name
+    if duplicator:
+        object_id_source += duplicator.name
+    props.Set(pyluxcore.Property(prefix + "id", utils.make_object_id(object_id_source)))
+
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
 

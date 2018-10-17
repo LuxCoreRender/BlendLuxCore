@@ -27,9 +27,9 @@ import bpy
 from . import engine, handlers, nodes, operators, properties, ui
 from .nodes import materials, volumes, textures
 from .ui import (
-    aovs, blender_object, camera, config, denoiser, device, display, errorlog,
-    halt, image_tools, light, lightgroups, material, particle, postpro, render,
-    render_layer, scene, texture, units, viewport, world,
+    aovs, blender_object, camera, config, debug, denoiser, device, display,
+    errorlog, halt, image_tools, light, lightgroups, material, particle,
+    postpro, render, render_layer, scene, texture, units, viewport, world,
 )
 from .utils.log import LuxCoreLog
 
@@ -58,7 +58,8 @@ def register():
     properties.init()
 
     # Has to be called at least once, can be called multiple times
-    pyluxcore.Init(LuxCoreLog.add)
+    # pyluxcore.Init(LuxCoreLog.add)
+    pyluxcore.Init()
     print("pyluxcore version:", pyluxcore.Version())
 
 
