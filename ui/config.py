@@ -128,6 +128,7 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                 col.prop(dls_cache, "entry_normalangle")
                 col.prop(dls_cache, "entry_maxpasses")
                 col.prop(dls_cache, "entry_convergencethreshold")
+                col.prop(dls_cache, "entry_warmupsamples")
                 col.prop(dls_cache, "entry_volumes_enable")
 
                 col = ls_layout.column(align=True)

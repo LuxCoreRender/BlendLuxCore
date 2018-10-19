@@ -9,6 +9,9 @@ class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
     Note that we do not offer a direct hex code input,
     because that one would have to go through Blender's
     color management.
+
+    In case anyone wants to implement a hex input:
+    https://devtalk.blender.org/t/get-hex-gamma-corrected-color/2422
     """
     bl_label = "Constant Value"
 

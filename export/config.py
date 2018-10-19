@@ -314,6 +314,7 @@ def _convert_dlscache_settings(scene, definitions, config):
         "lightstrategy.entry.normalangle": degrees(dls_cache.entry_normalangle),
         "lightstrategy.entry.maxpasses": dls_cache.entry_maxpasses,
         "lightstrategy.entry.convergencethreshold": dls_cache.entry_convergencethreshold / 100,
+        "lightstrategy.entry.warmupsamples": dls_cache.entry_warmupsamples,
         "lightstrategy.entry.volumes.enable": dls_cache.entry_volumes_enable,
 
         "lightstrategy.lightthreshold": dls_cache.lightthreshold / 100,

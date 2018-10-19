@@ -147,17 +147,19 @@ class LuxCoreConfigDLSCache(PropertyGroup):
     entry_radius = FloatProperty(name="Entry Radius", default=0.15, subtype="DISTANCE")
     entry_normalangle = FloatProperty(name="Normal Angle",
                                       default=radians(10), min=0, max=radians(90), subtype="ANGLE")
-    entry_maxpasses = IntProperty(name="Max. Passes", default=1024)
+    entry_maxpasses = IntProperty(name="Max. Passes", default=1024, min=0)
     entry_convergencethreshold = FloatProperty(name="Convergence Threshold",
                                                default=1, min=0, max=100, subtype="PERCENTAGE")
+    entry_warmupsamples = IntProperty(name="Warmup Samples", default=12, min=0,
+                                      description="Increase this value if splotchy artifacts appear in the image")
     entry_volumes_enable = BoolProperty(name="Place Entries in Volumes", default=False,
                                         description="Enable/disable placement of entries in volumes")
 
     lightthreshold = FloatProperty(name="Light Threshold", default=1, min=0, max=100, subtype="PERCENTAGE")
     targetcachehitratio = FloatProperty(name="Target Cache Hit Ratio",
                                         default=99.5, min=0, max=100, subtype="PERCENTAGE")
-    maxdepth = IntProperty(name="Max. Depth", default=4)
-    maxsamplescount = IntProperty(name="Max. Samples", default=10000000)
+    maxdepth = IntProperty(name="Max. Depth", default=4, min=0)
+    maxsamplescount = IntProperty(name="Max. Samples", default=10000000, min=0)
 
 
 class LuxCoreConfig(PropertyGroup):
