@@ -58,8 +58,7 @@ def register():
     properties.init()
 
     # Has to be called at least once, can be called multiple times
-    # pyluxcore.Init(LuxCoreLog.add)
-    pyluxcore.Init()
+    pyluxcore.Init(LuxCoreLog.add)
     print("pyluxcore version:", pyluxcore.Version())
 
 

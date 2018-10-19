@@ -1,4 +1,5 @@
 import bpy
+from time import sleep
 from . import final, preview, viewport
 from ..handlers.draw_imageeditor import TileStats
 from ..utils.log import LuxCoreLog
@@ -38,6 +39,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def log_listener(self, msg):
         if "Direct light sampling cache entries" in msg:
             self.update_stats("", msg)
+            # We have to sleep for a bit, otherwise Blender does not update the UI
+            sleep(0.01)
         # elif "BCD progress" in msg:  # TODO For some weird reason this does not work
         #     self.update_stats("", msg)
 
