@@ -62,6 +62,12 @@ POWER_DESC = (
 
 UNIFORM_DESC = "Sample all lights equally, not according to their brightness"
 
+DLSC_DESC = (
+    "Use the DLSC in scenes with many light sources if each of them only "
+    "lights up a small part of the scene (example: a city at night). "
+    "The DLSC is built before the rendering starts"
+)
+
 LARGE_STEP_RATE_DESC = (
     "Probability of generating a large sample mutation. "
     "Low values cause the sampler to focus more on "
@@ -123,17 +129,14 @@ class LuxCoreConfigTile(PropertyGroup):
 
     # TODO: unify with halt condition noise threshold settings
 
-    # TODO: min/max correct?
     # tile.multipass.convergencetest.threshold
     multipass_convtest_threshold = FloatProperty(name="Convergence Threshold", default=(6 / 256),
                                                  min=0.0000001, soft_max=(6 / 256),
                                                  description="")
-    # TODO min/max/default
     # tile.multipass.convergencetest.threshold.reduction
     multipass_convtest_threshold_reduction = FloatProperty(name="Threshold Reduction", default=0.5, min=0.001,
                                                            soft_min=0.1, max=0.99, soft_max=0.9,
                                                            description=THRESH_REDUCT_DESC)
-    # TODO do we need to expose this? In LuxBlend we didn't
     # tile.multipass.convergencetest.warmup.count
     multipass_convtest_warmup = IntProperty(name="Convergence Warmup", default=32, min=0,
                                             soft_min=8, soft_max=128,
@@ -240,8 +243,7 @@ class LuxCoreConfig(PropertyGroup):
         ("LOG_POWER", "Log Power", LOG_POWER_DESC, 0),
         ("POWER", "Power", POWER_DESC, 1),
         ("UNIFORM", "Uniform", UNIFORM_DESC, 2),
-        # TODO description
-        ("DLS_CACHE", "Direct Light Cache", "", 3)
+        ("DLS_CACHE", "Direct Light Sampling Cache", DLSC_DESC, 3),
     ]
     light_strategy = EnumProperty(name="Light Strategy", items=light_strategy_items, default="LOG_POWER",
                                   description="Decides how the lights in the scene are sampled")
