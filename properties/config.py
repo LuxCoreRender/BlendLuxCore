@@ -147,7 +147,9 @@ class LuxCoreConfigDLSCache(PropertyGroup):
     show_advanced = BoolProperty(name="Show Advanced", default=False)
 
     # TODO min/max, descriptions
-    entry_radius = FloatProperty(name="Entry Radius", default=0.15, subtype="DISTANCE")
+    entry_radius = FloatProperty(name="Entry Radius", default=0.15, min=0, subtype="DISTANCE",
+                                 description="Choose this value according to the size of your scene. "
+                                             "The default (15 cm) is suited for a room-sized scene")
     entry_normalangle = FloatProperty(name="Normal Angle",
                                       default=radians(10), min=0, max=radians(90), subtype="ANGLE")
     entry_maxpasses = IntProperty(name="Max. Passes", default=1024, min=0)
@@ -156,7 +158,7 @@ class LuxCoreConfigDLSCache(PropertyGroup):
     entry_warmupsamples = IntProperty(name="Warmup Samples", default=12, min=0,
                                       description="Increase this value if splotchy artifacts appear in the image")
     entry_volumes_enable = BoolProperty(name="Place Entries in Volumes", default=False,
-                                        description="Enable/disable placement of entries in volumes")
+                                        description="Enable/disable placement of entries in volumes (in mid-air)")
 
     lightthreshold = FloatProperty(name="Light Threshold", default=1, min=0, max=100, subtype="PERCENTAGE")
     targetcachehitratio = FloatProperty(name="Target Cache Hit Ratio",

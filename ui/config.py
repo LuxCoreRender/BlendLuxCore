@@ -119,7 +119,9 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
         if config.light_strategy == "DLS_CACHE":
             dls_cache = config.dls_cache
-            ls_layout.prop(dls_cache, "entry_radius")
+            col = ls_layout.column(align=True)
+            col.prop(dls_cache, "entry_radius")
+            col.prop(dls_cache, "entry_warmupsamples")
             ls_layout.prop(dls_cache, "show_advanced", toggle=True)
 
             if dls_cache.show_advanced:
@@ -128,7 +130,6 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                 col.prop(dls_cache, "entry_normalangle")
                 col.prop(dls_cache, "entry_maxpasses")
                 col.prop(dls_cache, "entry_convergencethreshold")
-                col.prop(dls_cache, "entry_warmupsamples")
                 col.prop(dls_cache, "entry_volumes_enable")
 
                 col = ls_layout.column(align=True)
