@@ -33,14 +33,15 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
 
     preset = EnumProperty(name="Preset", description="Cloth presets", items=preset_items,
                           default="denim")
+
+    repeat_u = FloatProperty(name="Repeat U", default=100, description=REPEATU_DESCRIPTION)
+    repeat_v = FloatProperty(name="Repeat V", default=100, description=REPEATV_DESCRIPTION)
     
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Wrap Diffuse Color", (0.7, 0.05, 0.05))
         self.add_input("LuxCoreSocketColor", "Wrap Specular Color", (0.04, 0.04, 0.04))
         self.add_input("LuxCoreSocketColor", "Weft Diffuse Color", (0.64, 0.64, 0.64))
         self.add_input("LuxCoreSocketColor", "Weft Specular Color", (0.04, 0.04, 0.04))
-        self.add_input("LuxCoreSocketRepeatU", "Repeat U", 100)
-        self.add_input("LuxCoreSocketRepeatV", "Repeat V", 100)
         self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
@@ -48,6 +49,10 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
     def draw_buttons(self, context, layout):
         # Info about UV mapping (only show if default is used,
         utils_node.draw_uv_info(context, layout)
+
+        col = layout.column(align=True)
+        col.prop(self, "repeat_u")
+        col.prop(self, "repeat_v")
 
         layout.prop(self, "preset")
 
@@ -59,8 +64,8 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
             "warp_ks": self.inputs["Wrap Specular Color"].export(exporter, props),
             "weft_kd": self.inputs["Weft Diffuse Color"].export(exporter, props),
             "weft_ks": self.inputs["Weft Specular Color"].export(exporter, props),
-            "repeat_u": self.inputs["Repeat U"].export(exporter, props),
-            "repeat_v": self.inputs["Repeat V"].export(exporter, props)
+            "repeat_u": self.repeat_u,
+            "repeat_v": self.repeat_v,
         }
         self.export_common_inputs(exporter, props, definitions)
         return self.create_props(props, definitions, luxcore_name)
