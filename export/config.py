@@ -211,7 +211,7 @@ def _convert_final_engine(scene, definitions, config):
 
         if config.device == "OCL":
             # OpenCL specific settings
-            _convert_opencl_settings(scene, definitions, False)
+            _convert_opencl_settings(scene, definitions, True)
     else:
         # config.engine == BIDIR
         luxcore_engine = "BIDIRCPU"
