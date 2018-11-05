@@ -16,6 +16,7 @@ def run():
     update_smoke_nodes_add_color_output()
     update_colormix_remove_min_max_sockets()
     update_imagemap_remove_gamma_brightness_sockets()
+    update_cloth_remove_repeat_sockets()
 
 
 def update_output_nodes_volume_change():
@@ -156,4 +157,22 @@ def update_imagemap_remove_gamma_brightness_sockets():
                 updated = True
 
             if updated:
+                print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_cloth_remove_repeat_sockets():
+    # commit ec3fccdccb3e4c95a4230df8b38f6494bb8e4583
+
+    for node_tree in bpy.data.node_groups:
+        if node_tree.library:
+            continue
+
+        for node in find_nodes(node_tree, "LuxCoreNodeMatCloth"):
+            if "Repeat U" in node.inputs and "Repeat V" in node.inputs:
+                socket_repeat_u = node.inputs["Repeat U"]
+                socket_repeat_v = node.inputs["Repeat V"]
+                node.repeat_u = socket_repeat_u.default_value
+                node.repeat_v = socket_repeat_v.default_value
+                node.inputs.remove(socket_repeat_u)
+                node.inputs.remove(socket_repeat_v)
                 print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
