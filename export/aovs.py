@@ -100,6 +100,9 @@ def convert(exporter, scene, context=None, engine=None):
                                                      pipeline_index, definitions, engine,
                                                      group_id, exporter.lightgroup_cache)
 
+            if not any([group.enabled for group in scene.luxcore.lightgroups.get_all_groups()]):
+                scene.luxcore.errorlog.add_warning("All light groups are disabled.")
+
             # Denoiser imagepipeline
             if scene.luxcore.denoiser.enabled:
                 pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,

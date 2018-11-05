@@ -15,9 +15,16 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
     bl_label = "LuxCore Light Groups"
     COMPAT_ENGINES = {"LUXCORE"}
 
+    def draw_header(self, context):
+        if self._are_all_groups_disabled(context):
+            self.layout.label("", icon="ERROR")
+
     def draw(self, context):
         layout = self.layout
         groups = context.scene.luxcore.lightgroups
+
+        if self._are_all_groups_disabled(context):
+            layout.label("All groups disabled.", icon="ERROR")
 
         self.draw_lightgroup(layout, groups.default, -1,
                              is_default_group=True)
@@ -74,3 +81,6 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
             sub = row.split()
             sub.active = group.use_temperature
             sub.prop(group, 'temperature', slider=True)
+
+    def _are_all_groups_disabled(self, context):
+        return not any([group.enabled for group in context.scene.luxcore.lightgroups.get_all_groups()])

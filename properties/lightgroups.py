@@ -78,3 +78,6 @@ class LuxCoreLightGroupSettings(PropertyGroup):
             names.append(self.get_lightgroup_pass_name(group.name, i))
 
         return names
+
+    def get_all_groups(self):
+        return [group for group in self.custom] + [self.default]
