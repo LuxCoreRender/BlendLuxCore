@@ -247,7 +247,7 @@ def _convert_filesaver(scene, definitions, luxcore_engine):
     filesaver_path = config.filesaver_path
     output_path = utils.get_abspath(filesaver_path, must_exist=True, must_be_existing_dir=True)
 
-    blend_name = bpy.path.basename(bpy.context.blend_data.filepath)
+    blend_name = bpy.path.basename(bpy.data.filepath)
     blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"
 
     if not blend_name:
