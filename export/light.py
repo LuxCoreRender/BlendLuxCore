@@ -357,8 +357,6 @@ def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance, lux
         obj_transform = None
         mesh_transform = transform
 
-    # shape_transform = None if context else transform
-
     shape_name = "Mesh-" + luxcore_name
     if not luxcore_scene.IsMeshDefined(shape_name):
         vertices = [
@@ -371,7 +369,13 @@ def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance, lux
             (0, 1, 2),
             (2, 3, 0)
         ]
-        luxcore_scene.DefineMesh(shape_name, vertices, faces, None, None, None, None, mesh_transform)
+        normals = [
+            (0, 0, -1),
+            (0, 0, -1),
+            (0, 0, -1),
+            (0, 0, -1),
+        ]
+        luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, None, None, None, mesh_transform)
 
     obj_prefix = "scene.objects." + luxcore_name + "."
     obj_definitions = {
