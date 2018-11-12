@@ -392,7 +392,7 @@ def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance, lux
 
     fake_material_index = 0
     mesh_definition = [luxcore_name, fake_material_index]
-    exported_obj = ExportedObject([mesh_definition])
+    exported_obj = ExportedObject([mesh_definition], luxcore_name)
     return props, exported_obj
 
 

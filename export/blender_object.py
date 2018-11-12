@@ -79,7 +79,7 @@ def convert(exporter, obj, scene, context, luxcore_scene,
         if update_shared_mesh:
             exporter.shared_meshes[mesh_key] = mesh_definitions
 
-        return props, ExportedObject(mesh_definitions)
+        return props, ExportedObject(mesh_definitions, luxcore_name)
     except Exception as error:
         msg = 'Object "%s": %s' % (obj.name, error)
         scene.luxcore.errorlog.add_warning(msg)
