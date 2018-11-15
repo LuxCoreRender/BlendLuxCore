@@ -1,9 +1,9 @@
+from time import time
 from .. import utils
 import array
 
 
 def convert(smoke_obj, channel):
-    from time import time
     start = time()
 
     # Search smoke domain target for smoke modifiers
@@ -33,7 +33,9 @@ def convert(smoke_obj, channel):
         msg = 'Object "%s": No smoke data (simulate some frames first)' % smoke_obj.name
         raise Exception(msg)
 
-    channeldata = list(grid)
+    # We have to convert Blender's bpy_prop_array because it doesn't support the Python buffer interface.
+    # We use an array instead of a list here to save a lot of memory (list would use doubles instead of floats).
+    channeldata = array.array("f", grid)
 
     # The smoke resolution along the x, y, z axis
     resolution = list(settings.domain_resolution)
@@ -43,6 +45,6 @@ def convert(smoke_obj, channel):
         for i in range(3):
             resolution[i] *= settings.amplify + 1
 
-    print("conversion to list took %.3f s" % (time() - start))
+    print("conversion to array took %.3f s" % (time() - start))
 
     return resolution, channeldata
