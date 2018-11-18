@@ -8,11 +8,37 @@ from ..utils.log import LuxCoreLog
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_idname = "LUXCORE"
     bl_label = "LuxCore"
+
+    # When rendering an animation, this prevents layers from being updated if they
+    # are excluded on all render layers.
+    bl_use_exclude_layers = True
+
+    # No idea what this flag does exactly.
+    bl_use_postprocess = True
+
+    # Enables material preview (but not texture preview) for this render engine.
+    # Previews call self.render() like a final render. We have to check self.is_preview
+    # to see if we should render a preview.
     bl_use_preview = True
+
+    # Has something to do with tiled EXR render output, not sure about the details.
+    bl_use_save_buffers = False
+
+    # This makes the "MATERIAL" shading mode work like in Cycles. Currently we can't
+    # use this, it requires GLSL code for each node, which has to be defined in C.
+    bl_use_shading_nodes = False
+
+    # Hides Cycles node trees in the node editor.
     bl_use_shading_nodes_custom = True
-    # bl_use_shading_nodes = True  # This makes the "MATERIAL" shading mode work like in Cycles
-    bl_use_exclude_layers = True  # No idea what this does, but we support exclude layers
-    bl_use_postprocess = True  # No idea what this does
+
+    # Sets the value of the property scene.render.use_spherical_stereo
+    # (this is all it does as far as I could see in the Blender source code).
+    bl_use_spherical_stereo = False
+
+    # Texture previews are disabled intentionally. It is faster and easier to let
+    # Blender Internal render them. They are only shown for brush textures,
+    # displacement textures etc., not for LuxCore textures.
+    bl_use_texture_preview = False
 
     final_running = False
 
