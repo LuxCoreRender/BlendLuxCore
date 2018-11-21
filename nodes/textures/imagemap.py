@@ -66,8 +66,6 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
 
         color_output.enabled = not self.is_normal_map
         bump_output.enabled = self.is_normal_map
-        self.inputs["Gamma"].enabled = not self.is_normal_map
-        self.inputs["Brightness"].enabled = not self.is_normal_map
 
         utils_node.copy_links_after_socket_swap(color_output, bump_output, was_color_enabled)
 
