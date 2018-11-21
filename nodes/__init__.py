@@ -82,6 +82,15 @@ class LuxCoreNode(Node):
         for old_link in node_tree.links:
             # Check if an old link is deleted by this new link
             if old_link.to_socket == link.to_socket:
+                if not old_link.from_socket.enabled:
+                    # Links from disabled sockets are not visible to the user, but prevent
+                    # other links from being established. This code solves this problem.
+                    # Sockets can be disabled on nodes where there are multiple output
+                    # sockets, e.g. the pointer node (Material/Volume/Color output, depending
+                    # on the selected node tree)
+                    node_tree.requested_links.add((link.from_socket, link.to_socket))
+                    break
+
                 # Try to find a suitable replacement socket (e.g. switch from "Material 1"
                 # to "Material 2" on the Mix node, if "Material 2" is free)
                 for socket in link.to_node.inputs:
