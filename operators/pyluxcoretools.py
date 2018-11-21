@@ -49,6 +49,24 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
                       "start and control network rendering sessions")
 
     def execute(self, context):
+        my_env = os.environ.copy()
+
+        if platform.system() == "Darwin":
+            # MacOS does not come with Python3 most installation methods supply
+            # a symbolic link to /usr/local/bin or /usr/local/sbin
+            my_env["PATH"] = "/usr/local/bin:/usr/local/sbin:" + my_env.get("PATH", '')
+
+            try:
+                result = run(["pip3", "list"], env=my_env, stdout=PIPE)
+                installed_packages = result.stdout.decode()
+            except FileNotFoundError:
+                self.report({'WARNING'}, 'pip3 not installed see wiki for setup instructions')
+                return {"CANCELLED"}
+
+            if "PySide2" not in installed_packages:
+                self.report({'WARNING'}, 'PySide2 not install see wiki for setup instructions')
+                return {"CANCELLED"}
+
         if platform.system() == "Linux":
             # On Linux, PySide can not be bundled because of this bug:
             # https://github.com/LuxCoreRender/LuxCore/issues/80#issuecomment-378223152
@@ -80,7 +98,7 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
         # Set the current working directory to the bin folder so pyluxcore is found
         kwargs.update(cwd=bin_dir)
 
-        if platform.system() == "Linux":
+        if (platform.system() == "Linux") or (platform.system() == "Darwin"):
             zip_path = os.path.join(bin_dir, "pyluxcoretools.zip")
             command = ["python3", zip_path]
         elif platform.system() == "Windows":
@@ -89,6 +107,6 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
         else:
             raise NotImplementedError("Unsupported system: " + platform.system())
 
-        Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, **kwargs)
+        Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=my_env, **kwargs)
 
         return {"FINISHED"}
