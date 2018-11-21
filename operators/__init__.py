@@ -5,9 +5,9 @@ from bpy.props import StringProperty, BoolProperty
 from platform import system
 from os import environ
 
-#Fix problem of OpenMP calling a trap about two libraries loading because blender's
-#openmp lib uses @loader_path and zip does not preserve symbolic links (so can't
-#spoof loader_path with symlinks)
+# Fix problem of OpenMP calling a trap about two libraries loading because blender's
+# openmp lib uses @loader_path and zip does not preserve symbolic links (so can't
+# spoof loader_path with symlinks)
 if system() == "Darwin":
     environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
@@ -189,6 +189,34 @@ class LUXCORE_OT_open_website(bpy.types.Operator):
     # op.url = "https://www.example.com"
 
     url = StringProperty()
+
+    def execute(self, context):
+        webbrowser.open(self.url)
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_open_website_popup(bpy.types.Operator):
+    bl_idname = "luxcore.open_website_popup"
+    bl_label = "Open Website"
+    bl_description = "Open related website in the web browser"
+    # This operator is intended to be used as a popup with short message and OK button.
+    # When the user clicks the OK button, the url is opened.
+    # Usage:
+    # bpy.ops.luxcore.open_website_popup("INVOKE_DEFAULT",
+    #                                    message="Short message",
+    #                                    url="http://example.com/")
+
+    message = StringProperty()
+    url = StringProperty()
+
+    def draw(self, context):
+        layout = self.layout
+        if self.message:
+            layout.label(text=self.message)
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
 
     def execute(self, context):
         webbrowser.open(self.url)

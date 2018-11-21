@@ -11,7 +11,6 @@ class LUXCORE_OT_install_pyside(bpy.types.Operator):
     bl_description = ""
 
     def invoke(self, context, event):
-        print("invoke")
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
@@ -45,7 +44,7 @@ class LUXCORE_OT_install_pyside(bpy.types.Operator):
 class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
     bl_idname = "luxcore.start_pyluxcoretools"
     bl_label = "LuxCore Network Render"
-    bl_description = ("Start the pyluxcoretools that can be used to "
+    bl_description = ("Open the pyluxcoretools that can be used to "
                       "start and control network rendering sessions")
 
     def execute(self, context):
@@ -54,17 +53,25 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
         if platform.system() == "Darwin":
             # MacOS does not come with Python3 most installation methods supply
             # a symbolic link to /usr/local/bin or /usr/local/sbin
-            my_env["PATH"] = "/usr/local/bin:/usr/local/sbin:" + my_env.get("PATH", '')
+            my_env["PATH"] = "/usr/local/bin:/usr/local/sbin:" + my_env.get("PATH", "")
 
             try:
                 result = run(["pip3", "list"], env=my_env, stdout=PIPE)
                 installed_packages = result.stdout.decode()
             except FileNotFoundError:
-                self.report({'WARNING'}, 'pip3 not installed see wiki for setup instructions')
+                msg = "pip3 not installed, see wiki for instructions"
+                self.report({"WARNING"}, msg)
+                bpy.ops.luxcore.open_website_popup("INVOKE_DEFAULT",
+                                                   message=msg,
+                                                   url="https://wiki.luxcorerender.org/LuxCoreRender_Network_Rendering")
                 return {"CANCELLED"}
 
             if "PySide2" not in installed_packages:
-                self.report({'WARNING'}, 'PySide2 not install see wiki for setup instructions')
+                msg = "PySide2 not installed, see wiki for instructions"
+                self.report({"WARNING"}, msg)
+                bpy.ops.luxcore.open_website_popup("INVOKE_DEFAULT",
+                                                   message=msg,
+                                                   url="https://wiki.luxcorerender.org/LuxCoreRender_Network_Rendering")
                 return {"CANCELLED"}
 
         if platform.system() == "Linux":
