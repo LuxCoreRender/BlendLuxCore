@@ -1,3 +1,4 @@
+import mathutils
 from ..bin import pyluxcore
 from . import find_active_uv
 from ..ui import icons
@@ -105,16 +106,13 @@ def update_opengl_materials(_, context):
             # Set default color for nodes without color sockets, e.g. mix or glossy coating
             diffuse_color = (0.5, 0.5, 0.5)
 
-            # Usually we want to show the color in the first input as main color
-            socket = first_node.inputs[0]
+            if first_node.inputs:
+                # Usually we want to show the color in the first input as main color
+                socket = first_node.inputs[0]
+                socket_value = getattr(socket, "default_value", None)
 
-            if socket.is_linked:
-                # TODO (complicated topic)
-                color_node = get_linked_node(socket)
-                if color_node.bl_idname == "LuxCoreNodeTexImagemap":
-                    ...
-            elif hasattr(socket, "default_value"):
-                diffuse_color = socket.default_value
+                if not socket.is_linked and isinstance(socket_value, mathutils.Color):
+                    diffuse_color = socket_value
 
     mat.diffuse_color = diffuse_color
 
