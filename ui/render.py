@@ -1,4 +1,5 @@
 from bl_ui.properties_render import RENDER_PT_render
+from . import icons
 
 # Note: The main LuxCore config UI is defined in ui/config.py
 # Each of the other render panels is also defined in their
@@ -16,7 +17,7 @@ def luxcore_render_draw(panel, context):
     row = split.row(align=True)
     row.operator("luxcore.start_pyluxcoretools")
     row = split.row(align=True)
-    op = row.operator("luxcore.open_website", icon="URL", text="Wiki")
+    op = row.operator("luxcore.open_website", icon=icons.URL, text="Wiki")
     op.url = "https://wiki.luxcorerender.org/BlendLuxCore_Network_Rendering"
 
 

@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from .. import utils
+from . import icons
 
 
 class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
@@ -36,5 +37,5 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
             row.prop(viewport, "device", expand=True)
 
             if viewport.device == "OCL" and not utils.is_opencl_build():
-                layout.label("No OpenCL support in this BlendLuxCore version", icon="CANCEL")
+                layout.label("No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
                 layout.label("(Falling back to CPU realtime engine)")

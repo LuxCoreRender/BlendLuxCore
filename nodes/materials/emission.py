@@ -11,6 +11,7 @@ from ...properties.light import (
 )
 from ...properties.ies import LuxCoreIESProps
 from ...export import light
+from ...ui import icons
 
 DLS_AUTO_DESC = "Direct light sampling is disabled if the mesh has more than 256 triangles"
 DLS_ENABLED_DESC = (
@@ -71,7 +72,7 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
         lightgroups = context.scene.luxcore.lightgroups
         layout.prop_search(self, "lightgroup",
                            lightgroups, "custom",
-                           icon="OUTLINER_OB_LAMP", text="")
+                           icon=icons.LIGHTGROUP, text="")
 
         layout.prop(self, "spread_angle", slider=True)
 

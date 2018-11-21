@@ -1,6 +1,7 @@
 from bl_ui.properties_render_layer import RenderLayerButtonsPanel
 from bpy.types import Panel
 from .. import utils
+from . import icons
 
 
 class LUXCORE_RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
@@ -28,8 +29,8 @@ class LUXCORE_RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
             tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
             if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
                 msg = "Auto tonemapper will cause brightness difference!"
-                layout.label(msg, icon="ERROR")
-                layout.operator("luxcore.switch_to_camera_settings", icon="CAMERA_DATA")
+                layout.label(msg, icon=icons.WARNING)
+                layout.operator("luxcore.switch_to_camera_settings", icon=icons.CAMERA)
 
 
 class LUXCORE_RENDERLAYER_PT_layer_options(RenderLayerButtonsPanel, Panel):

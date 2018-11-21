@@ -2,6 +2,7 @@ import mathutils
 from bpy.types import NodeSocket
 from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty
 from ..utils.node import update_opengl_materials
+from ..ui import icons
 
 # The rules for socket classes are these:
 # - If it is a socket that's used by more than one node, put it in this file
@@ -42,7 +43,7 @@ class LuxCoreNodeSocket(NodeSocket):
                     break
 
             if not is_allowed:
-                layout.label("Wrong Input!", icon="CANCEL")
+                layout.label("Wrong Input!", icon=icons.ERROR)
                 return
 
         has_default = hasattr(self, "default_value") and self.default_value is not None
@@ -57,7 +58,7 @@ class LuxCoreNodeSocket(NodeSocket):
             is_vol_socket_on_vol_output = self.bl_idname == "LuxCoreSocketVolume" and node.bl_idname == "LuxCoreNodeVolOutput"
 
             if show_operator and not is_vol_socket_on_vol_output:
-                op = layout.operator("luxcore.add_node", icon="ZOOMIN")
+                op = layout.operator("luxcore.add_node", icon=icons.ADD)
                 op.node_type = self.default_node
                 op.socket_type = self.bl_idname
                 op.input_socket = self.name

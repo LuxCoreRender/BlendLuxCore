@@ -2,7 +2,7 @@ import bpy
 from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
-from ...ui import ICON_TEXTURE
+from ...ui import icons
 from ..nodeitems import Separator, NodeItemMultiImageImport
 from .. import LuxCoreNodeTree
 
@@ -58,7 +58,7 @@ from .windy import LuxCoreNodeTexWindy
 class LuxCoreTextureNodeTree(LuxCoreNodeTree, NodeTree):
     bl_idname = "luxcore_texture_nodes"
     bl_label = "LuxCore Texture Nodes"
-    bl_icon = ICON_TEXTURE
+    bl_icon = icons.NTREE_TEXTURE
 
 
 class LuxCoreNodeCategoryTexture(NodeCategory):

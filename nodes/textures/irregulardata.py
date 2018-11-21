@@ -1,5 +1,6 @@
 from bpy.props import StringProperty, BoolProperty
 from .. import LuxCoreNodeTexture
+from ...ui import icons
 
 
 def convert(string):
@@ -38,10 +39,10 @@ class LuxCoreNodeTexIrregularData(LuxCoreNodeTexture):
         layout.prop(self, "data")
 
         if not self.equal_length:
-            layout.label("Both lists need the same number of values!", icon="CANCEL")
+            layout.label("Both lists need the same number of values!", icon=icons.ERROR)
 
         if self.error:
-            layout.label(self.error, icon="CANCEL")
+            layout.label(self.error, icon=icons.ERROR)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {

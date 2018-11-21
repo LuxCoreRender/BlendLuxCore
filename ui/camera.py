@@ -1,7 +1,7 @@
 from bl_ui.properties_data_camera import CameraButtonsPanel
 from bpy.types import Panel
 from ..utils import ui as utils_ui
-from . import ICON_VOLUME
+from . import icons
 
 
 class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
@@ -67,7 +67,7 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
 
         if not cam.luxcore.auto_volume:
             layout.label("Camera Volume:")
-            utils_ui.template_node_tree(layout, cam.luxcore, "volume", ICON_VOLUME,
+            utils_ui.template_node_tree(layout, cam.luxcore, "volume", icons.NTREE_VOLUME,
                                         "LUXCORE_VOLUME_MT_camera_select_volume_node_tree",
                                         "luxcore.camera_show_volume_node_tree",
                                         "luxcore.camera_new_volume_node_tree",
@@ -124,7 +124,7 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
             if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
                 name = "Auto" if tonemapper.type == "TONEMAP_LINEAR" else "Reinhard"
                 msg = name + " and multiple renderlayers will cause brightness difference!"
-                box.label(msg, icon="ERROR")
+                box.label(msg, icon=icons.WARNING)
 
         # Bloom settings
         bloom = pipeline.bloom
@@ -139,7 +139,7 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
         if box:
             col = box.column(align=True)
             col.scale_y = 0.8
-            col.label("Note: the mist is not anti-aliased.", icon="ERROR")
+            col.label("Note: the mist is not anti-aliased.", icon=icons.WARNING)
             col.label("This causes jagged edges if the effect is too strong.")
             row = box.row()
             row.prop(mist, "color", text="")
@@ -251,4 +251,4 @@ class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
         col.prop(motion_blur, "steps")
 
         if motion_blur.camera_blur:
-            layout.label("Camera blur is only visible in final render", icon="INFO")
+            layout.label("Camera blur is only visible in final render", icon=icons.INFO)

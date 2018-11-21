@@ -2,6 +2,7 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bl_ui.properties_render_layer import RenderLayerButtonsPanel
 from bpy.types import Panel
 from ..utils import ui as utils_ui
+from . import icons
 
 
 def draw(layout, context, halt):
@@ -97,7 +98,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
                     col.label(text, icon="RENDERLAYERS")
                 else:
                     text = layer.name + ": No Halt Condition!"
-                    col.label(text, icon="CANCEL")
+                    col.label(text, icon=icons.ERROR)
 
 
 class LUXCORE_RENDERLAYER_PT_halt_conditions(Panel, RenderLayerButtonsPanel):

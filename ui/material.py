@@ -2,6 +2,7 @@ from bl_ui.properties_material import MaterialButtonsPanel
 from bpy.types import Panel, Menu
 from .. import utils
 from ..operators.node_tree_presets import LUXCORE_OT_preset_material
+from ..ui import icons
 
 
 class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
@@ -32,8 +33,8 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             row.template_list("MATERIAL_UL_matslots", "", obj, "material_slots", obj, "active_material_index", rows=2)
 
             col = row.column(align=True)
-            col.operator("object.material_slot_add", icon="ZOOMIN", text="")
-            col.operator("object.material_slot_remove", icon="ZOOMOUT", text="")
+            col.operator("object.material_slot_add", icon=icons.ADD, text="")
+            col.operator("object.material_slot_remove", icon=icons.REMOVE, text="")
 
             col.menu("MATERIAL_MT_specials", icon="DOWNARROW_HLT", text="")
 
@@ -51,7 +52,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             # So we mimic our own template_ID.
             row = split.row(align=True)
             sub = row.split(align=True, percentage=1 / (context.region.width * 0.015))
-            sub.operator("luxcore.material_select", icon="MATERIAL", text="")
+            sub.operator("luxcore.material_select", icon=icons.MATERIAL, text="")
             row = sub.row(align=True)
             if obj.active_material:
                 row.prop(obj.active_material, "name", text="")
@@ -61,7 +62,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             else:
                 text_new = "New"
 
-            row.operator("luxcore.material_new", text=text_new, icon="ZOOMIN")
+            row.operator("luxcore.material_new", text=text_new, icon=icons.ADD)
 
             if slot:
                 row = split.row()
@@ -78,7 +79,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                 row = layout.row()
                 tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
                 row.label('Nodes: "%s"' % tree_name, icon="NODETREE")
-                row.operator("luxcore.material_show_nodetree", icon="SCREEN_BACK")
+                row.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
             else:
                 layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use Material Nodes")
 

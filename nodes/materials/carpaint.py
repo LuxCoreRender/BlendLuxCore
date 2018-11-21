@@ -1,6 +1,7 @@
 from bpy.props import FloatProperty, EnumProperty
 from .. import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
+from ...ui import icons
 
 REFLECTION_DESCRIPTION = "Glossy layer reflection value"
 
@@ -67,7 +68,7 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
     def draw_buttons(self, context, layout):
-        op = layout.operator("luxcore.open_website", text="Open Wiki Page", icon="URL")
+        op = layout.operator("luxcore.open_website", text="Open Wiki Page", icon=icons.URL)
         op.url = "https://wiki.luxcorerender.org/LuxCoreRender_Materials_Car_Paint"
         layout.prop(self, "preset")
 

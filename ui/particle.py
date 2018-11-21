@@ -1,6 +1,7 @@
 from bl_ui.properties_particle import ParticleButtonsPanel
 from bpy.types import Panel
 from .. import utils
+from ..ui import icons
 
 
 class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
@@ -71,8 +72,8 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
 
         if not obj.data.uv_textures:
                 row = col.row()
-                row.label("No UV map", icon="ERROR")
-                row.operator("mesh.uv_texture_add", icon="ZOOMIN")
+                row.label("No UV map", icon=icons.WARNING)
+                row.operator("mesh.uv_texture_add", icon=icons.ADD)
 
         # Vertex color settings
         box = layout.box()
@@ -96,8 +97,8 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
 
             if not obj.data.vertex_colors:
                 row = col.row()
-                row.label("No Vertex Colors", icon="ERROR")
-                row.operator("mesh.vertex_color_add", icon="ZOOMIN")
+                row.label("No Vertex Colors", icon=icons.WARNING)
+                row.operator("mesh.vertex_color_add", icon=icons.ADD)
 
         elif settings.export_color == "uv_texture_map":
             box.template_ID(settings, "image", open="image.open")

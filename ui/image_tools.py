@@ -3,6 +3,7 @@ from . import denoiser
 from ..utils.refresh_button import template_refresh_button
 from ..utils import ui as utils_ui
 from ..engine import LuxCoreRenderEngine
+from . import icons
 
 
 class LuxCoreImagePanel:
@@ -51,7 +52,7 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
         denoiser.draw(context, layout)
 
         col = layout.column()
-        col.label("Change the pass to see the result", icon="INFO")
+        col.label("Change the pass to see the result", icon=icons.INFO)
         if image:
             iuser = context.space_data.image_user
             col.template_image_layers(image, iuser)
@@ -88,7 +89,7 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
         active_index = image.render_slots.active_index
 
         if len(context.scene.render.layers) > 1:
-            layout.label("Only stats of last rendered render layer are shown", icon="ERROR")
+            layout.label("Only stats of last rendered render layer are shown", icon=icons.WARNING)
 
         layout.prop(statistics_collection, "compare")
 

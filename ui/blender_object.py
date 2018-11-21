@@ -1,6 +1,7 @@
 from bl_ui.properties_object import ObjectButtonsPanel
 from bpy.types import Panel
 from .. import utils
+from ..ui import icons
 
 
 class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
@@ -25,11 +26,11 @@ class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
             object_blur = motion_blur.enable and motion_blur.object_blur
 
             if not motion_blur.enable:
-                layout.label("Motion blur disabled in camera settings", icon="INFO")
+                layout.label("Motion blur disabled in camera settings", icon=icons.INFO)
             elif not motion_blur.object_blur:
-                layout.label("Object blur disabled in camera settings", icon="INFO")
+                layout.label("Object blur disabled in camera settings", icon=icons.INFO)
         else:
-            layout.label("No camera in scene", icon="INFO")
+            layout.label("No camera in scene", icon=icons.INFO)
             object_blur = False
 
         row = layout.row()
@@ -37,4 +38,4 @@ class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
         row.prop(obj.luxcore, "enable_motion_blur")
         # Instancing can cost performance, so inform the user when it happens
         if utils.use_obj_motion_blur(obj, context.scene):
-            layout.label("Object will be exported as instance", icon="INFO")
+            layout.label("Object will be exported as instance", icon=icons.INFO)

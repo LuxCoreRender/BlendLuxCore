@@ -1,14 +1,15 @@
 from bl_ui.properties_scene import SceneButtonsPanel
 from bpy.types import Panel
 from ..properties.lightgroups import MAX_LIGHTGROUPS
+from . import icons
 
 
 def lightgroup_icon(enabled):
-    return 'OUTLINER_OB_LAMP' if enabled else 'LAMP'
+    return icons.LIGHTGROUP_ENABLED if enabled else icons.LIGHTGROUP_DISABLED
 
 
 def settings_toggle_icon(enabled):
-    return 'TRIA_DOWN' if enabled else 'TRIA_RIGHT'
+    return icons.EXPANDABLE_OPENED if enabled else icons.EXPANDABLE_CLOSED
 
 
 class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
@@ -17,14 +18,14 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
 
     def draw_header(self, context):
         if self._are_all_groups_disabled(context):
-            self.layout.label("", icon="ERROR")
+            self.layout.label("", icon=icons.WARNING)
 
     def draw(self, context):
         layout = self.layout
         groups = context.scene.luxcore.lightgroups
 
         if self._are_all_groups_disabled(context):
-            layout.label("All groups disabled.", icon="ERROR")
+            layout.label("All groups disabled.", icon=icons.WARNING)
 
         self.draw_lightgroup(layout, groups.default, -1,
                              is_default_group=True)
@@ -33,7 +34,7 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
             self.draw_lightgroup(layout, group, i)
 
         if len(groups.custom) < MAX_LIGHTGROUPS:
-            layout.operator("luxcore.add_lightgroup", icon="ZOOMIN")
+            layout.operator("luxcore.add_lightgroup", icon=icons.ADD)
 
     @staticmethod
     def draw_lightgroup(layout, group, index, is_default_group=False):
@@ -52,14 +53,14 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         sub_row.active = group.enabled
         if is_default_group:
             sub_row.label("Default Light Group")
-            box.label("Contains all lights without specified light group", icon="INFO")
+            box.label("Contains all lights without specified light group", icon=icons.INFO)
         else:
             sub_row.prop(group, "name", text="")
 
         # Can't delete the default lightgroup
         if not is_default_group:
             op = row.operator("luxcore.remove_lightgroup",
-                              text="", icon="X", emboss=False)
+                              text="", icon=icons.CLEAR, emboss=False)
             op.index = index
 
         if group.show_settings:

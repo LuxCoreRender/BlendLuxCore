@@ -1,5 +1,6 @@
 from bl_ui.properties_render_layer import RenderLayerButtonsPanel
 from bpy.types import Panel
+from ..ui import icons
 
 COMPATIBLE_WITH_BIDIR = {
     "RADIANCE_GROUP", "SAMPLECOUNT",
@@ -19,7 +20,7 @@ class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
         engine_is_path = context.scene.luxcore.config.engine == "PATH"
 
         if not engine_is_path:
-            layout.label("The Bidir engine only supports a few AOVs", icon="INFO")
+            layout.label("The Bidir engine only supports a few AOVs", icon=icons.INFO)
 
         split = layout.split()
         col = split.column(align=True)

@@ -185,7 +185,7 @@ class LUXCORE_OT_open_website(bpy.types.Operator):
     bl_label = ""
     bl_description = "Open related website in the web browser"
     # Note: use the "URL" icon and a custom text when using this operator:
-    # op = layout.operator("luxcore.open_website", text="Wiki Page", icon="URL")
+    # op = layout.operator("luxcore.open_website", text="Wiki Page", icon=icons.URL)
     # op.url = "https://www.example.com"
 
     url = StringProperty()

@@ -1,6 +1,6 @@
-import bpy
 from ..bin import pyluxcore
 from . import find_active_uv
+from ..ui import icons
 
 
 def draw_uv_info(context, layout):
@@ -11,7 +11,7 @@ def draw_uv_info(context, layout):
     obj = context.object
 
     def warning_no_uvmap(_layout):
-        _layout.label("No UV map", icon="ERROR")
+        _layout.label("No UV map", icon=icons.WARNING)
 
     if obj and obj.data:
         if obj.type in {"CURVE", "SURFACE", "FONT"}:
@@ -22,7 +22,7 @@ def draw_uv_info(context, layout):
         elif obj.type == "MESH":
             if len(obj.data.uv_textures) > 1:
                 box = layout.box()
-                box.label("LuxCore only supports one UV map", icon="INFO")
+                box.label("LuxCore only supports one UV map", icon=icons.INFO)
                 active_uv = find_active_uv(obj.data.uv_textures)
                 box.label('Active: "%s"' % active_uv.name, icon="GROUP_UVS")
             elif len(obj.data.uv_textures) == 0:
@@ -49,7 +49,7 @@ def draw_transmission_info(node, layout):
         # Note that this is an estimation.
         # We are for example not accounting for specular reflections
         transmitted = min(1 - kd_value, kt_value)
-        layout.label("Transmitted: %.2f" % transmitted, icon="INFO")
+        layout.label("Transmitted: %.2f" % transmitted, icon=icons.INFO)
 
 
 def export_material_input(input, exporter, props):

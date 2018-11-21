@@ -4,7 +4,7 @@ from bpy.props import PointerProperty
 from .. import utils
 from ..utils import node as utils_node
 from ..utils import ui as utils_ui
-from ..ui import ICON_MATERIAL, ICON_TEXTURE, ICON_VOLUME
+from ..ui import icons
 
 TREE_TYPES = (
     "luxcore_material_nodes",
@@ -13,9 +13,9 @@ TREE_TYPES = (
 )
 
 TREE_ICONS = {
-    "luxcore_material_nodes": ICON_MATERIAL,
-    "luxcore_texture_nodes": ICON_TEXTURE,
-    "luxcore_volume_nodes": ICON_VOLUME,
+    "luxcore_material_nodes": icons.NTREE_MATERIAL,
+    "luxcore_texture_nodes": icons.NTREE_TEXTURE,
+    "luxcore_volume_nodes": icons.NTREE_VOLUME,
 }
 
 NOISE_BASIS_ITEMS = [
@@ -182,7 +182,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
         lightgroups = context.scene.luxcore.lightgroups
         layout.prop_search(self, "lightgroup",
                            lightgroups, "custom",
-                           icon="OUTLINER_OB_LAMP", text="")
+                           icon=icons.LIGHTGROUP, text="")
         layout.prop(self, "color_depth")
 
     def add_common_inputs(self):
@@ -301,7 +301,7 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
                                     "luxcore.pointer_unlink_node_tree")
 
         if self.node_tree == self.id_data:
-            layout.label("Recursion!", icon="ERROR")
+            layout.label("Recursion!", icon=icons.WARNING)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         if self.node_tree == self.id_data:

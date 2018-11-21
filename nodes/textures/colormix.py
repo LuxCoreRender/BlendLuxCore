@@ -1,7 +1,7 @@
-import bpy
 from bpy.props import BoolProperty, EnumProperty, FloatProperty
 from .. import LuxCoreNodeTexture
 from ... import utils
+from ...ui import icons
 
 
 class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
@@ -60,7 +60,7 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture):
             layout.prop(self, "mode_clamp_max")
 
             if self.mode_clamp_min > self.mode_clamp_max:
-                layout.label("Min should be smaller than max!", icon="ERROR")
+                layout.label("Min should be smaller than max!", icon=icons.WARNING)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {

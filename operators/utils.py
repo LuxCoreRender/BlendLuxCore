@@ -1,8 +1,10 @@
 import bpy
 from ..nodes import TREE_TYPES, TREE_ICONS
 from .. import utils
+from ..ui import icons
 
 """ Utility functions for our operators """
+
 
 def make_nodetree_name(material_name):
     return "Nodes_" + material_name
@@ -155,7 +157,7 @@ class LUXCORE_MT_node_tree(bpy.types.Menu):
 
             if tree_type == "luxcore_material_nodetree":
                 # Volumes need a more complicated new operator (Todo)
-                col.operator("luxcore.mat_nodetree_new", text="New Node Tree", icon="ZOOMIN")
+                col.operator("luxcore.mat_nodetree_new", text="New Node Tree", icon=icons.ADD)
                 col.menu("LUXCORE_MT_node_tree_preset")
 
         for j, (index, tree, icon) in enumerate(trees):

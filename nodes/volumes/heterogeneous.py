@@ -1,9 +1,10 @@
 import math
 import bpy
 from bpy.props import IntProperty, BoolProperty, FloatProperty, PointerProperty, StringProperty
-from ... import utils
 from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
+from ... import utils
 from ...properties.light import LIGHTGROUP_DESC
+from ...ui import icons
 
 
 STEP_SIZE_DESCRIPTION = (
@@ -67,9 +68,9 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
             layout.prop(self, "domain")
 
             if self.domain and not utils.find_smoke_domain_modifier(self.domain):
-                layout.label("Not a smoke domain!", icon="ERROR")
+                layout.label("Not a smoke domain!", icon=icons.WARNING)
             elif self.domain is None:
-                layout.label("Select the smoke domain object", icon="ERROR")
+                layout.label("Select the smoke domain object", icon=icons.WARNING)
         else:
             layout.prop(self, "step_size")
             layout.prop(self, "maxcount")

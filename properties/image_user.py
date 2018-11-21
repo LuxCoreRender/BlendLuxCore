@@ -3,6 +3,7 @@ import bpy
 from bpy.types import PropertyGroup
 from bpy.props import IntProperty, BoolProperty, PointerProperty, EnumProperty
 from .. import utils
+from ..ui import icons
 
 
 FIRST_FRAME_DESC = (
@@ -130,9 +131,9 @@ class LuxCoreImageUser(PropertyGroup):
                 frame = self.get_frame(scene)
                 sub.label("Frame: %d" % frame)
                 if frame < self.first_frame or frame > self.last_frame:
-                    sub.label("Out of range", icon="ERROR")
+                    sub.label("Out of range", icon=icons.WARNING)
             except ValueError as error:
-                sub.label(str(error), icon="CANCEL")
+                sub.label(str(error), icon=icons.ERROR)
 
             sub.prop(self, "first_frame")
             sub.prop(self, "last_frame")

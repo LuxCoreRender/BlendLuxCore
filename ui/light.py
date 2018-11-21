@@ -1,5 +1,6 @@
 from bl_ui.properties_data_lamp import DataButtonsPanel
 from bpy.types import Panel
+from . import icons
 
 # TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
 
@@ -74,7 +75,7 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
         lightgroups = context.scene.luxcore.lightgroups
         col.prop_search(lamp.luxcore, "lightgroup",
                         lightgroups, "custom",
-                        icon="OUTLINER_OB_LAMP", text="")
+                        icon=icons.LIGHTGROUP, text="")
 
         layout.separator()
 
@@ -97,7 +98,7 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
             if lamp.luxcore.sun_type == "sun":
                 world = context.scene.world
                 if world and world.luxcore.light == "sky2" and world.luxcore.sun != context.object:
-                    layout.operator("luxcore.attach_sun_to_sky", icon="WORLD")
+                    layout.operator("luxcore.attach_sun_to_sky", icon=icons.WORLD)
                 layout.prop(lamp.luxcore, "relsize")
                 layout.prop(lamp.luxcore, "turbidity")
             elif lamp.luxcore.sun_type == "distant":
@@ -211,4 +212,4 @@ class LUXCORE_LAMP_PT_visibility(DataButtonsPanel, Panel):
         row.prop(lamp.luxcore, "visibility_indirect_specular")
 
         if not enabled:
-            layout.label("Only supported by Path engines (not by Bidir)", icon="INFO")
+            layout.label("Only supported by Path engines (not by Bidir)", icon=icons.INFO)

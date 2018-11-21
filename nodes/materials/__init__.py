@@ -2,7 +2,7 @@ import bpy
 from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
-from ...ui import ICON_MATERIAL
+from ...ui import icons
 from ...utils import node as utils_node
 from ..nodeitems import Separator, NodeItemMultiImageImport
 from .. import LuxCoreNodeTree
@@ -28,7 +28,7 @@ from .output import LuxCoreNodeMatOutput
 class LuxCoreMaterialNodeTree(LuxCoreNodeTree, NodeTree):
     bl_idname = "luxcore_material_nodes"
     bl_label = "LuxCore Material Nodes"
-    bl_icon = ICON_MATERIAL
+    bl_icon = icons.NTREE_MATERIAL
 
     @classmethod
     def get_from_context(cls, context):

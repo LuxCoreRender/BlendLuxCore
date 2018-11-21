@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from .. import utils
+from . import icons
 
 
 class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
@@ -36,7 +37,7 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
             if config.device == "OCL" and not utils.is_opencl_build():
                 # pyluxcore was compiled without OpenCL support
-                layout.label("No OpenCL support in this BlendLuxCore version", icon="CANCEL")
+                layout.label("No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
         else:
             row_device.prop(config, "bidir_device", expand=True)
 
@@ -59,11 +60,11 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             layout.prop(config, "use_tiles")
 
             if config.use_tiles:
-                layout.label("Tiled path uses special sampler", icon="INFO")
+                layout.label("Tiled path uses special sampler", icon=icons.INFO)
                 row = layout.row(align=True)
                 row.prop(config.tile, "size")
                 if denoiser.enabled:
-                    layout.label("Using 1 sample per pass (required by denoiser)", icon="INFO")
+                    layout.label("Using 1 sample per pass (required by denoiser)", icon=icons.INFO)
                 else:
                     row.prop(config.tile, "path_sampling_aa_size")
 
@@ -91,13 +92,13 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                 layout.prop(config, "sobol_adaptive_strength", slider=True)
             elif config.sampler == "METROPOLIS":
                 if denoiser.enabled:
-                    layout.label("Can lead to artifacts in the denoiser!", icon="ERROR")
+                    layout.label("Can lead to artifacts in the denoiser!", icon=icons.WARNING)
 
                 self.draw_metropolis_props(layout, config)
 
         # Filter settings
         if denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE":
-            layout.label('Set filter to "None" to reduce blurriness when using the denoiser with Bidir', icon="ERROR")
+            layout.label('Set filter to "None" to reduce blurriness when using the denoiser with Bidir', icon=icons.WARNING)
         row = layout.row()
         row.prop(config, "filter")
         sub = row.row()
@@ -150,9 +151,9 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             # Optimal clamp value not yet found, need to start a render first
             if config.path.use_clamping:
                 # Can't compute optimal value if clamping is enabled
-                layout.label("Render without clamping to get suggested clamp value", icon="INFO")
+                layout.label("Render without clamping to get suggested clamp value", icon=icons.INFO)
             else:
-                layout.label("Start a render to get a suggested clamp value", icon="INFO")
+                layout.label("Start a render to get a suggested clamp value", icon=icons.INFO)
         else:
             # Show a button that can be used to set the optimal clamp value
             op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value

@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from .. import utils
+from . import icons
 
 
 class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
@@ -31,7 +32,7 @@ class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
 
     def draw_header(self, context):
         if self._show_hybrid_metropolis_warning(context):
-            self.layout.label("", icon="ERROR")
+            self.layout.label("", icon=icons.WARNING)
 
     def draw(self, context):
         layout = self.layout
@@ -41,10 +42,10 @@ class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
         if config.engine == "PATH" and config.device == "OCL":
             if not utils.is_opencl_build():
                 # pyluxcore was compiled without OpenCL support
-                layout.label("No OpenCL support in this BlendLuxCore version", icon="CANCEL")
+                layout.label("No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
 
             if not opencl.devices:
-                layout.label("No OpenCL Devices available.", icon="ERROR")
+                layout.label("No OpenCL Devices available.", icon=icons.WARNING)
                 layout.operator("luxcore.update_opencl_devices")
 
             gpu_devices = [device for device in opencl.devices if device.type == "OPENCL_GPU"]
@@ -67,7 +68,7 @@ class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
             has_gpus = any([device.enabled for device in gpu_devices])
             has_others = any([device.enabled for device in other_devices])
             if not has_gpus and not has_others:
-                layout.label("Select at least one OpenCL device!", icon="ERROR")
+                layout.label("Select at least one OpenCL device!", icon=icons.WARNING)
 
             col = layout.column(align=True)
             col.prop(opencl, "use_native_cpu", toggle=True)
@@ -77,7 +78,7 @@ class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
 
                 if self._show_hybrid_metropolis_warning(context):
                     col = box.column(align=True)
-                    col.label("CPU should be disabled if Metropolis", icon="ERROR")
+                    col.label("CPU should be disabled if Metropolis", icon=icons.WARNING)
                     col.label("sampler is used (can cause artifacts)")
         else:
             col = layout.column()

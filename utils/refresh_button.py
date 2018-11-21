@@ -1,5 +1,6 @@
-# This is in a separate file because otherwise there are quickly circular imports
+# This is in a separate file because otherwise there are circular imports
 from ..engine import LuxCoreRenderEngine
+from ..ui import icons
 
 
 def template_refresh_button(data, property_name, layout, run_msg="Refreshing..."):
@@ -9,4 +10,4 @@ def template_refresh_button(data, property_name, layout, run_msg="Refreshing..."
     if getattr(data, property_name):
         row.label(run_msg)
     else:
-        row.prop(data, property_name, toggle=True, icon="FILE_REFRESH")
+        row.prop(data, property_name, toggle=True, icon=icons.REFRESH)

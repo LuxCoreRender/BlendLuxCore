@@ -1,12 +1,6 @@
 import bpy
 
 
-# Node tree icons
-ICON_VOLUME = "MOD_FLUIDSIM"
-ICON_MATERIAL = "MATERIAL"
-ICON_TEXTURE = "TEXTURE_SHADED"
-
-
 # Note: this is an include list
 # We could also use an exclude list, may be shorter
 def compatible_panels():

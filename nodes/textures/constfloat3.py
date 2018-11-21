@@ -1,6 +1,7 @@
 from bpy.props import FloatVectorProperty, BoolProperty, EnumProperty, StringProperty
 from .. import LuxCoreNodeTexture
 from mathutils import Color
+from ...ui import icons
 
 
 class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
@@ -46,14 +47,14 @@ class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
 
     def draw_buttons(self, context, layout):
         col = layout.column(align=True)
-        icon = "TRIA_DOWN" if self.show_picker else "TRIA_RIGHT"
+        icon = icons.EXPANDABLE_OPENED if self.show_picker else icons.EXPANDABLE_CLOSED
         col.prop(self, "show_picker", icon=icon)
 
         if self.show_picker:
             col.template_color_picker(self, "value", value_slider=True)
 
         col = layout.column(align=True)
-        icon = "TRIA_DOWN" if self.show_values else "TRIA_RIGHT"
+        icon = icons.EXPANDABLE_OPENED if self.show_values else icons.EXPANDABLE_CLOSED
         col.prop(self, "show_values", icon=icon)
 
         if self.show_values:

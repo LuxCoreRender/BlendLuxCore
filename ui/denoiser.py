@@ -2,6 +2,7 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ..utils.refresh_button import template_refresh_button
 from ..engine import LuxCoreRenderEngine
+from . import icons
 
 
 def draw(context, layout):
@@ -12,9 +13,9 @@ def draw(context, layout):
 
     if denoiser.enabled:
         if config.sampler == "METROPOLIS":
-            col.label("Metropolis sampler can lead to artifacts!", icon="ERROR")
+            col.label("Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
         if config.engine == "BIDIR" and config.filter != "NONE":
-            col.label('Set filter to "None" to reduce blurriness', icon="ERROR")
+            col.label('Set filter to "None" to reduce blurriness', icon=icons.WARNING)
 
     sub = col.column()
     # The user should not be able to request a refresh when denoiser is disabled
@@ -50,4 +51,4 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         draw(context, self.layout)
 
         col = self.layout.column(align=True)
-        col.label("These settings are also available in the image editor tool shelf (press T)", icon="INFO")
+        col.label("These settings are also available in the image editor tool shelf (press T)", icon=icons.INFO)

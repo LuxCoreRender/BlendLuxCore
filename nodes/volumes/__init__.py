@@ -1,8 +1,7 @@
-import bpy
 from bpy.types import NodeTree
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
-from ...ui import ICON_VOLUME
+from ...ui import icons
 from ..nodeitems import Separator
 from .. import LuxCoreNodeTree
 
@@ -15,7 +14,7 @@ from .heterogeneous import LuxCoreNodeVolHeterogeneous
 class LuxCoreVolumeNodeTree(LuxCoreNodeTree, NodeTree):
     bl_idname = "luxcore_volume_nodes"
     bl_label = "LuxCore Volume Nodes"
-    bl_icon = ICON_VOLUME
+    bl_icon = icons.NTREE_VOLUME
 
 
 class LuxCoreNodeCategoryVolume(NodeCategory):

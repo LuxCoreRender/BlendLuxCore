@@ -5,6 +5,7 @@ from .utils import (
     poll_object, poll_material, init_mat_node_tree, make_nodetree_name,
     LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree
 )
+from ..ui import icons
 
 
 class LUXCORE_OT_material_new(bpy.types.Operator):
@@ -115,7 +116,7 @@ class LUXCORE_MT_material_select(bpy.types.Menu):
             mat = bpy.data.materials[i]
             name = utils.get_name_with_lib(mat)
 
-            op = col.operator("luxcore.material_set", text=name, icon="MATERIAL")
+            op = col.operator("luxcore.material_set", text=name, icon=icons.MATERIAL)
             op.material_index = i
 
 

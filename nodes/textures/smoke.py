@@ -3,11 +3,12 @@ import mathutils
 import math
 from time import time
 from bpy.props import EnumProperty, PointerProperty, StringProperty
+from .. import LuxCoreNodeTexture
+from ... import utils
 from ...bin import pyluxcore
 from ...export import smoke
-from ... import utils
 from ...utils import node as utils_node
-from .. import LuxCoreNodeTexture
+from ...ui import icons
 
 
 class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
@@ -54,9 +55,9 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         layout.prop(self, "domain")
 
         if self.domain and not utils.find_smoke_domain_modifier(self.domain):
-            layout.label("Not a smoke domain!", icon="ERROR")
+            layout.label("Not a smoke domain!", icon=icons.WARNING)
         elif self.domain is None:
-            layout.label("Select the smoke domain object", icon="ERROR")
+            layout.label("Select the smoke domain object", icon=icons.WARNING)
 
         col = layout.column()
         col.prop(self, "source")

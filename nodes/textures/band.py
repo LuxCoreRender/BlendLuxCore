@@ -1,6 +1,7 @@
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty, StringProperty
 from .. import LuxCoreNodeTexture
+from ...ui import icons
 
 
 class ColorRampItem(PropertyGroup):
@@ -102,11 +103,11 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
         layout.prop(self, "interpolation", expand=True)
 
         row = layout.row(align=True)
-        row.prop(self, "add_item", icon="ZOOMIN")
+        row.prop(self, "add_item", icon=icons.ADD)
 
         subrow = row.row(align=True)
         subrow.enabled = len(self.ramp_items) > 2
-        subrow.prop(self, "remove_item", icon="ZOOMOUT")
+        subrow.prop(self, "remove_item", icon=icons.REMOVE)
 
         for index, item in enumerate(self.ramp_items):
             row = layout.row(align=True)
@@ -137,10 +138,9 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
                 sub = row.row(align=True)
                 # Highlight in red to show that a keyframe exists
                 sub.alert = True
-                sub.prop(item, "remove_keyframe", toggle=True, icon="KEY_DEHLT")
+                sub.prop(item, "remove_keyframe", toggle=True, icon=icons.REMOVE_KEYFRAME)
             else:
-                # sub = split.row(align=True)
-                row.prop(item, "add_keyframe", toggle=True, icon="KEY_HLT")
+                row.prop(item, "add_keyframe", toggle=True, icon=icons.ADD_KEYFRAME)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         definitions = {

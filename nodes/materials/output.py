@@ -1,9 +1,9 @@
-import bpy
+from bpy.props import BoolProperty, PointerProperty, IntProperty
 from ...bin import pyluxcore
 from ... import utils
 from ...utils import node as utils_node
-from bpy.props import BoolProperty, PointerProperty, IntProperty
 from ..output import LuxCoreNodeOutput, update_active, get_active_output
+from ...ui import icons
 
 SHADOWCATCHER_DESC = (
     "Make this material transparent and only catch shadows on it. "
@@ -64,23 +64,23 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         col.prop(self, "is_shadow_catcher")
 
         if engine_is_bidir:
-            col.label("Not supported by Bidir engine", icon="INFO")
+            col.label("Not supported by Bidir engine", icon=icons.INFO)
         elif self.is_shadow_catcher:
             # Some settings that should be used with shadow catcher
             if utils.is_valid_camera(context.scene.camera):
                 pipeline = context.scene.camera.data.luxcore.imagepipeline
                 if not pipeline.transparent_film:
                     layout.prop(pipeline, "transparent_film", text="Enable Transparent Film",
-                                icon="CAMERA_DATA", toggle=True)
+                                icon=icons.CAMERA, toggle=True)
             if context.scene.world:
                 luxcore_world = context.scene.world.luxcore
                 is_ground_black = luxcore_world.ground_enable and tuple(luxcore_world.ground_color) == (0, 0, 0)
 
                 if luxcore_world.light == "sky2" and not is_ground_black:
-                    layout.operator("luxcore.world_set_ground_black", icon="WORLD")
+                    layout.operator("luxcore.world_set_ground_black", icon=icons.WORLD)
                 elif luxcore_world.light == "infinite" and not luxcore_world.sampleupperhemisphereonly:
                     layout.prop(luxcore_world, "sampleupperhemisphereonly",
-                                icon="WORLD", toggle=True)
+                                icon=icons.WORLD, toggle=True)
 
     def export(self, exporter, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."

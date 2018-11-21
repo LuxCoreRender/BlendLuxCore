@@ -1,11 +1,6 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from .. import utils
-
-
-# Confusing, I know
-ICON_ERROR = "CANCEL"
-ICON_WARNING = "ERROR"
+from . import icons
 
 
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
@@ -21,20 +16,20 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
 
         row = self.layout.row(align=True)
         if errorlog.errors:
-            row.label(str(len(errorlog.errors)), icon=ICON_ERROR)
+            row.label(str(len(errorlog.errors)), icon=icons.ERROR)
         if errorlog.warnings:
-            row.label(str(len(errorlog.warnings)), icon=ICON_WARNING)
+            row.label(str(len(errorlog.warnings)), icon=icons.WARNING)
 
     def draw(self, context):
         errorlog = context.scene.luxcore.errorlog
 
         if errorlog.errors or errorlog.warnings:
-            self.layout.operator("luxcore.errorlog_clear", icon="X")
+            self.layout.operator("luxcore.errorlog_clear", icon=icons.CLEAR)
 
-        self._draw(errorlog.errors, "Errors:", ICON_ERROR)
-        self._draw(errorlog.warnings, "Warnings:", ICON_WARNING)
+        self._draw(errorlog.errors, "Errors:", icons.ERROR)
+        self._draw(errorlog.warnings, "Warnings:", icons.WARNING)
 
-    def _draw(self, errors_or_warnings, label, icon="NONE"):
+    def _draw(self, errors_or_warnings, label, icon=icons.NONE):
         if len(errors_or_warnings) == 0:
             return
 
@@ -52,5 +47,5 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
                 text += str(elem.count) + "x"
 
             row.label(elem.message, icon=icon)
-            op = row.operator("luxcore.copy_error_to_clipboard", icon="COPYDOWN")
+            op = row.operator("luxcore.copy_error_to_clipboard", icon=icons.COPY_TO_CLIPBOARD)
             op.message = elem.message

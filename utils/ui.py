@@ -1,6 +1,6 @@
-import math
 from . import get_name_with_lib
 from . import pluralize
+from ..ui import icons
 
 
 def template_node_tree(layout, data, property, icon,
@@ -10,7 +10,7 @@ def template_node_tree(layout, data, property, icon,
                        operator_unlink=""):
     """
     Example usage:
-    utils_ui.template_node_tree(layout, cam.luxcore, "volume", ICON_VOLUME,
+    utils_ui.template_node_tree(layout, cam.luxcore, "volume", icons.NTREE_VOLUME,
                                 "LUXCORE_VOLUME_MT_camera_select_volume_node_tree",
                                 "luxcore.camera_show_volume_node_tree",
                                 "luxcore.camera_new_volume_node_tree",
@@ -38,11 +38,11 @@ def template_node_tree(layout, data, property, icon,
     # Operator for new node tree
     if operator_new:
         new_text = "" if node_tree else "New"
-        row.operator(operator_new, text=new_text, icon="ZOOMIN")
+        row.operator(operator_new, text=new_text, icon=icons.ADD)
 
     # Operator to unlink node tree
     if node_tree and operator_unlink:
-        row.operator(operator_unlink, text="", icon="X")
+        row.operator(operator_unlink, text="", icon=icons.CLEAR)
 
 
 def get_all_spaces(context, area_type, space_type):

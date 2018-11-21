@@ -3,6 +3,7 @@ from .. import LuxCoreNodeMaterial, Roughness
 from ..sockets import LuxCoreSocketFloat
 from ..output import get_active_output
 from ...utils import node as utils_node
+from ...ui import icons
 
 CAUCHYC_DESCRIPTION = (
     "Dispersion strength (cauchy C coefficient)\n"
@@ -76,7 +77,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         row.prop(self, "architectural")
 
         if self.get_interior_volume():
-            layout.label("Using IOR of interior volume", icon="INFO")
+            layout.label("Using IOR of interior volume", icon=icons.INFO)
 
     def sub_export(self, exporter, props, luxcore_name=None):
         if self.rough:

@@ -1,4 +1,5 @@
 from bl_ui.properties_scene import SCENE_PT_unit
+from . import icons
 
 
 def luxcore_unit_draw(panel, context):
@@ -18,7 +19,7 @@ def luxcore_unit_draw(panel, context):
         row.prop(config, "max_epsilon")
 
     if config.min_epsilon >= config.max_epsilon:
-        col.label("Min epsilon should be smaller than max epsilon!", icon="ERROR")
+        col.label("Min epsilon should be smaller than max epsilon!", icon=icons.WARNING)
 
 
 def register():
