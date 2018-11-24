@@ -12,7 +12,7 @@ def draw(context, layout):
     col = layout.column()
 
     if denoiser.enabled:
-        if config.sampler == "METROPOLIS":
+        if config.sampler == "METROPOLIS" and not config.use_tiles:
             col.label("Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
         if config.engine == "BIDIR" and config.filter != "NONE":
             col.label('Set filter to "None" to reduce blurriness', icon=icons.WARNING)

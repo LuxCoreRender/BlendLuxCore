@@ -65,6 +65,9 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                 row.prop(config.tile, "size")
                 row.prop(config.tile, "path_sampling_aa_size")
 
+                if utils.use_two_tiled_passes(context.scene):
+                    layout.label("(Doubling amount of samples because of denoiser)")
+
                 layout.prop(config.tile, "multipass_enable")
                 if config.tile.multipass_enable:
                     col = layout.column(align=True)

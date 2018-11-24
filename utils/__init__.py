@@ -551,6 +551,15 @@ def get_halt_conditions(scene):
         return scene.luxcore.halt
 
 
+def use_two_tiled_passes(scene):
+    # When combining the denoiser with tilepath in singlepass mode, we have to render
+    # two passes (twice as many samples) because the first pass is needed as denoiser
+    # warmup, and only during the second pass can the denoiser collect sample information.
+    config = scene.luxcore.config
+    using_tilepath = config.engine == "PATH" and config.use_tiles
+    return scene.luxcore.denoiser.enabled and using_tilepath and not config.tile.multipass_enable
+
+
 def pluralize(format_str, amount):
     formatted = format_str % amount
     if amount != 1:

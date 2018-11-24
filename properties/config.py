@@ -16,7 +16,8 @@ TILE_SIZE_DESC = (
 )
 
 AA_SAMPLE_DESC = (
-    "How many samples to compute per pass. Higher values increase memory usage, but lead to better performance"
+    "How many samples to compute per pass. Higher values increase memory usage, but lead to better performance. "
+    "Note that this number is squared, so e.g. a value of 5 will lead to 25 samples per pixel after one pass"
 )
 
 THRESH_REDUCT_DESC = (

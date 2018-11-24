@@ -187,7 +187,7 @@ def _convert_final_engine(scene, definitions, config):
 
             definitions["tilepath.sampling.aa.size"] = tile.path_sampling_aa_size
             definitions["tile.size"] = tile.size
-            definitions["tile.multipass.enable"] = tile.multipass_enable
+            definitions["tile.multipass.enable"] = tile.multipass_enable or utils.use_two_tiled_passes(scene)
             thresh = tile.multipass_convtest_threshold
             definitions["tile.multipass.convergencetest.threshold"] = thresh
             thresh_reduct = tile.multipass_convtest_threshold_reduction
