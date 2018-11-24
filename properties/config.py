@@ -15,7 +15,9 @@ TILE_SIZE_DESC = (
     "Note that OpenCL devices will automatically render multiple tiles if it increases performance"
 )
 
-AA_SAMPLE_DESC = "How many samples to compute per pass. Higher values increase memory usage"
+AA_SAMPLE_DESC = (
+    "How many samples to compute per pass. Higher values increase memory usage, but lead to better performance"
+)
 
 THRESH_REDUCT_DESC = (
     "Multiply noise level with this value after all tiles have converged, "

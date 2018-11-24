@@ -184,17 +184,8 @@ def _convert_final_engine(scene, definitions, config):
             luxcore_engine = "TILEPATH"
             # Tile specific settings
             tile = config.tile
-            denoiser = scene.luxcore.denoiser
 
-            if denoiser.enabled:
-                # The denoiser warmup period in LuxCore is hardcoded to end when 2 samples per pixel
-                # have been rendered. This makes it necessary to use exactly 1 AA sample per pass
-                # when the denoiser is enabled, otherwise the warmup period finishes too early,
-                # leading to completely wrong brightness in the denoised image.
-                aa_samples = 1
-            else:
-                aa_samples = tile.path_sampling_aa_size
-            definitions["tilepath.sampling.aa.size"] = aa_samples
+            definitions["tilepath.sampling.aa.size"] = tile.path_sampling_aa_size
             definitions["tile.size"] = tile.size
             definitions["tile.multipass.enable"] = tile.multipass_enable
             thresh = tile.multipass_convtest_threshold

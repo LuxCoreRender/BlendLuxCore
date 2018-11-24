@@ -46,8 +46,6 @@ def convert(exporter, scene, context=None, engine=None):
 
         use_transparent_film = pipeline.transparent_film and not utils.use_filesaver(context, scene)
 
-        # TODO correct filepaths
-
         # Reset the output index
         _add_output.index = 0
 
@@ -214,6 +212,11 @@ def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
     definitions[str(index) + ".filterspikes"] = denoiser.filter_spikes
     if scene.render.threads_mode == "FIXED":
         definitions[str(index) + ".threadcount"] = scene.render.threads
+    config = scene.luxcore.config
+    if config.engine == "PATH" and config.use_tiles:
+        epsilon = 0.1
+        aa = config.tile.path_sampling_aa_size
+        definitions[str(index) + ".warmupspp"] = aa**2 - epsilon
     index += 1
 
     index = imagepipeline.convert_defs(context, scene, definitions, index)
