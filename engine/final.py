@@ -85,7 +85,14 @@ def _render_layer(engine, scene, render_slot_stats):
     path_settings = scene.luxcore.config.path
     last_film_refresh = 0
     last_stat_refresh = 0
-    optimal_clamp = None
+    checked_optimal_clamp = path_settings.use_clamping
+    engine_type = config.GetProperties().Get("renderengine.type").GetString()
+    if engine_type.startswith("TILE"):
+        epsilon = 0.1
+        aa = scene.luxcore.config.tile.path_sampling_aa_size
+        clamp_warmup_samples = aa**2 - epsilon
+    else:
+        clamp_warmup_samples = 2.0
     stats = utils_render.update_stats(engine.session)
     FAST_REFRESH_DURATION = 1 if engine.is_animation else 5
 
@@ -142,9 +149,11 @@ def _render_layer(engine, scene, render_slot_stats):
 
             # Compute and print the optimal clamp value. Done only once after a warmup phase.
             # Only do this if clamping is disabled, otherwise the value is meaningless.
-            if not optimal_clamp and not path_settings.use_clamping and now - start > 10:
-                optimal_clamp = utils_render.find_suggested_clamp_value(engine.session, scene)
-                print("Recommended clamp value:", optimal_clamp)
+            samples = stats.Get("stats.renderengine.pass").GetInt()
+            if not checked_optimal_clamp and samples > clamp_warmup_samples:
+                clamp_value = utils_render.find_suggested_clamp_value(engine.session, scene)
+                print("Recommended clamp value:", clamp_value)
+                checked_optimal_clamp = True
 
         # Check before we sleep
         if engine.test_break():
