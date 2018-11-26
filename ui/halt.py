@@ -26,6 +26,27 @@ def draw(layout, context, halt):
     split.prop(halt, "samples")
 
     config = context.scene.luxcore.config
+
+    if halt.use_samples and config.engine == "PATH" and config.use_tiles:
+        # some special warnings about tile path usage
+        aa = config.tile.path_sampling_aa_size
+        samples_per_pass = aa**2
+
+        if config.tile.multipass_enable and halt.samples % samples_per_pass != 0:
+            layout.label("Should be a multiple of %d" % samples_per_pass, icon=icons.WARNING)
+
+        if context.scene.luxcore.denoiser.enabled:
+            # Denoiser needs one warmup pass plus at least one sample collecting pass
+            min_samples = samples_per_pass * 2
+        else:
+            min_samples = samples_per_pass
+
+        if halt.samples < min_samples:
+            layout.label("Use at least %d samples!" % min_samples, icon=icons.WARNING)
+
+        if not config.tile.multipass_enable and halt.samples > min_samples:
+            layout.label("Samples halt condition overriden by disabled multipass", icon=icons.INFO)
+
     is_adaptive_sampler = config.engine == "PATH" and config.sampler in {"SOBOL", "RANDOM"}
     show_adaptive_sampling_props = halt.use_noise_thresh and is_adaptive_sampler
 
