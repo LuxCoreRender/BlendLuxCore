@@ -14,8 +14,12 @@ from ...ui import icons
 class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
     bl_label = "Smoke"
     bl_width_default = 200
+
+    def poll_domain(self, obj):
+        # Only allow objects with a smoke modifier in domain mode to be picked
+        return utils.find_smoke_domain_modifier(obj)
     
-    domain = PointerProperty(name="Domain", type=bpy.types.Object)
+    domain = PointerProperty(name="Domain", type=bpy.types.Object, poll=poll_domain)
 
     def update_source(self, context):
         value_output = self.outputs["Value"]
