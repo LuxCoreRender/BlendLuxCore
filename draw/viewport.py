@@ -3,6 +3,37 @@ import math
 from ..bin import pyluxcore
 from .. import utils
 
+import subprocess
+import tempfile
+import bpy
+import os
+from bpy_extras.image_utils import load_image
+
+
+class OptixTempFileManager:
+    files = set()
+
+    @classmethod
+    def track(cls, path):
+        cls.files.add(path)
+
+    @classmethod
+    def generate_filename(cls, framebuffer_id, suffix="", extension=".png"):
+        name = "optix_" + str(framebuffer_id) + suffix + extension
+        filepath = os.path.join(tempfile.gettempdir(), name)
+        return filepath
+
+    @classmethod
+    def cleanup(cls):
+        for path in cls.files:
+            print("[Optix TempFiles] Deleting temporary file:", path)
+            try:
+                os.remove(path)
+            except FileNotFoundError as err:
+                print(err)
+
+        cls.files.clear()
+
 
 def draw_quad(offset_x, offset_y, width, height):
     glBegin(GL_QUADS)
@@ -59,28 +90,28 @@ class FrameBuffer(object):
         self.optix_result = None
 
     def calc_optix(self, luxcore_session, context):
-        print("optix")
-
-        # const std::string &fileName, const FilmOutputType type, const Properties &props
-        filename = r"D:\test"
         # Can't gl_load a .exr
         ext = ".png"
-        props = pyluxcore.Properties()
-        luxcore_session.GetFilm().SaveOutput(filename + ext, self._output_type, props)
+        # For now only one optix output supported
+        framebuffer_id = 0
 
-        import subprocess
+        raw_path = OptixTempFileManager.generate_filename(framebuffer_id, "_raw", ext)
+        result_path = OptixTempFileManager.generate_filename(framebuffer_id, "_result", ext)
+        image_name = os.path.basename(result_path)
+
+        luxcore_session.GetFilm().SaveOutput(raw_path, self._output_type, pyluxcore.Properties())
+        OptixTempFileManager.track(raw_path)
+        # Also track LuxCore's backup file in case it's created
+        OptixTempFileManager.track(raw_path + ".bak")
+
         denoiser_path = r"C:\Users\Simon\AppData\Roaming\Blender Foundation\Blender\2.79\scripts\addons\Denosier_v2.1\Denoiser.exe"
-        raw_path = filename + ext
-        result_path = filename + "_denoised" + ext
         args = [denoiser_path, '-i', raw_path, "-o", result_path]
         subprocess.call(args)
+        OptixTempFileManager.track(result_path)
 
-        from bpy_extras.image_utils import load_image
         load_image(result_path, check_existing=True, force_reload=True)
 
-        import bpy
-        import os
-        self.optix_result = bpy.data.images[os.path.basename(result_path)]
+        self.optix_result = bpy.data.images[image_name]
         self.optix_result.gl_load(GL_NEAREST, GL_NEAREST)
 
     def reset_optix(self):
