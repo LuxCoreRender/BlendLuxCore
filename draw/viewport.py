@@ -56,6 +56,36 @@ class FrameBuffer(object):
         glGenTextures(1, self.texture)
         self.texture_id = self.texture[0]
 
+        self.optix_result = None
+
+    def calc_optix(self, luxcore_session, context):
+        print("optix")
+
+        # const std::string &fileName, const FilmOutputType type, const Properties &props
+        filename = r"D:\test"
+        # Can't gl_load a .exr
+        ext = ".png"
+        props = pyluxcore.Properties()
+        luxcore_session.GetFilm().SaveOutput(filename + ext, self._output_type, props)
+
+        import subprocess
+        denoiser_path = r"C:\Users\Simon\AppData\Roaming\Blender Foundation\Blender\2.79\scripts\addons\Denosier_v2.1\Denoiser.exe"
+        raw_path = filename + ext
+        result_path = filename + "_denoised" + ext
+        args = [denoiser_path, '-i', raw_path, "-o", result_path]
+        subprocess.call(args)
+
+        from bpy_extras.image_utils import load_image
+        load_image(result_path, check_existing=True, force_reload=True)
+
+        import bpy
+        import os
+        self.optix_result = bpy.data.images[os.path.basename(result_path)]
+        self.optix_result.gl_load(GL_NEAREST, GL_NEAREST)
+
+    def reset_optix(self):
+        self.optix_result = None
+
     def update(self, luxcore_session, context):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
 
@@ -84,7 +114,10 @@ class FrameBuffer(object):
 
         glEnable(GL_TEXTURE_2D)
         glEnable(GL_COLOR_MATERIAL)
-        glBindTexture(GL_TEXTURE_2D, self.texture_id)
+        if self.optix_result:
+            glBindTexture(GL_TEXTURE_2D, self.optix_result.bindcode[0])
+        else:
+            glBindTexture(GL_TEXTURE_2D, self.texture_id)
 
         if engine.support_display_space_shader(context.scene):
             # This is the fragment shader that applies Blender color management

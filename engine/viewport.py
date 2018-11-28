@@ -45,7 +45,7 @@ def view_update(engine, context, changes=None):
 
     if changes:
         engine.viewport_start_time = time()
-    
+
 
 def view_draw(engine, context):
     scene = context.scene
@@ -94,8 +94,13 @@ def view_draw(engine, context):
             print("[Engine/Viewport] Pausing session")
             engine.session.Pause()
         status_message = "(Paused)"
+
+        if not engine.framebuffer.optix_result:
+            engine.framebuffer.calc_optix(engine.session, context)
+            engine.framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
     else:
         # Not in pause yet, keep drawing
+        engine.framebuffer.reset_optix()
         engine.tag_redraw()
 
     # Show formatted statistics in Blender UI
