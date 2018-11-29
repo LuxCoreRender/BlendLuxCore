@@ -97,14 +97,13 @@ def view_draw(engine, context):
 
         if engine.framebuffer.optix_process_active():
             if engine.framebuffer.optix_done():
-                print("optix done")
+                status_message = "(Paused, Optix Done)"
                 engine.framebuffer.load_optix_result()
                 engine.framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
             else:
-                # print("waiting for optix to finish")
+                status_message = "(Paused, Optix Working ...)"
                 engine.tag_redraw()
         else:
-            print("starting optix")
             engine.framebuffer.start_optix(engine.session, context)
             engine.tag_redraw()
     else:
