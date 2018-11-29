@@ -88,8 +88,10 @@ class FrameBuffer(object):
         self.texture_id = self.texture[0]
 
         self.optix_result = None
+        self.optix_result_path = None
+        self._optix_process = None
 
-    def calc_optix(self, luxcore_session, context):
+    def start_optix(self, luxcore_session, context):
         # Can't gl_load a .exr
         ext = ".png"
         # For now only one optix output supported
@@ -97,7 +99,7 @@ class FrameBuffer(object):
 
         raw_path = OptixTempFileManager.generate_filename(framebuffer_id, "_raw", ext)
         result_path = OptixTempFileManager.generate_filename(framebuffer_id, "_result", ext)
-        image_name = os.path.basename(result_path)
+        self.optix_result_path = result_path
 
         luxcore_session.GetFilm().SaveOutput(raw_path, self._output_type, pyluxcore.Properties())
         OptixTempFileManager.track(raw_path)
@@ -106,16 +108,37 @@ class FrameBuffer(object):
 
         denoiser_path = r"C:\Users\Simon\AppData\Roaming\Blender Foundation\Blender\2.79\scripts\addons\Denosier_v2.1\Denoiser.exe"
         args = [denoiser_path, '-i', raw_path, "-o", result_path]
-        subprocess.call(args)
-        OptixTempFileManager.track(result_path)
+        self._optix_process = subprocess.Popen(args)
 
-        load_image(result_path, check_existing=True, force_reload=True)
+    def optix_process_active(self):
+        return self._optix_process is not None
+
+    def optix_done(self):
+        return self._optix_process.poll() is not None
+
+    def load_optix_result(self):
+        self._optix_process = None
+
+        OptixTempFileManager.track(self.optix_result_path)
+        load_image(self.optix_result_path, check_existing=True, force_reload=True)
+        image_name = os.path.basename(self.optix_result_path)
 
         self.optix_result = bpy.data.images[image_name]
+        self.optix_result.gl_free()
         self.optix_result.gl_load(GL_NEAREST, GL_NEAREST)
 
     def reset_optix(self):
+        # Optix was not started yet or the user has triggered an update
+        if self.optix_result_path and os.path.exists(self.optix_result_path):
+            os.remove(self.optix_result_path)
         self.optix_result = None
+        self.optix_result_path = None
+
+        if self._optix_process:
+            print("killing optix")
+            self._optix_process.terminate()
+            self._optix_process.communicate()
+            self._optix_process = None
 
     def update(self, luxcore_session, context):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)

@@ -95,9 +95,18 @@ def view_draw(engine, context):
             engine.session.Pause()
         status_message = "(Paused)"
 
-        if not engine.framebuffer.optix_result:
-            engine.framebuffer.calc_optix(engine.session, context)
-            engine.framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
+        if engine.framebuffer.optix_process_active():
+            if engine.framebuffer.optix_done():
+                print("optix done")
+                engine.framebuffer.load_optix_result()
+                engine.framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
+            else:
+                # print("waiting for optix to finish")
+                engine.tag_redraw()
+        else:
+            print("starting optix")
+            engine.framebuffer.start_optix(engine.session, context)
+            engine.tag_redraw()
     else:
         # Not in pause yet, keep drawing
         engine.framebuffer.reset_optix()
