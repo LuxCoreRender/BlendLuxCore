@@ -94,8 +94,7 @@ class FrameBuffer(object):
     def start_optix(self, luxcore_session, context):
         # Can't gl_load a .exr
         ext = ".png"
-        # For now only one optix output supported
-        framebuffer_id = 0
+        framebuffer_id = id(self)
 
         raw_path = OptixTempFileManager.generate_filename(framebuffer_id, "_raw", ext)
         result_path = OptixTempFileManager.generate_filename(framebuffer_id, "_result", ext)
