@@ -103,8 +103,7 @@ def view_draw(engine, context):
             else:
                 status_message = "(Paused, Optix Working ...)"
                 engine.tag_redraw()
-        else:
-            engine.framebuffer.start_optix(engine.session, context)
+        elif engine.framebuffer.start_optix(engine.session, context):
             engine.tag_redraw()
     else:
         # Not in pause yet, keep drawing

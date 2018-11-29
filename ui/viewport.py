@@ -39,3 +39,7 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
             if viewport.device == "OCL" and not utils.is_opencl_build():
                 layout.label("No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
                 layout.label("(Falling back to CPU realtime engine)")
+
+        layout.prop(viewport, "optix_enabled")
+        if viewport.optix_enabled:
+            layout.prop(viewport, "optix_path")

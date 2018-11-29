@@ -1,8 +1,17 @@
+import os
 import bpy
 from bpy.app.handlers import persistent
 from ..bin import pyluxcore
 from ..utils import compatibility
 
+
+def find_optix_denoiser(scene):
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    blendluxcore_dir = os.path.dirname(current_dir)
+    addon_dir = os.path.dirname(blendluxcore_dir)
+    denoiser_path = os.path.join(addon_dir, "Denosier_v2.1", "Denoiser.exe")
+    if not scene.luxcore.viewport.optix_path and os.path.exists(denoiser_path):
+        scene.luxcore.viewport.optix_path = denoiser_path
 
 @persistent
 def handler(_):
@@ -26,5 +35,9 @@ def handler(_):
         if not scene.luxcore.config.filesaver_path:
             scene.luxcore.config.filesaver_path = scene.render.filepath
 
+        # Try to find optix binary automatically
+        find_optix_denoiser(scene)
+
     # Run converters for backwards compatibility
     compatibility.run()
+

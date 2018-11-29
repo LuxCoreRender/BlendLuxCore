@@ -92,6 +92,10 @@ class FrameBuffer(object):
         self._optix_process = None
 
     def start_optix(self, luxcore_session, context):
+        viewport = context.scene.luxcore.viewport
+        if not viewport.optix_enabled or not os.path.isfile(viewport.optix_path):
+            return False
+
         # Can't gl_load a .exr
         ext = ".png"
         framebuffer_id = id(self)
@@ -105,9 +109,9 @@ class FrameBuffer(object):
         # Also track LuxCore's backup file in case it's created
         OptixTempFileManager.track(raw_path + ".bak")
 
-        denoiser_path = r"C:\Users\Simon\AppData\Roaming\Blender Foundation\Blender\2.79\scripts\addons\Denosier_v2.1\Denoiser.exe"
-        args = [denoiser_path, '-i', raw_path, "-o", result_path]
+        args = [viewport.optix_path, '-i', raw_path, "-o", result_path]
         self._optix_process = subprocess.Popen(args)
+        return True
 
     def optix_process_active(self):
         return self._optix_process is not None
