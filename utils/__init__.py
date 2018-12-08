@@ -606,3 +606,19 @@ def image_sequence_resolve_all(image):
 
 def is_valid_camera(obj):
     return obj and hasattr(obj, "type") and obj.type == "CAMERA"
+
+
+def find_optix_denoiser(scene):
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    blendluxcore_dir = os.path.dirname(current_dir)
+    addon_dir = os.path.dirname(blendluxcore_dir)
+    search_paths = []
+    # Addon from https://remingtongraphics.net/tools/d-noise/
+    search_paths.append(os.path.join(addon_dir, "DNOISE", "OptiXDenoiser", "Denoiser.exe"))
+    # troopy28's addon
+    search_paths.append(os.path.join(addon_dir, "Denosier_v2.1", "Denoiser.exe"))
+
+    for path in search_paths:
+        if not scene.luxcore.viewport.optix_path and os.path.exists(path):
+            scene.luxcore.viewport.optix_path = path
+            break

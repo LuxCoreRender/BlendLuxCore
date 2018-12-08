@@ -1,5 +1,6 @@
 import bpy
 from bpy.props import IntProperty, EnumProperty, BoolProperty, StringProperty
+from ..utils import find_optix_denoiser
 
 DESC_CPU = "Usually better suited for viewport rendering than OpenCL"
 DESC_OCL = (
@@ -45,7 +46,10 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
                                          "the RT Path engine is used in the viewport, which is optimized "
                                          "for quick feedback but can't handle complex light paths")
 
-    optix_enabled = BoolProperty(name="Use Optix", default=False)
+    def update_optix_enabled(self, context):
+        find_optix_denoiser(context.scene)
+
+    optix_enabled = BoolProperty(name="Use Optix", default=False, update=update_optix_enabled)
     optix_path = StringProperty(name="Executable", default="", subtype="FILE_PATH",
                                 description="Path to Declan Russel's implementation of "
                                             "the Nvidia Optix denoiser (Denoiser.exe)")
