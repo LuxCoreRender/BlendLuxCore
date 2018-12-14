@@ -18,7 +18,12 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         viewport = context.scene.luxcore.viewport
 
         layout.prop(viewport, "halt_time")
-        layout.prop(viewport, "reduce_resolution_on_edit")
+
+        split = layout.split(percentage=0.6)
+        split.prop(viewport, "reduce_resolution_on_edit")
+        sub = split.row()
+        sub.active = viewport.reduce_resolution_on_edit
+        sub.prop(viewport, "resolution_reduction")
 
         col = layout.column()
         col.prop(viewport, "pixel_size")

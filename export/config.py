@@ -121,13 +121,15 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
 def _convert_viewport_engine(scene, definitions, config):
     _convert_path(config, definitions)
 
-    use_cpu = scene.luxcore.viewport.device == "CPU"
+    viewport = scene.luxcore.viewport
+
+    use_cpu = viewport.device == "CPU"
     if not use_cpu and not utils.is_opencl_build():
         msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
         scene.luxcore.errorlog.add_warning(msg)
         use_cpu = True
 
-    resolutionreduction = 4 if scene.luxcore.viewport.reduce_resolution_on_edit else 1
+    resolutionreduction = viewport.resolution_reduction if viewport.reduce_resolution_on_edit else 1
 
     if use_cpu:
         luxcore_engine = "RTPATHCPU"
