@@ -96,14 +96,13 @@ def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props
     for lux_object_name, material_index in mesh_definitions:
         if not context and override_mat:
             # Only use override material in final render
-            lux_mat_name, mat_props = material.convert(exporter, override_mat, scene, context)
+            mat = override_mat
         else:
             if material_index < len(obj.material_slots):
                 mat = obj.material_slots[material_index].material
-                lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
 
                 if mat is None:
-                    # Note: material.convert returned the fallback material in this case
+                    # Note: material.convert returns the fallback material in this case
                     msg = 'Object "%s": No material attached to slot %d' % (obj.name, material_index)
                     scene.luxcore.errorlog.add_warning(msg)
             else:
@@ -111,7 +110,18 @@ def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props
                 msg = 'Object "%s": No material defined' % obj.name
                 scene.luxcore.errorlog.add_warning(msg)
                 # Use fallback material
-                lux_mat_name, mat_props = material.fallback()
+                mat = None
+
+        if mat:
+            imagemaps = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap")
+            if imagemaps and not utils_node.has_valid_uv_map(obj):
+                msg = ('Object "%s": %d image texture(s) used, but no UVs defined. ' 
+                       'In case of bumpmaps this can lead to artifacts' % (obj.name, len(imagemaps)))
+                scene.luxcore.errorlog.add_warning(msg)
+
+            lux_mat_name, mat_props = material.convert(exporter, mat, scene, context)
+        else:
+            lux_mat_name, mat_props = material.fallback()
 
         props.Set(mat_props)
 

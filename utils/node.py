@@ -34,6 +34,19 @@ def draw_uv_info(context, layout):
             warning_no_uvmap(layout)
 
 
+def has_valid_uv_map(obj):
+    if not obj.data:
+        return False
+
+    if obj.type in {"CURVE", "SURFACE", "FONT"}:
+        if not obj.data.use_uv_as_generated:
+            return False
+    elif obj.type == "MESH" and len(obj.data.uv_textures) == 0:
+        return False
+
+    return True
+
+
 def draw_transmission_info(node, layout):
     try:
         kd_socket = node.inputs["Diffuse Color"]
