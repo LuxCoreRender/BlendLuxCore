@@ -372,6 +372,10 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
     if is_dupli:
         return True
 
+    # Mimic Blender behaviour: if object is duplicated via a parent, it should be invisible
+    if obj.parent and obj.parent.dupli_type != "NONE":
+        return False
+
     # Check if object is used as camera clipping plane
     if is_valid_camera(scene.camera) and obj == scene.camera.data.luxcore.clipping_plane:
         return False
