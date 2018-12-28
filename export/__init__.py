@@ -301,7 +301,8 @@ class Exporter(object):
             session.Parse(self.halt_cache.props)
 
     def _convert_object(self, props, obj, scene, context, luxcore_scene,
-                        update_mesh=False, dupli_suffix="", engine=None):
+                        update_mesh=False, dupli_suffix="", engine=None,
+                        check_dupli_parent=False):
         key = utils.make_key(obj)
         old_exported_obj = None
 
@@ -325,8 +326,9 @@ class Exporter(object):
                 duplis.convert(self, obj, scene, context, luxcore_scene, engine)
 
         # When moving a duplicated object, update the parent, too (concerns dupliverts/faces)
-        if obj.parent and obj.parent.is_duplicator:
-            self._convert_object(props, obj.parent, scene, context, luxcore_scene)
+        if check_dupli_parent and obj.parent and obj.parent.is_duplicator:
+            self._convert_object(props, obj.parent, scene, context, luxcore_scene,
+                                 update_mesh, dupli_suffix, engine, check_dupli_parent)
 
         # Convert hair
         for psys in obj.particle_systems:
@@ -367,15 +369,18 @@ class Exporter(object):
         if changes & Change.OBJECT:
             for obj in self.object_cache.changed_transform:
                 print("transformed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False)
+                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False,
+                                     check_dupli_parent=True)
 
             for obj in self.object_cache.changed_mesh:
                 print("mesh changed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True)
+                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True,
+                                     check_dupli_parent=True)
 
             for obj in self.object_cache.changed_lamps:
                 print("lamp changed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene)
+                self._convert_object(props, obj, context.scene, context, luxcore_scene,
+                                     check_dupli_parent=True)
 
         if changes & Change.MATERIAL:
             for mat in self.material_cache.changed_materials:
