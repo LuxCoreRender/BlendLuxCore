@@ -112,7 +112,7 @@ def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props
                 # Use fallback material
                 mat = None
 
-        if mat:
+        if mat and mat.luxcore.node_tree:
             imagemaps = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap")
             if imagemaps and not utils_node.has_valid_uv_map(obj):
                 msg = ('Object "%s": %d image texture(s) used, but no UVs defined. ' 
