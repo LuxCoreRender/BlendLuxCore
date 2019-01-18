@@ -224,7 +224,13 @@ def find_suggested_clamp_value(session, scene=None):
         suggested_clamping_value = v * v
 
     if scene:
-        scene.luxcore.config.path.suggested_clamping_value = suggested_clamping_value
+        try:
+            # TODO: rework this so it can't fail anymore (some users have reported that it throws an AttributeError)
+            scene.luxcore.config.path.suggested_clamping_value = suggested_clamping_value
+        except AttributeError:
+            print("Warning: could not set suggested_clamping_value property")
+            import traceback
+            traceback.print_exc()
 
     return suggested_clamping_value
 
