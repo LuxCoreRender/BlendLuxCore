@@ -155,6 +155,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         if aovs.depth:
             # In the compositor we need to register the Depth pass
             self.register_pass(scene, renderlayer, "Depth", 1, "Z", "VALUE")
+        if aovs.albedo:
+            self.register_pass(scene, renderlayer, "ALBEDO", 3, "RGB", "COLOR")
         if aovs.material_id:
             self.register_pass(scene, renderlayer, "MATERIAL_ID", 1, "X", "VALUE")
         if aovs.material_id_color:

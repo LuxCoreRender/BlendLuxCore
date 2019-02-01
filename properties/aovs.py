@@ -21,6 +21,8 @@ class LuxCoreAOVSettings(PropertyGroup):
     depth = BoolProperty(name="Depth", default=False,
                        description="Distance from camera (Z-Pass)",
                        update=toggle_depth)
+    albedo = BoolProperty(name="Albedo", default=False,
+                       description="Unlit material/texture colors")
 
     # Material/Object Information
     material_id = BoolProperty(name="Material ID", default=False,

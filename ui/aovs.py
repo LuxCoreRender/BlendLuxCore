@@ -30,6 +30,7 @@ class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
         col.prop(aovs, "rgba")
         col.prop(aovs, "alpha")
         col.prop(aovs, "depth")
+        col.prop(aovs, "albedo")
 
         # All following AOVs are not supported by BIDIR, only by PATH
         sub = col.column(align=True)

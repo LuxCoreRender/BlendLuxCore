@@ -245,6 +245,8 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("RGBA", 4, "RGBA", layer.name)
     if aovs.alpha:
         engine.add_pass("ALPHA", 1, "A", layer.name)
+    if aovs.albedo:
+        engine.add_pass("ALBEDO", 3, "RGB", layer.name)
     if aovs.material_id:
         engine.add_pass("MATERIAL_ID", 1, "X", layer.name)
     if aovs.material_id_color:
