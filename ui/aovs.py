@@ -58,6 +58,7 @@ class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
         sub.label("Geometry Information")
         sub.prop(aovs, "position")
         sub.prop(aovs, "shading_normal")
+        sub.prop(aovs, "avg_shading_normal")
         sub.prop(aovs, "geometry_normal")
         sub.prop(aovs, "uv")
 

@@ -55,6 +55,8 @@ class LuxCoreAOVSettings(PropertyGroup):
                        description="World X, Y, Z")
     shading_normal = BoolProperty(name="Shading Normal", default=False,
                        description="Normal vector X, Y, Z with mesh smoothing")
+    avg_shading_normal = BoolProperty(name="Avg. Shading Normal", default=False,
+                       description="Same as shading normal, but with anti-aliasing")
     geometry_normal = BoolProperty(name="Geometry Normal", default=False,
                        description="Normal vector X, Y, Z without mesh smoothing")
     uv = BoolProperty(name="UV", default=False,

@@ -179,6 +179,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "POSITION", 3, "XYZ", "VECTOR")
         if aovs.shading_normal:
             self.register_pass(scene, renderlayer, "SHADING_NORMAL", 3, "XYZ", "VECTOR")
+        if aovs.avg_shading_normal:
+            self.register_pass(scene, renderlayer, "AVG_SHADING_NORMAL", 3, "XYZ", "VECTOR")
         if aovs.geometry_normal:
             self.register_pass(scene, renderlayer, "GEOMETRY_NORMAL", 3, "XYZ", "VECTOR")
         if aovs.uv:

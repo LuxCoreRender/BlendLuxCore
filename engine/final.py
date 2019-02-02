@@ -269,6 +269,8 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("POSITION", 3, "XYZ", layer.name)
     if aovs.shading_normal:
         engine.add_pass("SHADING_NORMAL", 3, "XYZ", layer.name)
+    if aovs.avg_shading_normal:
+        engine.add_pass("AVG_SHADING_NORMAL", 3, "XYZ", layer.name)
     if aovs.geometry_normal:
         engine.add_pass("GEOMETRY_NORMAL", 3, "XYZ", layer.name)
     if aovs.uv:
