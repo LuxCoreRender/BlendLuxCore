@@ -176,23 +176,32 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     # TODO: descriptions
 
     # Shared settings
-    photon_maxcount = IntProperty(name="Photon Count", default=100000, min=1000)
-    photon_maxdepth = IntProperty(name="Photon Depth", default=4, min=3, max=64)
+    photon_maxcount = IntProperty(name="Photon Count", default=100000, min=1000,
+                                  description="Max. number of photons traced")
+    photon_maxdepth = IntProperty(name="Photon Depth", default=4, min=3, max=64,
+                                  description="Max. depth of photon paths")
     # Indirect cache
     indirect_enabled = BoolProperty(name="Indirect Cache", default=True)
-    indirect_maxsize = IntProperty(name="Max. Size", default=100000, min=1000)
-    indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001)
+    indirect_maxsize = IntProperty(name="Max. Size", default=100000, min=1000,
+                                   description="Max. number of photons stored in indirect cache")
+    indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
+                                           description="Choose this value according to the size of your scene. "
+                                                       "Larger values can degrade rendering performance")
     # Caustic cache
-    caustic_enabled = BoolProperty(name="Caustic Cache", default=True)
-    caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000)
-    caustic_lookup_radius = FloatProperty(name="Lookup Radius", default=0.075, min=0.00001)
+    caustic_enabled = BoolProperty(name="Caustic Cache", default=False)
+    caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000,
+                                  description="Max. number of photons stored in caustic cache")
+    caustic_lookup_radius = FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
+                                          description="Choose this value according to the size of your scene. "
+                                                      "Larger values can degrade rendering performance")
 
     debug_items = [
-        ("off", "Off", "", 0),
+        ("off", "Off (Final Render Mode)", "", 0),
         ("showindirect", "Show Indirect", "", 1),
         ("showcaustic", "Show Caustic", "", 2),
     ]
-    debug = EnumProperty(name="Debug", items=debug_items, default="off")
+    debug = EnumProperty(name="Debug", items=debug_items, default="off",
+                         description="Use this setting to directly see the photon distribution of a cache")
 
 
 class LuxCoreConfig(PropertyGroup):

@@ -1,5 +1,6 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
+from . import icons
 
 
 class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
@@ -17,6 +18,9 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         layout = self.layout
         photongi = context.scene.luxcore.config.photongi
         layout.active = photongi.enabled
+
+        if not photongi.indirect_enabled and not photongi.caustic_enabled:
+            layout.label(text="All caches disabled", icon=icons.WARNING)
 
         row = layout.row(align=True)
         row.prop(photongi, "photon_maxcount")
@@ -37,3 +41,6 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         row.prop(photongi, "caustic_lookup_radius")
 
         layout.prop(photongi, "debug")
+        if (photongi.debug == "showindirect" and not photongi.indirect_enabled) or (
+                photongi.debug == "showcaustic" and not photongi.caustic_enabled):
+            layout.label(text="Can't show this cache (disabled)", icon=icons.WARNING)
