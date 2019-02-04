@@ -202,7 +202,18 @@ def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
     definitions = OrderedDict()
     index = 0
 
-    # Denoiser plugin
+    if scene.luxcore.denoiser.type == "BCD":
+        index = get_BCD_props(definitions, scene, index)
+    elif scene.luxcore.denoiser.type == "OIDN":
+        index = get_OIDN_props(definitions, index)
+        # TODO: enable Avg shading normal + Albedo
+
+    index = imagepipeline.convert_defs(context, scene, definitions, index)
+
+    return utils.create_props(prefix, definitions)
+
+
+def get_BCD_props(definitions, scene, index):
     denoiser = scene.luxcore.denoiser
     definitions[str(index) + ".type"] = "BCD_DENOISER"
     definitions[str(index) + ".scales"] = denoiser.scales
@@ -216,12 +227,13 @@ def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
     if config.engine == "PATH" and config.use_tiles:
         epsilon = 0.1
         aa = config.tile.path_sampling_aa_size
-        definitions[str(index) + ".warmupspp"] = aa**2 - epsilon
-    index += 1
+        definitions[str(index) + ".warmupspp"] = aa ** 2 - epsilon
+    return index + 1
 
-    index = imagepipeline.convert_defs(context, scene, definitions, index)
 
-    return utils.create_props(prefix, definitions)
+def get_OIDN_props(definitions, index):
+    definitions[str(index) + ".type"] = "INTEL_OIDN"
+    return index + 1
 
 
 def _make_denoiser_imagepipeline(context, scene, props, engine, pipeline_index, output_definitions):

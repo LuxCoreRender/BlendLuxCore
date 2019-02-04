@@ -8,12 +8,14 @@ import os
 LINUX_FILES = [
     "libembree3.so.3", "libtbb.so.2", "libtbbmalloc.so.2",
     "pyluxcore.so", "luxcoreui", "pyluxcoretools.zip",
+    "libOpenImageDenoise.so.0",
 ]
 
 WINDOWS_FILES = [
     "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
+    "OpenImageDenoise.dll",
 ]
 
 MAC_FILES = [

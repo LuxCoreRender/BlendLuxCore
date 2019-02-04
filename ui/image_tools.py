@@ -69,14 +69,15 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
             subcol.label("Render Time: " + utils_ui.humanize_time(entry.elapsed_render_time))
             subcol.label("Denoising Duration: " + utils_ui.humanize_time(entry.elapsed_denoiser_time))
 
-            box = col.box()
-            subcol = box.column()
-            subcol.label("Last Denoiser Settings:", icon="UI")
-            subcol.label("Remove Fireflies: " + ("Enabled" if entry.filter_spikes else "Disabled"))
-            subcol.label("Histogram Distance Threshold: " + str(entry.hist_dist_thresh))
-            subcol.label("Search Window Radius: " + str(entry.search_window_radius))
-            subcol.label("Scales: " + str(entry.scales))
-            subcol.label("Patch Radius: " + str(entry.patch_radius))
+            if context.scene.luxcore.denoiser.type == "BCD":
+                box = col.box()
+                subcol = box.column()
+                subcol.label("Last Denoiser Settings:", icon="UI")
+                subcol.label("Remove Fireflies: " + ("Enabled" if entry.filter_spikes else "Disabled"))
+                subcol.label("Histogram Distance Threshold: " + str(entry.hist_dist_thresh))
+                subcol.label("Search Window Radius: " + str(entry.search_window_radius))
+                subcol.label("Scales: " + str(entry.scales))
+                subcol.label("Patch Radius: " + str(entry.patch_radius))
 
 
 class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):

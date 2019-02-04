@@ -9,29 +9,38 @@ def draw(context, layout):
     denoiser = context.scene.luxcore.denoiser
     config = context.scene.luxcore.config
 
+    row = layout.row()
+    row.enabled = not LuxCoreRenderEngine.final_running
+    row.prop(denoiser, "type", expand=True)
+
     col = layout.column()
 
     if denoiser.enabled:
-        if config.sampler == "METROPOLIS" and not config.use_tiles:
-            col.label("Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
-        if config.engine == "BIDIR" and config.filter != "NONE":
-            col.label('Set filter to "None" to reduce blurriness', icon=icons.WARNING)
+        if denoiser.type == "BCD":
+            if config.sampler == "METROPOLIS" and not config.use_tiles:
+                col.label("Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
+            if config.engine == "BIDIR" and config.filter != "NONE":
+                col.label('Set filter to "None" to reduce blurriness', icon=icons.WARNING)
+        elif denoiser.type == "OIDN":
+            if config.engine == "BIDIR":
+                col.label("OIDN can't denoise Bidir", icon=icons.WARNING)
 
     sub = col.column()
     # The user should not be able to request a refresh when denoiser is disabled
     sub.enabled = denoiser.enabled
     template_refresh_button(denoiser, "refresh", sub, "Running denoiser...")
-    
-    sub = col.column(align=True)
-    # The user should be able to adjust settings even when denoiser is disabled
-    sub.active = denoiser.enabled
-    sub.prop(denoiser, "filter_spikes")
-    sub.prop(denoiser, "hist_dist_thresh")
-    sub.prop(denoiser, "search_window_radius")
-    sub.prop(denoiser, "show_advanced", toggle=True, icon=("TRIA_DOWN" if denoiser.show_advanced else "TRIA_RIGHT"))
-    if denoiser.show_advanced:
-        sub.prop(denoiser, "scales")
-        sub.prop(denoiser, "patch_radius")
+
+    if denoiser.type == "BCD":
+        sub = col.column(align=True)
+        # The user should be able to adjust settings even when denoiser is disabled
+        sub.active = denoiser.enabled
+        sub.prop(denoiser, "filter_spikes")
+        sub.prop(denoiser, "hist_dist_thresh")
+        sub.prop(denoiser, "search_window_radius")
+        sub.prop(denoiser, "show_advanced", toggle=True, icon=("TRIA_DOWN" if denoiser.show_advanced else "TRIA_RIGHT"))
+        if denoiser.show_advanced:
+            sub.prop(denoiser, "scales")
+            sub.prop(denoiser, "patch_radius")
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
