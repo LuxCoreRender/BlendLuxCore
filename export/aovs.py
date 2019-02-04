@@ -31,6 +31,7 @@ def convert(exporter, scene, context=None, engine=None):
             return pyluxcore.Properties()
 
         pipeline = scene.camera.data.luxcore.imagepipeline
+        denoiser = scene.luxcore.denoiser
         # If we have a context, we are in viewport render.
         # If engine.is_preview, we are in material preview. Both don't need AOVs.
         final = not context and not (engine and engine.is_preview)
@@ -67,13 +68,18 @@ def convert(exporter, scene, context=None, engine=None):
             _add_output(definitions, "DEPTH")
         if (final and aovs.irradiance) or pipeline.contour_lines.enabled:
             _add_output(definitions, "IRRADIANCE")
+        if (final and aovs.albedo) or (denoiser.enabled and denoiser.type == "OIDN"):
+            _add_output(definitions, "ALBEDO")
+        if (final and aovs.avg_shading_normal) or (denoiser.enabled and denoiser.type == "OIDN"):
+            _add_output(definitions, "AVG_SHADING_NORMAL")
 
         pipeline_props = pyluxcore.Properties()
 
         # These AOVs only make sense in final renders
         if final:
             for output_name, output_type in pyluxcore.FilmOutputType.names.items():
-                if output_name in {"RGB_IMAGEPIPELINE", "RGBA_IMAGEPIPELINE", "ALPHA", "DEPTH", "IRRADIANCE"}:
+                if output_name in {"RGB_IMAGEPIPELINE", "RGBA_IMAGEPIPELINE", "ALPHA", "DEPTH",
+                                   "IRRADIANCE", "ALBEDO", "AVG_SHADING_NORMAL"}:
                     # We already checked these
                     continue
 
@@ -206,7 +212,6 @@ def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
         index = get_BCD_props(definitions, scene, index)
     elif scene.luxcore.denoiser.type == "OIDN":
         index = get_OIDN_props(definitions, index)
-        # TODO: enable Avg shading normal + Albedo
 
     index = imagepipeline.convert_defs(context, scene, definitions, index)
 
