@@ -3,13 +3,14 @@ from bpy.types import Panel
 from . import icons
 
 
-class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore PhotonGI Cache"
 
     @classmethod
     def poll(cls, context):
-        return context.scene.render.engine == "LUXCORE"
+        # PhotonGI is currently not supported by Bidir, so we hide the settings in this case
+        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine != "BIDIR"
 
     def draw_header(self, context):
         self.layout.prop(context.scene.luxcore.config.photongi, "enabled", text="")
