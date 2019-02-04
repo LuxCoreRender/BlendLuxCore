@@ -29,7 +29,8 @@ from .nodes import materials, volumes, textures
 from .ui import (
     aovs, blender_object, camera, config, debug, denoiser, device, display,
     errorlog, halt, image_tools, light, lightgroups, material, particle,
-    postpro, render, render_layer, scene, texture, units, viewport, world,
+    photongi, postpro, render, render_layer, scene, texture, units, viewport,
+    world,
 )
 from .utils.log import LuxCoreLog
 

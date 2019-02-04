@@ -48,6 +48,9 @@ def convert(exporter, scene, context=None, engine=None):
         if config.light_strategy == "DLS_CACHE":
             _convert_dlscache_settings(scene, definitions, config)
 
+        if config.photongi.enabled:
+            _convert_photongi_settings(scene, definitions, config)
+
         if config.path.use_clamping:
             definitions["path.clamping.variance.maxvalue"] = config.path.clamping
 
@@ -315,3 +318,32 @@ def _convert_dlscache_settings(scene, definitions, config):
         "lightstrategy.maxdepth": dls_cache.maxdepth,
         "lightstrategy.maxsamplescount": dls_cache.maxsamplescount,
     })
+
+
+def _convert_photongi_settings(scene, definitions, config):
+    photongi = config.photongi
+    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+
+    indirect_radius = photongi.indirect_lookup_radius * worldscale
+    caustic_radius = photongi.caustic_lookup_radius * worldscale
+    visibility_radius = indirect_radius * 2 if photongi.indirect_enabled else caustic_radius * 4
+    if photongi.caustic_enabled:
+        visibility_radius = max(visibility_radius, caustic_radius * 4)
+
+    definitions.update({
+        "path.photongi.photon.maxcount": photongi.photon_maxcount,
+        "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
+        "path.photongi.direct.enabled": 0,
+        "path.photongi.visibility.lookup.radius": visibility_radius,
+
+        "path.photongi.indirect.enabled": photongi.indirect_enabled,
+        "path.photongi.indirect.maxsize": photongi.indirect_maxsize,
+        "path.photongi.indirect.lookup.radius": indirect_radius,
+
+        "path.photongi.caustic.enabled": photongi.caustic_enabled,
+        "path.photongi.caustic.maxsize": photongi.caustic_maxsize,
+        "path.photongi.caustic.lookup.radius": caustic_radius,
+    })
+
+    if photongi.debug != "off":
+        definitions["path.photongi.debug.type"] = photongi.debug

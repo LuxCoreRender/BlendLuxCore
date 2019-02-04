@@ -149,7 +149,6 @@ class LuxCoreConfigTile(PropertyGroup):
 class LuxCoreConfigDLSCache(PropertyGroup):
     show_advanced = BoolProperty(name="Show Advanced", default=False)
 
-    # TODO min/max, descriptions
     entry_radius = FloatProperty(name="Entry Radius", default=0.15, min=0, subtype="DISTANCE",
                                  description="Choose this value according to the size of your scene. "
                                              "The default (15 cm) is suited for a room-sized scene")
@@ -168,6 +167,32 @@ class LuxCoreConfigDLSCache(PropertyGroup):
                                         default=99.5, min=0, max=100, subtype="PERCENTAGE")
     maxdepth = IntProperty(name="Max. Depth", default=4, min=0)
     maxsamplescount = IntProperty(name="Max. Samples", default=10000000, min=0)
+
+
+class LuxCoreConfigPhotonGI(PropertyGroup):
+    enabled = BoolProperty(name="Enabled", default=False)
+
+    # TODO: sensible stepping when dragging values
+    # TODO: descriptions
+
+    # Shared settings
+    photon_maxcount = IntProperty(name="Photon Count", default=100000, min=1000)
+    photon_maxdepth = IntProperty(name="Photon Depth", default=4, min=3, max=64)
+    # Indirect cache
+    indirect_enabled = BoolProperty(name="Indirect Cache", default=True)
+    indirect_maxsize = IntProperty(name="Max. Size", default=100000, min=1000)
+    indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001)
+    # Caustic cache
+    caustic_enabled = BoolProperty(name="Caustic Cache", default=True)
+    caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000)
+    caustic_lookup_radius = FloatProperty(name="Lookup Radius", default=0.075, min=0.00001)
+
+    debug_items = [
+        ("off", "Off", "", 0),
+        ("showindirect", "Show Indirect", "", 1),
+        ("showcaustic", "Show Caustic", "", 2),
+    ]
+    debug = EnumProperty(name="Debug", items=debug_items, default="off")
 
 
 class LuxCoreConfig(PropertyGroup):
@@ -255,6 +280,8 @@ class LuxCoreConfig(PropertyGroup):
 
     # Special properties of the direct light sampling cache
     dls_cache = PointerProperty(type=LuxCoreConfigDLSCache)
+    # Special properties of the photon GI cache
+    photongi = PointerProperty(type=LuxCoreConfigPhotonGI)
 
     # FILESAVER options
     use_filesaver = BoolProperty(name="Only write LuxCore scene", default=False)
