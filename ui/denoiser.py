@@ -9,10 +9,6 @@ def draw(context, layout):
     denoiser = context.scene.luxcore.denoiser
     config = context.scene.luxcore.config
 
-    row = layout.row()
-    row.enabled = not LuxCoreRenderEngine.final_running
-    row.prop(denoiser, "type", expand=True)
-
     col = layout.column()
 
     if denoiser.enabled:
@@ -57,7 +53,12 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         row.prop(context.scene.luxcore.denoiser, "enabled", text="")
 
     def draw(self, context):
-        draw(context, self.layout)
+        layout = self.layout
+        row = layout.row()
+        row.enabled = not LuxCoreRenderEngine.final_running
+        row.prop(context.scene.luxcore.denoiser, "type", expand=True)
 
-        col = self.layout.column(align=True)
+        draw(context, layout)
+
+        col = layout.column(align=True)
         col.label("These settings are also available in the image editor tool shelf (press T)", icon=icons.INFO)
