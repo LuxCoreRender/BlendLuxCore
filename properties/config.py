@@ -173,7 +173,6 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     enabled = BoolProperty(name="Enabled", default=False)
 
     # TODO: sensible stepping when dragging values
-    # TODO: descriptions
 
     # Shared settings
     photon_maxcount = IntProperty(name="Photon Count", default=100000, min=1000,

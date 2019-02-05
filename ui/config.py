@@ -91,7 +91,7 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             if config.sampler in {"SOBOL", "RANDOM"}:
                 layout.prop(config, "sobol_adaptive_strength", slider=True)
             elif config.sampler == "METROPOLIS":
-                if denoiser.enabled:
+                if denoiser.enabled and denoiser.type == "BCD":
                     layout.label("Can lead to artifacts in the denoiser!", icon=icons.WARNING)
 
                 self.draw_metropolis_props(layout, config)
