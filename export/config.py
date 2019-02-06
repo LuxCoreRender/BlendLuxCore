@@ -337,12 +337,14 @@ def _convert_photongi_settings(scene, definitions, config):
         "path.photongi.visibility.lookup.radius": visibility_radius,
 
         "path.photongi.indirect.enabled": photongi.indirect_enabled,
-        "path.photongi.indirect.maxsize": photongi.indirect_maxsize,
+        "path.photongi.indirect.maxsize": photongi.photon_maxcount,  # TODO is this a good idea?
         "path.photongi.indirect.lookup.radius": indirect_radius,
+        "path.photongi.indirect.lookup.maxcount": photongi.indirect_lookup_maxcount,
 
         "path.photongi.caustic.enabled": photongi.caustic_enabled,
-        "path.photongi.caustic.maxsize": photongi.caustic_maxsize,
+        "path.photongi.caustic.maxsize": photongi.photon_maxcount,  # TODO is this a good idea?
         "path.photongi.caustic.lookup.radius": caustic_radius,
+        "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
     })
 
     if photongi.debug != "off":

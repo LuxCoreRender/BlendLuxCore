@@ -86,6 +86,17 @@ MAX_CONSECUTIVE_REJECT_DESC = (
 
 IMAGE_MUTATION_RATE_DESC = "Maximum distance over the image plane for a small mutation"
 
+LOOKUP_RADIUS_DESC = (
+    "Choose this value according to the size of your scene. "
+    "The default value is suited for a room-sized scene. "
+    "Larger values can degrade rendering performance"
+)
+
+LOOKUP_MAXCOUNT_DESC = (
+    "How many photons to consider at most per lookup. Larger values can give "
+    "more accurate results, but may slow down rendering"
+)
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -181,18 +192,20 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                   description="Max. depth of photon paths")
     # Indirect cache
     indirect_enabled = BoolProperty(name="Indirect Cache", default=True)
-    indirect_maxsize = IntProperty(name="Max. Size", default=100000, min=1000,
-                                   description="Max. number of photons stored in indirect cache")
+    # indirect_maxsize = IntProperty(name="Max. Size", default=100000, min=1000,
+    #                                description="Max. number of photons stored in indirect cache")
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
-                                           description="Choose this value according to the size of your scene. "
-                                                       "Larger values can degrade rendering performance")
+                                           description=LOOKUP_RADIUS_DESC)
+    indirect_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=64, min=1,
+                                           description=LOOKUP_MAXCOUNT_DESC)
     # Caustic cache
     caustic_enabled = BoolProperty(name="Caustic Cache", default=False)
-    caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000,
-                                  description="Max. number of photons stored in caustic cache")
+    # caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000,
+    #                               description="Max. number of photons stored in caustic cache")
     caustic_lookup_radius = FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
-                                          description="Choose this value according to the size of your scene. "
-                                                      "Larger values can degrade rendering performance")
+                                          description=LOOKUP_RADIUS_DESC)
+    caustic_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=256, min=1,
+                                          description=LOOKUP_MAXCOUNT_DESC)
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),

@@ -9,8 +9,7 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        # PhotonGI is currently not supported by Bidir, so we hide the settings in this case
-        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine != "BIDIR"
+        return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
         self.layout.prop(context.scene.luxcore.config.photongi, "enabled", text="")
@@ -19,6 +18,9 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         layout = self.layout
         photongi = context.scene.luxcore.config.photongi
         layout.active = photongi.enabled
+
+        if context.scene.luxcore.config.engine == "BIDIR":
+            layout.label(text="Not supported by Bidir", icon=icons.INFO)
 
         if not photongi.indirect_enabled and not photongi.caustic_enabled:
             layout.label(text="All caches disabled", icon=icons.WARNING)
@@ -31,15 +33,17 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         col.prop(photongi, "indirect_enabled")
         row = col.row(align=True)
         row.active = photongi.indirect_enabled
-        row.prop(photongi, "indirect_maxsize")
+        # row.prop(photongi, "indirect_maxsize")
         row.prop(photongi, "indirect_lookup_radius")
+        row.prop(photongi, "indirect_lookup_maxcount")
 
         col = layout.column()
         col.prop(photongi, "caustic_enabled")
         row = col.row(align=True)
         row.active = photongi.caustic_enabled
-        row.prop(photongi, "caustic_maxsize")
+        # row.prop(photongi, "caustic_maxsize")
         row.prop(photongi, "caustic_lookup_radius")
+        row.prop(photongi, "caustic_lookup_maxcount")
 
         layout.prop(photongi, "debug")
         if (photongi.debug == "showindirect" and not photongi.indirect_enabled) or (
