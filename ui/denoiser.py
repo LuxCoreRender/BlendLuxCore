@@ -15,11 +15,6 @@ def draw(context, layout):
         if denoiser.type == "BCD":
             if config.sampler == "METROPOLIS" and not config.use_tiles:
                 col.label("Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
-            if config.engine == "BIDIR" and config.filter != "NONE":
-                col.label('Set filter to "None" to reduce blurriness', icon=icons.WARNING)
-        elif denoiser.type == "OIDN":
-            if config.engine == "BIDIR":
-                col.label("OIDN can't denoise Bidir", icon=icons.WARNING)
 
     sub = col.column()
     # The user should not be able to request a refresh when denoiser is disabled

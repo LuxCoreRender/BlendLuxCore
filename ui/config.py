@@ -97,9 +97,11 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
                 self.draw_metropolis_props(layout, config)
 
         # Filter settings
-        if denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE":
-            layout.label('Set filter to "None" to reduce blurriness when using the denoiser with Bidir', icon=icons.WARNING)
+        filter_forced_none = denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE"
+        if filter_forced_none:
+            layout.label('Filter set to "None" (required by denoiser)', icon=icons.INFO)
         row = layout.row()
+        row.active = not filter_forced_none
         row.prop(config, "filter")
         sub = row.row()
         sub.active = config.filter != "NONE"

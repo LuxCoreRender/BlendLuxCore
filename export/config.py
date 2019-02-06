@@ -29,15 +29,18 @@ def convert(exporter, scene, context=None, engine=None):
             # Final render
             luxcore_engine, sampler = _convert_final_engine(scene, definitions, config)
 
+        if luxcore_engine == "BIDIRCPU" and scene.luxcore.denoiser.enabled:
+            filter_type = "NONE"
+        else:
+            filter_type = config.filter
+
         # Common properties that should be set regardless of engine configuration.
-        # We create them as variables and set them here because then the IDE can warn us
-        # if we forget some in the if/else construct above.
         definitions.update({
             "renderengine.type": luxcore_engine,
             "sampler.type": sampler,
             "film.width": width,
             "film.height": height,
-            "film.filter.type": config.filter,
+            "film.filter.type": filter_type,
             "film.filter.width": config.filter_width,
             "lightstrategy.type": config.light_strategy,
             "scene.epsilon.min": config.min_epsilon,
