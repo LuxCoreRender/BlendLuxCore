@@ -29,19 +29,23 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         row.prop(photongi, "photon_maxcount")
         row.prop(photongi, "photon_maxdepth")
 
-        col = layout.column()
+        col = layout.column(align=True)
         col.prop(photongi, "indirect_enabled")
         row = col.row(align=True)
         row.active = photongi.indirect_enabled
-        # row.prop(photongi, "indirect_maxsize")
+        row.prop(photongi, "indirect_maxsize")
+        row = col.row(align=True)
+        row.active = photongi.indirect_enabled
         row.prop(photongi, "indirect_lookup_radius")
         row.prop(photongi, "indirect_lookup_maxcount")
 
-        col = layout.column()
+        col = layout.column(align=True)
         col.prop(photongi, "caustic_enabled")
         row = col.row(align=True)
         row.active = photongi.caustic_enabled
-        # row.prop(photongi, "caustic_maxsize")
+        row.prop(photongi, "caustic_maxsize")
+        row = col.row(align=True)
+        row.active = photongi.caustic_enabled
         row.prop(photongi, "caustic_lookup_radius")
         row.prop(photongi, "caustic_lookup_maxcount")
 

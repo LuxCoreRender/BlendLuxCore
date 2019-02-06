@@ -189,19 +189,19 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     photon_maxcount = IntProperty(name="Photon Count", default=100000, min=1000,
                                   description="Max. number of photons traced")
     photon_maxdepth = IntProperty(name="Photon Depth", default=4, min=3, max=64,
-                                  description="Max. depth of photon paths")
+                                  description="Max. depth of photon paths. At each bounce, a photon might be stored")
     # Indirect cache
     indirect_enabled = BoolProperty(name="Indirect Cache", default=True)
-    # indirect_maxsize = IntProperty(name="Max. Size", default=100000, min=1000,
-    #                                description="Max. number of photons stored in indirect cache")
+    indirect_maxsize = IntProperty(name="Max. Size", default=100000, min=1000,
+                                   description="Max. number of photons stored in indirect cache")
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
                                            description=LOOKUP_RADIUS_DESC)
     indirect_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=64, min=1,
                                            description=LOOKUP_MAXCOUNT_DESC)
     # Caustic cache
     caustic_enabled = BoolProperty(name="Caustic Cache", default=False)
-    # caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000,
-    #                               description="Max. number of photons stored in caustic cache")
+    caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000,
+                                  description="Max. number of photons stored in caustic cache")
     caustic_lookup_radius = FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
                                           description=LOOKUP_RADIUS_DESC)
     caustic_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=256, min=1,
