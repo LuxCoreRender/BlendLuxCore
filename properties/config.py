@@ -211,6 +211,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
         ("off", "Off (Final Render Mode)", "", 0),
         ("showindirect", "Show Indirect", "", 1),
         ("showcaustic", "Show Caustic", "", 2),
+        ("showdirect", "Show Direct", "", 3),
     ]
     debug = EnumProperty(name="Debug", items=debug_items, default="off",
                          description="Use this setting to directly see the photon distribution of a cache")
