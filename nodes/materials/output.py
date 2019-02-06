@@ -31,6 +31,9 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
                                      description=SHADOWCATCHER_DESC)
     id = IntProperty(name="Material ID", default=-1, min=-1, soft_max=32767,
                      description=MATERIAL_ID_DESC)
+    use_photongi = BoolProperty(name="Use PhotonGI Cache", default=True,
+                                description="Disable for mirror-like surfaces like "
+                                            "metal or glossy with low roughness")
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
@@ -54,6 +57,11 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
     def draw_buttons(self, context, layout):
         super().draw_buttons(context, layout)
+
+        # PhotonGI currently only works with Path engine
+        if (context.scene.luxcore.config.photongi.enabled
+                and context.scene.luxcore.config.engine == "PATH"):
+            layout.prop(self, "use_photongi")
 
         layout.prop(self, "id")
 
@@ -124,6 +132,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             # LuxCore only assigns a random ID if the ID is not set at all
             props.Set(pyluxcore.Property(prefix + "id", self.id))
         props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
+        props.Set(pyluxcore.Property(prefix + "photongi.enable", self.use_photongi))
 
     def _convert_volume(self, exporter, node_tree, props):
         if node_tree is None:
