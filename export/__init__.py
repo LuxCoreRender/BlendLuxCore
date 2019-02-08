@@ -438,8 +438,8 @@ class Exporter(object):
 
         if render_engine == "BIDIRCPU":
             path_depths = (
-                config_settings.bidir_light_maxdepth,
                 config_settings.bidir_path_maxdepth,
+                config_settings.bidir_light_maxdepth,
             )
         else:
             path_depths = (
