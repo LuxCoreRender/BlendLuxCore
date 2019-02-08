@@ -35,8 +35,8 @@ def draw(layout, context, halt):
         if config.tile.multipass_enable and halt.samples % samples_per_pass != 0:
             layout.label("Should be a multiple of %d" % samples_per_pass, icon=icons.WARNING)
 
-        if context.scene.luxcore.denoiser.enabled:
-            # Denoiser needs one warmup pass plus at least one sample collecting pass
+        if context.scene.luxcore.denoiser.enabled and context.scene.luxcore.denoiser.type == "BCD":
+            # BCD Denoiser needs one warmup pass plus at least one sample collecting pass
             min_samples = samples_per_pass * 2
         else:
             min_samples = samples_per_pass
