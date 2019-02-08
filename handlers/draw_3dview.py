@@ -19,7 +19,7 @@ def handler():
         radius = lamp.luxcore.radius
 
         if radius > 0:
-            x, y, z = obj.location
+            x, y, z = obj.matrix_world.to_translation()
             steps = 16
             # Optimization
             inv_steps = 1 / steps
