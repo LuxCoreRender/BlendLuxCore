@@ -336,8 +336,6 @@ def _convert_photongi_settings(scene, definitions, config):
     definitions.update({
         "path.photongi.photon.maxcount": photongi.photon_maxcount,
         "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
-        "path.photongi.direct.enabled": photongi.debug == "showdirect",
-        "path.photongi.direct.maxsize": 2 * photongi.indirect_maxsize / photongi.photon_maxdepth,
         "path.photongi.visibility.lookup.radius": visibility_radius,
 
         "path.photongi.indirect.enabled": photongi.indirect_enabled,

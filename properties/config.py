@@ -184,6 +184,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     enabled = BoolProperty(name="Enabled", default=False)
 
     # TODO: sensible stepping when dragging values
+    # TODO: multiply large values by 1000 behind the scenes?
 
     # Shared settings
     photon_maxcount = IntProperty(name="Photon Count", default=100000, min=1000,
@@ -211,7 +212,6 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
         ("off", "Off (Final Render Mode)", "", 0),
         ("showindirect", "Show Indirect", "", 1),
         ("showcaustic", "Show Caustic", "", 2),
-        ("showdirect", "Show Direct", "", 3),
     ]
     debug = EnumProperty(name="Debug", items=debug_items, default="off",
                          description="Use this setting to directly see the photon distribution of a cache")
