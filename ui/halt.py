@@ -47,7 +47,7 @@ def draw(layout, context, halt):
         if not config.tile.multipass_enable and halt.samples > min_samples:
             layout.label("Samples halt condition overriden by disabled multipass", icon=icons.INFO)
 
-    is_adaptive_sampler = config.engine == "PATH" and config.sampler in {"SOBOL", "RANDOM"}
+    is_adaptive_sampler = config.sampler in {"SOBOL", "RANDOM"}
     show_adaptive_sampling_props = halt.use_noise_thresh and is_adaptive_sampler
 
     if show_adaptive_sampling_props:
