@@ -31,7 +31,7 @@ before_install:
 install:
   # Compile LuxCore
   - cd LuxCore
-  - cmake -DBOOST_SEARCH_PATH=`pwd`/target-64-sse2 -DOPENIMAGEIO_ROOT_DIR=`pwd`/target-64-sse2 -DOPENIMAGEIO_ROOT_DIR=`pwd`/target-64-sse2 -DEMBREE_SEARCH_PATH=`pwd`/target-64-sse2 -DBLOSC_SEARCH_PATH=`pwd`/target-64-sse2 -DTBB_SEARCH_PATH=`pwd`/target-64-sse2 -DBlosc_USE_STATIC_LIBS=ON -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.4m.so -DPYTHON_INCLUDE_DIR=/usr/include/python3.4m .
+  - cmake -DBOOST_SEARCH_PATH=`pwd`/target-64-sse2 -DOPENIMAGEIO_ROOT_DIR=`pwd`/target-64-sse2 -DOPENIMAGEIO_ROOT_DIR=`pwd`/target-64-sse2 -DEMBREE_SEARCH_PATH=`pwd`/target-64-sse2 -DBLOSC_SEARCH_PATH=`pwd`/target-64-sse2 -DTBB_SEARCH_PATH=`pwd`/target-64-sse2 -DBlosc_USE_STATIC_LIBS=ON -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.4m.so -DPYTHON_INCLUDE_DIR=/usr/include/python3.4m -DOIDN_INCLUDE_PATH=`pwd`/target-64-sse2/include -DOIDN_LIBRARY=`pwd`/target-64-sse2/lib/libOpenImageDenoise.so .
   - make -j 2 pyluxcore
   - cd ..
 
