@@ -70,7 +70,7 @@ class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
         sub.label("Render Information")
         sub.prop(aovs, "irradiance")
         sub.prop(aovs, "raycount")
-        sub.prop(aovs, "convergence")
 
         # Supported by BIDIR
+        col.prop(aovs, "convergence")
         col.prop(aovs, "samplecount")
