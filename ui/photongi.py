@@ -31,13 +31,10 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
 
         col = layout.column(align=True)
         col.prop(photongi, "indirect_enabled")
-        row = col.row(align=True)
-        row.active = photongi.indirect_enabled
-        row.prop(photongi, "indirect_maxsize")
-        row = col.row(align=True)
-        row.active = photongi.indirect_enabled
-        row.prop(photongi, "indirect_lookup_radius")
-        row.prop(photongi, "indirect_lookup_maxcount")
+        col = col.column(align=True)
+        col.active = photongi.indirect_enabled
+        col.prop(photongi, "indirect_maxsize")
+        col.prop(photongi, "indirect_lookup_radius")
 
         col = layout.column(align=True)
         col.prop(photongi, "caustic_enabled")

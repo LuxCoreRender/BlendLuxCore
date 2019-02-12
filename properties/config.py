@@ -197,8 +197,6 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                    description="Max. number of photons stored in indirect cache")
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
                                            description=LOOKUP_RADIUS_DESC)
-    indirect_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=64, min=1,
-                                           description=LOOKUP_MAXCOUNT_DESC)
     # Caustic cache
     caustic_enabled = BoolProperty(name="Caustic Cache", default=False)
     caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000,
