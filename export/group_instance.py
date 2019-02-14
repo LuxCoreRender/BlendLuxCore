@@ -7,9 +7,14 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, props):
         assert duplicator.is_duplicator
         assert duplicator.dupli_type == "GROUP"
 
+        if not utils.is_obj_visible(duplicator, scene, context):
+            # Duplicator is not on a visible layer
+            return
+
         dupli_suffix = utils.get_luxcore_name(duplicator, context)
 
-        duplicator.dupli_list_create(scene)
+        mode = 'VIEWPORT' if context else 'RENDER'
+        duplicator.dupli_list_create(scene, settings=mode)
 
         for dupli_obj in duplicator.dupli_list:
             obj = dupli_obj.object
