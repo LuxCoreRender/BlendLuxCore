@@ -1,7 +1,30 @@
+import math
 from bpy.props import FloatVectorProperty, BoolProperty, EnumProperty, StringProperty
 from .. import LuxCoreNodeTexture
 from mathutils import Color
 from ...ui import icons
+
+
+def channel_linear_to_srgb(channel):
+    if channel < 0.0031308:
+        return 0.0 if channel < 0.0 else channel * 12.92
+    else:
+        return 1.055 * math.pow(channel, 1.0 / 2.4) - 0.055
+
+
+def linear_to_srgb(color):
+    return Color([channel_linear_to_srgb(c) for c in color])
+
+
+def channel_srgb_to_linear(channel):
+    if channel < 0.0404482362771082:
+        return 0.0 if channel < 0.0 else channel / 12.92
+    else:
+        return math.pow((channel + 0.055) / 1.055, 2.4)
+
+
+def srgb_to_linear(color):
+    return Color([channel_srgb_to_linear(c) for c in color])
 
 
 class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
@@ -14,13 +37,13 @@ class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
     In case anyone wants to implement a hex input:
     https://devtalk.blender.org/t/get-hex-gamma-corrected-color/2422
     """
-    bl_label = "Constant Value"
+    bl_label = "Constant Color"
 
     show_picker = BoolProperty(name="Color Picker", default=True)
     show_values = BoolProperty(name="Values", default=False)
 
     def update_value(self, context):
-        self["value_hsv"] = self.value.hsv
+        self["value_hsv"] = linear_to_srgb(self.value).hsv
 
     value = FloatVectorProperty(name="Color", description="A constant color",
                                 soft_min=0, soft_max=1, subtype="COLOR",
@@ -30,7 +53,7 @@ class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
     def update_value_hsv(self, context):
         col = Color()
         col.hsv = self.value_hsv
-        self["value"] = col
+        self["value"] = srgb_to_linear(col)
 
     # This is a helper property to offer an "HSV view" on the value property
     value_hsv = FloatVectorProperty(soft_min=0, soft_max=1, precision=3,
