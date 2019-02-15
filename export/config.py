@@ -337,6 +337,8 @@ def _convert_photongi_settings(scene, definitions, config):
         "path.photongi.indirect.enabled": photongi.indirect_enabled,
         "path.photongi.indirect.maxsize": photongi.indirect_maxsize,
         "path.photongi.indirect.lookup.radius": indirect_radius,
+        "path.photongi.indirect.glossinessusagethreshold": photongi.indirect_glossinessusagethreshold,
+        "path.photongi.indirect.usagethresholdscale": photongi.indirect_usagethresholdscale,
 
         "path.photongi.caustic.enabled": photongi.caustic_enabled,
         "path.photongi.caustic.maxsize": photongi.caustic_maxsize,

@@ -197,6 +197,12 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                    description="Max. number of photons stored in indirect cache")
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
                                            description=LOOKUP_RADIUS_DESC)
+    indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.2, min=0,
+                                                      description="Only if a material's roughness is higher than "
+                                                                  "this threshold, cache entries are stored on it")
+    indirect_usagethresholdscale = FloatProperty(name="Usage Threshold Scale", default=4, min=0,
+                                                 description="")  # TODO description
+
     # Caustic cache
     caustic_enabled = BoolProperty(name="Caustic Cache", default=False)
     caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000,
