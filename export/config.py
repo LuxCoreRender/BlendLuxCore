@@ -331,17 +331,17 @@ def _convert_photongi_settings(scene, definitions, config):
     caustic_radius = photongi.caustic_lookup_radius * worldscale
 
     definitions.update({
-        "path.photongi.photon.maxcount": photongi.photon_maxcount,
+        "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000),
         "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
 
         "path.photongi.indirect.enabled": photongi.indirect_enabled,
-        "path.photongi.indirect.maxsize": photongi.indirect_maxsize,
+        "path.photongi.indirect.maxsize": round(photongi.indirect_maxsize * 1000),
         "path.photongi.indirect.lookup.radius": indirect_radius,
         "path.photongi.indirect.glossinessusagethreshold": photongi.indirect_glossinessusagethreshold,
         "path.photongi.indirect.usagethresholdscale": photongi.indirect_usagethresholdscale,
 
         "path.photongi.caustic.enabled": photongi.caustic_enabled,
-        "path.photongi.caustic.maxsize": photongi.caustic_maxsize,
+        "path.photongi.caustic.maxsize": round(photongi.caustic_maxsize * 1000),
         "path.photongi.caustic.lookup.radius": caustic_radius,
         "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
     })

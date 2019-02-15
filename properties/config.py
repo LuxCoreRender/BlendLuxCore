@@ -187,14 +187,14 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     # TODO: multiply large values by 1000 behind the scenes?
 
     # Shared settings
-    photon_maxcount = IntProperty(name="Photon Count", default=100000, min=1000,
-                                  description="Max. number of photons traced")
+    photon_maxcount = FloatProperty(name="Photon Count", default=100, min=1, precision=0, step=100,
+                                    description="Max. number of photons traced (value in thousands)")
     photon_maxdepth = IntProperty(name="Photon Depth", default=4, min=3, max=64,
                                   description="Max. depth of photon paths. At each bounce, a photon might be stored")
     # Indirect cache
     indirect_enabled = BoolProperty(name="Indirect Cache", default=True)
-    indirect_maxsize = IntProperty(name="Max. Size", default=100000, min=1000,
-                                   description="Max. number of photons stored in indirect cache")
+    indirect_maxsize = FloatProperty(name="Max. Size", default=100, min=1, precision=0, step=100,
+                                     description="Max. number of photons stored in indirect cache (value in thousands)")
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
                                            description=LOOKUP_RADIUS_DESC)
     indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.2, min=0,
@@ -205,8 +205,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
 
     # Caustic cache
     caustic_enabled = BoolProperty(name="Caustic Cache", default=False)
-    caustic_maxsize = IntProperty(name="Max. Size", default=200000, min=1000,
-                                  description="Max. number of photons stored in caustic cache")
+    caustic_maxsize = FloatProperty(name="Max. Size", default=200, min=1, precision=0, step=100,
+                                    description="Max. number of photons stored in caustic cache (value in thousands)")
     caustic_lookup_radius = FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
                                           description=LOOKUP_RADIUS_DESC)
     caustic_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=256, min=1,
