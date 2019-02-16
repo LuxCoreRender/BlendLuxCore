@@ -35,6 +35,7 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         col.active = photongi.indirect_enabled
         col.prop(photongi, "indirect_maxsize")
         col.prop(photongi, "indirect_lookup_radius")
+        col.prop(photongi, "indirect_normalangle")
         col.prop(photongi, "indirect_usagethresholdscale")
         col.prop(photongi, "indirect_glossinessusagethreshold")
 
@@ -47,6 +48,9 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         row.active = photongi.caustic_enabled
         row.prop(photongi, "caustic_lookup_radius")
         row.prop(photongi, "caustic_lookup_maxcount")
+        row = col.row(align=True)
+        row.active = photongi.caustic_enabled
+        row.prop(photongi, "caustic_normalangle")
 
         layout.prop(photongi, "debug")
         if (photongi.debug == "showindirect" and not photongi.indirect_enabled) or (

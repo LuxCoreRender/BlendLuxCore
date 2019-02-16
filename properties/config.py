@@ -197,6 +197,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                      description="Max. number of photons stored in indirect cache (value in thousands)")
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
                                            description=LOOKUP_RADIUS_DESC)
+    indirect_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
+                                         subtype="ANGLE")
     indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.2, min=0,
                                                       description="Only if a material's roughness is higher than "
                                                                   "this threshold, cache entries are stored on it")
@@ -211,6 +213,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                           description=LOOKUP_RADIUS_DESC)
     caustic_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=256, min=1,
                                           description=LOOKUP_MAXCOUNT_DESC)
+    caustic_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
+                                        subtype="ANGLE")
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),
