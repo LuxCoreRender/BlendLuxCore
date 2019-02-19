@@ -211,7 +211,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                     description="Max. number of photons stored in caustic cache (value in thousands)")
     caustic_lookup_radius = FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
                                           description=LOOKUP_RADIUS_DESC)
-    caustic_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=256, min=1,
+    caustic_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=128, min=1,
                                           description=LOOKUP_MAXCOUNT_DESC)
     caustic_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
                                         subtype="ANGLE")
