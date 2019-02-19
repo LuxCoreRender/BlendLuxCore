@@ -1,7 +1,11 @@
 from bgl import *  # Nah I'm not typing them all out
 import math
+import os
+import numpy
+import subprocess
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import pfm
 
 
 def draw_quad(offset_x, offset_y, width, height):
@@ -56,24 +60,60 @@ class FrameBuffer(object):
         glGenTextures(1, self.texture)
         self.texture_id = self.texture[0]
 
+        # Denoiser
+        current_dir = os.path.dirname(os.path.realpath(__file__))
+        framebuffer_id = str(id(self))
+        self._noisy_file_path = os.path.join(current_dir, framebuffer_id + "_noisy.pfm")
+        self._denoised_file_path = os.path.join(current_dir, framebuffer_id + "_denoised.pfm")
+        self._denoiser_path = os.path.join(os.path.dirname(current_dir), "bin", "denoise.exe")
+        self._denoiser_process = None
+
+    def __del__(self):
+        # TODO make sure this is called, currently it's not reliable
+        print("Cleaning up denoiser files")
+        if os.path.exists(self._noisy_file_path):
+            os.remove(self._noisy_file_path)
+        if os.path.exists(self._denoised_file_path):
+            os.remove(self._denoised_file_path)
+
     def update(self, luxcore_session, context):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
+        self._update_texture(context)
 
-        # update texture
-        glBindTexture(GL_TEXTURE_2D, self.texture_id)
-        if self._transparent:
-            gl_format = GL_RGBA
-            internal_format = GL_RGBA32F
-        else:
-            gl_format = GL_RGB
-            internal_format = GL_RGB32F
-        glTexImage2D(GL_TEXTURE_2D, 0, internal_format, self._width, self._height,
-                     0, gl_format, GL_FLOAT, self.buffer)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-        mag_filter = GL_NEAREST if context.scene.luxcore.viewport.mag_filter == "NEAREST" else GL_LINEAR
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter)
+    def start_denoiser(self, luxcore_session):
+        # TODO albedo and normal
+        # Bufferdepth always 3 because denoiser can't handle alpha anyway (maybe copy over alpha channel in the future)
+        np_buffer = numpy.zeros((self._height, self._width, 3), dtype="float32")
+        luxcore_session.GetFilm().GetOutputFloat(pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, np_buffer)
+        # TODO use tempfile.SpooledTemporaryFile to avoid saving the file to disk (for output as well, if possible)
+        with open(self._noisy_file_path, "wb") as f:
+            # TODO handle exceptions (e.g. no write permissions)
+            utils.pfm.save_pfm(f, np_buffer)
+        args = [self._denoiser_path, "-hdr", self._noisy_file_path, "-o", self._denoised_file_path]
+        self._denoiser_process = subprocess.Popen(args)
+        return True
+
+    def is_denoiser_active(self):
+        return self._denoiser_process is not None
+
+    def is_denoiser_done(self):
+        return self._denoiser_process.poll() is not None
+
+    def load_denoiser_result(self, context):
+        self._denoiser_process = None
+        with open(self._denoised_file_path, "rb") as f:
+            # TODO handle exceptions
+            data, scale = utils.pfm.load_pfm(f, as_flat_list=True)
+        self.buffer[:] = data
+        self._update_texture(context)
+
+    def reset_denoiser(self):
+        """ Denoiser was not started yet or the user has triggered an update """
+        if self._denoiser_process:
+            print("killing denoiser")
+            self._denoiser_process.terminate()
+            self._denoiser_process.communicate()
+            self._denoiser_process = None
 
     def draw(self, region_size, view_camera_offset, view_camera_zoom, engine, context):
         if self._transparent:
@@ -105,6 +145,22 @@ class FrameBuffer(object):
 
         if self._transparent:
             glDisable(GL_BLEND)
+
+    def _update_texture(self, context):
+        glBindTexture(GL_TEXTURE_2D, self.texture_id)
+        if self._transparent:
+            gl_format = GL_RGBA
+            internal_format = GL_RGBA32F
+        else:
+            gl_format = GL_RGB
+            internal_format = GL_RGB32F
+        glTexImage2D(GL_TEXTURE_2D, 0, internal_format, self._width, self._height,
+                     0, gl_format, GL_FLOAT, self.buffer)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        mag_filter = GL_NEAREST if context.scene.luxcore.viewport.mag_filter == "NEAREST" else GL_LINEAR
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter)
 
     def _calc_offset(self, context, region_size, view_camera_offset, zoom):
         render = context.scene.render

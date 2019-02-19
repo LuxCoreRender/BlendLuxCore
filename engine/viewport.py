@@ -71,17 +71,18 @@ def view_draw(engine, context):
         engine.framebuffer = FrameBuffer(context)
 
     # Update and draw the framebuffer
+    framebuffer = engine.framebuffer
     try:
         engine.session.UpdateStats()
     except RuntimeError as error:
         print("[Engine/Viewport] Error during UpdateStats():", error)
     engine.session.WaitNewFrame()
-    engine.framebuffer.update(engine.session, context)
+    framebuffer.update(engine.session, context)
 
     region_size = context.region.width, context.region.height
     view_camera_offset = list(context.region_data.view_camera_offset)
     view_camera_zoom = context.region_data.view_camera_zoom
-    engine.framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
+    framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
 
     # Check if we need to pause the viewport render
     # (note: the LuxCore stat "stats.renderengine.time" is not reliable here)
@@ -94,8 +95,20 @@ def view_draw(engine, context):
             print("[Engine/Viewport] Pausing session")
             engine.session.Pause()
         status_message = "(Paused)"
+
+        if framebuffer.is_denoiser_active():
+            if framebuffer.is_denoiser_done():
+                status_message = "(Paused, Denoiser Done)"
+                framebuffer.load_denoiser_result(context)
+                framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
+            else:
+                status_message = "(Paused, Denoiser Working ...)"
+                engine.tag_redraw()
+        elif framebuffer.start_denoiser(engine.session):
+            engine.tag_redraw()
     else:
         # Not in pause yet, keep drawing
+        framebuffer.reset_denoiser()
         engine.tag_redraw()
 
     # Show formatted statistics in Blender UI
