@@ -47,3 +47,5 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
                                          "you need to preview them in the viewport render. If disabled, "
                                          "the RT Path engine is used in the viewport, which is optimized "
                                          "for quick feedback but can't handle complex light paths")
+
+    denoise = BoolProperty(name="Denoise", default=True)

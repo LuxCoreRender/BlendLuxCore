@@ -104,7 +104,7 @@ def view_draw(engine, context):
             else:
                 status_message = "(Paused, Denoiser Working ...)"
                 engine.tag_redraw()
-        elif framebuffer.start_denoiser(engine.session):
+        elif context.scene.luxcore.viewport.denoise and framebuffer.start_denoiser(engine.session):
             engine.tag_redraw()
     else:
         # Not in pause yet, keep drawing

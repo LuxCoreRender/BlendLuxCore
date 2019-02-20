@@ -64,6 +64,8 @@ class FrameBuffer(object):
         current_dir = os.path.dirname(os.path.realpath(__file__))
         framebuffer_id = str(id(self))
         self._noisy_file_path = os.path.join(current_dir, framebuffer_id + "_noisy.pfm")
+        self._albedo_file_path = os.path.join(current_dir, framebuffer_id + "_albedo.pfm")
+        self._normal_file_path = os.path.join(current_dir, framebuffer_id + "_normal.pfm")
         self._denoised_file_path = os.path.join(current_dir, framebuffer_id + "_denoised.pfm")
         self._denoiser_path = os.path.join(os.path.dirname(current_dir), "bin", "denoise.exe")
         self._denoiser_process = None
@@ -80,16 +82,27 @@ class FrameBuffer(object):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
         self._update_texture(context)
 
-    def start_denoiser(self, luxcore_session):
-        # TODO albedo and normal
+    def _save_denoiser_AOV(self, luxcore_session, film_output_type, path):
         # Bufferdepth always 3 because denoiser can't handle alpha anyway (maybe copy over alpha channel in the future)
         np_buffer = numpy.zeros((self._height, self._width, 3), dtype="float32")
-        luxcore_session.GetFilm().GetOutputFloat(pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, np_buffer)
+        luxcore_session.GetFilm().GetOutputFloat(film_output_type, np_buffer)
         # TODO use tempfile.SpooledTemporaryFile to avoid saving the file to disk (for output as well, if possible)
-        with open(self._noisy_file_path, "wb") as f:
+        with open(path, "wb") as f:
             # TODO handle exceptions (e.g. no write permissions)
             utils.pfm.save_pfm(f, np_buffer)
-        args = [self._denoiser_path, "-hdr", self._noisy_file_path, "-o", self._denoised_file_path]
+
+    def start_denoiser(self, luxcore_session):
+        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, self._noisy_file_path)
+        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.ALBEDO, self._albedo_file_path)
+        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.AVG_SHADING_NORMAL, self._normal_file_path)
+
+        args = [
+            self._denoiser_path,
+            "-hdr", self._noisy_file_path,
+            "-alb", self._albedo_file_path,
+            "-nrm", self._normal_file_path,
+            "-o", self._denoised_file_path,
+        ]
         self._denoiser_process = subprocess.Popen(args)
         return True
 

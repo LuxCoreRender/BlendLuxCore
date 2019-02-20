@@ -31,6 +31,8 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         sub.active = viewport.pixel_size != "1"
         sub.prop(viewport, "mag_filter")
 
+        layout.prop(viewport, "denoise")
+
         luxcore_engine = context.scene.luxcore.config.engine
 
         if luxcore_engine == "BIDIR":

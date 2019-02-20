@@ -60,6 +60,8 @@ def convert(exporter, scene, context=None, engine=None):
             _add_output(definitions, "RGBA_IMAGEPIPELINE", pipeline_index)
 
         pipeline_index += 1
+        add_OIDN_AOVs = ((final and denoiser.enabled and denoiser.type == "OIDN")
+                         or scene.luxcore.viewport.denoise)
 
         # AOVs
         if (final and aovs.alpha) or use_transparent_film or use_backgroundimage(context, scene):
@@ -68,9 +70,9 @@ def convert(exporter, scene, context=None, engine=None):
             _add_output(definitions, "DEPTH")
         if (final and aovs.irradiance) or pipeline.contour_lines.enabled:
             _add_output(definitions, "IRRADIANCE")
-        if (final and aovs.albedo) or (denoiser.enabled and denoiser.type == "OIDN"):
+        if (final and aovs.albedo) or add_OIDN_AOVs:
             _add_output(definitions, "ALBEDO")
-        if (final and aovs.avg_shading_normal) or (denoiser.enabled and denoiser.type == "OIDN"):
+        if (final and aovs.avg_shading_normal) or add_OIDN_AOVs:
             _add_output(definitions, "AVG_SHADING_NORMAL")
 
         pipeline_props = pyluxcore.Properties()
