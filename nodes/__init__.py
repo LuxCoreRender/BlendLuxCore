@@ -182,7 +182,6 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
     # Common properties that every derived class needs to add
     # priority (IntProperty)
-    # emission_id (IntProperty) (or maybe PointerProperty to light group later)
     # color_depth (FloatProperty) - for implicit colordepth texture
     # lightgroup (StringProperty)
 
@@ -203,6 +202,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
     def export_common_inputs(self, exporter, props, definitions):
         """ Call from derived classes (in export method) """
         definitions["ior"] = self.inputs["IOR"].export(exporter, props)
+        definitions["priority"] = self.priority
 
         abs_col = self.inputs["Absorption"].export(exporter, props)
         worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
