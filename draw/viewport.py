@@ -3,6 +3,7 @@ import math
 import os
 import numpy
 import subprocess
+import tempfile
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import pfm
@@ -27,6 +28,33 @@ def draw_quad(offset_x, offset_y, width, height):
     glVertex2f(offset_x, offset_y + height)
 
     glEnd()
+
+
+class TempfileManager:
+    _paths = {}
+
+    @classmethod
+    def track(cls, key, path):
+        try:
+            cls._paths[key].add(path)
+        except KeyError:
+            cls._paths[key] = {path}
+
+    @classmethod
+    def delete_files(cls, key):
+        if key not in cls._paths:
+            return
+        for path in cls._paths[key]:
+            if os.path.exists(path):
+                os.remove(path)
+
+    @classmethod
+    def cleanup(cls):
+        for path_set in cls._paths.values():
+            for path in path_set:
+                if os.path.exists(path):
+                    os.remove(path)
+        cls._paths.clear()
 
 
 class FrameBuffer(object):
@@ -61,50 +89,44 @@ class FrameBuffer(object):
         self.texture_id = self.texture[0]
 
         # Denoiser
+        self._noisy_file_path = self._make_denoiser_filepath("noisy")
+        self._albedo_file_path = self._make_denoiser_filepath("albedo")
+        self._normal_file_path = self._make_denoiser_filepath("normal")
+        self._denoised_file_path = self._make_denoiser_filepath("denoised")
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        framebuffer_id = str(id(self))
-        self._noisy_file_path = os.path.join(current_dir, framebuffer_id + "_noisy.pfm")
-        self._albedo_file_path = os.path.join(current_dir, framebuffer_id + "_albedo.pfm")
-        self._normal_file_path = os.path.join(current_dir, framebuffer_id + "_normal.pfm")
-        self._denoised_file_path = os.path.join(current_dir, framebuffer_id + "_denoised.pfm")
         self._denoiser_path = os.path.join(os.path.dirname(current_dir), "bin", "denoise.exe")
         self._denoiser_process = None
 
-    def __del__(self):
-        # TODO make sure this is called, currently it's not reliable
-        print("Cleaning up denoiser files")
-        if os.path.exists(self._noisy_file_path):
-            os.remove(self._noisy_file_path)
-        if os.path.exists(self._denoised_file_path):
-            os.remove(self._denoised_file_path)
-
-    def update(self, luxcore_session, context):
-        luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
-        self._update_texture(context)
+    def _make_denoiser_filepath(self, name):
+        return os.path.join(tempfile.gettempdir(), str(id(self)) + "_" + name + ".pfm")
 
     def _save_denoiser_AOV(self, luxcore_session, film_output_type, path):
         # Bufferdepth always 3 because denoiser can't handle alpha anyway (maybe copy over alpha channel in the future)
         np_buffer = numpy.zeros((self._height, self._width, 3), dtype="float32")
         luxcore_session.GetFilm().GetOutputFloat(film_output_type, np_buffer)
-        # TODO use tempfile.SpooledTemporaryFile to avoid saving the file to disk (for output as well, if possible)
-        with open(path, "wb") as f:
-            # TODO handle exceptions (e.g. no write permissions)
+        TempfileManager.track(id(self), path)
+        with open(path, "w+b") as f:
             utils.pfm.save_pfm(f, np_buffer)
 
     def start_denoiser(self, luxcore_session):
-        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, self._noisy_file_path)
-        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.ALBEDO, self._albedo_file_path)
-        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.AVG_SHADING_NORMAL, self._normal_file_path)
+        try:
+            self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, self._noisy_file_path)
+            self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.ALBEDO, self._albedo_file_path)
+            self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.AVG_SHADING_NORMAL, self._normal_file_path)
+            TempfileManager.track(id(self), self._denoised_file_path)
 
-        args = [
-            self._denoiser_path,
-            "-hdr", self._noisy_file_path,
-            "-alb", self._albedo_file_path,
-            "-nrm", self._normal_file_path,
-            "-o", self._denoised_file_path,
-        ]
-        self._denoiser_process = subprocess.Popen(args)
-        return True
+            args = [
+                self._denoiser_path,
+                "-hdr", self._noisy_file_path,
+                "-alb", self._albedo_file_path,
+                "-nrm", self._normal_file_path,
+                "-o", self._denoised_file_path,
+            ]
+            self._denoiser_process = subprocess.Popen(args)
+            return True
+        except Exception as error:
+            print("Could not start denoiser:", error)
+            return False
 
     def is_denoiser_active(self):
         return self._denoiser_process is not None
@@ -115,8 +137,8 @@ class FrameBuffer(object):
     def load_denoiser_result(self, context):
         self._denoiser_process = None
         with open(self._denoised_file_path, "rb") as f:
-            # TODO handle exceptions
             data, scale = utils.pfm.load_pfm(f, as_flat_list=True)
+        TempfileManager.delete_files(id(self))
         self.buffer[:] = data
         self._update_texture(context)
 
@@ -127,6 +149,10 @@ class FrameBuffer(object):
             self._denoiser_process.terminate()
             self._denoiser_process.communicate()
             self._denoiser_process = None
+
+    def update(self, luxcore_session, context):
+        luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
+        self._update_texture(context)
 
     def draw(self, region_size, view_camera_offset, view_camera_zoom, engine, context):
         if self._transparent:

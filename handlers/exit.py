@@ -1,9 +1,11 @@
 from ..export.image import ImageExporter
+from ..draw.viewport import TempfileManager
 from ..bin import pyluxcore
 
 
 def handler():
     ImageExporter.cleanup()
+    TempfileManager.cleanup()
 
     # Workaround for a bug in LuxCore:
     # We have to uninstall the log handler to prevent a crash.
