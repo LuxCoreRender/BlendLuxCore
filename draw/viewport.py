@@ -1,6 +1,7 @@
 from bgl import *  # Nah I'm not typing them all out
 import math
 import os
+import platform
 import numpy
 import subprocess
 import tempfile
@@ -94,7 +95,9 @@ class FrameBuffer(object):
         self._normal_file_path = self._make_denoiser_filepath("normal")
         self._denoised_file_path = self._make_denoiser_filepath("denoised")
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        self._denoiser_path = os.path.join(os.path.dirname(current_dir), "bin", "denoise.exe")
+        self._denoiser_path = os.path.join(os.path.dirname(current_dir), "bin", "denoise")
+        if platform.system() == "Windows":
+            self._denoiser_path += ".exe"
         self._denoiser_process = None
 
     def _make_denoiser_filepath(self, name):
