@@ -134,17 +134,16 @@ def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props
             lux_object_name = luxcore_name + "%03d" % material_index
 
         _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_mat_name, obj_transform,
-                               obj, scene, context, duplicator)
+                               obj, mat, scene, context, duplicator)
 
 
-def _handle_pointiness(props, lux_shape_name, obj):
+def _handle_pointiness(props, lux_shape_name, mat):
     use_pointiness = False
 
-    for mat_slot in obj.material_slots:
-        mat = mat_slot.material
-        if mat and mat.luxcore.node_tree:
-            # Material with nodetree, check the nodes for pointiness node
-            use_pointiness = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")
+    if mat and mat.luxcore.node_tree:
+        # Material with nodetree, check the nodes for pointiness node
+        # Note: it would be more correct to check if the pointiness node is actually connected and used
+        use_pointiness = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")
 
     if use_pointiness:
         pointiness_shape = lux_shape_name + "_pointiness"
@@ -157,8 +156,8 @@ def _handle_pointiness(props, lux_shape_name, obj):
 
 
 def _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_material_name, obj_transform,
-                           obj, scene, context, duplicator):
-    lux_shape_name = _handle_pointiness(props, lux_shape_name, obj)
+                           obj, mat, scene, context, duplicator):
+    lux_shape_name = _handle_pointiness(props, lux_shape_name, mat)
     prefix = "scene.objects." + lux_object_name + "."
 
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
