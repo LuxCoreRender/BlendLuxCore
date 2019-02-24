@@ -32,6 +32,16 @@ MAC_FILES = [
     "pyluxcoretools.zip", "libomp.dylib",
 ]
 
+OIDN_WIN = "oidn-windows.zip"
+OIDN_LINUX = "oidn-linux.tar.gz"
+OIDN_MAC = "oidn-macos.tar.gz"
+
+OIDN_urls = {
+    OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.8.1/oidn-0.8.1.x64.vc14.windows.zip",
+    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.8.1/oidn-0.8.1.x86_64.linux.tar.gz",
+    OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.8.1/oidn-0.8.1.x86_64.macos.tar.gz",
+}
+
 
 def print_divider():
     print("=" * 60)
@@ -44,7 +54,76 @@ def build_name(prefix, version_string, suffix):
 def build_zip_name(version_string, suffix):
     return "BlendLuxCore-" + version_string + suffix.split(".")[0]
 
-def extract_tar_files(prefix, platform_suffixes, file_names, version_string):
+
+def extract_files_from_tar(tar_path, files_to_extract, destination):
+    # have to use a temp dir (weird extract behaviour)
+    temp_dir = os.path.join(script_dir, "temp")
+    # Make sure we don't delete someone's beloved temp folder later
+    while os.path.exists(temp_dir):
+        temp_dir += "_"
+    os.mkdir(temp_dir)
+
+    print("Reading tar file:", tar_path)
+
+    tar_type = os.path.splitext(tar_path)[1][1:]
+    with tarfile.open(tar_path, "r:" + tar_type) as tar:
+        for member in tar.getmembers():
+            basename = os.path.basename(member.name)
+            if basename not in files_to_extract:
+                continue
+
+            # have to use a temp dir (weird extract behaviour)
+            print('Extracting "%s" to "%s"' % (basename, temp_dir))
+            tar.extract(member, path=temp_dir)
+            src = os.path.join(temp_dir, member.name)
+
+            # move to real target directory
+            dst = os.path.join(destination, basename)
+            print('Moving "%s" to "%s"' % (src, dst))
+            if not os.path.isfile(dst):
+                shutil.move(src, dst)
+
+    shutil.rmtree(temp_dir)
+
+
+def extract_files_from_zip(zip_path, files_to_extract, destination):
+    # have to use a temp dir (weird extract behaviour)
+    temp_dir = os.path.join(script_dir, "temp")
+    # Make sure we don't delete someone's beloved temp folder later
+    while os.path.exists(temp_dir):
+        temp_dir += "_"
+    os.mkdir(temp_dir)
+
+    print("Reading zip file:", zip_path)
+
+    with zipfile.ZipFile(zip_path, "r") as zip:
+        for member in zip.namelist():
+            basename = os.path.basename(member)  # in zip case, member is just a string
+            if basename not in files_to_extract:
+                continue
+
+            # have to use a temp dir (weird extract behaviour)
+            print('Extracting "%s" to "%s"' % (basename, temp_dir))
+            src = zip.extract(member, path=temp_dir)
+
+            # move to real target directory
+            dst = os.path.join(destination, basename)
+            print('Moving "%s" to "%s"' % (src, dst))
+            shutil.move(src, dst)
+
+    shutil.rmtree(temp_dir)
+
+
+def extract_files_from_archive(archive_path, files_to_extract, destination):
+    if archive_path.endswith(".zip"):
+        extract_files_from_zip(archive_path, files_to_extract, destination)
+    elif archive_path.endswith(".tar.gz") or archive_path.endswith(".tar.bz2"):
+        extract_files_from_tar(archive_path, files_to_extract, destination)
+    else:
+        raise Exception("Unknown archive type:", archive_path)
+
+
+def extract_luxcore_tar(prefix, platform_suffixes, file_names, version_string):
     for suffix in platform_suffixes:
         dst_name = build_zip_name(version_string, suffix)
         destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
@@ -54,36 +133,22 @@ def extract_tar_files(prefix, platform_suffixes, file_names, version_string):
         print("Extracting tar to", dst_name)
         print_divider()
 
-        # have to use a temp dir (weird extract behaviour)
-        temp_dir = os.path.join(script_dir, "temp")
-        # Make sure we don't delete someone's beloved temp folder later
-        while os.path.exists(temp_dir):
-            temp_dir += "_"
-        os.mkdir(temp_dir)
-
         tar_name = build_name(prefix, version_string, suffix)
-        print("Reading tar file:", tar_name)
-        print("(This will take a while)")
+        extract_files_from_archive(tar_name, file_names, destination)
 
-        tar_type = os.path.splitext(tar_name)[1][1:]
-        with tarfile.open(tar_name, "r:" + tar_type) as tar:
-            for member in tar.getmembers():
-                basename = os.path.basename(member.name)
-                if basename not in file_names:
-                    continue
 
-                # have to use a temp dir (weird extract behaviour)
-                print('Extracting "%s" to "%s"' % (basename, temp_dir))
-                tar.extract(member, path=temp_dir)
-                src = os.path.join(temp_dir, member.name)
+def extract_luxcore_zip(prefix, platform_suffixes, file_names, version_string):
+    for suffix in platform_suffixes:
+        dst_name = build_zip_name(version_string, suffix)
+        destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
 
-                # move to real target directory
-                dst = os.path.join(destination, basename)
-                print('Moving "%s" to "%s"' % (src, dst))
-                if not os.path.isfile(dst):
-                    shutil.move(src, dst)
+        print()
+        print_divider()
+        print("Extracting zip to", dst_name)
+        print_divider()
 
-        shutil.rmtree(temp_dir)
+        zip_name = build_name(prefix, version_string, suffix)
+        extract_files_from_archive(zip_name, file_names, destination)
 
 
 def main():
@@ -180,58 +245,54 @@ def main():
     for suffix in suffixes:
         name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, name, "BlendLuxCore")
+        print('Creating "%s"' % destination)
 
         if os.path.exists(destination):
-            print('Destination already exists, deleting it: "%s"' % destination)
+            print("(Already exists, cleaning it)")
             shutil.rmtree(destination)
 
         shutil.copytree(repo_path, destination)
 
+    print()
+    print_divider()
+    print("Downloading OIDN binaries")
+    print_divider()
+
+    for name, url in OIDN_urls.items():
+        # Check if file already downloaded
+        if name in os.listdir(script_dir):
+            print('File already downloaded: "%s"' % name)
+        else:
+            destination = os.path.join(script_dir, name)
+            try:
+                urllib.request.urlretrieve(url, destination)
+            except urllib.error.HTTPError as error:
+                print(error)
+
+    print("Extracting OIDN standalone denoiser")
+
+    for suffix in suffixes:
+        name = build_zip_name(args.version_string, suffix)
+        destination = os.path.join(script_dir, name, "BlendLuxCore", "bin")
+
+        if "win64" in suffix:
+            extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
+        elif "linux64" in suffix:
+            extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
+        elif "mac64" in suffix:
+            extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
+
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if suffix.startswith("-linux")]
-    extract_tar_files(prefix, linux_suffixes, LINUX_FILES, args.version_string)
+    extract_luxcore_tar(prefix, linux_suffixes, LINUX_FILES, args.version_string)
 
     # Mac archives are tar.gz
     mac_suffixes = [suffix for suffix in suffixes if suffix.startswith("-mac")]
-    extract_tar_files(prefix, mac_suffixes, MAC_FILES, args.version_string)
+    extract_luxcore_tar(prefix, mac_suffixes, MAC_FILES, args.version_string)
 
     # Windows archives are zip
     windows_suffixes = [suffix for suffix in suffixes if suffix.startswith("-win")]
-    for suffix in windows_suffixes:
-        dst_name = build_zip_name(args.version_string, suffix)
-        destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
-
-        print()
-        print_divider()
-        print("Extracting zip to", dst_name)
-        print_divider()
-
-        # have to use a temp dir (weird extract behaviour)
-        temp_dir = os.path.join(script_dir, "temp")
-        # Make sure we don't delete someone's beloved temp folder later
-        while os.path.exists(temp_dir):
-            temp_dir += "_"
-        os.mkdir(temp_dir)
-
-        zip_name = build_name(prefix, args.version_string, suffix)
-        print("Reading zip file:", zip_name)
-
-        with zipfile.ZipFile(zip_name, "r") as zip:
-            for member in zip.namelist():
-                basename = os.path.basename(member)  # in zip case, member is just a string
-                if basename not in WINDOWS_FILES:
-                    continue
-
-                # have to use a temp dir (weird extract behaviour)
-                print('Extracting "%s" to "%s"' % (basename, temp_dir))
-                src = zip.extract(member, path=temp_dir)
-
-                # move to real target directory
-                dst = os.path.join(destination, basename)
-                print('Moving "%s" to "%s"' % (src, dst))
-                shutil.move(src, dst)
-
-        shutil.rmtree(temp_dir)
+    extract_luxcore_zip(prefix, windows_suffixes, WINDOWS_FILES, args.version_string)
 
     # Package everything
     print()
