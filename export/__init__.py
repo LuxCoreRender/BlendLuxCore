@@ -40,17 +40,6 @@ class Change:
         return s if changes else "NONE"
 
 
-def find_updated_objects(scene):
-    updated_datablocks = set()
-
-    if bpy.data.objects.is_updated:
-        for obj in scene.objects:
-            if obj.is_updated_data:
-                updated_datablocks.add(obj)
-
-    return updated_datablocks
-
-
 class Exporter(object):
     def __init__(self, blender_scene, stats=None):
         self.scene = blender_scene
@@ -85,6 +74,7 @@ class Exporter(object):
         self.lightgroup_cache = set()
 
         self.objs_updated_by_export = set()
+        self.mats_updated_by_export = set()
 
     def create_session(self, context=None, engine=None):
         # Notes:
@@ -97,7 +87,8 @@ class Exporter(object):
         stats = self.stats
         if stats:
             stats.reset()
-        updated_objs_pre = find_updated_objects(scene)
+        updated_objs_pre = self.object_cache.diff(scene)
+        updated_mats_pre = self.material_cache.diff()
 
         # Scene
         luxcore_scene = pyluxcore.Scene()
@@ -184,8 +175,8 @@ class Exporter(object):
 
         # Check which objects were flagged for update by our own export,
         # these should not be considered for the next viewport update.
-        updated_objs_post = find_updated_objects(scene)
-        self.objs_updated_by_export = updated_objs_post - updated_objs_pre
+        self.objs_updated_by_export = self.object_cache.diff(scene) - updated_objs_pre
+        self.mats_updated_by_export = self.material_cache.diff() - updated_mats_pre
 
         # Regularly check if we should abort the export (important in heavy scenes)
         if engine and engine.test_break():
@@ -225,7 +216,7 @@ class Exporter(object):
             if self.object_cache.diff(scene, self.objs_updated_by_export):
                 changes |= Change.OBJECT
 
-            if self.material_cache.diff():
+            if self.material_cache.diff(self.mats_updated_by_export):
                 changes |= Change.MATERIAL
 
             if self.visibility_cache.diff(context):
@@ -289,6 +280,7 @@ class Exporter(object):
             self.update_session(changes, session)
 
         self.objs_updated_by_export.clear()
+        self.mats_updated_by_export.clear()
 
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()

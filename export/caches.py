@@ -98,7 +98,7 @@ class ObjectCache(object):
 
         return child_obj_changes
 
-    def diff(self, scene, objs_updated_by_export):
+    def diff(self, scene, ignored_objs=None):
         self._reset()
 
         if bpy.data.objects.is_updated:
@@ -106,7 +106,7 @@ class ObjectCache(object):
                 # Skip the object if it was touched by our previous export, for
                 # example because tessfaces for the mesh were generated.
                 # This prevents unnecessary updates when starting the viewport render.
-                if obj in objs_updated_by_export:
+                if ignored_objs and obj in ignored_objs:
                     continue
 
                 self._check(obj)
@@ -137,11 +137,14 @@ class MaterialCache(object):
     def _reset(self):
         self.changed_materials = set()
 
-    def diff(self):
+    def diff(self, ignored_mats=None):
         self._reset()
 
         if bpy.data.materials.is_updated:
             for mat in bpy.data.materials:
+                if ignored_mats and mat in ignored_mats:
+                    continue
+
                 node_tree = mat.luxcore.node_tree
                 mat_updated = False
 
