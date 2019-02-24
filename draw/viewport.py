@@ -99,6 +99,7 @@ class FrameBuffer(object):
         if platform.system() == "Windows":
             self._denoiser_path += ".exe"
         self._denoiser_process = None
+        self.denoiser_result_cached = False
 
     def _make_denoiser_filepath(self, name):
         return os.path.join(tempfile.gettempdir(), str(id(self)) + "_" + name + ".pfm")
@@ -112,6 +113,10 @@ class FrameBuffer(object):
             utils.pfm.save_pfm(f, np_buffer)
 
     def start_denoiser(self, luxcore_session):
+        if not os.path.exists(self._denoiser_path):
+            print("Denoiser binary not found. Download it from https://github.com/OpenImageDenoise/oidn/releases")
+            return False
+
         try:
             self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, self._noisy_file_path)
             self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.ALBEDO, self._albedo_file_path)
@@ -144,11 +149,14 @@ class FrameBuffer(object):
         TempfileManager.delete_files(id(self))
         self.buffer[:] = data
         self._update_texture(context)
+        self.denoiser_result_cached = True
 
     def reset_denoiser(self):
         """ Denoiser was not started yet or the user has triggered an update """
+        self.denoiser_result_cached = False
+
         if self._denoiser_process:
-            print("killing denoiser")
+            print("Interrupting denoiser")
             self._denoiser_process.terminate()
             self._denoiser_process.communicate()
             self._denoiser_process = None
@@ -157,7 +165,11 @@ class FrameBuffer(object):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
         self._update_texture(context)
 
-    def draw(self, region_size, view_camera_offset, view_camera_zoom, engine, context):
+    def draw(self, engine, context):
+        region_size = context.region.width, context.region.height
+        view_camera_offset = list(context.region_data.view_camera_offset)
+        view_camera_zoom = context.region_data.view_camera_zoom
+
         if self._transparent:
             glEnable(GL_BLEND)
 

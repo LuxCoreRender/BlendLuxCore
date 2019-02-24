@@ -1,10 +1,10 @@
 import numpy as np
 import re
 import sys
-from time import time
 
 # Functions for loading/saving portable floatmap files from
 # https://gist.github.com/chpatrick/8935738
+
 
 def load_pfm(file, as_flat_list=False):
     """
@@ -16,8 +16,6 @@ def load_pfm(file, as_flat_list=False):
     with open(r"path/to/file.pfm", "rb") as f:
         data, scale = load_pfm(f)
     """
-    start = time()
-
     header = file.readline().decode("utf-8").rstrip()
     if header == "PF":
         color = True
@@ -45,7 +43,6 @@ def load_pfm(file, as_flat_list=False):
         result = data
     else:
         result = np.reshape(data, shape)
-    print("PFM import took %.3f s" % (time() - start))
     return result, scale
 
 
@@ -57,8 +54,6 @@ def save_pfm(file, image, scale=1):
     with open(r"/path/to/out.pfm", "wb") as f:
         save_pfm(f, data)
     """
-    start = time()
-
     if image.dtype.name != "float32":
         raise Exception("Image dtype must be float32 (got %s)" % image.dtype.name)
 
@@ -80,5 +75,3 @@ def save_pfm(file, image, scale=1):
     file.write(b"%f\n" % scale)
 
     image.tofile(file)
-
-    print("PFM export took %.3f s" % (time() - start))

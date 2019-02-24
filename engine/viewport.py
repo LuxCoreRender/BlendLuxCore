@@ -5,6 +5,9 @@ from ..utils import render as utils_render
 
 
 def view_update(engine, context, changes=None):
+    if engine.framebuffer:
+        engine.framebuffer.reset_denoiser()
+
     scene = context.scene
     scene.luxcore.errorlog.clear()
 
@@ -69,20 +72,7 @@ def view_draw(engine, context):
     # On startup we don't have a framebuffer yet
     if engine.framebuffer is None:
         engine.framebuffer = FrameBuffer(context)
-
-    # Update and draw the framebuffer
     framebuffer = engine.framebuffer
-    try:
-        engine.session.UpdateStats()
-    except RuntimeError as error:
-        print("[Engine/Viewport] Error during UpdateStats():", error)
-    engine.session.WaitNewFrame()
-    framebuffer.update(engine.session, context)
-
-    region_size = context.region.width, context.region.height
-    view_camera_offset = list(context.region_data.view_camera_offset)
-    view_camera_zoom = context.region_data.view_camera_zoom
-    framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
 
     # Check if we need to pause the viewport render
     # (note: the LuxCore stat "stats.renderengine.time" is not reliable here)
@@ -96,20 +86,30 @@ def view_draw(engine, context):
             engine.session.Pause()
         status_message = "(Paused)"
 
-        if framebuffer.is_denoiser_active():
-            if framebuffer.is_denoiser_done():
-                status_message = "(Paused, Denoiser Done)"
-                framebuffer.load_denoiser_result(context)
-                framebuffer.draw(region_size, view_camera_offset, view_camera_zoom, engine, context)
-            else:
-                status_message = "(Paused, Denoiser Working ...)"
+        if framebuffer.denoiser_result_cached:
+            status_message = "(Paused, Denoiser Done)"
+        else:
+            if framebuffer.is_denoiser_active():
+                if framebuffer.is_denoiser_done():
+                    status_message = "(Paused, Denoiser Done)"
+                    framebuffer.load_denoiser_result(context)
+                else:
+                    status_message = "(Paused, Denoiser Working ...)"
+                    engine.tag_redraw()
+            elif context.scene.luxcore.viewport.denoise and framebuffer.start_denoiser(engine.session):
                 engine.tag_redraw()
-        elif context.scene.luxcore.viewport.denoise and framebuffer.start_denoiser(engine.session):
-            engine.tag_redraw()
     else:
         # Not in pause yet, keep drawing
+        try:
+            engine.session.UpdateStats()
+        except RuntimeError as error:
+            print("[Engine/Viewport] Error during UpdateStats():", error)
+        engine.session.WaitNewFrame()
+        framebuffer.update(engine.session, context)
         framebuffer.reset_denoiser()
         engine.tag_redraw()
+
+    framebuffer.draw(engine, context)
 
     # Show formatted statistics in Blender UI
     config = engine.session.GetRenderConfig()
