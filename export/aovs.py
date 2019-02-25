@@ -25,16 +25,23 @@ def convert(exporter, scene, context=None, engine=None):
         prefix = "film.outputs."
         # Ordered because we sometimes need to read these for debugging
         definitions = OrderedDict()
+        # Reset the output index
+        _add_output.index = 0
 
-        if not utils.is_valid_camera(scene.camera):
-            # Can not work without a camera
-            return pyluxcore.Properties()
-
-        pipeline = scene.camera.data.luxcore.imagepipeline
-        denoiser = scene.luxcore.denoiser
         # If we have a context, we are in viewport render.
         # If engine.is_preview, we are in material preview. Both don't need AOVs.
         final = not context and not (engine and engine.is_preview)
+
+        # Can not work without a camera
+        if not utils.is_valid_camera(scene.camera):
+            # However, viewport denoising should be possible even without camera
+            if not final and scene.luxcore.viewport.denoise:
+                _add_output(definitions, "ALBEDO")
+                _add_output(definitions, "AVG_SHADING_NORMAL")
+            return utils.create_props(prefix, definitions)
+
+        pipeline = scene.camera.data.luxcore.imagepipeline
+        denoiser = scene.luxcore.denoiser
 
         if final:
             # This is the layer that is currently being exported, not the active layer in the UI!
@@ -46,9 +53,6 @@ def convert(exporter, scene, context=None, engine=None):
             aovs = None
 
         use_transparent_film = pipeline.transparent_film and not utils.use_filesaver(context, scene)
-
-        # Reset the output index
-        _add_output.index = 0
 
         # Some AOVs need tonemapping with a custom imagepipeline
         pipeline_index = 0
