@@ -51,6 +51,8 @@ def recursive_overwrite(src, dest):
                 shutil.move(dest, dest_old)
 
         shutil.copyfile(src, dest)
+        # Copy permission bits (rwx)
+        shutil.copystat(src, dest)
 
 
 def get_current_version():
