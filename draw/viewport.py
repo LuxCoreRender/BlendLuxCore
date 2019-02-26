@@ -114,27 +114,24 @@ class FrameBuffer(object):
 
     def start_denoiser(self, luxcore_session):
         if not os.path.exists(self._denoiser_path):
-            print("Denoiser binary not found. Download it from https://github.com/OpenImageDenoise/oidn/releases")
-            return False
+            raise Exception("Binary not found. Download it from "
+                            "https://github.com/OpenImageDenoise/oidn/releases")
+        if self._transparent:
+            raise Exception("Does not work with transparent film yet")
 
-        try:
-            self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, self._noisy_file_path)
-            self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.ALBEDO, self._albedo_file_path)
-            self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.AVG_SHADING_NORMAL, self._normal_file_path)
-            TempfileManager.track(id(self), self._denoised_file_path)
+        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, self._noisy_file_path)
+        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.ALBEDO, self._albedo_file_path)
+        self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.AVG_SHADING_NORMAL, self._normal_file_path)
+        TempfileManager.track(id(self), self._denoised_file_path)
 
-            args = [
-                self._denoiser_path,
-                "-hdr", self._noisy_file_path,
-                "-alb", self._albedo_file_path,
-                "-nrm", self._normal_file_path,
-                "-o", self._denoised_file_path,
-            ]
-            self._denoiser_process = subprocess.Popen(args)
-            return True
-        except Exception as error:
-            print("Could not start denoiser:", error)
-            return False
+        args = [
+            self._denoiser_path,
+            "-hdr", self._noisy_file_path,
+            "-alb", self._albedo_file_path,
+            "-nrm", self._normal_file_path,
+            "-o", self._denoised_file_path,
+        ]
+        self._denoiser_process = subprocess.Popen(args)
 
     def is_denoiser_active(self):
         return self._denoiser_process is not None
