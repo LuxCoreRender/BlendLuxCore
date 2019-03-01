@@ -329,6 +329,7 @@ def _convert_photongi_settings(scene, definitions, config):
 
     indirect_radius = photongi.indirect_lookup_radius * worldscale
     caustic_radius = photongi.caustic_lookup_radius * worldscale
+    caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
 
     definitions.update({
         "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000),
@@ -346,6 +347,7 @@ def _convert_photongi_settings(scene, definitions, config):
         "path.photongi.caustic.lookup.radius": caustic_radius,
         "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
         "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),
+        "path.photongi.caustic.merge.radiusscale": caustic_merge_radius_scale,
     })
 
     if photongi.debug != "off":

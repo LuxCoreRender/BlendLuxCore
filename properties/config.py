@@ -184,7 +184,6 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     enabled = BoolProperty(name="Enabled", default=False)
 
     # TODO: sensible stepping when dragging values
-    # TODO: multiply large values by 1000 behind the scenes?
 
     # Shared settings
     photon_maxcount = FloatProperty(name="Photon Count", default=100, min=1, precision=0, step=100,
@@ -215,6 +214,13 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                           description=LOOKUP_MAXCOUNT_DESC)
     caustic_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
                                         subtype="ANGLE")
+    caustic_merge_enabled = BoolProperty(name="Merge Caustic Photons", default=True,
+                                         description="Merge clumped up photons. Improves rendering speed a lot, "
+                                                     "but leads to blurring if the radius is too large")
+    caustic_merge_radius_scale = FloatProperty(name="Radius Scale", default=0.25, min=0,
+                                               description="Scale factor for the merge radius. Smaller values lead to "
+                                                           "sharper caustics, but worse rendering performance. Larger "
+                                                           "values lead to blurred caustics, but faster rendering")
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),
