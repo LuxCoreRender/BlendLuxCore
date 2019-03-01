@@ -7,6 +7,9 @@ from . import material, mesh_converter
 from .light import convert_lamp
 
 
+EXPORTABLE_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT", "LAMP", "EMPTY"}
+
+
 def convert(exporter, obj, scene, context, luxcore_scene,
             exported_object=None, update_mesh=False,
             dupli_suffix="", dupli_matrix=None, duplicator=None):

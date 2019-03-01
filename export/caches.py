@@ -1,7 +1,7 @@
 import bpy
 from .. import utils
 from ..utils import node as utils_node
-from ..export import camera
+from ..export import blender_object, camera
 
 
 class StringCache(object):
@@ -187,7 +187,8 @@ class VisibilityCache(object):
         return self.objects_to_remove or self.objects_to_add
 
     def _get_visible_objects(self, context):
-        as_keylist = [utils.make_key(obj) for obj in context.visible_objects]
+        as_keylist = [utils.make_key(obj) for obj in context.visible_objects
+                      if obj.type in blender_object.EXPORTABLE_OBJECTS]
         return set(as_keylist)
 
 

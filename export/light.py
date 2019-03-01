@@ -377,7 +377,9 @@ def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance, lux
         ]
         luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, None, None, None, mesh_transform)
 
-    obj_prefix = "scene.objects." + luxcore_name + "."
+    # Note: we append "000" to the luxcore name here as fake material index because the DefineBlenderMesh
+    # function would do the same, and it is expected by other parts of the code.
+    obj_prefix = "scene.objects." + luxcore_name + "000" + "."
     obj_definitions = {
         "material": mat_name,
         "shape": shape_name,
