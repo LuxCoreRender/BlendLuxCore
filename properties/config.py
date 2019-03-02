@@ -97,6 +97,11 @@ LOOKUP_MAXCOUNT_DESC = (
     "more accurate results, but may slow down rendering"
 )
 
+NORMAL_ANGLE_DESC = (
+    "Only if the angle between two faces is smaller than this value, "
+    "cache entries can be shared by the surfaces"
+)
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -197,12 +202,19 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
                                            description=LOOKUP_RADIUS_DESC)
     indirect_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
-                                         subtype="ANGLE")
+                                         subtype="ANGLE", description=NORMAL_ANGLE_DESC)
     indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.2, min=0,
                                                       description="Only if a material's roughness is higher than "
                                                                   "this threshold, cache entries are stored on it")
-    indirect_usagethresholdscale = FloatProperty(name="Usage Threshold Scale", default=4, min=0,
-                                                 description="")  # TODO description
+    indirect_usagethresholdscale = FloatProperty(name="Brute Force Radius Scale", default=4, min=0,
+                                                 description="In corners and other areas with fine detail, LuxCore "
+                                                             "uses brute force pathtracing instead of the cache "
+                                                             "entries. This parameter is multiplied with the lookup "
+                                                             "radius and controls the size of the pathtraced area "
+                                                             "around corners. "
+                                                             "Smaller values can increase performance, but might lead "
+                                                             "to splotches and light leaks near corners. Use a larger "
+                                                             "value if you encounter such artifacts")
 
     # Caustic cache
     caustic_enabled = BoolProperty(name="Caustic Cache", default=False)
@@ -213,14 +225,15 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     caustic_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=128, min=1,
                                           description=LOOKUP_MAXCOUNT_DESC)
     caustic_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
-                                        subtype="ANGLE")
+                                        subtype="ANGLE", description=NORMAL_ANGLE_DESC)
     caustic_merge_enabled = BoolProperty(name="Merge Caustic Photons", default=True,
-                                         description="Merge clumped up photons. Improves rendering speed a lot, "
+                                         description="Merge clumped up photons. Improves rendering speed, "
                                                      "but leads to blurring if the radius is too large")
-    caustic_merge_radius_scale = FloatProperty(name="Radius Scale", default=0.25, min=0,
-                                               description="Scale factor for the merge radius. Smaller values lead to "
-                                                           "sharper caustics, but worse rendering performance. Larger "
-                                                           "values lead to blurred caustics, but faster rendering")
+    caustic_merge_radius_scale = FloatProperty(name="Radius Scale", default=0.25, min=0, max=0.4, step=0.1,
+                                               description="Scale factor for the merge radius, multiplied with lookup "
+                                                           "radius. Smaller values lead to sharper caustics, but worse "
+                                                           "rendering performance. Larger values lead to blurred "
+                                                           "caustics, but faster rendering")
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),
