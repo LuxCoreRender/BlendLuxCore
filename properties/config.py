@@ -203,10 +203,11 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                            description=LOOKUP_RADIUS_DESC)
     indirect_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
                                          subtype="ANGLE", description=NORMAL_ANGLE_DESC)
-    indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.2, min=0,
+    # I use 0.049 as default because then glossy materials with default roughness (0.05) are cached
+    indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.049, min=0,
                                                       description="Only if a material's roughness is higher than "
                                                                   "this threshold, cache entries are stored on it")
-    indirect_usagethresholdscale = FloatProperty(name="Brute Force Radius Scale", default=4, min=0,
+    indirect_usagethresholdscale = FloatProperty(name="Brute Force Radius Scale", default=8, min=0,
                                                  description="In corners and other areas with fine detail, LuxCore "
                                                              "uses brute force pathtracing instead of the cache "
                                                              "entries. This parameter is multiplied with the lookup "
@@ -237,11 +238,13 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),
-        ("showindirect", "Show Indirect", "", 1),
-        ("showcaustic", "Show Caustic", "", 2),
+        ("showindirect", "Show Indirect", "View the indirect light cache", 1),
+        ("showindirectpathmix", "Show Indirect/Path Mix",
+         "Blue = cache is used, red = brute force path tracing is used", 3),
+        ("showcaustic", "Show Caustic", "View the caustic cache", 2),
     ]
     debug = EnumProperty(name="Debug", items=debug_items, default="off",
-                         description="Use this setting to directly see the photon distribution of a cache")
+                         description="Choose between final render mode or a debug representation of the caches")
 
 
 class LuxCoreConfig(PropertyGroup):

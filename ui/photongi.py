@@ -60,6 +60,7 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         subrow.prop(photongi, "caustic_merge_radius_scale")
 
         col.prop(photongi, "debug")
-        if (photongi.debug == "showindirect" and not photongi.indirect_enabled) or (
+        if ((photongi.debug == "showindirect" or photongi.debug == "showindirectpathmix")
+                and not photongi.indirect_enabled) or (
                 photongi.debug == "showcaustic" and not photongi.caustic_enabled):
             col.label(text="Can't show this cache (disabled)", icon=icons.WARNING)
