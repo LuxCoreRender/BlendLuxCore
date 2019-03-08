@@ -327,7 +327,11 @@ def _convert_photongi_settings(scene, definitions, config):
     photongi = config.photongi
     worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
-    indirect_radius = photongi.indirect_lookup_radius * worldscale
+    if photongi.indirect_lookup_radius_auto:
+        indirect_radius = 0
+    else:
+        indirect_radius = photongi.indirect_lookup_radius * worldscale
+
     caustic_radius = photongi.caustic_lookup_radius * worldscale
     caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
 

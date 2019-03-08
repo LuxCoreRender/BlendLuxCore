@@ -199,6 +199,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     indirect_enabled = BoolProperty(name="Indirect Cache", default=True)
     indirect_maxsize = FloatProperty(name="Max. Size", default=100, min=1, precision=0, step=100,
                                      description="Max. number of photons stored in indirect cache (value in thousands)")
+    indirect_lookup_radius_auto = BoolProperty(name="Automatic Lookup Radius", default=True,
+                                               description="Automatically choose a good lookup radius")
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
                                            description=LOOKUP_RADIUS_DESC)
     indirect_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),

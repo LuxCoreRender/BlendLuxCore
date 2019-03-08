@@ -52,6 +52,12 @@ class LuxCoreLightGroupSettings(PropertyGroup):
         # Fallback to default group
         return 0
 
+    def get_group_by_name(self, group_name):
+        for group in self.custom:
+            if group.name == group_name:
+                return group
+        return self.default
+
     @staticmethod
     def get_lightgroup_pass_name(group_name="", group_index=-1, is_default_group=False):
         """
@@ -80,4 +86,4 @@ class LuxCoreLightGroupSettings(PropertyGroup):
         return names
 
     def get_all_groups(self):
-        return [group for group in self.custom] + [self.default]
+        return [self.default] + [group for group in self.custom]
