@@ -17,6 +17,7 @@ def run():
     update_colormix_remove_min_max_sockets()
     update_imagemap_remove_gamma_brightness_sockets()
     update_cloth_remove_repeat_sockets()
+    update_imagemap_add_alpha_output()
 
 
 def update_output_nodes_volume_change():
@@ -176,3 +177,15 @@ def update_cloth_remove_repeat_sockets():
                 node.inputs.remove(socket_repeat_u)
                 node.inputs.remove(socket_repeat_v)
                 print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_imagemap_add_alpha_output():
+    # commit 09f23b0d758bce9383a0fa8c64ccbeb73706bccf
+
+    for node_tree in bpy.data.node_groups:
+        if node_tree.library:
+            continue
+
+        for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap"):
+            if "Alpha" not in node.outputs:
+                node.outputs.new("LuxCoreSocketFloatUnbounded", "Alpha")

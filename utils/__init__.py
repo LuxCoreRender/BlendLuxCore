@@ -31,7 +31,7 @@ class ExportedLight(object):
         self.luxcore_names = [luxcore_name]
 
 
-def to_luxcore_name(string):
+def sanitize_luxcore_name(string):
     """
     Do NOT use this function to create a luxcore name for an object/material/etc.!
     Use the function get_luxcore_name() instead.
@@ -84,7 +84,7 @@ def get_luxcore_name(datablock, is_viewport_render=True):
 
     if not is_viewport_render:
         # Final render - we can use pretty names
-        key = to_luxcore_name(get_pretty_name(datablock)) + "_" + key
+        key = sanitize_luxcore_name(get_pretty_name(datablock)) + "_" + key
 
     return key
 

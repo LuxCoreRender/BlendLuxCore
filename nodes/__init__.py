@@ -117,6 +117,8 @@ class LuxCoreNode(Node):
     def export(self, exporter, props, luxcore_name=None, output_socket=None):
         """ This method is an abstraction layer that handles the caching. """
         cache_key = self.make_name()
+        if output_socket:
+            cache_key += utils.sanitize_luxcore_name(output_socket.name)
 
         if luxcore_name is None:
             luxcore_name = cache_key
