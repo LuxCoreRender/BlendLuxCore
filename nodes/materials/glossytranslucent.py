@@ -101,7 +101,7 @@ class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial):
 
         utils_node.draw_transmission_info(self, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "glossytranslucent",
             "kd": self.inputs["Diffuse Color"].export(exporter, props),

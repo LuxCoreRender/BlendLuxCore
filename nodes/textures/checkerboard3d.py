@@ -13,7 +13,7 @@ class LuxCoreNodeTexCheckerboard3D(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)
 
         definitions = {

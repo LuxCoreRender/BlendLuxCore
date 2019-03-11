@@ -22,7 +22,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "curvature_mode", expand=True)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         # Pointiness is a hitpointalpha texture behind the scenes, just that it implicitly enables pointiness
         # calculation on the mesh (handled in luxcore object export) and has some nice wrapping to get only part of
         # the pointiness information (see code below)

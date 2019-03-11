@@ -14,7 +14,7 @@ class LuxCoreNodeMatMix(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         # luxcore_name, cached = self.is_cached(exporter, luxcore_name)
         # if cached:
         #     return luxcore_name

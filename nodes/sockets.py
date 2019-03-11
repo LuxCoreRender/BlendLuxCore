@@ -81,12 +81,7 @@ class LuxCoreNodeSocket(NodeSocket):
         link = self._get_link()
 
         if link:
-            linked_node = link.from_node
-
-            if luxcore_name:
-                return linked_node.export(exporter, props, luxcore_name)
-            else:
-                return linked_node.export(exporter, props)
+            return link.from_node.export(exporter, props, luxcore_name, link.from_socket)
         elif hasattr(self, "default_value"):
             return self.export_default()
         else:

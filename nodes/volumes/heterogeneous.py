@@ -76,7 +76,7 @@ class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
 
         self.draw_common_buttons(context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "heterogeneous",
             "asymmetry": self.inputs["Asymmetry"].export(exporter, props),

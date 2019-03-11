@@ -111,10 +111,10 @@ class LuxCoreNode(Node):
     def make_name(self):
         return utils.make_key(self)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
 
-    def export(self, exporter, props, luxcore_name=None):
+    def export(self, exporter, props, luxcore_name=None, output_socket=None):
         """ This method is an abstraction layer that handles the caching. """
         cache_key = self.make_name()
 
@@ -127,7 +127,7 @@ class LuxCoreNode(Node):
             # Nodes can return a different luxcore_name than the one that
             # is passed in to sub_export, for example when an implicit scale
             # texture is added.
-            luxcore_name = self.sub_export(exporter, props, luxcore_name)
+            luxcore_name = self.sub_export(exporter, props, luxcore_name, output_socket)
             exporter.node_cache[cache_key] = luxcore_name
             return luxcore_name
 
@@ -162,7 +162,7 @@ class LuxCoreNodeMaterial(LuxCoreNode):
         # with special export methods
         self.inputs["Emission"].export_emission(exporter, props, definitions)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
@@ -171,7 +171,7 @@ class LuxCoreNodeTexture(LuxCoreNode):
     suffix = "tex"
     prefix = "scene.textures."
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
@@ -260,7 +260,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
         return scattering_col
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
@@ -312,7 +312,7 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
         if self.node_tree == self.id_data:
             layout.label("Recursion!", icon=icons.WARNING)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         if self.node_tree == self.id_data:
             raise Exception("Recursion (pointer referencing its own node tree)")
 

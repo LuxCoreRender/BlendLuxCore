@@ -40,8 +40,8 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         ("green", "Green", "Use only the green color channel", 3),
         ("blue", "Blue", "Use only the blue color channel", 4),
         ("alpha", "Alpha", "Use only the alpha channel", 5),
-        ("mean", "Mean", "Greyscale", 6),
-        ("colored_mean", "Colored Mean", "Greyscale", 7),
+        ("mean", "Mean (Average)", "Greyscale", 6),
+        ("colored_mean", "Mean (Luminance)", "Greyscale", 7),
     ]
     channel = EnumProperty(name="Channel", items=channel_items, default="default")
 
@@ -62,9 +62,11 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
     def update_is_normal_map(self, context):
         color_output = self.outputs["Color"]
         bump_output = self.outputs["Bump"]
+        alpha_output = self.outputs["Alpha"]
         was_color_enabled = color_output.enabled
 
         color_output.enabled = not self.is_normal_map
+        alpha_output.enabled = not self.is_normal_map
         bump_output.enabled = self.is_normal_map
 
         utils_node.copy_links_after_socket_swap(color_output, bump_output, was_color_enabled)
@@ -116,6 +118,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
 
         self.outputs.new("LuxCoreSocketColor", "Color")
+        self.outputs.new("LuxCoreSocketFloatUnbounded", "Alpha")
         self.outputs.new("LuxCoreSocketBump", "Bump")
         self.outputs["Bump"].enabled = False
 
@@ -157,7 +160,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
 
         self.image_user.draw(col, context.scene)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         if self.image is None:
             if self.is_normal_map:
                 return [0.5, 0.5, 1.0]
@@ -192,7 +195,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
             })
         else:
             definitions.update({
-                "channel": self.channel,
+                "channel": "alpha" if output_socket == self.outputs["Alpha"] else self.channel,
                 "gamma": self.gamma,
                 "gain": self.brightness,
             })

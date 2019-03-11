@@ -67,7 +67,7 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture):
         col.prop(self, "source")
         col.prop(self, "precision")
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         start_time = time()
         print("[Node Tree: %s][Smoke Domain: %s] Beginning smoke export of channel %s"
               % (self.id_data.name, self.domain.name, self.source))

@@ -52,7 +52,7 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial):
         layout.prop(self, "input_type", expand=True)
         Roughness.draw(self, context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "metal2",
         }

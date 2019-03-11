@@ -53,7 +53,7 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture):
             layout.prop(self, "file_type", expand=True)            
             layout.prop(self, "filepath")
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         if self.input_type == "color":
             definitions = {
                 "type": "fresnelcolor",

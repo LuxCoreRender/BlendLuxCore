@@ -22,7 +22,7 @@ class LuxCoreNodeVolClear(LuxCoreNodeVolume):
     def draw_buttons(self, context, layout):
         self.draw_common_buttons(context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "clear",
         }

@@ -22,7 +22,7 @@ class LuxCoreNodeMatMatte(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         sigma = self.inputs["Sigma"].export(exporter, props)
         mat_type = "matte" if sigma == 0 else "roughmatte"
         definitions = {

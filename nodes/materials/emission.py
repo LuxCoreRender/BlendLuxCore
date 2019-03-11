@@ -127,5 +127,5 @@ class LuxCoreNodeMatEmission(LuxCoreNode):
                 msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
                 exporter.scene.luxcore.errorlog.add_warning(msg)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("This node uses a special export method.")

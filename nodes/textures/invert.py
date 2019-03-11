@@ -10,7 +10,7 @@ class LuxCoreNodeTexInvert(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "subtract",
             "texture1": 1,

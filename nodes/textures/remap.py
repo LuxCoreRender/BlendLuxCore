@@ -14,7 +14,7 @@ class LuxCoreNodeTexRemap(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketFloatUnbounded", "Value")
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "remap",
             "value": self.inputs["Value"].export(exporter, props),

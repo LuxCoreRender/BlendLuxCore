@@ -49,7 +49,7 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
 
         scale_column.prop(self, "use_uniform_scale")
 
-    def export(self, exporter, props):
+    def export(self, exporter, props, luxcore_name=None, output_socket=None):
         mapping_type, input_mapping = self.inputs["3D Mapping (optional)"].export(exporter, props)
         # Use the mapping type of this node only when mapping type is not
         # already set by previous mapping node

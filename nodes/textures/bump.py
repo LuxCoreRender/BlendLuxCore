@@ -23,7 +23,7 @@ class LuxCoreNodeTexBump(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketBump", "Bump")
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "scale",
             "texture1": self.inputs["Value"].export(exporter, props),

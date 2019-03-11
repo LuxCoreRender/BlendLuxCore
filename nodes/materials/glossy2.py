@@ -38,7 +38,7 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial):
         layout.prop(self, "use_ior")
         Roughness.draw(self, context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "glossy2",
             "kd": self.inputs["Diffuse Color"].export(exporter, props),

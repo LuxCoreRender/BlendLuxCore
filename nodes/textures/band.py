@@ -142,7 +142,7 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
             else:
                 row.prop(item, "add_keyframe", toggle=True, icon=icons.ADD_KEYFRAME)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "band",
             "interpolation": self.interpolation,

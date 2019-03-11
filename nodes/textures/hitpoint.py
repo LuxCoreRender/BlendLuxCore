@@ -45,7 +45,7 @@ class LuxCoreNodeTexHitpoint(LuxCoreNodeTexture):
         if self.mode == "hitpointgrey":
             layout.prop(self, "channel", expand=True)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": self.mode,
         }

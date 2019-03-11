@@ -31,7 +31,7 @@ class LuxCoreNodeMatVelvet(LuxCoreNodeMaterial):
     def draw_buttons(self, context, layout):
         layout.prop(self, "advanced", toggle=True)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "velvet",
             "kd": self.inputs["Diffuse Color"].export(exporter, props),

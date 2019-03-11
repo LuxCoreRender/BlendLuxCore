@@ -79,7 +79,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         if self.get_interior_volume():
             layout.label("Using IOR of interior volume", icon=icons.INFO)
 
-    def sub_export(self, exporter, props, luxcore_name=None):
+    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         if self.rough:
             type = "roughglass"
         elif self.architectural:
