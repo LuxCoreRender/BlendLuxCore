@@ -189,3 +189,4 @@ def update_imagemap_add_alpha_output():
         for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap"):
             if "Alpha" not in node.outputs:
                 node.outputs.new("LuxCoreSocketFloatUnbounded", "Alpha")
+                print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))

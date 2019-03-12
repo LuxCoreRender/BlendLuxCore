@@ -200,8 +200,6 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
                 "gain": self.brightness,
             })
 
-        print("Definitions:")
-        print(definitions)
         luxcore_name = self.create_props(props, definitions, luxcore_name)
 
         if self.is_normal_map:
