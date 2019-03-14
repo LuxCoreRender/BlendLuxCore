@@ -107,6 +107,27 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
                 op.preset = preset
 
 
+class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
+    bl_label = "Settings"
+    bl_context = "material"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return engine == "LUXCORE"
+
+    def draw(self, context):
+        layout = self.layout
+
+        mat = context.material
+        cmat = mat.cycles
+
+        split = layout.split()
+        col = split.column()
+        col.label("Viewport Color:")
+        col.prop(mat, "diffuse_color", text="")
+    
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Preview"
