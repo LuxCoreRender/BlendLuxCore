@@ -28,6 +28,7 @@ from .colormix import LuxCoreNodeTexColorMix
 from .constfloat1 import LuxCoreNodeTexConstfloat1
 from .constfloat3 import LuxCoreNodeTexConstfloat3
 from .dots import LuxCoreNodeTexDots
+from .dotproduct import LuxCoreNodeTexDotProduct
 from .fbm import LuxCoreNodeTexfBM
 from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
@@ -105,6 +106,7 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         Separator(),
