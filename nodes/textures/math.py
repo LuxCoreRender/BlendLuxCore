@@ -53,6 +53,7 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
         ("clamp", "Clamp", "Clamp the input so it is between min and max values", 4),
         ("abs", "Absolute", "Take the absolute value (remove minus sign)", 5),
         ("power", "Power", "(Value 1) ^ (Value 2)", 7),
+        ("lessthan", "Less Than", "Value 1 < Value 2", 8),
     ]
     mode = EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
