@@ -52,6 +52,7 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
         ("mix", "Mix", MIX_DESCRIPTION, 3),
         ("clamp", "Clamp", "Clamp the input so it is between min and max values", 4),
         ("abs", "Absolute", "Take the absolute value (remove minus sign)", 5),
+        ("power", "Power", "(Value 1) ^ (Value 2)", 7),
     ]
     mode = EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
@@ -103,6 +104,9 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
             definitions["texture1"] = self.inputs[0].export(exporter, props)
             definitions["texture2"] = self.inputs[1].export(exporter, props)
             definitions["amount"] = self.inputs[2].export(exporter, props)
+        elif self.mode == "power":
+            definitions["base"] = self.inputs[0].export(exporter, props)
+            definitions["exponent"] = self.inputs[1].export(exporter, props)
         else:
             definitions["texture1"] = self.inputs[0].export(exporter, props)
             definitions["texture2"] = self.inputs[1].export(exporter, props)
