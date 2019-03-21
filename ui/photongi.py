@@ -6,6 +6,7 @@ from . import icons
 class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore PhotonGI Cache"
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
@@ -15,8 +16,9 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         self.layout.prop(context.scene.luxcore.config.photongi, "enabled", text="")
 
     def draw(self, context):
-        layout = self.layout
         photongi = context.scene.luxcore.config.photongi
+        layout = self.layout
+        layout.active = photongi.enabled
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
 
         if engine_is_bidir:
@@ -28,15 +30,18 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         col = layout.column()
         col.active = not engine_is_bidir
 
-        row = col.row(align=True)
-        row.prop(photongi, "photon_maxcount")
-        row.prop(photongi, "photon_maxdepth")
+        sub = col.column(align=True)
+        sub.prop(photongi, "photon_maxcount")
+        sub.prop(photongi, "photon_maxdepth")
 
         sub = col.column(align=True)
         sub.prop(photongi, "indirect_enabled")
         sub = sub.column(align=True)
         sub.active = photongi.indirect_enabled
-        sub.prop(photongi, "indirect_maxsize")
+        row = sub.row()
+        row.prop(photongi, "indirect_haltthreshold_preset")
+        if photongi.indirect_haltthreshold_preset == "custom":
+            row.prop(photongi, "indirect_haltthreshold_custom")
         sub.prop(photongi, "indirect_usagethresholdscale")
         sub.prop(photongi, "indirect_normalangle")
         sub.prop(photongi, "indirect_glossinessusagethreshold")

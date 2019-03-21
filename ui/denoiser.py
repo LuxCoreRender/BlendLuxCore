@@ -37,6 +37,7 @@ def draw(context, layout):
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Denoiser"
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
@@ -48,10 +49,12 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         row.prop(context.scene.luxcore.denoiser, "enabled", text="")
 
     def draw(self, context):
+        denoiser = context.scene.luxcore.denoiser
         layout = self.layout
+        layout.active = denoiser.enabled
         row = layout.row()
         row.enabled = not LuxCoreRenderEngine.final_running
-        row.prop(context.scene.luxcore.denoiser, "type", expand=True)
+        row.prop(denoiser, "type", expand=True)
 
         draw(context, layout)
 

@@ -332,22 +332,32 @@ def _convert_photongi_settings(scene, definitions, config):
     else:
         indirect_radius = photongi.indirect_lookup_radius * worldscale
 
+    if photongi.indirect_haltthreshold_preset == "final":
+        indirect_haltthreshold = 0.05
+    elif photongi.indirect_haltthreshold_preset == "preview":
+        indirect_haltthreshold = 0.15
+    elif photongi.indirect_haltthreshold_preset == "custom":
+        indirect_haltthreshold = photongi.indirect_haltthreshold_custom / 100
+    else:
+        raise Exception("Unknown preset mode")
+
     caustic_radius = photongi.caustic_lookup_radius * worldscale
     caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
 
     definitions.update({
-        "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000),
+        "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000000),
         "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
 
         "path.photongi.indirect.enabled": photongi.indirect_enabled,
-        "path.photongi.indirect.maxsize": round(photongi.indirect_maxsize * 1000),
+        "path.photongi.indirect.maxsize": 0,  # Set to 0 to use haltthreshold stop condition
+        "path.photongi.indirect.haltthreshold": indirect_haltthreshold,
         "path.photongi.indirect.lookup.radius": indirect_radius,
         "path.photongi.indirect.lookup.normalangle": degrees(photongi.indirect_normalangle),
         "path.photongi.indirect.glossinessusagethreshold": photongi.indirect_glossinessusagethreshold,
         "path.photongi.indirect.usagethresholdscale": photongi.indirect_usagethresholdscale,
 
         "path.photongi.caustic.enabled": photongi.caustic_enabled,
-        "path.photongi.caustic.maxsize": round(photongi.caustic_maxsize * 1000),
+        "path.photongi.caustic.maxsize": round(photongi.caustic_maxsize * 1000000),
         "path.photongi.caustic.lookup.radius": caustic_radius,
         "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
         "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),
