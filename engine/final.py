@@ -232,9 +232,6 @@ def _add_passes(engine, layer, scene):
     """
     aovs = layer.luxcore.aovs
 
-    # Note: The Depth pass is already added by Blender. If we add it again, it won't be
-    # displayed correctly in the "Depth" view mode of the "Combined" pass in the image editor.
-
     # Denoiser
     if scene.luxcore.denoiser.enabled:
         engine.add_pass("DENOISED", 3, "RGB", layer.name)
@@ -245,6 +242,10 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("RGBA", 4, "RGBA", layer.name)
     if aovs.alpha:
         engine.add_pass("ALPHA", 1, "A", layer.name)
+    # Note: If the Depth pass is already added by Blender and we add it again, it won't be
+    # displayed correctly in the "Depth" view mode of the "Combined" pass in the image editor.
+    if aovs.depth and not layer.use_pass_z:
+        engine.add_pass("Depth", 1, "Z", layer.name)
     if aovs.albedo:
         engine.add_pass("ALBEDO", 3, "RGB", layer.name)
     if aovs.material_id:
