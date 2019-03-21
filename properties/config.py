@@ -197,8 +197,9 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     # TODO: sensible stepping when dragging values
 
     # Shared settings
-    photon_maxcount = FloatProperty(name="Photon Count", default=100, min=1, precision=0, step=100,
-                                    description="Max. number of photons traced (value in thousands)")
+    photon_maxcount = FloatProperty(name="Photon Count (Millions)", default=20, min=1, soft_max=100,
+                                    precision=0, step=10,
+                                    description="Max. number of photons traced (value in millions)")
     photon_maxdepth = IntProperty(name="Photon Depth", default=4, min=3, max=64,
                                   description="Max. depth of photon paths. At each bounce, a photon might be stored")
     # Indirect cache
@@ -224,7 +225,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.049, min=0,
                                                       description="Only if a material's roughness is higher than "
                                                                   "this threshold, cache entries are stored on it")
-    indirect_usagethresholdscale = FloatProperty(name="Brute Force Radius Scale", default=8, min=0,
+    indirect_usagethresholdscale = FloatProperty(name="Brute Force Radius Scale", default=8, min=0, precision=1,
                                                  description="In corners and other areas with fine detail, LuxCore "
                                                              "uses brute force pathtracing instead of the cache "
                                                              "entries. This parameter is multiplied with the lookup "
@@ -236,8 +237,9 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
 
     # Caustic cache
     caustic_enabled = BoolProperty(name="Caustic Cache", default=False)
-    caustic_maxsize = FloatProperty(name="Max. Size", default=200, min=1, precision=0, step=100,
-                                    description="Max. number of photons stored in caustic cache (value in thousands)")
+    caustic_maxsize = FloatProperty(name="Max. Size (Millions)", default=1, soft_min=0.1, min=0.01, soft_max=10,
+                                    precision=0, step=1,
+                                    description="Max. number of photons stored in caustic cache (value in millions)")
     caustic_lookup_radius = FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
                                           description=LOOKUP_RADIUS_DESC)
     caustic_lookup_maxcount = IntProperty(name="Lookup Max. Count", default=128, min=1,

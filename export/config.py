@@ -345,7 +345,7 @@ def _convert_photongi_settings(scene, definitions, config):
     caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
 
     definitions.update({
-        "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000),
+        "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000000),
         "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
 
         "path.photongi.indirect.enabled": photongi.indirect_enabled,
@@ -357,7 +357,7 @@ def _convert_photongi_settings(scene, definitions, config):
         "path.photongi.indirect.usagethresholdscale": photongi.indirect_usagethresholdscale,
 
         "path.photongi.caustic.enabled": photongi.caustic_enabled,
-        "path.photongi.caustic.maxsize": round(photongi.caustic_maxsize * 1000),
+        "path.photongi.caustic.maxsize": round(photongi.caustic_maxsize * 1000000),
         "path.photongi.caustic.lookup.radius": caustic_radius,
         "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
         "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),

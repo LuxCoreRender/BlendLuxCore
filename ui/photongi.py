@@ -30,9 +30,9 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         col = layout.column()
         col.active = not engine_is_bidir
 
-        row = col.row(align=True)
-        row.prop(photongi, "photon_maxcount")
-        row.prop(photongi, "photon_maxdepth")
+        sub = col.column(align=True)
+        sub.prop(photongi, "photon_maxcount")
+        sub.prop(photongi, "photon_maxdepth")
 
         sub = col.column(align=True)
         sub.prop(photongi, "indirect_enabled")
