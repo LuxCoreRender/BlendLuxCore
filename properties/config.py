@@ -102,6 +102,12 @@ NORMAL_ANGLE_DESC = (
     "cache entries can be shared by the surfaces"
 )
 
+PHOTONGI_HALTTHRESH_DESC = (
+    "Max. convergence error. Photons are traced until the convergence error is below "
+    "this threshold or the photon count is reached. Lower values lead to higher quality "
+    "cache, but take longer to compute"
+)
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -197,8 +203,17 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                   description="Max. depth of photon paths. At each bounce, a photon might be stored")
     # Indirect cache
     indirect_enabled = BoolProperty(name="Indirect Cache", default=True)
-    indirect_maxsize = FloatProperty(name="Max. Size", default=100, min=1, precision=0, step=100,
-                                     description="Max. number of photons stored in indirect cache (value in thousands)")
+    indirect_haltthreshold_preset_items = [
+        ("final", "Final Render", "Halt Threshold 5%", 0),
+        ("preview", "Preview", "Halt Threshold 15%", 1),
+        ("custom", "Custom", "", 2),
+    ]
+    indirect_haltthreshold_preset = EnumProperty(name="Quality", items=indirect_haltthreshold_preset_items,
+                                                 default="final",
+                                                 description=PHOTONGI_HALTTHRESH_DESC)
+    indirect_haltthreshold_custom = FloatProperty(name="Halt Threshold", default=5, min=0.001, max=100,
+                                                  precision=0, subtype="PERCENTAGE",
+                                                  description=PHOTONGI_HALTTHRESH_DESC)
     indirect_lookup_radius_auto = BoolProperty(name="Automatic Lookup Radius", default=True,
                                                description="Automatically choose a good lookup radius")
     indirect_lookup_radius = FloatProperty(name="Lookup Radius", default=0.15, min=0.00001, subtype="DISTANCE",
