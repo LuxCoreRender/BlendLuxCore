@@ -130,10 +130,12 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
+        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
-        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[

@@ -7,9 +7,8 @@ class LuxCoreNodeTexDotProduct(LuxCoreNodeTexture):
     bl_width_default = 200
     
     def init(self, context):
-        # TODO: new vector socket
-        self.add_input("LuxCoreSocketColor", "Vector 1", (1.0, 1.0, 1.0))
-        self.add_input("LuxCoreSocketColor", "Vector 2", (1.0, 1.0, 1.0))
+        self.add_input("LuxCoreSocketVector", "Vector 1", (0, 0, 0))
+        self.add_input("LuxCoreSocketVector", "Vector 2", (0, 0, 0))
         self.outputs.new("LuxCoreSocketFloatUnbounded", "Value")
     
     def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
