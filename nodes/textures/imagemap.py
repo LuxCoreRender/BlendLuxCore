@@ -75,6 +75,11 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
                                  description=NORMAL_MAP_DESC)
     normal_map_scale = FloatProperty(name="Height", default=1, min=0, soft_max=5,
                                      description=NORMAL_SCALE_DESC)
+    normal_map_orientation_items = [
+        ("opengl", "OpenGL", "Select if the image is a left-handed normal map", 0),
+        ("directx", "DirectX", "Select if the image is a right-handed normal map (inverted green channel)", 1),
+    ]
+    normal_map_orientation = EnumProperty(name="Orientation", items=normal_map_orientation_items, default="opengl")
 
     # This function assigns self.image to all faces of all objects using this material
     # and assigns self.image to all image editors that do not have their image pinned.
@@ -144,6 +149,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
 
         if self.is_normal_map:
             col.prop(self, "normal_map_scale")
+            col.prop(self, "normal_map_orientation")
         else:
             col.prop(self, "channel")
 
@@ -189,7 +195,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
 
         if self.is_normal_map:
             definitions.update({
-                "channel": "rgb",
+                "channel": "rgb" if self.normal_map_orientation == "opengl" else "directx2opengl_normalmap",
                 "gamma": 1,
                 "gain": 1,
             })
