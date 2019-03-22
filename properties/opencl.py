@@ -16,8 +16,6 @@ class LuxCoreOpenCLSettings(PropertyGroup):
     # To check on .blend file loading if the devices are correct for this computer
     devices_hash = StringProperty()
 
-    # TODO: opencl.platform.index - do we expose this?
-
     use_native_cpu = BoolProperty(name="Use CPUs", default=True,
                                   description="Use native C++ threads on the CPU (hybrid rendering)")
 
@@ -41,6 +39,8 @@ class LuxCoreOpenCLSettings(PropertyGroup):
 
         if self.devices_hash != new_devices_hash:
             self.init_devices(device_list)
+            return True
+        return False
 
     def get_devices_hash_str(self, device_list):
         concat = ""

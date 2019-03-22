@@ -108,6 +108,9 @@ PHOTONGI_HALTTHRESH_DESC = (
     "cache, but take longer to compute"
 )
 
+# Used in enum callback
+film_opencl_device_items = []
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -386,3 +389,17 @@ class LuxCoreConfig(PropertyGroup):
                                                   "Disabling this option will save a bit of RAM, especially if "
                                                   "the render resolution is large. "
                                                   "This option is ignored in Non-OpenCL builds")
+
+    def film_opencl_device_items_callback(self, context):
+        devices = context.scene.luxcore.opencl.devices
+        items = [("none", "None", "", 0)]
+        items += [(str(i), device.name, "", i + 1) for i, device in enumerate(devices) if device.type == "OPENCL_GPU"]
+        # There is a known bug with using a callback,
+        # Python must keep a reference to the strings
+        # returned or Blender will misbehave or even crash.
+        global film_opencl_device_items
+        film_opencl_device_items = items
+        return items
+
+    film_opencl_device = EnumProperty(name="Device", items=film_opencl_device_items_callback,
+                                      description="Which device to use to compute the imagepipeline")

@@ -45,8 +45,13 @@ def convert(exporter, scene, context=None, engine=None):
             "lightstrategy.type": config.light_strategy,
             "scene.epsilon.min": config.min_epsilon,
             "scene.epsilon.max": config.max_epsilon,
-            "film.opencl.enable": config.film_opencl_enable,
         })
+
+        if config.film_opencl_enable and config.film_opencl_device != "none":
+            definitions["film.opencl.enable"] = True
+            definitions["film.opencl.device"] = int(config.film_opencl_device)
+        else:
+            definitions["film.opencl.enable"] = False
 
         if config.light_strategy == "DLS_CACHE":
             _convert_dlscache_settings(scene, definitions, config)
