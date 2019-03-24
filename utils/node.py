@@ -66,14 +66,15 @@ def draw_transmission_info(node, layout):
         layout.label("Transmitted: %.2f" % transmitted, icon=icons.INFO)
 
 
-def export_material_input(input, exporter, props):
-    material_name = input.export(exporter, props)
+def export_material_input(input, exporter, props, luxcore_name=None):
+    material_name = input.export(exporter, props, luxcore_name)
 
     if material_name:
         return material_name
     else:
         print("WARNING: No material linked on input", input.name, "of node", input.node.name)
-        luxcore_name = "__BLACK__"
+        if luxcore_name is None:
+            luxcore_name = "__BLACK__"
         props.Set(pyluxcore.Property("scene.materials.%s.type" % luxcore_name, "matte"))
         props.Set(pyluxcore.Property("scene.materials.%s.kd" % luxcore_name, [0, 0, 0]))
         return luxcore_name

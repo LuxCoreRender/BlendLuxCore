@@ -8,13 +8,14 @@ from ..nodeitems import Separator, NodeItemMultiImageImport
 from .. import LuxCoreNodeTree
 
 # Import all material nodes just so they get registered
-from .emission import LuxCoreNodeMatEmission
+from .carpaint import LuxCoreNodeMatCarpaint
 from .cloth import LuxCoreNodeMatCloth
+from .emission import LuxCoreNodeMatEmission
+from .frontbackopacity import LuxCoreNodeMatFrontBackOpacity
 from .glass import LuxCoreNodeMatGlass
 from .glossytranslucent import LuxCoreNodeMatGlossyTranslucent
 from .glossy2 import LuxCoreNodeMatGlossy2
 from .glossycoating import LuxCoreNodeMatGlossyCoating
-from .carpaint import LuxCoreNodeMatCarpaint
 from .matte import LuxCoreNodeMatMatte
 from .mattetranslucent import LuxCoreNodeMatMatteTranslucent
 from .metal import LuxCoreNodeMatMetal
@@ -82,6 +83,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),
         NodeItem("LuxCoreNodeMatCloth", label="Cloth"),
         NodeItem("LuxCoreNodeMatVelvet", label="Velvet"),
+        NodeItem("LuxCoreNodeMatFrontBackOpacity", label="Front/Back Opacity"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
