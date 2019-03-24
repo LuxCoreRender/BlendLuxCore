@@ -3,6 +3,7 @@ from time import time
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import render as utils_render
+from ..utils import compatibility as utils_compatibility
 from . import (
     blender_object, caches, camera, config, duplis,
     group_instance, imagepipeline, light, material,
@@ -89,6 +90,11 @@ class Exporter(object):
             stats.reset()
         updated_objs_pre = self.object_cache.diff(scene)
         updated_mats_pre = self.material_cache.diff()
+
+        # We have to run the compatibility code before export because it could be that
+        # the user has linked/appended assets with node trees from previous versions of
+        # the addon since opening the .blend file.
+        utils_compatibility.run()
 
         # Scene
         luxcore_scene = pyluxcore.Scene()
