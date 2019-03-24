@@ -60,6 +60,7 @@ luxcore_node_categories_volume = [
         # Note: 2D textures make no sense for volumes
         NodeItem("LuxCoreNodeTexColorMix", label="Color Mix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         Separator(),
@@ -69,6 +70,8 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MAPPING", "Mapping", items=[

@@ -28,6 +28,7 @@ from .colormix import LuxCoreNodeTexColorMix
 from .constfloat1 import LuxCoreNodeTexConstfloat1
 from .constfloat3 import LuxCoreNodeTexConstfloat3
 from .dots import LuxCoreNodeTexDots
+from .dotproduct import LuxCoreNodeTexDotProduct
 from .fbm import LuxCoreNodeTexfBM
 from .fresnel import LuxCoreNodeTexFresnel
 from .hitpoint import LuxCoreNodeTexHitpoint
@@ -46,6 +47,7 @@ from .objectid import LuxCoreNodeTexObjectID
 from .output import LuxCoreNodeTexOutput
 from .pointiness import LuxCoreNodeTexPointiness
 from .remap import LuxCoreNodeTexRemap
+from .hitpointinfo import LuxCoreNodeTexHitpointInfo
 from .smoke import LuxCoreNodeTexSmoke
 from .uv import LuxCoreNodeTexUV
 from .wrinkled import LuxCoreNodeTexWrinkled
@@ -105,6 +107,7 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         Separator(),
@@ -115,10 +118,12 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
+        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
-        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[

@@ -1,6 +1,6 @@
 import mathutils
 from bpy.types import NodeSocket
-from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty
+from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty, BoolProperty
 from ..utils.node import update_opengl_materials
 from ..ui import icons
 
@@ -112,6 +112,7 @@ class Color:
     material = (0.39, 0.78, 0.39, 1.0)
     color_texture = (0.78, 0.78, 0.16, 1.0)
     float_texture = (0.63, 0.63, 0.63, 1.0)
+    vector_texture = (0.39, 0.39, 0.78, 1.0)
     fresnel_texture = (0.33, 0.6, 0.85, 1.0)
     volume = (1.0, 0.4, 0.216, 1.0)
     mat_emission = (0.9, 0.9, 0.9, 1.0)
@@ -209,6 +210,33 @@ class LuxCoreSocketFloat0to2(LuxCoreSocketFloat):
     slider = True
 
 
+class LuxCoreSocketVector(LuxCoreNodeSocket):
+    color = Color.vector_texture
+    default_value = FloatVectorProperty(name="", subtype="XYZ")
+    expand = BoolProperty(default=False)
+
+    def draw_prop(self, context, layout, node, text):
+        split = layout.split(percentage=0.1)
+
+        col = split.column()
+        icon = icons.EXPANDABLE_OPENED if self.expand else icons.EXPANDABLE_CLOSED
+        col.prop(self, "expand", text="", icon=icon)
+
+        if self.expand:
+            split = split.split(percentage=0.6)
+            col = split.column()
+            col.prop(self, "default_value", expand=True)
+
+        col = split.column()
+        if self.expand:
+            # Empty label to center the text vertically
+            col.label("")
+        col.label(text)
+
+    def export_default(self):
+        return list(self.default_value)
+
+
 class LuxCoreSocketRoughness(LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
     default_value = FloatProperty(min=0.001, soft_max=0.8, max=1.0, precision=4,
@@ -230,7 +258,7 @@ class LuxCoreSocketIOR(LuxCoreSocketFloat):
 
 
 class LuxCoreSocketVolumeAsymmetry(LuxCoreNodeSocket):
-    color = Color.color_texture
+    color = Color.vector_texture
     default_value = FloatVectorProperty(name="", default=(0, 0, 0), min=-1, max=1, subtype="COLOR",
                                         description="Scattering asymmetry. -1 means back scatter, "
                                                     "0 is isotropic, 1 is forwards scattering")
@@ -289,8 +317,9 @@ LuxCoreSocketVolume.allowed_inputs = {LuxCoreSocketVolume}
 LuxCoreSocketFresnel.allowed_inputs = {LuxCoreSocketFresnel}
 LuxCoreSocketMatEmission.allowed_inputs = {LuxCoreSocketMatEmission}
 LuxCoreSocketBump.allowed_inputs = {LuxCoreSocketBump, LuxCoreSocketColor, LuxCoreSocketFloat}
-LuxCoreSocketColor.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}
+LuxCoreSocketColor.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketVector}
 # Note: Utility nodes like "math" can be used to add bumpmaps together, so we allow Bump input here
 LuxCoreSocketFloat.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketBump}
+LuxCoreSocketVector.allowed_inputs = {LuxCoreSocketVector, LuxCoreSocketColor, LuxCoreSocketFloat}
 LuxCoreSocketMapping2D.allowed_inputs = {LuxCoreSocketMapping2D}
 LuxCoreSocketMapping3D.allowed_inputs = {LuxCoreSocketMapping3D}
