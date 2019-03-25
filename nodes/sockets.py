@@ -212,7 +212,7 @@ class LuxCoreSocketFloat0to2(LuxCoreSocketFloat):
 
 class LuxCoreSocketVector(LuxCoreNodeSocket):
     color = Color.vector_texture
-    default_value = FloatVectorProperty(name="", subtype="XYZ")
+    default_value = FloatVectorProperty(name="", subtype="XYZ", precision=3)
     expand = BoolProperty(default=False)
 
     def draw_prop(self, context, layout, node, text):
@@ -231,6 +231,9 @@ class LuxCoreSocketVector(LuxCoreNodeSocket):
         if self.expand:
             # Empty label to center the text vertically
             col.label("")
+        else:
+            # Show the value of the vector even in collapsed form
+            text += " (%s)" % (", ".join(str(round(x, 2)) for x in self.default_value))
         col.label(text)
 
     def export_default(self):
