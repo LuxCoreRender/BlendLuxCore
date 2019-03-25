@@ -65,9 +65,9 @@ class LuxCoreNodeTexVectorMath(LuxCoreNodeTexture):
         }
         
         if self.mode == "abs":
-            definitions["texture"] = self.inputs["Color"].export(exporter, props)
+            definitions["texture"] = self.inputs["Vector"].export(exporter, props)
         elif self.mode == "clamp":
-            definitions["texture"] = self.inputs["Color"].export(exporter, props)
+            definitions["texture"] = self.inputs["Vector"].export(exporter, props)
             definitions["min"] = self.mode_clamp_min
             definitions["max"] = self.mode_clamp_max
         else:
