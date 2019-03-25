@@ -24,5 +24,6 @@ class LuxCoreMaterialPreviewProps(PropertyGroup):
 
 
 class LuxCoreMaterialProps(PropertyGroup):
+    auto_mat_selection = bpy.props.BoolProperty(name="Automatic Material Selection", default=True)
     node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
     preview = PointerProperty(type=LuxCoreMaterialPreviewProps)

@@ -119,14 +119,13 @@ class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
 
     def draw(self, context):
         layout = self.layout
-
         mat = context.material
-        cmat = mat.cycles
+        core = mat.luxcore
 
         split = layout.split()
         col = split.column()
-        col.label("Viewport Color:")
-        col.prop(mat, "diffuse_color", text="")
+        layout.prop(mat, "diffuse_color", text="Viewport Color")
+        layout.prop(core, "auto_mat_selection", text="Automatic Material Selection:")
     
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
