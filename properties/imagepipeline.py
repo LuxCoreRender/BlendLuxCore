@@ -53,6 +53,8 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup):
                                   description=REINHARD_BURN_DESC)
 
     def is_automatic(self):
+        if not self.enabled:
+            return False
         autolinear = (self.type == "TONEMAP_LINEAR" and self.use_autolinear)
         return autolinear or self.type == "TONEMAP_REINHARD02"
 
