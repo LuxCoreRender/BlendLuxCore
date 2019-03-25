@@ -119,7 +119,8 @@ luxcore_node_categories_material = [
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
-        NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
+        NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
+        NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),

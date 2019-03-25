@@ -4,7 +4,7 @@ from ... import utils
 from ...ui import icons
 
 MIX_DESCRIPTION = (
-    "Mix between two values/textures according to the amount "
+    "Linear interpolation between two values/textures according to the amount "
     "(0 = use first value, 1 = use second value)"
 )
 

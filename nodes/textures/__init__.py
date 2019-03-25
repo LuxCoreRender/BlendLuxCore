@@ -50,6 +50,7 @@ from .remap import LuxCoreNodeTexRemap
 from .hitpointinfo import LuxCoreNodeTexHitpointInfo
 from .smoke import LuxCoreNodeTexSmoke
 from .uv import LuxCoreNodeTexUV
+from .vectormath import LuxCoreNodeTexVectorMath
 from .wrinkled import LuxCoreNodeTexWrinkled
 from .windy import LuxCoreNodeTexWindy
 
@@ -105,7 +106,7 @@ luxcore_node_categories_texture = [
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
-        NodeItem("LuxCoreNodeTexColorMix", label="ColorMix"),
+        NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
