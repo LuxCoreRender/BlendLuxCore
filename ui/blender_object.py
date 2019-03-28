@@ -17,6 +17,7 @@ class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
         layout = self.layout
         obj = context.object
 
+        layout.prop(obj.luxcore, "id")
         layout.prop(obj.luxcore, "visible_to_camera")
 
         # Motion blur settings

@@ -166,12 +166,16 @@ def _define_luxcore_object(props, lux_object_name, lux_shape_name, lux_material_
     props.Set(pyluxcore.Property(prefix + "material", lux_material_name))
     props.Set(pyluxcore.Property(prefix + "shape", lux_shape_name))
 
-    # We calculate the "random" object ID from the object name and, in case of dupli groups,
-    # add the duplicator name so different group instances get different IDs
-    object_id_source = obj.name
-    if duplicator:
-        object_id_source += duplicator.name
-    props.Set(pyluxcore.Property(prefix + "id", utils.make_object_id(object_id_source)))
+    if obj.luxcore.id == -1:
+        # We calculate the "random" object ID from the object name and, in case of dupli groups,
+        # add the duplicator name so different group instances get different IDs
+        object_id_source = obj.name
+        if duplicator:
+            object_id_source += duplicator.name
+        obj_id = utils.make_object_id(object_id_source)
+    else:
+        obj_id = obj.luxcore.id
+    props.Set(pyluxcore.Property(prefix + "id", obj_id))
 
     if obj_transform:
         props.Set(pyluxcore.Property(prefix + "transformation", obj_transform))
