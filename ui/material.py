@@ -125,7 +125,7 @@ class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
         split = layout.split()
         col = split.column()
         layout.prop(mat, "diffuse_color", text="Viewport Color")
-        layout.prop(core, "auto_mat_selection", text="Automatic Material Selection:")
+        layout.prop(core, "auto_vp_selection")
     
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
