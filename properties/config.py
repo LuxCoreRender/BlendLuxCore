@@ -203,7 +203,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     photon_maxcount = FloatProperty(name="Photon Count (Millions)", default=20, min=1, soft_max=100,
                                     precision=0, step=10,
                                     description="Max. number of photons traced (value in millions)")
-    photon_maxdepth = IntProperty(name="Photon Depth", default=4, min=3, max=64,
+    photon_maxdepth = IntProperty(name="Photon Depth", default=8, min=3, max=64,
                                   description="Max. depth of photon paths. At each bounce, a photon might be stored")
     # Indirect cache
     indirect_enabled = BoolProperty(name="Indirect Cache", default=True)
