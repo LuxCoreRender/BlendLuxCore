@@ -122,12 +122,16 @@ class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
     def draw(self, context):
         layout = self.layout
         mat = context.material
-        core = mat.luxcore
 
-        split = layout.split()
-        col = split.column()
-        layout.prop(mat, "diffuse_color", text="Viewport Color")
-        layout.prop(core, "auto_vp_selection")
+        if mat.luxcore.auto_vp_color:
+            split = layout.split(percentage=0.8)
+            split.prop(mat.luxcore, "auto_vp_color")
+            row = split.row()
+            row.enabled = not mat.luxcore.auto_vp_color
+            row.prop(mat, "diffuse_color", text="")
+        else:
+            layout.prop(mat.luxcore, "auto_vp_color")
+            layout.prop(mat, "diffuse_color", text="Viewport Color")
     
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}

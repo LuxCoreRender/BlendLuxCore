@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import PropertyGroup
-from bpy.props import PointerProperty, FloatProperty
+from bpy.props import PointerProperty, FloatProperty, BoolProperty
+from ..utils import node as utils_node
 
 
 def init():
@@ -24,6 +25,13 @@ class LuxCoreMaterialPreviewProps(PropertyGroup):
 
 
 class LuxCoreMaterialProps(PropertyGroup):
-    auto_vp_selection = bpy.props.BoolProperty(name="Automatic Viewport Color", default=True)
+    def update_auto_vp_color(self, context):
+        if self.auto_vp_color:
+            utils_node.update_opengl_materials(None, context)
+
+    auto_vp_color = BoolProperty(name="Automatic Viewport Color", default=True,
+                                 update=update_auto_vp_color,
+                                 description="Automatically choose a viewport color "
+                                             "from the first nodes in the node tree")
     node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
     preview = PointerProperty(type=LuxCoreMaterialPreviewProps)
