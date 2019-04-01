@@ -99,7 +99,7 @@ def find_nodes(node_tree, bl_idname):
 
 
 def update_opengl_materials(_, context):
-    if not hasattr(context, "object") or not context.object or not context.object.active_material:
+    if not hasattr(context, "object") or not context.object or not context.object.active_material or not context.object.active_material.luxcore.auto_vp_color:
         return
 
     mat = context.object.active_material
