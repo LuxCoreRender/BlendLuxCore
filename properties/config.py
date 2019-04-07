@@ -292,7 +292,7 @@ class LuxCoreConfig(PropertyGroup):
     sampler = EnumProperty(name="Sampler", items=samplers, default="SOBOL")
 
     # SOBOL properties
-    sobol_adaptive_strength = FloatProperty(name="Adaptive Strength", default=0.7, min=0, max=0.95,
+    sobol_adaptive_strength = FloatProperty(name="Adaptive Strength", default=0.95, min=0, max=0.95,
                                             description=SOBOL_ADAPTIVE_STRENGTH_DESC)
     # METROPOLIS properties
     # sampler.metropolis.largesteprate
