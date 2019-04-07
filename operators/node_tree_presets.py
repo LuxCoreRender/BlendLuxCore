@@ -37,6 +37,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         ("Advanced", [
             "Smoke",
             "Fire and Smoke",
+            "Colored Glass",
         ]),
     ])
 
@@ -130,6 +131,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             self._preset_smoke(obj, node_tree, output)
         elif self.preset == "Fire and Smoke":
             self._preset_fire_and_smoke(obj, node_tree, output)
+        elif self.preset == "Colored Glass":
+            self._preset_colored_glass(obj, node_tree, output)
 
         return {"FINISHED"}
 
@@ -237,6 +240,12 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         # A smoke material setup only makes sense on the smoke domain object
         if not is_smoke_domain:
             self.report({"ERROR"}, 'Object "%s" is not a smoke domain!' % obj.name)
+
+    def _preset_colored_glass(self, obj, node_tree, output):
+        new_node("LuxCoreNodeMatGlass", node_tree, output)
+        clear_vol = new_node("LuxCoreNodeVolClear", node_tree, output, 0, "Interior Volume")
+        clear_vol.location.y -= 280
+        clear_vol.inputs["Absorption"].default_value = (0.9, 0.1, 0.1)
 
 
 class LUXCORE_MATERIAL_MT_node_tree_preset(bpy.types.Menu):

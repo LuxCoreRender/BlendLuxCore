@@ -86,6 +86,12 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatFrontBackOpacity", label="Front/Back Opacity"),
     ]),
 
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_VOLUME", "Volume", items=[
+        NodeItem("LuxCoreNodeVolClear", label="Clear"),
+        NodeItem("LuxCoreNodeVolHomogeneous", label="Homogeneous"),
+        NodeItem("LuxCoreNodeVolHeterogeneous", label="Heterogeneous"),
+    ]),
+
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
         NodeItemMultiImageImport(),
         NodeItem("LuxCoreNodeTexImagemap", label="Image"),

@@ -100,19 +100,8 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         # We have to export volumes before the material definition because LuxCore properties
         # do not support forward declarations (the volume has to be already defined when it is
         # referenced in the material)
-
-        interior_volume_name = None
-        exterior_volume_name = None
-
-        interior_pointer = utils_node.get_linked_node(self.inputs["Interior Volume"])
-        if interior_pointer:
-            node_tree = interior_pointer.node_tree
-            interior_volume_name = self._convert_volume(exporter, node_tree, props)
-
-        exterior_pointer = utils_node.get_linked_node(self.inputs["Exterior Volume"])
-        if exterior_pointer:
-            node_tree = exterior_pointer.node_tree
-            exterior_volume_name = self._convert_volume(exporter, node_tree, props)
+        interior_volume_name = self.inputs["Interior Volume"].export(exporter, props)
+        exterior_volume_name = self.inputs["Exterior Volume"].export(exporter, props)
 
         # Export the material
         exported_name = self.inputs["Material"].export(exporter, props, luxcore_name)
