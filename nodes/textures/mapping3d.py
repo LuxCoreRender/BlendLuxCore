@@ -1,6 +1,7 @@
 from bpy.props import FloatProperty, BoolProperty, FloatVectorProperty, EnumProperty
 from mathutils import Matrix
 from .. import LuxCoreNodeTexture
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
@@ -10,6 +11,7 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
     mapping_types = [
         ("globalmapping3d", "Global", "World coordinate system", 0),
         ("localmapping3d", "Local", "Object coordinate system", 1),
+        ("uvmapping3d", "UV", "Use the UV coordinates of the mesh to map the texture", 2),
     ]
     mapping_type = EnumProperty(name="Mapping", items=mapping_types, default="globalmapping3d")
     translate = FloatVectorProperty(name="Translate", subtype="TRANSLATION", description="Moves the texture")
@@ -34,6 +36,9 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture):
         # already set by previous mapping node
         if not self.inputs["3D Mapping (optional)"].is_linked:
             layout.prop(self, "mapping_type")
+
+        if self.mapping_type == "uvmapping3d":
+            utils_node.draw_uv_info(context, layout)
 
         row = layout.row()
 
