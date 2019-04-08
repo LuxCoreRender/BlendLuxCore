@@ -1,6 +1,5 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from ..utils.refresh_button import template_refresh_button
 
 
 class LUXCORE_RENDER_PT_debug_settings(RenderButtonsPanel, Panel):
@@ -24,3 +23,4 @@ class LUXCORE_RENDER_PT_debug_settings(RenderButtonsPanel, Panel):
         col = layout.column()
         col.active = debug.enabled
         col.prop(debug, "use_opencl_cpu")
+        col.prop(debug, "print_properties")

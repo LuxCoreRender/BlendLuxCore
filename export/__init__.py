@@ -177,6 +177,7 @@ class Exporter(object):
             stats.light_count.value = light_count
 
         # Create the renderconfig
+        self._print_debug_info(scene, config_props, luxcore_scene)
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
         # Check which objects were flagged for update by our own export,
@@ -196,7 +197,7 @@ class Exporter(object):
 
         if engine:
             if config_props.Get("renderengine.type").GetString().endswith("OCL"):
-                message = "Compiling OpenCL Kernels..."
+                message = "Creating RenderSession and compiling OpenCL kernels..."
             else:
                 message = "Creating RenderSession..."
 
@@ -452,3 +453,12 @@ class Exporter(object):
             stats.clamping.value = path_settings.clamping
         else:
             stats.clamping.value = 0
+
+    def _print_debug_info(self, scene, config_props, luxcore_scene):
+        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
+            print("-" * 50)
+            print("DEBUG: Config Properties:\n")
+            print(config_props)
+            print("DEBUG: Scene Properties:\n")
+            print(luxcore_scene.ToProperties())
+            print("-" * 50)

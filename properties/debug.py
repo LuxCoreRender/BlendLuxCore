@@ -9,3 +9,4 @@ class LuxCoreDebugSettings(bpy.types.PropertyGroup):
                                   description="This is a mode for debugging OpenCL problems. "
                                               "If the problem shows up in this mode, it is most "
                                               "likely a bug in LuxCore and not an OpenCL compiler bug")
+    print_properties = BoolProperty(name="Print Properties", default=False)
