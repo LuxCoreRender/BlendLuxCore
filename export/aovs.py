@@ -65,7 +65,7 @@ def convert(exporter, scene, context=None, engine=None):
 
         pipeline_index += 1
         add_OIDN_AOVs = ((final and denoiser.enabled and denoiser.type == "OIDN")
-                         or scene.luxcore.viewport.denoise)
+                         or (not final and scene.luxcore.viewport.denoise))
 
         # AOVs
         if (final and aovs.alpha) or use_transparent_film or use_backgroundimage(context, scene):
