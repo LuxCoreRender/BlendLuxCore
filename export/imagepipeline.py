@@ -142,7 +142,7 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
     definitions[str(index) + ".type"] = "BACKGROUND_IMG"
     definitions[str(index) + ".file"] = filepath
     definitions[str(index) + ".gamma"] = backgroundimage.gamma
-    definitions[str(index) + ".storage"] = "byte"
+    definitions[str(index) + ".storage"] = backgroundimage.storage
     return index + 1
 
 

@@ -112,6 +112,12 @@ class LuxCoreImagepipelineBackgroundImage(PropertyGroup):
     image = PointerProperty(name="Image", type=Image, update=update_image)
     image_user = PointerProperty(type=LuxCoreImageUser)
     gamma = FloatProperty(name="Gamma", default=2.2, min=0, description=GAMMA_DESCRIPTION)
+    storage_items = [
+        ("byte", "Byte", "8 bit integer per channel. Use for normal LDR JPG/PNG images", 0),
+        ("float", "Float", "32 bit float per channel. Higher precision, but also 4 times "
+                           "the RAM usage. Use for 16 bit PNG or for HDR images like EXR", 1),
+    ]
+    storage = EnumProperty(name="Storage", items=storage_items, default="byte")
 
 
 class LuxCoreImagepipelineCameraResponseFunc(PropertyGroup):
