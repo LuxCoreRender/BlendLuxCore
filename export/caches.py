@@ -49,7 +49,7 @@ class ObjectCache(object):
         NONE = 0
         TRANSFORM = 1 << 0
         MESH = 1 << 1
-        LAMP = 1 << 2
+        LIGHT = 1 << 2
 
     def __init__(self):
         self._reset()
@@ -58,7 +58,7 @@ class ObjectCache(object):
         # We use sets to make duplicates impossible
         self.changed_transform = set()
         self.changed_mesh = set()
-        self.changed_lamps = set()
+        self.changed_lights = set()
 
     def _check(self, obj):
         changes = self.ChangeType.NONE
@@ -68,8 +68,8 @@ class ObjectCache(object):
                 self.changed_mesh.add(obj)
                 changes |= self.ChangeType.MESH
             elif obj.type == "LAMP":
-                self.changed_lamps.add(obj)
-                changes |= self.ChangeType.LAMP
+                self.changed_lights.add(obj)
+                changes |= self.ChangeType.LIGHT
 
         if obj.is_updated:
             if obj.type in {"MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY"}:
@@ -81,8 +81,8 @@ class ObjectCache(object):
                     self.changed_transform.add(obj)
                     changes |= self.ChangeType.TRANSFORM
             elif obj.type == "LAMP":
-                self.changed_lamps.add(obj)
-                changes |= self.ChangeType.LAMP
+                self.changed_lights.add(obj)
+                changes |= self.ChangeType.LIGHT
 
         return changes
 
@@ -92,7 +92,7 @@ class ObjectCache(object):
         for child_obj in dupli_group.objects:
             child_obj_changes |= self._check(child_obj)
 
-        if child_obj_changes & (self.ChangeType.MESH | self.ChangeType.LAMP):
+        if child_obj_changes & (self.ChangeType.MESH | self.ChangeType.LIGHT):
             # Flag the duplicator object for update
             self.changed_mesh.add(duplicator_obj)
 
@@ -120,14 +120,14 @@ class ObjectCache(object):
 
                     if settings.render_type == "OBJECT":
                         changes = self._check(settings.dupli_object)
-                        if changes & (self.ChangeType.MESH | self.ChangeType.LAMP):
+                        if changes & (self.ChangeType.MESH | self.ChangeType.LIGHT):
                             # The data of the source object was modified,
                             # flag the duplicator for update
                             self.changed_mesh.add(obj)
                     elif settings.render_type == "GROUP":
                         self._check_group(obj, settings.dupli_group)
 
-        return self.changed_transform or self.changed_mesh or self.changed_lamps
+        return self.changed_transform or self.changed_mesh or self.changed_lights
 
 
 class MaterialCache(object):

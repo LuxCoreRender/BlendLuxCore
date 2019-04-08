@@ -375,8 +375,8 @@ class Exporter(object):
                 self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True,
                                      check_dupli_parent=True)
 
-            for obj in self.object_cache.changed_lamps:
-                print("lamp changed:", obj.name)
+            for obj in self.object_cache.changed_lights:
+                print("light changed:", obj.name)
                 self._convert_object(props, obj, context.scene, context, luxcore_scene,
                                      check_dupli_parent=True)
 
