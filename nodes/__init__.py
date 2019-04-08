@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Node
-from bpy.props import PointerProperty
+from bpy.props import PointerProperty, EnumProperty
 from .. import utils
 from ..utils import node as utils_node
 from ..utils import ui as utils_ui
@@ -269,7 +269,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
 class LuxCoreNodeTreePointer(LuxCoreNode):
     """ Pointer to a node tree """
     bl_label = "Pointer"
-    bl_width_default = 210
+    bl_width_default = 250
     suffix = "pointer"
 
     def update_node_tree(self, context):
@@ -284,6 +284,14 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
 
     node_tree = PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree,
                                 description="Use the output of the selected node tree in this node tree")
+
+    filter_items = [
+        ("luxcore_material_nodes", "Materials", "Only show material nodes", icons.NTREE_MATERIAL, 0),
+        ("luxcore_volume_nodes", "Volumes", "Only show volume nodes", icons.NTREE_VOLUME, 1),
+        ("luxcore_texture_nodes", "Textures", "Only show texture nodes", icons.NTREE_TEXTURE, 2),
+    ]
+    filter = EnumProperty(name="Filter", items=filter_items, default="luxcore_volume_nodes",
+                          description="Filter for the node tree selection menu below")
 
     def init(self, context):
         self.outputs.new("LuxCoreSocketMaterial", "Material")
@@ -300,6 +308,8 @@ class LuxCoreNodeTreePointer(LuxCoreNode):
             return self.bl_label
 
     def draw_buttons(self, context, layout):
+        layout.prop(self, "filter", expand=True)
+
         if self.node_tree:
             icon = TREE_ICONS[self.node_tree.bl_idname]
         else:

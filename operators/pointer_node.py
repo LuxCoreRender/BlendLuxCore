@@ -47,8 +47,9 @@ class LUXCORE_MT_pointer_select_node_tree(LUXCORE_MT_node_tree):
         return poll_node(context)
 
     def draw(self, context):
-        self.custom_draw("ALL",
-                         "luxcore.pointer_set_node_tree")
+        node = context.node
+        assert node.bl_idname == "LuxCoreNodeTreePointer"
+        self.custom_draw(node.filter, "luxcore.pointer_set_node_tree")
 
 
 class LUXCORE_OT_pointer_show_node_tree(bpy.types.Operator):
