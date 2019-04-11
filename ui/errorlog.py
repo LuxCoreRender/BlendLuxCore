@@ -47,5 +47,8 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
                 text += str(elem.count) + "x"
 
             row.label(elem.message, icon=icon)
+            if elem.obj_name:
+                op = row.operator("luxcore.select_object", text="", icon=icons.OBJECT)
+                op.obj_name = elem.obj_name
             op = row.operator("luxcore.copy_error_to_clipboard", icon=icons.COPY_TO_CLIPBOARD)
             op.message = elem.message

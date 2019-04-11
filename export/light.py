@@ -53,7 +53,7 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", 
                         definitions["gamma"] = lamp.luxcore.gamma
                     except OSError as error:
                         msg = 'Lamp "%s": %s' % (obj.name, error)
-                        scene.luxcore.errorlog.add_warning(msg)
+                        scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
                         # Fallback
                         definitions["type"] = "point" if lamp.luxcore.radius == 0 else "sphere"
                         # Signal that the image is missing
@@ -64,7 +64,7 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", 
                     has_ies = export_ies(definitions, lamp.luxcore.ies, lamp.library)
                 except OSError as error:
                     msg = 'Lamp "%s": %s' % (obj.name, error)
-                    scene.luxcore.errorlog.add_warning(msg)
+                    scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
                 finally:
                     if not has_ies:
                         # Fallback
@@ -118,7 +118,7 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", 
                     definitions["gamma"] = lamp.luxcore.gamma
                 except OSError as error:
                     msg = 'Lamp "%s": %s' % (obj.name, error)
-                    scene.luxcore.errorlog.add_warning(msg)
+                    scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
                     # Fallback
                     definitions["type"] = "spot"
                     # Signal that the image is missing
@@ -177,7 +177,7 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", 
         return props, exported_light
     except Exception as error:
         msg = 'Light "%s": %s' % (obj.name, error)
-        scene.luxcore.errorlog.add_warning(msg)
+        scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None
@@ -329,7 +329,7 @@ def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance, lux
             export_ies(mat_definitions, lamp.luxcore.ies, lamp.library, is_meshlight=True)
         except OSError as error:
             msg = 'Lamp "%s": %s' % (obj.name, error)
-            scene.luxcore.errorlog.add_warning(msg)
+            scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
 
     mat_props = utils.create_props(mat_prefix, mat_definitions)
     props.Set(mat_props)

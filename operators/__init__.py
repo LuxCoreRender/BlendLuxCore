@@ -221,3 +221,26 @@ class LUXCORE_OT_open_website_popup(bpy.types.Operator):
     def execute(self, context):
         webbrowser.open(self.url)
         return {"FINISHED"}
+
+
+class LUXCORE_OT_select_object(bpy.types.Operator):
+    bl_idname = "luxcore.select_object"
+    bl_label = "Select Object"
+    bl_description = "Select this object"
+    bl_options = {"UNDO"}
+
+    obj_name = StringProperty()
+
+    def execute(self, context):
+        if self.obj_name not in context.scene.objects:
+            self.report({"ERROR"}, "Object was deleted or renamed")
+            return {"CANCELLED"}
+        if context.active_object and context.active_object.mode != "OBJECT":
+            self.report({"ERROR"}, "Change to object mode first")
+            return {"CANCELLED"}
+
+        obj = context.scene.objects[self.obj_name]
+        bpy.ops.object.select_all(action="DESELECT")
+        obj.select = True
+        context.scene.objects.active = obj
+        return {"FINISHED"}

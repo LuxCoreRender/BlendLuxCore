@@ -4,9 +4,10 @@ from ..utils import ui as utils_ui
 
 
 class LuxCoreError:
-    def __init__(self, message):
+    def __init__(self, message, obj_name):
         self.message = str(message)
         self.count = 1
+        self.obj_name = obj_name
 
 
 class LuxCoreErrorLog(PropertyGroup):
@@ -21,11 +22,11 @@ class LuxCoreErrorLog(PropertyGroup):
     errors = []
     warnings = []
 
-    def add_error(self, message):
-        self._add("ERROR:", self.errors, message)
+    def add_error(self, message, obj_name=""):
+        self._add("ERROR:", self.errors, message, obj_name)
 
-    def add_warning(self, message):
-        self._add("WARNING:", self.warnings, message)
+    def add_warning(self, message, obj_name=""):
+        self._add("WARNING:", self.warnings, message, obj_name)
 
     def clear(self):
         self.errors.clear()
@@ -39,7 +40,7 @@ class LuxCoreErrorLog(PropertyGroup):
             # print("Can't tag errorlog for redraw in _RestrictContext")
             pass
 
-    def _add(self, prefix, collection, message):
+    def _add(self, prefix, collection, message, obj_name):
         for elem in collection:
             if elem.message == message:
                 elem.count += 1
@@ -47,7 +48,7 @@ class LuxCoreErrorLog(PropertyGroup):
                 return
 
         print(prefix, message)
-        new = LuxCoreError(message)
+        new = LuxCoreError(message, obj_name)
         collection.append(new)
 
         try:
