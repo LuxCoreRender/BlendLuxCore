@@ -157,3 +157,12 @@ def get_links(node_tree, socket):
     return tuple(link for link in node_tree.links
                  if (link.from_socket == socket or
                      link.to_socket == socket))
+
+
+def is_allowed_input(socket, input_socket):
+    if not hasattr(socket, "allowed_inputs"):
+        return True
+    for allowed_class in socket.allowed_inputs:
+        if isinstance(input_socket, allowed_class):
+            return True
+    return False

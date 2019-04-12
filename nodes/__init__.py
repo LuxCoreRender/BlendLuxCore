@@ -138,6 +138,21 @@ class LuxCoreNode(Node):
         props.Set(utils.create_props(prefix, definitions))
         return luxcore_name
 
+    def free(self):
+        # This method implements a workaround to have "delete and reconnect" functionality.
+        node_tree = self.id_data
+
+        for input in self.inputs:
+            for output in self.outputs:
+                if input.is_linked and output.is_linked:
+                    from_socket = input.links[0].from_socket
+
+                    for link in output.links:
+                        to_socket = link.to_socket
+
+                        if utils_node.is_allowed_input(to_socket, from_socket):
+                            node_tree.links.new(from_socket, to_socket)
+
 
 class LuxCoreNodeMaterial(LuxCoreNode):
     """Base class for material nodes"""
