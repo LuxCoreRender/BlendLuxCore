@@ -196,6 +196,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "SAMPLECOUNT", 1, "X", "VALUE")
         if aovs.convergence:
             self.register_pass(scene, renderlayer, "CONVERGENCE", 1, "X", "VALUE")
+        if aovs.noise:
+            self.register_pass(scene, renderlayer, "NOISE", 1, "X", "VALUE")
         if aovs.irradiance:
             self.register_pass(scene, renderlayer, "IRRADIANCE", 3, "RGB", "COLOR")
 

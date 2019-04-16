@@ -28,6 +28,7 @@ AOVS = {
     "OBJECT_ID": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False),
     "SAMPLECOUNT": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, True),
     "CONVERGENCE": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
+    "NOISE": AOV(1, pyluxcore.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False),
 }
 DEFAULT_AOV_SETTINGS = AOV(3, pyluxcore.ConvertFilmChannelOutput_3xFloat_To_3xFloatList, False)
 

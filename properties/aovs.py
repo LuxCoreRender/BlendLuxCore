@@ -67,6 +67,11 @@ class LuxCoreAOVSettings(PropertyGroup):
     samplecount = BoolProperty(name="Samplecount", default=False,
                        description="Samples per pixel (normalized so the values range from 0 to 1)")
     convergence = BoolProperty(name="Convergence", default=False,
-                       description="The noise amount per pixel. High values mean more noise, low value less noise")
+                       description="The convergence per pixel. The lower the value, the more converged "
+                                   "(noise-free) the pixel is. If the convergence halt condition is "
+                                   "enabled, the render is stopped once all pixels fall below the "
+                                   "convergence threshold")
+    noise = BoolProperty(name="Noise", default=False,
+                       description="The noise amount per pixel. High values mean more noise, low values less noise")
     irradiance = BoolProperty(name="Irradiance", default=False,
                        description="Surface irradiance")

@@ -287,6 +287,8 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("SAMPLECOUNT", 1, "X", layer.name)
     if aovs.convergence:
         engine.add_pass("CONVERGENCE", 1, "X", layer.name)
+    if aovs.noise:
+        engine.add_pass("NOISE", 1, "X", layer.name)
     if aovs.irradiance:
         engine.add_pass("IRRADIANCE", 3, "RGB", layer.name)
 

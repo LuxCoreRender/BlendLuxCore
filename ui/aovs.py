@@ -73,4 +73,5 @@ class LUXCORE_RENDERLAYER_PT_aovs(RenderLayerButtonsPanel, Panel):
 
         # Supported by BIDIR
         col.prop(aovs, "convergence")
+        col.prop(aovs, "noise")
         col.prop(aovs, "samplecount")
