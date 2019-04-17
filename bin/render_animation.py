@@ -1,15 +1,7 @@
-
 import os
 import argparse
 import pyluxcore
 from time import time, sleep
-
-
-def sanitize_render_engine(props):
-    # Debug
-    engine_type = props.Get("renderengine.type").GetString()
-    if engine_type.endswith("OCL"):
-        props.Set(pyluxcore.Property("renderengine.type", engine_type[:-3] + "CPU"))
 
 
 def main():
@@ -21,6 +13,8 @@ def main():
     args = parser.parse_args()
     props = pyluxcore.Properties(args.config_file)
     sanitize_render_engine(props)
+    # TODO: disable halt conditions and handle them in render_frame(), to prevent LuxCore from stopping the session
+    halt_samples = 5
 
     pyluxcore.AddFileNameResolverPath(os.path.dirname(args.config_file))
 
@@ -38,7 +32,7 @@ def main():
     try:
         for frame in range(frame_start, frame_end + 1):
             update(session, frame, anim_props_dir)
-            render_frame(session, frame)
+            render_frame(session, frame, halt_samples)
             render_times.append(time() - start)
             start = time()
     except KeyboardInterrupt:
@@ -51,6 +45,13 @@ def main():
         print("Frame %d: %.3f s" % (i, t))
 
 
+def sanitize_render_engine(props):
+    # Debug
+    engine_type = props.Get("renderengine.type").GetString()
+    if engine_type.endswith("OCL"):
+        props.Set(pyluxcore.Property("renderengine.type", engine_type[:-3] + "CPU"))
+
+
 def update(session, frame, anim_props_dir):
     print("Update for frame", frame)
     config = session.GetRenderConfig()
@@ -58,41 +59,10 @@ def update(session, frame, anim_props_dir):
 
     session.BeginSceneEdit()
 
-    # This works
-    # cameraProps = scene.ToProperties().GetAllProperties("scene.camera")
-    # fov = 70 - 10 * frame
-    # print("fov:", fov)
-    # cameraProps.Set(pyluxcore.Property("scene.camera.fieldofview", fov))
-    # scene.Parse(cameraProps)
-
     frame_props = pyluxcore.Properties(os.path.join(anim_props_dir, "%05d.scn" % frame))
-    # frame_props = pyluxcore.Properties()
-    # if frame > 1:
-    #     t = [float(elem) for elem in
-    #          "1 0 0 0 0 1 0 0 0 0 1 0 0.45968633890151978 -0.63940036296844482 0.18945108354091644 1".split(" ")]
-    #     print(t)
-    #     frame_props.Set(pyluxcore.Property("scene.objects.Mesh_animated_140570184019464000.transformation", t))
-    print("Setting frame props for frame", frame)
-    print(frame_props)
-    # scene_props = scene.ToProperties()
-    # old = scene_props.ToString()
-
-    # scene_props.Set(frame_props)
-
-    # new = scene_props.ToString()
-    # print("Changes:")
-    # for i, old_line in enumerate(old.split("\n")):
-    #     new_line = new.split("\n")[i]
-    #     if new_line != old_line:
-    #         print("<")
-    #         print(old_line)
-    #         print(">")
-    #         print(new_line)
-    #         print("-")
-    # print("-----")
-
-    # scene.Parse(scene_props)
     scene_props = scene.ToProperties()
+
+    # TODO: make generic so any group of keys in frame_props is fetched from scene_props
     new_props = frame_props.GetAllProperties("scene.camera")
 
     for key in frame_props.GetAllUniqueSubNames("scene.objects"):
@@ -102,20 +72,10 @@ def update(session, frame, anim_props_dir):
         new_props.Set(obj_props)
 
     scene.Parse(new_props)
-
-
-
-    # if frame > 1:
-    #     t = [float(elem) for elem in
-    #          "1 0 0 0 0 1 0 0 0 0 1 0 0.45968633890151978 -0.63940036296844482 0.18945108354091644 1".split(" ")]
-    #     scene.UpdateObjectTransformation("Mesh_Sphere__001_140282129500680000", t)
-
-    # __import__('code').interact(local=dict(globals(), **locals()))
-
     session.EndSceneEdit()
 
 
-def render_frame(session, frame):
+def render_frame(session, frame, halt_samples):
     print("Rendering frame", frame)
 
     while not session.HasDone():
@@ -123,11 +83,11 @@ def render_frame(session, frame):
         session.UpdateStats()
         stats = session.GetStats()
         elapsed_time = stats.Get("stats.renderengine.time").GetFloat()
-        current_pass = stats.Get("stats.renderengine.pass").GetUnsignedLongLong()
-        print("Time: %d s\tSamples: %d" % (elapsed_time, current_pass))
+        samples = stats.Get("stats.renderengine.pass").GetUnsignedLongLong()
+        print("Time: %d s\tSamples: %d" % (elapsed_time, samples))
 
         # Debug
-        if current_pass > 1:
+        if halt_samples and samples >= halt_samples:
             break
 
     filename = "%05d.png" % frame
