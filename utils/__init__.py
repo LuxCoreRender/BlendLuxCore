@@ -495,6 +495,12 @@ def use_instancing(obj, scene, context):
         # Always instance in viewport so we can move the object/light around
         return True
 
+    if use_filesaver(context, scene):
+        # TODO this is a hack to get a quick result, not a good solution
+        anim = obj.animation_data
+        if anim and anim.action:
+            return True
+
     if use_obj_motion_blur(obj, scene):
         # When using object motion blur, we export all objects as instances
         return True

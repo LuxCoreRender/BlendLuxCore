@@ -23,6 +23,10 @@ def export(exporter, scene, exported_objects):
         props.Set(cam_props)
 
         for obj in scene.objects:
+            if not utils.use_instancing(obj, scene, None):
+                # TODO this is a hack to get something usable fast
+                continue
+
             key = utils.make_key(obj)
             matrix = obj.matrix_world
             try:
