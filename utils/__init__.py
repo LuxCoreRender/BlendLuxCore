@@ -4,6 +4,7 @@ import math
 import re
 import os
 import hashlib
+import errno
 from ..bin import pyluxcore
 
 NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
@@ -611,3 +612,13 @@ def image_sequence_resolve_all(image):
 
 def is_valid_camera(obj):
     return obj and hasattr(obj, "type") and obj.type == "CAMERA"
+
+
+def create_dir_if_necessary(path):
+    if not os.path.exists(path):
+        # https://stackoverflow.com/a/273227
+        try:
+            os.makedirs(path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise

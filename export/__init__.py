@@ -139,6 +139,11 @@ class Exporter(object):
 
                 scene_props.Set(motion_blur_props)
 
+        export_animation = True  # TODO make property
+        if utils.use_filesaver(context, scene) and export_animation:
+            from . import animation
+            animation.export(self, scene, self.exported_objects)
+
         # World
         world_props = world.convert(self, scene)
         scene_props.Set(world_props)

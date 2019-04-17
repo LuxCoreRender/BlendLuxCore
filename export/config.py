@@ -1,10 +1,10 @@
 import os
-import errno
 from math import degrees
 import bpy
 from collections import OrderedDict
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import filesaver
 from . import aovs
 from .imagepipeline import use_backgroundimage
 
@@ -247,39 +247,9 @@ def _convert_path(config, definitions):
 
 def _convert_filesaver(scene, definitions, luxcore_engine):
     config = scene.luxcore.config
+    output_path, frame_name = utils.filesaver.get_output_path(scene, scene.frame_current)
 
-    filesaver_path = config.filesaver_path
-    output_path = utils.get_abspath(filesaver_path, must_exist=True, must_be_existing_dir=True)
-
-    blend_name = bpy.path.basename(bpy.data.filepath)
-    blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"
-
-    if not blend_name:
-        blend_name = "Untitled"
-
-    dir_name = blend_name + "_LuxCore"
-    frame_name = "%05d" % scene.frame_current
-
-    # If we have multiple render layers, we append the layer name
-    if len(scene.render.layers) > 1:
-        render_layer = utils.get_current_render_layer(scene)
-        frame_name += "_" + render_layer.name
-
-    if config.filesaver_format == "BIN":
-        # For binary format, the frame number is used as file name instead of directory name
-        frame_name += ".bcf"
-        output_path = os.path.join(output_path, dir_name)
-    else:
-        # For text format, we use the frame number as name for a subfolder
-        output_path = os.path.join(output_path, dir_name, frame_name)
-
-    if not os.path.exists(output_path):
-        # https://stackoverflow.com/a/273227
-        try:
-            os.makedirs(output_path)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+    utils.create_dir_if_necessary(output_path)
 
     if config.filesaver_format == "BIN":
         definitions["filesaver.filename"] = os.path.join(output_path, frame_name)
