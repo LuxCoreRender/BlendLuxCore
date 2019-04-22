@@ -27,12 +27,12 @@ class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
     bl_width_default = 160
 
     preset_items = [
-        ("denim", "Denim", "Denim", 0),
-        ("silk_charmeuse", "Silk Charmeuse", "Silk charmeuse", 1),
-        ("cotton_twill", "Cotton Twill", "Cotton twill", 2),
-        ("wool_gabardine", "Wool Gabardine", "Wool Gabardine", 3),
-        ("polyester_lining_cloth", "Polyester Lining Cloth", "Polyester lining cloth", 4),
-        ("silk_shantung", "Silk Shantung", "Silk shantung", 5),
+        ("denim", "Denim", "", 0),
+        ("silk_charmeuse", "Silk Charmeuse", "", 1),
+        ("cotton_twill", "Cotton Twill", "", 2),
+        ("wool_gabardine", "Wool Gabardine", "", 3),
+        ("polyester_lining_cloth", "Polyester Lining Cloth", "", 4),
+        ("silk_shantung", "Silk Shantung", "", 5),
     ]
 
     preset = EnumProperty(name="Preset", description="Cloth presets", items=preset_items,
