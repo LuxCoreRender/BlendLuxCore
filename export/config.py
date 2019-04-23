@@ -228,8 +228,12 @@ def _convert_final_engine(scene, definitions, config):
         sampler = "TILEPATHSAMPLER"
     else:
         sampler = config.sampler
-        definitions["sampler.sobol.adaptive.strength"] = config.sobol_adaptive_strength
-        definitions["sampler.random.adaptive.strength"] = config.sobol_adaptive_strength
+        adaptive_strength = config.sobol_adaptive_strength
+        if adaptive_strength > 0:
+            definitions["film.noiseestimation.warmup"] = config.noise_estimation.warmup
+            definitions["film.noiseestimation.step"] = config.noise_estimation.step
+        definitions["sampler.sobol.adaptive.strength"] = adaptive_strength
+        definitions["sampler.random.adaptive.strength"] = adaptive_strength
         _convert_metropolis_settings(definitions, config)
 
     return luxcore_engine, sampler

@@ -89,7 +89,11 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             row_sampler.prop(config, "sampler", expand=True)
 
             if config.sampler in {"SOBOL", "RANDOM"}:
-                layout.prop(config, "sobol_adaptive_strength", slider=True)
+                col = layout.column(align=True)
+                col.prop(config, "sobol_adaptive_strength", slider=True)
+                if config.sobol_adaptive_strength > 0:
+                    col.prop(config.noise_estimation, "warmup")
+                    col.prop(config.noise_estimation, "step")
             elif config.sampler == "METROPOLIS":
                 if denoiser.enabled and denoiser.type == "BCD":
                     layout.label("Can lead to artifacts in the denoiser!", icon=icons.WARNING)

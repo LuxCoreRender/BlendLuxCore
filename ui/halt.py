@@ -14,10 +14,11 @@ def draw(layout, context, halt):
     split.active = halt.use_time
     split.prop(halt, "time")
 
-    time_humanized = utils_ui.humanize_time(halt.time)
-    row = layout.row()
-    row.active = halt.use_time
-    row.label(time_humanized, icon="TIME")
+    if halt.use_time and halt.time > 60:
+        time_humanized = utils_ui.humanize_time(halt.time)
+        row = layout.row()
+        row.alignment = "RIGHT"
+        row.label(time_humanized, icon="TIME")
 
     row = layout.row()
     row.prop(halt, "use_samples")
@@ -47,25 +48,12 @@ def draw(layout, context, halt):
         if not config.tile.multipass_enable and halt.samples > min_samples:
             layout.label("Samples halt condition overriden by disabled multipass", icon=icons.INFO)
 
-    is_adaptive_sampler = config.sampler in {"SOBOL", "RANDOM"}
-    show_adaptive_sampling_props = halt.use_noise_thresh and is_adaptive_sampler
-
-    if show_adaptive_sampling_props:
-        thresh_layout = layout.box()
-    else:
-        thresh_layout = layout
-
-    row = thresh_layout.row()
-    row.prop(halt, "use_noise_thresh")
-    split = row.split()
-    split.active = halt.use_noise_thresh
-    split.prop(halt, "noise_thresh")
-
-    if show_adaptive_sampling_props:
-        row = thresh_layout.row(align=True)
-        row.prop(halt, "noise_thresh_warmup")
-        row.prop(halt, "noise_thresh_step")
-        thresh_layout.prop(halt, "noise_thresh_use_filter")
+    col = layout.column(align=True)
+    col.prop(halt, "use_noise_thresh")
+    if halt.use_noise_thresh:
+        col.prop(halt, "noise_thresh")
+        col.prop(halt, "noise_thresh_warmup")
+        col.prop(halt, "noise_thresh_step")
 
 
 class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):

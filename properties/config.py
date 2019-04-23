@@ -5,6 +5,7 @@ from bpy.props import (
     PointerProperty, StringProperty,
 )
 from math import radians
+from .halt import NOISE_THRESH_WARMUP_DESC, NOISE_THRESH_STEP_DESC
 
 
 TILED_DESCRIPTION = (
@@ -269,6 +270,13 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                          description="Choose between final render mode or a debug representation of the caches")
 
 
+class LuxCoreConfigNoiseEstimation(PropertyGroup):
+    warmup = IntProperty(name="Warmup Samples", default=8, min=1,
+                         description=NOISE_THRESH_WARMUP_DESC)
+    step = IntProperty(name="Test Step Samples", default=32, min=1, soft_min=16,
+                       description=NOISE_THRESH_STEP_DESC)
+
+
 class LuxCoreConfig(PropertyGroup):
     """
     Main config storage class.
@@ -294,6 +302,10 @@ class LuxCoreConfig(PropertyGroup):
     # SOBOL properties
     sobol_adaptive_strength = FloatProperty(name="Adaptive Strength", default=0.95, min=0, max=0.95,
                                             description=SOBOL_ADAPTIVE_STRENGTH_DESC)
+
+    # Noise estimation (used by adaptive samplers like SOBOL and RANDOM)
+    noise_estimation = PointerProperty(type=LuxCoreConfigNoiseEstimation)
+
     # METROPOLIS properties
     # sampler.metropolis.largesteprate
     metropolis_largesteprate = FloatProperty(name="Large Mutation Probability", default=40,
