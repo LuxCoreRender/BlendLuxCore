@@ -318,7 +318,7 @@ def _convert_dlscache_settings(scene, definitions, config):
     dls_cache = config.dls_cache
     worldscale = utils.get_worldscale(scene, as_scalematrix=False)
     definitions.update({
-        "lightstrategy.entry.radius": dls_cache.entry_radius * worldscale,
+        "lightstrategy.entry.radius": 0 if dls_cache.entry_radius_auto else dls_cache.entry_radius * worldscale,
         "lightstrategy.entry.normalangle": degrees(dls_cache.entry_normalangle),
         "lightstrategy.entry.maxpasses": dls_cache.entry_maxpasses,
         "lightstrategy.entry.convergencethreshold": dls_cache.entry_convergencethreshold / 100,

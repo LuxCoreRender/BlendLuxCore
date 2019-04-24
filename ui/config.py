@@ -127,7 +127,9 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
         if config.light_strategy == "DLS_CACHE":
             dls_cache = config.dls_cache
             col = ls_layout.column(align=True)
-            col.prop(dls_cache, "entry_radius")
+            col.prop(dls_cache, "entry_radius_auto")
+            if not dls_cache.entry_radius_auto:
+                col.prop(dls_cache, "entry_radius")
             col.prop(dls_cache, "entry_warmupsamples")
             ls_layout.prop(dls_cache, "show_advanced", toggle=True)
 

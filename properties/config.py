@@ -175,6 +175,8 @@ class LuxCoreConfigTile(PropertyGroup):
 class LuxCoreConfigDLSCache(PropertyGroup):
     show_advanced = BoolProperty(name="Show Advanced", default=False)
 
+    entry_radius_auto = BoolProperty(name="Automatic Entry Radius", default=True,
+                                     description="Automatically choose a good entry radius")
     entry_radius = FloatProperty(name="Entry Radius", default=0.15, min=0, subtype="DISTANCE",
                                  description="Choose this value according to the size of your scene. "
                                              "The default (15 cm) is suited for a room-sized scene")
