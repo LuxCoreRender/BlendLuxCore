@@ -255,9 +255,7 @@ def _convert_filesaver(scene, definitions, luxcore_engine):
     filesaver_path = config.filesaver_path
     output_path = utils.get_abspath(filesaver_path, must_exist=True, must_be_existing_dir=True)
 
-    blend_name = bpy.path.basename(bpy.data.filepath)
-    blend_name = os.path.splitext(blend_name)[0]  # remove ".blend"
-
+    blend_name = utils.get_blendfile_name()
     if not blend_name:
         blend_name = "Untitled"
 
@@ -353,6 +351,11 @@ def _convert_photongi_settings(scene, definitions, config):
     caustic_radius = photongi.caustic_lookup_radius * worldscale
     caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
 
+    file_path = utils.get_abspath(photongi.file_path, library=scene.library)
+    if os.path.isfile(file_path) and photongi.save_or_overwrite:
+        # Overwrite the file
+        os.remove(file_path)
+
     definitions.update({
         "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000000),
         "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
@@ -371,6 +374,8 @@ def _convert_photongi_settings(scene, definitions, config):
         "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
         "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),
         "path.photongi.caustic.merge.radiusscale": caustic_merge_radius_scale,
+
+        "path.photongi.persistent.file": file_path
     })
 
     if photongi.debug != "off":

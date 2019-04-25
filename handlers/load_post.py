@@ -1,6 +1,9 @@
+import os
+import tempfile
 import bpy
 from bpy.app.handlers import persistent
 from ..bin import pyluxcore
+from .. import utils
 from ..utils import compatibility
 
 
@@ -30,6 +33,15 @@ def handler(_):
         # Use Blender output path for filesaver by default
         if not scene.luxcore.config.filesaver_path:
             scene.luxcore.config.filesaver_path = scene.render.filepath
+
+        if not scene.luxcore.config.photongi.file_path:
+            blend_name = utils.get_blendfile_name()
+            if blend_name:
+                pgi_path = "//" + blend_name + ".pgi"
+            else:
+                # Blend file was not saved yet
+                pgi_path = os.path.join(tempfile.gettempdir(), "Untitled.pgi")
+            scene.luxcore.config.photongi.file_path = pgi_path
 
     # Run converters for backwards compatibility
     compatibility.run()

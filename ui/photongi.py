@@ -1,6 +1,8 @@
+import os
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from . import icons
+from .. import utils
 
 
 class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
@@ -72,3 +74,25 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
                 and not photongi.indirect_enabled) or (
                 photongi.debug == "showcaustic" and not photongi.caustic_enabled):
             col.label(text="Can't show this cache (disabled)", icon=icons.WARNING)
+
+        file_abspath = utils.get_abspath(photongi.file_path, library=context.scene.library)
+        file_exists = os.path.isfile(file_abspath)
+
+        if not file_abspath:
+            cache_status = "Cache file will not be saved"
+        elif photongi.save_or_overwrite:
+            if file_exists:
+                cache_status = "Cache file exists, but will be overwritten"
+            else:
+                cache_status = "Cache file will be saved"
+        else:
+            if file_exists:
+                cache_status = "Will use cache from file"
+            else:
+                cache_status = "No cache file available"
+
+        col = layout.column()
+        col.prop(photongi, "save_or_overwrite",
+                 text="Compute and overwrite" if file_exists else "Compute and save")
+        col.prop(photongi, "file_path", text="")
+        col.label(cache_status)

@@ -200,8 +200,6 @@ class LuxCoreConfigDLSCache(PropertyGroup):
 class LuxCoreConfigPhotonGI(PropertyGroup):
     enabled = BoolProperty(name="Enabled", default=False)
 
-    # TODO: sensible stepping when dragging values
-
     # Shared settings
     photon_maxcount = FloatProperty(name="Photon Count (Millions)", default=20, min=1, soft_max=100,
                                     precision=0, step=10,
@@ -270,6 +268,12 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     ]
     debug = EnumProperty(name="Debug", items=debug_items, default="off",
                          description="Choose between final render mode or a debug representation of the caches")
+
+    file_path = StringProperty(name="File Path", subtype="FILE_PATH",
+                               description="File path to the PhotonGI cache file")
+    save_or_overwrite = BoolProperty(name="", default=False,
+                                     description="Save the cache to a file or overwrite the existing cache file. "
+                                                 "If you want to use the saved cache, disable this option")
 
 
 class LuxCoreConfigNoiseEstimation(PropertyGroup):

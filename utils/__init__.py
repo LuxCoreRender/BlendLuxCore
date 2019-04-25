@@ -611,3 +611,8 @@ def image_sequence_resolve_all(image):
 
 def is_valid_camera(obj):
     return obj and hasattr(obj, "type") and obj.type == "CAMERA"
+
+
+def get_blendfile_name():
+    basename = bpy.path.basename(bpy.data.filepath)
+    return os.path.splitext(basename)[0]  # remove ".blend"
