@@ -362,10 +362,10 @@ def _convert_photongi_settings(context, scene, definitions, config):
             file_path = photongi.file_path[2:]
         else:
             file_path = file_path_abs
-            if os.path.isfile(file_path) and photongi.save_or_overwrite:
-                # To overwrite the file, we first have to delete it, otherwise
-                # LuxCore loads the cache from this file
-                os.remove(file_path)
+            # if os.path.isfile(file_path) and photongi.save_or_overwrite:
+            #     # To overwrite the file, we first have to delete it, otherwise
+            #     # LuxCore loads the cache from this file
+            #     os.remove(file_path)
 
     definitions.update({
         "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000000),
