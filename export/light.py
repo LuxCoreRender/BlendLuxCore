@@ -19,7 +19,7 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", 
         luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
 
         # If this light was previously defined as an area lamp, delete the area lamp mesh
-        luxcore_scene.DeleteObject(luxcore_name)
+        luxcore_scene.DeleteObject(_get_area_obj_name(luxcore_name))
         # If this light was previously defined as a light, delete it
         luxcore_scene.DeleteLight(luxcore_name)
 
@@ -377,9 +377,7 @@ def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance, lux
         ]
         luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, None, None, None, mesh_transform)
 
-    # Note: we append "000" to the luxcore name here as fake material index because the DefineBlenderMesh
-    # function would do the same, and it is expected by other parts of the code.
-    obj_prefix = "scene.objects." + luxcore_name + "000" + "."
+    obj_prefix = "scene.objects." + _get_area_obj_name(luxcore_name) + "."
     obj_definitions = {
         "material": mat_name,
         "shape": shape_name,
@@ -396,6 +394,12 @@ def _convert_area_lamp(obj, scene, context, luxcore_scene, gain, importance, lux
     mesh_definition = [luxcore_name, fake_material_index]
     exported_obj = ExportedObject([mesh_definition], luxcore_name)
     return props, exported_obj
+
+
+def _get_area_obj_name(luxcore_name):
+    # Note: we append "000" to the luxcore name here as fake material index because the DefineBlenderMesh
+    # function would do the same, and it is expected by other parts of the code.
+    return luxcore_name + "000"
 
 
 def _indirect_light_visibility(definitions, lamp_or_world):
