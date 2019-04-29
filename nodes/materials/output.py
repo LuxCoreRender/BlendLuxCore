@@ -11,6 +11,11 @@ SHADOWCATCHER_DESC = (
     "Remember to enable transparent film in camera settings"
 )
 
+ONLY_INFINITE_DESC = (
+    "Only consider shadows of infinite lights (sky, HDRI, "
+    "flat colored background) for the shadowcatcher"
+)
+
 MATERIAL_ID_DESC = (
     "ID for Material ID AOV, if -1 is set a random ID is chosen. "
     "Note that the random IDs of LuxCore can be greater than 32767 "
@@ -29,6 +34,8 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     active = BoolProperty(name="Active", default=True, update=update_active)
     is_shadow_catcher = BoolProperty(name="Shadow Catcher", default=False,
                                      description=SHADOWCATCHER_DESC)
+    shadow_catcher_only_infinite = BoolProperty(name="Only Infinite Lights", default=False,
+                                                description=ONLY_INFINITE_DESC)
     id = IntProperty(name="Material ID", default=-1, min=-1, soft_max=32767,
                      description=MATERIAL_ID_DESC)
     use_photongi = BoolProperty(name="Use PhotonGI Cache", default=True,
@@ -74,6 +81,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         if engine_is_bidir:
             col.label("Not supported by Bidir engine", icon=icons.INFO)
         elif self.is_shadow_catcher:
+            col.prop(self, "shadow_catcher_only_infinite")
             # Some settings that should be used with shadow catcher
             if utils.is_valid_camera(context.scene.camera):
                 pipeline = context.scene.camera.data.luxcore.imagepipeline
@@ -121,6 +129,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
             # LuxCore only assigns a random ID if the ID is not set at all
             props.Set(pyluxcore.Property(prefix + "id", self.id))
         props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
+        props.Set(pyluxcore.Property(prefix + "shadowcatcher.onlyinfinitelights", self.shadow_catcher_only_infinite))
         props.Set(pyluxcore.Property(prefix + "photongi.enable", self.use_photongi))
 
     def _convert_volume(self, exporter, node_tree, props):
