@@ -115,7 +115,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
                               description=TURBIDITY_DESC)
 
     # sun
-    relsize = FloatProperty(name="Relative Size", default=1, min=0.05,
+    relsize = FloatProperty(name="Relative Size", default=1, min=1,
                             description=RELSIZE_DESC)
 
     # The image property has different names on different lights:
