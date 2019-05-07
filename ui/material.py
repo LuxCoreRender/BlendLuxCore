@@ -117,7 +117,7 @@ class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return engine == "LUXCORE"
+        return context.material and engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
@@ -132,7 +132,8 @@ class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
         else:
             layout.prop(mat.luxcore, "auto_vp_color")
             layout.prop(mat, "diffuse_color", text="Viewport Color")
-    
+
+
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Preview"
