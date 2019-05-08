@@ -49,6 +49,7 @@ from .pointiness import LuxCoreNodeTexPointiness
 from .remap import LuxCoreNodeTexRemap
 from .hitpointinfo import LuxCoreNodeTexHitpointInfo
 from .smoke import LuxCoreNodeTexSmoke
+from .splitfloat3 import LuxCoreNodeTexSplitFloat3
 from .uv import LuxCoreNodeTexUV
 from .vectormath import LuxCoreNodeTexVectorMath
 from .wrinkled import LuxCoreNodeTexWrinkled
@@ -109,6 +110,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
+        NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         Separator(),
