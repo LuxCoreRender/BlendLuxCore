@@ -144,7 +144,7 @@ class LuxCoreNode(Node):
 
         for input in self.inputs:
             for output in self.outputs:
-                if input.is_linked and output.is_linked:
+                if input.links and output.links:
                     from_socket = input.links[0].from_socket
 
                     for link in output.links:
