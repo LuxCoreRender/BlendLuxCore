@@ -38,6 +38,7 @@ from .invert import LuxCoreNodeTexInvert
 from .iorpreset import LuxCoreNodeTexIORPreset
 from .irregulardata import LuxCoreNodeTexIrregularData
 from .lampspectrum import LuxCoreNodeTexLampSpectrum
+from .makefloat3 import LuxCoreNodeTexMakeFloat3
 from .mapping2d import LuxCoreNodeTexMapping2D
 from .mapping3d import LuxCoreNodeTexMapping3D
 from .marble import LuxCoreNodeTexMarble
@@ -49,6 +50,7 @@ from .pointiness import LuxCoreNodeTexPointiness
 from .remap import LuxCoreNodeTexRemap
 from .hitpointinfo import LuxCoreNodeTexHitpointInfo
 from .smoke import LuxCoreNodeTexSmoke
+from .splitfloat3 import LuxCoreNodeTexSplitFloat3
 from .uv import LuxCoreNodeTexUV
 from .vectormath import LuxCoreNodeTexVectorMath
 from .wrinkled import LuxCoreNodeTexWrinkled
@@ -109,6 +111,8 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
+        NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
+        NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         Separator(),
