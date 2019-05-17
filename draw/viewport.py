@@ -141,9 +141,14 @@ class FrameBuffer(object):
 
     def load_denoiser_result(self, context):
         self._denoiser_process = None
-        with open(self._denoised_file_path, "rb") as f:
-            data, scale = utils.pfm.load_pfm(f, as_flat_list=True)
-        TempfileManager.delete_files(id(self))
+        try:
+            with open(self._denoised_file_path, "rb") as f:
+                data, scale = utils.pfm.load_pfm(f, as_flat_list=True)
+            TempfileManager.delete_files(id(self))
+        except FileNotFoundError:
+            TempfileManager.delete_files(id(self))
+            raise Exception("Denoising failed, check console for details")
+
         self.buffer[:] = data
         self._update_texture(context)
         self.denoiser_result_cached = True
