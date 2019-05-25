@@ -2,6 +2,7 @@ import nodeitems_utils
 from .tree import luxcore_node_categories_material
 
 # Import all material nodes just so they get registered
+# TODO 2.8 remove
 from .carpaint import LuxCoreNodeMatCarpaint
 from .cloth import LuxCoreNodeMatCloth
 from .emission import LuxCoreNodeMatEmission

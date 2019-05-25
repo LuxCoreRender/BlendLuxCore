@@ -2,6 +2,7 @@ import nodeitems_utils
 from .tree import luxcore_node_categories_texture
 
 # Import all texture nodes just so they get registered
+# TODO 2.8 remove
 from .band import LuxCoreNodeTexBand
 from .blackbody import LuxCoreNodeTexBlackbody
 from .blenderblend import LuxCoreNodeTexBlenderBlend
