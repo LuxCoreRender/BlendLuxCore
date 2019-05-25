@@ -34,7 +34,7 @@ def _tile_highlight(context):
     current_image = context.space_data.image
     if current_image is None or current_image.type != "RENDER_RESULT":
         return
-    from ..engine import LuxCoreRenderEngine
+    from ..engine.base import LuxCoreRenderEngine
     if not LuxCoreRenderEngine.final_running:
         return
 

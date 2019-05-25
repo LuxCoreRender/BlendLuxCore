@@ -2,7 +2,7 @@ from bpy.types import Panel
 from . import denoiser
 from ..utils.refresh_button import template_refresh_button
 from ..utils import ui as utils_ui
-from ..engine import LuxCoreRenderEngine
+from ..engine.base import LuxCoreRenderEngine
 from . import icons
 
 

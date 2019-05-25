@@ -1,5 +1,5 @@
 # This is in a separate file because otherwise there are circular imports
-from ..engine import LuxCoreRenderEngine
+from ..engine.base import LuxCoreRenderEngine
 from ..ui import icons
 
 
