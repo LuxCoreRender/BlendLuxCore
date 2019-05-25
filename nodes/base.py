@@ -5,7 +5,7 @@ from .. import utils
 from ..utils import node as utils_node
 from ..utils import ui as utils_ui
 from ..ui import icons
-from . import TREE_TYPES
+from . import TREE_TYPES, TREE_ICONS
 
 class LuxCoreNodeTree:
     """Base class for LuxCore node trees"""
