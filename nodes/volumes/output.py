@@ -1,7 +1,6 @@
-import bpy
 from bpy.props import BoolProperty
 from ..output import LuxCoreNodeOutput, update_active
-from .. import utils
+from ... import utils
 from ...bin import pyluxcore
 
 

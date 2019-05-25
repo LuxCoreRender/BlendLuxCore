@@ -3,7 +3,7 @@ import mathutils
 import math
 from time import time
 from bpy.props import EnumProperty, PointerProperty, StringProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ... import utils
 from ...bin import pyluxcore
 from ...export import smoke

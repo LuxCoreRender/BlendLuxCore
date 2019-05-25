@@ -1,5 +1,5 @@
 from bpy.props import EnumProperty, FloatProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 
 from .. import NOISE_BASIS_ITEMS
 from .. import NOISE_TYPE_ITEMS

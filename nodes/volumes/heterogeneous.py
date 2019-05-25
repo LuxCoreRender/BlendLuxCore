@@ -1,7 +1,8 @@
 import math
 import bpy
 from bpy.props import IntProperty, BoolProperty, FloatProperty, PointerProperty, StringProperty
-from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
+from .. import COLORDEPTH_DESC
+from ..base import LuxCoreNodeVolume
 from ... import utils
 from ...properties.light import LIGHTGROUP_DESC
 from ...ui import icons

@@ -1,5 +1,5 @@
 from bpy.props import EnumProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 
 
 class LuxCoreNodeTexUV(LuxCoreNodeTexture):

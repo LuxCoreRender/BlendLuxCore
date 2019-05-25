@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import BoolProperty
-from .. import LuxCoreNodeMaterial, Roughness
+from ..base import LuxCoreNodeMaterial, Roughness
 from .glossytranslucent import IOR_DESCRIPTION
 
 

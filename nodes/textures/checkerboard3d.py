@@ -1,4 +1,4 @@
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ... import utils
 
 

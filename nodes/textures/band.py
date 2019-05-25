@@ -1,6 +1,6 @@
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty, StringProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...ui import icons
 
 

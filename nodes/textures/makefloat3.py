@@ -1,4 +1,4 @@
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 
 
 class LuxCoreNodeTexMakeFloat3(LuxCoreNodeTexture):

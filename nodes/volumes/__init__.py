@@ -3,7 +3,7 @@ import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import icons
 from ..nodeitems import Separator
-from .. import LuxCoreNodeTree
+from ..base import LuxCoreNodeTree
 
 from .output import LuxCoreNodeVolOutput
 from .clear import LuxCoreNodeVolClear

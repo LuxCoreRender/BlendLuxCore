@@ -4,7 +4,7 @@ import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import icons
 from ..nodeitems import Separator, NodeItemMultiImageImport
-from .. import LuxCoreNodeTree
+from ..base import LuxCoreNodeTree
 
 # Import all texture nodes just so they get registered
 from .band import LuxCoreNodeTexBand

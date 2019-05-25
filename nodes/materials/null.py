@@ -1,4 +1,4 @@
-from .. import LuxCoreNodeMaterial
+from ..base import LuxCoreNodeMaterial
 
 
 class LuxCoreNodeMatNull(LuxCoreNodeMaterial):

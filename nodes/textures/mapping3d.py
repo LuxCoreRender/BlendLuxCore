@@ -1,6 +1,6 @@
 from bpy.props import FloatProperty, BoolProperty, FloatVectorProperty, EnumProperty
 from mathutils import Matrix
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 

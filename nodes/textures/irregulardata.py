@@ -1,5 +1,5 @@
 from bpy.props import StringProperty, BoolProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...ui import icons
 
 

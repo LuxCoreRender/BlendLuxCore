@@ -3,7 +3,7 @@ from bpy.props import (
     PointerProperty, EnumProperty,
     BoolProperty, FloatProperty,
 )
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...export.image import ImageExporter
 from ...properties.image_user import LuxCoreImageUser
 from ... import utils

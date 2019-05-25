@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import FloatProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ..sockets import LuxCoreSocketFloat
 from ... import utils
 

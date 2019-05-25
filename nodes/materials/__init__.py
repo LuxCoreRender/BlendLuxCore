@@ -5,7 +5,7 @@ from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 from ...ui import icons
 from ...utils import node as utils_node
 from ..nodeitems import Separator, NodeItemMultiImageImport
-from .. import LuxCoreNodeTree
+from ..base import LuxCoreNodeTree
 
 # Import all material nodes just so they get registered
 from .carpaint import LuxCoreNodeMatCarpaint

@@ -1,5 +1,5 @@
 from bpy.props import FloatProperty, BoolProperty
-from .. import LuxCoreNodeMaterial, Roughness
+from ..base import LuxCoreNodeMaterial, Roughness
 from ..sockets import LuxCoreSocketFloat
 from ..output import get_active_output
 from ...utils import node as utils_node

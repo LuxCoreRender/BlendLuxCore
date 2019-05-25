@@ -1,5 +1,5 @@
 from bpy.props import FloatProperty, EnumProperty
-from .. import LuxCoreNodeMaterial
+from ..base import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
 from ...ui import icons
 

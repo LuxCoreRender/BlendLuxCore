@@ -1,5 +1,6 @@
 from bpy.props import IntProperty, FloatProperty, StringProperty
-from .. import LuxCoreNodeVolume, COLORDEPTH_DESC
+from .. import COLORDEPTH_DESC
+from ..base import LuxCoreNodeVolume
 from ...properties.light import LIGHTGROUP_DESC
 
 

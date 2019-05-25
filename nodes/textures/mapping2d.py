@@ -1,6 +1,6 @@
 import math
 from bpy.props import FloatProperty, BoolProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 

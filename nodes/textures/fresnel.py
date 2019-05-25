@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import PointerProperty, EnumProperty, StringProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ... import utils
 
 

@@ -3,7 +3,7 @@
 # <pep8 compliant>
 import bpy
 from bpy.props import FloatProperty, StringProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...operators import ior_presets
 
 

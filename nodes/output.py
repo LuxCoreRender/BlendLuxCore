@@ -1,5 +1,5 @@
 import bpy
-from . import LuxCoreNode
+from .base import LuxCoreNode
 from .. import utils
 from ..utils import node as utils_node
 

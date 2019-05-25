@@ -1,6 +1,6 @@
 import math
 from bpy.props import FloatVectorProperty, BoolProperty, EnumProperty, StringProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from mathutils import Color
 from ...ui import icons
 

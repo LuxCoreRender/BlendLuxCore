@@ -1,4 +1,4 @@
-from .. import LuxCoreNodeMaterial
+from ..base import LuxCoreNodeMaterial
 from ...utils import node as utils_node
 
 

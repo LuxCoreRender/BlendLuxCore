@@ -1,5 +1,5 @@
 import bpy
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 class LuxCoreNodeTexDots(LuxCoreNodeTexture):

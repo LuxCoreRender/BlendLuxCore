@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import FloatProperty
-from .. import LuxCoreNodeMaterial
+from ..base import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
 
 SIGMA_DESCRIPTION = "Surface roughness, 0 for pure Lambertian reflection"
