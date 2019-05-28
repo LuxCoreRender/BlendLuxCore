@@ -153,6 +153,14 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
             layout.prop(lamp.luxcore, "is_laser")
 
 
+def draw_vismap_ui(layout, light_or_world):
+    layout.prop(light_or_world.luxcore.vismap, "type")
+    if light_or_world.luxcore.vismap.type == "cache":
+        col = layout.column(align=True)
+        col.prop(light_or_world.luxcore.vismap, "cache_map_width")
+        col.prop(light_or_world.luxcore.vismap, "cache_samples")
+
+
 class LUXCORE_LAMP_PT_performance(DataButtonsPanel, Panel):
     """
     Lamp UI Panel, shows stuff that affects the performance of the render
@@ -174,7 +182,7 @@ class LUXCORE_LAMP_PT_performance(DataButtonsPanel, Panel):
 
         if lamp.type == "HEMI":
             # infinite (with image) and constantinfinte lights
-            layout.prop(lamp.luxcore, "visibilitymap_enable")
+            draw_vismap_ui(layout, lamp)
 
 
 class LUXCORE_LAMP_PT_visibility(DataButtonsPanel, Panel):

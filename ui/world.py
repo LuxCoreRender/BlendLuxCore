@@ -2,6 +2,7 @@ from bl_ui.properties_world import WorldButtonsPanel
 from bpy.types import Panel
 from ..utils import ui as utils_ui
 from . import icons
+from .light import draw_vismap_ui
 
 
 class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
@@ -155,7 +156,7 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
         world = context.world
 
         layout.prop(world.luxcore, "importance")
-        layout.prop(world.luxcore, "visibilitymap_enable")
+        draw_vismap_ui(layout, world)
 
 
 class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):

@@ -411,7 +411,18 @@ def _indirect_light_visibility(definitions, lamp_or_world):
 
 
 def _visibilitymap(definitions, lamp_or_world):
-    definitions["visibilitymap.enable"] = lamp_or_world.luxcore.visibilitymap_enable
+    vismap = lamp_or_world.luxcore.vismap
+
+    definitions["visibilitymap.enable"] = vismap.type == "single"
+    use_cache = vismap.type == "cache"
+    definitions["visibilitymapcache.enable"] = use_cache
+
+    if use_cache:
+        map_width = vismap.cache_map_width
+        definitions["visibilitymapcache.map.width"] = map_width
+        definitions["visibilitymapcache.map.height"] = map_width / 2
+        definitions["visibilitymapcache.map.samplecount"] = vismap.cache_samples
+        definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = lamp_or_world.luxcore.sampleupperhemisphereonly
 
 
 def export_ies(definitions, ies, library, is_meshlight=False):

@@ -8,9 +8,9 @@ from bpy.props import (
 from .light import (
     RGB_GAIN_DESC, IMPORTANCE_DESCRIPTION,
     GAMMA_DESCRIPTION, SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION,
-    VISIBILITYMAP_ENABLE_DESC, LIGHTGROUP_DESC, TURBIDITY_DESC,
-    VIS_INDIRECT_DIFFUSE_DESC, VIS_INDIRECT_GLOSSY_DESC,
-    VIS_INDIRECT_SPECULAR_DESC,
+    LIGHTGROUP_DESC, TURBIDITY_DESC, VIS_INDIRECT_DIFFUSE_DESC,
+    VIS_INDIRECT_GLOSSY_DESC, VIS_INDIRECT_SPECULAR_DESC,
+    LuxCoreVisMapProps
 )
 from .image_user import LuxCoreImageUser
 
@@ -95,7 +95,6 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     visibility_indirect_specular = BoolProperty(name="Specular", default=True, description=VIS_INDIRECT_SPECULAR_DESC)
 
     # sky2, infinite, constantinfinite
-    visibilitymap_enable = BoolProperty(name="Build Visibility Map", default=True,
-                                        description=VISIBILITYMAP_ENABLE_DESC)
+    vismap = PointerProperty(type=LuxCoreVisMapProps)
 
     volume = PointerProperty(type=bpy.types.NodeTree)
