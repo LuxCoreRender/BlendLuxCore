@@ -1,7 +1,5 @@
 import bpy
-from bpy.props import FloatProperty
 from ..base import LuxCoreNodeMaterial
-from ..sockets import LuxCoreSocketFloat
 
 class LuxCoreNodeMatMirror(bpy.types.Node, LuxCoreNodeMaterial):
     """mirror material node"""

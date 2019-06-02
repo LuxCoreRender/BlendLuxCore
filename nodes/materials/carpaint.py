@@ -7,7 +7,7 @@ from ...ui import icons
 REFLECTION_DESCRIPTION = "Glossy layer reflection value"
 
 
-class LuxCoreSocketReflection(LuxCoreSocketFloat):
+class LuxCoreSocketReflection(bpy.types.NodeSocket, LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
     default_value = FloatProperty(min=0.00001, max=1, description=REFLECTION_DESCRIPTION)
     slider = True

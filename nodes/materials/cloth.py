@@ -10,14 +10,14 @@ REPEATV_DESCRIPTION = "Repetition count of pattern in V direction"
 
 # Note: we need to keep this class around for backwards compatibility reasons,
 # even if it is not used (we need it so we can port old cloth nodes to new ones)
-class LuxCoreSocketRepeatU(LuxCoreSocketFloat):
+class LuxCoreSocketRepeatU(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, soft_max=10000, description=REPEATU_DESCRIPTION)
     slider = True
 
 
 # Note: we need to keep this class around for backwards compatibility reasons,
 # even if it is not used (we need it so we can port old cloth nodes to new ones)
-class LuxCoreSocketRepeatV(LuxCoreSocketFloat):
+class LuxCoreSocketRepeatV(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value = FloatProperty(min=0, soft_max=10000, description=REPEATV_DESCRIPTION)
     slider = True
 

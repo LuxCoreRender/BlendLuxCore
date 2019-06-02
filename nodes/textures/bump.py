@@ -5,7 +5,7 @@ from ..sockets import LuxCoreSocketFloat
 from ... import utils
 
 
-class LuxCoreSocketBumpHeight(LuxCoreSocketFloat):
+class LuxCoreSocketBumpHeight(bpy.types.NodeSocket, LuxCoreSocketFloat):
     # Allow negative values for inverting the bump. These values are in meters.
     default_value = FloatProperty(default=0.001, soft_min=-0.01, soft_max=0.01,
                                   precision=3, step=0.001,

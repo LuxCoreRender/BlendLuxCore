@@ -248,7 +248,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
-class LuxCoreNodeTreePointer(LuxCoreNode):
+class LuxCoreNodeTreePointer(bpy.types.Node, LuxCoreNode):
     """ Pointer to a node tree """
     bl_label = "Pointer"
     bl_width_default = 250
