@@ -38,31 +38,32 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
     if pipeline.tonemapper.enabled:
         index = convert_tonemapper(definitions, index, pipeline.tonemapper)
 
-    # Note: Blender expects the alpha to be NOT premultiplied, so we only
-    # premultiply it when the backgroundimage plugin is used
-    if use_backgroundimage(context, scene):
-        index = _premul_alpha(definitions, index)
+    if not (context and scene.luxcore.viewport.denoise):
+        # Note: Blender expects the alpha to be NOT premultiplied, so we only
+        # premultiply it when the backgroundimage plugin is used
+        if use_backgroundimage(context, scene):
+            index = _premul_alpha(definitions, index)
 
-    if use_backgroundimage(context, scene):
-        index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
+        if use_backgroundimage(context, scene):
+            index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
 
-    if pipeline.mist.enabled:
-        index = _mist(definitions, index, pipeline.mist, scene)
+        if pipeline.mist.enabled:
+            index = _mist(definitions, index, pipeline.mist, scene)
 
-    if pipeline.bloom.enabled:
-        index = _bloom(definitions, index, pipeline.bloom)
+        if pipeline.bloom.enabled:
+            index = _bloom(definitions, index, pipeline.bloom)
 
-    if pipeline.coloraberration.enabled:
-        index = _coloraberration(definitions, index, pipeline.coloraberration)
+        if pipeline.coloraberration.enabled:
+            index = _coloraberration(definitions, index, pipeline.coloraberration)
 
-    if pipeline.vignetting.enabled:
-        index = _vignetting(definitions, index, pipeline.vignetting)
+        if pipeline.vignetting.enabled:
+            index = _vignetting(definitions, index, pipeline.vignetting)
 
-    if pipeline.camera_response_func.enabled:
-        index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
+        if pipeline.camera_response_func.enabled:
+            index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
 
-    if pipeline.contour_lines.enabled:
-        index = _contour_lines(definitions, index, pipeline.contour_lines)
+        if pipeline.contour_lines.enabled:
+            index = _contour_lines(definitions, index, pipeline.contour_lines)
 
     if use_filesaver:
         # Needs gamma correction (Blender applies it for us,
