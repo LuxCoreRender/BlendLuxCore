@@ -1,3 +1,4 @@
+import bpy
 from bpy.props import FloatProperty, EnumProperty
 from ..base import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
@@ -21,7 +22,7 @@ class LuxCoreSocketRepeatV(LuxCoreSocketFloat):
     slider = True
 
 
-class LuxCoreNodeMatCloth(LuxCoreNodeMaterial):
+class LuxCoreNodeMatCloth(bpy.types.Node, LuxCoreNodeMaterial):
     """Cloth material node"""
     bl_label = "Cloth Material"
     bl_width_default = 160

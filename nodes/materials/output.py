@@ -1,3 +1,4 @@
+import bpy
 from bpy.props import BoolProperty, PointerProperty, IntProperty
 from ...bin import pyluxcore
 from ... import utils
@@ -23,7 +24,7 @@ MATERIAL_ID_DESC = (
 )
 
 
-class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
+class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
     """
     Material output node.
     This is where the export starts (if the output is active).

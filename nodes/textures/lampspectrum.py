@@ -1,3 +1,4 @@
+import bpy
 from bpy.props import EnumProperty
 from ..base import LuxCoreNodeTexture
 
@@ -133,7 +134,7 @@ ABSORPTION_ITEMS = [
 ]
 
 
-class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture):
+class LuxCoreNodeTexLampSpectrum(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Lamp Spectrum"
     bl_width_default = 310
 

@@ -1,10 +1,11 @@
+import bpy
 from bpy.props import FloatProperty, IntProperty
 from ..base import LuxCoreNodeTexture
 
 from ... import utils
 
 
-class LuxCoreNodeTexBlenderMagic(LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderMagic(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Magic"
     bl_width_default = 200
 

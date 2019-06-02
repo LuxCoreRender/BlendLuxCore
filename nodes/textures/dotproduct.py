@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexDotProduct(LuxCoreNodeTexture):
+class LuxCoreNodeTexDotProduct(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Dot Product"
     bl_width_default = 200
     

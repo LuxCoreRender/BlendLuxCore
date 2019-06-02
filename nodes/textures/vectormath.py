@@ -1,10 +1,11 @@
+import bpy
 from bpy.props import BoolProperty, EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 from ...ui import icons
 from .math import MIX_DESCRIPTION
 
 
-class LuxCoreNodeTexVectorMath(LuxCoreNodeTexture):
+class LuxCoreNodeTexVectorMath(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Vector Math"
     bl_width_default = 200
 

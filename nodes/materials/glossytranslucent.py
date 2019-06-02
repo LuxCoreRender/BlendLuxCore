@@ -12,7 +12,7 @@ MULTIBOUNCE_DESCRIPTION = (
 )
 
 
-class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial):
+class LuxCoreNodeMatGlossyTranslucent(bpy.types.Node, LuxCoreNodeMaterial):
     bl_label = "Glossy Translucent Material"
     bl_width_default = 160
 

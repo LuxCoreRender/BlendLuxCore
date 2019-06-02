@@ -21,7 +21,7 @@ MULTISCATTERING_DESC = (
 )
 
 
-class LuxCoreNodeVolHeterogeneous(LuxCoreNodeVolume):
+class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
     bl_label = "Heterogeneous Volume"
     bl_width_default = 190
 

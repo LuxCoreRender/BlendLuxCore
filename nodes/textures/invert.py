@@ -1,7 +1,8 @@
+import bpy
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexInvert(LuxCoreNodeTexture):
+class LuxCoreNodeTexInvert(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Invert"
     bl_width_default = 100
 

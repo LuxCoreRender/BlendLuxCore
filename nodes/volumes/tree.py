@@ -5,7 +5,7 @@ from ..nodeitems import Separator
 from ..base import LuxCoreNodeTree
 
 
-class LuxCoreVolumeNodeTree(LuxCoreNodeTree, bpy.types.NodeTree):
+class LuxCoreVolumeNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
     bl_idname = "luxcore_volume_nodes"
     bl_label = "LuxCore Volume Nodes"
     bl_icon = icons.NTREE_VOLUME

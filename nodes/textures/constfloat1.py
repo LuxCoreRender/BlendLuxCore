@@ -1,8 +1,9 @@
+import bpy
 from bpy.props import FloatProperty
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexConstfloat1(LuxCoreNodeTexture):
+class LuxCoreNodeTexConstfloat1(bpy.types.Node, LuxCoreNodeTexture):
     """ Constant float value """
     bl_label = "Constant Value"
 

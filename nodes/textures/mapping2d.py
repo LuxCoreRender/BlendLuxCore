@@ -1,10 +1,11 @@
+import bpy
 import math
 from bpy.props import FloatProperty, BoolProperty
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture):
+class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "2D Mapping"
     bl_width_default = 160
 

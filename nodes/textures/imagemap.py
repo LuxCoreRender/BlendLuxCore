@@ -18,7 +18,7 @@ NORMAL_MAP_DESC = (
 NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of the normal map"
 
 
-class LuxCoreNodeTexImagemap(LuxCoreNodeTexture):
+class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Imagemap"
     bl_width_default = 200
 

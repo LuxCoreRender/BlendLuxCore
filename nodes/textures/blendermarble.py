@@ -1,3 +1,4 @@
+import bpy
 from bpy.props import EnumProperty, IntProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 
@@ -7,7 +8,7 @@ from .. import NOISE_TYPE_ITEMS
 from ... import utils
 
 
-class LuxCoreNodeTexBlenderMarble(LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderMarble(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Marble"
     bl_width_default = 200    
 

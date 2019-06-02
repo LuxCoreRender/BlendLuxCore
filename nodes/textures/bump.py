@@ -12,7 +12,7 @@ class LuxCoreSocketBumpHeight(LuxCoreSocketFloat):
                                   subtype="DISTANCE", description="Bump height")
 
 
-class LuxCoreNodeTexBump(LuxCoreNodeTexture):
+class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
     """ A scale texture which applies worldscale """
     bl_label = "Bump"
     bl_width_default = 180

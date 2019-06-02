@@ -5,7 +5,7 @@ from ..base import LuxCoreNodeTexture
 from .. import sockets
 from ... import utils
 
-class LuxCoreNodeTexfBM(LuxCoreNodeTexture):
+class LuxCoreNodeTexfBM(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "fBM"
     bl_width_default = 200
 

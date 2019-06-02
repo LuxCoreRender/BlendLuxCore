@@ -7,7 +7,7 @@ from .. import NOISE_BASIS_ITEMS
 from .. import sockets
 from ... import utils
 
-class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Musgrave"
     bl_width_default = 200    
 

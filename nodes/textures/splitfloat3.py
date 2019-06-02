@@ -1,7 +1,8 @@
+import bpy
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexSplitFloat3(LuxCoreNodeTexture):
+class LuxCoreNodeTexSplitFloat3(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Split RGB"
     bl_width_default = 100
 

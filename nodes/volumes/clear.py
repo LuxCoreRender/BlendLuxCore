@@ -1,10 +1,11 @@
+import bpy
 from bpy.props import IntProperty, FloatProperty, StringProperty
 from .. import COLORDEPTH_DESC
 from ..base import LuxCoreNodeVolume
 from ...properties.light import LIGHTGROUP_DESC
 
 
-class LuxCoreNodeVolClear(LuxCoreNodeVolume):
+class LuxCoreNodeVolClear(bpy.types.Node, LuxCoreNodeVolume):
     bl_label = "Clear Volume"
     bl_width_default = 160
 

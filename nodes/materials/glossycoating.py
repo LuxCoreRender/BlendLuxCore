@@ -5,7 +5,7 @@ from ...utils import node as utils_node
 from .glossytranslucent import IOR_DESCRIPTION
 
 
-class LuxCoreNodeMatGlossyCoating(LuxCoreNodeMaterial):
+class LuxCoreNodeMatGlossyCoating(bpy.types.Node, LuxCoreNodeMaterial):
     bl_label = "Glossy Coating Material"
     bl_width_default = 160
 

@@ -1,5 +1,4 @@
 import bpy
-from bpy.types import Node
 from bpy.props import PointerProperty, EnumProperty
 from .. import utils
 from ..utils import node as utils_node
@@ -35,7 +34,7 @@ class LuxCoreNodeTree:
                                      update=acknowledge_connection)
 
 
-class LuxCoreNode(Node):
+class LuxCoreNode:
     """Base class for LuxCore nodes (material, volume and texture)"""
     bl_label = ""
 

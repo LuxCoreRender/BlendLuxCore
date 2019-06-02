@@ -1,10 +1,11 @@
+import bpy
 from bpy.props import IntProperty, BoolProperty, FloatProperty, StringProperty
 from .. import COLORDEPTH_DESC
 from ..base import LuxCoreNodeVolume
 from ...properties.light import LIGHTGROUP_DESC
 
 
-class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume):
+class LuxCoreNodeVolHomogeneous(bpy.types.Node, LuxCoreNodeVolume):
     bl_label = "Homogeneous Volume"
     bl_width_default = 175
 

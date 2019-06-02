@@ -1,10 +1,11 @@
+import bpy
 from bpy.props import EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 
 from ... import utils
 
 
-class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderVoronoi(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Voronoi"
     bl_width_default = 200
 

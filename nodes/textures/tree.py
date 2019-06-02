@@ -5,7 +5,7 @@ from ..nodeitems import Separator, NodeItemMultiImageImport
 from ..base import LuxCoreNodeTree
 
 
-class LuxCoreTextureNodeTree(LuxCoreNodeTree, bpy.types.NodeTree):
+class LuxCoreTextureNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
     bl_idname = "luxcore_texture_nodes"
     bl_label = "LuxCore Texture Nodes"
     bl_icon = icons.NTREE_TEXTURE

@@ -1,3 +1,4 @@
+import bpy
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty, StringProperty
 from ..base import LuxCoreNodeTexture
@@ -30,7 +31,7 @@ class ColorRampItem(PropertyGroup):
                                    default=False, update=update_remove_keyframe)
 
 
-class LuxCoreNodeTexBand(LuxCoreNodeTexture):
+class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Band"
     bl_width_default = 200
 

@@ -3,7 +3,7 @@ from bpy.props import FloatProperty
 from ..base import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
 
-class LuxCoreNodeMatMirror(LuxCoreNodeMaterial):
+class LuxCoreNodeMatMirror(bpy.types.Node, LuxCoreNodeMaterial):
     """mirror material node"""
     bl_label = "Mirror Material"
     bl_width_default = 160

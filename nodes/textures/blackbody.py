@@ -1,8 +1,9 @@
+import bpy
 from bpy.props import FloatProperty
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexBlackbody(LuxCoreNodeTexture):
+class LuxCoreNodeTexBlackbody(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blackbody"
     bl_width_default = 200
 

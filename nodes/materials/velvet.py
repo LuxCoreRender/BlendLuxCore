@@ -1,9 +1,9 @@
+import bpy
 from ..base import LuxCoreNodeMaterial
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty
-from ...utils import node as utils_node
 
 
-class LuxCoreNodeMatVelvet(LuxCoreNodeMaterial):
+class LuxCoreNodeMatVelvet(bpy.types.Node, LuxCoreNodeMaterial):
     bl_label = "Velvet Material"
     bl_width_default = 160
 

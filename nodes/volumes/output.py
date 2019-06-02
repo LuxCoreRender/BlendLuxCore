@@ -1,10 +1,11 @@
+import bpy
 from bpy.props import BoolProperty
 from ..output import LuxCoreNodeOutput, update_active
 from ... import utils
 from ...bin import pyluxcore
 
 
-class LuxCoreNodeVolOutput(LuxCoreNodeOutput):
+class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
     """
     Volume output node.
     This is where the export starts (if the output is active).

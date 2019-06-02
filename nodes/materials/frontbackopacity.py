@@ -1,8 +1,9 @@
+import bpy
 from ..base import LuxCoreNodeMaterial
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeMatFrontBackOpacity(LuxCoreNodeMaterial):
+class LuxCoreNodeMatFrontBackOpacity(bpy.types.Node, LuxCoreNodeMaterial):
     """
     Not a standalone material, but a node that offers
     optional extra properties for all materials, to

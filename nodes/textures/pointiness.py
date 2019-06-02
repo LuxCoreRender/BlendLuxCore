@@ -1,9 +1,10 @@
+import bpy
 from bpy.props import FloatProperty, EnumProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
 
 
-class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
+class LuxCoreNodeTexPointiness(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Pointiness"
     bl_width_default = 180
 
