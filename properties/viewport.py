@@ -48,4 +48,6 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
                                          "the RT Path engine is used in the viewport, which is optimized "
                                          "for quick feedback but can't handle complex light paths")
 
-    denoise = BoolProperty(name="Denoise", default=True)
+    denoise = BoolProperty(name="Denoise", default=True,
+                           description="Denoise the viewport render once the halt time is reached. "
+                                       "Note that this disables most imagepipeline plugins in the viewport")

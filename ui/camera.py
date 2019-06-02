@@ -128,6 +128,9 @@ class LUXCORE_CAMERA_PT_imagepipeline(CameraButtonsPanel, Panel):
                 msg = name + " and multiple renderlayers will cause brightness difference!"
                 box.label(msg, icon=icons.WARNING)
 
+        if context.scene.luxcore.viewport.denoise:
+            layout.label("Plugins below disabled in viewport because of viewport denoising", icon=icons.INFO)
+
         # Bloom settings
         bloom = pipeline.bloom
         box = self.draw_plugin_box(bloom)
