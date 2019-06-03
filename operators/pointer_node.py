@@ -18,7 +18,7 @@ class LUXCORE_OT_pointer_unlink_node_tree(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class LUXCORE_OT_pointer_set_node_tree(LUXCORE_OT_set_node_tree):
+class LUXCORE_OT_pointer_set_node_tree(bpy.types.Operator, LUXCORE_OT_set_node_tree):
     """ Dropdown operator pointer node version """
 
     bl_idname = "luxcore.pointer_set_node_tree"
@@ -36,7 +36,7 @@ class LUXCORE_OT_pointer_set_node_tree(LUXCORE_OT_set_node_tree):
 
 
 # This is a menu, not an operator
-class LUXCORE_MT_pointer_select_node_tree(LUXCORE_MT_node_tree):
+class LUXCORE_MT_pointer_select_node_tree(bpy.types.Menu, LUXCORE_MT_node_tree):
     """ Dropdown menu pointer version """
 
     bl_idname = "LUXCORE_MT_pointer_select_node_tree"

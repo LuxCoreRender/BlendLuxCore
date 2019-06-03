@@ -45,7 +45,7 @@ class LUXCORE_OT_world_unlink_volume_node_tree(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class LUXCORE_OT_world_set_volume_node_tree(LUXCORE_OT_set_node_tree):
+class LUXCORE_OT_world_set_volume_node_tree(bpy.types.Operator, LUXCORE_OT_set_node_tree):
     """ Dropdown operator volume version """
 
     bl_idname = "luxcore.world_set_volume_node_tree"
@@ -63,7 +63,7 @@ class LUXCORE_OT_world_set_volume_node_tree(LUXCORE_OT_set_node_tree):
 
 
 # This is a menu, not an operator
-class LUXCORE_VOLUME_MT_world_select_volume_node_tree(LUXCORE_MT_node_tree):
+class LUXCORE_VOLUME_MT_world_select_volume_node_tree(bpy.types.Menu, LUXCORE_MT_node_tree):
     """ Dropdown menu world version """
 
     bl_idname = "LUXCORE_VOLUME_MT_world_select_volume_node_tree"

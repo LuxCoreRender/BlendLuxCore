@@ -103,8 +103,7 @@ class LuxCoreIORPresetCommonProperties():
     node_tree_index = IntProperty()
 
 
-class LuxCoreIORPresetBase(bpy.types.Operator,
-                           LuxCoreIORPresetCommonProperties):
+class LuxCoreIORPresetBase(LuxCoreIORPresetCommonProperties):
     """ A base class for LUXCORE_OT_ior_preset_* common methods. Do not call"""
 
     bl_idname = "luxcore.ior_preset_base"
@@ -129,7 +128,8 @@ class LuxCoreIORPresetBase(bpy.types.Operator,
         return {'FINISHED'}
 
 
-class LUXCORE_OT_ior_preset_names(LuxCoreIORPresetBase,
+class LUXCORE_OT_ior_preset_names(bpy.types.Operator,
+                                  LuxCoreIORPresetBase,
                                   LuxCoreIORPresetCommonProperties):
     """ A custom operator to return a list of IOR presets sorted by name """
 
@@ -152,7 +152,8 @@ class LUXCORE_OT_ior_preset_names(LuxCoreIORPresetBase,
                               items=cb_ior_preset)
 
 
-class LUXCORE_OT_ior_preset_values(LuxCoreIORPresetBase,
+class LUXCORE_OT_ior_preset_values(bpy.types.Operator,
+                                   LuxCoreIORPresetBase,
                                    LuxCoreIORPresetCommonProperties):
     """ A custom operator to return a list of IOR presets sorted by value """
 

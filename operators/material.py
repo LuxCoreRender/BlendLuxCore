@@ -214,7 +214,7 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class LUXCORE_OT_set_mat_node_tree(LUXCORE_OT_set_node_tree):
+class LUXCORE_OT_set_mat_node_tree(bpy.types.Operator, LUXCORE_OT_set_node_tree):
     """ Dropdown Operator Material version """
 
     bl_idname = "luxcore.set_mat_node_tree"
@@ -233,7 +233,7 @@ class LUXCORE_OT_set_mat_node_tree(LUXCORE_OT_set_node_tree):
 
 
 # Note: this is a menu, not an operator
-class LUXCORE_MATERIAL_MT_node_tree(LUXCORE_MT_node_tree):
+class LUXCORE_MATERIAL_MT_node_tree(bpy.types.Menu, LUXCORE_MT_node_tree):
     """ Dropdown Menu Material version """
 
     bl_idname = "LUXCORE_MATERIAL_MT_node_tree"

@@ -75,10 +75,8 @@ class LUXCORE_OT_import_multiple_images(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         location = context.space_data.cursor_location
-        import time
 
         for file_elem in self.files:
-            s1 = time.time()
             print("Importing image:", file_elem.name)
             filepath = os.path.join(self.directory, file_elem.name)
 

@@ -87,7 +87,7 @@ def init_vol_node_tree(node_tree):
     node_tree.links.new(clear.outputs[0], output.inputs[0])
 
 
-class LUXCORE_OT_set_node_tree(bpy.types.Operator):
+class LUXCORE_OT_set_node_tree:
     """
     Generic version. Do not use in UI.
     There are subclasses for materials and volumes
@@ -112,7 +112,7 @@ class LUXCORE_OT_set_node_tree(bpy.types.Operator):
                     mat.update_tag()
 
 
-class LUXCORE_MT_node_tree(bpy.types.Menu):
+class LUXCORE_MT_node_tree:
     """
     Generic version. Do not use in UI.
     There are subclasses for materials and volumes
