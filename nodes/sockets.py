@@ -166,9 +166,8 @@ class LuxCoreSocketBump(bpy.types.NodeSocket, LuxCoreNodeSocket):
 
 class LuxCoreSocketColor(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.color_texture
-    # Currently this is the only socket that updates OpenGL materials
     default_value: FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1,
-                                        update=update_opengl_materials)
+                                       update=update_opengl_materials)
 
     def draw_prop(self, context, layout, node, text):
         row = layout.row()
@@ -199,7 +198,8 @@ class LuxCoreSocketFloatPositive(bpy.types.NodeSocket, LuxCoreSocketFloat):
 
 
 class LuxCoreSocketFloat0to1(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, max=1, description="Float value between 0 and 1")
+    default_value: FloatProperty(min=0, max=1, description="Float value between 0 and 1",
+                                 update=update_opengl_materials)
     slider = True
 
 

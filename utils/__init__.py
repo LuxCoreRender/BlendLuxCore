@@ -429,9 +429,10 @@ def is_duplicator_visible(obj):
     return False
 
 
-def get_theme(context):
-    current_theme_name = context.user_preferences.themes.items()[0][0]
-    return context.user_preferences.themes[current_theme_name]
+# TODO 2.8 fix or remove
+# def get_theme(context):
+#     current_theme_name = context.user_preferences.themes.items()[0][0]
+#     return context.user_preferences.themes[current_theme_name]
 
 
 def get_abspath(path, library=None, must_exist=False, must_be_existing_file=False, must_be_existing_dir=False):
