@@ -104,10 +104,10 @@ def update_opengl_materials(_, context):
 
     mat = context.object.active_material
     node_tree = mat.luxcore.node_tree
-    diffuse_color = (0, 0, 0)
+    diffuse_color = (0, 0, 0, 1)
 
     if node_tree is None:
-        mat.diffuse_color = (0.5, 0.5, 0.5)
+        mat.diffuse_color = (0.5, 0.5, 0.5, 1)
         return
 
     from ..nodes.output import get_active_output
@@ -118,7 +118,7 @@ def update_opengl_materials(_, context):
 
         if first_node:
             # Set default color for nodes without color sockets, e.g. mix or glossy coating
-            diffuse_color = (0.5, 0.5, 0.5)
+            diffuse_color = (0.5, 0.5, 0.5, 1)
 
             if first_node.inputs:
                 # Usually we want to show the color in the first input as main color
@@ -126,7 +126,7 @@ def update_opengl_materials(_, context):
                 socket_value = getattr(socket, "default_value", None)
 
                 if not socket.is_linked and isinstance(socket_value, mathutils.Color):
-                    diffuse_color = socket_value
+                    diffuse_color = (*socket_value, 1)
 
     mat.diffuse_color = diffuse_color
 
