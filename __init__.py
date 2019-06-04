@@ -78,6 +78,9 @@ auto_load.init()
 def register():
     auto_load.register()
     #ui.register()
+    nodes.materials.register()
+    nodes.textures.register()
+    nodes.volumes.register()
 
     properties.init()
 
