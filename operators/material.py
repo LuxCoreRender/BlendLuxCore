@@ -97,7 +97,7 @@ class LUXCORE_MT_material_select(bpy.types.Menu):
         layout = self.layout
 
         if not bpy.data.materials:
-            layout.label("No materials available")
+            layout.label(text="No materials available")
 
         row = layout.row()
         col = row.column()

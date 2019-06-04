@@ -32,7 +32,7 @@
 #
 #     def draw_header(self, context):
 #         if self._show_hybrid_metropolis_warning(context):
-#             self.layout.label("", icon=icons.WARNING)
+#             self.layout.label(text="", icon=icons.WARNING)
 #
 #     def draw(self, context):
 #         layout = self.layout
@@ -42,10 +42,10 @@
 #         if config.engine == "PATH" and config.device == "OCL":
 #             if not utils.is_opencl_build():
 #                 # pyluxcore was compiled without OpenCL support
-#                 layout.label("No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
+#                 layout.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
 #
 #             if not opencl.devices:
-#                 layout.label("No OpenCL Devices available.", icon=icons.WARNING)
+#                 layout.label(text="No OpenCL Devices available.", icon=icons.WARNING)
 #                 layout.operator("luxcore.update_opencl_devices")
 #
 #             gpu_devices = [device for device in opencl.devices if device.type == "OPENCL_GPU"]
@@ -54,21 +54,21 @@
 #             other_devices = set(opencl.devices) - (set(gpu_devices) | set(cpu_devices))
 #
 #             box = layout.box()
-#             box.label("GPU Devices:")
+#             box.label(text="GPU Devices:")
 #             self._draw_devices(box, gpu_devices)
 #
 #             # This probably never happens
 #             if other_devices:
 #                 col = layout.column(align=True)
 #                 box = col.box()
-#                 box.label("Other Devices")
+#                 box.label(text="Other Devices")
 #                 box = col.box()
 #                 self._draw_devices(box, other_devices)
 #
 #             has_gpus = any([device.enabled for device in gpu_devices])
 #             has_others = any([device.enabled for device in other_devices])
 #             if not has_gpus and not has_others:
-#                 layout.label("Select at least one OpenCL device!", icon=icons.WARNING)
+#                 layout.label(text="Select at least one OpenCL device!", icon=icons.WARNING)
 #
 #             col = layout.column(align=True)
 #             col.prop(opencl, "use_native_cpu", toggle=True)
@@ -78,8 +78,8 @@
 #
 #                 if self._show_hybrid_metropolis_warning(context):
 #                     col = box.column(align=True)
-#                     col.label("CPU should be disabled if Metropolis", icon=icons.WARNING)
-#                     col.label("sampler is used (can cause artifacts)")
+#                     col.label(text="CPU should be disabled if Metropolis", icon=icons.WARNING)
+#                     col.label(text="sampler is used (can cause artifacts)")
 #         else:
 #             col = layout.column()
 #             col.label(text="CPU Threads:")

@@ -19,6 +19,6 @@
 #         row.active = False
 #         row.prop(scene, "background_set", text="Background")
 #         if scene.background_set:
-#             col.label("Background scene not supported by LuxCore", icon=icons.WARNING)
+#             col.label(text="Background scene not supported by LuxCore", icon=icons.WARNING)
 #
 #         layout.prop(scene, "active_clip", text="Active Clip")

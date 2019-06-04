@@ -40,9 +40,9 @@
 #
 #         if not (luxcore_engine == "BIDIR" and viewport.use_bidir):
 #             row = layout.row()
-#             row.label("Device:")
+#             row.label(text="Device:")
 #             row.prop(viewport, "device", expand=True)
 #
 #             if viewport.device == "OCL" and not utils.is_opencl_build():
-#                 layout.label("No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
-#                 layout.label("(Falling back to CPU realtime engine)")
+#                 layout.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
+#                 layout.label(text="(Falling back to CPU realtime engine)")

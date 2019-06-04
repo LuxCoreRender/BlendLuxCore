@@ -23,7 +23,7 @@
 #         lamp = context.lamp
 #
 #         col = layout.column(align=True)
-#         col.label("Image:")
+#         col.label(text="Image:")
 #         col.template_ID(lamp.luxcore, "image", open="image.open")
 #         if lamp.luxcore.image:
 #             col.prop(lamp.luxcore, "gamma")
@@ -40,7 +40,7 @@
 #             box = col.box()
 #
 #             row = box.row()
-#             row.label("IES Data:")
+#             row.label(text="IES Data:")
 #             row.prop(lamp.luxcore.ies, "file_type", expand=True)
 #
 #             if lamp.luxcore.ies.file_type == "TEXT":
@@ -213,11 +213,11 @@
 #
 #         sub = layout.column()
 #         sub.enabled = enabled
-#         sub.label("Visibility for indirect light rays:")
+#         sub.label(text="Visibility for indirect light rays:")
 #         row = sub.row()
 #         row.prop(lamp.luxcore, "visibility_indirect_diffuse")
 #         row.prop(lamp.luxcore, "visibility_indirect_glossy")
 #         row.prop(lamp.luxcore, "visibility_indirect_specular")
 #
 #         if not enabled:
-#             layout.label("Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+#             layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)

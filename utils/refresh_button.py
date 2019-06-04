@@ -8,6 +8,6 @@ def template_refresh_button(data, property_name, layout, run_msg="Refreshing..."
     row.enabled = LuxCoreRenderEngine.final_running
 
     if getattr(data, property_name):
-        row.label(run_msg)
+        row.label(text=run_msg)
     else:
         row.prop(data, property_name, toggle=True, icon=icons.REFRESH)

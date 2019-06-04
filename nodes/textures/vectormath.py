@@ -58,7 +58,7 @@ class LuxCoreNodeTexVectorMath(bpy.types.Node, LuxCoreNodeTexture):
             layout.prop(self, "mode_clamp_max")
 
             if self.mode_clamp_min > self.mode_clamp_max:
-                layout.label("Min should be smaller than max!", icon=icons.WARNING)
+                layout.label(text="Min should be smaller than max!", icon=icons.WARNING)
 
     def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {

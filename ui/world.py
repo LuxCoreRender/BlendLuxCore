@@ -71,10 +71,10 @@
 #             is_really_a_sun = sun.type == "LAMP" and sun.data and sun.data.type == "SUN"
 #
 #             if is_really_a_sun:
-#                 layout.label("Using turbidity of sun light:", icon=icons.INFO)
+#                 layout.label(text="Using turbidity of sun light:", icon=icons.INFO)
 #                 layout.prop(sun.data.luxcore, "turbidity")
 #             else:
-#                 layout.label("Not a sun lamp", icon=icons.WARNING)
+#                 layout.label(text="Not a sun lamp", icon=icons.WARNING)
 #         else:
 #             layout.prop(world.luxcore, "turbidity")
 #
@@ -109,7 +109,7 @@
 #         sub.prop(world.luxcore, "gamma")
 #         world.luxcore.image_user.draw(sub, context.scene)
 #         sub.prop(world.luxcore, "rotation")
-#         sub.label("For free transformation use a hemi lamp", icon=icons.INFO)
+#         sub.label(text="For free transformation use a hemi lamp", icon=icons.INFO)
 #         sub.prop(world.luxcore, "sampleupperhemisphereonly")
 #
 #
@@ -130,7 +130,7 @@
 #         layout = self.layout
 #         world = context.world
 #
-#         layout.label("Default Volume (used on materials without attached volume):")
+#         layout.label(text="Default Volume (used on materials without attached volume):")
 #         utils_ui.template_node_tree(layout, world.luxcore, "volume", icons.NTREE_VOLUME,
 #                                     "LUXCORE_VOLUME_MT_world_select_volume_node_tree",
 #                                     "luxcore.world_show_volume_node_tree",
@@ -179,11 +179,11 @@
 #
 #         sub = layout.column()
 #         sub.enabled = enabled
-#         sub.label("Visibility for indirect light rays:")
+#         sub.label(text="Visibility for indirect light rays:")
 #         row = sub.row()
 #         row.prop(world.luxcore, "visibility_indirect_diffuse")
 #         row.prop(world.luxcore, "visibility_indirect_glossy")
 #         row.prop(world.luxcore, "visibility_indirect_specular")
 #
 #         if not enabled:
-#             layout.label("Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+#             layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)

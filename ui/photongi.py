@@ -95,4 +95,4 @@
 #         col.prop(photongi, "save_or_overwrite",
 #                  text="Compute and overwrite" if file_exists else "Compute and save")
 #         col.prop(photongi, "file_path", text="")
-#         col.label(cache_status)
+#         col.label(text=cache_status)

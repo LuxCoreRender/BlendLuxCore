@@ -27,11 +27,11 @@
 #             object_blur = motion_blur.enable and motion_blur.object_blur
 #
 #             if not motion_blur.enable:
-#                 layout.label("Motion blur disabled in camera settings", icon=icons.INFO)
+#                 layout.label(text="Motion blur disabled in camera settings", icon=icons.INFO)
 #             elif not motion_blur.object_blur:
-#                 layout.label("Object blur disabled in camera settings", icon=icons.INFO)
+#                 layout.label(text="Object blur disabled in camera settings", icon=icons.INFO)
 #         else:
-#             layout.label("No camera in scene", icon=icons.INFO)
+#             layout.label(text="No camera in scene", icon=icons.INFO)
 #             object_blur = False
 #
 #         row = layout.row()
@@ -39,4 +39,4 @@
 #         row.prop(obj.luxcore, "enable_motion_blur")
 #         # Instancing can cost performance, so inform the user when it happens
 #         if utils.use_obj_motion_blur(obj, context.scene):
-#             layout.label("Object will be exported as instance", icon=icons.INFO)
+#             layout.label(text="Object will be exported as instance", icon=icons.INFO)

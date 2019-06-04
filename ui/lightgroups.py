@@ -18,14 +18,14 @@
 #
 #     def draw_header(self, context):
 #         if self._are_all_groups_disabled(context):
-#             self.layout.label("", icon=icons.WARNING)
+#             self.layout.label(text="", icon=icons.WARNING)
 #
 #     def draw(self, context):
 #         layout = self.layout
 #         groups = context.scene.luxcore.lightgroups
 #
 #         if self._are_all_groups_disabled(context):
-#             layout.label("All groups disabled.", icon=icons.WARNING)
+#             layout.label(text="All groups disabled.", icon=icons.WARNING)
 #
 #         self.draw_lightgroup(layout, groups.default, -1,
 #                              is_default_group=True)
@@ -52,8 +52,8 @@
 #         sub_row = row.row()
 #         sub_row.active = group.enabled
 #         if is_default_group:
-#             sub_row.label("Default Light Group")
-#             box.label("Contains all lights without specified light group", icon=icons.INFO)
+#             sub_row.label(text="Default Light Group")
+#             box.label(text="Contains all lights without specified light group", icon=icons.INFO)
 #         else:
 #             sub_row.prop(group, "name", text="")
 #

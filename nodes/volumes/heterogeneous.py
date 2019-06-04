@@ -68,9 +68,9 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
             layout.prop(self, "domain")
 
             if self.domain and not utils.find_smoke_domain_modifier(self.domain):
-                layout.label("Not a smoke domain!", icon=icons.WARNING)
+                layout.label(text="Not a smoke domain!", icon=icons.WARNING)
             elif self.domain is None:
-                layout.label("Select the smoke domain object", icon=icons.WARNING)
+                layout.label(text="Select the smoke domain object", icon=icons.WARNING)
         else:
             layout.prop(self, "step_size")
             layout.prop(self, "maxcount")

@@ -43,13 +43,13 @@ class LuxCoreNodeSocket:
                     break
 
             if not is_allowed:
-                layout.label("Wrong Input!", icon=icons.ERROR)
+                layout.label(text="Wrong Input!", icon=icons.ERROR)
                 return
 
         has_default = hasattr(self, "default_value") and self.default_value is not None
 
         if self.is_output or self.is_linked or not has_default:
-            layout.label(text)
+            layout.label(text=text)
 
             # Show a button that lets the user add a node for this socket instantly.
             # Sockets that only accept one node (e.g. volume, emission, fresnel) should have a default_node member
@@ -228,11 +228,11 @@ class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
         col = split.column()
         if self.expand:
             # Empty label to center the text vertically
-            col.label("")
+            col.label(text="")
         else:
             # Show the value of the vector even in collapsed form
             text += " (%s)" % (", ".join(str(round(x, 2)) for x in self.default_value))
-        col.label(text)
+        col.label(text=text)
 
     def export_default(self):
         return list(self.default_value)
@@ -268,8 +268,8 @@ class LuxCoreSocketVolumeAsymmetry(bpy.types.NodeSocket, LuxCoreNodeSocket):
         split = layout.split()
         col = split.column()
         # Empty label to center the text vertically
-        col.label("")
-        col.label("Asymmetry:")
+        col.label(text="")
+        col.label(text="Asymmetry:")
 
         col = split.column()
         col.prop(self, "default_value", expand=True)

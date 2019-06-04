@@ -66,7 +66,7 @@
 #         layout.prop(cam.luxcore, "auto_volume")
 #
 #         if not cam.luxcore.auto_volume:
-#             layout.label("Camera Volume:")
+#             layout.label(text="Camera Volume:")
 #             utils_ui.template_node_tree(layout, cam.luxcore, "volume", icons.NTREE_VOLUME,
 #                                         "LUXCORE_VOLUME_MT_camera_select_volume_node_tree",
 #                                         "luxcore.camera_show_volume_node_tree",
@@ -126,10 +126,10 @@
 #             if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
 #                 name = "Auto" if tonemapper.type == "TONEMAP_LINEAR" else "Reinhard"
 #                 msg = name + " and multiple renderlayers will cause brightness difference!"
-#                 box.label(msg, icon=icons.WARNING)
+#                 box.label(text=msg, icon=icons.WARNING)
 #
 #         if context.scene.luxcore.viewport.denoise:
-#             layout.label("Plugins below disabled in viewport because of viewport denoising", icon=icons.INFO)
+#             layout.label(text="Plugins below disabled in viewport because of viewport denoising", icon=icons.INFO)
 #
 #         # Bloom settings
 #         bloom = pipeline.bloom
@@ -144,8 +144,8 @@
 #         if box:
 #             col = box.column(align=True)
 #             col.scale_y = 0.8
-#             col.label("Note: the mist is not anti-aliased.", icon=icons.WARNING)
-#             col.label("This causes jagged edges if the effect is too strong.")
+#             col.label(text="Note: the mist is not anti-aliased.", icon=icons.WARNING)
+#             col.label(text="This causes jagged edges if the effect is too strong.")
 #             row = box.row()
 #             row.prop(mist, "color", text="")
 #             row.prop(mist, "amount", slider=True)
@@ -224,7 +224,7 @@
 #
 #         hq_support = dof_options.is_hq_supported
 #         col = split.column(align=True)
-#         col.label("Viewport:")
+#         col.label(text="Viewport:")
 #         sub = col.column()
 #         sub.active = hq_support
 #         sub.prop(dof_options, "use_high_quality")
@@ -257,4 +257,4 @@
 #         col.prop(motion_blur, "steps")
 #
 #         if motion_blur.camera_blur:
-#             layout.label("Camera blur is only visible in final render", icon=icons.INFO)
+#             layout.label(text="Camera blur is only visible in final render", icon=icons.INFO)

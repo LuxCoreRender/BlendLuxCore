@@ -19,7 +19,7 @@
 #         row.prop(config, "max_epsilon")
 #
 #     if config.min_epsilon >= config.max_epsilon:
-#         col.label("Min epsilon should be smaller than max epsilon!", icon=icons.WARNING)
+#         col.label(text="Min epsilon should be smaller than max epsilon!", icon=icons.WARNING)
 #
 #
 # def register():

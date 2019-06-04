@@ -30,20 +30,20 @@
 #         # Device
 #         row_device = layout.row()
 #         row_device.enabled = config.engine == "PATH"
-#         row_device.label("Device:")
+#         row_device.label(text="Device:")
 #
 #         if config.engine == "PATH":
 #             row_device.prop(config, "device", expand=True)
 #
 #             if config.device == "OCL" and not utils.is_opencl_build():
 #                 # pyluxcore was compiled without OpenCL support
-#                 layout.label("No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
+#                 layout.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
 #         else:
 #             row_device.prop(config, "bidir_device", expand=True)
 #
 #         # Engine
 #         row_engine = layout.row()
-#         row_engine.label("Engine:")
+#         row_engine.label(text="Engine:")
 #         row_engine.prop(config, "engine", expand=True)
 #
 #         if config.engine == "PATH":
@@ -60,13 +60,13 @@
 #             layout.prop(config, "use_tiles")
 #
 #             if config.use_tiles:
-#                 layout.label("Tiled path uses special sampler", icon=icons.INFO)
+#                 layout.label(text="Tiled path uses special sampler", icon=icons.INFO)
 #                 row = layout.row(align=True)
 #                 row.prop(config.tile, "size")
 #                 row.prop(config.tile, "path_sampling_aa_size")
 #
 #                 if utils.use_two_tiled_passes(context.scene):
-#                     layout.label("(Doubling amount of samples because of denoiser)")
+#                     layout.label(text="(Doubling amount of samples because of denoiser)")
 #
 #                 layout.prop(config.tile, "multipass_enable")
 #                 if config.tile.multipass_enable:
@@ -85,7 +85,7 @@
 #         # Sampler settings
 #         if not (config.engine == "PATH" and config.use_tiles):
 #             row_sampler = layout.row()
-#             row_sampler.label("Sampler:")
+#             row_sampler.label(text="Sampler:")
 #             row_sampler.prop(config, "sampler", expand=True)
 #
 #             if config.sampler in {"SOBOL", "RANDOM"}:
@@ -96,14 +96,14 @@
 #                     col.prop(config.noise_estimation, "step")
 #             elif config.sampler == "METROPOLIS":
 #                 if denoiser.enabled and denoiser.type == "BCD":
-#                     layout.label("Can lead to artifacts in the denoiser!", icon=icons.WARNING)
+#                     layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
 #
 #                 self.draw_metropolis_props(layout, config)
 #
 #         # Filter settings
 #         filter_forced_none = denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE"
 #         if filter_forced_none:
-#             layout.label('Filter set to "None" (required by denoiser)', icon=icons.INFO)
+#             layout.label(text='Filter set to "None" (required by denoiser)', icon=icons.INFO)
 #         row = layout.row()
 #         row.active = not filter_forced_none
 #         row.prop(config, "filter")
@@ -135,14 +135,14 @@
 #
 #             if dls_cache.show_advanced:
 #                 col = ls_layout.column(align=True)
-#                 col.label("Entry Settings:")
+#                 col.label(text="Entry Settings:")
 #                 col.prop(dls_cache, "entry_normalangle")
 #                 col.prop(dls_cache, "entry_maxpasses")
 #                 col.prop(dls_cache, "entry_convergencethreshold")
 #                 col.prop(dls_cache, "entry_volumes_enable")
 #
 #                 col = ls_layout.column(align=True)
-#                 col.label("General Cache Settings:")
+#                 col.label(text="General Cache Settings:")
 #                 col.prop(dls_cache, "lightthreshold")
 #                 col.prop(dls_cache, "targetcachehitratio")
 #                 col.prop(dls_cache, "maxdepth")
@@ -159,9 +159,9 @@
 #             # Optimal clamp value not yet found, need to start a render first
 #             if config.path.use_clamping:
 #                 # Can't compute optimal value if clamping is enabled
-#                 layout.label("Render without clamping to get suggested clamp value", icon=icons.INFO)
+#                 layout.label(text="Render without clamping to get suggested clamp value", icon=icons.INFO)
 #             else:
-#                 layout.label("Start a render to get a suggested clamp value", icon=icons.INFO)
+#                 layout.label(text="Start a render to get a suggested clamp value", icon=icons.INFO)
 #         else:
 #             # Show a button that can be used to set the optimal clamp value
 #             op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value

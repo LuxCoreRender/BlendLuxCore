@@ -34,16 +34,16 @@ class LuxCoreNodeTexIrregularData(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
-        layout.label("Wavelengths:")
+        layout.label(text="Wavelengths:")
         layout.prop(self, "wavelengths")
-        layout.label("Data:")
+        layout.label(text="Data:")
         layout.prop(self, "data")
 
         if not self.equal_length:
-            layout.label("Both lists need the same number of values!", icon=icons.ERROR)
+            layout.label(text="Both lists need the same number of values!", icon=icons.ERROR)
 
         if self.error:
-            layout.label(self.error, icon=icons.ERROR)
+            layout.label(text=self.error, icon=icons.ERROR)
 
     def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         definitions = {

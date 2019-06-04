@@ -19,7 +19,7 @@
 #
 #         if config.engine == "PATH" and config.use_tiles:
 #             box = layout.box()
-#             box.label("Tile Highlighting:")
+#             box.label(text="Tile Highlighting:")
 #
 #             row = box.row(align=True)
 #             row.prop(display, "show_converged", text="Converged")

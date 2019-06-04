@@ -47,7 +47,7 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
 
         layout.prop(self, "rotation")
 
-        layout.label("Offset:")
+        layout.label(text="Offset:")
         row = layout.row(align=True)
         row.prop(self, "udelta")
         row.prop(self, "vdelta")

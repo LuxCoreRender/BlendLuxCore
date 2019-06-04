@@ -14,7 +14,7 @@
 #     if denoiser.enabled:
 #         if denoiser.type == "BCD":
 #             if config.sampler == "METROPOLIS" and not config.use_tiles:
-#                 col.label("Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
+#                 col.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
 #
 #     sub = col.column()
 #     # The user should not be able to request a refresh when denoiser is disabled
@@ -59,4 +59,4 @@
 #         draw(context, layout)
 #
 #         col = layout.column(align=True)
-#         col.label("These settings are also available in the image editor tool shelf (press T)", icon=icons.INFO)
+#         col.label(text="These settings are also available in the image editor tool shelf (press T)", icon=icons.INFO)

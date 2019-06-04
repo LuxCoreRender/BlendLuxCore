@@ -150,10 +150,10 @@ class LUXCORE_MT_node_tree:
         if not trees:
             # No node trees of this type in the scene yet
             if tree_type == "ALL":
-                col.label("No node trees available")
+                col.label(text="No node trees available")
             else:
                 tree_type_pretty = tree_type.split("_")[1]
-                col.label("No " + tree_type_pretty + " node trees available")
+                col.label(text="No " + tree_type_pretty + " node trees available")
 
             if tree_type == "luxcore_material_nodetree":
                 # Volumes need a more complicated new operator (Todo)

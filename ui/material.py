@@ -69,7 +69,7 @@
 #                 row.prop(slot, "link", text="")
 #             else:
 #                 row = split.row()
-#                 row.label()
+#                 row.label(text="")
 #         elif mat:
 #             split.template_ID(space, "pin_id")
 #             split.separator()
@@ -78,9 +78,9 @@
 #             if mat.luxcore.node_tree:
 #                 row = layout.row()
 #                 split = row.split(percentage=0.25)
-#                 split.label(utils.pluralize("%d User", mat.users))
+#                 split.label(text=utils.pluralize("%d User", mat.users))
 #                 tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
-#                 split.label('Nodes: "%s"' % tree_name, icon="NODETREE")
+#                 split.label(text='Nodes: "%s"' % tree_name, icon="NODETREE")
 #                 split.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
 #             else:
 #                 layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use Material Nodes")
@@ -102,7 +102,7 @@
 #
 #         for category, presets in LUXCORE_OT_preset_material.categories.items():
 #             col = row.column()
-#             col.label(category)
+#             col.label(text=category)
 #
 #             for preset in presets:
 #                 op = col.operator("luxcore.preset_material", text=preset)

@@ -29,7 +29,7 @@
 #             tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
 #             if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
 #                 msg = "Auto tonemapper will cause brightness difference!"
-#                 layout.label(msg, icon=icons.WARNING)
+#                 layout.label(text=msg, icon=icons.WARNING)
 #                 layout.operator("luxcore.switch_to_camera_settings", icon=icons.CAMERA)
 #
 #

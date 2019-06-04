@@ -16,9 +16,9 @@
 #
 #         row = self.layout.row(align=True)
 #         if errorlog.errors:
-#             row.label(str(len(errorlog.errors)), icon=icons.ERROR)
+#             row.label(text=str(len(errorlog.errors)), icon=icons.ERROR)
 #         if errorlog.warnings:
-#             row.label(str(len(errorlog.warnings)), icon=icons.WARNING)
+#             row.label(text=str(len(errorlog.warnings)), icon=icons.WARNING)
 #
 #     def draw(self, context):
 #         errorlog = context.scene.luxcore.errorlog
@@ -46,7 +46,7 @@
 #             if elem.count > 1:
 #                 text += str(elem.count) + "x"
 #
-#             row.label(elem.message, icon=icon)
+#             row.label(text=elem.message, icon=icon)
 #             if elem.obj_name:
 #                 op = row.operator("luxcore.select_object", text="", icon=icons.OBJECT)
 #                 op.obj_name = elem.obj_name

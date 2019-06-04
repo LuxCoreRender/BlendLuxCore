@@ -84,7 +84,7 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
             box = col.box()
 
             row = box.row()
-            row.label("Source:")
+            row.label(text="Source:")
             row.prop(self.ies, "file_type", expand=True)
 
             if self.ies.file_type == "TEXT":

@@ -63,8 +63,8 @@
 #                 active_uv = utils.find_active_uv(obj.data.uv_textures)
 #                 if active_uv:
 #                     row = col.row()
-#                     row.label("UV Map:")
-#                     row.label(active_uv.name, icon="GROUP_UVS")
+#                     row.label(text="UV Map:")
+#                     row.label(text=active_uv.name, icon="GROUP_UVS")
 #         else:
 #             col.prop_search(settings, "uv_map_name",
 #                             obj.data, "uv_textures",
@@ -72,7 +72,7 @@
 #
 #         if not obj.data.uv_textures:
 #                 row = col.row()
-#                 row.label("No UV map", icon=icons.WARNING)
+#                 row.label(text="No UV map", icon=icons.WARNING)
 #                 row.operator("mesh.uv_texture_add", icon=icons.ADD)
 #
 #         # Vertex color settings
@@ -88,8 +88,8 @@
 #                     active_vcol_layer = utils.find_active_vertex_color_layer(obj.data.vertex_colors)
 #                     if active_vcol_layer:
 #                         row = col.row()
-#                         row.label("Vertex Colors:")
-#                         row.label(active_vcol_layer.name, icon="GROUP_VCOL")
+#                         row.label(text="Vertex Colors:")
+#                         row.label(text=active_vcol_layer.name, icon="GROUP_VCOL")
 #             else:
 #                 col.prop_search(settings, "vertex_color_layer_name",
 #                                 obj.data, "vertex_colors",
@@ -97,7 +97,7 @@
 #
 #             if not obj.data.vertex_colors:
 #                 row = col.row()
-#                 row.label("No Vertex Colors", icon=icons.WARNING)
+#                 row.label(text="No Vertex Colors", icon=icons.WARNING)
 #                 row.operator("mesh.vertex_color_add", icon=icons.ADD)
 #
 #         elif settings.export_color == "uv_texture_map":

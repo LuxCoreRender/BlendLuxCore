@@ -259,7 +259,7 @@ class LUXCORE_MATERIAL_MT_node_tree_preset(bpy.types.Menu):
 
         for category, presets in LUXCORE_OT_preset_material.categories.items():
             col = row.column()
-            col.label(category)
+            col.label(text=category)
 
             for preset in presets:
                 op = col.operator("luxcore.preset_material", text=preset)
