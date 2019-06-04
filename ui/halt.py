@@ -85,7 +85,7 @@
 #
 #             col = layout.column(align=True)
 #             row = col.row()
-#             split = row.split(percentage=0.8)
+#             split = row.split(factor=0.8)
 #             split.label(text="Render Layers Overriding Halt Conditions:")
 #             op = split.operator("luxcore.switch_space_data_context",
 #                                 text="Show", icon="RENDERLAYERS")

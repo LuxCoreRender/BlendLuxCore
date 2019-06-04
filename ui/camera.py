@@ -16,7 +16,7 @@
 #         obj = context.object
 #         space = context.space_data
 #
-#         split = layout.split(percentage=0.65)
+#         split = layout.split(factor=0.65)
 #         if obj:
 #             split.template_ID(obj, "data")
 #             split.separator()

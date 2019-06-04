@@ -20,7 +20,7 @@
 #
 #         layout.prop(viewport, "halt_time")
 #
-#         split = layout.split(percentage=0.6)
+#         split = layout.split(factor=0.6)
 #         split.active = not (luxcore_engine == "BIDIR" and viewport.use_bidir)
 #         split.prop(viewport, "reduce_resolution_on_edit")
 #         sub = split.row()

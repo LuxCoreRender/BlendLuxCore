@@ -13,7 +13,7 @@
 #     if scene.render.engine != "LUXCORE":
 #         return
 #
-#     split = layout.split(percentage=0.66, align=True)
+#     split = layout.split(factor=0.66, align=True)
 #     row = split.row(align=True)
 #     row.operator("luxcore.start_pyluxcoretools")
 #     row = split.row(align=True)

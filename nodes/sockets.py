@@ -214,14 +214,14 @@ class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
     expand: BoolProperty(default=False)
 
     def draw_prop(self, context, layout, node, text):
-        split = layout.split(percentage=0.1)
+        split = layout.split(factor=0.1)
 
         col = split.column()
         icon = icons.EXPANDABLE_OPENED if self.expand else icons.EXPANDABLE_CLOSED
         col.prop(self, "expand", text="", icon=icon)
 
         if self.expand:
-            split = split.split(percentage=0.6)
+            split = split.split(factor=0.6)
             col = split.column()
             col.prop(self, "default_value", expand=True)
 

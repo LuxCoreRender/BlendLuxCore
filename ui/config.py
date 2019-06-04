@@ -20,7 +20,7 @@
 #         # Filesaver
 #         # TODO: we might want to move this to a more appropriate place later
 #         row = layout.row()
-#         split = row.split(percentage=0.7)
+#         split = row.split(factor=0.7)
 #         split.prop(config, "use_filesaver")
 #         if config.use_filesaver:
 #             split.prop(config, "filesaver_format")

@@ -57,7 +57,7 @@
 #                     row.template_ID(user, propname, new="texture.new")
 #
 #                 if tex:
-#                     split = layout.split(percentage=0.2)
+#                     split = layout.split(factor=0.2)
 #                     if tex.use_nodes:
 #                         if slot:
 #                             split.label(text="Output:")
@@ -91,7 +91,7 @@
 #             layout.template_ID(space, "pin_id")
 #
 #         if tex:
-#             split = layout.split(percentage=0.2)
+#             split = layout.split(factor=0.2)
 #             if tex.use_nodes:
 #                 if slot:
 #                     split.label(text="Output:")

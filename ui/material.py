@@ -44,14 +44,14 @@
 #                 row.operator("object.material_slot_select", text="Select")
 #                 row.operator("object.material_slot_deselect", text="Deselect")
 #
-#         split = layout.split(percentage=0.68)
+#         split = layout.split(factor=0.68)
 #
 #         if obj:
 #             # Note that we don't use layout.template_ID() because we can't
 #             # control the copy operator in that template.
 #             # So we mimic our own template_ID.
 #             row = split.row(align=True)
-#             sub = row.split(align=True, percentage=1 / (context.region.width * 0.015))
+#             sub = row.split(align=True, factor=1 / (context.region.width * 0.015))
 #             sub.operator("luxcore.material_select", icon=icons.MATERIAL, text="")
 #             row = sub.row(align=True)
 #             if obj.active_material:
@@ -77,7 +77,7 @@
 #         if mat:
 #             if mat.luxcore.node_tree:
 #                 row = layout.row()
-#                 split = row.split(percentage=0.25)
+#                 split = row.split(factor=0.25)
 #                 split.label(text=utils.pluralize("%d User", mat.users))
 #                 tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
 #                 split.label(text='Nodes: "%s"' % tree_name, icon="NODETREE")
@@ -124,7 +124,7 @@
 #         mat = context.material
 #
 #         if mat.luxcore.auto_vp_color:
-#             split = layout.split(percentage=0.8)
+#             split = layout.split(factor=0.8)
 #             split.prop(mat.luxcore, "auto_vp_color")
 #             row = split.row()
 #             row.enabled = not mat.luxcore.auto_vp_color

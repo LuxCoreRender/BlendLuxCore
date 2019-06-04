@@ -18,7 +18,7 @@ def template_node_tree(layout, data, property, icon,
     """
     node_tree = getattr(data, property)
 
-    split = layout.split(percentage=0.6, align=True)
+    split = layout.split(factor=0.6, align=True)
     row = split.row(align=True)
 
     # Dropdown menu
