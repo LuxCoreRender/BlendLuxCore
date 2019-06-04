@@ -10,6 +10,6 @@ def init():
     light.init()
     material.init()
     hair.init()
-    render_layer.init()
+    # render_layer.init()
     scene.init()
     world.init()

@@ -21,7 +21,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, props):
             if dupli_obj.matrix.determinant() == 0:
                 continue
 
-            if obj.type == "LAMP":
+            if obj.type == "LIGHT":
                 # It is a light (we don't do instancing here)
                 light_props, exported_light = blender_object.convert(exporter, obj, scene, context,
                                                                      luxcore_scene, update_mesh=True,

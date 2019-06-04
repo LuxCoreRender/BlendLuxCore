@@ -18,7 +18,7 @@ class LuxCoreMaterialNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
         """
         obj = context.active_object
 
-        if obj and obj.type not in {"LAMP", "CAMERA"}:
+        if obj and obj.type not in {"LIGHT", "CAMERA"}:
             mat = obj.active_material
 
             if mat:

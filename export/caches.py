@@ -67,7 +67,7 @@ class ObjectCache(object):
             if obj.type in {"MESH", "CURVE", "SURFACE", "META", "FONT"}:
                 self.changed_mesh.add(obj)
                 changes |= self.ChangeType.MESH
-            elif obj.type == "LAMP":
+            elif obj.type == "LIGHT":
                 self.changed_lights.add(obj)
                 changes |= self.ChangeType.LIGHT
 
@@ -80,7 +80,7 @@ class ObjectCache(object):
                 else:
                     self.changed_transform.add(obj)
                     changes |= self.ChangeType.TRANSFORM
-            elif obj.type == "LAMP":
+            elif obj.type == "LIGHT":
                 self.changed_lights.add(obj)
                 changes |= self.ChangeType.LIGHT
 

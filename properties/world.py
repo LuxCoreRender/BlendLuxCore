@@ -58,7 +58,7 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
 
     # sky2 settings
     def poll_sun(self, obj):
-        return obj.type == "LAMP" and obj.data and obj.data.type == "SUN"
+        return obj.type == "LIGHT" and obj.data and obj.data.type == "SUN"
 
     sun: PointerProperty(name="Sun", type=bpy.types.Object,
                           poll=poll_sun,  # The poll method filters the objects in the scene

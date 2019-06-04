@@ -58,8 +58,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
             name = name_prefix + utils.get_luxcore_name(dupli.object, context)
             matrix_list = utils.matrix_to_list(dupli.matrix, scene, apply_worldscale=True)
 
-            if dupli.object.type == "LAMP":
-                # It is a light
+            if dupli.object.type == "LIGHT":
                 name_suffix = _get_name_suffix(name_prefix, dupli, context)
                 light_props, exported_light = blender_object.convert(exporter, dupli.object, scene, context,
                                                                      luxcore_scene, update_mesh=True,

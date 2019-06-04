@@ -13,8 +13,8 @@
 #         "RENDER_PT_stamp",
 #
 #         # Data panels
-#         # Lamp
-#         "DATA_PT_context_lamp",
+#         # Light
+#         "DATA_PT_context_light",
 #         # Mesh
 #         "DATA_PT_context_mesh",
 #         "DATA_PT_normals",

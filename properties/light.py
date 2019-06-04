@@ -21,12 +21,12 @@ IMPORTANCE_DESCRIPTION = (
 
 POWER_DESCRIPTION = (
     "Power in watt; setting 0 for both power and efficacy bypasses "
-    "this feature and uses only the lamp gain"
+    "this feature and uses only the light gain"
 )
 
 EFFICACY_DESCRIPTION = (
     "Luminous efficacy in lumens per watt; setting 0 for both power "
-    "and efficacy bypasses this feature and uses only the lamp gain"
+    "and efficacy bypasses this feature and uses only the light gain"
 )
 
 GAMMA_DESCRIPTION = (
@@ -74,7 +74,7 @@ VISMAP_CACHE_DESC = (
 
 
 def init():
-    bpy.types.Lamp.luxcore = PointerProperty(type=LuxCoreLightProps)
+    bpy.types.Light.luxcore = PointerProperty(type=LuxCoreLightProps)
 
 
 class LuxCoreVisMapProps(bpy.types.PropertyGroup):
@@ -93,16 +93,16 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     def update_image(self, context):
         self.image_user.update(self.image)
 
-        if getattr(context, "lamp", None):
-            # For spot lamp (toggle projection mode)
-            if context.lamp.type == "SPOT":
-                context.lamp.use_square = self.image is not None
+        if getattr(context, "light", None):
+            # For spot light (toggle projection mode)
+            if context.light.type == "SPOT":
+                context.light.use_square = self.image is not None
 
     def update_is_laser(self, context):
-        if getattr(context, "lamp", None):
-            # For area lamp (laser can't be rectangular)
+        if getattr(context, "light", None):
+            # For area light (laser can't be rectangular)
             if self.is_laser:
-                context.lamp.shape = "SQUARE"
+                context.light.shape = "SQUARE"
 
     ##############################################
     # BlendLuxCore specific properties needed to translate LuxCore light concepts to Blender
