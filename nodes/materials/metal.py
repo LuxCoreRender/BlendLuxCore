@@ -9,7 +9,7 @@ class LuxCoreNodeMatMetal(bpy.types.Node, LuxCoreNodeMaterial):
     bl_width_default = 200
 
     # For internal use, do not show in UI
-    is_first_input_change = BoolProperty(default=True)
+    is_first_input_change: BoolProperty(default=True)
 
     def change_input_type(self, context):
         is_fresnel = self.input_type == "fresnel"
@@ -31,10 +31,10 @@ class LuxCoreNodeMatMetal(bpy.types.Node, LuxCoreNodeMaterial):
         ("color", "Color", "Use custom color as input", 0),
         ("fresnel", "Fresnel Texture", "Use a fresnel texture as input", 1)
     ]
-    input_type = EnumProperty(name="Type", description="Input Type", items=input_type_items, default="color",
+    input_type: EnumProperty(name="Type", description="Input Type", items=input_type_items, default="color",
                                         update=change_input_type)
 
-    use_anisotropy = BoolProperty(name=Roughness.aniso_name,
+    use_anisotropy: BoolProperty(name=Roughness.aniso_name,
                                   default=False,
                                   description=Roughness.aniso_desc,
                                   update=Roughness.update_anisotropy)

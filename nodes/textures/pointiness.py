@@ -13,7 +13,7 @@ class LuxCoreNodeTexPointiness(bpy.types.Node, LuxCoreNodeTexture):
         ("convex", "Convex", "Only use hills"),
         ("both", "Both", "Use both hills and dents"),
     ]
-    curvature_mode = EnumProperty(items=curvature_items, default="both")
+    curvature_mode: EnumProperty(items=curvature_items, default="both")
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Multiplier", 10)

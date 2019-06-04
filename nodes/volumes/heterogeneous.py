@@ -26,19 +26,19 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
     bl_width_default = 190
 
     # TODO: get name, default, description etc. from super class or something
-    priority = IntProperty(name="Priority", default=0, min=0)
-    color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
+    priority: IntProperty(name="Priority", default=0, min=0)
+    color_depth: FloatProperty(name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
-    lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
+    lightgroup: StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
 
-    step_size = FloatProperty(name="Step Size", default=0.1, min=0.0001,
+    step_size: FloatProperty(name="Step Size", default=0.1, min=0.0001,
                               soft_min=0.01, soft_max=1,
                               subtype="DISTANCE", unit="LENGTH",
                               description=STEP_SIZE_DESCRIPTION)
-    maxcount = IntProperty(name="Max. Steps", default=1024, min=0,
+    maxcount: IntProperty(name="Max. Steps", default=1024, min=0,
                            description="Maximum Step Count for Volume Integration")
-    auto_step_settings = BoolProperty(name="Auto Step Settings", default=False,
+    auto_step_settings: BoolProperty(name="Auto Step Settings", default=False,
                                       description="Enable when using a smoke domain. "
                                                   "Automatically calculates the correct step size and maximum steps")
 
@@ -46,10 +46,10 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
         # Only allow objects with a smoke modifier in domain mode to be picked
         return utils.find_smoke_domain_modifier(obj)
 
-    domain = PointerProperty(name="Domain", type=bpy.types.Object, poll=poll_domain,
+    domain: PointerProperty(name="Domain", type=bpy.types.Object, poll=poll_domain,
                              description="Domain object for calculating the step size and maximum steps settings")
 
-    multiscattering = BoolProperty(name="Multiscattering", default=False,
+    multiscattering: BoolProperty(name="Multiscattering", default=False,
                                    description=MULTISCATTERING_DESC)
 
     def init(self, context):

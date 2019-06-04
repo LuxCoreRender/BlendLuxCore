@@ -12,7 +12,7 @@ class LuxCoreNodeTexOutput(bpy.types.Node, LuxCoreNodeOutput):
     bl_label = "Texture Output"
     bl_width_default = 160
 
-    active = BoolProperty(name="Active", default=True, update=update_active)
+    active: BoolProperty(name="Active", default=True, update=update_active)
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketColor", "Color")

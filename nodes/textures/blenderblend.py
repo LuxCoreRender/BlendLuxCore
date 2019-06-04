@@ -24,11 +24,11 @@ class LuxCoreNodeTexBlenderBlend(bpy.types.Node, LuxCoreNodeTexture):
         ("vertical", "Vertical", "Direction: -y to y")
     ]
 
-    progression_type = EnumProperty(name="Progression", description="progression", items=progression_items, default="linear")
-    direction = EnumProperty(name="Direction", items=direction_items, default="horizontal")
+    progression_type: EnumProperty(name="Progression", description="progression", items=progression_items, default="linear")
+    direction: EnumProperty(name="Direction", items=direction_items, default="horizontal")
 
-    bright = FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast = FloatProperty(name="Contrast", default=1.0, min=0)
+    bright: FloatProperty(name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

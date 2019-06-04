@@ -13,8 +13,8 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
     bl_label = "Volume Output"
     bl_width_default = 160
 
-    active = BoolProperty(name="Active", default=True, update=update_active)
-    use_photongi = BoolProperty(name="Use PhotonGI Cache", default=True,
+    active: BoolProperty(name="Active", default=True, update=update_active)
+    use_photongi: BoolProperty(name="Use PhotonGI Cache", default=True,
                                 description="Store PhotonGI entries in this volume. This only affects "
                                             "homogeneous and heterogeneous volumes, entries are never "
                                             "stored on clear volumes. You might want to disable this "

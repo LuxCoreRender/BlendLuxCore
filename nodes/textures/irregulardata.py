@@ -12,8 +12,8 @@ def convert(string):
 class LuxCoreNodeTexIrregularData(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Irregular Data"
 
-    equal_length = BoolProperty(default=True)
-    error = StringProperty()
+    equal_length: BoolProperty(default=True)
+    error: StringProperty()
 
     def update_data(self, context):
         try:
@@ -25,9 +25,9 @@ class LuxCoreNodeTexIrregularData(bpy.types.Node, LuxCoreNodeTexture):
             print(error)
             self.error = str(error)
 
-    wavelengths = StringProperty(name="", default="580.0, 620.0, 660.0", update=update_data,
+    wavelengths: StringProperty(name="", default="580.0, 620.0, 660.0", update=update_data,
                                  description="Comma-separated list of values")
-    data = StringProperty(name="", default="0.0, 0.000015, 0.0", update=update_data,
+    data: StringProperty(name="", default="0.0, 0.000015, 0.0", update=update_data,
                           description="Comma-separated list of values")
 
     def init(self, context):

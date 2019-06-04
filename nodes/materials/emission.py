@@ -37,22 +37,22 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
     bl_label = "Emission"
     bl_width_default = 160
 
-    gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
-    power = FloatProperty(name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
-    efficacy = FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
-    ies = PointerProperty(type=LuxCoreIESProps)
-    importance = FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
+    gain: FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
+    power: FloatProperty(name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
+    efficacy: FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
+    ies: PointerProperty(type=LuxCoreIESProps)
+    importance: FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     # We use unit="ROTATION" because angles are radians, so conversion is necessary for the UI
-    spread_angle = FloatProperty(name="Spread Angle", default=math.pi / 2, min=0, soft_min=math.radians(5),
+    spread_angle: FloatProperty(name="Spread Angle", default=math.pi / 2, min=0, soft_min=math.radians(5),
                                  max=math.pi / 2, subtype="ANGLE", unit="ROTATION",
                                  description=SPREAD_ANGLE_DESCRIPTION)
-    lightgroup = StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
+    lightgroup: StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
     dls_type_items = [
         ("AUTO", "Auto", DLS_AUTO_DESC, 0),
         ("ENABLED", "Enabled", DLS_ENABLED_DESC, 1),
         ("DISABLED", "Disabled", DLS_DISABLED_DESC, 2),
     ]
-    dls_type = EnumProperty(name="DLS", description="Direct Light Sampling Type",
+    dls_type: EnumProperty(name="DLS", description="Direct Light Sampling Type",
                             items=dls_type_items, default="AUTO")
     # TODO: mapfile and gamma?
 

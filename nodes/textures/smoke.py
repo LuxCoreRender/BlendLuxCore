@@ -19,7 +19,7 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         # Only allow objects with a smoke modifier in domain mode to be picked
         return utils.find_smoke_domain_modifier(obj)
     
-    domain = PointerProperty(name="Domain", type=bpy.types.Object, poll=poll_domain)
+    domain: PointerProperty(name="Domain", type=bpy.types.Object, poll=poll_domain)
 
     def update_source(self, context):
         value_output = self.outputs["Value"]
@@ -38,14 +38,14 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         ("color", "Color", "Smoke color grid, 3 values per voxel (RGB)", 3),
         ("velocity", "Velocity", "Smoke velocity grid, 3 values per voxel", 4),
     ]
-    source = EnumProperty(name="Grid Type", items=source_items, default="density", update=update_source)
+    source: EnumProperty(name="Grid Type", items=source_items, default="density", update=update_source)
 
     precision_items = [
         ("byte", "Byte", "Only 1 byte per value. Required memory is 1/2 of Half and 1/4 of Float", 0),
         ("half", "Half", "2 bytes per value. Required memory is 1/2 of Float, but 2 times the size of Byte", 1),
         ("float", "Float", "4 bytes per value. Required memory is 2 times the size of half and 4 times the size of Byte", 2),
     ]
-    precision = EnumProperty(name="Precision", items=precision_items, default="half",
+    precision: EnumProperty(name="Precision", items=precision_items, default="half",
                              description="How many bytes to use per value. The floating point precision "
                                          "increases/decreases when more/less bytes are used. Low floating "
                                          "point precision can lead to artifacts when the smoke resolution is low")

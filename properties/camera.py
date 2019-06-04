@@ -27,29 +27,29 @@ class LuxCoreMotionBlur(PropertyGroup):
     """
     motion_blur.*
     """
-    enable = BoolProperty(name="Enable Motion Blur", default=False)
-    object_blur = BoolProperty(name="Object", default=True, description="Blur moving objects")
-    camera_blur = BoolProperty(name="Camera", default=False, description="Blur if camera moves")
-    shutter = FloatProperty(name="Shutter (frames)", default=0.1, min=0, soft_max=2, description=SHUTTER_TIME_DESC)
+    enable: BoolProperty(name="Enable Motion Blur", default=False)
+    object_blur: BoolProperty(name="Object", default=True, description="Blur moving objects")
+    camera_blur: BoolProperty(name="Camera", default=False, description="Blur if camera moves")
+    shutter: FloatProperty(name="Shutter (frames)", default=0.1, min=0, soft_max=2, description=SHUTTER_TIME_DESC)
     # Note: Embree allows a maximum of 129 motion steps
-    steps = IntProperty(name="Steps", default=2, min=2, soft_max=20, max=129, description="Number of substeps")
+    steps: IntProperty(name="Steps", default=2, min=2, soft_max=20, max=129, description="Number of substeps")
 
 
 class LuxCoreCameraProps(PropertyGroup):
-    use_clipping = BoolProperty(name="Clipping:", default=False,
+    use_clipping: BoolProperty(name="Clipping:", default=False,
                                 description="Use near/far clipping for the LuxCore camera "
                                             "(clipping still affects the Blender OpenGL viewport even if disabled)")
-    use_dof = BoolProperty(name="Use Depth of Field", default=False,
+    use_dof: BoolProperty(name="Use Depth of Field", default=False,
                            description="Simulate the blurring happening in real-world cameras "
                                        "when objects are out of focus")
-    use_autofocus = BoolProperty(name="Use Autofocus", default=False,
+    use_autofocus: BoolProperty(name="Use Autofocus", default=False,
                                  description="Focus on the surface in the center of the film")
-    fstop = FloatProperty(name="F-stop", default=2.8, min=0.01, description=FSTOP_DESC)
-    use_clipping_plane = BoolProperty(name="Use Clipping Plane:", default=False, description=CLIPPING_PLANE_DESC)
-    clipping_plane = PointerProperty(name="Clipping Plane", type=bpy.types.Object, description=CLIPPING_PLANE_DESC)
+    fstop: FloatProperty(name="F-stop", default=2.8, min=0.01, description=FSTOP_DESC)
+    use_clipping_plane: BoolProperty(name="Use Clipping Plane:", default=False, description=CLIPPING_PLANE_DESC)
+    clipping_plane: PointerProperty(name="Clipping Plane", type=bpy.types.Object, description=CLIPPING_PLANE_DESC)
 
-    motion_blur = PointerProperty(type=LuxCoreMotionBlur)
-    imagepipeline = PointerProperty(type=LuxCoreImagepipeline)
+    motion_blur: PointerProperty(type=LuxCoreMotionBlur)
+    imagepipeline: PointerProperty(type=LuxCoreImagepipeline)
 
-    volume = PointerProperty(type=bpy.types.NodeTree)
-    auto_volume = BoolProperty(name="Auto-Detect Camera Volume", default=True, description=AUTO_VOLUME_DESC)
+    volume: PointerProperty(type=bpy.types.NodeTree)
+    auto_volume: BoolProperty(name="Auto-Detect Camera Volume", default=True, description=AUTO_VOLUME_DESC)

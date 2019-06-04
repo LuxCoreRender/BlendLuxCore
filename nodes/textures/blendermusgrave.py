@@ -19,17 +19,17 @@ class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
         ("fbm", "FBM", ""),
     ]
 
-    musgrave_type = EnumProperty(name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
-    noise_basis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
-    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)
+    musgrave_type: EnumProperty(name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
+    noise_basis: EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
+    noise_size: FloatProperty(name="Noise Size", default=0.25, min=0)
     h =FloatProperty(name="Dimension", default=1.0, min=0)
-    lacu = FloatProperty(name="Lacunarity", default=2.0)
-    octs = FloatProperty(name="Octaves", default=2.0, min=0)
-    offset = FloatProperty(name="Offset", default=1.0)
-    gain = FloatProperty(name="Gain", default=1.0, min=0)
-    iscale = FloatProperty(name="Intensity", default=1.0)
-    bright = FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast = FloatProperty(name="Contrast", default=1.0, min=0)
+    lacu: FloatProperty(name="Lacunarity", default=2.0)
+    octs: FloatProperty(name="Octaves", default=2.0, min=0)
+    offset: FloatProperty(name="Offset", default=1.0)
+    gain: FloatProperty(name="Gain", default=1.0, min=0)
+    iscale: FloatProperty(name="Intensity", default=1.0)
+    bright: FloatProperty(name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

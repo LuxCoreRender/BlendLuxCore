@@ -99,8 +99,8 @@ class LuxCoreIORPresetCommonProperties():
     """ A property-only class to work around Blender's inheritance limits. """
     bl_idname = "luxcore.ior_preset_common_properties"
     bl_label = ""
-    node_name = StringProperty()
-    node_tree_index = IntProperty()
+    node_name: StringProperty()
+    node_tree_index: IntProperty()
 
 
 class LuxCoreIORPresetBase(LuxCoreIORPresetCommonProperties):
@@ -111,7 +111,7 @@ class LuxCoreIORPresetBase(LuxCoreIORPresetCommonProperties):
     def cb_ior_preset(self, context):
         return []
 
-    ior_preset = EnumProperty(name="IOR Preset",
+    ior_preset: EnumProperty(name="IOR Preset",
                               description="Index of Refraction Preset Values",
                               items=cb_ior_preset)
 
@@ -147,7 +147,7 @@ class LUXCORE_OT_ior_preset_names(bpy.types.Operator,
         LUXCORE_OT_ior_preset_names.callback_strings = items
         return items
 
-    ior_preset = EnumProperty(name="IOR Preset",
+    ior_preset: EnumProperty(name="IOR Preset",
                               description="Index of Refraction Preset Values",
                               items=cb_ior_preset)
 
@@ -171,6 +171,6 @@ class LUXCORE_OT_ior_preset_values(bpy.types.Operator,
         LUXCORE_OT_ior_preset_values.callback_strings = items
         return items
 
-    ior_preset = EnumProperty(name="IOR Preset",
+    ior_preset: EnumProperty(name="IOR Preset",
                               description="Index of Refraction Preset Values",
                               items=cb_ior_preset)

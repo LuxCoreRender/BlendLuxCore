@@ -22,22 +22,22 @@ NOISE_THRESH_STEP_DESC = (
 
 # Attached to render layer and scene
 class LuxCoreHaltConditions(bpy.types.PropertyGroup):
-    enable = BoolProperty(name="Enable", default=False)
+    enable: BoolProperty(name="Enable", default=False)
 
-    use_time = BoolProperty(name="Use Time", default=False)
-    time = IntProperty(name="Time (s)", default=600, min=1)
+    use_time: BoolProperty(name="Use Time", default=False)
+    time: IntProperty(name="Time (s)", default=600, min=1)
 
-    use_samples = BoolProperty(name="Use Samples", default=False)
-    samples = IntProperty(name="Samples", default=500, min=1)
+    use_samples: BoolProperty(name="Use Samples", default=False)
+    samples: IntProperty(name="Samples", default=500, min=1)
 
     # Noise threshold
-    use_noise_thresh = BoolProperty(name="Use Noise Threshold", default=False,
+    use_noise_thresh: BoolProperty(name="Use Noise Threshold", default=False,
                                     description=USE_NOISE_THRESH_DESC)
-    noise_thresh = IntProperty(name="Noise Threshold", default=5, min=0, soft_min=3, max=255,
+    noise_thresh: IntProperty(name="Noise Threshold", default=5, min=0, soft_min=3, max=255,
                                description=NOISE_THRESH_DESC)
-    noise_thresh_warmup = IntProperty(name="Warmup Samples", default=64, min=1,
+    noise_thresh_warmup: IntProperty(name="Warmup Samples", default=64, min=1,
                                       description=NOISE_THRESH_WARMUP_DESC)
-    noise_thresh_step = IntProperty(name="Test Step Samples", default=64, min=1, soft_min=16,
+    noise_thresh_step: IntProperty(name="Test Step Samples", default=64, min=1, soft_min=16,
                                     description=NOISE_THRESH_STEP_DESC)
 
     def is_enabled(self):

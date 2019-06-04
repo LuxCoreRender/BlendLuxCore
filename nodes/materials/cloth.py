@@ -11,14 +11,14 @@ REPEATV_DESCRIPTION = "Repetition count of pattern in V direction"
 # Note: we need to keep this class around for backwards compatibility reasons,
 # even if it is not used (we need it so we can port old cloth nodes to new ones)
 class LuxCoreSocketRepeatU(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, soft_max=10000, description=REPEATU_DESCRIPTION)
+    default_value: FloatProperty(min=0, soft_max=10000, description=REPEATU_DESCRIPTION)
     slider = True
 
 
 # Note: we need to keep this class around for backwards compatibility reasons,
 # even if it is not used (we need it so we can port old cloth nodes to new ones)
 class LuxCoreSocketRepeatV(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, soft_max=10000, description=REPEATV_DESCRIPTION)
+    default_value: FloatProperty(min=0, soft_max=10000, description=REPEATV_DESCRIPTION)
     slider = True
 
 
@@ -36,12 +36,12 @@ class LuxCoreNodeMatCloth(bpy.types.Node, LuxCoreNodeMaterial):
         ("silk_shantung", "Silk Shantung", "", 5),
     ]
 
-    preset = EnumProperty(name="Preset", description="Cloth presets", items=preset_items,
+    preset: EnumProperty(name="Preset", description="Cloth presets", items=preset_items,
                           default="denim")
 
-    repeat_u = FloatProperty(name="Repeat U", default=100, min=0, soft_max=10000,
+    repeat_u: FloatProperty(name="Repeat U", default=100, min=0, soft_max=10000,
                              description=REPEATU_DESCRIPTION)
-    repeat_v = FloatProperty(name="Repeat V", default=100, min=0, soft_max=10000,
+    repeat_v: FloatProperty(name="Repeat V", default=100, min=0, soft_max=10000,
                              description=REPEATV_DESCRIPTION)
     
     def init(self, context):

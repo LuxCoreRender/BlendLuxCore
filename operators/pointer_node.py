@@ -23,7 +23,7 @@ class LUXCORE_OT_pointer_set_node_tree(bpy.types.Operator, LUXCORE_OT_set_node_t
 
     bl_idname = "luxcore.pointer_set_node_tree"
 
-    node_tree_index = IntProperty()
+    node_tree_index: IntProperty()
 
     @classmethod
     def poll(cls, context):

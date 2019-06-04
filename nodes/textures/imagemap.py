@@ -30,8 +30,8 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             # Sometimes, this node is not counted as user.
             self.image.use_fake_user = True
 
-    image = PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
-    image_user = PointerProperty(type=LuxCoreImageUser)
+    image: PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
+    image_user: PointerProperty(type=LuxCoreImageUser)
 
     channel_items = [
         ("default", "Default", "Do not convert the image cannels", 0),
@@ -43,7 +43,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         ("mean", "Mean (Average)", "Greyscale", 6),
         ("colored_mean", "Mean (Luminance)", "Greyscale", 7),
     ]
-    channel = EnumProperty(name="Channel", items=channel_items, default="default")
+    channel: EnumProperty(name="Channel", items=channel_items, default="default")
 
     wrap_items = [
         ("repeat", "Repeat", "", 0),
@@ -51,12 +51,12 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         ("black", "Black", "", 1),
         ("white", "White", "", 2),
     ]
-    wrap = EnumProperty(name="Wrap", items=wrap_items, default="repeat")
+    wrap: EnumProperty(name="Wrap", items=wrap_items, default="repeat")
 
-    gamma = FloatProperty(name="Gamma", default=2.2, soft_min=0, soft_max=5,
+    gamma: FloatProperty(name="Gamma", default=2.2, soft_min=0, soft_max=5,
                           description="Most LDR images with sRgb colors use gamma 2.2, "
                                       "while most HDR images with linear colors use gamma 1")
-    brightness = FloatProperty(name="Brightness", default=1,
+    brightness: FloatProperty(name="Brightness", default=1,
                                description="Brightness multiplier")
 
     def update_is_normal_map(self, context):
@@ -71,15 +71,15 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
 
         utils_node.copy_links_after_socket_swap(color_output, bump_output, was_color_enabled)
 
-    is_normal_map = BoolProperty(name="Normalmap", default=False, update=update_is_normal_map,
+    is_normal_map: BoolProperty(name="Normalmap", default=False, update=update_is_normal_map,
                                  description=NORMAL_MAP_DESC)
-    normal_map_scale = FloatProperty(name="Height", default=1, min=0, soft_max=5,
+    normal_map_scale: FloatProperty(name="Height", default=1, min=0, soft_max=5,
                                      description=NORMAL_SCALE_DESC)
     normal_map_orientation_items = [
         ("opengl", "OpenGL", "Select if the image is a left-handed normal map", 0),
         ("directx", "DirectX", "Select if the image is a right-handed normal map (inverted green channel)", 1),
     ]
-    normal_map_orientation = EnumProperty(name="Orientation", items=normal_map_orientation_items, default="opengl")
+    normal_map_orientation: EnumProperty(name="Orientation", items=normal_map_orientation_items, default="opengl")
 
     # This function assigns self.image to all faces of all objects using this material
     # and assigns self.image to all image editors that do not have their image pinned.
@@ -113,11 +113,11 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
                 space.image = self.image
 
     # Note: the old "use a property as a button because it is so much simpler" trick
-    set_as_active_uvmap = BoolProperty(name="Show in Viewport", default=False,
+    set_as_active_uvmap: BoolProperty(name="Show in Viewport", default=False,
                                        update=update_set_as_active_uvmap,
                                        description="Show this image map on all objects with this material")
 
-    show_thumbnail = BoolProperty(name="", default=True, description="Show thumbnail")
+    show_thumbnail: BoolProperty(name="", default=True, description="Show thumbnail")
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")

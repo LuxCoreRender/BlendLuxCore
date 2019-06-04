@@ -37,17 +37,17 @@ class LuxCoreImageUser(PropertyGroup):
     """
 
     # This image reference is just for internal bookkeeping
-    image = PointerProperty(type=bpy.types.Image)
+    image: PointerProperty(type=bpy.types.Image)
 
-    first_frame = IntProperty(name="First Frame", default=1, min=1,  description=FIRST_FRAME_DESC)
-    last_frame = IntProperty(name="Last Frame", default=2, min=1, description=LAST_FRAME_DESC)
+    first_frame: IntProperty(name="First Frame", default=1, min=1,  description=FIRST_FRAME_DESC)
+    last_frame: IntProperty(name="Last Frame", default=2, min=1, description=LAST_FRAME_DESC)
     # TODO description?
-    frame_offset = IntProperty(name="Offset", default=0)
+    frame_offset: IntProperty(name="Offset", default=0)
 
-    pick_random = BoolProperty(name="Pick Random", default=False,
+    pick_random: BoolProperty(name="Pick Random", default=False,
                                description="Pick a random frame n so that: First Frame <= n <= Last Frame")
-    seed = IntProperty(name="Seed", default=0, description=SEED_DESC)
-    reverse = BoolProperty(name="Reverse", default=False,
+    seed: IntProperty(name="Seed", default=0, description=SEED_DESC)
+    reverse: BoolProperty(name="Reverse", default=False,
                            description="Reverse the number of frames in the sequence")
 
     wrap_modes = [
@@ -56,7 +56,7 @@ class LuxCoreImageUser(PropertyGroup):
         ("repeat", "Repeat", "Loop the sequence: 12345 12345 12345", 2),
         ("pingpong", "Ping-Pong", "Like repeat, but every second repetition is reversed: 12345 54321 12345", 3),
     ]
-    wrap_mode = EnumProperty(name="Wrap", items=wrap_modes, default="clamp",
+    wrap_mode: EnumProperty(name="Wrap", items=wrap_modes, default="clamp",
                              description="How to handle the case of being outside of the sequence range")
 
     def update(self, image):

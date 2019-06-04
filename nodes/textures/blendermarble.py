@@ -24,18 +24,18 @@ class LuxCoreNodeTexBlenderMarble(bpy.types.Node, LuxCoreNodeTexture):
         ("tri", "Tri", ""),
     ]
 
-    marble_type = EnumProperty(name="Type", description="Type of noise used", items=marble_type_items, default="soft")
-    noise_basis = EnumProperty(name="Noise Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
+    marble_type: EnumProperty(name="Type", description="Type of noise used", items=marble_type_items, default="soft")
+    noise_basis: EnumProperty(name="Noise Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
-    noise_basis2 = EnumProperty(name="Noise Basis 2", description="Second basis of noise used",
+    noise_basis2: EnumProperty(name="Noise Basis 2", description="Second basis of noise used",
                                          items=marble_noise_items, default="sin")
-    noise_type = EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
+    noise_type: EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
                                        default="soft_noise")
-    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)
-    noise_depth = IntProperty(name="Noise Depth", default=2, min=0)
-    turbulence = FloatProperty(name="Turbulence", default=5.0, min=0)
-    bright = FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast = FloatProperty(name="Contrast", default=1.0, min=0)
+    noise_size: FloatProperty(name="Noise Size", default=0.25, min=0)
+    noise_depth: IntProperty(name="Noise Depth", default=2, min=0)
+    turbulence: FloatProperty(name="Turbulence", default=5.0, min=0)
+    bright: FloatProperty(name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

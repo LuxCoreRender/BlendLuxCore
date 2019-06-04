@@ -19,7 +19,7 @@ ARCHGLASS_DESCRIPTION = (
 
 
 class LuxCoreSocketCauchyC(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value = FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.1,
+    default_value: FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.1,
                                   step=0.1, precision=5, description=CAUCHYC_DESCRIPTION)
 
     def draw(self, context, layout, node, text):
@@ -41,15 +41,15 @@ class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
     bl_label = "Glass Material"
     bl_width_default = 160
 
-    use_anisotropy = BoolProperty(name=Roughness.aniso_name,
+    use_anisotropy: BoolProperty(name=Roughness.aniso_name,
                                   default=False,
                                   description=Roughness.aniso_desc,
                                   update=Roughness.update_anisotropy)
-    rough = BoolProperty(name="Rough",
+    rough: BoolProperty(name="Rough",
                          default=False,
                          description="Rough glass surface instead of a smooth one",
                          update=Roughness.toggle_roughness)
-    architectural = BoolProperty(name="Architectural",
+    architectural: BoolProperty(name="Architectural",
                                  default=False,
                                  description=ARCHGLASS_DESCRIPTION)
 

@@ -57,12 +57,12 @@ class LuxCoreNodeTexMath(bpy.types.Node, LuxCoreNodeTexture):
         ("lessthan", "Less Than", "Value 1 < Value 2 (returns 0 if false, 1 if true)", 8),
         ("greaterthan", "Greater Than", "Value 1 > Value 2 (returns 0 if false, 1 if true)", 9),
     ]
-    mode = EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
+    mode: EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
-    mode_clamp_min = FloatProperty(name="Min", description="", default=0)
-    mode_clamp_max = FloatProperty(name="Max", description="", default=1)
+    mode_clamp_min: FloatProperty(name="Min", description="", default=0)
+    mode_clamp_max: FloatProperty(name="Max", description="", default=1)
 
-    clamp_output = BoolProperty(name="Clamp", default=False,
+    clamp_output: BoolProperty(name="Clamp", default=False,
                                 description="Limit the output value to 0..1 range")
 
     def init(self, context):

@@ -32,11 +32,11 @@ class LuxCoreNodeTexColorMix(bpy.types.Node, LuxCoreNodeTexture):
         else:
             self.inputs["Fac"].enabled = False
 
-    mode = EnumProperty(name="Mode", items=mode_items, default="mix", update=change_mode)
-    clamp_output = BoolProperty(name="Clamp", default=False, description="Limit the output value to 0..1 range")
+    mode: EnumProperty(name="Mode", items=mode_items, default="mix", update=change_mode)
+    clamp_output: BoolProperty(name="Clamp", default=False, description="Limit the output value to 0..1 range")
 
-    mode_clamp_min = FloatProperty(name="Min", description="", default=0)
-    mode_clamp_max = FloatProperty(name="Max", description="", default=1)
+    mode_clamp_min: FloatProperty(name="Min", description="", default=0)
+    mode_clamp_max: FloatProperty(name="Max", description="", default=1)
 
     def draw_label(self):
         # Use the name of the selected operation as displayed node name

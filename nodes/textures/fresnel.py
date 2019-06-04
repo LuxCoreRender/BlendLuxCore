@@ -17,14 +17,14 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
         ("preset", "Preset", "Use a Preset fresnel texture as input", 1),
         ("nk", "File", "Use a fresnel texture file (.nk) as input", 2)
     ]
-    input_type = EnumProperty(name="Type", description="Input Type", items=input_type_items, default="preset",
+    input_type: EnumProperty(name="Type", description="Input Type", items=input_type_items, default="preset",
                                         update=change_input_type)
 
     file_type_items = [
         ("luxpop", "Lux Pop", "Use Luxpop format for NK data file", 0),
         ("sopra", "Sopra", "Use Sopra format for NK data file", 1),
     ]
-    file_type = EnumProperty(name="FileType", description="File Type", items=file_type_items, default="luxpop")
+    file_type: EnumProperty(name="FileType", description="File Type", items=file_type_items, default="luxpop")
 
     preset_items = [
                 ("amorphous carbon", "Amorphous carbon", "amorphous carbon", 0),
@@ -33,10 +33,10 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
                 ("silver", "Silver", "silver", 3),
                 ("aluminium", "Aluminium", "aluminium", 4)
     ]
-    preset = EnumProperty(name="Preset", description="NK data presets", items=preset_items,
+    preset: EnumProperty(name="Preset", description="NK data presets", items=preset_items,
                                            default="aluminium")
 
-    filepath = StringProperty(name="Nk File", description="Nk file path", subtype="FILE_PATH")
+    filepath: StringProperty(name="Nk File", description="Nk file path", subtype="FILE_PATH")
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (0.7, 0.7, 0.7))

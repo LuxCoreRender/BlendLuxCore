@@ -19,7 +19,7 @@ class LUXCORE_OT_switch_texture_context(bpy.types.Operator):
     bl_label = ""
     bl_description = "Switch the texture context"
 
-    target = bpy.props.StringProperty()
+    target: bpy.props.StringProperty()
 
     def execute(self, context):
         assert self.target in {"PARTICLES", "OTHER"}
@@ -39,7 +39,7 @@ class LUXCORE_OT_switch_space_data_context(bpy.types.Operator):
     bl_label = ""
     bl_description = "Switch the properties context (Render, Scene, Material, Texture, ...)"
 
-    target = bpy.props.StringProperty()
+    target: bpy.props.StringProperty()
 
     def execute(self, context):
         assert self.target in {"SCENE", "RENDER", "RENDER_LAYER", "WORLD", "OBJECT", "CONSTRAINT",
@@ -101,9 +101,9 @@ class LUXCORE_OT_add_node(bpy.types.Operator):
     bl_idname = "luxcore.add_node"
     bl_label = "Add"
 
-    node_type = StringProperty()
-    socket_type = StringProperty()
-    input_socket = StringProperty()
+    node_type: StringProperty()
+    socket_type: StringProperty()
+    input_socket: StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -157,7 +157,7 @@ class LUXCORE_OT_copy_error_to_clipboard(bpy.types.Operator):
     bl_label = ""
     bl_description = "Copy the error message to clipboard so you can paste it with Ctrl+V"
 
-    message = StringProperty()
+    message: StringProperty()
 
     def execute(self, context):
         context.window_manager.clipboard = self.message
@@ -172,7 +172,7 @@ class LUXCORE_OT_open_website(bpy.types.Operator):
     # op = layout.operator("luxcore.open_website", text="Wiki Page", icon=icons.URL)
     # op.url = "https://www.example.com"
 
-    url = StringProperty()
+    url: StringProperty()
 
     def execute(self, context):
         webbrowser.open(self.url)
@@ -190,8 +190,8 @@ class LUXCORE_OT_open_website_popup(bpy.types.Operator):
     #                                    message="Short message",
     #                                    url="http://example.com/")
 
-    message = StringProperty()
-    url = StringProperty()
+    message: StringProperty()
+    url: StringProperty()
 
     def draw(self, context):
         layout = self.layout
@@ -213,7 +213,7 @@ class LUXCORE_OT_select_object(bpy.types.Operator):
     bl_description = "Select this object"
     bl_options = {"UNDO"}
 
-    obj_name = StringProperty()
+    obj_name: StringProperty()
 
     def execute(self, context):
         if self.obj_name not in context.scene.objects:

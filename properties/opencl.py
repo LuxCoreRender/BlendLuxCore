@@ -5,18 +5,18 @@ from ..bin import pyluxcore
 
 
 class LuxCoreOpenCLDevice(PropertyGroup):
-    enabled = BoolProperty(default=True)
-    name = StringProperty()
-    type = StringProperty()
+    enabled: BoolProperty(default=True)
+    name: StringProperty()
+    type: StringProperty()
 
 
 class LuxCoreOpenCLSettings(PropertyGroup):
     # A collection of devices (can be enabled/disabled and have a name and type)
-    devices = CollectionProperty(type=LuxCoreOpenCLDevice)
+    devices: CollectionProperty(type=LuxCoreOpenCLDevice)
     # To check on .blend file loading if the devices are correct for this computer
-    devices_hash = StringProperty()
+    devices_hash: StringProperty()
 
-    use_native_cpu = BoolProperty(name="Use CPUs", default=True,
+    use_native_cpu: BoolProperty(name="Use CPUs", default=True,
                                   description="Use native C++ threads on the CPU (hybrid rendering)")
 
     def init_devices(self, device_list):

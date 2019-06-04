@@ -18,16 +18,16 @@ class LuxCoreNodeTexBlenderStucci(bpy.types.Node, LuxCoreNodeTexture):
         ("wall_out", "Wall Out", ""),
     ]
 
-    stucci_type = EnumProperty(name="Type", description="Type of noise used", items=stucci_type_items, default="plastic")
-    noise_basis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
+    stucci_type: EnumProperty(name="Type", description="Type of noise used", items=stucci_type_items, default="plastic")
+    noise_basis: EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
-    noise_type = EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
+    noise_type: EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
                                        default="soft_noise")
-    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)
-    noise_depth = IntProperty(name="Noise Depth", default=2, min=0)
-    turbulence = FloatProperty(name="Turbulence", default=5.0, min=0)
-    bright = FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast = FloatProperty(name="Contrast", default=1.0, min=0)
+    noise_size: FloatProperty(name="Noise Size", default=0.25, min=0)
+    noise_depth: IntProperty(name="Noise Depth", default=2, min=0)
+    turbulence: FloatProperty(name="Turbulence", default=5.0, min=0)
+    bright: FloatProperty(name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

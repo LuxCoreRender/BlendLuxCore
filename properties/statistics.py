@@ -225,7 +225,7 @@ class LuxCoreRenderStats:
 class LuxCoreRenderStatsCollection(PropertyGroup):
     slots = [LuxCoreRenderStats() for i in range(8)]
 
-    compare = BoolProperty(name="Compare", default=False,
+    compare: BoolProperty(name="Compare", default=False,
                            description="Compare the statistics of two slots")
 
     def generate_slot_items(self, index_offset=0):
@@ -256,9 +256,9 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
         LuxCoreRenderStatsCollection.second_slot_callback_strings = items
         return items
 
-    first_slot = EnumProperty(name="First Slot", description="The first slot",
+    first_slot: EnumProperty(name="First Slot", description="The first slot",
                               items=first_slot_items_callback)
-    second_slot = EnumProperty(name="Second Slot", description="The other slot to compare with",
+    second_slot: EnumProperty(name="Second Slot", description="The other slot to compare with",
                                items=second_slot_items_callback)
 
     def __getitem__(self, slot_index):

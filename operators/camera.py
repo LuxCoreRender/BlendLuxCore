@@ -50,7 +50,7 @@ class LUXCORE_OT_camera_set_volume_node_tree(bpy.types.Operator, LUXCORE_OT_set_
 
     bl_idname = "luxcore.camera_set_volume_node_tree"
 
-    node_tree_index = IntProperty()
+    node_tree_index: IntProperty()
 
     @classmethod
     def poll(cls, context):

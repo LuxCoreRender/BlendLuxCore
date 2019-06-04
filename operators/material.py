@@ -75,7 +75,7 @@ class LUXCORE_OT_material_set(bpy.types.Operator):
     bl_description = "Assign this node tree"
     bl_options = {"UNDO"}
 
-    material_index = IntProperty()
+    material_index: IntProperty()
 
     @classmethod
     def poll(cls, context):
@@ -142,7 +142,7 @@ class LuxCore_OT_material_select(bpy.types.Operator):
         LuxCore_OT_material_select.callback_strings = items
         return items
 
-    material = EnumProperty(name="Materials", items=callback)
+    material: EnumProperty(name="Materials", items=callback)
 
     @classmethod
     def poll(cls, context):
@@ -219,7 +219,7 @@ class LUXCORE_OT_set_mat_node_tree(bpy.types.Operator, LUXCORE_OT_set_node_tree)
 
     bl_idname = "luxcore.set_mat_node_tree"
 
-    node_tree_index = IntProperty()
+    node_tree_index: IntProperty()
 
     @classmethod
     def poll(cls, context):

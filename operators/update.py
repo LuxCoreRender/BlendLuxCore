@@ -101,7 +101,7 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
     bl_label = "Change Version"
     bl_description = "Download a different BlendLuxCore version and replace this installation"
 
-    selected_release = EnumProperty(name="Releases", items=release_items_callback,
+    selected_release: EnumProperty(name="Releases", items=release_items_callback,
                                     description="Select a release")
 
     def invoke(self, context, event):

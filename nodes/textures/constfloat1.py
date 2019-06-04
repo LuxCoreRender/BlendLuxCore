@@ -7,7 +7,7 @@ class LuxCoreNodeTexConstfloat1(bpy.types.Node, LuxCoreNodeTexture):
     """ Constant float value """
     bl_label = "Constant Value"
 
-    value = FloatProperty(name="Value", description="A constant float value")
+    value: FloatProperty(name="Value", description="A constant float value")
 
     def init(self, context):
         self.outputs.new("LuxCoreSocketFloatUnbounded", "Value")

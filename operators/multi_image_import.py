@@ -54,14 +54,14 @@ class LUXCORE_OT_import_multiple_images(bpy.types.Operator, ImportHelper):
     bl_description = "Import multiple imagemaps into the node editor at once"
     bl_options = {"UNDO"}
 
-    detect_normalmaps_fast = BoolProperty(name="Auto-Detect Normalmaps (fast)", default=True,
+    detect_normalmaps_fast: BoolProperty(name="Auto-Detect Normalmaps (fast)", default=True,
                                           description='Check if the filename contains the string "normal"')
-    detect_normalmaps_slow = BoolProperty(name="Auto-Detect Normalmaps (slow)", default=False,
+    detect_normalmaps_slow: BoolProperty(name="Auto-Detect Normalmaps (slow)", default=False,
                                           description="Check if the image pixels are normalized vectors "
                                                       "(takes about half a second per 4k image)")
-    files = CollectionProperty(name="File Path", type=OperatorFileListElement)
-    directory = StringProperty(subtype='DIR_PATH')
-    filter_glob = StringProperty(
+    files: CollectionProperty(name="File Path", type=OperatorFileListElement)
+    directory: StringProperty(subtype='DIR_PATH')
+    filter_glob: StringProperty(
         default="*.jpg;*.jpeg;*.png;*.gif;*.tga;*.tif;*.tiff;*.exr;*.hdr",
         options={'HIDDEN'}
     )

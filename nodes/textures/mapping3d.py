@@ -14,15 +14,15 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
         ("localmapping3d", "Local", "Object coordinate system", 1),
         ("uvmapping3d", "UV", "Use the UV coordinates of the mesh to map the texture", 2),
     ]
-    mapping_type = EnumProperty(name="Mapping", items=mapping_types, default="globalmapping3d")
-    translate = FloatVectorProperty(name="Translate", subtype="TRANSLATION", description="Moves the texture")
-    rotate = FloatVectorProperty(name="Rotate", unit="ROTATION", default=(0, 0, 0), subtype="EULER",
+    mapping_type: EnumProperty(name="Mapping", items=mapping_types, default="globalmapping3d")
+    translate: FloatVectorProperty(name="Translate", subtype="TRANSLATION", description="Moves the texture")
+    rotate: FloatVectorProperty(name="Rotate", unit="ROTATION", default=(0, 0, 0), subtype="EULER",
                                  description="Rotates the texture")
-    scale = FloatVectorProperty(name="Scale", default=(1.0, 1.0, 1.0), subtype="XYZ",
+    scale: FloatVectorProperty(name="Scale", default=(1.0, 1.0, 1.0), subtype="XYZ",
                                 description="Scales the texture")
-    uniform_scale = FloatProperty(name="", default=1.0,
+    uniform_scale: FloatProperty(name="", default=1.0,
                                   description="Scales the texture uniformly along all axis")
-    use_uniform_scale = BoolProperty(name="Uniform", default=False,
+    use_uniform_scale: BoolProperty(name="Uniform", default=False,
                                      description="Use the same scale value for all axis")
 
     def init(self, context):

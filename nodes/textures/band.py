@@ -6,11 +6,11 @@ from ...ui import icons
 
 
 class ColorRampItem(PropertyGroup):
-    offset = FloatProperty(name="Offset", default=0.0, min=0, max=1)
-    value = FloatVectorProperty(name="", min=0, soft_max=1, subtype="COLOR")
+    offset: FloatProperty(name="Offset", default=0.0, min=0, max=1)
+    value: FloatVectorProperty(name="", min=0, soft_max=1, subtype="COLOR")
     # For internal use
-    index = IntProperty()
-    node_name = StringProperty()
+    index: IntProperty()
+    node_name: StringProperty()
 
     def update_add_keyframe(self, context):
         data_path = 'nodes["%s"].ramp_items[%d]' % (self.node_name, self.index)
@@ -25,9 +25,9 @@ class ColorRampItem(PropertyGroup):
         self["remove_keyframe"] = False
 
     # This is a bit of a hack, we use BoolProperties as buttons
-    add_keyframe = BoolProperty(name="", description="Add a keyframe on the current frame",
+    add_keyframe: BoolProperty(name="", description="Add a keyframe on the current frame",
                                 default=False, update=update_add_keyframe)
-    remove_keyframe = BoolProperty(name="", description="Remove the keyframe on the current frame",
+    remove_keyframe: BoolProperty(name="", description="Remove the keyframe on the current frame",
                                    default=False, update=update_remove_keyframe)
 
 
@@ -40,7 +40,7 @@ class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
         ("cubic", "Cubic", "Cubic interpolation between values, smooth transition", 1),
         ("none", "None", "No interpolation between values, sharp transition", 2),
     ]
-    interpolation = EnumProperty(name="Mode", description="Interpolation type of band values",
+    interpolation: EnumProperty(name="Mode", description="Interpolation type of band values",
                                  items=interpolation_items, default="linear")
 
     def update_add(self, context):
@@ -71,11 +71,11 @@ class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
         self["remove_item"] = False
 
     # This is a bit of a hack, we use BoolProperties as buttons
-    add_item = BoolProperty(name="Add", description="Add an offset",
+    add_item: BoolProperty(name="Add", description="Add an offset",
                             default=False, update=update_add)
-    remove_item = BoolProperty(name="Remove", description="Remove last offset",
+    remove_item: BoolProperty(name="Remove", description="Remove last offset",
                                default=False, update=update_remove)
-    ramp_items = CollectionProperty(type=ColorRampItem)
+    ramp_items: CollectionProperty(type=ColorRampItem)
     
     def init(self, context):
         self.add_input("LuxCoreSocketFloat0to1", "Amount", 1)

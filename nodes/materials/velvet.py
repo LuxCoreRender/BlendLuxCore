@@ -12,7 +12,7 @@ class LuxCoreNodeMatVelvet(bpy.types.Node, LuxCoreNodeMaterial):
         self.inputs["p2"].enabled = self.advanced
         self.inputs["p3"].enabled = self.advanced
 
-    advanced = BoolProperty(name="Advanced Options", description="Advanced Velvet Parameters", default=False, update=update_advanced)
+    advanced: BoolProperty(name="Advanced Options", description="Advanced Velvet Parameters", default=False, update=update_advanced)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Diffuse Color", (1, 1, 1))

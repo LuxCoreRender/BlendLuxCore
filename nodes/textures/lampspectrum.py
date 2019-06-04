@@ -138,38 +138,38 @@ class LuxCoreNodeTexLampSpectrum(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Lamp Spectrum"
     bl_width_default = 310
 
-    lamp_category = EnumProperty(name="Lamp Category", description="Lamp Preset Category", items=CATEGORY_ITEMS,
+    lamp_category: EnumProperty(name="Lamp Category", description="Lamp Preset Category", items=CATEGORY_ITEMS,
                                         default="Natural")
 
-    lamp_spectrum_natural = EnumProperty(name="Natural Preset", description="Natural Preset", items=NATURAL_ITEMS,
+    lamp_spectrum_natural: EnumProperty(name="Natural Preset", description="Natural Preset", items=NATURAL_ITEMS,
                                         default="Daylight")
-    lamp_spectrum_incandescent = EnumProperty(name="Incandescent Preset", description="Incandescent Preset", items=INCANDESCENT_ITEMS,
+    lamp_spectrum_incandescent: EnumProperty(name="Incandescent Preset", description="Incandescent Preset", items=INCANDESCENT_ITEMS,
                                         default="Candle")
-    lamp_spectrum_fluorescent = EnumProperty(name="Fluorescent Preset", description="Fluorescent Preset", items=FLOURESCENT_ITEMS,
+    lamp_spectrum_fluorescent: EnumProperty(name="Fluorescent Preset", description="Fluorescent Preset", items=FLOURESCENT_ITEMS,
                                         default="FLD2")
-    lamp_spectrum_high_pressure_mercury = EnumProperty(name="High Pressure Mercury Preset", description="High Pressure Mercury Preset", items=HIGH_PRESSURE_MERCURY_ITEMS,
+    lamp_spectrum_high_pressure_mercury: EnumProperty(name="High Pressure Mercury Preset", description="High Pressure Mercury Preset", items=HIGH_PRESSURE_MERCURY_ITEMS,
                                         default="HPM2")
-    lamp_spectrum_sodium_discharge = EnumProperty(name="Sodium Discharge Preset", description="Sodium Discharge Preset", items=SODIUM_DISCHARGE_ITEMS,
+    lamp_spectrum_sodium_discharge: EnumProperty(name="Sodium Discharge Preset", description="Sodium Discharge Preset", items=SODIUM_DISCHARGE_ITEMS,
                                         default="SS1")
-    lamp_spectrum_metal_halide = EnumProperty(name="Metal Halide Preset", description="Metal Halide Preset", items=METAL_HALIDE_ITEMS,
+    lamp_spectrum_metal_halide: EnumProperty(name="Metal Halide Preset", description="Metal Halide Preset", items=METAL_HALIDE_ITEMS,
                                         default="MHN")
-    lamp_spectrum_diode = EnumProperty(name="Diode Preset", description="Diode Preset", items=DIODE_ITEMS,
+    lamp_spectrum_diode: EnumProperty(name="Diode Preset", description="Diode Preset", items=DIODE_ITEMS,
                                         default="LEDB")
-    lamp_spectrum_spectral = EnumProperty(name="Spectral", description="Spectral Preset", items=SPECTRAL_ITEMS,
+    lamp_spectrum_spectral: EnumProperty(name="Spectral", description="Spectral Preset", items=SPECTRAL_ITEMS,
                                        default="XeI")
-    lamp_spectrum_glow_discharge = EnumProperty(name="Glow Discharge Preset", description="low Discharge Preset", items=GLOW_DISCHARGE_ITEMS,
+    lamp_spectrum_glow_discharge: EnumProperty(name="Glow Discharge Preset", description="low Discharge Preset", items=GLOW_DISCHARGE_ITEMS,
                                         default="NeKrFL")
-    lamp_spectrum_molecular = EnumProperty(name="Molecular Preset", description="Molecular Preset", items=MOLECULAR_ITEMS,
+    lamp_spectrum_molecular: EnumProperty(name="Molecular Preset", description="Molecular Preset", items=MOLECULAR_ITEMS,
                                         default="Butane")
-    lamp_spectrum_fluorescence = EnumProperty(name="Flourecence Preset", description="Flourecence Preset", items=FLUORECENCE_ITEMS,
+    lamp_spectrum_fluorescence: EnumProperty(name="Flourecence Preset", description="Flourecence Preset", items=FLUORECENCE_ITEMS,
                                         default="BLP")
-    lamp_spectrum_various = EnumProperty(name="Various Preset", description="Various Preset", items=VARIOUS_ITEMS,
+    lamp_spectrum_various: EnumProperty(name="Various Preset", description="Various Preset", items=VARIOUS_ITEMS,
                                         default="Xe")
-    lamp_spectrum_blacklight = EnumProperty(name="Blacklight Preset", description="Blacklight Preset", items=BLACKLIGHT_ITEMS,
+    lamp_spectrum_blacklight: EnumProperty(name="Blacklight Preset", description="Blacklight Preset", items=BLACKLIGHT_ITEMS,
                                         default="LPM2")
-    lamp_spectrum_mercury_uv = EnumProperty(name="Mercury/UV Preset", description="Mercury/UV Preset", items=MERCURY_UV_ITEMS,
+    lamp_spectrum_mercury_uv: EnumProperty(name="Mercury/UV Preset", description="Mercury/UV Preset", items=MERCURY_UV_ITEMS,
                                         default="UVA")
-    lamp_spectrum_absorption = EnumProperty(name="Absorption/Mixed Preset", description="bsorption/Mixed Preset", items=ABSORPTION_ITEMS,
+    lamp_spectrum_absorption: EnumProperty(name="Absorption/Mixed Preset", description="bsorption/Mixed Preset", items=ABSORPTION_ITEMS,
                                         default="HPMFLCobaltGlass")
 
     def init(self, context):

@@ -39,25 +39,25 @@ class LuxCoreNodeMatGlossyTranslucent(bpy.types.Node, LuxCoreNodeMaterial):
                 self.inputs[socket].enabled = self.use_backface
 
     # This enables/disables anisotropic roughness for both front and back face
-    use_anisotropy = BoolProperty(name=Roughness.aniso_name,
+    use_anisotropy: BoolProperty(name=Roughness.aniso_name,
                                   default=False,
                                   description=Roughness.aniso_desc,
                                   update=Roughness.update_anisotropy)
 
     # Front face
-    multibounce = BoolProperty(name="Multibounce", default=False,
+    multibounce: BoolProperty(name="Multibounce", default=False,
                                description=MULTIBOUNCE_DESCRIPTION)
-    use_ior = BoolProperty(name="Use IOR", default=False,
+    use_ior: BoolProperty(name="Use IOR", default=False,
                            update=update_use_ior,
                            description=IOR_DESCRIPTION)
 
     # Back face
-    use_backface = BoolProperty(name="Double Sided", default=False,
+    use_backface: BoolProperty(name="Double Sided", default=False,
                                 update=update_use_backface,
                                 description="Enable if used on a 2D mesh, e.g. on tree leaves")
-    multibounce_bf = BoolProperty(name="BF Multibounce", default=False,
+    multibounce_bf: BoolProperty(name="BF Multibounce", default=False,
                                   description=MULTIBOUNCE_DESCRIPTION + " (backface)")
-    use_ior_bf = BoolProperty(name="BF Use IOR", default=False,
+    use_ior_bf: BoolProperty(name="BF Use IOR", default=False,
                               update=update_use_ior_bf,
                               description=IOR_DESCRIPTION + " (backface)")
 

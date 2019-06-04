@@ -31,7 +31,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         ("Matte Translucent", "LuxCoreNodeMatMatteTranslucent"),
     ])
 
-    preset = StringProperty()
+    preset: StringProperty()
     categories = OrderedDict([
         ("Basic", list(basic_mapping.keys())),
         ("Advanced", [

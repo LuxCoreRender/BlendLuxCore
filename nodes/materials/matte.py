@@ -6,7 +6,7 @@ from ..sockets import LuxCoreSocketFloat
 SIGMA_DESCRIPTION = "Surface roughness, 0 for pure Lambertian reflection"
 
 class LuxCoreSocketSigma(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value = FloatProperty(min=0, max=45, description=SIGMA_DESCRIPTION)
+    default_value: FloatProperty(min=0, max=45, description=SIGMA_DESCRIPTION)
     slider = True
 
 

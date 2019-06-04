@@ -10,10 +10,10 @@ class LuxCoreNodeTexMarble(bpy.types.Node, LuxCoreNodeTexture):
     bl_width_default = 200
 
 
-    octaves = IntProperty(name="Octaves", default=8, min=1, max=29)
-    roughness = FloatProperty(name="Roughness", default=0.5, min=0, max=1)
-    scale = FloatProperty(name="Scale", default=1.0, min=0)
-    variation = FloatProperty(name="Variation", default=0.2, min=0, max=1)
+    octaves: IntProperty(name="Octaves", default=8, min=1, max=29)
+    roughness: FloatProperty(name="Roughness", default=0.5, min=0, max=1)
+    scale: FloatProperty(name="Scale", default=1.0, min=0)
+    variation: FloatProperty(name="Variation", default=0.2, min=0, max=1)
     
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

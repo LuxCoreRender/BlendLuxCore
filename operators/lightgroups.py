@@ -27,7 +27,7 @@ class LUXCORE_OT_remove_lightgroup(bpy.types.Operator):
     bl_description = "Remove this light group"
     bl_options = {"UNDO"}
 
-    index = IntProperty()
+    index: IntProperty()
 
     def execute(self, context):
         groups = context.scene.luxcore.lightgroups

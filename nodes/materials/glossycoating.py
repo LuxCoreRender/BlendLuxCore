@@ -13,11 +13,11 @@ class LuxCoreNodeMatGlossyCoating(bpy.types.Node, LuxCoreNodeMaterial):
         self.inputs["IOR"].enabled = self.use_ior
         self.inputs["Specular Color"].enabled = not self.use_ior
 
-    multibounce = BoolProperty(name="Multibounce", default=False)
-    use_ior = BoolProperty(name="Use IOR", default=False,
+    multibounce: BoolProperty(name="Multibounce", default=False)
+    use_ior: BoolProperty(name="Use IOR", default=False,
                            update=update_use_ior,
                            description=IOR_DESCRIPTION)
-    use_anisotropy = BoolProperty(name=Roughness.aniso_name,
+    use_anisotropy: BoolProperty(name=Roughness.aniso_name,
                                   default=False,
                                   description=Roughness.aniso_desc,
                                   update=Roughness.update_anisotropy)

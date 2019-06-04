@@ -14,24 +14,24 @@ TEMP_DESC = "Blackbody emission color in Kelvin by which to shift the color of e
 
 
 class LuxCoreLightGroup(PropertyGroup):
-    enabled = BoolProperty(default=True, description="Enable/disable this light group. "
+    enabled: BoolProperty(default=True, description="Enable/disable this light group. "
                                                      "If disabled, all lights in this group are off")
-    show_settings = BoolProperty(default=True)
-    name = StringProperty()
-    gain = FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
-    use_rgb_gain = BoolProperty(name="Color:", default=True, description="Use RGB color multiplier")
-    rgb_gain = FloatVectorProperty(name="", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
+    show_settings: BoolProperty(default=True)
+    name: StringProperty()
+    gain: FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
+    use_rgb_gain: BoolProperty(name="Color:", default=True, description="Use RGB color multiplier")
+    rgb_gain: FloatVectorProperty(name="", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
                                    description=RGB_GAIN_DESC)
-    use_temperature = BoolProperty(name="Temperature:", default=False,
+    use_temperature: BoolProperty(name="Temperature:", default=False,
                                    description="Use temperature multiplier")
-    temperature = FloatProperty(name="Kelvin", default=4000, min=1000, max=10000, precision=0,
+    temperature: FloatProperty(name="Kelvin", default=4000, min=1000, max=10000, precision=0,
                                 description=TEMP_DESC)
 
 
 # Attached to scene
 class LuxCoreLightGroupSettings(PropertyGroup):
-    default = PointerProperty(type=LuxCoreLightGroup)
-    custom = CollectionProperty(type=LuxCoreLightGroup)
+    default: PointerProperty(type=LuxCoreLightGroup)
+    custom: CollectionProperty(type=LuxCoreLightGroup)
 
     def add(self):
         if len(self.custom) < MAX_LIGHTGROUPS:
