@@ -70,11 +70,13 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         # elif "BCD progress" in msg:  # TODO For some weird reason this does not work
         #     self.update_stats("", msg)
 
-    def render(self, scene):
+    def render(self, depsgraph):
         if self.is_preview:
-            self.render_preview(scene)
+            print("Material Preview TODO")
+            # self.render_preview(scene)
         else:
-            self.render_final(scene)
+            print("Final Render TODO")
+            # self.render_final(scene)
 
     def render_final(self, scene):
         try:
@@ -110,22 +112,24 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             del self.session
             self.session = None
 
-    def view_update(self, context):
-        viewport.view_update(self, context)
+    def view_update(self, context, depsgraph):
+        print("Viewport Render Update TODO")
+        # viewport.view_update(self, context)
 
-    def view_draw(self, context):
-        if self.session is None:
-            return
-
-        try:
-            viewport.view_draw(self, context)
-        except Exception as error:
-            del self.session
-            self.session = None
-
-            self.update_stats("Error: ", str(error))
-            import traceback
-            traceback.print_exc()
+    def view_draw(self, context, depsgraph):
+        print("Viewport Render Draw TODO")
+        # if self.session is None:
+        #     return
+        #
+        # try:
+        #     viewport.view_draw(self, context)
+        # except Exception as error:
+        #     del self.session
+        #     self.session = None
+        #
+        #     self.update_stats("Error: ", str(error))
+        #     import traceback
+        #     traceback.print_exc()
 
     def has_denoiser(self):
         return self.DENOISED_OUTPUT_NAME in self.aov_imagepipelines
