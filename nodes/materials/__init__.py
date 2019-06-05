@@ -10,6 +10,7 @@ from .. import LuxCoreNodeTree
 # Import all material nodes just so they get registered
 from .carpaint import LuxCoreNodeMatCarpaint
 from .cloth import LuxCoreNodeMatCloth
+from .disney import LuxCoreNodeMatDisney
 from .emission import LuxCoreNodeMatEmission
 from .frontbackopacity import LuxCoreNodeMatFrontBackOpacity
 from .glass import LuxCoreNodeMatGlass
@@ -70,6 +71,7 @@ class LuxCoreNodeCategoryMaterial(NodeCategory):
 # In general it is a good idea to put often used nodes near the top.
 luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
+        NodeItem("LuxCoreNodeMatDisney", label="Disney"),
         NodeItem("LuxCoreNodeMatMix", label="Mix"),
         NodeItem("LuxCoreNodeMatMatte", label="Matte"),
         NodeItem("LuxCoreNodeMatMatteTranslucent", label="Matte Translucent"),
