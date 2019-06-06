@@ -114,10 +114,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def view_update(self, context, depsgraph):
         print("Viewport Render Update TODO")
-        # viewport.view_update(self, context)
+        viewport.view_update(self, context, depsgraph)
 
     def view_draw(self, context, depsgraph):
         print("Viewport Render Draw TODO")
+        viewport.view_draw(self, context, depsgraph)
+
         # if self.session is None:
         #     return
         #

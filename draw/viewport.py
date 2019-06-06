@@ -1,4 +1,4 @@
-from bgl import *  # Nah I'm not typing them all out
+import bgl
 import math
 import os
 import platform
@@ -9,26 +9,7 @@ from ..bin import pyluxcore
 from .. import utils
 from ..utils import pfm
 
-
-def draw_quad(offset_x, offset_y, width, height):
-    glBegin(GL_QUADS)
-    # 0, 0 (top left)
-    glTexCoord2f(0, 0)
-    glVertex2f(offset_x, offset_y)
-
-    # 1, 0 (top right)
-    glTexCoord2f(1, 0)
-    glVertex2f(offset_x + width, offset_y)
-
-    # 1, 1 (bottom right)
-    glTexCoord2f(1, 1)
-    glVertex2f(offset_x + width, offset_y + height)
-
-    # 0, 1 (bottom left)
-    glTexCoord2f(0, 1)
-    glVertex2f(offset_x, offset_y + height)
-
-    glEnd()
+NULL = 0
 
 
 class TempfileManager:
@@ -61,33 +42,30 @@ class TempfileManager:
 class FrameBuffer(object):
     """ FrameBuffer used for viewport render """
 
-    def __init__(self, context):
-        filmsize = utils.calc_filmsize(context.scene, context)
-        self._width = filmsize[0]
-        self._height = filmsize[1]
-        self._border = utils.calc_blender_border(context.scene, context)
+    def __init__(self, engine, context, scene):
+        filmsize = utils.calc_filmsize(scene, context)
+        self._width, self._height = filmsize
+        self._border = utils.calc_blender_border(scene, context)
+        self._offset_x, self._offset_y = self._calc_offset(context, scene, self._border)
+        self._pixel_size = int(scene.luxcore.viewport.pixel_size)
 
-        if utils.is_valid_camera(context.scene.camera):
-            pipeline = context.scene.camera.data.luxcore.imagepipeline
+        if utils.is_valid_camera(scene.camera):
+            pipeline = scene.camera.data.luxcore.imagepipeline
             self._transparent = pipeline.transparent_film
         else:
             self._transparent = False
 
         if self._transparent:
             bufferdepth = 4
-            self._buffertype = GL_RGBA
+            self._buffertype = bgl.GL_RGBA
             self._output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
         else:
             bufferdepth = 3
-            self._buffertype = GL_RGB
+            self._buffertype = bgl.GL_RGB
             self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
-        self.buffer = Buffer(GL_FLOAT, [self._width * self._height * bufferdepth])
-
-        # Create texture
-        self.texture = Buffer(GL_INT, 1)
-        glGenTextures(1, self.texture)
-        self.texture_id = self.texture[0]
+        self.buffer = bgl.Buffer(bgl.GL_FLOAT, [self._width * self._height * bufferdepth])
+        self._init_opengl(engine, scene)
 
         # Denoiser
         self._noisy_file_path = self._make_denoiser_filepath("noisy")
@@ -100,6 +78,77 @@ class FrameBuffer(object):
             self._denoiser_path += ".exe"
         self._denoiser_process = None
         self.denoiser_result_cached = False
+
+    def _init_opengl(self, engine, scene):
+        # Create texture
+        self.texture = bgl.Buffer(bgl.GL_INT, 1)
+        bgl.glGenTextures(1, self.texture)
+        self.texture_id = self.texture[0]
+
+        # Bind shader that converts from scene linear to display space,
+        # use the scene's color management settings.
+        engine.bind_display_space_shader(scene)
+        shader_program = bgl.Buffer(bgl.GL_INT, 1)
+        bgl.glGetIntegerv(bgl.GL_CURRENT_PROGRAM, shader_program)
+
+        # Generate vertex array
+        self.vertex_array = bgl.Buffer(bgl.GL_INT, 1)
+        bgl.glGenVertexArrays(1, self.vertex_array)
+        bgl.glBindVertexArray(self.vertex_array[0])
+
+        texturecoord_location = bgl.glGetAttribLocation(shader_program[0], "texCoord")
+        position_location = bgl.glGetAttribLocation(shader_program[0], "pos")
+
+        bgl.glEnableVertexAttribArray(texturecoord_location)
+        bgl.glEnableVertexAttribArray(position_location)
+
+        # Generate geometry buffers for drawing textured quad
+        width = self._width * self._pixel_size
+        height = self._height * self._pixel_size
+        position = [
+            self._offset_x, self._offset_y,
+            self._offset_x + width, self._offset_y,
+            self._offset_x + width, self._offset_y + height,
+            self._offset_x, self._offset_y + height
+        ]
+        position = bgl.Buffer(bgl.GL_FLOAT, len(position), position)
+        texcoord = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+        texcoord = bgl.Buffer(bgl.GL_FLOAT, len(texcoord), texcoord)
+
+        self.vertex_buffer = bgl.Buffer(bgl.GL_INT, 2)
+
+        bgl.glGenBuffers(2, self.vertex_buffer)
+        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, self.vertex_buffer[0])
+        bgl.glBufferData(bgl.GL_ARRAY_BUFFER, 32, position, bgl.GL_STATIC_DRAW)
+        bgl.glVertexAttribPointer(position_location, 2, bgl.GL_FLOAT, bgl.GL_FALSE, 0, None)
+
+        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, self.vertex_buffer[1])
+        bgl.glBufferData(bgl.GL_ARRAY_BUFFER, 32, texcoord, bgl.GL_STATIC_DRAW)
+        bgl.glVertexAttribPointer(texturecoord_location, 2, bgl.GL_FLOAT, bgl.GL_FALSE, 0, None)
+
+        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, NULL)
+        bgl.glBindVertexArray(NULL)
+        engine.unbind_display_space_shader()
+
+    def __del__(self):
+        bgl.glDeleteBuffers(2, self.vertex_buffer)
+        bgl.glDeleteVertexArrays(1, self.vertex_array)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, 0)
+        bgl.glDeleteTextures(1, self.texture)
+
+    def needs_replacement(self, context, scene):
+        if (self._width, self._height) != utils.calc_filmsize(scene, context):
+            return True
+        if self._transparent != scene.camera.data.luxcore.imagepipeline.transparent_film:
+            return True
+        new_border = utils.calc_blender_border(scene, context)
+        if self._border != new_border:
+            return True
+        if (self._offset_x, self._offset_y) != self._calc_offset(context, scene, new_border):
+            return True
+        if self._pixel_size != int(scene.luxcore.viewport.pixel_size):
+            return True
+        return False
 
     def _make_denoiser_filepath(self, name):
         return os.path.join(tempfile.gettempdir(), str(id(self)) + "_" + name + ".pfm")
@@ -117,6 +166,7 @@ class FrameBuffer(object):
             raise Exception("Binary not found. Download it from "
                             "https://github.com/OpenImageDenoise/oidn/releases")
         if self._transparent:
+            # TODO: enable ALPHA AOV and use it in case of transparent film
             raise Exception("Does not work with transparent film yet")
 
         self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, self._noisy_file_path)
@@ -139,7 +189,7 @@ class FrameBuffer(object):
     def is_denoiser_done(self):
         return self._denoiser_process.poll() is not None
 
-    def load_denoiser_result(self, context):
+    def load_denoiser_result(self, scene):
         self._denoiser_process = None
         try:
             with open(self._denoised_file_path, "rb") as f:
@@ -150,7 +200,7 @@ class FrameBuffer(object):
             raise Exception("Denoising failed, check console for details")
 
         self.buffer[:] = data
-        self._update_texture(context)
+        self._update_texture(scene)
         self.denoiser_result_cached = True
 
     def reset_denoiser(self):
@@ -163,69 +213,74 @@ class FrameBuffer(object):
             self._denoiser_process.communicate()
             self._denoiser_process = None
 
-    def update(self, luxcore_session, context):
-        luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
-        self._update_texture(context)
+    def update(self, luxcore_session, scene):
+        # luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
 
-    def draw(self, engine, context):
-        region_size = context.region.width, context.region.height
-        view_camera_offset = list(context.region_data.view_camera_offset)
-        view_camera_zoom = context.region_data.view_camera_zoom
+        # Generate some dummy data until we can use session again
+        pixels = numpy.random.rand(len(self.buffer)).tolist()
+        # pixels = [0.0] * len(self.buffer)
+        # for i in range(len(self.buffer)):
+        #     pixels[i] = 0 if i < len(self.buffer) / 2 else 1
+        self.buffer = bgl.Buffer(bgl.GL_FLOAT, len(self.buffer), pixels)
 
+        self._update_texture(scene)
+
+    def draw(self, engine, context, scene):
         if self._transparent:
-            glEnable(GL_BLEND)
+            bgl.glEnable(bgl.GL_BLEND)
+            bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
 
-        zoom = 0.25 * ((math.sqrt(2) + view_camera_zoom / 50) ** 2)
-        offset_x, offset_y = self._calc_offset(context, region_size, view_camera_offset, zoom)
+        engine.bind_display_space_shader(scene)
 
-        glEnable(GL_TEXTURE_2D)
-        glEnable(GL_COLOR_MATERIAL)
-        glBindTexture(GL_TEXTURE_2D, self.texture_id)
+        bgl.glActiveTexture(bgl.GL_TEXTURE0)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.texture_id)
+        bgl.glBindVertexArray(self.vertex_array[0])
+        bgl.glDrawArrays(bgl.GL_TRIANGLE_FAN, 0, 4)
+        bgl.glBindVertexArray(NULL)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, NULL)
 
-        if engine.support_display_space_shader(context.scene):
-            # This is the fragment shader that applies Blender color management
-            engine.bind_display_space_shader(context.scene)
+        engine.unbind_display_space_shader()
 
-        pixel_size = int(context.scene.luxcore.viewport.pixel_size)
-        draw_quad(offset_x, offset_y, self._width * pixel_size, self._height * pixel_size)
-
-        if engine.support_display_space_shader(context.scene):
-            engine.unbind_display_space_shader()
-
-        glDisable(GL_COLOR_MATERIAL)
-        glDisable(GL_TEXTURE_2D)
-
-        err = glGetError()
-        if err != GL_NO_ERROR:
+        err = bgl.glGetError()
+        if err != bgl.GL_NO_ERROR:
             print("GL Error:", err)
 
         if self._transparent:
-            glDisable(GL_BLEND)
+            bgl.glDisable(bgl.GL_BLEND)
 
-    def _update_texture(self, context):
-        glBindTexture(GL_TEXTURE_2D, self.texture_id)
+    def _update_texture(self, scene):
         if self._transparent:
-            gl_format = GL_RGBA
-            internal_format = GL_RGBA32F
+            gl_format = bgl.GL_RGBA
+            internal_format = bgl.GL_RGBA32F
         else:
-            gl_format = GL_RGB
-            internal_format = GL_RGB32F
-        glTexImage2D(GL_TEXTURE_2D, 0, internal_format, self._width, self._height,
-                     0, gl_format, GL_FLOAT, self.buffer)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-        mag_filter = GL_NEAREST if context.scene.luxcore.viewport.mag_filter == "NEAREST" else GL_LINEAR
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter)
+            gl_format = bgl.GL_RGB
+            internal_format = bgl.GL_RGB32F
 
-    def _calc_offset(self, context, region_size, view_camera_offset, zoom):
-        render = context.scene.render
+        bgl.glActiveTexture(bgl.GL_TEXTURE0)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.texture_id)
+        bgl.glTexImage2D(bgl.GL_TEXTURE_2D, 0, internal_format, self._width, self._height,
+                         0, gl_format, bgl.GL_FLOAT, self.buffer)
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_WRAP_S, bgl.GL_CLAMP_TO_EDGE)
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_WRAP_T, bgl.GL_CLAMP_TO_EDGE)
+
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MIN_FILTER, bgl.GL_NEAREST)
+        mag_filter = bgl.GL_NEAREST if scene.luxcore.viewport.mag_filter == "NEAREST" else bgl.GL_LINEAR
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MAG_FILTER, mag_filter)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, NULL)
+
+    def _calc_offset(self, context, scene, border):
+        region_size = context.region.width, context.region.height
+        view_camera_offset = list(context.region_data.view_camera_offset)
+        view_camera_zoom = context.region_data.view_camera_zoom
+        zoom = 0.25 * ((math.sqrt(2) + view_camera_zoom / 50) ** 2)
+
+        render = scene.render
         region_width, region_height = region_size
-        border_min_x, border_max_x, border_min_y, border_max_y = self._border
+        border_min_x, border_max_x, border_min_y, border_max_y = border
 
         if context.region_data.view_perspective == "CAMERA" and render.use_border:
             # Offset is only needed if viewport is in camera mode and uses border rendering
-            sensor_fit = context.scene.camera.data.sensor_fit
+            sensor_fit = scene.camera.data.sensor_fit
 
             aspectratio, aspect_x, aspect_y = utils.calc_aspect(
                 render.resolution_x * render.pixel_aspect_x,
