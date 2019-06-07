@@ -9,10 +9,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_idname = "LUXCORE"
     bl_label = "LuxCore"
 
-    # When rendering an animation, this prevents layers from being updated if they
-    # are excluded on all render layers.
-    bl_use_exclude_layers = True
-
     # No idea what this flag does exactly.
     bl_use_postprocess = True
 
@@ -23,10 +19,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     # Has something to do with tiled EXR render output, not sure about the details.
     bl_use_save_buffers = False
-
-    # This makes the "MATERIAL" shading mode work like in Cycles. Currently we can't
-    # use this, it requires GLSL code for each node, which has to be defined in C.
-    bl_use_shading_nodes = False
 
     # Hides Cycles node trees in the node editor.
     bl_use_shading_nodes_custom = True
@@ -39,6 +31,9 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     # Blender Internal render them. They are only shown for brush textures,
     # displacement textures etc., not for LuxCore textures.
     bl_use_texture_preview = False
+
+    # Use Eevee nodes in look dev ("MATERIAL") shading mode in the viewport.
+    # bl_use_eevee_viewport = True
 
     final_running = False
 
