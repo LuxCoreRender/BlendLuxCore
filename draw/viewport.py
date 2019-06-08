@@ -214,14 +214,14 @@ class FrameBuffer(object):
             self._denoiser_process = None
 
     def update(self, luxcore_session, scene):
-        # luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
+        luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
 
-        # Generate some dummy data until we can use session again
-        pixels = numpy.random.rand(len(self.buffer)).tolist()
-        # pixels = [0.0] * len(self.buffer)
-        # for i in range(len(self.buffer)):
-        #     pixels[i] = 0 if i < len(self.buffer) / 2 else 1
-        self.buffer = bgl.Buffer(bgl.GL_FLOAT, len(self.buffer), pixels)
+        # # Generate some dummy data until we can use session again
+        # pixels = numpy.random.rand(len(self.buffer)).tolist()
+        # # pixels = [0.0] * len(self.buffer)
+        # # for i in range(len(self.buffer)):
+        # #     pixels[i] = 0 if i < len(self.buffer) / 2 else 1
+        # self.buffer = bgl.Buffer(bgl.GL_FLOAT, len(self.buffer), pixels)
 
         self._update_texture(scene)
 

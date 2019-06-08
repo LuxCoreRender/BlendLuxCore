@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import bpy
 
+# TODO 2.8
 
 @contextmanager
 def convert(obj, context, scene):
@@ -18,19 +19,27 @@ def convert(obj, context, scene):
     """
 
     mesh = None
+    object_eval = None
 
     try:
-        apply_modifiers = True
-        modifier_mode = "PREVIEW" if context else "RENDER"
-        mesh = obj.to_mesh(scene, apply_modifiers, modifier_mode, calc_tessface=False)
+        # apply_modifiers = True
+        # modifier_mode = "PREVIEW" if context else "RENDER"
+        # mesh = obj.to_mesh(scene, apply_modifiers, modifier_mode, calc_tessface=False)
 
-        if mesh:
-            if mesh.use_auto_smooth and not mesh.has_custom_normals:
-                mesh.calc_normals()
-                mesh.split_faces()
-            mesh.calc_tessface()
+        object_eval = obj.evaluated_get(depsgraph)
+        if object_eval:
+            mesh = object_eval.to_mesh()
+
+            # if mesh:
+            #     if mesh.use_auto_smooth and not mesh.has_custom_normals:
+            #         mesh.calc_normals()
+            #         mesh.split_faces()
+            #     mesh.calc_tessface()
 
         yield mesh
     finally:
-        if mesh:
-            bpy.data.meshes.remove(mesh, do_unlink=False)
+        if object_eval and mesh:
+            # bpy.data.meshes.remove(mesh, do_unlink=False)
+
+            # Remove temporary mesh.
+            object_eval.to_mesh_clear()
