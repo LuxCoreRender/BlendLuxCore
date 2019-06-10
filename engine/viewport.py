@@ -3,50 +3,18 @@ from .. import export
 from ..draw.viewport import FrameBuffer
 from ..utils import render as utils_render
 
-
-def export_obj(obj, depsgraph, luxcore_scene):
-    # Avoid annoying None checks later on.
-    if obj.type not in {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META'}:
-        return None
-
-    object_eval = obj.evaluated_get(depsgraph)
-    mesh = object_eval.to_mesh()
-
-    ##########################
-
-    mesh.calc_loop_triangles()
-    loopTriPtr = mesh.loop_triangles[0].as_pointer()
-    loopTriCount = len(mesh.loop_triangles)
-    loopPtr = mesh.loops[0].as_pointer()
-    loopCount = len(mesh.loops)
-    vertPtr = mesh.vertices[0].as_pointer()
-    vertCount = len(mesh.vertices)
-    polyCount = len(mesh.polygons)
-    polyPtr = mesh.polygons[0].as_pointer()
-
-    name = "testmesh"
-    matIndex = 0
-    # mesh_transform = utils.matrix_to_list(obj.matrix_world)
-    res = luxcore_scene.DefineBlenderMeshNew(name,
-                                             loopTriCount, loopTriPtr,
-                                             loopCount, loopPtr,
-                                             vertCount, vertPtr,
-                                             polyCount, polyPtr,
-                                             matIndex)
-
-    ##########################
-    # Remove temporary mesh.
-    object_eval.to_mesh_clear()
-
-    ##########################
-
-
+import bpy
+from ..bin import pyluxcore
+from .. import utils
+from ..export import blender_object_280
 
 
 def view_update(engine, context, depsgraph, changes=None):
-    scene = depsgraph.scene
+    scene = depsgraph.scene_eval
 
-    if engine.session is None:
+    if engine.session is None and not engine.starting_session:
+        engine.starting_session = True
+
         # engine.exporter = export.Exporter(scene)
         # # Note: in viewport render, the user can't cancel the
         # # export (Blender limitation), so we don't pass engine here
@@ -54,38 +22,76 @@ def view_update(engine, context, depsgraph, changes=None):
         # engine.session.Start()
 
         # Just for mesh export testing
-        from ..bin import pyluxcore
-        luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
         scene_props.SetFromString("""
-            scene.camera.lookat.orig = 5 -8 5
-            scene.camera.lookat.target = 0.0 0.0 0.4
-            
-            scene.materials.testmat.type = "matte"
-            scene.materials.testmat.kd = 0 0.5 0.5
-            
-            scene.objects.testobj.shape = "testmesh"
-            scene.objects.testobj.material = "testmat"
+            scene.materials.__CLAY__.type = "matte"
+            scene.materials.__CLAY__.kd = 0.5 0.5 0.5
             
             scene.lights.testlight.type = "constantinfinite"
-            #scene.lights.testlight.position = -2 0.3 1.6
+            scene.lights.testlight.gain = 0.1 0.1 0.1
+            scene.lights.testlight.visibilitymap.enable = 0
+            
+            scene.lights.testlight2.type = "point"
+            scene.lights.testlight2.position = -2 -2 1.6
+            scene.lights.testlight2.gain = 600 50 50
             """)
-        export_obj(depsgraph.objects["Cube"], depsgraph, luxcore_scene)
-        luxcore_scene.Parse(scene_props)
-        config_props = pyluxcore.Properties()
-        from .. import utils
+        from ..export import camera
+        cam_props = camera.convert(None, scene, context)
+        scene_props.Set(cam_props)
         filmsize = utils.calc_filmsize(scene, context)
-        config_props.Set(pyluxcore.Property("film.width", filmsize[0]))
-        config_props.Set(pyluxcore.Property("film.height", filmsize[1]))
-        renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
-        engine.session = pyluxcore.RenderSession(renderconfig)
-        print("session created")
-        engine.session.Start()
 
-        # import time
-        # time.sleep(3)
-        # engine.session.GetFilm().SaveOutput(r"C:\Users\Simon\Desktop\test.png", pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, pyluxcore.Properties())
+        def start_session(engine, scene_props, filmsize):
+            start = time()
+            luxcore_scene = pyluxcore.Scene()
 
+            for datablock in depsgraph.ids:
+                print("checking datablock:", datablock)
+                if isinstance(datablock, bpy.types.Object):
+                    props = blender_object_280.convert(datablock, depsgraph, luxcore_scene, True, False)
+                    if props:
+                        scene_props.Set(props)
+
+            luxcore_scene.Parse(scene_props)
+            exp_time = time() - start
+
+            config_props = pyluxcore.Properties()
+            config_props.SetFromString("""
+                renderengine.type = "RTPATHCPU"
+                sampler.type = "RTPATHCPUSAMPLER"
+                rtpathcpu.zoomphase.size = 2
+                rtpathcpu.zoomphase.weight = 0
+            """)
+            config_props.Set(pyluxcore.Property("film.width", filmsize[0]))
+            config_props.Set(pyluxcore.Property("film.height", filmsize[1]))
+            t0 = time()
+            renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
+            t1 = time()
+            engine.session = pyluxcore.RenderSession(renderconfig)
+            t2 = time()
+            print("session created")
+            print("times:")
+            print("export: %.3f s" % exp_time)
+            print("config: %.3f s" % (t1 - t0))
+            print("session: %.3f s" % (t2 - t1))
+
+            #############################
+            s = time()
+            engine.session.Start()
+            print("Starting session took %.3f s" % (time() - s))
+            # TODO use lock when changing starting_session? probably yes
+            engine.starting_session = False
+
+        import _thread
+        _thread.start_new_thread(start_session, (engine, scene_props, filmsize))
+
+    for update in depsgraph.updates:
+        datablock = update.id
+        print("Datablock updated: ", datablock.name)
+
+    if depsgraph.id_type_updated('OBJECT'):
+        print("---")
+        for instance in depsgraph.object_instances:
+            print("Instance:", instance)
 
     pass
     # if engine.framebuffer:
@@ -131,16 +137,31 @@ def view_update(engine, context, depsgraph, changes=None):
     #
     # if changes:
     #     engine.viewport_start_time = time()
-    
+
+last_cam_str = ""
 
 def view_draw(engine, context, depsgraph):
-    scene = depsgraph.scene
+    scene = depsgraph.scene_eval
 
     if not engine.framebuffer or engine.framebuffer.needs_replacement(context, scene):
         print("new framebuffer")
         engine.framebuffer = FrameBuffer(engine, context, scene)
 
-    if engine.session:
+    if engine.session and not engine.starting_session:
+        # hacky camera update
+        from ..export import camera
+        cam_props = camera.convert(None, scene, context)
+        global last_cam_str
+        new_cam_str = str(cam_props)
+        if new_cam_str != last_cam_str:
+            last_cam_str = new_cam_str
+            luxcore_scene = engine.session.GetRenderConfig().GetScene()
+            engine.session.BeginSceneEdit()
+            luxcore_scene.Parse(cam_props)
+            engine.session.EndSceneEdit()
+            import time
+            time.sleep(0.1)
+
         try:
             engine.session.UpdateStats()
         except RuntimeError as error:

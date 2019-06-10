@@ -33,12 +33,13 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_use_texture_preview = False
 
     # Use Eevee nodes in look dev ("MATERIAL") shading mode in the viewport.
-    # bl_use_eevee_viewport = True
+    bl_use_eevee_viewport = True
 
     final_running = False
 
     def __init__(self):
         self.session = None
+        self.starting_session = False
         self.DENOISED_OUTPUT_NAME = "DENOISED"
         self.reset()
 
@@ -108,11 +109,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.session = None
 
     def view_update(self, context, depsgraph):
-        print("Viewport Render Update TODO")
+        #print("Viewport Render Update TODO")
         viewport.view_update(self, context, depsgraph)
 
     def view_draw(self, context, depsgraph):
-        print("Viewport Render Draw TODO")
+        #print("Viewport Render Draw TODO")
         viewport.view_draw(self, context, depsgraph)
 
         # if self.session is None:

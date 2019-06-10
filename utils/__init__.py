@@ -139,7 +139,7 @@ def get_worldscale(scene, as_scalematrix=True):
 def get_scaled_to_world(matrix, scene):
     matrix = matrix.copy()
     sm = get_worldscale(scene)
-    matrix *= sm
+    matrix = matrix @ sm
     ws = get_worldscale(scene, as_scalematrix=False)
     matrix[0][3] *= ws
     matrix[1][3] *= ws

@@ -108,7 +108,7 @@ def update_opengl_materials(_, context):
     alpha = 1
 
     if node_tree is None:
-        mat.diffuse_color = (0.5, 0.5, 0.5)
+        mat.diffuse_color = (0.5, 0.5, 0.5, alpha)
         return
 
     from ..nodes.output import get_active_output

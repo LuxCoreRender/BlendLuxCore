@@ -150,7 +150,7 @@ def _depth_of_field(scene, definitions):
             # Use distance along camera Z direction
             cam_matrix = camera.matrix_world
             lookat_orig = cam_matrix.to_translation()
-            lookat_target = cam_matrix * Vector((0, 0, -1))
+            lookat_target = cam_matrix @ Vector((0, 0, -1))
 
             lookat_dir = (lookat_target - lookat_orig).normalized()
             dof_dir = dof_obj.matrix_world.to_translation() - lookat_orig
@@ -194,7 +194,7 @@ def _clipping_plane(scene, definitions):
 
     if cam_settings.use_clipping_plane and cam_settings.clipping_plane:
         plane = cam_settings.clipping_plane
-        normal = plane.rotation_euler.to_matrix() * Vector((0, 0, 1))
+        normal = plane.rotation_euler.to_matrix() @ Vector((0, 0, 1))
         worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
         definitions.update({
@@ -234,8 +234,8 @@ def _motion_blur(scene, definitions, context, is_camera_moving):
 def _calc_lookat(cam_matrix, scene):
     cam_matrix = utils.get_scaled_to_world(cam_matrix, scene)
     lookat_orig = list(cam_matrix.to_translation())
-    lookat_target = list(cam_matrix * Vector((0, 0, -1)))
-    up_vector = list(cam_matrix.to_3x3() * Vector((0, 1, 0)))
+    lookat_target = list(cam_matrix @ Vector((0, 0, -1)))
+    up_vector = list(cam_matrix.to_3x3() @ Vector((0, 1, 0)))
     return lookat_orig, lookat_target, up_vector
 
 
