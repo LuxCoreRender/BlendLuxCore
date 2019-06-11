@@ -57,6 +57,8 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (1, 1, 1))
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
         self.add_input("LuxCoreSocketCauchyC", "Dispersion", 0)
+        self.add_input("LuxCoreSocketFloatPositive", "Film Thickness (nm)", 0)
+        self.add_input("LuxCoreSocketFloatPositive", "Film IOR", 1.5)
 
         Roughness.init(self, default=0.05, init_enabled=False)
         self.add_common_inputs()
@@ -100,6 +102,11 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial):
         cauchyc = self.inputs["Dispersion"].export(exporter, props)
         if self.inputs["Dispersion"].is_linked or cauchyc > 0:
             definitions["cauchyc"] = cauchyc
+
+        film_thickness = self.inputs["Film Thickness (nm)"].export(exporter, props)
+        if not self.rough and self.inputs["Film Thickness (nm)"].is_linked or film_thickness > 0:
+            definitions["filmthickness"] = film_thickness
+            definitions["filmior"] = self.inputs["Film IOR"].export(exporter, props)
 
         if self.rough:
             Roughness.export(self, exporter, props, definitions)
