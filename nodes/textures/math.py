@@ -66,6 +66,7 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
         ("lessthan", "Less Than", "Value 1 < Value 2 (returns 0 if false, 1 if true)", 8),
         ("greaterthan", "Greater Than", "Value 1 > Value 2 (returns 0 if false, 1 if true)", 9),
         ("rounding", "Round", "Round the input to the nearest increment", 10),
+        ("modulo", "Modulo", "Return the remainder of the floating point division Value 1 / Value 2", 11),
     ]
     mode = EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
@@ -123,6 +124,9 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
         elif self.mode == "rounding":
             definitions["texture"] = self.inputs[0].export(exporter, props)
             definitions["increment"] = self.inputs[1].export(exporter, props)
+        elif self.mode == "modulo":
+            definitions["texture"] = self.inputs[0].export(exporter, props)
+            definitions["modulo"] = self.inputs[1].export(exporter, props)
         else:
             definitions["texture1"] = self.inputs[0].export(exporter, props)
             definitions["texture2"] = self.inputs[1].export(exporter, props)
