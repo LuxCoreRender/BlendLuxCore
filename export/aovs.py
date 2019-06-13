@@ -215,16 +215,16 @@ def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
     index = 0
 
     if scene.luxcore.denoiser.type == "BCD":
-        index = get_BCD_props(definitions, scene, index)
+        index = _get_BCD_props(definitions, scene, index)
     elif scene.luxcore.denoiser.type == "OIDN":
-        index = get_OIDN_props(definitions, index)
+        index = _get_OIDN_props(definitions, scene, index)
 
     index = imagepipeline.convert_defs(context, scene, definitions, index)
 
     return utils.create_props(prefix, definitions)
 
 
-def get_BCD_props(definitions, scene, index):
+def _get_BCD_props(definitions, scene, index):
     denoiser = scene.luxcore.denoiser
     definitions[str(index) + ".type"] = "BCD_DENOISER"
     definitions[str(index) + ".scales"] = denoiser.scales
@@ -242,8 +242,10 @@ def get_BCD_props(definitions, scene, index):
     return index + 1
 
 
-def get_OIDN_props(definitions, index):
+def _get_OIDN_props(definitions, scene, index):
+    denoiser = scene.luxcore.denoiser
     definitions[str(index) + ".type"] = "INTEL_OIDN"
+    definitions[str(index) + ".numpixels"] = denoiser.tile_size
     return index + 1
 
 

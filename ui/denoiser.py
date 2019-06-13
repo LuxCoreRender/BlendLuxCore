@@ -32,6 +32,11 @@ def draw(context, layout):
         if denoiser.show_advanced:
             sub.prop(denoiser, "scales")
             sub.prop(denoiser, "patch_radius")
+    elif denoiser.type == "OIDN":
+        sub = col.column(align=True)
+        # The user should be able to adjust settings even when denoiser is disabled
+        sub.active = denoiser.enabled
+        sub.prop(denoiser, "tile_size")
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
@@ -57,6 +62,3 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         row.prop(denoiser, "type", expand=True)
 
         draw(context, layout)
-
-        col = layout.column(align=True)
-        col.label("These settings are also available in the image editor tool shelf (press T)", icon=icons.INFO)
