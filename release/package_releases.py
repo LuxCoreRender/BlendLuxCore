@@ -216,6 +216,12 @@ def main():
     # If the current version tag already exists, set the repository to this version
     # This is used in case we re-package a release
     os.chdir("BlendLuxCore")
+
+    # Checkout 2.79 maintenance branch
+    print("Switching to 2.79 maintenance branch")
+    git_process = subprocess.Popen(["git", "checkout", "2_79_maintenance"])
+    git_process.wait()
+
     tags_raw = subprocess.check_output(["git", "tag", "-l"])
     tags = [tag.decode("utf-8") for tag in tags_raw.splitlines()]
 
