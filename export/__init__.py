@@ -460,5 +460,6 @@ class Exporter(object):
             print("DEBUG: Config Properties:\n")
             print(config_props)
             print("DEBUG: Scene Properties:\n")
+            print("IMPORTANT: This is FILESAVER output! Can't be used to detect bugs in FILESAVER!\n")
             print(luxcore_scene.ToProperties())
             print("-" * 50)
