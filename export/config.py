@@ -350,6 +350,7 @@ def _convert_photongi_settings(context, scene, definitions, config):
 
     caustic_radius = photongi.caustic_lookup_radius * worldscale
     caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
+    caustic_updatespp = photongi.caustic_updatespp if photongi.caustic_periodic_update else 0
 
     file_path_abs = utils.get_abspath(photongi.file_path, library=scene.library)
     if not os.path.isfile(file_path_abs) and not photongi.save_or_overwrite:
@@ -385,6 +386,7 @@ def _convert_photongi_settings(context, scene, definitions, config):
         "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
         "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),
         "path.photongi.caustic.merge.radiusscale": caustic_merge_radius_scale,
+        "path.photongi.caustic.updatespp": caustic_updatespp,
 
         "path.photongi.persistent.file": file_path
     })

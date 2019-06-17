@@ -63,11 +63,16 @@ class LUXCORE_RENDER_PT_photongi(RenderButtonsPanel, Panel):
         row.prop(photongi, "caustic_lookup_maxcount")
         row = sub.row(align=True)
         row.prop(photongi, "caustic_normalangle")
-        row = sub.row(align=False)
+        row = sub.row()
         row.prop(photongi, "caustic_merge_enabled")
-        subrow = row.row(align=False)
+        subrow = row.row()
         subrow.active = photongi.caustic_merge_enabled
         subrow.prop(photongi, "caustic_merge_radius_scale")
+        row = sub.row()
+        row.prop(photongi, "caustic_periodic_update")
+        subrow = row.row()
+        subrow.active = photongi.caustic_periodic_update
+        subrow.prop(photongi, "caustic_updatespp")
 
         col.prop(photongi, "debug")
         if ((photongi.debug == "showindirect" or photongi.debug == "showindirectpathmix")
