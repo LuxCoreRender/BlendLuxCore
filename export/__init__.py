@@ -154,10 +154,9 @@ class Exporter(object):
         #
         #         scene_props.Set(motion_blur_props)
 
-        # TODO 2.8
         # World
-        # world_props = world.convert(self, scene)
-        # scene_props.Set(world_props)
+        world_props = world.convert(self, scene)
+        scene_props.Set(world_props)
 
         luxcore_scene.Parse(scene_props)
 
@@ -385,7 +384,7 @@ class Exporter(object):
             props.Set(self.camera_cache.props)
 
         if changes & Change.OBJECT:
-            self.object_cache2.update(depsgraph, props)
+            self.object_cache2.update(depsgraph, luxcore_scene, props)
             # for obj in self.object_cache.changed_transform:
             #     print("transformed:", obj.name)
             #     self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False,

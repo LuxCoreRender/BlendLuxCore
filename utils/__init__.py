@@ -51,11 +51,15 @@ def make_key(datablock):
 def make_key_from_instance(dg_obj_instance):
     # TODO optimize, since this will be used for particles as well
     if dg_obj_instance.is_instance:
-        key = make_key(dg_obj_instance.instance_object)
-        key += make_key(dg_obj_instance.parent)
-        key += str(dg_obj_instance.persistent_id[0])
+        key = make_key(dg_obj_instance.object)
+        key += "_" + make_key(dg_obj_instance.parent)
+        # Apparently we need all entries in persistent_id, otherwise
+        # there are collisions when instances are nested
+        key += "_".join([str(pid) for pid in dg_obj_instance.persistent_id])
+        # print(f"instance key for obj {dg_obj_instance.instance_object}: {key}")
     else:
         key = make_key(dg_obj_instance.object)
+        # print(f"non-instance key for obj {dg_obj_instance.object.name_full}: {key}")
     return key
 
 

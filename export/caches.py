@@ -51,49 +51,58 @@ class ObjectCache2:
         self.last_instance_transforms = {}
 
     def first_run(self, depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
-        # for debug
-        used_names = set()
-
         for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
-            if not dg_obj_instance.show_self:
-                continue
-
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-            if obj.type not in blender_object_280.EXPORTABLE_OBJECTS:
+            if not self._is_visible(dg_obj_instance, obj):
                 continue
 
-            transform = dg_obj_instance.matrix_world
-            # print(f"obj {obj}, is_instance: {dg_obj_instance.is_instance}, transform: {transform}")
-            use_instancing = True
-            key = utils.make_key_from_instance(dg_obj_instance)
-            luxcore_name_base = utils.make_name_from_instance(dg_obj_instance)
-            exported_obj = blender_object_280.convert(obj, luxcore_name_base, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform)
-            if exported_obj:
-                scene_props.Set(exported_obj.get_props())
-                self.exported_objects[key] = exported_obj
-
+            self._convert(dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render)
             if engine:
                 # Objects are the most expensive to export, so they dictate the progress
                 # engine.update_progress(index / obj_amount)
                 if engine.test_break():
                     return False
-
-            if luxcore_name_base in used_names:
-                print("WARNING: NAME ALREADY USED!", luxcore_name_base, obj.name)
-                print("parent:", dg_obj_instance.parent)
-                print("is_instance:", dg_obj_instance.is_instance)
-            used_names.add(luxcore_name_base)
         return True
+
+    def _is_visible(self, dg_obj_instance, obj):
+        if not dg_obj_instance.show_self:
+            return False
+        if obj.type not in blender_object_280.EXPORTABLE_OBJECTS:
+            return False
+        return True
+
+    def _convert(self, dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render):
+        """ Convert one DepsgraphObjectInstance amd keep track of it """
+        transform = dg_obj_instance.matrix_world
+        use_instancing = True
+        key = utils.make_key_from_instance(dg_obj_instance)
+        # luxcore_name_base = utils.make_name_from_instance(dg_obj_instance)
+
+        if key in self.exported_objects:
+            raise Exception("key already in exp_obj:", key)
+
+        luxcore_name_base = utils.sanitize_luxcore_name(key)
+        exported_obj = blender_object_280.convert(obj, luxcore_name_base, depsgraph, luxcore_scene, is_viewport_render,
+                                                  use_instancing, transform)
+        if exported_obj:
+            scene_props.Set(exported_obj.get_props())
+            self.exported_objects[key] = exported_obj
 
     def diff(self, depsgraph):
         return depsgraph.id_type_updated("OBJECT")
 
-    def update(self, depsgraph, scene_props):
+    def update(self, depsgraph, luxcore_scene, scene_props, is_viewport_render=True):
         print("object cache update")
 
-        # For now, transforms only
+        # TODO maybe not loop over all instances, instead only loop over updated
+        #  objects and check if they have a particle system that needs to be updated?
+        #  Would be better for performance with many particles, however I'm not sure
+        #  we can find all instances corresponding to one particle system?
+
+        # For now, transforms and new instances only
         for dg_obj_instance in depsgraph.object_instances:
-            if not dg_obj_instance.show_self:
+            obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+            if not self._is_visible(dg_obj_instance, obj):
                 continue
 
             key = utils.make_key_from_instance(dg_obj_instance)
@@ -102,14 +111,14 @@ class ObjectCache2:
                 exported_obj = self.exported_objects[key]
                 last_transform = exported_obj.transform
                 if last_transform != transform:
-                    print("instance needs transform update:", dg_obj_instance)
                     # Update transform
                     exported_obj.transform = transform
                     scene_props.Set(exported_obj.get_props())
             except KeyError:
-                print("Instance not yet exported")
                 # Do export
-                ...
+                self._convert(dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render)
+
+        # TODO: mesh updates
 
 
 class ObjectCache:

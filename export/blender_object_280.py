@@ -9,7 +9,7 @@ def convert(obj, luxcore_name_base, depsgraph, luxcore_scene, is_viewport_render
     if obj.type == "EMPTY" or obj.data is None:
         print("empty export not implemented yet")
     elif obj.type in MESH_OBJECTS:
-        print("converting mesh object")
+        print("converting mesh object", obj.name_full)
         return convert_mesh_obj(obj, luxcore_name_base, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform)
     elif obj.type == "LIGHT":
         print("light export not implemented yet")
@@ -53,12 +53,23 @@ class ExportedLight(ExportedObject):
         definitions = {
             "type": "point",
             "transformation": utils.matrix_to_list(self.transform),
-            "gain": [1] * 3,
+            "gain": [30000000] * 3,
         }
         return utils.create_props(prefix, definitions)
 
 
 def convert_mesh_obj(obj, luxcore_name_base, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
+    # Before converting curves, we might want to check if they actually generate a mesh, like Cycles does:
+    # TODO profile this, check if it's actually a problem
+    # if (b_ob.type() == BL::Object::type_CURVE) {
+    #     /* Skip exporting curves without faces, overhead can be
+    #      * significant if there are many for path animation. */
+    #     BL::Curve b_curve(b_ob.data());
+    #
+    #     return (b_curve.bevel_object() || b_curve.extrude() != 0.0f || b_curve.bevel_depth() != 0.0f ||
+    #             b_curve.dimensions() == BL::Curve::dimensions_2D || b_ob.modifiers.length());
+    #   }
+
     mesh_definitions = mesh_converter.convert(obj, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform)
 
     if not mesh_definitions:
