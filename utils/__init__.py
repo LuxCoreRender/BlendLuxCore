@@ -48,16 +48,19 @@ def make_key(datablock):
     return str(datablock.as_pointer())
 
 
-def make_key_from_name(datablock):
-    """ Old make_key method, not sure if we need it anymore """
-    key = datablock.name
-    if hasattr(datablock, "type"):
-        key += datablock.type
-    if hasattr(datablock, "data") and hasattr(datablock.data, "type"):
-        key += datablock.data.type
-    if datablock.library:
-        key += datablock.library.name
+def make_key_from_instance(dg_obj_instance):
+    # TODO optimize, since this will be used for particles as well
+    if dg_obj_instance.is_instance:
+        key = make_key(dg_obj_instance.instance_object)
+        key += make_key(dg_obj_instance.parent)
+        key += str(dg_obj_instance.persistent_id[0])
+    else:
+        key = make_key(dg_obj_instance.object)
     return key
+
+
+def make_name_from_instance(dg_obj_instance):
+    return sanitize_luxcore_name(make_key_from_instance(dg_obj_instance))
 
 
 def get_pretty_name(datablock):
@@ -84,9 +87,9 @@ def get_luxcore_name(datablock, is_viewport_render=True):
 
     if not is_viewport_render:
         # Final render - we can use pretty names
-        key = sanitize_luxcore_name(get_pretty_name(datablock)) + "_" + key
+        key = get_pretty_name(datablock) + key
 
-    return key
+    return sanitize_luxcore_name(key)
 
 
 def obj_from_key(key, objects):

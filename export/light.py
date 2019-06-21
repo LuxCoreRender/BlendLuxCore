@@ -11,7 +11,7 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
-def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", dupli_matrix=None):
+def convert_light(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", dupli_matrix=None):
     try:
         assert isinstance(obj, bpy.types.Object)
         assert obj.type == "LIGHT"

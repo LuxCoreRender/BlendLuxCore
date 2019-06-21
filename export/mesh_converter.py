@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from .. import utils
 
 
-def convert(obj, depsgraph, luxcore_scene, is_viewport_render, use_instancing):
+def convert(obj, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
@@ -33,7 +33,7 @@ def convert(obj, depsgraph, luxcore_scene, is_viewport_render, use_instancing):
         if is_viewport_render or use_instancing:
             mesh_transform = None
         else:
-            mesh_transform = utils.matrix_to_list(obj.matrix_world)
+            mesh_transform = utils.matrix_to_list(transform, depsgraph.scene_eval, apply_worldscale=True)
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(name, loopTriCount, loopTriPtr, loopPtr,
                                                            vertPtr, polyPtr, loopUVsPtr, loopColsPtr,

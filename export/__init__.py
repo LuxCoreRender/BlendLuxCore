@@ -5,7 +5,7 @@ from .. import utils
 from ..utils import render as utils_render
 from ..utils import compatibility as utils_compatibility
 from . import (
-    blender_object, caches, camera, config, duplis,
+    blender_object, blender_object_280, caches, camera, config, duplis,
     group_instance, imagepipeline, light, material,
     motion_blur, hair, halt, world,
 )
@@ -49,6 +49,7 @@ class Exporter(object):
         self.config_cache = caches.StringCache()
         self.camera_cache = caches.CameraCache()
         self.object_cache = caches.ObjectCache()
+        self.object_cache2 = caches.ObjectCache2()
         self.material_cache = caches.MaterialCache()
         self.visibility_cache = caches.VisibilityCache()
         self.world_cache = caches.WorldCache()
@@ -77,10 +78,9 @@ class Exporter(object):
         self.objs_updated_by_export = set()
         self.mats_updated_by_export = set()
 
-    def create_session(self, context=None, engine=None):
+    def create_session(self, depsgraph, context=None, engine=None):
         # Notes:
         # In final render, context is None
-        # In viewport render, engine is None (we can't show messages or check test_break() anyway)
 
         print("[Exporter] Creating session")
         start = time()
@@ -88,8 +88,10 @@ class Exporter(object):
         stats = self.stats
         if stats:
             stats.reset()
-        updated_objs_pre = self.object_cache.diff(scene)
-        updated_mats_pre = self.material_cache.diff()
+        # TODO 2.8 I hope we can remove this once 2.8 port is done
+        #  (there should be no changes to objs or mats during export anymore)
+        # updated_objs_pre = self.object_cache.diff(scene)
+        # updated_mats_pre = self.material_cache.diff()
 
         # We have to run the compatibility code before export because it could be that
         # the user has linked/appended assets with node trees from previous versions of
@@ -100,48 +102,62 @@ class Exporter(object):
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
 
+        # TODO 2.8 remove when done
+        scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.type", "matte"))
+        scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.kd", [0.5] * 3))
+
         # Camera (needs to be parsed first because it is needed for hair tesselation)
         self.camera_cache.diff(self, scene, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
 
-        # Objects and lamps
-        objs = context.visible_objects if context else scene.objects
-        len_objs = len(objs)
+        # Objects and lights
+        is_viewport_render = context is not None
+        if not self.object_cache2.first_run(depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
+            return None
+        # objs = context.visible_objects if context else scene.objects
+        # len_objs = len(objs)
+        #
+        # for index, obj in enumerate(objs, start=1):
+        #     if obj.type in blender_object.EXPORTABLE_OBJECTS:
+        #         if engine:
+        #             engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
+        #         # self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine=engine)
+        #         is_viewport_render = context is not None
+        #         use_instancing = False
+        #         props = blender_object_280.convert(obj, depsgraph, luxcore_scene, is_viewport_render, use_instancing)
+        #         if props:
+        #             scene_props.Set(props)
+        #
+        #         # Objects are the most expensive to export, so they dictate the progress
+        #         if engine:
+        #             engine.update_progress(index / len_objs)
+        #     # Regularly check if we should abort the export (important in heavy scenes)
+        #     if engine and engine.test_break():
+        #         return None
 
-        for index, obj in enumerate(objs, start=1):
-            if obj.type in blender_object.EXPORTABLE_OBJECTS:
-                if engine:
-                    engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
-                self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine=engine)
-
-                # Objects are the most expensive to export, so they dictate the progress
-                if engine:
-                    engine.update_progress(index / len_objs)
-            # Regularly check if we should abort the export (important in heavy scenes)
-            if engine and engine.test_break():
-                return None
-
+        # TODO 2.8
         # Motion blur
-        if utils.is_valid_camera(scene.camera):
-            blur_settings = scene.camera.data.luxcore.motion_blur
-            # Don't export camera blur in viewport
-            camera_blur = blur_settings.camera_blur and not context
-            enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
+        # if utils.is_valid_camera(scene.camera):
+        #     blur_settings = scene.camera.data.luxcore.motion_blur
+        #     # Don't export camera blur in viewport
+        #     camera_blur = blur_settings.camera_blur and not context
+        #     enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
+        #
+        #     if enabled and blur_settings.shutter > 0:
+        #         motion_blur_props, cam_moving = motion_blur.convert(context, scene, objs, self.exported_objects)
+        #
+        #         if cam_moving:
+        #             # Re-export the camera with motion blur enabled
+        #             # (This is fast and we only have to step through the scene once in total, not twice)
+        #             camera_props = camera.convert(self, scene, context, cam_moving)
+        #             motion_blur_props.Set(camera_props)
+        #
+        #         scene_props.Set(motion_blur_props)
 
-            if enabled and blur_settings.shutter > 0:
-                motion_blur_props, cam_moving = motion_blur.convert(context, scene, objs, self.exported_objects)
-
-                if cam_moving:
-                    # Re-export the camera with motion blur enabled
-                    # (This is fast and we only have to step through the scene once in total, not twice)
-                    camera_props = camera.convert(self, scene, context, cam_moving)
-                    motion_blur_props.Set(camera_props)
-
-                scene_props.Set(motion_blur_props)
-
+        # TODO 2.8
         # World
-        world_props = world.convert(self, scene)
-        scene_props.Set(world_props)
+        # world_props = world.convert(self, scene)
+        # scene_props.Set(world_props)
 
         luxcore_scene.Parse(scene_props)
 
@@ -182,8 +198,9 @@ class Exporter(object):
 
         # Check which objects were flagged for update by our own export,
         # these should not be considered for the next viewport update.
-        self.objs_updated_by_export = self.object_cache.diff(scene) - updated_objs_pre
-        self.mats_updated_by_export = self.material_cache.diff() - updated_mats_pre
+        # TODO 2.8 hopefully remove
+        # self.objs_updated_by_export = self.object_cache.diff(scene) - updated_objs_pre
+        # self.mats_updated_by_export = self.material_cache.diff() - updated_mats_pre
 
         # Regularly check if we should abort the export (important in heavy scenes)
         if engine and engine.test_break():
@@ -203,10 +220,9 @@ class Exporter(object):
 
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 
-        session = pyluxcore.RenderSession(renderconfig)
-        return session
+        return pyluxcore.RenderSession(renderconfig)
 
-    def get_changes(self, context=None):
+    def get_changes(self, depsgraph, context=None):
         scene = self.scene
         changes = Change.NONE
         final = context is None
@@ -220,16 +236,19 @@ class Exporter(object):
             if self.camera_cache.diff(self, scene, context):
                 changes |= Change.CAMERA
 
-            if self.object_cache.diff(scene, self.objs_updated_by_export):
+            # if self.object_cache.diff(scene, self.objs_updated_by_export):
+            #     changes |= Change.OBJECT
+            if self.object_cache2.diff(depsgraph):
                 changes |= Change.OBJECT
 
-            if self.material_cache.diff(self.mats_updated_by_export):
+            # if self.material_cache.diff(self.mats_updated_by_export):
+            if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
 
-            if self.visibility_cache.diff(context):
+            if self.visibility_cache.diff(depsgraph):
                 changes |= Change.VISIBILITY
 
-            if self.world_cache.diff(context):
+            if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
 
         # Relevant during final render
@@ -245,7 +264,7 @@ class Exporter(object):
 
         return changes
 
-    def update(self, context, session, changes):
+    def update(self, depsgraph, context, session, changes):
         print("[Exporter] Update because of:", Change.to_string(changes))
         # Invalidate node cache
         self.node_cache.clear()
@@ -261,7 +280,7 @@ class Exporter(object):
             session.BeginSceneEdit()
 
             try:
-                props = self._update_scene(context, changes, luxcore_scene)
+                props = self._update_scene(depsgraph, context, changes, luxcore_scene)
                 luxcore_scene.Parse(props)
             except Exception as error:
                 context.scene.luxcore.errorlog.add_error(error)
@@ -358,7 +377,7 @@ class Exporter(object):
         session.Start()
         return session
 
-    def _update_scene(self, context, changes, luxcore_scene):
+    def _update_scene(self, depsgraph, context, changes, luxcore_scene):
         props = pyluxcore.Properties()
 
         if changes & Change.CAMERA:
@@ -366,25 +385,27 @@ class Exporter(object):
             props.Set(self.camera_cache.props)
 
         if changes & Change.OBJECT:
-            for obj in self.object_cache.changed_transform:
-                print("transformed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False,
-                                     check_dupli_parent=True)
-
-            for obj in self.object_cache.changed_mesh:
-                print("mesh changed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True,
-                                     check_dupli_parent=True)
-
-            for obj in self.object_cache.changed_lights:
-                print("light changed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene,
-                                     check_dupli_parent=True)
+            self.object_cache2.update(depsgraph, props)
+            # for obj in self.object_cache.changed_transform:
+            #     print("transformed:", obj.name)
+            #     self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False,
+            #                          check_dupli_parent=True)
+            #
+            # for obj in self.object_cache.changed_mesh:
+            #     print("mesh changed:", obj.name)
+            #     self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True,
+            #                          check_dupli_parent=True)
+            #
+            # for obj in self.object_cache.changed_lights:
+            #     print("light changed:", obj.name)
+            #     self._convert_object(props, obj, context.scene, context, luxcore_scene,
+            #                          check_dupli_parent=True)
 
         if changes & Change.MATERIAL:
-            for mat in self.material_cache.changed_materials:
-                luxcore_name, mat_props = material.convert(self, mat, context.scene, context)
-                props.Set(mat_props)
+            # for mat in self.material_cache.changed_materials:
+            #     luxcore_name, mat_props = material.convert(self, mat, context.scene, context)
+            #     props.Set(mat_props)
+            self.material_cache.update(depsgraph, props)
 
         if changes & Change.VISIBILITY:
             for key in self.visibility_cache.objects_to_remove:

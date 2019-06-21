@@ -4,7 +4,7 @@ from ..utils import ExportedObject
 from ..utils import node as utils_node
 
 from . import material, mesh_converter
-from .light import convert_lamp
+from .light import convert_light
 
 
 EXPORTABLE_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT", "LIGHT", "EMPTY"}
@@ -24,7 +24,7 @@ def convert(exporter, obj, scene, context, luxcore_scene,
         return pyluxcore.Properties(), None
 
     if obj.type == "LIGHT":
-        return convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix, dupli_matrix)
+        return convert_light(exporter, obj, scene, context, luxcore_scene, dupli_suffix, dupli_matrix)
     elif obj.type == "EMPTY":
         return pyluxcore.Properties(), None
 
