@@ -1,8 +1,9 @@
 from contextlib import contextmanager
 from .. import utils
+from .blender_object_280 import ExportedMesh
 
 
-def convert(obj, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
+def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
@@ -27,18 +28,17 @@ def convert(obj, depsgraph, luxcore_scene, is_viewport_render, use_instancing, t
         else:
             loopColsPtr = 0
 
-        name = utils.get_luxcore_name(obj.data, is_viewport_render)
         material_count = max(1, len(mesh.materials))
 
         if is_viewport_render or use_instancing:
             mesh_transform = None
         else:
-            mesh_transform = utils.matrix_to_list(transform, depsgraph.scene_eval, apply_worldscale=True)
+            mesh_transform = utils.matrix_to_list(transform)
 
-        mesh_definitions = luxcore_scene.DefineBlenderMesh(name, loopTriCount, loopTriPtr, loopPtr,
+        mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
                                                            vertPtr, polyPtr, loopUVsPtr, loopColsPtr,
                                                            material_count, mesh_transform)
-        return mesh_definitions
+        return ExportedMesh(mesh_definitions)
 
 
 @contextmanager

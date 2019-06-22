@@ -5,6 +5,7 @@ MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT", "EMPTY"}
 
 
+# I think this whole file is not needed, just complicates things. Move the stuff we use to object cache.
 def convert(obj, luxcore_name_base, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
     if obj.type == "EMPTY" or obj.data is None:
         print("empty export not implemented yet")
@@ -21,6 +22,10 @@ class ExportedPart:
         self.lux_obj = lux_obj
         self.lux_shape = lux_shape
         self.lux_mat = lux_mat
+
+class ExportedMesh:
+    def __init__(self, mesh_definitions):
+        self.mesh_definitions = mesh_definitions
 
 class ExportedObject:
     def __init__(self, lux_name_base, mesh_definitions, transform):
@@ -58,7 +63,10 @@ class ExportedLight(ExportedObject):
         return utils.create_props(prefix, definitions)
 
 
+# TODO remove this, has been moved to object cache
 def convert_mesh_obj(obj, luxcore_name_base, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
+    raise Exception("shouldnt use this")
+
     # Before converting curves, we might want to check if they actually generate a mesh, like Cycles does:
     # TODO profile this, check if it's actually a problem
     # if (b_ob.type() == BL::Object::type_CURVE) {

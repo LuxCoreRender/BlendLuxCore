@@ -1,7 +1,8 @@
 import bpy
 from .. import utils
 from ..utils import node as utils_node
-from ..export import blender_object, camera, blender_object_280
+from ..export import blender_object, camera
+from .blender_object_280 import ExportedObject, ExportedMesh, ExportedLight, EXPORTABLE_OBJECTS, MESH_OBJECTS
 
 
 class StringCache:
@@ -48,7 +49,7 @@ class ObjectCache2:
     def __init__(self):
         pass
         self.exported_objects = {}
-        self.last_instance_transforms = {}
+        self.exported_meshes = {}
 
     def first_run(self, depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
         for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
@@ -62,31 +63,60 @@ class ObjectCache2:
                 # engine.update_progress(index / obj_amount)
                 if engine.test_break():
                     return False
+
+        self._debug_info()
         return True
+
+    def _debug_info(self):
+        print("Objects in cache:", len(self.exported_objects))
+        print("Meshes in cache:", len(self.exported_meshes))
+        for key, exported_mesh in self.exported_meshes.items():
+            print(key, exported_mesh.mesh_definitions)
 
     def _is_visible(self, dg_obj_instance, obj):
         if not dg_obj_instance.show_self:
             return False
-        if obj.type not in blender_object_280.EXPORTABLE_OBJECTS:
+        if obj.type not in EXPORTABLE_OBJECTS:
             return False
         return True
 
     def _convert(self, dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render):
         """ Convert one DepsgraphObjectInstance amd keep track of it """
+        obj_key = utils.make_key_from_instance(dg_obj_instance)
+        if obj_key in self.exported_objects:
+            raise Exception("key already in exp_obj:", obj_key)
+
+        if obj.type == "EMPTY" or obj.data is None:
+            # Not sure if we even need a special empty export, could just ignore them
+            print("empty export not implemented yet")
+        elif obj.type in MESH_OBJECTS:
+            print("converting mesh object", obj.name_full)
+            self._convert_mesh_obj(dg_obj_instance, obj, obj_key, depsgraph, luxcore_scene, scene_props, is_viewport_render)
+        elif obj.type == "LIGHT":
+            print("light export not implemented yet")
+            transform = dg_obj_instance.matrix_world.copy()
+            return ExportedLight(obj_key, transform)
+
+    def _convert_mesh_obj(self, dg_obj_instance, obj, obj_key, depsgraph, luxcore_scene, scene_props, is_viewport_render):
         transform = dg_obj_instance.matrix_world
-        use_instancing = True
-        key = utils.make_key_from_instance(dg_obj_instance)
-        # luxcore_name_base = utils.make_name_from_instance(dg_obj_instance)
 
-        if key in self.exported_objects:
-            raise Exception("key already in exp_obj:", key)
+        use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj)
+        mesh_key = utils.get_luxcore_name(obj.data, is_viewport_render)
 
-        luxcore_name_base = utils.sanitize_luxcore_name(key)
-        exported_obj = blender_object_280.convert(obj, luxcore_name_base, depsgraph, luxcore_scene, is_viewport_render,
-                                                  use_instancing, transform)
+        if use_instancing and mesh_key in self.exported_meshes:
+            print("retrieving mesh from cache")
+            exported_mesh = self.exported_meshes[mesh_key]
+        else:
+            print("fresh export")
+            from . import mesh_converter
+            exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform)
+            self.exported_meshes[mesh_key] = exported_mesh
+
+        obj_transform = transform if use_instancing else None
+        exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, obj_transform)
         if exported_obj:
             scene_props.Set(exported_obj.get_props())
-            self.exported_objects[key] = exported_obj
+            self.exported_objects[obj_key] = exported_obj
 
     def diff(self, depsgraph):
         return depsgraph.id_type_updated("OBJECT")
@@ -119,6 +149,8 @@ class ObjectCache2:
                 self._convert(dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render)
 
         # TODO: mesh updates
+
+        self._debug_info()
 
 
 class ObjectCache:

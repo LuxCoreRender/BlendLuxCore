@@ -244,8 +244,9 @@ class Exporter(object):
             if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
 
-            if self.visibility_cache.diff(depsgraph):
-                changes |= Change.VISIBILITY
+            # TODO
+            # if self.visibility_cache.diff(depsgraph):
+            #     changes |= Change.VISIBILITY
 
             if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
