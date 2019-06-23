@@ -144,7 +144,7 @@ def _depth_of_field(scene, definitions):
         definitions["autofocus.enable"] = True
     else:
         worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-        dof_obj = camera.data.dof_object
+        dof_obj = camera.data.dof.focus_object
 
         if dof_obj:
             # Use distance along camera Z direction
@@ -157,7 +157,7 @@ def _depth_of_field(scene, definitions):
 
             definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir)) * worldscale
         else:
-            definitions["focaldistance"] = camera.data.dof_distance * worldscale
+            definitions["focaldistance"] = camera.data.dof.focus_distance * worldscale
 
 
 def _clipping(scene, definitions):
