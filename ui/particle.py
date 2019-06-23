@@ -1,9 +1,66 @@
-# from bl_ui.properties_particle import ParticleButtonsPanel
-# from bpy.types import Panel
-# from .. import utils
-# from ..ui import icons
-#
-#
+import bpy
+from . import icons
+
+#from bl_ui.properties_particle import ParticleButtonsPanel
+#from bpy.types import Panel
+#from .. import utils
+#from ..ui import icons
+
+def compatible_panels():
+     panels = [
+         "PARTICLE_PT_physics",
+         "PARTICLE_PT_physics_fluid_advanced",
+         "PARTICLE_PT_physics_fluid_springs",
+         "PARTICLE_PT_physics_fluid_springs_viscoelastic",
+         "PARTICLE_PT_physics_fluid_springs_advanced",
+         "PARTICLE_PT_physics_boids_movement",
+         "PARTICLE_PT_physics_boids_battle",
+         "PARTICLE_PT_physics_boids_misc",
+         "PARTICLE_PT_physics_relations",
+         "PARTICLE_PT_physics_fluid_interaction",
+         "PARTICLE_PT_physics_deflection",
+         "PARTICLE_PT_physics_forces",
+         "PARTICLE_PT_physics_integration",         
+         "PARTICLE_PT_hair_dynamics",
+         "PARTICLE_PT_hair_dynamics_structure",
+         "PARTICLE_PT_hair_dynamics_volume",
+         "PARTICLE_PT_emission",
+         "PARTICLE_PT_emission_source",
+         "PARTICLE_PT_boidbrain",
+         "PARTICLE_PT_cache",
+         "PARTICLE_PT_draw",
+         "PARTICLE_PT_velocity",
+         "PARTICLE_PT_field_weights",
+         "PARTICLE_PT_force_fields",
+         "PARTICLE_PT_force_fields_type1",
+         "PARTICLE_PT_force_fields_type2",
+         "PARTICLE_PT_force_fields_type1_falloff",
+         "PARTICLE_PT_force_fields_type2_falloff",
+         "PARTICLE_PT_vertexgroups",
+         "PARTICLE_PT_children",
+         "PARTICLE_PT_children_parting",
+         "PARTICLE_PT_children_clumping",
+         "PARTICLE_PT_children_clumping_noise",
+         "PARTICLE_PT_children_roughness",
+         "PARTICLE_PT_children_kink",
+         "PARTICLE_MT_hair_dynamics_presets",
+         "PARTICLE_PT_render",
+         "PARTICLE_PT_render_extra",
+         "PARTICLE_PT_render_path",
+         "PARTICLE_PT_render_path_timing",
+         "PARTICLE_PT_render_object",
+         "PARTICLE_PT_render_collection",
+         "PARTICLE_PT_render_collection_use_count",
+         "PARTICLE_PT_rotation",
+         "PARTICLE_PT_rotation_angular_velocity",
+         "PARTICLE_PT_context_particles",
+         "PARTICLE_PT_textures",
+         "PARTICLE_PT_hair_shape",
+         "PARTICLE_PT_custom_props",
+     ]
+     types = bpy.types
+     return [getattr(types, p) for p in panels if hasattr(types, p)]
+
 # class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
 #     bl_label = "LuxCore Hair Settings"
 #     COMPAT_ENGINES = {"LUXCORE"}
@@ -151,3 +208,12 @@
 #             row = layout.row()
 #             op = row.operator("luxcore.switch_space_data_context", text="Show Texture Settings", icon="UI")
 #             op.target = "TEXTURE"
+
+def register():
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.add("LUXCORE")        
+
+
+def unregister():
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.remove("LUXCORE")

@@ -1,9 +1,10 @@
-# from bl_ui.properties_world import WorldButtonsPanel
-# from bpy.types import Panel
+from bl_ui.properties_world import WorldButtonsPanel
+from bpy.types import Panel
+from . import bpy
+from . import icons
+
 # from ..utils import ui as utils_ui
-# from . import icons
 # from .light import draw_vismap_ui
-#
 #
 # class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
 #     """
@@ -157,33 +158,54 @@
 #
 #         layout.prop(world.luxcore, "importance")
 #         draw_vismap_ui(layout, world)
-#
-#
-# class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
-#     COMPAT_ENGINES = {"LUXCORE"}
-#     bl_label = "Visibility"
-#     bl_options = {"DEFAULT_CLOSED"}
-#
-#     @classmethod
-#     def poll(cls, context):
-#         engine = context.scene.render.engine
-#         visible = context.world and context.world.luxcore.light != "none"
-#         return engine == "LUXCORE" and visible
-#
-#     def draw(self, context):
-#         layout = self.layout
-#         world = context.world
-#
-#         # These settings only work with PATH and TILEPATH, not with BIDIR
-#         enabled = context.scene.luxcore.config.engine == "PATH"
-#
-#         sub = layout.column()
-#         sub.enabled = enabled
-#         sub.label(text="Visibility for indirect light rays:")
-#         row = sub.row()
-#         row.prop(world.luxcore, "visibility_indirect_diffuse")
-#         row.prop(world.luxcore, "visibility_indirect_glossy")
-#         row.prop(world.luxcore, "visibility_indirect_specular")
-#
-#         if not enabled:
-#             layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+
+
+class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
+   COMPAT_ENGINES = {"LUXCORE"}
+   bl_label = "Visibility"
+   bl_options = {"DEFAULT_CLOSED"}
+   @classmethod
+   def poll(cls, context):
+      engine = context.scene.render.engine
+      visible = context.world and context.world.luxcore.light != "none"
+      return engine == "LUXCORE" and visible
+
+   def draw(self, context):
+      layout = self.layout
+      world = context.world
+
+      # These settings only work with PATH and TILEPATH, not with BIDIR
+      enabled = context.scene.luxcore.config.engine == "PATH"
+      layout.use_property_split = True
+      layout.use_property_decorate = False
+
+      col = layout.column(align=True)
+      col.enabled = enabled
+      col.label(text="Visibility for indirect light rays:")
+      col = layout.column(align=True)
+      col.prop(world.luxcore, "visibility_indirect_diffuse")
+      col.prop(world.luxcore, "visibility_indirect_glossy")
+      col.prop(world.luxcore, "visibility_indirect_specular")
+
+      if not enabled:
+         layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+
+
+def compatible_panels():
+   panels = [
+      "WORLD_PT_context_world",
+      "WORLD_PT_custom_props",
+   ]
+   types = bpy.types
+   return [getattr(types, p) for p in panels if hasattr(types, p)]
+
+
+def register():
+   for panel in compatible_panels():
+      panel.COMPAT_ENGINES.add("LUXCORE")  
+
+
+def unregister():
+   for panel in compatible_panels():
+      panel.COMPAT_ENGINES.remove("LUXCORE")
+

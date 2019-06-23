@@ -1,9 +1,10 @@
-# from bl_ui.properties_object import ObjectButtonsPanel
-# from bpy.types import Panel
-# from .. import utils
-# from ..ui import icons
-#
-#
+from bl_ui.properties_object import ObjectButtonsPanel
+from bpy.types import Panel
+from . import bpy
+from .. import utils
+from ..ui import icons
+
+
 # class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
 #     COMPAT_ENGINES = {"LUXCORE"}
 #     bl_context = "object"
@@ -40,3 +41,39 @@
 #         # Instancing can cost performance, so inform the user when it happens
 #         if utils.use_obj_motion_blur(obj, context.scene):
 #             layout.label(text="Object will be exported as instance", icon=icons.INFO)
+
+
+def compatible_panels():
+   panels = [
+      # Mesh, etc.
+      "DATA_PT_context_mesh",
+      "DATA_PT_normals",
+      "DATA_PT_normals_auto_smooth",
+      "DATA_PT_texture_space",
+      "DATA_PT_vertex_groups",
+      "DATA_PT_face_maps",
+      "DATA_PT_shape_keys",
+      "DATA_PT_uv_texture",
+      "DATA_PT_vertex_colors",
+      "DATA_PT_customdata",
+      "DATA_PT_custom_props_mesh",
+      # Speaker
+      "DATA_PT_context_speaker",
+      "DATA_PT_speaker",
+      "DATA_PT_distance",
+      "DATA_PT_cone",
+      "DATA_PT_custom_props_speaker",
+      
+   ]
+   types = bpy.types
+   return [getattr(types, p) for p in panels if hasattr(types, p)]
+
+
+def register():
+   for panel in compatible_panels():
+      panel.COMPAT_ENGINES.add("LUXCORE")    
+
+
+def unregister():
+   for panel in compatible_panels():
+      panel.COMPAT_ENGINES.remove("LUXCORE")

@@ -1,7 +1,8 @@
 # from bl_ui.properties_data_camera import CameraButtonsPanel
-# from bpy.types import Panel
+from . import bpy
+from bpy.types import Panel
 # from ..utils import ui as utils_ui
-# from . import icons
+from . import icons
 #
 #
 # class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
@@ -258,3 +259,30 @@
 #
 #         if motion_blur.camera_blur:
 #             layout.label(text="Camera blur is only visible in final render", icon=icons.INFO)
+
+def compatible_panels():
+     panels = [
+        "DATA_PT_context_camera",
+        "DATA_PT_lens",
+        "DATA_PT_camera_stereoscopy",
+        "DATA_PT_camera",
+        "DATA_PT_camera_background_image",
+        "DATA_PT_camera_display",
+        "DATA_PT_camera_display_composition_guides",
+        "DATA_PT_camera_display_passepartout",
+        "DATA_PT_camera_safe_areas",
+        "DATA_PT_camera_safe_areas_center_cut",
+        "DATA_PT_custom_props_camera",
+     ]
+     types = bpy.types
+     return [getattr(types, p) for p in panels if hasattr(types, p)]
+
+def register():
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.add("LUXCORE")        
+
+
+def unregister():
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.remove("LUXCORE")
+   
