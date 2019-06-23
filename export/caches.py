@@ -71,7 +71,10 @@ class ObjectCache2:
         print("Objects in cache:", len(self.exported_objects))
         print("Meshes in cache:", len(self.exported_meshes))
         for key, exported_mesh in self.exported_meshes.items():
-            print(key, exported_mesh.mesh_definitions)
+            if exported_mesh:
+                print(key, exported_mesh.mesh_definitions)
+            else:
+                print(key, "mesh is None")
 
     def _is_visible(self, dg_obj_instance, obj):
         if not dg_obj_instance.show_self:
@@ -112,11 +115,12 @@ class ObjectCache2:
             exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform)
             self.exported_meshes[mesh_key] = exported_mesh
 
-        obj_transform = transform if use_instancing else None
-        exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, obj_transform)
-        if exported_obj:
-            scene_props.Set(exported_obj.get_props())
-            self.exported_objects[obj_key] = exported_obj
+        if exported_mesh:
+            obj_transform = transform if use_instancing else None
+            exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, obj_transform)
+            if exported_obj:
+                scene_props.Set(exported_obj.get_props())
+                self.exported_objects[obj_key] = exported_obj
 
     def diff(self, depsgraph):
         return depsgraph.id_type_updated("OBJECT")
