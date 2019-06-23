@@ -184,7 +184,7 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
         col = layout.column()
         col.enabled = enabled
         col.label(text="Visibility for indirect light rays:")
-        col = sub.column()        
+        col = layout.column()        
         col.prop(light.luxcore, "visibility_indirect_diffuse")
         col.prop(light.luxcore, "visibility_indirect_glossy")
         col.prop(light.luxcore, "visibility_indirect_specular")
