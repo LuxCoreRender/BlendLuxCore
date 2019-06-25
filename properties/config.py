@@ -109,6 +109,14 @@ PHOTONGI_HALTTHRESH_DESC = (
     "cache, but take longer to compute"
 )
 
+HYBRID_BACKFORWARD_DESC = (
+    "Trace rays from lights in addition to rays from the camera. Enable if your scene contains caustics"
+)
+HYBRID_BACKFORWARD_LIGHTPART_DESC = (
+    "Controls the amount of computed light rays. Higher values assign more computational power "
+    "to caustic rendering. Using 0% disables light tracing, using 100% disables camera rays completely"
+)
+
 # Used in enum callback
 film_opencl_device_items = []
 
@@ -127,6 +135,11 @@ class LuxCoreConfigPath(PropertyGroup):
     depth_glossy = IntProperty(name="Glossy", default=4, min=1, soft_max=16)
     # path.pathdepth.specular
     depth_specular = IntProperty(name="Specular", default=6, min=1, soft_max=16)
+
+    hybridbackforward_enable = BoolProperty(name="Add Light Tracing", default=False,
+                                            description=HYBRID_BACKFORWARD_DESC)
+    hybridbackforward_lightpartition = FloatProperty(name="Light Rays", default=20, min=0, max=100, subtype="PERCENTAGE",
+                                                     description=HYBRID_BACKFORWARD_LIGHTPART_DESC)
 
     use_clamping = BoolProperty(name="Clamp Output", default=False, description=CLAMPING_DESC)
     # path.clamping.variance.maxvalue
@@ -306,7 +319,7 @@ class LuxCoreConfig(PropertyGroup):
     samplers = [
         ("SOBOL", "Sobol", SIMPLE_DESC, 0),
         ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
-        ("RANDOM", "Random", "Recommended only if the denoiser is used", 2),
+        ("RANDOM", "Random", "Recommended only if the BCD denoiser is used (use Sobol otherwise)", 2),
     ]
     sampler = EnumProperty(name="Sampler", items=samplers, default="SOBOL")
 

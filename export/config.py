@@ -248,6 +248,13 @@ def _convert_path(config, definitions):
     definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
     definitions["path.pathdepth.specular"] = path.depth_specular
 
+    # When a GPU is used, the CPU should only handle light paths (partition == 0)
+    # Note that our partition property is inverted compared to LuxCore's (it is the probability to
+    # sample a light path, not the probability to sample a camera path)
+    partition = 0 if config.device == "OCL" else (1 - path.hybridbackforward_lightpartition / 100)
+    definitions["path.hybridbackforward.enable"] = path.hybridbackforward_enable
+    definitions["path.hybridbackforward.partition"] = partition
+
 
 def _convert_filesaver(scene, definitions, luxcore_engine):
     config = scene.luxcore.config

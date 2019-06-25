@@ -55,6 +55,18 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
             subrow.prop(config.path, "depth_glossy")
             subrow.prop(config.path, "depth_specular")
 
+            if not config.use_tiles:
+                use_native_cpu = context.scene.luxcore.opencl.use_native_cpu
+                row = layout.row()
+                row.prop(config.path, "hybridbackforward_enable")
+                if config.path.hybridbackforward_enable:
+                    if config.device == "CPU":
+                        row.prop(config.path, "hybridbackforward_lightpartition")
+                    elif config.device == "OCL" and not use_native_cpu:
+                        col = layout.column()
+                        col.label('Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
+                        col.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True)
+
             self.draw_clamp_settings(layout, config)
 
             layout.prop(config, "use_tiles")
