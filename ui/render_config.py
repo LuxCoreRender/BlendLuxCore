@@ -180,7 +180,7 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
 
 class LUXCORE_RENDER_PT_sampling_sub_samples(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-#    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
+    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
     bl_label = "Sub Samples"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -206,7 +206,7 @@ class LUXCORE_RENDER_PT_sampling_sub_samples(RenderButtonsPanel, Panel):
 
 class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-#    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
+    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
     bl_label = "Advanced"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -252,7 +252,7 @@ class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
 
 class LUXCORE_RENDER_PT_sampling_tiled(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-#    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
+    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
     bl_label = "Tiled"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -284,7 +284,7 @@ class LUXCORE_RENDER_PT_sampling_tiled(RenderButtonsPanel, Panel):
 
 class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-#   bl_parent_id = "LUXCORE_RENDER_PT_sampling_tiled"
+    bl_parent_id = "LUXCORE_RENDER_PT_sampling_tiled"
     bl_label = "Multipass"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -315,7 +315,7 @@ class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
 
 class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-#   bl_parent_id = "LUXCORE_RENDER_PT_sampling_tiled"
+    bl_parent_id = "LUXCORE_RENDER_PT_sampling_tiled"
     bl_label = "Clamping"
     bl_options = {'DEFAULT_CLOSED'}
     

@@ -84,6 +84,11 @@ def get_register_deps_dict(modules):
 def iter_own_register_deps(cls, own_classes):
     yield from (dep for dep in iter_register_deps(cls) if dep in own_classes)
 
+    if getattr(cls, "bl_parent_id", None):
+        for other_cls in own_classes:
+            if other_cls.__name__ == cls.bl_parent_id:
+                yield other_cls
+
 def iter_register_deps(cls):
     for value in typing.get_type_hints(cls, {}, {}).values():
         dependency = get_dependency_from_annotation(value)
