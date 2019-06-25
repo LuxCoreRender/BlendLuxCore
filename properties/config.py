@@ -116,6 +116,10 @@ HYBRID_BACKFORWARD_LIGHTPART_DESC = (
     "Controls the amount of computed light rays. Higher values assign more computational power "
     "to caustic rendering. Using 0% disables light tracing, using 100% disables camera rays completely"
 )
+HYBRID_BACKFORWARD_GLOSSINESS_DESC = (
+    "If a material's roughness is lower than this threshold, it is sampled from lights, "
+    "otherwise it is sampled from the camera (normal path tracing)"
+)
 
 # Used in enum callback
 film_opencl_device_items = []
@@ -140,6 +144,8 @@ class LuxCoreConfigPath(PropertyGroup):
                                             description=HYBRID_BACKFORWARD_DESC)
     hybridbackforward_lightpartition = FloatProperty(name="Light Rays", default=20, min=0, max=100, subtype="PERCENTAGE",
                                                      description=HYBRID_BACKFORWARD_LIGHTPART_DESC)
+    hybridbackforward_glossinessthresh = FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
+                                                       description=HYBRID_BACKFORWARD_GLOSSINESS_DESC)
 
     use_clamping = BoolProperty(name="Clamp Output", default=False, description=CLAMPING_DESC)
     # path.clamping.variance.maxvalue
@@ -239,7 +245,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     indirect_normalangle = FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
                                          subtype="ANGLE", description=NORMAL_ANGLE_DESC)
     # I use 0.049 as default because then glossy materials with default roughness (0.05) are cached
-    indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.049, min=0,
+    indirect_glossinessusagethreshold = FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
                                                       description="Only if a material's roughness is higher than "
                                                                   "this threshold, cache entries are stored on it")
     indirect_usagethresholdscale = FloatProperty(name="Brute Force Radius Scale", default=8, min=0, precision=1,

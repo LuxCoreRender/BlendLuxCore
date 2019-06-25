@@ -254,6 +254,7 @@ def _convert_path(config, definitions):
     partition = 0 if config.device == "OCL" else (1 - path.hybridbackforward_lightpartition / 100)
     definitions["path.hybridbackforward.enable"] = path.hybridbackforward_enable
     definitions["path.hybridbackforward.partition"] = partition
+    definitions["path.hybridbackforward.glossinessthreshold"] = path.hybridbackforward_glossinessthresh
 
 
 def _convert_filesaver(scene, definitions, luxcore_engine):

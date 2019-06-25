@@ -57,15 +57,18 @@ class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
 
             if not config.use_tiles:
                 use_native_cpu = context.scene.luxcore.opencl.use_native_cpu
-                row = layout.row()
+                col = layout.column(align=True)
+                row = col.row()
                 row.prop(config.path, "hybridbackforward_enable")
                 if config.path.hybridbackforward_enable:
                     if config.device == "CPU":
-                        row.prop(config.path, "hybridbackforward_lightpartition")
-                    elif config.device == "OCL" and not use_native_cpu:
-                        col = layout.column()
-                        col.label('Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
-                        col.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True)
+                        col.prop(config.path, "hybridbackforward_lightpartition")
+                        col.prop(config.path, "hybridbackforward_glossinessthresh")
+                    elif config.device == "OCL":
+                        row.prop(config.path, "hybridbackforward_glossinessthresh")
+                        if not use_native_cpu:
+                            col.label('Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
+                            col.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True)
 
             self.draw_clamp_settings(layout, config)
 
