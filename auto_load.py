@@ -89,6 +89,11 @@ def iter_own_register_deps(cls, own_classes):
             if other_cls.__name__ == cls.bl_parent_id:
                 yield other_cls
 
+    if getattr(cls, "lux_predecessor", None):        
+        for other_cls in own_classes:
+            if other_cls.__name__ == cls.lux_predecessor:
+                yield other_cls
+
 def iter_register_deps(cls):
     for value in typing.get_type_hints(cls, {}, {}).values():
         dependency = get_dependency_from_annotation(value)

@@ -117,6 +117,7 @@ def draw_samples_info(layout, context):
 class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Pixel Filter"
+    bl_order = 2
 
     def draw(self, context):
         layout = self.layout
@@ -148,6 +149,7 @@ class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
 class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Sampling"
+    bl_order = 1
 
     def draw(self, context):
         layout = self.layout
@@ -183,7 +185,8 @@ class LUXCORE_RENDER_PT_sampling_sub_samples(RenderButtonsPanel, Panel):
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
     bl_label = "Sub Samples"
     bl_options = {'DEFAULT_CLOSED'}
-
+    lux_predecessor = "LUXCORE_RENDER_PT_sampling"
+    
     @classmethod
     def poll(cls, context):        
         config = context.scene.luxcore.config
@@ -204,11 +207,47 @@ class LUXCORE_RENDER_PT_sampling_sub_samples(RenderButtonsPanel, Panel):
         draw_samples_info(layout, context)
 
 
+class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
+    bl_label = "Clamping"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_RENDER_PT_sampling_advanced"
+    
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config        
+        layout.prop(config.path, "use_clamping", text="")
+      
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False      
+      
+        layout.enabled = config.path.use_clamping
+        layout.prop(config.path, "clamping")
+
+        if config.path.suggested_clamping_value == -1:
+            # Optimal clamp value not yet found, need to start a render first
+            if config.path.use_clamping:
+                # Can't compute optimal value if clamping is enabled
+                layout.label(text="Render without clamping to get suggested clamp value", icon=icons.INFO)
+            else:
+                layout.label(text="Start a render to get a suggested clamp value", icon=icons.INFO)
+        else:
+            # Show a button that can be used to set the optimal clamp value
+            op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
+            layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
+
+
 class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
     bl_label = "Advanced"
     bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_RENDER_PT_sampling_sub_samples"
 
     def draw(self, context):
         layout = self.layout
@@ -255,6 +294,8 @@ class LUXCORE_RENDER_PT_sampling_tiled(RenderButtonsPanel, Panel):
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
     bl_label = "Tiled"
     bl_options = {'DEFAULT_CLOSED'}
+    bl_order = 5
+    lux_predecessor = "LUXCORE_RENDER_PT_clamping"
 
     @classmethod
     def poll(cls, context):        
@@ -286,7 +327,7 @@ class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling_tiled"
     bl_label = "Multipass"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}    
 
     @classmethod
     def poll(cls, context):        
@@ -313,40 +354,6 @@ class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
         col.prop(config.tile, "multipass_convtest_warmup")
 
 
-class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_sampling_tiled"
-    bl_label = "Clamping"
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    def draw_header(self, context):
-        layout = self.layout
-        config = context.scene.luxcore.config        
-        layout.prop(config.path, "use_clamping", text="")
-      
-    def draw(self, context):
-        layout = self.layout
-        config = context.scene.luxcore.config
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False      
-      
-        layout.enabled = config.path.use_clamping
-        layout.prop(config.path, "clamping")
-
-        if config.path.suggested_clamping_value == -1:
-            # Optimal clamp value not yet found, need to start a render first
-            if config.path.use_clamping:
-                # Can't compute optimal value if clamping is enabled
-                layout.label(text="Render without clamping to get suggested clamp value", icon=icons.INFO)
-            else:
-                layout.label(text="Start a render to get a suggested clamp value", icon=icons.INFO)
-        else:
-            # Show a button that can be used to set the optimal clamp value
-            op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
-            layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
-
-
 def compatible_panels():
     panels = [
         "RENDER_PT_color_management",
@@ -355,32 +362,16 @@ def compatible_panels():
     types = bpy.types
     return [getattr(types, p) for p in panels if hasattr(types, p)]
 
-classes = (
-    LUXCORE_RENDER_PT_sampling,
-    LUXCORE_RENDER_PT_sampling_sub_samples,
-    LUXCORE_RENDER_PT_sampling_advanced,
-    LUXCORE_RENDER_PT_sampling_tiled,
-    LUXCORE_RENDER_PT_sampling_tiled_multipass,
-    LUXCORE_RENDER_PT_filter,
-)
 
 def register():
-#    from bpy.utils import register_class
     # We append our draw function to the existing Blender render panel
     RENDER_PT_context.append(luxcore_render_draw)
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.add("LUXCORE")
 
-#    for cls in classes:
-#       register_class(cls)
-    
-
 
 def unregister():
-#    from bpy.utils import unregister_class
     RENDER_PT_context.remove(luxcore_render_draw)
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.remove("LUXCORE")
 
-#   for cls in classes:
-#      unregister_class(cls)
