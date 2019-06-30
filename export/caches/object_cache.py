@@ -82,7 +82,7 @@ class ObjectCache2:
             self.exported_meshes[mesh_key] = exported_mesh
 
         if exported_mesh:
-            obj_transform = transform if use_instancing else None
+            obj_transform = transform.copy() if use_instancing else None
             exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, obj_transform)
             if exported_obj:
                 scene_props.Set(exported_obj.get_props())
