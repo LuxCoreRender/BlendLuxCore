@@ -5,7 +5,7 @@ from .. import utils
 from ..utils import render as utils_render
 from ..utils import compatibility as utils_compatibility
 from . import (
-    blender_object, blender_object_280, caches, camera, config, duplis,
+    blender_object, caches, camera, config, duplis,
     group_instance, imagepipeline, light, material,
     motion_blur, hair, halt, world,
 )
@@ -48,7 +48,7 @@ class Exporter(object):
 
         self.config_cache = caches.StringCache()
         self.camera_cache = caches.CameraCache()
-        self.object_cache = caches.ObjectCache()
+        # self.object_cache = caches.ObjectCache()
         self.object_cache2 = caches.ObjectCache2()
         self.material_cache = caches.MaterialCache()
         self.visibility_cache = caches.VisibilityCache()
@@ -114,26 +114,6 @@ class Exporter(object):
         is_viewport_render = context is not None
         if not self.object_cache2.first_run(depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
             return None
-        # objs = context.visible_objects if context else scene.objects
-        # len_objs = len(objs)
-        #
-        # for index, obj in enumerate(objs, start=1):
-        #     if obj.type in blender_object.EXPORTABLE_OBJECTS:
-        #         if engine:
-        #             engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
-        #         # self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine=engine)
-        #         is_viewport_render = context is not None
-        #         use_instancing = False
-        #         props = blender_object_280.convert(obj, depsgraph, luxcore_scene, is_viewport_render, use_instancing)
-        #         if props:
-        #             scene_props.Set(props)
-        #
-        #         # Objects are the most expensive to export, so they dictate the progress
-        #         if engine:
-        #             engine.update_progress(index / len_objs)
-        #     # Regularly check if we should abort the export (important in heavy scenes)
-        #     if engine and engine.test_break():
-        #         return None
 
         # TODO 2.8
         # Motion blur

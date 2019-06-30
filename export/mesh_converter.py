@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from .. import utils
-from .blender_object_280 import ExportedMesh
+from .caches.exported_data import ExportedMesh
 
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):

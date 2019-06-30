@@ -6,7 +6,6 @@ from ..utils import render as utils_render
 import bpy
 from ..bin import pyluxcore
 from .. import utils
-from ..export import blender_object_280
 
 
 # Executed in separate thread
