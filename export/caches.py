@@ -3,6 +3,7 @@ from .. import utils
 from ..utils import node as utils_node
 from ..export import blender_object, camera
 from .blender_object_280 import ExportedObject, ExportedMesh, ExportedLight, EXPORTABLE_OBJECTS, MESH_OBJECTS
+from . import mesh_converter
 
 
 class StringCache:
@@ -83,6 +84,10 @@ class ObjectCache2:
             return False
         return True
 
+    def _get_mesh_key(self, obj, is_viewport_render=True):
+        # Important: we need the data of the original object, not the evaluated one
+        return utils.get_luxcore_name(obj.original.data, is_viewport_render)
+
     def _convert(self, dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render):
         """ Convert one DepsgraphObjectInstance amd keep track of it """
         obj_key = utils.make_key_from_instance(dg_obj_instance)
@@ -91,7 +96,8 @@ class ObjectCache2:
 
         if obj.type == "EMPTY" or obj.data is None:
             # Not sure if we even need a special empty export, could just ignore them
-            print("empty export not implemented yet")
+            #print("empty export not implemented yet")
+            pass
         elif obj.type in MESH_OBJECTS:
             print("converting mesh object", obj.name_full)
             self._convert_mesh_obj(dg_obj_instance, obj, obj_key, depsgraph, luxcore_scene, scene_props, is_viewport_render)
@@ -104,14 +110,13 @@ class ObjectCache2:
         transform = dg_obj_instance.matrix_world
 
         use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj)
-        mesh_key = utils.get_luxcore_name(obj.data, is_viewport_render)
+        mesh_key = self._get_mesh_key(obj, is_viewport_render)
 
         if use_instancing and mesh_key in self.exported_meshes:
             print("retrieving mesh from cache")
             exported_mesh = self.exported_meshes[mesh_key]
         else:
             print("fresh export")
-            from . import mesh_converter
             exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform)
             self.exported_meshes[mesh_key] = exported_mesh
 
@@ -152,7 +157,26 @@ class ObjectCache2:
                 # Do export
                 self._convert(dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render)
 
-        # TODO: mesh updates
+        # Geometry updates (mesh edit, modifier edit etc.)
+        if depsgraph.id_type_updated("OBJECT"):
+            print("exported meshes:", self.exported_meshes.keys())
+
+            for dg_update in depsgraph.updates:
+                print(f"update id: {dg_update.id}, geom: {dg_update.is_updated_geometry}, trans: {dg_update.is_updated_transform}")
+
+                if dg_update.is_updated_geometry and isinstance(dg_update.id, bpy.types.Object):
+                    obj = dg_update.id
+                    print(f"Geometry of obj {obj.name} was updated")
+                    mesh_key = self._get_mesh_key(obj)
+                    if mesh_key not in self.exported_meshes:
+                        # Debug
+                        raise Exception("NO MESH KEY FOUND")
+                    transform = None  # In viewport render, everything is instanced
+                    use_instancing = True
+                    exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render,
+                                                           use_instancing, transform)
+                    self.exported_meshes[mesh_key] = exported_mesh
+                    print(self.exported_meshes[mesh_key].mesh_definitions)
 
         self._debug_info()
 
