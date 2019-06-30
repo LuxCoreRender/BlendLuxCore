@@ -82,7 +82,7 @@ def register():
     nodes.textures.register()
     nodes.volumes.register()
 
-    properties.init()
+    #properties.init()
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)

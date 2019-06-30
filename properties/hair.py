@@ -8,8 +8,8 @@ from .image_user import LuxCoreImageUser
 from .light import GAMMA_DESCRIPTION
 
 
-def init():
-    bpy.types.ParticleSettings.luxcore = PointerProperty(type=LuxCoreParticlesProps)
+#def init():
+#    bpy.types.ParticleSettings.luxcore = PointerProperty(type=LuxCoreParticlesProps)
 
 
 TESSEL_ITEMS = [
@@ -122,3 +122,15 @@ class LuxCoreHair(PropertyGroup):
 
 class LuxCoreParticlesProps(PropertyGroup):
     hair: PointerProperty(type=LuxCoreHair)
+    
+    @classmethod
+    def register(cls):        
+        bpy.types.ParticleSettings.luxcore = PointerProperty(
+            name="LuxCore Particle Settings",
+            description="LuxCore particle settings",
+            type=cls,
+        )
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.ParticleSettings.luxcore

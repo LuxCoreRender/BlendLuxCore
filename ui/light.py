@@ -1,7 +1,7 @@
 from bl_ui.properties_data_light import DataButtonsPanel
 from . import bpy
-from bpy.types import Panel
 from . import icons
+from bpy.types import Panel
 
 # TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
 class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
@@ -10,6 +10,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
     """
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light"
+    bl_order = 1
 
     @classmethod
     def poll(cls, context):
@@ -44,15 +45,14 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.prop(light.luxcore, "rgb_gain", text="Color")        
         layout.prop(light.luxcore, "gain")
 
-        #TODO: Reactivate when Light Group code is implemented
-        #col = split.column(align=True)
-        #op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
-        #op.target = "SCENE"
-        #lightgroups = context.scene.luxcore.lightgroups
-        #col.prop_search(light.luxcore, "lightgroup",
-        #                lightgroups, "custom",
-        #                icon=icons.LIGHTGROUP, text="")
-        #
+        col = layout.column(align=True)
+        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
+        op.target = "SCENE"
+        lightgroups = context.scene.luxcore.lightgroups
+        col.prop_search(light.luxcore, "lightgroup",
+                        lightgroups, "custom",
+                        icon=icons.LIGHTGROUP, text="")
+        
 
         layout.separator()
 
@@ -98,9 +98,8 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                 col.prop(light, "size", text="Size")
             else:
                 col = layout.column(align=True)
-#TODO: Reactivate when object code is setup correctly
-#                if context.object:
-#                    row.prop(context.object.luxcore, "visible_to_camera")
+                if context.object:
+                    col.prop(context.object.luxcore, "visible_to_camera")
                 col.prop(light.luxcore, "spread_angle", slider=True)
 
                 col = layout.column(align=True)
@@ -132,6 +131,7 @@ class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
     bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 3
 
     @classmethod
     def poll(cls, context):
@@ -156,6 +156,7 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Visibility"
     bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 4
 
     @classmethod
     def poll(cls, context):
@@ -196,6 +197,7 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
 class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):
     bl_label = "Spot Shape"
     bl_context = "data"    
+    bl_order = 2
 
     @classmethod
     def poll(cls, context):
@@ -220,6 +222,7 @@ class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
     bl_label = "IES Light"
     bl_context = "data"
     bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 2
 
     @classmethod
     def poll(cls, context):

@@ -19,8 +19,8 @@ SHUTTER_TIME_DESC = (
 AUTO_VOLUME_DESC = "Use the exterior volume of the object in the middle of the film as camera volume"
 
 
-def init():
-    bpy.types.Camera.luxcore = PointerProperty(type=LuxCoreCameraProps)
+#def init():
+#    bpy.types.Camera.luxcore = PointerProperty(type=LuxCoreCameraProps)
 
 
 class LuxCoreMotionBlur(PropertyGroup):
@@ -53,3 +53,15 @@ class LuxCoreCameraProps(PropertyGroup):
 
     volume: PointerProperty(type=bpy.types.NodeTree)
     auto_volume: BoolProperty(name="Auto-Detect Camera Volume", default=True, description=AUTO_VOLUME_DESC)
+    
+    @classmethod
+    def register(cls):
+        bpy.types.Camera.luxcore = PointerProperty(
+            name="LuxCore Camera Settings",
+            description="LuxCore camera settings",
+            type=cls,
+        )
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.Camera.luxcore

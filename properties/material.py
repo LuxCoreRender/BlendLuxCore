@@ -4,8 +4,8 @@ from bpy.props import PointerProperty, FloatProperty, BoolProperty
 from ..utils import node as utils_node
 
 
-def init():
-    bpy.types.Material.luxcore = PointerProperty(type=LuxCoreMaterialProps)
+#def init():
+#    bpy.types.Material.luxcore = PointerProperty(type=LuxCoreMaterialProps)
 
 
 class LuxCoreMaterialPreviewProps(PropertyGroup):
@@ -35,3 +35,15 @@ class LuxCoreMaterialProps(PropertyGroup):
                                              "from the first nodes in the node tree")
     node_tree: PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
     preview: PointerProperty(type=LuxCoreMaterialPreviewProps)
+
+    @classmethod
+    def register(cls):        
+        bpy.types.Material.luxcore = PointerProperty(
+            name="LuxCore Material Settings",
+            description="LuxCore material settings",
+            type=cls,
+        )
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.Material.luxcore

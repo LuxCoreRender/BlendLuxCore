@@ -184,8 +184,7 @@ class LUXCORE_RENDER_PT_sampling_sub_samples(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
     bl_label = "Sub Samples"
-    bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_RENDER_PT_sampling"
+    bl_options = {'DEFAULT_CLOSED'}    
     
     @classmethod
     def poll(cls, context):        

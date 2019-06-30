@@ -77,38 +77,6 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
 ##                                        "luxcore.camera_new_volume_node_tree",
 ##                                        "luxcore.camera_unlink_volume_node_tree")
 
-
-##class LUXCORE_PT_camera(CameraButtonsPanel, Panel):
-##    bl_label = "Camera"
-##    bl_order = 2
-##    bl_options = {'DEFAULT_CLOSED'}
-##    COMPAT_ENGINES = {"LUXCORE"}
-##
-##    def draw_header_preset(self, _context):
-##        LUXCORE_CAMERA_PT_presets.draw_panel_header(self.layout)
-##
-##    def draw(self, context):
-##        layout = self.layout
-##
-##        cam = context.camera
-##
-##        layout.use_property_split = True
-##
-##        col = layout.column()
-##        col.prop(cam, "sensor_fit")
-##
-##        if cam.sensor_fit == 'AUTO':
-##            col.prop(cam, "sensor_width", text="Size")
-##        else:
-##            sub = col.column(align=True)
-##            sub.active = cam.sensor_fit == 'HORIZONTAL'
-##            sub.prop(cam, "sensor_width", text="Width")
-##
-##            sub = col.column(align=True)
-##            sub.active = cam.sensor_fit == 'VERTICAL'
-##            sub.prop(cam, "sensor_height", text="Height")
-
-
 class LUXCORE_CAMERA_PT_clipping_plane(CameraButtonsPanel, Panel):
     bl_label = "Clipping Plane"
     bl_order = 3
@@ -361,17 +329,6 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
     bl_order = 8
     bl_options = {'DEFAULT_CLOSED'}
     COMPAT_ENGINES = {"LUXCORE"}
-##
-##    def draw_plugin_box(self, settings):
-##        col = self.layout.column(align=True)
-##        # Header
-##        icon = "RESTRICT_RENDER_OFF" if settings.enabled else "RESTRICT_RENDER_ON"
-##        col.prop(settings, "enabled", icon=icon, emboss=True)
-##        # Body
-##        if settings.enabled:
-##            return col.box()
-##        else:
-##            return None
         
     def draw(self, context):
         layout = self.layout
@@ -385,29 +342,46 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
         layout.prop(context.scene.luxcore.config, "film_opencl_enable")
         if context.scene.luxcore.config.film_opencl_enable:
             layout.prop(context.scene.luxcore.config, "film_opencl_device", text="")
+            
 
-        # Tonemapper settings
+class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):
+    bl_label = "Tonemapper"
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"    
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    COMPAT_ENGINES = {"LUXCORE"}    
+    
+    def draw_header(self, context):
+        pipeline = context.camera.luxcore.imagepipeline
+        self.layout.prop(pipeline.tonemapper, "enabled", text="")
+        
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        pipeline = context.camera.luxcore.imagepipeline
         tonemapper = pipeline.tonemapper
-##        box = self.draw_plugin_box(tonemapper)
-##        if box:
-##            row = box.row()
-##            row.prop(tonemapper, "type", expand=True)
-##
-##            if tonemapper.type == "TONEMAP_LINEAR":
-##                row = box.row()
-##                row.prop(tonemapper, "linear_scale")
-##                row.prop(tonemapper, "use_autolinear")
-##            elif tonemapper.type == "TONEMAP_LUXLINEAR":
-##                row = box.row(align=True)
-##                row.prop(tonemapper, "fstop")
-##                row.prop(tonemapper, "exposure")
-##                row.prop(tonemapper, "sensitivity")
-##            elif tonemapper.type == "TONEMAP_REINHARD02":
-##                row = box.row(align=True)
-##                row.prop(tonemapper, "reinhard_prescale")
-##                row.prop(tonemapper, "reinhard_postscale")
-##                row.prop(tonemapper, "reinhard_burn")
-##
+        layout.enabled = tonemapper.enabled
+        
+        layout.prop(tonemapper, "type", expand=False)
+
+        if tonemapper.type == "TONEMAP_LINEAR":
+            col = layout.column(align=True)            
+            col.prop(tonemapper, "linear_scale")
+            col.prop(tonemapper, "use_autolinear")
+        elif tonemapper.type == "TONEMAP_LUXLINEAR":
+            col = layout.column(align=True)            
+            col.prop(tonemapper, "fstop")
+            col.prop(tonemapper, "exposure")
+            col.prop(tonemapper, "sensitivity")
+        elif tonemapper.type == "TONEMAP_REINHARD02":
+            col = layout.column(align=True)            
+            col.prop(tonemapper, "reinhard_prescale")
+            col.prop(tonemapper, "reinhard_postscale")
+            col.prop(tonemapper, "reinhard_burn")
+
+##TODO: Adapt to new viewlayer structure
 ##            if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
 ##                name = "Auto" if tonemapper.type == "TONEMAP_LINEAR" else "Reinhard"
 ##                msg = name + " and multiple renderlayers will cause brightness difference!"
@@ -415,82 +389,131 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
 ##
 ##        if context.scene.luxcore.viewport.denoise:
 ##            layout.label(text="Plugins below disabled in viewport because of viewport denoising", icon=icons.INFO)
-##
-##        # Bloom settings
-##        bloom = pipeline.bloom
-##        box = self.draw_plugin_box(bloom)
-##        if box:
-##            row = box.row()
-##            row.prop(bloom, "radius")
-##            row.prop(bloom, "weight")
-##
-##        mist = pipeline.mist
-##        box = self.draw_plugin_box(mist)
-##        if box:
-##            col = box.column(align=True)
-##            col.scale_y = 0.8
-##            col.label(text="Note: the mist is not anti-aliased.", icon=icons.WARNING)
-##            col.label(text="This causes jagged edges if the effect is too strong.")
-##            row = box.row()
-##            row.prop(mist, "color", text="")
-##            row.prop(mist, "amount", slider=True)
-##            row = box.row(align=True)
-##            row.prop(mist, "start_distance")
-##            row.prop(mist, "end_distance")
-##            box.prop(mist, "exclude_background")
-##
-##        vignetting = pipeline.vignetting
-##        box = self.draw_plugin_box(vignetting)
-##        if box:
-##            box.prop(vignetting, "scale", slider=True)
-##
-##        coloraberration = pipeline.coloraberration
-##        box = self.draw_plugin_box(coloraberration)
-##        if box:
-##            box.prop(coloraberration, "amount", slider=True)
-##
-##        camera_response_func = pipeline.camera_response_func
-##        box = self.draw_plugin_box(camera_response_func)
-##        if box:
-##            row = box.row()
-##            row.prop(camera_response_func, "type", expand=True)
-##
-##            if camera_response_func.type == "PRESET":
-##                selected = camera_response_func.preset
-##                label = selected.replace("_", " ") if selected else "Select Preset"
-##                box.operator("luxcore.select_crf", text=label)
-##            else:
-##                box.prop(camera_response_func, "file")
-##
-##        contour_lines = pipeline.contour_lines
-##        box = self.draw_plugin_box(contour_lines)
-##        if box:
-##            row = box.row(align=True)
-##            row.prop(contour_lines, "scale")
-##            row.prop(contour_lines, "contour_range")
-##            row = box.row(align=True)
-##            row.prop(contour_lines, "steps")
-##            row.prop(contour_lines, "zero_grid_size")
 
 
-class LUXCORE_CAMERA_PT_background_image(CameraButtonsPanel, Panel):
-    bl_label = "Background Image"
+class LUXCORE_CAMERA_PT_image_pipeline_bloom(CameraButtonsPanel, Panel):
+    bl_label = "Bloom"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_tonemapper"
     COMPAT_ENGINES = {"LUXCORE"}    
     
-    def draw_header(self, context):
-        cam = context.camera
-        pipeline = cam.luxcore.imagepipeline        
+    def draw_header(self, context):        
+        pipeline = context.camera.luxcore.imagepipeline        
+        self.layout.prop(pipeline.bloom, "enabled", text="")
+        
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        
+        pipeline = context.camera.luxcore.imagepipeline
+        bloom = pipeline.bloom
+        layout.enabled = bloom.enabled
+
+        layout.prop(bloom, "radius")
+        layout.prop(bloom, "weight")
+
+
+class LUXCORE_CAMERA_PT_image_pipeline_mist(CameraButtonsPanel, Panel):
+    bl_label = "Mist"
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_bloom"
+    COMPAT_ENGINES = {"LUXCORE"}    
+    
+    def draw_header(self, context):        
+        pipeline = context.camera.luxcore.imagepipeline        
+        self.layout.prop(pipeline.mist, "enabled", text="")
+        
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        
+        pipeline = context.camera.luxcore.imagepipeline
+        mist = pipeline.mist
+        layout.enabled = mist.enabled
+
+        col = layout.column(align=True)
+        col.scale_y = 0.8
+        col.label(text="Note: the mist is not anti-aliased.", icon=icons.WARNING)
+        col.label(text="This causes jagged edges if the effect is too strong.")
+
+        layout.prop(mist, "color")
+        layout.prop(mist, "amount", slider=True)
+        
+        col = layout.column(align=True)
+        col.prop(mist, "start_distance")
+        col.prop(mist, "end_distance")
+        layout.prop(mist, "exclude_background")
+
+
+class LUXCORE_CAMERA_PT_image_pipeline_vignetting(CameraButtonsPanel, Panel):
+    bl_label = "Vignetting"
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_mist"
+    COMPAT_ENGINES = {"LUXCORE"}    
+    
+    def draw_header(self, context):        
+        pipeline = context.camera.luxcore.imagepipeline        
+        self.layout.prop(pipeline.vignetting, "enabled", text="")
+        
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        
+        pipeline = context.camera.luxcore.imagepipeline
+        vignetting = pipeline.vignetting
+        layout.enabled = vignetting.enabled
+
+        layout.prop(vignetting, "scale", slider=True)
+
+
+class LUXCORE_CAMERA_PT_image_pipeline_color_aberration(CameraButtonsPanel, Panel):
+    bl_label = "Color Aberration"
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_vignetting"
+    COMPAT_ENGINES = {"LUXCORE"}    
+    
+    def draw_header(self, context):        
+        pipeline = context.camera.luxcore.imagepipeline        
+        self.layout.prop(pipeline.coloraberration, "enabled", text="")
+        
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        
+        pipeline = context.camera.luxcore.imagepipeline
+        coloraberration = pipeline.coloraberration
+        layout.enabled = coloraberration.enabled
+
+        layout.prop(coloraberration, "amount", slider=True)
+
+
+class LUXCORE_CAMERA_PT_image_pipeline_background_image(CameraButtonsPanel, Panel):
+    bl_label = "Background Image"
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_color_aberration"
+    COMPAT_ENGINES = {"LUXCORE"}    
+    
+    def draw_header(self, context):        
+        pipeline = context.camera.luxcore.imagepipeline        
         self.layout.prop(pipeline.backgroundimage, "enabled", text="")
         
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-        layout.use_property_decorate = False      
-
-        cam = context.camera
-        pipeline = cam.luxcore.imagepipeline
+        layout.use_property_decorate = False
+        
+        pipeline = context.camera.luxcore.imagepipeline
         backgroundimage = pipeline.backgroundimage
+        layout.enabled = backgroundimage.enabled
 
         col = layout.column(align=True)
         col.enabled = backgroundimage.enabled
@@ -498,6 +521,62 @@ class LUXCORE_CAMERA_PT_background_image(CameraButtonsPanel, Panel):
         col.prop(backgroundimage, "gamma")
         backgroundimage.image_user.draw(col, context.scene)
         col.prop(backgroundimage, "storage")
+
+
+class LUXCORE_CAMERA_PT_image_pipeline_camera_response_function(CameraButtonsPanel, Panel):
+    bl_label = "Analog Film Simulation"
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_background_image"
+    COMPAT_ENGINES = {"LUXCORE"}    
+    
+    def draw_header(self, context):        
+        pipeline = context.camera.luxcore.imagepipeline        
+        self.layout.prop(pipeline.camera_response_func, "enabled", text="")
+        
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        
+        pipeline = context.camera.luxcore.imagepipeline
+        camera_response_func = pipeline.camera_response_func
+        layout.enabled = camera_response_func.enabled
+
+        layout.prop(camera_response_func, "type", expand=True)
+
+        if camera_response_func.type == "PRESET":
+            selected = camera_response_func.preset
+            label = selected.replace("_", " ") if selected else "Select Preset"
+            layout.operator("luxcore.select_crf", text=label)
+        else:
+            layout.prop(camera_response_func, "file")
+
+
+class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
+    bl_label = "Irradiance Contour Lines"
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_camera_response_function"
+    COMPAT_ENGINES = {"LUXCORE"}    
+    
+    def draw_header(self, context):        
+        pipeline = context.camera.luxcore.imagepipeline        
+        self.layout.prop(pipeline.contour_lines, "enabled", text="")
+        
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        
+        pipeline = context.camera.luxcore.imagepipeline
+        contour_lines = pipeline.contour_lines
+        layout.enabled = contour_lines.enabled
+
+        layout.prop(contour_lines, "scale")
+        layout.prop(contour_lines, "contour_range")
+        layout.prop(contour_lines, "steps")
+        layout.prop(contour_lines, "zero_grid_size")
 
 
 def compatible_panels():

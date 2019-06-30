@@ -36,10 +36,6 @@ GROUND_ENABLE_DESC = (
 GROUND_COLOR_DESC = GROUND_ENABLE_DESC
 
 
-def init():
-    bpy.types.World.luxcore = PointerProperty(type=LuxCoreWorldProps)
-
-
 class LuxCoreWorldProps(bpy.types.PropertyGroup):
     lights = [
         ("sky2", "Sky", "Hosek and Wilkie sky model", 0),
@@ -98,3 +94,16 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     vismap: PointerProperty(type=LuxCoreVisMapProps)
 
     volume: PointerProperty(type=bpy.types.NodeTree)
+    
+    @classmethod
+    def register(cls):
+        bpy.types.World.luxcore = PointerProperty(
+            name="LuxCore World Settings",
+            description="LuxCore World settings",
+            type=cls,
+        )
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.World.luxcore
+    

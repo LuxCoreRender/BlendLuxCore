@@ -79,7 +79,9 @@ def get_register_deps_dict(modules):
     classes_to_register = set(iter_classes_to_register(modules))
     for cls in classes_to_register:
         deps_dict[cls] = set(iter_own_register_deps(cls, classes_to_register))
+   
     return deps_dict
+
 
 def iter_own_register_deps(cls, own_classes):
     yield from (dep for dep in iter_register_deps(cls) if dep in own_classes)
@@ -88,11 +90,12 @@ def iter_own_register_deps(cls, own_classes):
         for other_cls in own_classes:
             if other_cls.__name__ == cls.bl_parent_id:
                 yield other_cls
-
+    
     if getattr(cls, "lux_predecessor", None):        
         for other_cls in own_classes:
-            if other_cls.__name__ == cls.lux_predecessor:
-                yield other_cls
+           if other_cls.__name__ == cls.lux_predecessor:
+               yield other_cls
+
 
 def iter_register_deps(cls):
     for value in typing.get_type_hints(cls, {}, {}).values():
@@ -149,4 +152,5 @@ def toposort(deps_dict):
             else:
                 unsorted.append(value)
         deps_dict = {value : deps_dict[value] - sorted_values for value in unsorted}
+        
     return sorted_list

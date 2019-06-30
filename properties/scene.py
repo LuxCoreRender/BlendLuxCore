@@ -6,8 +6,8 @@ from . import (
 )
 
 
-def init():
-    bpy.types.Scene.luxcore = PointerProperty(type=LuxCoreScene)
+#def init():
+#    bpy.types.Scene.luxcore = PointerProperty(type=LuxCoreScene)
 
 
 class LuxCoreScene(bpy.types.PropertyGroup):
@@ -27,3 +27,15 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     # TODO does this have to be an IntProperty? why not active_layer_index = -1
     # TODO having it as property sometimes causes exceptions when in _RestrictContext
     active_layer_index: IntProperty(default=-1)
+
+    @classmethod
+    def register(cls):
+        bpy.types.Scene.luxcore = PointerProperty(
+            name="LuxCore Scene Settings",
+            description="LuxCore scene settings",
+            type=cls,
+        )
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.Scene.luxcore

@@ -73,8 +73,8 @@ VISMAP_CACHE_DESC = (
 )
 
 
-def init():
-    bpy.types.Light.luxcore = PointerProperty(type=LuxCoreLightProps)
+#def init():
+#    bpy.types.Light.luxcore = PointerProperty(type=LuxCoreLightProps)
 
 
 class LuxCoreVisMapProps(bpy.types.PropertyGroup):
@@ -186,3 +186,14 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
                                  max=math.pi / 2, subtype="ANGLE", unit="ROTATION",
                                  description=SPREAD_ANGLE_DESCRIPTION)
 
+    @classmethod
+    def register(cls):        
+        bpy.types.Light.luxcore = PointerProperty(
+            name="LuxCore Light Settings",
+            description="LuxCore light settings",
+            type=cls,
+        )
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.Light.luxcore
