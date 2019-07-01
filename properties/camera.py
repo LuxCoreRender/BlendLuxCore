@@ -36,7 +36,7 @@ class LuxCoreMotionBlur(PropertyGroup):
 
 
 class LuxCoreCameraProps(PropertyGroup):
-    use_clipping: BoolProperty(name="Clipping:", default=False,
+    use_clipping: BoolProperty(name="Clipping", default=False,
                                 description="Use near/far clipping for the LuxCore camera "
                                             "(clipping still affects the Blender OpenGL viewport even if disabled)")
     use_dof: BoolProperty(name="Use Depth of Field", default=False,
@@ -44,8 +44,8 @@ class LuxCoreCameraProps(PropertyGroup):
                                        "when objects are out of focus")
     use_autofocus: BoolProperty(name="Use Autofocus", default=False,
                                  description="Focus on the surface in the center of the film")
-    fstop: FloatProperty(name="F-stop", default=2.8, min=0.01, description=FSTOP_DESC)
-    use_clipping_plane: BoolProperty(name="Use Clipping Plane:", default=False, description=CLIPPING_PLANE_DESC)
+    fstop: FloatProperty(name="F-Stop", default=2.8, min=0.01, description=FSTOP_DESC)
+    use_clipping_plane: BoolProperty(name="Use Clipping Plane", default=False, description=CLIPPING_PLANE_DESC)
     clipping_plane: PointerProperty(name="Clipping Plane", type=bpy.types.Object, description=CLIPPING_PLANE_DESC)
 
     motion_blur: PointerProperty(type=LuxCoreMotionBlur)
