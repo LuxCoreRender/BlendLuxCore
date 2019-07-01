@@ -33,6 +33,10 @@ def start_session(engine):
 
 
 def view_update(engine, context, depsgraph, changes=None):
+    if engine.starting_session:
+        # Prevent deadlock
+        return
+
     scene = depsgraph.scene_eval
 
     if engine.framebuffer:
@@ -41,28 +45,27 @@ def view_update(engine, context, depsgraph, changes=None):
     #scene.luxcore.errorlog.clear()  # TODO 2.8
 
     if engine.session is None:
-        if not engine.starting_session:
-            print("=" * 50)
-            print("[Engine/Viewport] New session")
-            try:
-                engine.update_stats("Creating Render Session...", "")
-                engine.exporter = export.Exporter(scene)
-                engine.session = engine.exporter.create_session(depsgraph, context)
-                # Start in separate thread to avoid blocking the UI
-                engine.starting_session = True
-                import _thread
-                _thread.start_new_thread(start_session, (engine,))
-            except Exception as error:
-                del engine.session
-                engine.session = None
-                # Reset the exporter to invalidate all caches
-                engine.exporter = None
+        print("=" * 50)
+        print("[Engine/Viewport] New session")
+        try:
+            engine.update_stats("Creating Render Session...", "")
+            engine.exporter = export.Exporter(scene)
+            engine.session = engine.exporter.create_session(depsgraph, context)
+            # Start in separate thread to avoid blocking the UI
+            engine.starting_session = True
+            import _thread
+            _thread.start_new_thread(start_session, (engine,))
+        except Exception as error:
+            del engine.session
+            engine.session = None
+            # Reset the exporter to invalidate all caches
+            engine.exporter = None
 
-                engine.update_stats("Error: ", str(error))
-                # scene.luxcore.errorlog.add_error(error)  # TODO 2.8
+            engine.update_stats("Error: ", str(error))
+            # scene.luxcore.errorlog.add_error(error)  # TODO 2.8
 
-                import traceback
-                traceback.print_exc()
+            import traceback
+            traceback.print_exc()
         return
 
     if changes is None:
