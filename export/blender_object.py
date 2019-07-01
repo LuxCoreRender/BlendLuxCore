@@ -1,3 +1,6 @@
+# TODO 2.8 delete this file
+
+
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import ExportedObject
@@ -16,6 +19,7 @@ def convert(exporter, obj, scene, context, luxcore_scene,
     """
     duplicator: The duplicator object that created this dupli (e.g. the particle emitter object)
     """
+    raise Exception("Don't use this function anymore")
 
     if not utils.is_obj_visible(obj, scene, context, is_dupli=dupli_suffix):
         return pyluxcore.Properties(), None

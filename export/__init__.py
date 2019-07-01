@@ -114,6 +114,9 @@ class Exporter(object):
         is_viewport_render = context is not None
         if not self.object_cache2.first_run(depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
             return None
+        if is_viewport_render:
+            # Init
+            self.visibility_cache.diff(depsgraph)
 
         # TODO 2.8
         # Motion blur
@@ -224,9 +227,8 @@ class Exporter(object):
             if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
 
-            # TODO
-            # if self.visibility_cache.diff(depsgraph):
-            #     changes |= Change.VISIBILITY
+            if self.visibility_cache.diff(depsgraph):
+                changes |= Change.VISIBILITY
 
             if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
@@ -389,32 +391,20 @@ class Exporter(object):
 
         if changes & Change.VISIBILITY:
             for key in self.visibility_cache.objects_to_remove:
-                if key not in self.exported_objects:
-                    print('[Exporter] WARNING: Can not delete key "%s" from luxcore_scene' % key)
-                    print("The object was probably renamed")
-                    continue
+                print("Removing object with key", key)
 
-                exported_thing = self.exported_objects[key]
+                try:
+                    self.object_cache2.exported_objects[key].delete(luxcore_scene)
+                    del self.object_cache2.exported_objects[key]
+                except KeyError:
+                    # This should be ok, not every exportable object is added to exported_objects
+                    print("Could not find object to remove for key", key)
 
-                if exported_thing is None:
-                    print('[Exporter] Value for key "%s" is None!' % key)
-                    continue
-
-                # exported_objects contains instances of ExportedObject and ExportedLight
-                if isinstance(exported_thing, utils.ExportedObject):
-                    remove_func = luxcore_scene.DeleteObject
-                else:
-                    remove_func = luxcore_scene.DeleteLight
-
-                for luxcore_name in exported_thing.luxcore_names:
-                    print("[Exporter] Deleting", luxcore_name)
-                    remove_func(luxcore_name)
-
-                del self.exported_objects[key]
-
-            for key in self.visibility_cache.objects_to_add:
-                obj = utils.obj_from_key(key, context.visible_objects)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene)
+            if self.visibility_cache.objects_to_remove:
+                luxcore_scene.RemoveUnusedMeshes()
+                luxcore_scene.RemoveUnusedMaterials()
+                luxcore_scene.RemoveUnusedTextures()
+                luxcore_scene.RemoveUnusedImageMaps()
 
         if changes & Change.WORLD:
             if not context.scene.world or context.scene.world.luxcore.light == "none":

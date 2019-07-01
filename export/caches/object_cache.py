@@ -1,7 +1,8 @@
 import bpy
 from ... import utils
 from .. import mesh_converter
-from .exported_data import ExportedObject, ExportedLight
+from .exported_data import ExportedObject
+from .. import light
 
 MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT", "EMPTY"}
@@ -9,7 +10,6 @@ EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT", "EMPTY"}
 
 class ObjectCache2:
     def __init__(self):
-        pass
         self.exported_objects = {}
         self.exported_meshes = {}
 
@@ -39,11 +39,7 @@ class ObjectCache2:
                 print(key, "mesh is None")
 
     def _is_visible(self, dg_obj_instance, obj):
-        if not dg_obj_instance.show_self:
-            return False
-        if obj.type not in EXPORTABLE_OBJECTS:
-            return False
-        return True
+        return dg_obj_instance.show_self and obj.type in EXPORTABLE_OBJECTS
 
     def _get_mesh_key(self, obj, is_viewport_render=True):
         # Important: we need the data of the original object, not the evaluated one
@@ -63,9 +59,11 @@ class ObjectCache2:
             print("converting mesh object", obj.name_full)
             self._convert_mesh_obj(dg_obj_instance, obj, obj_key, depsgraph, luxcore_scene, scene_props, is_viewport_render)
         elif obj.type == "LIGHT":
-            print("light export not implemented yet")
-            transform = dg_obj_instance.matrix_world.copy()
-            return ExportedLight(obj_key, transform)
+            #exported_light = light.convert_light()
+            pass
+            # print("light export not implemented yet")
+            # transform = dg_obj_instance.matrix_world.copy()
+            # return ExportedLight(obj_key, transform)
 
     def _convert_mesh_obj(self, dg_obj_instance, obj, obj_key, depsgraph, luxcore_scene, scene_props, is_viewport_render):
         transform = dg_obj_instance.matrix_world
@@ -115,7 +113,7 @@ class ObjectCache2:
                     exported_obj.transform = transform
                     scene_props.Set(exported_obj.get_props())
             except KeyError:
-                # Do export
+                # Object is new and not in LuxCore yet, export it
                 self._convert(dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render)
 
         # Geometry updates (mesh edit, modifier edit etc.)

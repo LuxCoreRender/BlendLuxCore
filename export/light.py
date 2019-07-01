@@ -11,17 +11,18 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
-def convert_light(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", dupli_matrix=None):
+# def convert_light(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", dupli_matrix=None):
+def convert_light():
     try:
         assert isinstance(obj, bpy.types.Object)
         assert obj.type == "LIGHT"
 
         luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
 
-        # If this light was previously defined as an area lamp, delete the area lamp mesh
-        luxcore_scene.DeleteObject(_get_area_obj_name(luxcore_name))
-        # If this light was previously defined as a light, delete it
-        luxcore_scene.DeleteLight(luxcore_name)
+        # # If this light was previously defined as an area lamp, delete the area lamp mesh
+        # luxcore_scene.DeleteObject(_get_area_obj_name(luxcore_name))
+        # # If this light was previously defined as a light, delete it
+        # luxcore_scene.DeleteLight(luxcore_name)
 
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
@@ -177,7 +178,7 @@ def convert_light(exporter, obj, scene, context, luxcore_scene, dupli_suffix="",
         return props, exported_light
     except Exception as error:
         msg = 'Light "%s": %s' % (obj.name, error)
-        scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+        # scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None

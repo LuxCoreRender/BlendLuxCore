@@ -1,5 +1,6 @@
 from ... import utils
 from .. import camera
+from .object_cache import EXPORTABLE_OBJECTS
 
 from .object_cache import ObjectCache2
 
@@ -92,7 +93,6 @@ class VisibilityCache:
         # sets containing keys
         self.last_visible_objects = None
         self.objects_to_remove = None
-        self.objects_to_add = None
 
     def diff(self, depsgraph):
         visible_objs = self._get_visible_objects(depsgraph)
@@ -102,17 +102,17 @@ class VisibilityCache:
             return False
 
         self.objects_to_remove = self.last_visible_objects - visible_objs
-        self.objects_to_add = visible_objs - self.last_visible_objects
         self.last_visible_objects = visible_objs
-        return self.objects_to_remove or self.objects_to_add
+        return self.objects_to_remove
 
     def _get_visible_objects(self, depsgraph):
-        # as_keylist = [utils.make_key(obj) for obj in context.visible_objects
-        #               if obj.type in blender_object.EXPORTABLE_OBJECTS]
-        # TODO check if we can actually use dgobjinst.instance_object for non-instances
-        as_keylist = [utils.make_key_from_instance(dg_obj_instance) for dg_obj_instance in depsgraph.object_instances
-                      if dg_obj_instance.show_self and dg_obj_instance.instance_object]
-        return set(as_keylist)
+        keys = set()
+        for dg_obj_instance in depsgraph.object_instances:
+            if dg_obj_instance.show_self:
+                obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+                if obj.type in EXPORTABLE_OBJECTS:
+                    keys.add(utils.make_key_from_instance(dg_obj_instance))
+        return keys
 
 
 class WorldCache:

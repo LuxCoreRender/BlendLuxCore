@@ -139,7 +139,12 @@ class FrameBuffer(object):
     def needs_replacement(self, context, scene):
         if (self._width, self._height) != utils.calc_filmsize(scene, context):
             return True
-        if self._transparent != scene.camera.data.luxcore.imagepipeline.transparent_film:
+        valid_cam = utils.is_valid_camera(scene.camera)
+        if valid_cam:
+            if self._transparent != scene.camera.data.luxcore.imagepipeline.transparent_film:
+                return True
+        elif self._transparent:
+            # By default (if no camera is available), the film is not transparent
             return True
         new_border = utils.calc_blender_border(scene, context)
         if self._border != new_border:

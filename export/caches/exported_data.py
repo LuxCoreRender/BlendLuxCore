@@ -35,6 +35,10 @@ class ExportedObject:
             definitions[part.lux_obj + ".material"] = part.lux_mat
         return utils.create_props(prefix, definitions)
 
+    def delete(self, luxcore_scene):
+        for part in self.parts:
+            luxcore_scene.DeleteObject(part.lux_obj)
+
 
 class ExportedLight(ExportedObject):
     def __init__(self, lux_light_name, transform):
@@ -48,3 +52,6 @@ class ExportedLight(ExportedObject):
             "gain": [30000000] * 3,
         }
         return utils.create_props(prefix, definitions)
+
+    def delete(self, luxcore_scene):
+        luxcore_scene.DeleteLight(self.lux_name_base)
