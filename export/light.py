@@ -3,7 +3,8 @@ from mathutils import Matrix
 import math
 from ..bin import pyluxcore
 from .. import utils
-from ..utils import ExportedObject, ExportedLight
+# from ..utils import ExportedObject, ExportedLight
+from .caches.exported_data import ExportedObject, ExportedLight
 from .image import ImageExporter
 
 
@@ -12,12 +13,11 @@ MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
 # def convert_light(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", dupli_matrix=None):
-def convert_light():
+def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
     try:
-        assert isinstance(obj, bpy.types.Object)
-        assert obj.type == "LIGHT"
-
-        luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
+        # luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
+        luxcore_name = obj_key
+        scene = depsgraph.scene_eval
 
         # # If this light was previously defined as an area lamp, delete the area lamp mesh
         # luxcore_scene.DeleteObject(_get_area_obj_name(luxcore_name))
@@ -26,12 +26,9 @@ def convert_light():
 
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
-        exported_light = ExportedLight(luxcore_name)
-
+        exported_light = ExportedLight(luxcore_name, transform.copy())
         light = obj.data
-
-        transform_matrix = dupli_matrix if dupli_matrix else obj.matrix_world
-        sun_dir = _calc_sun_dir(obj)
+        sun_dir = _calc_sun_dir(transform)
 
         # Common light settings shared by all light types
         # Note: these variables are also passed to the area light export function
@@ -45,6 +42,7 @@ def convert_light():
                 # mappoint/mapsphere
                 definitions["type"] = "mappoint" if light.luxcore.radius == 0 else "mapsphere"
 
+                has_image = False
                 if light.luxcore.image:
                     try:
                         filepath = ImageExporter.export(light.luxcore.image,
@@ -52,9 +50,10 @@ def convert_light():
                                                         scene)
                         definitions["mapfile"] = filepath
                         definitions["gamma"] = light.luxcore.gamma
+                        has_image = True
                     except OSError as error:
                         msg = 'Light "%s": %s' % (obj.name, error)
-                        scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                        # scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
                         # Fallback
                         definitions["type"] = "point" if light.luxcore.radius == 0 else "sphere"
                         # Signal that the image is missing
@@ -65,9 +64,9 @@ def convert_light():
                     has_ies = export_ies(definitions, light.luxcore.ies, light.library)
                 except OSError as error:
                     msg = 'Light "%s": %s' % (obj.name, error)
-                    scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                    # scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
                 finally:
-                    if not has_ies:
+                    if not has_ies and not has_image:
                         # Fallback
                         definitions["type"] = "point" if light.luxcore.radius == 0 else "sphere"
             else:
@@ -78,12 +77,11 @@ def convert_light():
             definitions["power"] = light.luxcore.power
             # Position is set by transformation property
             definitions["position"] = [0, 0, 0]
-            transformation = utils.matrix_to_list(transform_matrix, scene, apply_worldscale=True)
+            transformation = utils.matrix_to_list(transform)
             definitions["transformation"] = transformation
 
             if light.luxcore.radius > 0:
-                worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-                definitions["radius"] = light.luxcore.radius * worldscale
+                definitions["radius"] = light.luxcore.radius
 
         elif light.type == "SUN":
             distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
@@ -119,7 +117,7 @@ def convert_light():
                     definitions["gamma"] = light.luxcore.gamma
                 except OSError as error:
                     msg = 'Light "%s": %s' % (obj.name, error)
-                    scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                    #scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
                     # Fallback
                     definitions["type"] = "spot"
                     # Signal that the image is missing
@@ -137,12 +135,12 @@ def convert_light():
             definitions["target"] = [0, 0, -1]
 
             spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-            transformation = utils.matrix_to_list(transform_matrix * spot_fix, scene, apply_worldscale=True)
+            transformation = utils.matrix_to_list(transform @ spot_fix)
             definitions["transformation"] = transformation
 
         elif light.type == "HEMI":
             if light.luxcore.image:
-                _convert_infinite(definitions, light, scene, transform_matrix)
+                _convert_infinite(definitions, light, scene, transform)
             else:
                 # Fallback
                 definitions["type"] = "constantinfinite"
@@ -151,7 +149,7 @@ def convert_light():
             if light.luxcore.is_laser:
                 # laser
                 definitions["type"] = "laser"
-                definitions["radius"] = light.size / 2 * utils.get_worldscale(scene, as_scalematrix=False)
+                definitions["radius"] = light.size / 2
 
                 definitions["efficency"] = light.luxcore.efficacy
                 definitions["power"] = light.luxcore.power
@@ -160,10 +158,11 @@ def convert_light():
                 definitions["target"] = [0, 0, -1]
 
                 spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-                transformation = utils.matrix_to_list(transform_matrix * spot_fix, scene, apply_worldscale=True)
+                transformation = utils.matrix_to_list(transform @ spot_fix)
                 definitions["transformation"] = transformation
             else:
                 # area (mesh light)
+                # TODO 2.8
                 return _convert_area_light(obj, scene, context, luxcore_scene, gain,
                                            importance, luxcore_name, dupli_matrix)
 
@@ -204,7 +203,7 @@ def convert_world(exporter, world, scene):
             definitions["groundalbedo"] = list(world.luxcore.groundalbedo)
 
             if world.luxcore.sun:
-                definitions["dir"] = _calc_sun_dir(world.luxcore.sun)
+                definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
 
                 if world.luxcore.use_sun_gain_for_sky:
                     gain = [x * world.luxcore.sun.data.luxcore.gain for x in world.luxcore.rgb_gain]
@@ -240,8 +239,8 @@ def convert_world(exporter, world, scene):
         return pyluxcore.Properties()
 
 
-def _calc_sun_dir(obj):
-    matrix_inv = obj.matrix_world.inverted()
+def _calc_sun_dir(transform):
+    matrix_inv = transform.inverted()
     return [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
 
 
@@ -263,7 +262,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
     except OSError as error:
         error_context = "Light" if isinstance(light_or_world, bpy.types.light) else "World"
         msg = '%s "%s": %s' % (error_context, light_or_world.name, error)
-        scene.luxcore.errorlog.add_warning(msg)
+        # scene.luxcore.errorlog.add_warning(msg)
         # Fallback
         definitions["type"] = "constantinfinite"
         # Signal that the image is missing
@@ -278,7 +277,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
     if transformation:
         infinite_fix = Matrix.Scale(1.0, 4)
         infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
-        transformation = utils.matrix_to_list(infinite_fix * transformation.inverted(), scene)
+        transformation = utils.matrix_to_list(infinite_fix @ transformation.inverted())
         definitions["transformation"] = transformation
 
 

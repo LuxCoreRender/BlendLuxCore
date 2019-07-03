@@ -45,13 +45,8 @@ class ExportedLight(ExportedObject):
         super().__init__(lux_light_name, [], transform)
 
     def get_props(self):
-        prefix = "scene.lights." + self.lux_name_base + "."
-        definitions = {
-            "type": "point",
-            "transformation": utils.matrix_to_list(self.transform),
-            "gain": [30000000] * 3,
-        }
-        return utils.create_props(prefix, definitions)
+        # Should never happen
+        raise NotImplementedError("get_props called on ExportedLight")
 
     def delete(self, luxcore_scene):
         luxcore_scene.DeleteLight(self.lux_name_base)

@@ -84,6 +84,7 @@ class Exporter(object):
 
         print("[Exporter] Creating session")
         start = time()
+        # TODO 2.8 I'm not too happy about this, we shouldn't keep any reference to temporary data, even if only for a while
         scene = self.scene
         stats = self.stats
         if stats:
@@ -112,7 +113,7 @@ class Exporter(object):
 
         # Objects and lights
         is_viewport_render = context is not None
-        if not self.object_cache2.first_run(depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
+        if not self.object_cache2.first_run(self, depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
             return None
         if is_viewport_render:
             # Init
@@ -367,7 +368,7 @@ class Exporter(object):
             props.Set(self.camera_cache.props)
 
         if changes & Change.OBJECT:
-            self.object_cache2.update(depsgraph, luxcore_scene, props)
+            self.object_cache2.update(self, depsgraph, luxcore_scene, props)
             # for obj in self.object_cache.changed_transform:
             #     print("transformed:", obj.name)
             #     self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False,

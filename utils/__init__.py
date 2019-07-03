@@ -56,10 +56,8 @@ def make_key_from_instance(dg_obj_instance):
         # Apparently we need all entries in persistent_id, otherwise
         # there are collisions when instances are nested
         key += "_".join([str(pid) for pid in dg_obj_instance.persistent_id])
-        # print(f"instance key for obj {dg_obj_instance.instance_object}: {key}")
     else:
         key = make_key(dg_obj_instance.object)
-        # print(f"non-instance key for obj {dg_obj_instance.object.name_full}: {key}")
     return key
 
 
@@ -493,8 +491,10 @@ def use_obj_motion_blur(obj, scene):
 
 
 def can_share_mesh(obj):
+    if not obj.data or obj.data.users < 2:
+        return False
     modified = any([mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers])
-    return not modified and obj.data and obj.data.users > 1
+    return not modified
 
 
 def use_instancing(obj, scene, context):
