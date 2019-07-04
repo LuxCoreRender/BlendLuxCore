@@ -120,7 +120,6 @@ class ObjectCache2:
                     scene_props.Set(exported_obj.get_props())
             else:
                 # Object is new and not in LuxCore yet, or it is a light, do a full export
-                # TODO maybe only do transform update for area lights
                 self._convert(exporter, dg_obj_instance, obj, depsgraph,
                               luxcore_scene, scene_props, is_viewport_render)
 

@@ -45,19 +45,19 @@ def make_key(datablock):
     # renamed during viewport render.
     # Note that the memory address changes on undo/redo, but in this case the viewport render
     # is stopped and re-started anyway, so it should not be a problem.
-    return str(datablock.as_pointer())
+    return str(datablock.original.as_pointer())
 
 
 def make_key_from_instance(dg_obj_instance):
     # TODO optimize, since this will be used for particles as well
     if dg_obj_instance.is_instance:
-        key = make_key(dg_obj_instance.object)
-        key += "_" + make_key(dg_obj_instance.parent)
+        key = make_key(dg_obj_instance.object.original)
+        key += "_" + make_key(dg_obj_instance.parent.original)
         # Apparently we need all entries in persistent_id, otherwise
         # there are collisions when instances are nested
         key += "_".join([str(pid) for pid in dg_obj_instance.persistent_id])
     else:
-        key = make_key(dg_obj_instance.object)
+        key = make_key(dg_obj_instance.object.original)
     return key
 
 
@@ -497,8 +497,8 @@ def can_share_mesh(obj):
     return not modified
 
 
-def use_instancing(obj, scene, context):
-    if context:
+def use_instancing(obj, scene, is_viewport_render):
+    if is_viewport_render:
         # Always instance in viewport so we can move the object/light around
         return True
 

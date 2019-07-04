@@ -12,17 +12,16 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 
 
-# def convert_light(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", dupli_matrix=None):
 def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
     try:
         # luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
         luxcore_name = obj_key
         scene = depsgraph.scene_eval
 
-        # # If this light was previously defined as an area lamp, delete the area lamp mesh
-        # luxcore_scene.DeleteObject(_get_area_obj_name(luxcore_name))
-        # # If this light was previously defined as a light, delete it
-        # luxcore_scene.DeleteLight(luxcore_name)
+        # If this light was previously defined as an area lamp, delete the area lamp mesh
+        luxcore_scene.DeleteObject(luxcore_name)
+        # If this light was previously defined as a light, delete it
+        luxcore_scene.DeleteLight(luxcore_name)
 
         prefix = "scene.lights." + luxcore_name + "."
         definitions = {}
@@ -162,9 +161,8 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
                 definitions["transformation"] = transformation
             else:
                 # area (mesh light)
-                # TODO 2.8
-                return _convert_area_light(obj, scene, context, luxcore_scene, gain,
-                                           importance, luxcore_name, dupli_matrix)
+                return _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain,
+                                           importance, luxcore_name, transform)
 
         else:
             # Can only happen if Blender changes its light types
@@ -290,12 +288,12 @@ def calc_area_light_transformation(light, transform_matrix):
         scale_y = Matrix.Scale(light.size / 2, 4, (0, 1, 0))
 
     transform_matrix = transform_matrix.copy()
-    transform_matrix *= scale_x
-    transform_matrix *= scale_y
+    transform_matrix @= scale_x
+    transform_matrix @= scale_y
     return transform_matrix
 
 
-def _convert_area_light(obj, scene, context, luxcore_scene, gain, importance, luxcore_name, dupli_matrix):
+def _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain, importance, luxcore_name, transform):
     """
     An area light is a plane object with emissive material in LuxCore
     """
@@ -337,27 +335,26 @@ def _convert_area_light(obj, scene, context, luxcore_scene, gain, importance, lu
     # LuxCore object
 
     # Copy transformation of area light object
-    input_matrix = dupli_matrix if dupli_matrix else obj.matrix_world
-    transform_matrix = calc_area_light_transformation(obj.data, input_matrix)
+    transform_matrix = calc_area_light_transformation(light, transform)
 
     if transform_matrix.determinant() == 0:
         # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)
         # This happens if the light size is set to 0
         raise Exception("Area light has size 0 (can not be exported)")
 
-    transform = utils.matrix_to_list(transform_matrix, scene, apply_worldscale=True)
+    transform_list = utils.matrix_to_list(transform_matrix)
     # Only bake the transform into the mesh for final renders (disables instancing which
     # is needed for viewport render so we can move the light object)
 
     # Instancing just means that we transform the object instead of the mesh
-    if utils.use_instancing(obj, scene, context):
-        obj_transform = transform
+    if utils.use_instancing(obj, scene, is_viewport_render):
+        obj_transform = transform_list
         mesh_transform = None
     else:
         obj_transform = None
-        mesh_transform = transform
+        mesh_transform = transform_list
 
-    shape_name = "Mesh-" + luxcore_name
+    shape_name = luxcore_name
     if not luxcore_scene.IsMeshDefined(shape_name):
         vertices = [
             (1, 1, 0),
@@ -377,7 +374,7 @@ def _convert_area_light(obj, scene, context, luxcore_scene, gain, importance, lu
         ]
         luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, None, None, None, mesh_transform)
 
-    obj_prefix = "scene.objects." + _get_area_obj_name(luxcore_name) + "."
+    obj_prefix = "scene.objects." + luxcore_name + "."
     obj_definitions = {
         "material": mat_name,
         "shape": shape_name,
@@ -392,14 +389,14 @@ def _convert_area_light(obj, scene, context, luxcore_scene, gain, importance, lu
 
     fake_material_index = 0
     mesh_definition = [luxcore_name, fake_material_index]
-    exported_obj = ExportedObject([mesh_definition], luxcore_name)
+    exported_obj = ExportedObject(luxcore_name, [mesh_definition], transform.copy())
     return props, exported_obj
 
 
-def _get_area_obj_name(luxcore_name):
-    # Note: we append "000" to the luxcore name here as fake material index because the DefineBlenderMesh
-    # function would do the same, and it is expected by other parts of the code.
-    return luxcore_name + "000"
+# def _get_area_obj_name(luxcore_name):
+#     # Note: we append "000" to the luxcore name here as fake material index because the DefineBlenderMesh
+#     # function would do the same, and it is expected by other parts of the code.
+#     return luxcore_name + "000"
 
 
 def _indirect_light_visibility(definitions, light_or_world):

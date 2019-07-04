@@ -369,20 +369,6 @@ class Exporter(object):
 
         if changes & Change.OBJECT:
             self.object_cache2.update(self, depsgraph, luxcore_scene, props)
-            # for obj in self.object_cache.changed_transform:
-            #     print("transformed:", obj.name)
-            #     self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False,
-            #                          check_dupli_parent=True)
-            #
-            # for obj in self.object_cache.changed_mesh:
-            #     print("mesh changed:", obj.name)
-            #     self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True,
-            #                          check_dupli_parent=True)
-            #
-            # for obj in self.object_cache.changed_lights:
-            #     print("light changed:", obj.name)
-            #     self._convert_object(props, obj, context.scene, context, luxcore_scene,
-            #                          check_dupli_parent=True)
 
         if changes & Change.MATERIAL:
             # for mat in self.material_cache.changed_materials:
