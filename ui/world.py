@@ -200,13 +200,18 @@ class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
       enabled = context.scene.luxcore.config.engine == "PATH"
       layout.use_property_split = True
       layout.use_property_decorate = False
-
+      
+      
       col = layout.column(align=True)
-      col.enabled = enabled
       col.label(text="Visibility for indirect light rays:")
-      col = layout.column(align=True)
+      
+      flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
+
+      col = flow.column()
       col.prop(world.luxcore, "visibility_indirect_diffuse")
+      col = flow.column()
       col.prop(world.luxcore, "visibility_indirect_glossy")
+      col = flow.column()
       col.prop(world.luxcore, "visibility_indirect_specular")
 
       if not enabled:

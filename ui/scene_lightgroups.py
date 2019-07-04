@@ -16,6 +16,11 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
     bl_label = "LuxCore Light Groups"
     COMPAT_ENGINES = {"LUXCORE"}
 
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return engine == "LUXCORE"
+
     def draw_header(self, context):
         if self._are_all_groups_disabled(context):
             self.layout.label(text="", icon=icons.WARNING)

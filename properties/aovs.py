@@ -3,7 +3,7 @@ from bpy.props import PointerProperty, BoolProperty
 from bpy.types import PropertyGroup
 
 
-# Attached to render layer
+# Attached to view layer
 class LuxCoreAOVSettings(PropertyGroup):
     # Basic Information
     rgb: BoolProperty(name="RGB", default=False,
