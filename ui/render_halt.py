@@ -1,5 +1,5 @@
 from bl_ui.properties_render import RenderButtonsPanel
-#from bl_ui.properties_render_layer import RenderLayerButtonsPanel
+from bl_ui.properties_view_layer import ViewLayerButtonsPanel
 from bpy.types import Panel
 from ..utils import ui as utils_ui
 from . import icons
@@ -62,7 +62,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
     bl_label = "LuxCore Halt Conditions"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 8
+    bl_order = 10
 
     @classmethod
     def poll(cls, context):
@@ -80,59 +80,59 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
         halt = context.scene.luxcore.halt
         draw(layout, context, halt)
 
-##TODO: Adapt to view layer structure
-##        layers = context.scene.render.layers
-##        overriding_layers = [layer for layer in layers if layer.use and layer.luxcore.halt.enable]
-##
-##        if overriding_layers:
-##            layout.separator()
-##
-##            col = layout.column(align=True)
-##            row = col.row()
-##            split = row.split(factor=0.8)
-##            split.label(text="Render Layers Overriding Halt Conditions:")
-##            op = split.operator("luxcore.switch_space_data_context",
-##                                text="Show", icon="RENDERLAYERS")
-##            op.target = "RENDER_LAYER"
-##
-##            for layer in overriding_layers:
-##                halt = layer.luxcore.halt
-##                conditions = []
-##
-##                if halt.use_time:
-##                    conditions.append("Time (%ds)" % halt.time)
-##                if halt.use_samples:
-##                    conditions.append("Samples (%d)" % halt.samples)
-##                if halt.use_noise_thresh:
-##                    conditions.append("Noise (%d)" % halt.noise_thresh)
-##
-##                if conditions:
-##                    text = layer.name + ": " + ", ".join(conditions)
-##                    col.label(text=text, icon="RENDERLAYERS")
-##                else:
-##                    text = layer.name + ": No Halt Condition!"
-##                    col.label(text=text, icon=icons.ERROR)
+        layers = context.scene.view_layers
+        overriding_layers = [layer for layer in layers if layer.use and layer.luxcore.halt.enable]
+
+        if overriding_layers:
+            layout.separator()
+
+            col = layout.column(align=True)
+            row = col.row()
+            split = row.split(factor=0.8)
+            split.label(text="View Layers Overriding Halt Conditions:")
+            op = split.operator("luxcore.switch_space_data_context",
+                                text="Show", icon="RENDERLAYERS")
+            op.target = "VIEW_LAYER"
+
+            for layer in overriding_layers:
+                halt = layer.luxcore.halt
+                conditions = []
+
+                if halt.use_time:
+                    conditions.append("Time (%ds)" % halt.time)
+                if halt.use_samples:
+                    conditions.append("Samples (%d)" % halt.samples)
+                if halt.use_noise_thresh:
+                    conditions.append("Noise (%d)" % halt.noise_thresh)
+
+                if conditions:
+                    text = layer.name + ": " + ", ".join(conditions)
+                    col.label(text=text, icon="RENDERLAYERS")
+                else:
+                    text = layer.name + ": No Halt Condition!"
+                    col.label(text=text, icon=icons.ERROR)
 
 
-# class LUXCORE_RENDERLAYER_PT_halt_conditions(Panel, RenderLayerButtonsPanel):
-#     """
-#     These are the per-renderlayer halt condition settings,
-#     they can override the global settings and are shown in the renderlayer settings
-#     """
-#
-#     bl_label = "Override Halt Conditions"
-#     COMPAT_ENGINES = {"LUXCORE"}
-#
-#     @classmethod
-#     def poll(cls, context):
-#         return context.scene.render.engine == "LUXCORE"
-#
-#     def draw_header(self, context):
-#         rl = context.scene.render.layers.active
-#         halt = rl.luxcore.halt
-#         self.layout.prop(halt, "enable", text="")
-#
-#     def draw(self, context):
-#         rl = context.scene.render.layers.active
-#         halt = rl.luxcore.halt
-#         draw(self.layout, context, halt)
+class LUXCORE_RENDERLAYER_PT_halt_conditions(Panel, ViewLayerButtonsPanel):
+    """
+    These are the per-renderlayer halt condition settings,
+    they can override the global settings and are shown in the renderlayer settings
+    """
+
+    bl_label = "Override Halt Conditions"
+    bl_order = 4
+    COMPAT_ENGINES = {"LUXCORE"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE"
+
+    def draw_header(self, context):
+        vl = context.view_layer
+        halt = vl.luxcore.halt
+        self.layout.prop(halt, "enable", text="")
+
+    def draw(self, context):
+        vl = context.view_layer
+        halt = vl.luxcore.halt
+        draw(self.layout, context, halt)

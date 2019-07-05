@@ -2,7 +2,7 @@ from bl_ui.properties_data_camera import CameraButtonsPanel
 from . import bpy
 from bpy.types import Panel
 from bl_ui.utils import PresetPanel
-# from ..utils import ui as utils_ui
+from ..utils import ui as utils_ui
 from . import icons
 
 
@@ -64,18 +64,6 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
         sub.prop(cam, "clip_start", text="Clip Start")
         sub.prop(cam, "clip_end", text="End")
 
-#TODO: separate class for volume
-#TODO: Reactivate when volume code is implemented
-##        # Volume
-##        layout.prop(cam.luxcore, "auto_volume")
-##
-##        if not cam.luxcore.auto_volume:
-##            layout.label(text="Camera Volume:")
-##            utils_ui.template_node_tree(layout, cam.luxcore, "volume", icons.NTREE_VOLUME,
-##                                        "LUXCORE_VOLUME_MT_camera_select_volume_node_tree",
-##                                        "luxcore.camera_show_volume_node_tree",
-##                                        "luxcore.camera_new_volume_node_tree",
-##                                        "luxcore.camera_unlink_volume_node_tree")
 
 class LUXCORE_CAMERA_PT_clipping_plane(CameraButtonsPanel, Panel):
     bl_label = "Clipping Plane"
@@ -342,6 +330,9 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
         layout.prop(context.scene.luxcore.config, "film_opencl_enable")
         if context.scene.luxcore.config.film_opencl_enable:
             layout.prop(context.scene.luxcore.config, "film_opencl_device", text="")
+
+        if context.scene.luxcore.viewport.denoise:
+            layout.label(text="Most plugins are disabled in viewport because of viewport denoising", icon=icons.INFO)
             
 
 class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):
@@ -381,14 +372,11 @@ class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):
             col.prop(tonemapper, "reinhard_postscale")
             col.prop(tonemapper, "reinhard_burn")
 
-##TODO: Adapt to new viewlayer structure
-##            if len(context.scene.render.layers) > 1 and tonemapper.is_automatic():
-##                name = "Auto" if tonemapper.type == "TONEMAP_LINEAR" else "Reinhard"
-##                msg = name + " and multiple renderlayers will cause brightness difference!"
-##                box.label(text=msg, icon=icons.WARNING)
-##
-##        if context.scene.luxcore.viewport.denoise:
-##            layout.label(text="Plugins below disabled in viewport because of viewport denoising", icon=icons.INFO)
+        if len(context.scene.view_layers) > 1 and tonemapper.is_automatic():
+            name = "Auto" if tonemapper.type == "TONEMAP_LINEAR" else "Reinhard"
+            msg = name + " and multiple renderlayers will cause brightness difference!"
+            col = layout.column(align=True)
+            col.label(text=msg, icon=icons.WARNING)
 
 
 class LUXCORE_CAMERA_PT_image_pipeline_bloom(CameraButtonsPanel, Panel):
@@ -577,6 +565,32 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
         layout.prop(contour_lines, "contour_range")
         layout.prop(contour_lines, "steps")
         layout.prop(contour_lines, "zero_grid_size")
+
+
+class LUXCORE_CAMERA_PT_dof_aperture(CameraButtonsPanel, Panel):
+    bl_label = "Volume"    
+    bl_order = 8
+    COMPAT_ENGINES = {"LUXCORE"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.camera
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False      
+
+        cam = context.camera
+        
+        layout.prop(cam.luxcore, "auto_volume")
+
+        if not cam.luxcore.auto_volume:
+            utils_ui.template_node_tree(layout, cam.luxcore, "volume", icons.NTREE_VOLUME,
+                                        "LUXCORE_VOLUME_MT_camera_select_volume_node_tree",
+                                        "luxcore.camera_show_volume_node_tree",
+                                        "luxcore.camera_new_volume_node_tree",
+                                        "luxcore.camera_unlink_volume_node_tree")
 
 
 def compatible_panels():

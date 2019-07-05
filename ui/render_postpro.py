@@ -6,7 +6,7 @@ class LUXCORE_RENDER_PT_post_processing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Post Processing"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 10
+    bl_order = 12
 
     def draw(self, context):
         layout = self.layout

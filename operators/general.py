@@ -42,7 +42,7 @@ class LUXCORE_OT_switch_space_data_context(bpy.types.Operator):
     target: bpy.props.StringProperty()
 
     def execute(self, context):
-        assert self.target in {"SCENE", "RENDER", "RENDER_LAYER", "WORLD", "OBJECT", "CONSTRAINT",
+        assert self.target in {"SCENE", "RENDER", "VIEW_LAYER", "WORLD", "OBJECT", "CONSTRAINT",
                                "MODIFIER", "DATA", "BONE", "BONE_CONSTRAINT", "MATERIAL", "TEXTURE",
                                "PARTICLES", "PHYSICS"}
 

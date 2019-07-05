@@ -39,7 +39,7 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
         if light.type == "POINT":
             if light.luxcore.image or light.luxcore.ies.use:
                 # mappoint/mapsphere
-                definitions["type"] = "mappoint" if light.luxcore.radius == 0 else "mapsphere"
+                definitions["type"] = "mappoint" if light.shadow_soft_size == 0 else "mapsphere"
 
                 has_image = False
                 if light.luxcore.image:
@@ -54,7 +54,7 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
                         msg = 'Light "%s": %s' % (obj.name, error)
                         # scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
                         # Fallback
-                        definitions["type"] = "point" if light.luxcore.radius == 0 else "sphere"
+                        definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
                         # Signal that the image is missing
                         definitions["gain"] = [x * light.luxcore.gain for x in MISSING_IMAGE_COLOR]
 
@@ -67,10 +67,10 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
                 finally:
                     if not has_ies and not has_image:
                         # Fallback
-                        definitions["type"] = "point" if light.luxcore.radius == 0 else "sphere"
+                        definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
             else:
                 # point/sphere
-                definitions["type"] = "point" if light.luxcore.radius == 0 else "sphere"
+                definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
 
             definitions["efficency"] = light.luxcore.efficacy
             definitions["power"] = light.luxcore.power
@@ -79,8 +79,8 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
             transformation = utils.matrix_to_list(transform)
             definitions["transformation"] = transformation
 
-            if light.luxcore.radius > 0:
-                definitions["radius"] = light.luxcore.radius
+            if light.shadow_soft_size > 0:
+                definitions["radius"] = light.shadow_soft_size
 
         elif light.type == "SUN":
             distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]

@@ -5,7 +5,8 @@ from bpy.types import Panel
 class LUXCORE_RENDER_PT_debug_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore DEBUG Settings"
-    bl_order = 8
+    bl_options = {'DEFAULT_CLOSED'}    
+    bl_order = 10
 
     @classmethod
     def poll(cls, context):

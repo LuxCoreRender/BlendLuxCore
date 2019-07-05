@@ -62,7 +62,8 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             col.prop(light.luxcore, "power")
             col.prop(light.luxcore, "efficacy")
             
-            layout.prop(light.luxcore, "radius")
+            layout.prop(light, "shadow_soft_size", text="Radius")                        
+            
             self.draw_image_controls(context)
 
         elif light.type == "SUN":

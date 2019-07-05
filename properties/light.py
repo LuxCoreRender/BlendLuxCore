@@ -152,7 +152,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
                            description="If radius is greater than 0, a sphere light is used")
 
     # point, mappoint, spot, laser
-    power: FloatProperty(name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
+    power: FloatProperty(name="Power", default=100, min=0, description=POWER_DESCRIPTION, unit='POWER')
     efficacy: FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
 
     # mappoint

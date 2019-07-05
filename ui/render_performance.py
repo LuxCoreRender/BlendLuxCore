@@ -8,7 +8,7 @@ from . import icons
 class LUXCORE_RENDER_PT_performance(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
-    bl_order = 3
+    bl_order = 5
 
     @classmethod
     def poll(cls, context):

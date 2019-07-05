@@ -6,7 +6,7 @@ from . import icons
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Error Log"
-    bl_order = 7
+    bl_order = 9
 
     @classmethod
     def poll(cls, context):

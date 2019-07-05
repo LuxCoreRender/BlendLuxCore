@@ -30,13 +30,11 @@ def luxcore_render_draw(panel, context):
         col_device.enabled = config.engine == "PATH"
 
     # Buttons for Network Render and Wiki
-    row = layout.row(align=True)
-    row.alignment = 'LEFT'
     flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=True)
-    row = flow.row()
-    row.operator("luxcore.start_pyluxcoretools")
-    row = flow.row()
-    op = row.operator("luxcore.open_website", icon=icons.URL, text="Wiki")
+    col = flow.column(align=True)
+    col.operator("luxcore.start_pyluxcoretools")
+    col = flow.column(align=True)
+    op = col.operator("luxcore.open_website", icon=icons.URL, text="Wiki")
     op.url = "https://wiki.luxcorerender.org/BlendLuxCore_Network_Rendering"
 
 
@@ -61,63 +59,10 @@ def draw_samples_info(layout, context):
                   (total, diffuse * total, glossy * total, specular * total))
 
             
-#class LUXCORE_RENDER_PT_config(RenderButtonsPanel, Panel):
-#     COMPAT_ENGINES = {"LUXCORE"}
-#     bl_label = "LuxCore Config"
-#
-#     @classmethod
-#     def poll(cls, context):
-#         return context.scene.render.engine == "LUXCORE"
-#
-#     def draw(self, context):
-#         layout = self.layout
-#         config = context.scene.luxcore.config
-#         denoiser = context.scene.luxcore.denoiser
-#
-#         # Filesaver
-#         # TODO: we might want to move this to a more appropriate place later
-#         row = layout.row()
-#         split = row.split(factor=0.7)
-#         split.prop(config, "use_filesaver")
-#         if config.use_filesaver:
-#             split.prop(config, "filesaver_format")
-#             layout.prop(config, "filesaver_path")
-#             layout.separator()
-#
-#         # Light strategy
-#         ls_layout = layout.box() if config.light_strategy == "DLS_CACHE" else layout
-#         ls_layout.prop(config, "light_strategy")
-#
-#         if config.light_strategy == "DLS_CACHE":
-#             dls_cache = config.dls_cache
-#             col = ls_layout.column(align=True)
-#             col.prop(dls_cache, "entry_radius_auto")
-#             if not dls_cache.entry_radius_auto:
-#                 col.prop(dls_cache, "entry_radius")
-#             col.prop(dls_cache, "entry_warmupsamples")
-#             ls_layout.prop(dls_cache, "show_advanced", toggle=True)
-#
-#             if dls_cache.show_advanced:
-#                 col = ls_layout.column(align=True)
-#                 col.label(text="Entry Settings:")
-#                 col.prop(dls_cache, "entry_normalangle")
-#                 col.prop(dls_cache, "entry_maxpasses")
-#                 col.prop(dls_cache, "entry_convergencethreshold")
-#                 col.prop(dls_cache, "entry_volumes_enable")
-#
-#                 col = ls_layout.column(align=True)
-#                 col.label(text="General Cache Settings:")
-#                 col.prop(dls_cache, "lightthreshold")
-#                 col.prop(dls_cache, "targetcachehitratio")
-#                 col.prop(dls_cache, "maxdepth")
-#                 col.prop(dls_cache, "maxsamplescount")
-#
-
-
 class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Pixel Filter"
-    bl_order = 2
+    bl_order = 4
 
     def draw(self, context):
         layout = self.layout
@@ -146,10 +91,53 @@ class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
             layout.prop(config, "gaussian_alpha")
 
 
+class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Light Strategy"
+    bl_order = 3
+
+    def draw(self, context):
+        layout = self.layout
+
+        config = context.scene.luxcore.config
+        denoiser = context.scene.luxcore.denoiser
+        scene = context.scene
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False      
+
+        # Light strategy        
+        layout.prop(config, "light_strategy")
+
+        if config.light_strategy == "DLS_CACHE":
+            dls_cache = config.dls_cache
+            col = layout.column(align=True)
+            col.prop(dls_cache, "entry_radius_auto")
+            if not dls_cache.entry_radius_auto:
+                col.prop(dls_cache, "entry_radius")
+            col.prop(dls_cache, "entry_warmupsamples")
+            layout.prop(dls_cache, "show_advanced", toggle=True)
+
+            if dls_cache.show_advanced:
+                col = layout.column(align=True)
+                col.label(text="Entry Settings:")
+                col.prop(dls_cache, "entry_normalangle")
+                col.prop(dls_cache, "entry_maxpasses")
+                col.prop(dls_cache, "entry_convergencethreshold")
+                col.prop(dls_cache, "entry_volumes_enable")
+
+                col = layout.column(align=True)
+                col.label(text="General Cache Settings:")
+                col.prop(dls_cache, "lightthreshold")
+                col.prop(dls_cache, "targetcachehitratio")
+                col.prop(dls_cache, "maxdepth")
+                col.prop(dls_cache, "maxsamplescount")
+
+
 class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Sampling"
-    bl_order = 1
+    bl_order = 2
 
     def draw(self, context):
         layout = self.layout
@@ -292,8 +280,7 @@ class LUXCORE_RENDER_PT_sampling_tiled(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
     bl_label = "Tiled"
-    bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 5
+    bl_options = {'DEFAULT_CLOSED'}    
     lux_predecessor = "LUXCORE_RENDER_PT_clamping"
 
     @classmethod
@@ -352,6 +339,33 @@ class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
         col.prop(config.tile, "multipass_convtest_threshold_reduction")
         col.prop(config.tile, "multipass_convtest_warmup")
 
+
+class LUXCORE_RENDER_PT_filesaver(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "LuxCore Filesaver"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_order = 1
+
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        layout.prop(config, "use_filesaver", text="")
+      
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False      
+      
+        layout.enabled = config.use_filesaver
+        layout.label(text="Only write LuxCore scene to disk", icon=icons.INFO)
+   
+        col = layout.column(align=True)    
+        col.prop(config, "filesaver_format")
+        col.prop(config, "filesaver_path")
+        
+        
 
 def compatible_panels():
     panels = [
