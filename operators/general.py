@@ -226,6 +226,7 @@ class LUXCORE_OT_select_object(bpy.types.Operator):
 
         obj = context.scene.objects[self.obj_name]
         bpy.ops.object.select_all(action="DESELECT")
-        obj.select = True
-        context.scene.objects.active = obj
+        if not obj.select_get():
+            obj.select_set(True)
+        context.view_layer.objects.active = obj
         return {"FINISHED"}
