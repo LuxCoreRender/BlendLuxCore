@@ -43,7 +43,7 @@ def view_update(engine, context, depsgraph, changes=None):
     if engine.framebuffer:
         engine.framebuffer.reset_denoiser()
 
-        LuxCoreErrorLog.clear()  # TODO 2.8
+    LuxCoreErrorLog.clear()
 
     if engine.session is None:
         print("=" * 50)
