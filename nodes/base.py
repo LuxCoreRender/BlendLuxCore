@@ -76,7 +76,7 @@ class LuxCoreNode:
         return input
 
     def make_name(self):
-        return utils.make_key(self)
+        return str(self.as_pointer())
 
     def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")

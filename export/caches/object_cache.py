@@ -8,6 +8,36 @@ MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT", "EMPTY"}
 
 
+def get_material(obj, material_index, exporter, is_viewport_render):
+    from ...utils.errorlog import LuxCoreErrorLog
+    from ...utils import node as utils_node
+    from .. import material
+    if material_index < len(obj.material_slots):
+        mat = obj.material_slots[material_index].material
+
+        if mat is None:
+            # Note: material.convert returns the fallback material in this case
+            msg = "No material attached to slot %d" % (material_index + 1)
+            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+    else:
+        # The object has no material slots
+        LuxCoreErrorLog.add_warning("No material defined", obj_name=obj.name)
+        # Use fallback material
+        mat = None
+
+    if mat:
+        if mat.luxcore.node_tree:
+            imagemaps = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap")
+            if imagemaps and not utils_node.has_valid_uv_map(obj):
+                msg = ("%d image texture(s) used, but no UVs defined. "
+                       "In case of bumpmaps this can lead to artifacts" % len(imagemaps))
+                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+
+        return material.convert(exporter, mat, is_viewport_render, obj.name)
+    else:
+        return material.fallback()
+
+
 class ObjectCache2:
     def __init__(self):
         self.exported_objects = {}
@@ -57,8 +87,8 @@ class ObjectCache2:
         if obj.type in MESH_OBJECTS:
             if obj_key in self.exported_objects:
                 raise Exception("key already in exp_obj:", obj_key)
-            self._convert_mesh_obj(dg_obj_instance, obj, obj_key, depsgraph, luxcore_scene,
-                                   scene_props, is_viewport_render)
+            self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
+                                   luxcore_scene, scene_props, is_viewport_render)
         elif obj.type == "LIGHT":
             props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
                                                         dg_obj_instance.matrix_world.copy(), is_viewport_render)
@@ -66,7 +96,7 @@ class ObjectCache2:
                 self.exported_objects[obj_key] = exported_stuff
                 scene_props.Set(props)
 
-    def _convert_mesh_obj(self, dg_obj_instance, obj, obj_key, depsgraph,
+    def _convert_mesh_obj(self, exporter, dg_obj_instance, obj, obj_key, depsgraph,
                           luxcore_scene, scene_props, is_viewport_render):
         transform = dg_obj_instance.matrix_world
 
@@ -83,8 +113,14 @@ class ObjectCache2:
             self.exported_meshes[mesh_key] = exported_mesh
 
         if exported_mesh:
+            mat_names = []
+            for shape_name, mat_index in exported_mesh.mesh_definitions:
+                lux_mat_name, mat_props = get_material(obj, mat_index, exporter, is_viewport_render)
+                scene_props.Set(mat_props)
+                mat_names.append(lux_mat_name)
+
             obj_transform = transform.copy() if use_instancing else None
-            exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, obj_transform)
+            exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, obj_transform)
             if exported_obj:
                 scene_props.Set(exported_obj.get_props())
                 self.exported_objects[obj_key] = exported_obj

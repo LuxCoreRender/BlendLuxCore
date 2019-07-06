@@ -7,13 +7,13 @@ from ..utils.errorlog import LuxCoreErrorLog
 GLOBAL_FALLBACK_MAT = "__CLAY__"
 
 
-def convert(exporter, material, scene, context, obj_name=""):
+def convert(exporter, material, is_viewport_render, obj_name=""):
     try:
         if material is None:
             return fallback()
 
         props = pyluxcore.Properties()
-        luxcore_name = utils.get_luxcore_name(material, context)
+        luxcore_name = utils.get_luxcore_name(material, is_viewport_render)
 
         node_tree = material.luxcore.node_tree
         if node_tree is None:

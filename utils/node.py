@@ -41,7 +41,7 @@ def has_valid_uv_map(obj):
     if obj.type in {"CURVE", "SURFACE", "FONT"}:
         if not obj.data.use_uv_as_generated:
             return False
-    elif obj.type == "MESH" and len(obj.data.uv_textures) == 0:
+    elif obj.type == "MESH" and len(obj.data.uv_layers) == 0:
         return False
 
     return True

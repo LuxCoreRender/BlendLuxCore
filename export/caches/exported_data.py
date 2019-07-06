@@ -1,4 +1,4 @@
-from .. import utils
+from ... import utils
 
 
 class ExportedPart:
@@ -14,14 +14,13 @@ class ExportedMesh:
 
 
 class ExportedObject:
-    def __init__(self, lux_name_base, mesh_definitions, transform):
+    def __init__(self, lux_name_base, mesh_definitions, mat_names, transform):
         self.lux_name_base = lux_name_base
         self.transform = transform
         self.parts = []
 
-        for shape_name, mat_index in mesh_definitions:
+        for (shape_name, mat_index), mat_name in zip(mesh_definitions, mat_names):
             obj_name = lux_name_base + str(mat_index)
-            mat_name = "__CLAY__"  # TODO
             self.parts.append(ExportedPart(obj_name, shape_name, mat_name))
 
     def get_props(self):
@@ -42,7 +41,7 @@ class ExportedObject:
 
 class ExportedLight(ExportedObject):
     def __init__(self, lux_light_name, transform):
-        super().__init__(lux_light_name, [], transform)
+        super().__init__(None, lux_light_name, [], transform)
 
     def get_props(self):
         # Should never happen
