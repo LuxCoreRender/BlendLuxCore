@@ -2,11 +2,12 @@ from time import time, sleep
 from .. import export, utils
 from ..draw.final import FrameBufferFinal
 from ..utils import render as utils_render
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 def render(engine, scene):
     print("=" * 50)
-    scene.luxcore.errorlog.clear()
+    LuxCoreErrorLog.clear()
     scene.luxcore.denoiser_log.clear()
     render_slot_stats = scene.luxcore.statistics.get_active()
 
@@ -15,7 +16,7 @@ def render(engine, scene):
         if len(scene.render.layers) > 1 and tonemapper.is_automatic():
             msg = ("Using an automatic tonemapper with multiple "
                    "renderlayers will result in brightness differences")
-            scene.luxcore.errorlog.add_warning(msg)
+            LuxCoreErrorLog.add_warning(msg)
 
     _check_halt_conditions(engine, scene)
 
@@ -211,8 +212,7 @@ def _check_halt_conditions(engine, scene):
                 is_halt_enabled &= has_halt_condition
 
                 if not has_halt_condition:
-                    msg = 'Halt condition missing for render layer "%s"' % layer.name
-                    scene.luxcore.errorlog.add_error(msg)
+                    LuxCoreErrorLog.add_error('Halt condition missing for render layer "%s"' % layer.name)
             else:
                 is_halt_enabled = False
 

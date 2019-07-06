@@ -14,13 +14,14 @@ class ObjectCache2:
         self.exported_meshes = {}
 
     def first_run(self, exporter, depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
+        # TODO use luxcore_scene.DuplicateObjects for instances
         for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
             if not self._is_visible(dg_obj_instance, obj):
                 continue
 
-            self._convert(exporter, dg_obj_instance, obj, depsgraph,
-                          luxcore_scene, scene_props, is_viewport_render)
+            self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
+                              luxcore_scene, scene_props, is_viewport_render)
             if engine:
                 # Objects are the most expensive to export, so they dictate the progress
                 # engine.update_progress(index / obj_amount)
@@ -46,19 +47,16 @@ class ObjectCache2:
         # Important: we need the data of the original object, not the evaluated one
         return utils.get_luxcore_name(obj.original.data, is_viewport_render)
 
-    def _convert(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render):
+    def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render):
         """ Convert one DepsgraphObjectInstance amd keep track of it """
+        if obj.type == "EMPTY" or obj.data is None:
+            return
+
         obj_key = utils.make_key_from_instance(dg_obj_instance)
 
-        if obj.type == "EMPTY" or obj.data is None:
-            # Not sure if we even need a special empty export, could just ignore them
-            #print("empty export not implemented yet")
-            pass
-        elif obj.type in MESH_OBJECTS:
+        if obj.type in MESH_OBJECTS:
             if obj_key in self.exported_objects:
                 raise Exception("key already in exp_obj:", obj_key)
-
-            print("converting mesh object", obj.name_full)
             self._convert_mesh_obj(dg_obj_instance, obj, obj_key, depsgraph, luxcore_scene,
                                    scene_props, is_viewport_render)
         elif obj.type == "LIGHT":
@@ -120,8 +118,9 @@ class ObjectCache2:
                     scene_props.Set(exported_obj.get_props())
             else:
                 # Object is new and not in LuxCore yet, or it is a light, do a full export
-                self._convert(exporter, dg_obj_instance, obj, depsgraph,
-                              luxcore_scene, scene_props, is_viewport_render)
+                # TODO use luxcore_scene.DuplicateObjects for instances
+                self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
+                                  luxcore_scene, scene_props, is_viewport_render)
 
         # Geometry updates (mesh edit, modifier edit etc.)
         if depsgraph.id_type_updated("OBJECT"):

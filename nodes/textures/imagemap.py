@@ -9,6 +9,7 @@ from ...properties.image_user import LuxCoreImageUser
 from ... import utils
 from ...utils import node as utils_node
 from ...utils import ui as utils_ui
+from ...utils.errorlog import LuxCoreErrorLog
 
 
 NORMAL_MAP_DESC = (
@@ -177,7 +178,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
         except OSError as error:
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-            exporter.scene.luxcore.errorlog.add_warning(msg)
+            LuxCoreErrorLog.add_warning(msg)
             return [1, 0, 1]
 
         uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, props)

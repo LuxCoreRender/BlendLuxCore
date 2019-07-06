@@ -2,6 +2,7 @@ import webbrowser
 import bpy
 from bpy.props import StringProperty, BoolProperty
 from .utils import init_vol_node_tree, poll_node
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
@@ -10,7 +11,7 @@ class LUXCORE_OT_errorlog_clear(bpy.types.Operator):
     bl_description = "(Log is automatically cleared when a final or viewport render is started)"
 
     def execute(self, context):
-        context.scene.luxcore.errorlog.clear()
+        LuxCoreErrorLog.clear()
         return {"FINISHED"}
 
 

@@ -7,6 +7,7 @@ from ..bin import pyluxcore
 from .. import utils
 from . import aovs
 from .imagepipeline import use_backgroundimage
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 def convert(exporter, scene, context=None, engine=None):
@@ -99,7 +100,7 @@ def convert(exporter, scene, context=None, engine=None):
     except Exception as error:
         msg = 'Config: %s' % error
         # Note: Exceptions in the config are critical, we can't render without a config
-        scene.luxcore.errorlog.add_error(msg)
+        LuxCoreErrorLog.add_error(msg)
         return pyluxcore.Properties()
 
 
@@ -137,7 +138,7 @@ def _convert_viewport_engine(scene, definitions, config):
     use_cpu = viewport.device == "CPU"
     if not use_cpu and not utils.is_opencl_build():
         msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning(msg)
         use_cpu = True
 
     resolutionreduction = viewport.resolution_reduction if viewport.reduce_resolution_on_edit else 1

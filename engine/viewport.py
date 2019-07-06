@@ -2,6 +2,7 @@ from time import time
 from .. import export
 from ..draw.viewport import FrameBuffer
 from ..utils import render as utils_render
+from ..utils.errorlog import LuxCoreErrorLog
 
 import bpy
 from ..bin import pyluxcore
@@ -22,7 +23,7 @@ def start_session(engine):
         engine.exporter = None
 
         engine.update_stats("Error: ", str(error))
-        # scene.luxcore.errorlog.add_error(error)  # TODO 2.8
+        LuxCoreErrorLog.add_error(error)
 
         import traceback
         traceback.print_exc()
@@ -42,7 +43,7 @@ def view_update(engine, context, depsgraph, changes=None):
     if engine.framebuffer:
         engine.framebuffer.reset_denoiser()
 
-    #scene.luxcore.errorlog.clear()  # TODO 2.8
+        LuxCoreErrorLog.clear()  # TODO 2.8
 
     if engine.session is None:
         print("=" * 50)
@@ -62,7 +63,7 @@ def view_update(engine, context, depsgraph, changes=None):
             engine.exporter = None
 
             engine.update_stats("Error: ", str(error))
-            # scene.luxcore.errorlog.add_error(error)  # TODO 2.8
+            LuxCoreErrorLog.add_error(error)
 
             import traceback
             traceback.print_exc()

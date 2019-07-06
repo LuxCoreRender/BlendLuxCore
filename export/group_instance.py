@@ -1,5 +1,9 @@
 from . import blender_object
 from .. import utils
+from ..utils.errorlog import LuxCoreErrorLog
+
+
+# TODO 2.8 we can probably delete this file
 
 
 def convert(exporter, duplicator, scene, context, luxcore_scene, props):
@@ -49,7 +53,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, props):
                                                          is_shared_mesh, luxcore_name, transform, duplicator)
     except Exception as error:
         msg = '[Dupli group "%s"] %s' % (duplicator.dupli_group.name, error)
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning(msg)
         import traceback
         traceback.print_exc()
     finally:

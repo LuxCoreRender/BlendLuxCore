@@ -3,6 +3,7 @@ from mathutils import Vector, Matrix
 from ..bin import pyluxcore
 from .. import utils
 from ..nodes.output import get_active_output
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 def convert(exporter, scene, context=None, is_camera_moving=False):
@@ -183,7 +184,7 @@ def _clipping(scene, definitions):
 
         if warning:
             msg = 'Camera: %s' % warning
-            scene.luxcore.errorlog.add_warning(msg, obj_name=camera.name)
+            LuxCoreErrorLog.add_warning(msg, obj_name=camera.name)
 
 
 def _clipping_plane(scene, definitions):
@@ -258,7 +259,7 @@ def _get_volume_props(exporter, scene):
             props.Set(pyluxcore.Property("scene.camera.volume", luxcore_name))
         except Exception as error:
             msg = 'Camera: %s' % error
-            scene.luxcore.errorlog.add_warning(msg, obj_name=scene.camera.name)
+            LuxCoreErrorLog.add_warning(msg, obj_name=scene.camera.name)
 
     props.Set(pyluxcore.Property("scene.camera.autovolume.enable", cam_settings.auto_volume))
     return props

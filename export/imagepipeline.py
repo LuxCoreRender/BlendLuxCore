@@ -2,6 +2,7 @@ from collections import OrderedDict
 from ..bin import pyluxcore
 from .. import utils
 from .image import ImageExporter
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 def convert(scene, context=None, index=0):
@@ -20,8 +21,7 @@ def convert(scene, context=None, index=0):
     except Exception as error:
         import traceback
         traceback.print_exc()
-        msg = 'Imagepipeline: %s' % error
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning('Imagepipeline: %s' % error)
         return pyluxcore.Properties()
 
 
@@ -135,8 +135,7 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
                                         backgroundimage.image_user,
                                         scene)
     except OSError as error:
-        msg = "Imagepipeline: %s" % error
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning("Imagepipeline: %s" % error)
         # Skip this plugin
         return index
 
@@ -188,8 +187,8 @@ def _camera_response_func(definitions, index, camera_response_func, scene):
                                      must_exist=True, must_be_existing_file=True)
         except OSError as error:
             # Make the error message more precise
-            scene.luxcore.errorlog.add_warning('Could not find .crf file at path "%s" (%s)'
-                                               % (camera_response_func.file, error))
+            LuxCoreErrorLog.add_warning('Could not find .crf file at path "%s" (%s)'
+                                        % (camera_response_func.file, error))
             name = None
     else:
         raise NotImplementedError("Unknown crf type: " + camera_response_func.type)

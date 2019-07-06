@@ -8,6 +8,7 @@ from ..properties.statistics import (
     rays_per_sample_to_string,
     get_rays_per_sample,
 )
+from ..utils.errorlog import LuxCoreErrorLog
 
 ENGINE_TO_STR = {
     "PATHCPU": "Path CPU",
@@ -128,7 +129,6 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
 
 def get_pretty_stats(config, stats, scene, context=None):
     halt = utils.get_halt_conditions(scene)
-    errorlog = scene.luxcore.errorlog
 
     # Here we collect strings in a list and later join them
     # so the result will look like: "message 1 | message 2 | ..."
@@ -187,13 +187,13 @@ def get_pretty_stats(config, stats, scene, context=None):
     # Errors and warnings
     error_str = ""
 
-    if errorlog.errors:
-        error_str += utils.pluralize("%d Error", len(errorlog.errors))
+    if LuxCoreErrorLog.errors:
+        error_str += utils.pluralize("%d Error", len(LuxCoreErrorLog.errors))
 
-    if errorlog.warnings:
+    if LuxCoreErrorLog.warnings:
         if error_str:
             error_str += ", "
-        error_str += utils.pluralize("%d Warning", len(errorlog.warnings))
+        error_str += utils.pluralize("%d Warning", len(LuxCoreErrorLog.warnings))
 
     if error_str:
         pretty.append(error_str)

@@ -1,8 +1,7 @@
 import bpy
-from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
+from bpy.props import PointerProperty, IntProperty
 from . import (
-    config, debug, denoiser, denoiser_log, display, errorlog,
-    halt, lightgroups, opencl, statistics, viewport,
+    config, debug, denoiser, denoiser_log, display, halt, lightgroups, opencl, statistics, viewport,
 )
 
 
@@ -14,7 +13,6 @@ class LuxCoreScene(bpy.types.PropertyGroup):
     config: PointerProperty(type=config.LuxCoreConfig)
     denoiser: PointerProperty(type=denoiser.LuxCoreDenoiser)
     denoiser_log: PointerProperty(type=denoiser_log.LuxCoreDenoiserLog)
-    errorlog: PointerProperty(type=errorlog.LuxCoreErrorLog)
     halt: PointerProperty(type=halt.LuxCoreHaltConditions)
     display: PointerProperty(type=display.LuxCoreDisplaySettings)
     opencl: PointerProperty(type=opencl.LuxCoreOpenCLSettings)

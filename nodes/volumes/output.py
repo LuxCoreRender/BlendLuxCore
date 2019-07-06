@@ -3,6 +3,7 @@ from bpy.props import BoolProperty
 from ..output import LuxCoreNodeOutput, update_active
 from ... import utils
 from ...bin import pyluxcore
+from ...utils.errorlog import LuxCoreErrorLog
 
 
 class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
@@ -48,7 +49,7 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
         else:
             # We need a fallback (black volume)
             msg = 'Node "%s" in tree "%s": No volume attached' % (self.name, self.id_data.name)
-            exporter.scene.luxcore.errorlog.add_warning(msg)
+            LuxCoreErrorLog.add_warning(msg)
 
             helper_prefix = "scene.volumes." + luxcore_name + "."
             helper_defs = {

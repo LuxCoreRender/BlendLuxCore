@@ -3,6 +3,7 @@ from ..bin import pyluxcore
 from .. import utils
 from . import imagepipeline
 from .imagepipeline import use_backgroundimage
+from ..utils.errorlog import LuxCoreErrorLog
 
 # set of channels that don"t use an HDR format
 LDR_CHANNELS = {
@@ -111,7 +112,7 @@ def convert(exporter, scene, context=None, engine=None):
                                                      group_id, exporter.lightgroup_cache)
 
             if not any([group.enabled for group in scene.luxcore.lightgroups.get_all_groups()]):
-                scene.luxcore.errorlog.add_warning("All light groups are disabled.")
+                LuxCoreErrorLog.add_warning("All light groups are disabled.")
 
             # Denoiser imagepipeline
             if scene.luxcore.denoiser.enabled:
@@ -125,8 +126,7 @@ def convert(exporter, scene, context=None, engine=None):
     except Exception as error:
         import traceback
         traceback.print_exc()
-        msg = "AOVs: %s" % error
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning("AOVs: %s" % error)
         return pyluxcore.Properties()
 
 
@@ -172,8 +172,7 @@ def _make_imagepipeline(props, context, scene, output_name, pipeline_index, outp
     if tonemapper.is_automatic():
         # We can not work with an automatic tonemapper because
         # every AOV will differ in brightness
-        msg = "Use a non-automatic tonemapper to get tonemapped AOVs"
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning("Use a non-automatic tonemapper to get tonemapped AOVs")
         return pipeline_index
 
     prefix = "film.imagepipelines." + str(pipeline_index) + "."

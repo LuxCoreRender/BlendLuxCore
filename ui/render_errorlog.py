@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from . import icons
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
@@ -13,22 +14,18 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
         return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
-        errorlog = context.scene.luxcore.errorlog
-
         row = self.layout.row(align=True)
-        if errorlog.errors:
-            row.label(text=str(len(errorlog.errors)), icon=icons.ERROR)
-        if errorlog.warnings:
-            row.label(text=str(len(errorlog.warnings)), icon=icons.WARNING)
+        if LuxCoreErrorLog.errors:
+            row.label(text=str(len(LuxCoreErrorLog.errors)), icon=icons.ERROR)
+        if LuxCoreErrorLog.warnings:
+            row.label(text=str(len(LuxCoreErrorLog.warnings)), icon=icons.WARNING)
 
     def draw(self, context):
-        errorlog = context.scene.luxcore.errorlog
-
-        if errorlog.errors or errorlog.warnings:
+        if LuxCoreErrorLog.errors or LuxCoreErrorLog.warnings:
             self.layout.operator("luxcore.errorlog_clear", icon=icons.CLEAR)
 
-        self._draw(errorlog.errors, "Errors:", icons.ERROR)
-        self._draw(errorlog.warnings, "Warnings:", icons.WARNING)
+        self._draw(LuxCoreErrorLog.errors, "Errors:", icons.ERROR)
+        self._draw(LuxCoreErrorLog.warnings, "Warnings:", icons.WARNING)
 
     def _draw(self, errors_or_warnings, label, icon=icons.NONE):
         if len(errors_or_warnings) == 0:

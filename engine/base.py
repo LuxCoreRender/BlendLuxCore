@@ -3,6 +3,7 @@ from time import sleep
 from . import final, preview, viewport
 from ..handlers.draw_imageeditor import TileStats
 from ..utils.log import LuxCoreLog
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -87,7 +88,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             import traceback
             traceback.print_exc()
             # Add error to error log so the user can inspect and copy/paste it
-            scene.luxcore.errorlog.add_error(error)
+            LuxCoreErrorLog.add_error(error)
 
             # Clean up
             del self.session

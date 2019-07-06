@@ -3,6 +3,7 @@ from .. import utils
 from . import blender_object
 from time import time
 from array import array
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 class Duplis:
@@ -97,7 +98,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
                 '%d duplis with non-invertible matrices on duplicator "%s". '
                 'This can happen if e.g. the scale is 0' % (non_invertible_count, duplicator.name)
             )
-            scene.luxcore.errorlog.add_warning(msg, obj_name=duplicator.name)
+            LuxCoreErrorLog.add_warning(msg, obj_name=duplicator.name)
 
         duplicator.dupli_list_clear()
         # Need to parse so we have the dupli objects available for DuplicateObject
@@ -130,7 +131,7 @@ def convert(exporter, duplicator, scene, context, luxcore_scene, engine=None):
         print("[%s] Dupli export took %.3f s" % (duplicator.name, time() - start))
     except Exception as error:
         msg = '[Duplicator "%s"] %s' % (duplicator.name, error)
-        scene.luxcore.errorlog.add_warning(msg, obj_name=duplicator.name)
+        LuxCoreErrorLog.add_warning(msg, obj_name=duplicator.name)
         import traceback
         traceback.print_exc()
         duplicator.dupli_list_clear()

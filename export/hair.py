@@ -6,6 +6,7 @@ from .. import utils
 from time import time
 import math
 import numpy as np
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 def find_psys_modifier(obj, psys):
@@ -177,7 +178,7 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
                     uvs_needed = True
                 except OSError as error:
                     msg = "%s (Object: %s, Particle System: %s)" % (error, obj.name, psys.name)
-                    scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                    LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
             elif settings.export_color == "vertex_color":
                 colors = convert_colors(obj, psys, settings, vertex_colors, engine,
                                         strands_count, start, dupli_count, mod, num_children)
@@ -251,6 +252,6 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
         print("[%s: %s] Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
     except Exception as error:
         msg = "[%s: %s] %s" % (obj.name, psys.name, error)
-        scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
         import traceback
         traceback.print_exc()

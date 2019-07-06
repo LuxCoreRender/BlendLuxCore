@@ -2,6 +2,7 @@ from ..bin import pyluxcore
 from .. import utils
 from ..nodes.output import get_active_output
 from . import light
+from ..utils.errorlog import LuxCoreErrorLog
 
 # TODO: currently it is not possible to remove the world volume during viewport render
 
@@ -29,6 +30,6 @@ def convert(exporter, scene):
             props.Set(pyluxcore.Property("scene.world.volume.default", luxcore_name))
         except Exception as error:
             msg = 'World "%s": %s' % (world.name, error)
-            scene.luxcore.errorlog.add_warning(msg)
+            LuxCoreErrorLog.add_warning(msg)
 
     return props

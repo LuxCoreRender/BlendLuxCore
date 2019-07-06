@@ -6,6 +6,7 @@ from .. import utils
 # from ..utils import ExportedObject, ExportedLight
 from .caches.exported_data import ExportedObject, ExportedLight
 from .image import ImageExporter
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
@@ -52,7 +53,7 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
                         has_image = True
                     except OSError as error:
                         msg = 'Light "%s": %s' % (obj.name, error)
-                        # scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
                         # Fallback
                         definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
                         # Signal that the image is missing
@@ -63,7 +64,7 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
                     has_ies = export_ies(definitions, light.luxcore.ies, light.library)
                 except OSError as error:
                     msg = 'Light "%s": %s' % (obj.name, error)
-                    # scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                    LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
                 finally:
                     if not has_ies and not has_image:
                         # Fallback
@@ -116,7 +117,7 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
                     definitions["gamma"] = light.luxcore.gamma
                 except OSError as error:
                     msg = 'Light "%s": %s' % (obj.name, error)
-                    #scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                    LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
                     # Fallback
                     definitions["type"] = "spot"
                     # Signal that the image is missing
@@ -175,7 +176,7 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
         return props, exported_light
     except Exception as error:
         msg = 'Light "%s": %s' % (obj.name, error)
-        # scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None
@@ -231,7 +232,7 @@ def convert_world(exporter, world, scene):
         return props
     except Exception as error:
         msg = 'World "%s": %s' % (world.name, error)
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning(msg)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties()
@@ -260,7 +261,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
     except OSError as error:
         error_context = "Light" if isinstance(light_or_world, bpy.types.light) else "World"
         msg = '%s "%s": %s' % (error_context, light_or_world.name, error)
-        # scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning(msg)
         # Fallback
         definitions["type"] = "constantinfinite"
         # Signal that the image is missing
@@ -327,7 +328,7 @@ def _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain, imp
             export_ies(mat_definitions, light.luxcore.ies, light.library, is_meshlight=True)
         except OSError as error:
             msg = 'light "%s": %s' % (obj.name, error)
-            scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
 
     mat_props = utils.create_props(mat_prefix, mat_definitions)
     props.Set(mat_props)

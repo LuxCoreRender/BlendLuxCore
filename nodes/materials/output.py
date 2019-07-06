@@ -5,6 +5,7 @@ from ... import utils
 from ...utils import node as utils_node
 from ..output import LuxCoreNodeOutput, update_active, get_active_output
 from ...ui import icons
+from ...utils.errorlog import LuxCoreErrorLog
 
 SHADOWCATCHER_DESC = (
     "Make this material transparent and only catch shadows on it. "
@@ -148,7 +149,7 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
             return luxcore_name
         except Exception as error:
             msg = 'Node Tree "%s": %s' % (node_tree.name, error)
-            exporter.scene.luxcore.errorlog.add_warning(msg)
+            LuxCoreErrorLog.add_warning(msg)
             import traceback
             traceback.print_exc()
             return None

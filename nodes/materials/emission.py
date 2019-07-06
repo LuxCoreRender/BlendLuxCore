@@ -12,6 +12,7 @@ from ...properties.light import (
 from ...properties.ies import LuxCoreIESProps
 from ...export import light
 from ...ui import icons
+from ...utils.errorlog import LuxCoreErrorLog
 
 DLS_AUTO_DESC = "Direct light sampling is disabled if the mesh has more than 256 triangles"
 DLS_ENABLED_DESC = (
@@ -125,7 +126,7 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
                 light.export_ies(definitions, self.ies, self.id_data.library, is_meshlight=True)
             except OSError as error:
                 msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-                exporter.scene.luxcore.errorlog.add_warning(msg)
+                LuxCoreErrorLog.add_warning(msg)
 
     def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("This node uses a special export method.")

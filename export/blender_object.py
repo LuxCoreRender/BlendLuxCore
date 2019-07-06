@@ -89,7 +89,7 @@ def convert(exporter, obj, scene, context, luxcore_scene,
         return props, ExportedObject(mesh_definitions, luxcore_name)
     except Exception as error:
         msg = 'Object "%s": %s' % (obj.name, error)
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning(msg)
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties(), None
@@ -111,11 +111,11 @@ def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props
                 if mat is None:
                     # Note: material.convert returns the fallback material in this case
                     msg = 'Object "%s": No material attached to slot %d' % (obj.name, material_index)
-                    scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                    LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
             else:
                 # The object has no material slots
                 msg = 'Object "%s": No material defined' % obj.name
-                scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
                 # Use fallback material
                 mat = None
 
@@ -125,7 +125,7 @@ def define_from_mesh_defs(mesh_definitions, scene, context, exporter, obj, props
                 if imagemaps and not utils_node.has_valid_uv_map(obj):
                     msg = ('Object "%s": %d image texture(s) used, but no UVs defined. ' 
                            'In case of bumpmaps this can lead to artifacts' % (obj.name, len(imagemaps)))
-                    scene.luxcore.errorlog.add_warning(msg, obj_name=obj.name)
+                    LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
 
             lux_mat_name, mat_props = material.convert(exporter, mat, scene, context, obj.name)
         else:

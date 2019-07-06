@@ -2,6 +2,7 @@ import bpy
 from bpy.props import PointerProperty, EnumProperty, StringProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
+from ...utils.errorlog import LuxCoreErrorLog
 
 
 class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
@@ -86,7 +87,7 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
                 # Fallback, file not found
                 error = 'Could not find .nk file at path "%s"' % self.filepath
                 msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-                exporter.scene.luxcore.errorlog.add_warning(msg)
+                LuxCoreErrorLog.add_warning(msg)
 
                 definitions = {
                     "type": "fresnelcolor",
