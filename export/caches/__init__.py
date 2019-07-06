@@ -1,8 +1,10 @@
+import bpy
 from ... import utils
-from .. import camera
+from .. import camera, material
 from .object_cache import EXPORTABLE_OBJECTS
 
 from .object_cache import ObjectCache2
+
 
 class StringCache:
     def __init__(self):
@@ -46,17 +48,21 @@ class CameraCache:
 
 class MaterialCache:
     def __init__(self):
-        self._reset()
-
-    def _reset(self):
         self.changed_materials = set()
 
     def diff(self, depsgraph):
-        # TODO
-        return depsgraph.id_type_updated("MATERIAL")
+        if depsgraph.id_type_updated("MATERIAL"):
+            for dg_update in depsgraph.updates:
+                if isinstance(dg_update.id, bpy.types.Material):
+                    self.changed_materials.add(dg_update.id)
+                    print("mat update:", dg_update.id.name)
+        return self.changed_materials
 
-    def update(self, depsgraph, props):
-        print("mat cache update todo")
+    def update(self, exporter, is_viewport_render, props):
+        for mat in self.changed_materials:
+            lux_mat_name, mat_props = material.convert(exporter, mat, is_viewport_render)
+            props.Set(mat_props)
+        self.changed_materials.clear()
 
 # def diff(self, ignored_mats=None):
     #     self._reset()
@@ -124,9 +130,8 @@ class WorldCache:
         world_updated = False
 
         if world:
-            # TODO 2.8 remove commented
-            # world_updated = world.is_updated or world.is_updated_data or self.world_name != world.name
-            world_updated = depsgraph.id_type_updated("WORLD") or self.world_name != world.name
+            # TODO 2.8 for some reason this fires when editing a node tree, even when the world is not touched at all
+            world_updated = depsgraph.id_type_updated("WORLD") or self.world_name != world.name_full
 
             # The sun influcences the world, e.g. through direction and turbidity if sky2 is used
             # TODO 2.8

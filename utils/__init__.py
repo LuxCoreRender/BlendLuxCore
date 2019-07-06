@@ -355,8 +355,8 @@ def calc_aspect(width, height, fit="AUTO"):
     return aspect, xaspect, yaspect
 
 
-def find_active_uv(uv_textures):
-    for uv in uv_textures:
+def find_active_uv(uv_layers):
+    for uv in uv_layers:
         if uv.active_render:
             return uv
     return None
