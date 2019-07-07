@@ -42,7 +42,7 @@ def _view_ortho(scene, context, definitions):
     world_scale = utils.get_worldscale(scene, False)
 
     definitions["type"] = "orthographic"
-    zoom = 0.915 * world_scale * context.region_data.view_distance * 35 / context.space_data.lens
+    zoom = 1.0275 * world_scale * context.region_data.view_distance * 35 / context.space_data.lens
 
     # Move the camera origin away from the viewport center to avoid clipping
     origin = Vector(lookat_orig)
@@ -63,9 +63,9 @@ def _view_persp(scene, context, definitions):
     definitions["up"] = up_vector
 
     definitions["type"] = "perspective"
-    zoom = 2
-    definitions["fieldofview"] = math.degrees(2 * math.atan(16 / context.space_data.lens))
+    zoom = 2.25
 
+    definitions["fieldofview"] = math.degrees(2 * math.atan(16 / context.space_data.lens))
     definitions["screenwindow"] = utils.calc_screenwindow(zoom, 0, 0, scene, context)
 
 
