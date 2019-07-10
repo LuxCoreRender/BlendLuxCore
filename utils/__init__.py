@@ -9,28 +9,6 @@ from ..bin import pyluxcore
 NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
 
 
-class ExportedObject(object):
-    def __init__(self, mesh_definitions, luxcore_name):
-        """
-        :param luxcore_name: The true base name of this object (without material index suffix). Passed
-                             separately because the names in mesh_definitions are incorrect for shared meshes
-        """
-
-        # Note that luxcore_names is a list of names (because an object in Blender can have multiple materials,
-        # while in LuxCore it can have only one material, so we have to split it into multiple LuxCore objects)
-        self.luxcore_names = []
-        for _, material_index in mesh_definitions:
-            self.luxcore_names.append(luxcore_name + "%03d" % material_index)
-        # list of lists of the form [lux_obj_name, material_index]
-        self.mesh_definitions = mesh_definitions
-
-
-class ExportedLight(object):
-    def __init__(self, luxcore_name):
-        # this is a list to make it compatible with ExportedObject
-        self.luxcore_names = [luxcore_name]
-
-
 def sanitize_luxcore_name(string):
     """
     Do NOT use this function to create a luxcore name for an object/material/etc.!

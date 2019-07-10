@@ -134,13 +134,6 @@ def get_pretty_stats(config, stats, scene, context=None):
     # so the result will look like: "message 1 | message 2 | ..."
     pretty = []
 
-    # Name of the current render layer
-    if len(scene.render.layers) > 1:
-        render_layer = utils.get_current_render_layer(scene)
-        # render_layer is None in viewport render
-        if render_layer:
-            pretty.append(render_layer.name)
-
     if context:
         # In viewport, the usual halt conditions are irrelevant, only the time counts
         rendered_time = stats.Get("stats.renderengine.time").GetFloat()
@@ -150,6 +143,11 @@ def get_pretty_stats(config, stats, scene, context=None):
             rendered_time = viewport_halt_time
         pretty.append("Time: %ds/%ds" % (rendered_time, viewport_halt_time))
     else:
+        #  Name of the current render layer
+        if len(scene.render.layers) > 1:
+            render_layer = utils.get_current_render_layer(scene)
+            pretty.append(render_layer.name)
+
         # Time
         if halt.enable and halt.use_time:
             rendered_time = stats.Get("stats.renderengine.time").GetFloat()

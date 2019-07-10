@@ -264,7 +264,8 @@ def _convert_filesaver(scene, definitions, luxcore_engine):
     frame_name = "%05d" % scene.frame_current
 
     # If we have multiple render layers, we append the layer name
-    if len(scene.render.layers) > 1:
+    if len(scene.view_layers) > 1:
+        # TODO 2.8
         render_layer = utils.get_current_render_layer(scene)
         frame_name += "_" + render_layer.name
 
