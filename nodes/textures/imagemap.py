@@ -10,6 +10,7 @@ from ... import utils
 from ...utils import node as utils_node
 from ...utils import ui as utils_ui
 from ...utils.errorlog import LuxCoreErrorLog
+from ...ui import icons
 
 
 NORMAL_MAP_DESC = (
@@ -136,7 +137,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
 
     def draw_buttons(self, context, layout):
         row = layout.row()
-        row.prop(self, "show_thumbnail", icon="IMAGE_COL")
+        row.prop(self, "show_thumbnail", icon=icons.IMAGE)
         row.prop(self, "set_as_active_uvmap", toggle=True)
         if self.show_thumbnail:
             layout.template_ID_preview(self, "image", open="image.open")

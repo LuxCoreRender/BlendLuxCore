@@ -30,6 +30,7 @@ REFRESH = "FILE_REFRESH"  # used in display/denoiser refresh buttons
 
 CAMERA = "CAMERA_DATA"  # this should show a recognizable camera icon. Might need to be changed for 2.80.
 WORLD = "WORLD"
+IMAGE = "IMAGE_DATA"
 
 EXPANDABLE_CLOSED = "TRIA_RIGHT"
 EXPANDABLE_OPENED = "TRIA_DOWN"
