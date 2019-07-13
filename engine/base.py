@@ -22,7 +22,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_use_save_buffers = False
 
     # Hides Cycles node trees in the node editor.
-    bl_use_shading_nodes_custom = True
+    bl_use_shading_nodes_custom = False
 
     # Sets the value of the property scene.render.use_spherical_stereo
     # (this is all it does as far as I could see in the Blender source code).

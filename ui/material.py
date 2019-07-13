@@ -59,6 +59,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
         split = layout.split(factor=0.65)
 
         if obj:
+            # TODO 2.8 recreate our own version of this template with our custom new/copy operators
             split.template_ID(obj, "active_material", new="material.new")
             row = split.row()
 
@@ -75,11 +76,15 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                 row = layout.row()
                 split = row.split(factor=0.25)
                 split.label(text=utils.pluralize("%d User", mat.users))
-                tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
-                split.label(text='Nodes: "%s"' % tree_name, icon="NODETREE")
-                split.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
+                if not mat.luxcore.use_cycles_nodes:
+                    tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
+                    split.label(text='Nodes: "%s"' % tree_name, icon="NODETREE")
+                    split.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
             else:
                 layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use Material Nodes")
+
+            if mat.use_nodes and mat.node_tree:
+                layout.prop(mat.luxcore, "use_cycles_nodes")
 
 
 class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
@@ -90,7 +95,7 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return engine == "LUXCORE"
+        return engine == "LUXCORE" and not context.material.luxcore.use_cycles_nodes
 
     def draw(self, context):
         layout = self.layout

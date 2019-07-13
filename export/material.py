@@ -2,6 +2,7 @@ from ..bin import pyluxcore
 from .. import utils
 from ..nodes.output import get_active_output
 from ..utils.errorlog import LuxCoreErrorLog
+from . import cycles_node_reader
 
 
 GLOBAL_FALLBACK_MAT = "__CLAY__"
@@ -14,6 +15,9 @@ def convert(exporter, material, is_viewport_render, obj_name=""):
 
         props = pyluxcore.Properties()
         luxcore_name = utils.get_luxcore_name(material, is_viewport_render)
+
+        if material.use_nodes and material.luxcore.use_cycles_nodes:
+            return cycles_node_reader.convert(material, props, luxcore_name, obj_name)
 
         node_tree = material.luxcore.node_tree
         if node_tree is None:

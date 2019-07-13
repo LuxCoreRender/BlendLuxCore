@@ -35,6 +35,9 @@ class LuxCoreMaterialProps(PropertyGroup):
                                              "from the first nodes in the node tree")
     node_tree: PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
     preview: PointerProperty(type=LuxCoreMaterialPreviewProps)
+    use_cycles_nodes: BoolProperty(name="Use Cycles nodes", default=False,
+                                   description="Use the Cycles nodes of this material instead of the LuxCore node tree "
+                                               "(WARNING: This option is not fully implemented yet, only very few nodes work)")
 
     @classmethod
     def register(cls):        
