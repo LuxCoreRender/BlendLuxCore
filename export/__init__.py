@@ -389,7 +389,7 @@ class Exporter(object):
                     print("Could not find object to remove for key", key)
 
             if self.visibility_cache.objects_to_remove:
-                luxcore_scene.RemoveUnusedMeshes()
+                # luxcore_scene.RemoveUnusedMeshes()  # TODO for some reason this deletes even some meshes that are still in use
                 luxcore_scene.RemoveUnusedMaterials()
                 luxcore_scene.RemoveUnusedTextures()
                 luxcore_scene.RemoveUnusedImageMaps()
