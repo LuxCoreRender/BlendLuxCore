@@ -80,7 +80,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                     tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
                     split.label(text='Nodes: "%s"' % tree_name, icon="NODETREE")
                     split.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
-            else:
+            elif not mat.luxcore.use_cycles_nodes:
                 layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use Material Nodes")
 
             if mat.use_nodes and mat.node_tree:
