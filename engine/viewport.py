@@ -138,11 +138,11 @@ def view_draw(engine, context, depsgraph):
                     status_message = "Could not start denoiser: %s" % error
     else:
         # Not in pause yet, keep drawing
+        engine.session.WaitNewFrame()
         try:
             engine.session.UpdateStats()
         except RuntimeError as error:
             print("[Engine/Viewport] Error during UpdateStats():", error)
-        engine.session.WaitNewFrame()
         framebuffer.update(engine.session, scene)
         framebuffer.reset_denoiser()
         engine.tag_redraw()
