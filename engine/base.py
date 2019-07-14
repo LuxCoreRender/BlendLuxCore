@@ -110,25 +110,18 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.session = None
 
     def view_update(self, context, depsgraph):
-        #print("Viewport Render Update TODO")
         viewport.view_update(self, context, depsgraph)
 
     def view_draw(self, context, depsgraph):
-        #print("Viewport Render Draw TODO")
-        viewport.view_draw(self, context, depsgraph)
+        try:
+            viewport.view_draw(self, context, depsgraph)
+        except Exception as error:
+            del self.session
+            self.session = None
 
-        # if self.session is None:
-        #     return
-        #
-        # try:
-        #     viewport.view_draw(self, context)
-        # except Exception as error:
-        #     del self.session
-        #     self.session = None
-        #
-        #     self.update_stats("Error: ", str(error))
-        #     import traceback
-        #     traceback.print_exc()
+            self.update_stats("Error: ", str(error))
+            import traceback
+            traceback.print_exc()
 
     def has_denoiser(self):
         return self.DENOISED_OUTPUT_NAME in self.aov_imagepipelines
