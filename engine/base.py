@@ -102,7 +102,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def render_preview(self, scene):
         try:
             preview.render(self, scene)
-        except Exception as error:
+        except Exception:
             import traceback
             traceback.print_exc()
             # Clean up
