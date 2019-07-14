@@ -14,6 +14,7 @@ class ExportedMesh:
 
 
 class ExportedObject:
+    # TODO id, camera visibility etc.
     def __init__(self, lux_name_base, mesh_definitions, mat_names, transform):
         self.lux_name_base = lux_name_base
         self.transform = transform
@@ -28,10 +29,11 @@ class ExportedObject:
         definitions = {}
         for part in self.parts:
             definitions[part.lux_obj + ".shape"] = part.lux_shape
+            definitions[part.lux_obj + ".material"] = part.lux_mat
             # Note, I'm not applying worldscale here, I hope we can get rid
             # of that (https://github.com/LuxCoreRender/BlendLuxCore/issues/97)
-            definitions[part.lux_obj + ".transformation"] = utils.matrix_to_list(self.transform)
-            definitions[part.lux_obj + ".material"] = part.lux_mat
+            if self.transform:
+                definitions[part.lux_obj + ".transformation"] = utils.matrix_to_list(self.transform)
         return utils.create_props(prefix, definitions)
 
     def delete(self, luxcore_scene):

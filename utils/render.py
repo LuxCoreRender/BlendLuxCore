@@ -9,6 +9,7 @@ from ..properties.statistics import (
     get_rays_per_sample,
 )
 from ..utils.errorlog import LuxCoreErrorLog
+from . import view_layer
 
 ENGINE_TO_STR = {
     "PATHCPU": "Path CPU",
@@ -144,9 +145,9 @@ def get_pretty_stats(config, stats, scene, context=None):
         pretty.append("Time: %ds/%ds" % (rendered_time, viewport_halt_time))
     else:
         #  Name of the current render layer
-        if len(scene.render.layers) > 1:
-            render_layer = utils.get_current_render_layer(scene)
-            pretty.append(render_layer.name)
+        if len(scene.view_layers) > 1:
+            layer = view_layer.get_current_view_layer(scene)
+            pretty.append(layer.name)
 
         # Time
         if halt.enable and halt.use_time:

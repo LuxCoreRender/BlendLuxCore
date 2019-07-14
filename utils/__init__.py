@@ -5,6 +5,7 @@ import re
 import os
 import hashlib
 from ..bin import pyluxcore
+from . import view_layer
 
 NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
 
@@ -363,7 +364,7 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
     if is_valid_camera(scene.camera) and obj == scene.camera.data.luxcore.clipping_plane:
         return False
 
-    render_layer = get_current_render_layer(scene)
+    render_layer = view_layer.get_current_view_layer(scene)
     if render_layer:
         # We need the list of excluded layers in the settings of this render layer
         exclude_layers = render_layer.layers_exclude
@@ -372,6 +373,7 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
         # so we create a mock list here
         exclude_layers = [False] * 20
 
+    # TODO 2.8 (do we even still need this method? new depsgraph should solve it easier)
     on_visible_layer = False
     for lv in [ol and sl and not el for ol, sl, el in zip(obj.layers, scene.layers, exclude_layers)]:
         on_visible_layer |= lv
@@ -382,8 +384,9 @@ def is_obj_visible(obj, scene, context=None, is_dupli=False):
 
 def is_obj_visible_to_cam(obj, scene, context=None):
     visible_to_cam = obj.luxcore.visible_to_camera
-    render_layer = get_current_render_layer(scene)
+    render_layer = view_layer.get_current_view_layer(scene)
 
+    # TODO 2.8
     if render_layer:
         on_visible_layer = False
         for lv in [ol and sl for ol, sl in zip(obj.layers, render_layer.layers)]:
@@ -518,20 +521,13 @@ def use_filesaver(context, scene):
     return context is None and scene.luxcore.config.use_filesaver
 
 
+# TODO 2.8 remove
 def get_current_render_layer(scene):
-    """ This is the layer that is currently being exported, not the active layer in the UI """
-    active_layer_index = scene.luxcore.active_layer_index
-
-    # If active layer index is -1 we are trying to access it
-    # in an incorrect situation, e.g. viewport render
-    if active_layer_index == -1:
-        return None
-
-    return scene.render.layers[active_layer_index]
+    raise NotImplementedError("use the new method in view_layer.py")
 
 
 def get_halt_conditions(scene):
-    render_layer = get_current_render_layer(scene)
+    render_layer = view_layer.get_current_view_layer(scene)
 
     if render_layer and render_layer.luxcore.halt.enable:
         # Global halt conditions are overridden by this render layer

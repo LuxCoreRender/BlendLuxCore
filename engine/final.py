@@ -3,27 +3,29 @@ from .. import export, utils
 from ..draw.final import FrameBufferFinal
 from ..utils import render as utils_render
 from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import view_layer as utils_view_layer
 
 
-def render(engine, scene):
+def render(engine, depsgraph):
     print("=" * 50)
+    scene = depsgraph.scene_eval
     LuxCoreErrorLog.clear()
-    scene.luxcore.denoiser_log.clear()
-    render_slot_stats = scene.luxcore.statistics.get_active()
+    # scene.luxcore.denoiser_log.clear()  # TODO 2.8 merge denoiser log with statistics
+    statistics = scene.luxcore.statistics.get_active()
 
     if utils.is_valid_camera(scene.camera):
         tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
-        if len(scene.render.layers) > 1 and tonemapper.is_automatic():
+        if len(scene.view_layers) > 1 and tonemapper.is_automatic():
             msg = ("Using an automatic tonemapper with multiple "
                    "renderlayers will result in brightness differences")
             LuxCoreErrorLog.add_warning(msg)
 
     _check_halt_conditions(engine, scene)
 
-    for layer_index, layer in enumerate(scene.render.layers):
+    for layer_index, layer in enumerate(scene.view_layers):
         print('[Engine/Final] Rendering layer "%s"' % layer.name)
 
-        dummy_result = engine.begin_result(0, 0, 1, 1, layer.name)
+        dummy_result = engine.begin_result(0, 0, 1, 1, layer=layer.name)
 
         # Check if the layer is disabled. Cycles does this the same way,
         # to be honest I have no idea why they don't just check layer.use
@@ -35,10 +37,10 @@ def render(engine, scene):
         engine.end_result(dummy_result, cancel=True, do_merge_results=False)
 
         # This property is used during export, e.g. to check for layer visibility
-        scene.luxcore.active_layer_index = layer_index
+        utils_view_layer.State.active_view_layer_index = layer_index
 
         _add_passes(engine, layer, scene)
-        _render_layer(engine, scene, render_slot_stats)
+        _render_layer(engine, depsgraph, statistics)
 
         if engine.test_break():
             # Blender skips the rest of the render layers anyway
@@ -47,10 +49,11 @@ def render(engine, scene):
         print('[Engine/Final] Finished rendering layer "%s"' % layer.name)
     
 
-def _render_layer(engine, scene, render_slot_stats):
+def _render_layer(engine, depsgraph, statistics):
     engine.reset()
-    engine.exporter = export.Exporter(scene, render_slot_stats)
-    engine.session = engine.exporter.create_session(engine=engine)
+    engine.exporter = export.Exporter(statistics)
+    engine.session = engine.exporter.create_session(depsgraph, engine=engine)
+    scene = depsgraph.scene_eval
 
     if engine.session is None:
         # session is None, but no error was thrown
@@ -64,7 +67,7 @@ def _render_layer(engine, scene, render_slot_stats):
     engine.session.Start()
     session_init_time = time() - start
     print("Session started in %.1f s" % session_init_time)
-    render_slot_stats.session_init_time.value = session_init_time
+    statistics.session_init_time.value = session_init_time
 
     config = engine.session.GetRenderConfig()
 
@@ -116,7 +119,7 @@ def _render_layer(engine, scene, render_slot_stats):
                 engine.session.Resume()
 
         # Do session update (imagepipeline, lightgroups)
-        changes = engine.exporter.get_changes()
+        changes = engine.exporter.get_changes(depsgraph)
         engine.exporter.update_session(changes, engine.session)
 
         if engine.session.IsInPause():

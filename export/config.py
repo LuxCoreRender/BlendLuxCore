@@ -8,6 +8,7 @@ from .. import utils
 from . import aovs
 from .imagepipeline import use_backgroundimage
 from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import view_layer as utils_view_layer
 
 
 def convert(exporter, scene, context=None, engine=None):
@@ -266,7 +267,7 @@ def _convert_filesaver(scene, definitions, luxcore_engine):
     # If we have multiple render layers, we append the layer name
     if len(scene.view_layers) > 1:
         # TODO 2.8
-        render_layer = utils.get_current_render_layer(scene)
+        render_layer = utils_view_layer.get_current_view_layer(scene)
         frame_name += "_" + render_layer.name
 
     if config.filesaver_format == "BIN":

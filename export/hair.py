@@ -7,6 +7,7 @@ from time import time
 import math
 import numpy as np
 from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import view_layer as utils_view_layer
 
 
 def find_psys_modifier(obj, psys):
@@ -215,7 +216,7 @@ def convert_hair(exporter, obj, psys, luxcore_scene, scene, context=None, engine
             # For some reason this index is not starting at 0 but at 1 (Blender is strange)
             material_index = psys.settings.material - 1
 
-            render_layer = utils.get_current_render_layer(scene)
+            render_layer = utils_view_layer.get_current_view_layer(scene)
             override_mat = render_layer.material_override if render_layer else None
 
             if not context and override_mat:

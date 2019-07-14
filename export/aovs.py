@@ -4,6 +4,7 @@ from .. import utils
 from . import imagepipeline
 from .imagepipeline import use_backgroundimage
 from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import view_layer as utils_view_layer
 
 # set of channels that don"t use an HDR format
 LDR_CHANNELS = {
@@ -46,7 +47,7 @@ def convert(exporter, scene, context=None, engine=None):
 
         if final:
             # This is the layer that is currently being exported, not the active layer in the UI!
-            current_layer = utils.get_current_render_layer(scene)
+            current_layer = utils_view_layer.get_current_view_layer(scene)
             aovs = current_layer.luxcore.aovs
         else:
             # AOVs should not be accessed in viewport render

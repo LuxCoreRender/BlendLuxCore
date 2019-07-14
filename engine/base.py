@@ -4,6 +4,7 @@ from . import final, preview, viewport
 from ..handlers.draw_imageeditor import TileStats
 from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import view_layer as utils_view_layer
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -72,16 +73,15 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             print("Material Preview TODO")
             # self.render_preview(scene)
         else:
-            print("Final Render TODO")
-            # self.render_final(scene)
+            self.render_final(depsgraph)
 
-    def render_final(self, scene):
+    def render_final(self, depsgraph):
         try:
             LuxCoreRenderEngine.final_running = True
-            scene.luxcore.display.paused = False
+            # scene.luxcore.display.paused = False  # TODO 2.8 this should not be a property
             TileStats.reset()
             LuxCoreLog.add_listener(self.log_listener)
-            final.render(self, scene)
+            final.render(self, depsgraph)
         except Exception as error:
             self.report({"ERROR"}, str(error))
             self.error_set(str(error))
@@ -94,7 +94,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             del self.session
             self.session = None
         finally:
-            scene.luxcore.active_layer_index = -1
+            utils_view_layer.State.reset()
             LuxCoreRenderEngine.final_running = False
             TileStats.reset()
             LuxCoreLog.remove_listener(self.log_listener)

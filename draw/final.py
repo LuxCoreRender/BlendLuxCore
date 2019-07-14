@@ -3,6 +3,7 @@ from ..bin import pyluxcore
 from .. import utils
 from ..export.aovs import get_denoiser_imgpipeline_props
 from ..properties.denoiser_log import DenoiserLogEntry
+from ..utils import view_layer as utils_view_layer
 
 
 class AOV:
@@ -57,10 +58,10 @@ class FrameBufferFinal(object):
         self.denoiser_last_samples = 0
 
     def draw(self, engine, session, scene, render_stopped):
-        active_layer_index = scene.luxcore.active_layer_index
-        scene_layer = scene.render.layers[active_layer_index]
+        active_layer_index = utils_view_layer.State.active_view_layer_index
+        scene_layer = scene.view_layers[active_layer_index]
 
-        result = engine.begin_result(0, 0, self._width, self._height, scene_layer.name)
+        result = engine.begin_result(0, 0, self._width, self._height, layer=scene_layer.name)
         # Regardless of the scene render layers, the result always only contains one layer
         render_layer = result.layers[0]
 
