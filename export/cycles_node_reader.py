@@ -16,7 +16,7 @@ def convert(material, props, luxcore_name, obj_name=""):
     return luxcore_name, props
 
 
-def black(luxcore_name):
+def black(luxcore_name="__BLACK__"):
     props = pyluxcore.Properties()
     props.SetFromString("""
     scene.materials.{mat_name}.type = matte
@@ -67,15 +67,17 @@ def convert_cycles_node(node, output_socket, props, luxcore_name=None, obj_name=
         def convert_mat_socket(index):
             mat_name = convert_cycles_socket(node.inputs[index], props, obj_name)
             if mat_name == ERROR_VALUE:
-                mat_name, mat_props = black("__BLACK__")
+                mat_name, mat_props = black()
                 props.Set(mat_props)
             return mat_name
+
+        amount = convert_cycles_socket(node.inputs["Fac"], props, obj_name)
 
         definitions = {
             "type": "mix",
             "material1": convert_mat_socket(1),
             "material2": convert_mat_socket(2),
-            "amount": convert_cycles_socket(node.inputs["Fac"], props, obj_name),
+            "amount": 0.5 if amount == ERROR_VALUE else amount,
         }
     elif node.bl_idname == "ShaderNodeBsdfDiffuse":
         prefix = "scene.materials."
