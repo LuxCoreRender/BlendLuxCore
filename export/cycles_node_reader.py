@@ -43,6 +43,7 @@ def _socket(socket, props, obj_name, group_node):
             return socket.default_value
 
 
+# TODO convert roughness from squared to regular
 def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node=None):
     if luxcore_name is None:
         luxcore_name = str(node.as_pointer()) + output_socket.name
@@ -152,6 +153,42 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         if roughness != 0:
             definitions["uroughness"] = roughness
             definitions["vroughness"] = roughness
+    elif node.bl_idname == "ShaderNodeBsdfAnisotropic":
+        prefix = "scene.materials."
+
+        # Implicitly create a fresnelcolor texture with unique name
+        tex_name = luxcore_name + "fresnel_helper"
+        helper_prefix = "scene.textures." + tex_name + "."
+        helper_defs = {
+            "type": "fresnelcolor",
+            "kr": _socket(node.inputs["Color"], props, obj_name, group_node),
+        }
+        props.Set(utils.create_props(helper_prefix, helper_defs))
+
+        # TODO emulate actual anisotropy somehow ...
+        roughness = _socket(node.inputs["Roughness"], props, obj_name, group_node)
+
+        definitions = {
+            "type": "metal2",
+            "fresnel": tex_name,
+            "uroughness": roughness,
+            "vroughness": 0.05,
+        }
+    elif node.bl_idname == "ShaderNodeBsdfTranslucent":
+        prefix = "scene.materials."
+        definitions = {
+            "type": "mattetranslucent",
+            "kt": [1, 1, 1],
+            "kr": _socket(node.inputs["Color"], props, obj_name, group_node),
+        }
+    elif node.bl_idname == "ShaderNodeBsdfTransparent":
+        prefix = "scene.materials."
+        definitions = {
+            "type": "null",
+        }
+        color = _socket(node.inputs["Color"], props, obj_name, group_node)
+        if color != 1 and color != [1, 1, 1]:
+            definitions["transparency"] = color
     elif node.bl_idname == "ShaderNodeGroup":
         active_output = None
         for subnode in node.node_tree.nodes:
