@@ -1,4 +1,3 @@
-import math
 from ..bin import pyluxcore
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
@@ -78,13 +77,16 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
                 props.Set(mat_props)
             return mat_name
 
-        amount = _socket(node.inputs["Fac"], props, obj_name, group_node)
+        fac_input = node.inputs["Fac"]
+        amount = _socket(fac_input, props, obj_name, group_node)
+        if fac_input.is_linked and amount == ERROR_VALUE:
+            amount = 0.5
 
         definitions = {
             "type": "mix",
             "material1": convert_mat_socket(1),
             "material2": convert_mat_socket(2),
-            "amount": 0.5 if amount == ERROR_VALUE else amount,
+            "amount": amount,
         }
     elif node.bl_idname == "ShaderNodeBsdfDiffuse":
         prefix = "scene.materials."
@@ -193,6 +195,59 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         color = _socket(node.inputs["Color"], props, obj_name, group_node)
         if color != 1 and color != [1, 1, 1]:
             definitions["transparency"] = color
+    elif node.bl_idname == "ShaderNodeMixRGB":
+        prefix = "scene.textures."
+        definitions = {}
+        fac_input = node.inputs["Fac"]
+        fac = _socket(fac_input, props, obj_name, group_node)
+        if fac_input.is_linked and fac == ERROR_VALUE:
+            fac = 0.5
+        color1 = _socket(node.inputs["Color1"], props, obj_name, group_node)
+        color2 = _socket(node.inputs["Color2"], props, obj_name, group_node)
+
+        if fac == 0:
+            return color1
+
+        blend_type = node.blend_type
+        if blend_type in {"MIX", "MULTIPLY", "ADD", "SUBTRACT", "DIVIDE"}:
+            if blend_type == "MULTIPLY":
+                definitions["type"] = "scale"
+            else:
+                definitions["type"] = blend_type.lower()
+
+            definitions["texture1"] = color1
+            definitions["texture2"] = color2
+
+            if blend_type == "MIX":
+                definitions["amount"] = fac
+                if fac == 1:
+                    print("yolo")
+                    return color2
+        else:
+            LuxCoreErrorLog.add_warning(f"Unknown MixRGB mode: {blend_type}", obj_name=obj_name)
+            return ERROR_VALUE
+
+        if fac > 0 and fac < 1 and blend_type != "MIX":
+            # Here we need to insert a helper texture *after* the current texture
+            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            definitions = {
+                "type": "mix",
+                "texture1": color1,
+                "texture2": luxcore_name,
+                "amount": fac,
+            }
+            luxcore_name = luxcore_name + "fac"
+
+        if node.use_clamp:
+            # Here we need to insert a helper texture *after* the current texture
+            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            definitions = {
+                "type": "clamp",
+                "texture": luxcore_name,
+                "min": 0,
+                "max": 1,
+            }
+            luxcore_name = luxcore_name + "clamp"
     elif node.bl_idname == "ShaderNodeGroup":
         active_output = None
         for subnode in node.node_tree.nodes:
@@ -221,7 +276,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
 
 def _squared_roughness_to_linear(socket, props, luxcore_name, obj_name, group_node):
     roughness = _socket(socket, props, obj_name, group_node)
-    if socket.is_linked:
+    if socket.is_linked and roughness != ERROR_VALUE:
         # Implicitly create a math texture with unique name
         tex_name = luxcore_name + "roughness_converter"
         helper_prefix = "scene.textures." + tex_name + "."
