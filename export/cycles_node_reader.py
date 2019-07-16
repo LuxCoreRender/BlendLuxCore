@@ -4,6 +4,12 @@ from ..utils.errorlog import LuxCoreErrorLog
 
 ERROR_VALUE = 0
 
+math_operation_map = {
+    "MULTIPLY": "scale",
+    "GREATER_THAN": "greaterthan",
+    "LESS_THAN": "lessthan",
+}
+
 
 def convert(material, props, luxcore_name, obj_name=""):
     print("Converting Cycles node tree of material", material.name_full)
@@ -196,17 +202,23 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         if color != 1 and color != [1, 1, 1]:
             definitions["transparency"] = color
     elif node.bl_idname == "ShaderNodeMixRGB":
+        # TODO (in LuxCore):
+        #  "DARKEN", "BURN", "LIGHTEN", "SCREEN", "DODGE", "OVERLAY", "SOFT_LIGHT",
+        #  "LINEAR_LIGHT", "DIFFERENCE", "HUE", "SATURATION", "COLOR", "VALUE"
+
         prefix = "scene.textures."
         definitions = {}
+
         fac_input = node.inputs["Fac"]
         fac = _socket(fac_input, props, obj_name, group_node)
         if fac_input.is_linked and fac == ERROR_VALUE:
             fac = 0.5
-        color1 = _socket(node.inputs["Color1"], props, obj_name, group_node)
-        color2 = _socket(node.inputs["Color2"], props, obj_name, group_node)
+
+        tex1 = _socket(node.inputs["Color1"], props, obj_name, group_node)
+        tex2 = _socket(node.inputs["Color2"], props, obj_name, group_node)
 
         if fac == 0:
-            return color1
+            return tex1
 
         blend_type = node.blend_type
         if blend_type in {"MIX", "MULTIPLY", "ADD", "SUBTRACT", "DIVIDE"}:
@@ -215,14 +227,14 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             else:
                 definitions["type"] = blend_type.lower()
 
-            definitions["texture1"] = color1
-            definitions["texture2"] = color2
+            definitions["texture1"] = tex1
+            definitions["texture2"] = tex2
 
             if blend_type == "MIX":
                 definitions["amount"] = fac
                 if fac == 1:
                     print("yolo")
-                    return color2
+                    return tex2
         else:
             LuxCoreErrorLog.add_warning(f"Unknown MixRGB mode: {blend_type}", obj_name=obj_name)
             return ERROR_VALUE
@@ -232,22 +244,68 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
             definitions = {
                 "type": "mix",
-                "texture1": color1,
+                "texture1": tex1,
                 "texture2": luxcore_name,
                 "amount": fac,
             }
             luxcore_name = luxcore_name + "fac"
+    elif node.bl_idname == "ShaderNodeMath":
+        # TODO (in LuxCore):
+        #  "LOGARITHM", "SQRT", "MINIMUM", "MAXIMUM",
+        #  "FLOOR", "CEIL", "FRACT", "SINE", "COSINE", "TANGENT",
+        #  "ARCSINE", "ARCCOSINE", "ARCTANGENT", "ARCTAN2"]
 
-        if node.use_clamp:
-            # Here we need to insert a helper texture *after* the current texture
-            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
-            definitions = {
-                "type": "clamp",
-                "texture": luxcore_name,
-                "min": 0,
-                "max": 1,
-            }
-            luxcore_name = luxcore_name + "clamp"
+        prefix = "scene.textures."
+        definitions = {}
+
+        tex1 = _socket(node.inputs[0], props, obj_name, group_node)
+        tex2 = _socket(node.inputs[1], props, obj_name, group_node)
+
+        # In Cycles, the inputs are converted to float values (e.g. averaged in case of RGB input).
+        # The following LuxCore textures would perform RGB operations if we didn't convert the inputs to floats.
+        if node.operation in {"ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "ABSOLUTE"}:
+            def convert_to_float(input_tex_name):
+                # This is more or less a hack because we don't have a dedicated "RGB to BW" texture
+                tex_name = input_tex_name + "to_float"
+                helper_prefix = "scene.textures." + tex_name + "."
+                helper_defs = {
+                    "type": "power",
+                    "base": input_tex_name,
+                    "exponent": 1,
+                }
+                props.Set(utils.create_props(helper_prefix, helper_defs))
+                return tex_name
+
+            if node.inputs[0].is_linked:
+                tex1 = convert_to_float(tex1)
+            if node.inputs[1].is_linked:
+                tex2 = convert_to_float(tex2)
+
+        if node.operation in {"ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "GREATER_THAN", "LESS_THAN"}:
+            try:
+                definitions["type"] = math_operation_map[node.operation]
+            except KeyError:
+                definitions["type"] = node.operation.lower()
+            definitions["texture1"] = tex1
+            definitions["texture2"] = tex2
+        elif node.operation == "POWER":
+            definitions["type"] = "power"
+            definitions["base"] = tex1
+            definitions["exponent"] = tex2
+        elif node.operation == "ABSOLUTE":
+            definitions["type"] = "abs"
+            definitions["texture"] = tex1
+        elif node.operation == "ROUND":
+            definitions["type"] = "rounding"
+            definitions["texture"] = tex1
+            definitions["increment"] = 1
+        elif node.operation == "MODULO":
+            definitions["type"] = "modulo"
+            definitions["texture"] = tex1
+            definitions["modulo"] = tex2
+        else:
+            LuxCoreErrorLog.add_warning(f"Unknown Math mode: {node.operation}", obj_name=obj_name)
+            return ERROR_VALUE
     elif node.bl_idname == "ShaderNodeGroup":
         active_output = None
         for subnode in node.node_tree.nodes:
@@ -269,6 +327,17 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
         return ERROR_VALUE
+
+    if node.bl_idname in {"ShaderNodeMixRGB", "ShaderNodeMath"} and node.use_clamp:
+        # Here we need to insert a helper texture *after* the current texture
+        props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+        definitions = {
+            "type": "clamp",
+            "texture": luxcore_name,
+            "min": 0,
+            "max": 1,
+        }
+        luxcore_name = luxcore_name + "clamp"
 
     props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
     return luxcore_name
