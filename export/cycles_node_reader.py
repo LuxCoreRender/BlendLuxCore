@@ -1,3 +1,4 @@
+import math
 from ..bin import pyluxcore
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
@@ -43,7 +44,6 @@ def _socket(socket, props, obj_name, group_node):
             return socket.default_value
 
 
-# TODO convert roughness from squared to regular
 def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node=None):
     if luxcore_name is None:
         luxcore_name = str(node.as_pointer()) + output_socket.name
@@ -60,6 +60,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "metallic": _socket(node.inputs["Metallic"], props, obj_name, group_node),
             "specular": _socket(node.inputs["Specular"], props, obj_name, group_node),
             "speculartint": _socket(node.inputs["Specular Tint"], props, obj_name, group_node),
+            # Both LuxCore and Cycles use squared roughness here, no need to convert
             "roughness": _socket(node.inputs["Roughness"], props, obj_name, group_node),
             "anisotropic": _socket(node.inputs["Anisotropic"], props, obj_name, group_node),
             "sheen": _socket(node.inputs["Sheen"], props, obj_name, group_node),
@@ -104,7 +105,8 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         }
         props.Set(utils.create_props(helper_prefix, helper_defs))
 
-        roughness = _socket(node.inputs["Roughness"], props, obj_name, group_node)
+        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+                                                 luxcore_name, obj_name, group_node)
 
         definitions = {
             "type": "metal2",
@@ -141,7 +143,8 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
     elif node.bl_idname == "ShaderNodeBsdfGlass":
         prefix = "scene.materials."
         color = _socket(node.inputs["Color"], props, obj_name, group_node)
-        roughness = _socket(node.inputs["Roughness"], props, obj_name, group_node)
+        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+                                                 luxcore_name, obj_name, group_node)
 
         definitions = {
             "type": "glass" if roughness == 0 else "roughglass",
@@ -165,8 +168,9 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         }
         props.Set(utils.create_props(helper_prefix, helper_defs))
 
-        # TODO emulate actual anisotropy somehow ...
-        roughness = _socket(node.inputs["Roughness"], props, obj_name, group_node)
+        # TODO emulate actual anisotropy and rotation somehow ...
+        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+                                                 luxcore_name, obj_name, group_node)
 
         definitions = {
             "type": "metal2",
@@ -213,3 +217,20 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
 
     props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
     return luxcore_name
+
+
+def _squared_roughness_to_linear(socket, props, luxcore_name, obj_name, group_node):
+    roughness = _socket(socket, props, obj_name, group_node)
+    if socket.is_linked:
+        # Implicitly create a math texture with unique name
+        tex_name = luxcore_name + "roughness_converter"
+        helper_prefix = "scene.textures." + tex_name + "."
+        helper_defs = {
+            "type": "power",
+            "base": roughness,
+            "exponent": 2,
+        }
+        props.Set(utils.create_props(helper_prefix, helper_defs))
+        return tex_name
+    else:
+        return roughness ** 2
