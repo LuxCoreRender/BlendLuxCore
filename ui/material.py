@@ -80,11 +80,13 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                     tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
                     split.label(text='Nodes: "%s"' % tree_name, icon="NODETREE")
                     split.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
-            elif not mat.luxcore.use_cycles_nodes:
-                layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use Material Nodes")
 
             if mat.use_nodes and mat.node_tree:
                 layout.prop(mat.luxcore, "use_cycles_nodes")
+                # TODO show_nodetree operator for Cycles node tree
+
+            if mat.luxcore.node_tree and not mat.luxcore.use_cycles_nodes:
+                layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use LuxCore Material Nodes")
 
 
 class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
@@ -95,7 +97,7 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return engine == "LUXCORE" and not context.material.luxcore.use_cycles_nodes
+        return engine == "LUXCORE" and (context.material and not context.material.luxcore.use_cycles_nodes)
 
     def draw(self, context):
         layout = self.layout

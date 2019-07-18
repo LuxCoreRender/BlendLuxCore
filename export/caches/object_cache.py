@@ -29,8 +29,8 @@ def get_material(obj, material_index, exporter, is_viewport_render):
         if mat.luxcore.node_tree:
             imagemaps = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap")
             if imagemaps and not utils_node.has_valid_uv_map(obj):
-                msg = ("%d image texture(s) used, but no UVs defined. "
-                       "In case of bumpmaps this can lead to artifacts" % len(imagemaps))
+                msg = (utils.pluralize("%d image texture", len(imagemaps)) + " used, but no UVs defined. "
+                       "In case of bumpmaps this can lead to artifacts")
                 LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
 
         return material.convert(exporter, mat, is_viewport_render, obj.name)
@@ -73,9 +73,16 @@ class ObjectCache2:
     def _is_visible(self, dg_obj_instance, obj):
         return dg_obj_instance.show_self and obj.type in EXPORTABLE_OBJECTS
 
-    def _get_mesh_key(self, obj, is_viewport_render=True):
-        # Important: we need the data of the original object, not the evaluated one
-        return utils.get_luxcore_name(obj.original.data, is_viewport_render)
+    def _get_mesh_key(self, obj, use_instancing, is_viewport_render=True):
+        # Important: we need the data of the original object, not the evaluated one.
+        # The instancing state has to be part of the key because a non-instanced mesh
+        # has its transformation baked-in and can't be used by other instances.
+        modified = utils.has_deforming_modifiers(obj.original)
+        source = obj.original.data if (use_instancing and not modified) else obj.original
+        key = utils.get_luxcore_name(source, is_viewport_render)
+        if use_instancing:
+            key += "_instance"
+        return key
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render):
         """ Convert one DepsgraphObjectInstance amd keep track of it """
@@ -100,8 +107,9 @@ class ObjectCache2:
                           luxcore_scene, scene_props, is_viewport_render):
         transform = dg_obj_instance.matrix_world
 
-        use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj)
-        mesh_key = self._get_mesh_key(obj, is_viewport_render)
+        use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj.original)
+        mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
+        print(obj.name, "mesh key:", mesh_key)
 
         if use_instancing and mesh_key in self.exported_meshes:
             print("retrieving mesh from cache")
@@ -171,12 +179,12 @@ class ObjectCache2:
 
                     if obj.type in MESH_OBJECTS:
                         print(f"Geometry of obj {obj.name} was updated")
-                        mesh_key = self._get_mesh_key(obj)
+                        use_instancing = True
+                        mesh_key = self._get_mesh_key(obj, use_instancing)
                         if mesh_key not in self.exported_meshes:
                             # Debug
                             raise Exception("NO MESH KEY FOUND")
                         transform = None  # In viewport render, everything is instanced
-                        use_instancing = True
                         exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
                                                                is_viewport_render, use_instancing, transform)
                         self.exported_meshes[mesh_key] = exported_mesh

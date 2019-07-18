@@ -471,11 +471,14 @@ def use_obj_motion_blur(obj, scene):
     return object_blur and obj.luxcore.enable_motion_blur
 
 
+def has_deforming_modifiers(obj):
+    return any([mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers])
+
+
 def can_share_mesh(obj):
     if not obj.data or obj.data.users < 2:
         return False
-    modified = any([mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers])
-    return not modified
+    return not has_deforming_modifiers(obj)
 
 
 def use_instancing(obj, scene, is_viewport_render):

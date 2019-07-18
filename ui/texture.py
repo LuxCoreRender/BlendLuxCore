@@ -35,32 +35,33 @@ class LUXCORE_TEXTURE_PT_context_texture(TextureButtonsPanel, Panel):
 
             pin_id = None
 
-        if space.texture_context == 'OTHER':
-            if not pin_id:
-                row = layout.row()
-                row.template_texture_user()
-            user = context.texture_user
-            if user or pin_id:
-                layout.separator()
-
-                row = layout.row()
-
-                if pin_id:
-                    row.template_ID(space, "pin_id")
-                else:
-                    propname = context.texture_user_property.identifier
-                    row.template_ID(user, propname, new="texture.new")
-
-                if tex:
-                    split = layout.split(factor=0.2)
-                    if tex.use_nodes:
-                        if slot:
-                            split.label(text="Output:")
-                            split.prop(slot, "output_node", text="")
-                    else:
-                        split.label(text="Type:")
-                        split.prop(tex, "type", text="")
-            return
+        # TODO 2.8 texture_context was removed, have to check how to handle this now (maybe look at Cycles code)
+        # if space.texture_context == 'OTHER':
+        #     if not pin_id:
+        #         row = layout.row()
+        #         row.template_texture_user()
+        #     user = context.texture_user
+        #     if user or pin_id:
+        #         layout.separator()
+        #
+        #         row = layout.row()
+        #
+        #         if pin_id:
+        #             row.template_ID(space, "pin_id")
+        #         else:
+        #             propname = context.texture_user_property.identifier
+        #             row.template_ID(user, propname, new="texture.new")
+        #
+        #         if tex:
+        #             split = layout.split(factor=0.2)
+        #             if tex.use_nodes:
+        #                 if slot:
+        #                     split.label(text="Output:")
+        #                     split.prop(slot, "output_node", text="")
+        #             else:
+        #                 split.label(text="Type:")
+        #                 split.prop(tex, "type", text="")
+        #     return
 
         tex_collection = (pin_id is None) and (node is None) and (not isinstance(idblock, Brush))
 

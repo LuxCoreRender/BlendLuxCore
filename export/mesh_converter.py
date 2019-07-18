@@ -60,10 +60,6 @@ def _prepare_mesh(obj, depsgraph):
     object_eval = None
 
     try:
-        # apply_modifiers = True
-        # modifier_mode = "PREVIEW" if context else "RENDER"
-        # mesh = obj.to_mesh(scene, apply_modifiers, modifier_mode, calc_tessface=False)
-
         object_eval = obj.evaluated_get(depsgraph)
         if object_eval:
             mesh = object_eval.to_mesh()
