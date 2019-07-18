@@ -69,9 +69,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         #     self.update_stats("", msg)
 
     def render(self, depsgraph):
-        if self.is_preview:
-            print("Material Preview TODO")
-            # self.render_preview(scene)
+        if self.is_preview:            
+            self.render_preview(depsgraph)
         else:
             self.render_final(depsgraph)
 
@@ -99,10 +98,10 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             TileStats.reset()
             LuxCoreLog.remove_listener(self.log_listener)
 
-    def render_preview(self, scene):
+    def render_preview(self, depsgraph):
         try:
-            preview.render(self, scene)
-        except Exception:
+            preview.render(self, depsgraph)
+        except Exception as error:
             import traceback
             traceback.print_exc()
             # Clean up

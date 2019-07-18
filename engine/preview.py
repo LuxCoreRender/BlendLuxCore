@@ -13,8 +13,7 @@ blender/release/datafiles/preview.blend
 """
 
 # Diameter of the default sphere, in meters
-DEFAULT_SPHERE_SIZE = 9.15753
-
+DEFAULT_SPHERE_SIZE = 0.1
 
 class PreviewType(Enum):
     NONE = 0
@@ -26,7 +25,8 @@ def no_log_output(message):
     pass
 
 
-def render(engine, scene):
+def render(engine, depsgraph):
+    scene = depsgraph.scene_eval    
     width, height = utils.calc_filmsize(scene)
 
     if max(width, height) <= 96:
@@ -34,14 +34,15 @@ def render(engine, scene):
         return
 
     pyluxcore.SetLogHandler(no_log_output)
-    preview_type, obj = _get_preview_settings(scene)
+    engine.exporter = export.Exporter(scene)
+    preview_type, active_mat = _get_preview_settings(engine.exporter, depsgraph)
 
-    if preview_type == PreviewType.MATERIAL:
-        engine.exporter = export.Exporter(scene)
-        engine.session = _export_mat_scene(engine.exporter, obj, scene)
+    if preview_type == PreviewType.MATERIAL and not active_mat is None:
+        engine.session = _export_mat_scene(engine, depsgraph, active_mat)
     else:
         print("Unsupported preview type")
         return enable_log_output()
+
 
     engine.framebuffer = FrameBufferFinal(scene)
     engine.session.Start()
@@ -76,39 +77,50 @@ def enable_log_output():
     pyluxcore.SetLogHandler(LuxCoreLog.add)
 
 
-def _export_mat_scene(exporter, obj, scene):
+def _export_mat_scene(engine, depsgraph, active_mat):    
+    exporter = engine.exporter
+    scene = depsgraph.scene_eval
+
     # The diameter that the preview objects should have, in meters
-    size = obj.active_material.luxcore.preview.size
+    size = active_mat.luxcore.preview.size
     worldscale = size / DEFAULT_SPHERE_SIZE
     scene.unit_settings.system = "METRIC"
     scene.unit_settings.scale_length = worldscale
 
     scene_props = pyluxcore.Properties()
     luxcore_scene = pyluxcore.Scene()
+
     # The world sphere uses different lights and render settings
-    is_world_sphere = obj.name == "preview.004"
+    is_world_sphere = active_mat.use_preview_world
 
     # Camera
     cam_props = export.camera.convert(exporter, scene)
+
     # Apply zoom
     field_of_view = cam_props.Get("scene.camera.fieldofview").GetFloat()
-    zoom = obj.active_material.luxcore.preview.zoom
+    zoom = active_mat.luxcore.preview.zoom
     cam_props.Set(pyluxcore.Property("scene.camera.fieldofview", field_of_view / zoom))
     luxcore_scene.Parse(cam_props)
 
-    # Object
-    is_plane_scene = obj.name == "preview"
-    if is_plane_scene:
-        _export_plane_scene(exporter, scene, obj.active_material, scene_props, luxcore_scene)
-    else:
-        _convert_obj(exporter, obj, scene, luxcore_scene, scene_props)
+    # Objects    
+    for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
+        obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+        if not exporter.object_cache2._is_visible(dg_obj_instance, obj):
+            continue
 
+        # Don't export lights and floor from preview scene
+        if not (obj.type == 'LIGHT' or obj.name == 'Floor'):           
+            exporter.object_cache2._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
+                                                luxcore_scene, scene_props, False)
+    
     # Lights (either two area lights or a sun+sky setup)
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
 
-    if not is_world_sphere:
-        # Ground plane and background plane
-        _create_backplates(scene, luxcore_scene, scene_props)
+##  #TODO: Decide if the ground plane should be visible with world sphere enabled
+##    if not is_world_sphere:
+##        _create_backplates(scene, luxcore_scene, scene_props)
+    # Ground plane
+    _create_backplates(scene, luxcore_scene, scene_props)
 
     luxcore_scene.Parse(scene_props)
 
@@ -116,47 +128,47 @@ def _export_mat_scene(exporter, obj, scene):
     config_props = _create_config(scene, is_world_sphere)
     renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
     session = pyluxcore.RenderSession(renderconfig)
-
+    
     return session
 
 
-def _export_plane_scene(exporter, scene, mat, props, luxcore_scene):
-    # The default plane from the Blender preview scene is ugly (wrong scale and UVs), so we make our own.
-    # A quadratic texture (with UV mapping) is tiled exactly 2 times in horizontal directon on this plane,
-    # so it's also a nice tiling preview
-
-    lux_mat_name, mat_props = export.material.convert(exporter, mat, scene, None)
-    props.Set(mat_props)
-
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-
-    mesh_name = "mat_preview_planemesh"
-    size_z_raw = 7
-    size_z = size_z_raw * worldscale
-    size_x = size_z_raw * 2 * worldscale
-    ypos = -1.00001 * worldscale
-    zpos = 2 * worldscale
-    vertices = [
-        (-size_x / 2, ypos, zpos - size_z / 2),
-        (size_x / 2, ypos, zpos - size_z / 2),
-        (size_x / 2, ypos, zpos + size_z / 2),
-        (-size_x / 2, ypos, zpos + size_z / 2),
-    ]
-    faces = [
-        (0, 1, 2),
-        (2, 3, 0)
-    ]
-    uv = [
-        (1, 2),
-        (1, 0),
-        (0, 0),
-        (0, 2)
-    ]
-    luxcore_scene.DefineMesh(mesh_name, vertices, faces, None, uv, None, None)
-    # Create object
-    obj_name = "mat_preview_planeobj"
-    props.Set(pyluxcore.Property("scene.objects." + obj_name + ".ply", mesh_name))
-    props.Set(pyluxcore.Property("scene.objects." + obj_name + ".material", lux_mat_name))
+##def _export_plane_scene(exporter, scene, mat, props, luxcore_scene):
+##    # The default plane from the Blender preview scene is ugly (wrong scale and UVs), so we make our own.
+##    # A quadratic texture (with UV mapping) is tiled exactly 2 times in horizontal directon on this plane,
+##    # so it's also a nice tiling preview
+##
+##    lux_mat_name, mat_props = export.material.convert(exporter, mat, scene, None)
+##    props.Set(mat_props)
+##
+##    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+##
+##    mesh_name = "mat_preview_planemesh"
+##    size_z_raw = 2
+##    size_z = size_z_raw * worldscale
+##    size_x = size_z_raw * 2 * worldscale
+##    ypos = 0
+##    zpos = 2 * worldscale
+##    vertices = [
+##        (-size_x / 2, ypos, zpos - size_z / 2),
+##        (size_x / 2, ypos, zpos - size_z / 2),
+##        (size_x / 2, ypos, zpos + size_z / 2),
+##        (-size_x / 2, ypos, zpos + size_z / 2),
+##    ]
+##    faces = [
+##        (0, 1, 2),
+##        (2, 3, 0)
+##    ]
+##    uv = [
+##        (1, 2),
+##        (1, 0),
+##        (0, 0),
+##        (0, 2)
+##    ]
+##    luxcore_scene.DefineMesh(mesh_name, vertices, faces, None, uv, None, None)
+##    # Create object
+##    obj_name = "mat_preview_planeobj"
+##    props.Set(pyluxcore.Property("scene.objects." + obj_name + ".ply", mesh_name))
+##    props.Set(pyluxcore.Property("scene.objects." + obj_name + ".material", lux_mat_name))
 
 
 def _create_lights(scene, luxcore_scene, props, is_world_sphere):
@@ -213,7 +225,7 @@ def _create_area_light(scene, luxcore_scene, props, name, color, position, rotat
     transform_matrix[1][3] = position[1]
     transform_matrix[2][3] = position[2]
 
-    mat = transform_matrix * rotation_matrix * scale_matrix
+    mat = transform_matrix @ rotation_matrix @ scale_matrix
     transform = utils.matrix_to_list(mat, scene, apply_worldscale=True)
 
     # add mesh
@@ -237,8 +249,8 @@ def _create_backplates(scene, luxcore_scene, props):
     worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
     # Ground plane
-    size = 70 * worldscale
-    zpos = -2.00001 * worldscale
+    size = worldscale
+    zpos = 0.0
     vertices = [
         (size, size, zpos),
         (size, -size, zpos),
@@ -251,21 +263,6 @@ def _create_backplates(scene, luxcore_scene, props):
     ]
     _create_checker_plane(luxcore_scene, props, "ground_plane", vertices, faces, worldscale)
 
-    # Plane behind preview object
-    size = 70 * worldscale
-    ypos = 20.00001 * worldscale
-    vertices = [
-        (-size, ypos, size),
-        (size, ypos, size),
-        (size, ypos, -size),
-        (-size, ypos, -size)
-    ]
-    faces = [
-        (0, 1, 2),
-        (2, 3, 0)
-    ]
-    _create_checker_plane(luxcore_scene, props, "plane_behind_object", vertices, faces, worldscale)
-
 
 def _create_checker_plane(luxcore_scene, props, name, vertices, faces, worldscale):
     mesh_name = name + "_mesh"
@@ -275,8 +272,8 @@ def _create_checker_plane(luxcore_scene, props, name, vertices, faces, worldscal
     # Mesh
     luxcore_scene.DefineMesh(mesh_name, vertices, faces, None, None, None, None)
     # Texture
-    # (we scale the default sphere to be 10cm by default and we want the squares to be 10cm in size)
-    checker_size = 10
+    # (we scale the default sphere to be 10cm by default and we want the squares to be 5cm in size)
+    checker_size = 5
     checker_trans = [checker_size, 0, 0, 0, 0, checker_size, 0, 0, 0, 0, checker_size, 0, 0, 0, 0, 1]
     props.Set(pyluxcore.Property("scene.textures." + tex_name + ".type", "checkerboard3d"))
     props.Set(pyluxcore.Property("scene.textures." + tex_name + ".texture1", 0.7))
@@ -331,7 +328,7 @@ def _create_config(scene, is_world_sphere):
         "film.opencl.enable": False,
         # Imagepipeline
         "film.imagepipeline.0.type": "TONEMAP_LINEAR",
-        "film.imagepipeline.0.scale": 0.5,
+        "film.imagepipeline.0.scale": 1.0,
 
         # Preview quality
         "batch.halttime": 6,
@@ -359,12 +356,19 @@ def _convert_obj(exporter, obj, scene, luxcore_scene, props):
     props.Set(obj_props)
 
 
-def _get_preview_settings(scene):
+def _get_preview_settings(exporter, depsgraph):    
     # Iterate through the preview scene, finding objects with materials attached
-    objects = [o for o in scene.objects
-               if o.is_visible(scene) and not o.hide_render and o.name.startswith("preview")]
+    objects = []
+    for dg_obj_instance in depsgraph.object_instances:        
+        obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+        if not exporter.object_cache2._is_visible(dg_obj_instance, obj):
+            continue
+
+        if obj.name.startswith("preview"):
+            active_mat = obj.active_material
+            objects.append(obj)
 
     if objects:
-        return PreviewType.MATERIAL, objects[0]
+        return PreviewType.MATERIAL, active_mat
 
     return PreviewType.NONE, None
