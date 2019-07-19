@@ -93,15 +93,21 @@ def get_link(socket):
     link = socket.links[0]
 
     while link.from_node.bl_idname == "NodeReroute" or link.from_node.mute:
-        if link.from_node.mute:
-            if link.from_node.internal_links:
-                link = link.from_node.internal_links[0].from_socket.links[0]
+        node = link.from_node
+
+        if node.mute:
+            if node.internal_links:
+                links = node.internal_links[0].from_socket.links
+                if links:
+                    return links[0]
+                else:
+                    return None
             else:
                 return None
         else:
             # Reroute node
-            if link.from_node.inputs[0].is_linked:
-                link = link.from_node.inputs[0].links[0]
+            if node.inputs[0].is_linked:
+                link = node.inputs[0].links[0]
             else:
                 # If the left-most reroute has no input, it is like self.is_linked == False
                 return None

@@ -282,10 +282,15 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
                 props.Set(utils.create_props(helper_prefix, helper_defs))
                 return tex_name
 
-            if node.inputs[0].is_linked:
+            if isinstance(tex1, str):
                 tex1 = convert_to_float(tex1)
-            if node.inputs[1].is_linked:
+            elif isinstance(tex1, list):
+                tex1 = sum(tex1) / len(tex1)
+
+            if isinstance(tex2, str):
                 tex2 = convert_to_float(tex2)
+            elif isinstance(tex2, list):
+                tex2 = sum(tex2) / len(tex2)
 
         if node.operation in {"ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "GREATER_THAN", "LESS_THAN"}:
             try:
@@ -346,9 +351,21 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         return _node(link.from_node, link.from_socket, props, luxcore_name, obj_name, node)
     elif node.bl_idname == "NodeGroupInput":
         # TODO I set group_node to None, but what about nested groups?
+        if group_node is None:
+            LuxCoreErrorLog.add_warning("Nested groups are not supported yet", obj_name=obj_name)
+            return ERROR_VALUE
         return _socket(group_node.inputs[output_socket.name], props, obj_name, None)
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
+
+        # Try to skip this node by looking at its internal links (the same that are used when the node is muted)
+        if node.internal_links:
+            links = node.internal_links[0].from_socket.links
+            if links:
+                link = links[0]
+                print("current node", node.name, "failed, testing next node:", link.from_node.name)
+                return _node(link.from_node, link.from_socket, props, None, obj_name, group_node)
+
         return ERROR_VALUE
 
     if node.bl_idname in {"ShaderNodeMixRGB", "ShaderNodeMath"} and node.use_clamp:
