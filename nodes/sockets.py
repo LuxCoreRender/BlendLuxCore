@@ -1,7 +1,7 @@
 import bpy
 import mathutils
 from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty, BoolProperty
-from ..utils.node import update_opengl_materials
+from .. utils import node as utils_node
 from ..ui import icons
 
 # The rules for socket classes are these:
@@ -32,7 +32,7 @@ class LuxCoreNodeSocket:
 
     def draw(self, context, layout, node, text):
         # Check if the socket linked to this socket is in the set of allowed input socket classes.
-        link = self._get_link()
+        link = utils_node.get_link(self)
 
         if link and hasattr(self, "allowed_inputs"):
             is_allowed = False
@@ -78,32 +78,12 @@ class LuxCoreNodeSocket:
         return None
 
     def export(self, exporter, props, luxcore_name=None):
-        link = self._get_link()
+        link = utils_node.get_link(self)
 
         if link:
             return link.from_node.export(exporter, props, luxcore_name, link.from_socket)
         elif hasattr(self, "default_value"):
             return self.export_default()
-        else:
-            return None
-
-    def _get_link(self):
-        """
-        Returns the link if this socket is linked, None otherwise.
-        All reroute nodes between this socket and the next non-reroute node are skipped.
-        """
-
-        if self.is_linked:
-            link = self.links[0]
-
-            while link.from_node.bl_idname == "NodeReroute":
-                if link.from_node.inputs[0].is_linked:
-                    link = link.from_node.inputs[0].links[0]
-                else:
-                    # If the left-most reroute has no input, it is like self.is_linked == False
-                    return None
-
-            return link
         else:
             return None
 
@@ -167,7 +147,7 @@ class LuxCoreSocketBump(bpy.types.NodeSocket, LuxCoreNodeSocket):
 class LuxCoreSocketColor(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.color_texture
     default_value: FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1,
-                                       update=update_opengl_materials)
+                                       update=utils_node.update_opengl_materials)
 
     def draw_prop(self, context, layout, node, text):
         row = layout.row()
@@ -199,7 +179,7 @@ class LuxCoreSocketFloatPositive(bpy.types.NodeSocket, LuxCoreSocketFloat):
 
 class LuxCoreSocketFloat0to1(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value: FloatProperty(min=0, max=1, description="Float value between 0 and 1",
-                                 update=update_opengl_materials)
+                                 update=utils_node.update_opengl_materials)
     slider = True
 
 

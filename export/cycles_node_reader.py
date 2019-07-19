@@ -1,5 +1,6 @@
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import node as utils_node
 from ..utils.errorlog import LuxCoreErrorLog
 
 ERROR_VALUE = 0
@@ -12,14 +13,16 @@ math_operation_map = {
 
 
 def convert(material, props, luxcore_name, obj_name=""):
-    print("Converting Cycles node tree of material", material.name_full)
+    # print("Converting Cycles node tree of material", material.name_full)
     output = material.node_tree.get_output_node("CYCLES")
     if output is None or not output.inputs["Surface"].is_linked:
         return black(luxcore_name)
-    link = output.inputs["Surface"].links[0]
+
+    link = utils_node.get_link(output.inputs["Surface"])
     result = _node(link.from_node, link.from_socket, props, luxcore_name, obj_name)
-    if result == 0:
+    if result == ERROR_VALUE:
         return black(luxcore_name)
+
     assert result == luxcore_name
     return luxcore_name, props
 
@@ -35,18 +38,18 @@ def black(luxcore_name="__BLACK__"):
 
 def _socket(socket, props, obj_name, group_node):
     # TODO use more advanced functions from our own socket base class (bypass reroutes etc.)
-    if socket.is_linked:
-        link = socket.links[0]
+    link = utils_node.get_link(socket)
+    if link:
         return _node(link.from_node, link.from_socket, props, None, obj_name, group_node)
-    else:
-        if not hasattr(socket, "default_value"):
-            return ERROR_VALUE
 
-        try:
-            return list(socket.default_value)[:3]
-        except TypeError:
-            # Not iterable
-            return socket.default_value
+    if not hasattr(socket, "default_value"):
+        return ERROR_VALUE
+
+    try:
+        return list(socket.default_value)[:3]
+    except TypeError:
+        # Not iterable
+        return socket.default_value
 
 
 def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node=None):
@@ -239,7 +242,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             LuxCoreErrorLog.add_warning(f"Unknown MixRGB mode: {blend_type}", obj_name=obj_name)
             return ERROR_VALUE
 
-        if fac > 0 and fac < 1 and blend_type != "MIX":
+        if (isinstance(fac, str) or (fac > 0 and fac < 1)) and blend_type != "MIX":
             # Here we need to insert a helper texture *after* the current texture
             props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
             definitions = {
@@ -317,7 +320,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         if not current_input.is_linked:
             return ERROR_VALUE
 
-        link = current_input.links[0]
+        link = utils_node.get_link(current_input)
         # I call _node instead of _socket here because I need to pass the
         # luxcore_name in case the node group is the first node in the tree
         return _node(link.from_node, link.from_socket, props, luxcore_name, obj_name, node)

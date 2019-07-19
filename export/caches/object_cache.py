@@ -109,13 +109,13 @@ class ObjectCache2:
 
         use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj.original)
         mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
-        print(obj.name, "mesh key:", mesh_key)
+        # print(obj.name, "mesh key:", mesh_key)
 
         if use_instancing and mesh_key in self.exported_meshes:
-            print("retrieving mesh from cache")
+            # print("retrieving mesh from cache")
             exported_mesh = self.exported_meshes[mesh_key]
         else:
-            print("fresh export")
+            # print("fresh export")
             exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
                                                    is_viewport_render, use_instancing, transform)
             self.exported_meshes[mesh_key] = exported_mesh

@@ -80,10 +80,36 @@ def export_material_input(input, exporter, props, luxcore_name=None):
         return luxcore_name
 
 
-def get_linked_node(socket):
+def get_link(socket):
+    """
+    Returns the link if this socket is linked, None otherwise.
+    All reroute nodes between this socket and the next non-reroute node are skipped.
+    """
+
     if not socket.is_linked:
         return None
-    return socket.links[0].from_node
+
+    link = socket.links[0]
+
+    while link.from_node.bl_idname == "NodeReroute":
+        if link.from_node.inputs[0].is_linked:
+            link = link.from_node.inputs[0].links[0]
+        else:
+            # If the left-most reroute has no input, it is like self.is_linked == False
+            return None
+
+    return link
+
+
+def get_linked_node(socket):
+    """
+    Returns the connected node if this socket is linked, None otherwise.
+    All reroute nodes between this socket and the next non-reroute node are skipped.
+    """
+    link = get_link(socket)
+    if not link:
+        return None
+    return link.from_node
 
 
 def find_nodes(node_tree, bl_idname):
