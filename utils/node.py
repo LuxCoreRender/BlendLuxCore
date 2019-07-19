@@ -84,6 +84,7 @@ def get_link(socket):
     """
     Returns the link if this socket is linked, None otherwise.
     All reroute nodes between this socket and the next non-reroute node are skipped.
+    Muted nodes are ignored.
     """
 
     if not socket.is_linked:
@@ -91,12 +92,19 @@ def get_link(socket):
 
     link = socket.links[0]
 
-    while link.from_node.bl_idname == "NodeReroute":
-        if link.from_node.inputs[0].is_linked:
-            link = link.from_node.inputs[0].links[0]
+    while link.from_node.bl_idname == "NodeReroute" or link.from_node.mute:
+        if link.from_node.mute:
+            if link.from_node.internal_links:
+                link = link.from_node.internal_links[0].from_socket.links[0]
+            else:
+                return None
         else:
-            # If the left-most reroute has no input, it is like self.is_linked == False
-            return None
+            # Reroute node
+            if link.from_node.inputs[0].is_linked:
+                link = link.from_node.inputs[0].links[0]
+            else:
+                # If the left-most reroute has no input, it is like self.is_linked == False
+                return None
 
     return link
 

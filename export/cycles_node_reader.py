@@ -15,10 +15,13 @@ math_operation_map = {
 def convert(material, props, luxcore_name, obj_name=""):
     # print("Converting Cycles node tree of material", material.name_full)
     output = material.node_tree.get_output_node("CYCLES")
-    if output is None or not output.inputs["Surface"].is_linked:
+    if output is None:
         return black(luxcore_name)
 
     link = utils_node.get_link(output.inputs["Surface"])
+    if link is None:
+        return black(luxcore_name)
+
     result = _node(link.from_node, link.from_socket, props, luxcore_name, obj_name)
     if result == ERROR_VALUE:
         return black(luxcore_name)
@@ -37,7 +40,6 @@ def black(luxcore_name="__BLACK__"):
 
 
 def _socket(socket, props, obj_name, group_node):
-    # TODO use more advanced functions from our own socket base class (bypass reroutes etc.)
     link = utils_node.get_link(socket)
     if link:
         return _node(link.from_node, link.from_socket, props, None, obj_name, group_node)
@@ -193,6 +195,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         prefix = "scene.materials."
         definitions = {
             "type": "mattetranslucent",
+            # TODO kt and kr don't really match Cycles result yet
             "kt": [1, 1, 1],
             "kr": _socket(node.inputs["Color"], props, obj_name, group_node),
         }
@@ -309,6 +312,23 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         else:
             LuxCoreErrorLog.add_warning(f"Unknown Math mode: {node.operation}", obj_name=obj_name)
             return ERROR_VALUE
+    elif node.bl_idname == "ShaderNodeHueSaturation":
+        prefix = "scene.textures."
+
+        hue = _socket(node.inputs["Hue"], props, obj_name, group_node)
+        saturation = _socket(node.inputs["Saturation"], props, obj_name, group_node)
+        value = _socket(node.inputs["Value"], props, obj_name, group_node)
+        fac = _socket(node.inputs["Fac"], props, obj_name, group_node)  # TODO
+        color = _socket(node.inputs["Color"], props, obj_name, group_node)
+
+        definitions = {
+            "type": "hsv",
+            "texture": color,
+            "hue": hue,
+            "saturation": saturation,
+            "value": value,
+        }
+
     elif node.bl_idname == "ShaderNodeGroup":
         active_output = None
         for subnode in node.node_tree.nodes:
