@@ -255,12 +255,12 @@ def calc_blender_border(scene, context=None):
 
 def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     # shift is in range -2..2
-    # offset is in range -4..4
+    # offset is in range -1..1
     render = scene.render
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
-    world_scale = get_worldscale(scene, False)
+    #world_scale = get_worldscale(scene, False)
 
     # Following: Black Magic
     scale = 1
@@ -270,8 +270,12 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     if context:
         # Viewport rendering
         if context.region_data.view_perspective == "CAMERA":
+            # Camera view
             offset_x, offset_y = context.region_data.view_camera_offset
-            # Camera view            
+            
+            if scene.camera and scene.camera.data.type == "ORTHO":                    
+                scale = 0.5 * scene.camera.data.ortho_scale
+                
             if render.use_border:
                 offset_x = 0
                 offset_y = 0
@@ -281,11 +285,13 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
                                                             scene.camera.data.sensor_fit)
                     
                 if scene.camera and scene.camera.data.type == "ORTHO":
-                    zoom = 0.5 * scene.camera.data.ortho_scale * world_scale
-                    scale = zoom
+                    # zoom = scale * world_scale
+                    zoom = scale
+                    
             else:
                 # No border
                 aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw, scene.camera.data.sensor_fit)
+                
         else:
             # Normal viewport
             aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw)
@@ -294,6 +300,9 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
         aspectratio, xaspect, yaspect = calc_aspect(render.resolution_x * render.pixel_aspect_x,
                                                     render.resolution_y * render.pixel_aspect_y,
                                                     scene.camera.data.sensor_fit)
+        
+        if scene.camera and scene.camera.data.type == "ORTHO":                    
+            scale = 0.5 * scene.camera.data.ortho_scale                
 
     dx = scale * 2 * (shift_x + 2 * xaspect * offset_x)
     dy = scale * 2 * (shift_y + 2 * yaspect * offset_y)
