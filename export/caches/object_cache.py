@@ -5,7 +5,7 @@ from .exported_data import ExportedObject
 from .. import light
 
 MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
-EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT", "EMPTY"}
+EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 
 
 def get_material(obj, material_index, exporter, is_viewport_render):
@@ -43,11 +43,11 @@ class ObjectCache2:
         self.exported_objects = {}
         self.exported_meshes = {}
 
-    def first_run(self, exporter, depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
+    def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
         # TODO use luxcore_scene.DuplicateObjects for instances
         for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-            if not self._is_visible(dg_obj_instance, obj):
+            if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
                 continue
 
             self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,

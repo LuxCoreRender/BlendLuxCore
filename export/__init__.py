@@ -76,7 +76,7 @@ class Exporter(object):
         # If a light/material uses a lightgroup, the id is stored here during export
         self.lightgroup_cache = set()
 
-    def create_session(self, depsgraph, context=None, engine=None):
+    def create_session(self, depsgraph, context=None, engine=None, view_layer=None):
         # Notes:
         # In final render, context is None
 
@@ -108,7 +108,7 @@ class Exporter(object):
 
         # Objects and lights
         is_viewport_render = context is not None
-        if not self.object_cache2.first_run(self, depsgraph, engine, luxcore_scene, scene_props, is_viewport_render):
+        if not self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
             return None
         if is_viewport_render:
             # Init

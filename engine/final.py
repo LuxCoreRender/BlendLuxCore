@@ -40,7 +40,7 @@ def render(engine, depsgraph):
         utils_view_layer.State.active_view_layer_index = layer_index
 
         _add_passes(engine, layer, scene)
-        _render_layer(engine, depsgraph, statistics)
+        _render_layer(engine, depsgraph, statistics, layer)
 
         if engine.test_break():
             # Blender skips the rest of the render layers anyway
@@ -49,10 +49,10 @@ def render(engine, depsgraph):
         print('[Engine/Final] Finished rendering layer "%s"' % layer.name)
     
 
-def _render_layer(engine, depsgraph, statistics):
+def _render_layer(engine, depsgraph, statistics, view_layer):
     engine.reset()
     engine.exporter = export.Exporter(statistics)
-    engine.session = engine.exporter.create_session(depsgraph, engine=engine)
+    engine.session = engine.exporter.create_session(depsgraph, engine=engine, view_layer=view_layer)
     scene = depsgraph.scene_eval
 
     if engine.session is None:
