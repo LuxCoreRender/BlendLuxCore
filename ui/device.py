@@ -46,7 +46,8 @@ class LUXCORE_RENDER_PT_device_settings(RenderButtonsPanel, Panel):
 
             if not opencl.devices:
                 layout.label("No OpenCL Devices available.", icon=icons.WARNING)
-                layout.operator("luxcore.update_opencl_devices")
+
+            layout.operator("luxcore.update_opencl_devices")
 
             gpu_devices = [device for device in opencl.devices if device.type == "OPENCL_GPU"]
             # We don't show OpenCL CPU devices, we just need them to check if there are other devices

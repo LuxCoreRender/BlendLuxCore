@@ -28,10 +28,13 @@ class LuxCoreOpenCLSettings(PropertyGroup):
         self.devices.clear()
 
         for device_tuple in device_list:
-            self.devices.add()
-            new = self.devices[-1]
+            new = self.devices.add()
             new.name = device_tuple[0]
             new.type = device_tuple[1]
+
+            # Intel GPU devices can lead to crashes, so disable them by default
+            if "intel" in new.name.lower():
+                new.enabled = False
 
     def update_devices_if_necessary(self):
         device_list = self.get_opencl_devices()

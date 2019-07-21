@@ -84,12 +84,16 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             LuxCoreLog.add_listener(self.log_listener)
             final.render(self, scene)
         except Exception as error:
-            self.report({"ERROR"}, str(error))
-            self.error_set(str(error))
+            error_str = str(error)
+            if error_str.startswith("OpenCL device selection string has the wrong length"):
+                error_str += ". To fix this, update the OpenCL device list in the device settings"
+
+            self.report({"ERROR"}, error_str)
+            self.error_set(error_str)
             import traceback
             traceback.print_exc()
             # Add error to error log so the user can inspect and copy/paste it
-            scene.luxcore.errorlog.add_error(error)
+            scene.luxcore.errorlog.add_error(error_str)
 
             # Clean up
             del self.session
