@@ -35,7 +35,7 @@ bl_info = {
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
-from . import auto_load, nodes, properties
+from . import auto_load, nodes, properties, handlers
 auto_load.init()
 
 
@@ -44,6 +44,7 @@ def register():
     nodes.materials.register()
     nodes.textures.register()
     nodes.volumes.register()
+    handlers.register()
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
@@ -51,6 +52,7 @@ def register():
 
 
 def unregister():
+    handlers.unregister()
     nodes.materials.unregister()
     nodes.textures.unregister()
     nodes.volumes.unregister()
