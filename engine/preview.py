@@ -34,7 +34,8 @@ def render(engine, depsgraph):
         return
 
     pyluxcore.SetLogHandler(no_log_output)
-    engine.exporter = export.Exporter(scene)
+    engine.exporter = export.Exporter()
+    engine.exporter.scene = scene
     preview_type, active_mat = _get_preview_settings(engine.exporter, depsgraph)
 
     if preview_type == PreviewType.MATERIAL and not active_mat is None:
@@ -69,6 +70,9 @@ def render(engine, depsgraph):
 
     engine.framebuffer.draw(engine, engine.session, scene, True)
     engine.session.Stop()
+
+    # Do not hold reference to temporary data
+    engine.exporter.scene = None
     enable_log_output()
 
 
@@ -105,13 +109,24 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     # Objects    
     for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-        if not exporter.object_cache2._is_visible(dg_obj_instance, obj):
+        if not obj.name == 'preview_hair' and not exporter.object_cache2._is_visible(dg_obj_instance, obj):
             continue
-
+        
         # Don't export lights and floor from preview scene
-        if not (obj.type == 'LIGHT' or obj.name == 'Floor'):           
+        if not (obj.type == 'LIGHT' or obj.name == 'Floor'):
+##ToDo 2.8 Rework hair export and hair preview
+##            if active_mat.preview_render_type == 'HAIR':
+##                for psys in obj.particle_systems:
+##                    settings = psys.settings
+##                    
+##                    if settings.type == "HAIR" and settings.render_type == "PATH":
+##                        # Make the strands in strand preview mode thicker so they are visible
+##                        settings.luxcore.hair.hair_size = 0.05
+##                        settings.luxcore.hair.tesseltype = "solid"
+##                        export.hair.convert_hair(exporter, obj, psys, luxcore_scene, depsgraph)
+
             exporter.object_cache2._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                                luxcore_scene, scene_props, False)
+                                                luxcore_scene, scene_props, False)        
     
     # Lights (either two area lights or a sun+sky setup)
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
@@ -360,9 +375,10 @@ def _get_preview_settings(exporter, depsgraph):
     # Iterate through the preview scene, finding objects with materials attached
     objects = []
     for dg_obj_instance in depsgraph.object_instances:        
-        obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-        if not exporter.object_cache2._is_visible(dg_obj_instance, obj):
-            continue
+        obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object                
+        
+        if not obj.name == 'preview_hair' and not exporter.object_cache2._is_visible(dg_obj_instance, obj):
+            continue        
 
         if obj.name.startswith("preview"):
             active_mat = obj.active_material
