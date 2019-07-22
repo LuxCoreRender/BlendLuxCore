@@ -85,7 +85,7 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             return self.create_props(props, definitions, luxcore_name)
 
         scale = self.domain.dimensions
-        translate = self.domain.matrix_world * mathutils.Vector([v for v in self.domain.bound_box[0]])
+        translate = self.domain.matrix_world @ mathutils.Vector([v for v in self.domain.bound_box[0]])
         rotate = self.domain.rotation_euler
 
         # create a location matrix
@@ -101,11 +101,11 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         tex_rot0 = mathutils.Matrix.Rotation(math.radians(rotate[0]), 4, 'X')
         tex_rot1 = mathutils.Matrix.Rotation(math.radians(rotate[1]), 4, 'Y')
         tex_rot2 = mathutils.Matrix.Rotation(math.radians(rotate[2]), 4, 'Z')
-        tex_rot = tex_rot0 * tex_rot1 * tex_rot2
+        tex_rot = tex_rot0 @ tex_rot1 @ tex_rot2
 
         # combine transformations
         mapping_type = 'globalmapping3d'
-        matrix_transformation = utils.matrix_to_list(tex_loc * tex_rot * tex_sca,
+        matrix_transformation = utils.matrix_to_list(tex_loc @ tex_rot @ tex_sca,
                                                      scene=exporter.scene,
                                                      apply_worldscale=True,
                                                      invert=True)
