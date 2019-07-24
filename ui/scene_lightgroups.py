@@ -51,19 +51,26 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         # Upper row (enable/disable, name, remove)
         box = col.box()
         row = box.row()
-        row.prop(group, "show_settings",
+        col = row.column()
+        
+        col.prop(group, "show_settings",
                  icon=settings_toggle_icon(group.show_settings),
                  icon_only=True, emboss=False)
-        row.prop(group, "enabled",
+        
+        col = row.column()
+        col.prop(group, "enabled",
                  icon=lightgroup_icon(group.enabled),
                  icon_only=True, toggle=True)
-        sub_row = row.row()
-        sub_row.active = group.enabled
+        
+        col = row.column()
+        col.enabled = group.enabled        
+        
+
         if is_default_group:
-            sub_row.label(text="Default Light Group")
+            col.label(text="Default Light Group")
             box.label(text="Contains all lights without specified light group", icon=icons.INFO)
         else:
-            sub_row.prop(group, "name", text="")
+            col.prop(group, "name", text="")            
 
         # Can't delete the default lightgroup
         if not is_default_group:
@@ -74,7 +81,7 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         if group.show_settings:
             # Lower row (gain settings, RGB gain, temperature)
             box = col.box()
-            box.active = group.enabled
+            box.enabled = group.enabled
 
             row = box.row()
             row.prop(group, 'gain')
@@ -86,10 +93,10 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
             sub.prop(group, 'rgb_gain')
 
             row = box.row()
-            row.prop(group, 'use_temperature')
+            row.prop(group, 'use_temperature', text="Temperature (K)")
             sub = row.split()
             sub.active = group.use_temperature
-            sub.prop(group, 'temperature', slider=True)
+            sub.prop(group, 'temperature', slider=True, text="")
 
     def _are_all_groups_disabled(self, context):
         return not any([group.enabled for group in context.scene.luxcore.lightgroups.get_all_groups()])
