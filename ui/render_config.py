@@ -27,7 +27,15 @@ def luxcore_render_draw(panel, context):
         col_device.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
     else:
         col_device.prop(config, "device", text="Device")
-        col_device.enabled = config.engine == "PATH"
+        col_device.active = config.engine == "PATH"
+
+    # Engine
+    col = layout.column(align=True)
+    col.prop(config, "engine", expand=False)
+    col.active = True
+
+    if config.device == "OCL":
+        col.active = False
 
     # Buttons for Network Render and Wiki
     flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=True)
@@ -36,27 +44,6 @@ def luxcore_render_draw(panel, context):
     col = flow.column(align=True)
     op = col.operator("luxcore.open_website", icon=icons.URL, text="Wiki")
     op.url = "https://wiki.luxcorerender.org/BlendLuxCore_Network_Rendering"
-
-
-def draw_samples_info(layout, context):
-    config = context.scene.luxcore.config
-    engine = config.engine
-
-    # Calculate sample values
-    if engine == 'PATH':
-        total    = config.path.depth_total      
-        diffuse  = config.path.depth_diffuse
-        glossy   = config.path.depth_glossy
-        specular = config.path.depth_specular
-       
-        # Draw interface
-        # Do not draw for progressive, when Square Samples are disabled
-        col = layout.column(align=True)
-        col.scale_y = 0.6
-        col.label(text="Total Samples:")
-        col.separator()
-        col.label(text="%s Total, %s Diffuse, %s Glossy, %s Specular" %
-                  (total, diffuse * total, glossy * total, specular * total))
 
             
 class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
@@ -134,9 +121,9 @@ class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
                 col.prop(dls_cache, "maxsamplescount")
 
 
-class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "Sampling"
+    bl_label = "Light Paths"
     bl_order = 2
 
     def draw(self, context):
@@ -149,14 +136,6 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        col = layout.column(align=True)
-        col.prop(config, "engine", expand=False)
-        col.enabled = True
-      
-        # Engine
-        if config.device == "OCL":
-            col.enabled = False
-
         if config.engine == "PATH":
             # Path options
             col = layout.column(align=True)
@@ -168,11 +147,11 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
             col.prop(config, "bidir_light_maxdepth")
 
 
-class LUXCORE_RENDER_PT_sampling_sub_samples(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
-    bl_label = "Sub Samples"
-    bl_options = {'DEFAULT_CLOSED'}    
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
+    bl_label = "Max Bounces"
+    #bl_options = {'DEFAULT_CLOSED'}    
     
     @classmethod
     def poll(cls, context):        
@@ -189,17 +168,15 @@ class LUXCORE_RENDER_PT_sampling_sub_samples(RenderButtonsPanel, Panel):
         col = layout.column(align=True)
         col.prop(config.path, "depth_diffuse")
         col.prop(config.path, "depth_glossy")
-        col.prop(config.path, "depth_specular")
-
-        draw_samples_info(layout, context)
+        col.prop(config.path, "depth_specular")        
 
 
 class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
     bl_label = "Clamping"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_RENDER_PT_sampling_advanced"
+    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_advanced"
     
     def draw_header(self, context):
         layout = self.layout
@@ -229,12 +206,12 @@ class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
             layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
 
 
-class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
     bl_label = "Advanced"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_RENDER_PT_sampling_sub_samples"
+    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_bounces"
 
     def draw(self, context):
         layout = self.layout
@@ -276,9 +253,9 @@ class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
             row_sampler.label(text="Tiled path uses special sampler", icon=icons.INFO)
 
 
-class LUXCORE_RENDER_PT_sampling_tiled(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_lightpaths_tiled(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
     bl_label = "Tiled"
     bl_options = {'DEFAULT_CLOSED'}    
     lux_predecessor = "LUXCORE_RENDER_PT_clamping"
@@ -309,9 +286,9 @@ class LUXCORE_RENDER_PT_sampling_tiled(RenderButtonsPanel, Panel):
             layout.label(text="(Doubling amount of samples because of denoiser)")
 
 
-class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_lightpaths_tiled_multipass(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_sampling_tiled"
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths_tiled"
     bl_label = "Multipass"
     bl_options = {'DEFAULT_CLOSED'}    
 
