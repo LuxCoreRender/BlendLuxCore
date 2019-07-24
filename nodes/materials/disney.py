@@ -38,5 +38,5 @@ class LuxCoreNodeMatDisney(bpy.types.Node, LuxCoreNodeMaterial):
             "clearcoatgloss": self.inputs["Clearcoat Gloss"].export(exporter, depsgraph, props),
         }
 
-        self.export_common_inputs(exporter, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)
