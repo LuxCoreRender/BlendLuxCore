@@ -18,10 +18,10 @@ class LuxCoreNodeTexNormalmap(bpy.types.Node, LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "scale")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "normalmap",
-            "texture": self.inputs["Color"].export(exporter, props),
+            "texture": self.inputs["Color"].export(exporter, depsgraph, props),
             "scale": self.scale,
         }
 

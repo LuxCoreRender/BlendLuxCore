@@ -41,23 +41,23 @@ class LuxCoreNodeMatGlossyCoating(bpy.types.Node, LuxCoreNodeMaterial):
         layout.prop(self, "use_ior")
         Roughness.draw(self, context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
-        base = utils_node.export_material_input(self.inputs["Base Material"], exporter, props)
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        base = utils_node.export_material_input(self.inputs["Base Material"], exporter, depsgraph, props)
 
         definitions = {
             "type": "glossycoating",
             "base": base,
-            "ka": self.inputs["Absorption Color"].export(exporter, props),
-            "d": self.inputs["Absorption Depth (nm)"].export(exporter, props),
+            "ka": self.inputs["Absorption Color"].export(exporter, depsgraph, props),
+            "d": self.inputs["Absorption Depth (nm)"].export(exporter, depsgraph, props),
             "multibounce": self.multibounce,
         }
 
         if self.use_ior:
-            definitions["index"] = self.inputs["IOR"].export(exporter, props)
+            definitions["index"] = self.inputs["IOR"].export(exporter, depsgraph, props)
             definitions["ks"] = [1, 1, 1]
         else:
-            definitions["ks"] = self.inputs["Specular Color"].export(exporter, props)
+            definitions["ks"] = self.inputs["Specular Color"].export(exporter, depsgraph, props)
 
-        Roughness.export(self, exporter, props, definitions)
-        self.export_common_inputs(exporter, props, definitions)
+        Roughness.export(self, exporter, depsgraph, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

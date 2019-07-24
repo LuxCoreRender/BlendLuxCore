@@ -168,7 +168,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
 
         self.image_user.draw(col, context.scene)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         if self.image is None:
             if self.is_normal_map:
                 return [0.5, 0.5, 1.0]
@@ -182,7 +182,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             LuxCoreErrorLog.add_warning(msg)
             return [1, 0, 1]
 
-        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, props)
+        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
 
         definitions = {
             "type": "imagemap",

@@ -506,7 +506,7 @@ def use_instancing(obj, scene, is_viewport_render):
     return False
 
 
-def find_smoke_domain_modifier(obj):
+def find_smoke_domain_modifier(obj):    
     for mod in obj.modifiers:
         if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
             return mod

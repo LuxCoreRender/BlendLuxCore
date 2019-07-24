@@ -368,7 +368,7 @@ class Exporter(object):
             # for mat in self.material_cache.changed_materials:
             #     luxcore_name, mat_props = material.convert(self, mat, context.scene, context)
             #     props.Set(mat_props)
-            self.material_cache.update(self, context, props)
+            self.material_cache.update(self, depsgraph, context, props)
 
         if changes & Change.VISIBILITY:
             for key in self.visibility_cache.objects_to_remove:

@@ -143,11 +143,11 @@ class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
             else:
                 row.prop(item, "add_keyframe", toggle=True, icon=icons.ADD_KEYFRAME)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "band",
             "interpolation": self.interpolation,
-            "amount": self.inputs["Amount"].export(exporter, props),
+            "amount": self.inputs["Amount"].export(exporter, depsgraph, props),
         }
         
         for index, item in enumerate(self.ramp_items):            

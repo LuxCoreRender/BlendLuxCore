@@ -45,7 +45,7 @@ class LuxCoreNodeTexIrregularData(bpy.types.Node, LuxCoreNodeTexture):
         if self.error:
             layout.label(text=self.error, icon=icons.ERROR)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "irregulardata",
             "wavelengths": convert(self.wavelengths),

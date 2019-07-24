@@ -24,9 +24,9 @@ class LuxCoreNodeVolClear(bpy.types.Node, LuxCoreNodeVolume):
     def draw_buttons(self, context, layout):
         self.draw_common_buttons(context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "clear",
         }
-        self.export_common_inputs(exporter, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

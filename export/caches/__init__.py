@@ -58,9 +58,9 @@ class MaterialCache:
                     print("mat update:", dg_update.id.name)
         return self.changed_materials
 
-    def update(self, exporter, is_viewport_render, props):
+    def update(self, exporter, depsgraph, is_viewport_render, props):
         for mat in self.changed_materials:
-            lux_mat_name, mat_props = material.convert(exporter, mat, is_viewport_render)
+            lux_mat_name, mat_props = material.convert(exporter, depsgraph, mat, is_viewport_render)
             props.Set(mat_props)
         self.changed_materials.clear()
 

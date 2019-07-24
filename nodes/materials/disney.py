@@ -22,20 +22,20 @@ class LuxCoreNodeMatDisney(bpy.types.Node, LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "disney",
-            "basecolor": self.inputs["Base Color"].export(exporter, props),
-            "subsurface": self.inputs["Subsurface"].export(exporter, props),
-            "metallic": self.inputs["Metallic"].export(exporter, props),
-            "specular": self.inputs["Specular"].export(exporter, props),
-            "speculartint": self.inputs["Specular Tint"].export(exporter, props),
-            "roughness": self.inputs["Roughness"].export(exporter, props),
-            "anisotropic": self.inputs["Anisotropic"].export(exporter, props),
-            "sheen": self.inputs["Sheen"].export(exporter, props),
-            "sheentint": self.inputs["Sheen Tint"].export(exporter, props),
-            "clearcoat": self.inputs["Clearcoat"].export(exporter, props),
-            "clearcoatgloss": self.inputs["Clearcoat Gloss"].export(exporter, props),
+            "basecolor": self.inputs["Base Color"].export(exporter, depsgraph, props),
+            "subsurface": self.inputs["Subsurface"].export(exporter, depsgraph, props),
+            "metallic": self.inputs["Metallic"].export(exporter, depsgraph, props),
+            "specular": self.inputs["Specular"].export(exporter, depsgraph, props),
+            "speculartint": self.inputs["Specular Tint"].export(exporter, depsgraph, props),
+            "roughness": self.inputs["Roughness"].export(exporter, depsgraph, props),
+            "anisotropic": self.inputs["Anisotropic"].export(exporter, depsgraph, props),
+            "sheen": self.inputs["Sheen"].export(exporter, depsgraph, props),
+            "sheentint": self.inputs["Sheen Tint"].export(exporter, depsgraph, props),
+            "clearcoat": self.inputs["Clearcoat"].export(exporter, depsgraph, props),
+            "clearcoatgloss": self.inputs["Clearcoat Gloss"].export(exporter, depsgraph, props),
         }
 
         self.export_common_inputs(exporter, props, definitions)

@@ -77,16 +77,17 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
 
         self.draw_common_buttons(context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "heterogeneous",
-            "asymmetry": self.inputs["Asymmetry"].export(exporter, props),
+            "asymmetry": self.inputs["Asymmetry"].export(exporter, depsgraph, props),
             "multiscattering": self.multiscattering,
         }
 
         if self.auto_step_settings and self.domain:
             # Search smoke domain target for smoke modifiers
-            smoke_domain_mod = utils.find_smoke_domain_modifier(self.domain)
+            object_eval = self.domain.evaluated_get(depsgraph)
+            smoke_domain_mod = utils.find_smoke_domain_modifier(object_eval)
 
             if smoke_domain_mod is None:
                 msg = 'Object "%s" is not a smoke domain' % self.domain.name
@@ -118,5 +119,5 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
             definitions["steps.size"] = self.step_size
             definitions["steps.maxcount"] = self.maxcount
 
-        self.export_common_inputs(exporter, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

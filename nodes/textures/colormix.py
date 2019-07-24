@@ -64,23 +64,23 @@ class LuxCoreNodeTexColorMix(bpy.types.Node, LuxCoreNodeTexture):
             if self.mode_clamp_min > self.mode_clamp_max:
                 layout.label(text="Min should be smaller than max!", icon=icons.WARNING)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": self.mode,
         }
         
         if self.mode == "abs":
-            definitions["texture"] = self.inputs["Color"].export(exporter, props)
+            definitions["texture"] = self.inputs["Color"].export(exporter, depsgraph, props)
         elif self.mode == "clamp":
-            definitions["texture"] = self.inputs["Color"].export(exporter, props)
+            definitions["texture"] = self.inputs["Color"].export(exporter, depsgraph, props)
             definitions["min"] = self.mode_clamp_min
             definitions["max"] = self.mode_clamp_max
         else:
-            definitions["texture1"] = self.inputs["Color 1"].export(exporter, props)
-            definitions["texture2"] = self.inputs["Color 2"].export(exporter, props)
+            definitions["texture1"] = self.inputs["Color 1"].export(exporter, depsgraph, props)
+            definitions["texture2"] = self.inputs["Color 2"].export(exporter, depsgraph, props)
 
             if self.mode == "mix":
-                definitions["amount"] = self.inputs["Fac"].export(exporter, props)
+                definitions["amount"] = self.inputs["Fac"].export(exporter, depsgraph, props)
 
         luxcore_name = self.create_props(props, definitions, luxcore_name)
 

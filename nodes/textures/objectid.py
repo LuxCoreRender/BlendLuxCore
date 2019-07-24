@@ -34,7 +34,7 @@ class LuxCoreNodeTexObjectID(bpy.types.Node, LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "mode")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": self.mode,
         }

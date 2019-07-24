@@ -39,13 +39,13 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
                                                                    "LuxCoreNodeVolHeterogeneous"}
             row.prop(self, "use_photongi")
 
-    def export(self, exporter, props, luxcore_name):
+    def export(self, exporter, depsgraph, props, luxcore_name):
         # Invalidate node cache
         # TODO have one global properties object so this is no longer necessary
         exporter.node_cache.clear()
 
         if self.inputs["Volume"].is_linked:
-            self.inputs["Volume"].export(exporter, props, luxcore_name)
+            self.inputs["Volume"].export(exporter, depsgraph, props, luxcore_name)
         else:
             # We need a fallback (black volume)
             msg = 'Node "%s" in tree "%s": No volume attached' % (self.name, self.id_data.name)

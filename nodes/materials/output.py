@@ -104,7 +104,7 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
                     layout.prop(luxcore_world, "sampleupperhemisphereonly",
                                 icon=icons.WORLD, toggle=True)
 
-    def export(self, exporter, props, luxcore_name):
+    def export(self, exporter, depsgraph, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."
 
         # Invalidate node cache
@@ -114,11 +114,11 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
         # We have to export volumes before the material definition because LuxCore properties
         # do not support forward declarations (the volume has to be already defined when it is
         # referenced in the material)
-        interior_volume_name = self.inputs["Interior Volume"].export(exporter, props)
-        exterior_volume_name = self.inputs["Exterior Volume"].export(exporter, props)
+        interior_volume_name = self.inputs["Interior Volume"].export(exporter, depsgraph, props)
+        exterior_volume_name = self.inputs["Exterior Volume"].export(exporter, depsgraph, props)
 
         # Export the material
-        exported_name = self.inputs["Material"].export(exporter, props, luxcore_name)
+        exported_name = self.inputs["Material"].export(exporter, depsgraph, props, luxcore_name)
 
         # Attach the volumes
         if interior_volume_name:
@@ -138,14 +138,14 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
         props.Set(pyluxcore.Property(prefix + "shadowcatcher.onlyinfinitelights", self.shadow_catcher_only_infinite))
         props.Set(pyluxcore.Property(prefix + "photongi.enable", self.use_photongi))
 
-    def _convert_volume(self, exporter, node_tree, props):
+    def _convert_volume(self, exporter, depsgraph, node_tree, props):
         if node_tree is None:
             return None
 
         try:
             luxcore_name = utils.get_luxcore_name(node_tree)
             active_output = get_active_output(node_tree)
-            active_output.export(exporter, props, luxcore_name)
+            active_output.export(exporter, depsgraph, props, luxcore_name)
             return luxcore_name
         except Exception as error:
             msg = 'Node Tree "%s": %s' % (node_tree.name, error)

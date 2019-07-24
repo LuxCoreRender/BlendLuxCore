@@ -16,13 +16,13 @@ class LuxCoreNodeTexDots(bpy.types.Node, LuxCoreNodeTexture):
         if not self.inputs["2D Mapping"].is_linked:
             utils_node.draw_uv_info(context, layout)
     
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
-        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, props)
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
 
         definitions = {
             "type": "dots",
-            "inside": self.inputs["Inside"].export(exporter, props),
-            "outside": self.inputs["Outside"].export(exporter, props),
+            "inside": self.inputs["Inside"].export(exporter, depsgraph, props),
+            "outside": self.inputs["Outside"].export(exporter, depsgraph,  props),
             # Mapping
             "mapping.type": "uvmapping2d",
             "mapping.uvscale": uvscale,

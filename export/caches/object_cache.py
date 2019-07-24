@@ -8,7 +8,7 @@ MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 
 
-def get_material(obj, material_index, exporter, is_viewport_render):
+def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
     from ...utils.errorlog import LuxCoreErrorLog
     from ...utils import node as utils_node
     from .. import material
@@ -33,7 +33,7 @@ def get_material(obj, material_index, exporter, is_viewport_render):
                        "In case of bumpmaps this can lead to artifacts")
                 LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
 
-        return material.convert(exporter, mat, is_viewport_render, obj.name)
+        return material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
     else:
         return material.fallback()
 
@@ -123,7 +123,7 @@ class ObjectCache2:
         if exported_mesh:
             mat_names = []
             for shape_name, mat_index in exported_mesh.mesh_definitions:
-                lux_mat_name, mat_props = get_material(obj, mat_index, exporter, is_viewport_render)
+                lux_mat_name, mat_props = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 

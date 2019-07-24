@@ -13,7 +13,7 @@ class LuxCoreNodeTexHitpointInfo(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketVector", "Shading Normal")
         self.outputs.new("LuxCoreSocketVector", "Position")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {}
         if output_socket == self.outputs["Shading Normal"]:
             definitions["type"] = "shadingnormal"

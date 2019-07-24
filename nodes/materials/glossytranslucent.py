@@ -101,39 +101,39 @@ class LuxCoreNodeMatGlossyTranslucent(bpy.types.Node, LuxCoreNodeMaterial):
 
         utils_node.draw_transmission_info(self, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "glossytranslucent",
-            "kd": self.inputs["Diffuse Color"].export(exporter, props),
-            "kt": self.inputs["Transmission Color"].export(exporter, props),
+            "kd": self.inputs["Diffuse Color"].export(exporter, depsgraph, props),
+            "kt": self.inputs["Transmission Color"].export(exporter, depsgraph, props),
 
             # Front face (in normal direction)
             "multibounce": self.multibounce,
-            "ka": self.inputs["Absorption Color"].export(exporter, props),
-            "d": self.inputs["Absorption Depth (nm)"].export(exporter, props),
+            "ka": self.inputs["Absorption Color"].export(exporter, depsgraph, props),
+            "d": self.inputs["Absorption Depth (nm)"].export(exporter, depsgraph, props),
         }
 
         if self.use_ior:
-            definitions["index"] = self.inputs["IOR"].export(exporter, props)
+            definitions["index"] = self.inputs["IOR"].export(exporter, depsgraph, props)
             definitions["ks"] = [1, 1, 1]
         else:
-            definitions["ks"] = self.inputs["Specular Color"].export(exporter, props)
+            definitions["ks"] = self.inputs["Specular Color"].export(exporter, depsgraph, props)
 
         if self.use_backface:
             definitions.update({
                 # Back face (on opposite side of normal)
                 "multibounce_bf": self.multibounce_bf,
-                "ka_bf": self.inputs["BF Absorption Color"].export(exporter, props),
-                "d_bf": self.inputs["BF Absorption Depth (nm)"].export(exporter, props),
+                "ka_bf": self.inputs["BF Absorption Color"].export(exporter, depsgraph, props),
+                "d_bf": self.inputs["BF Absorption Depth (nm)"].export(exporter, depsgraph, props),
             })
 
             if self.use_ior_bf:
-                definitions["index_bf"] = self.inputs["BF IOR"].export(exporter, props)
+                definitions["index_bf"] = self.inputs["BF IOR"].export(exporter, depsgraph, props)
                 definitions["ks_bf"] = [1, 1, 1]
             else:
-                definitions["ks_bf"] = self.inputs["BF Specular Color"].export(exporter, props)
+                definitions["ks_bf"] = self.inputs["BF Specular Color"].export(exporter, depsgraph, props)
 
         # This includes backface roughness
-        Roughness.export(self, exporter, props, definitions)
-        self.export_common_inputs(exporter, props, definitions)
+        Roughness.export(self, exporter, depsgraph, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

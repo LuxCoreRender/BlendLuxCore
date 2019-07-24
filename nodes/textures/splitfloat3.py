@@ -12,7 +12,7 @@ class LuxCoreNodeTexSplitFloat3(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketFloatUnbounded", "G")
         self.outputs.new("LuxCoreSocketFloatUnbounded", "B")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         if output_socket == self.outputs["R"]:
             channel = 0
         elif output_socket == self.outputs["G"]:

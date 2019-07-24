@@ -78,10 +78,10 @@ class LuxCoreNode:
     def make_name(self):
         return str(self.as_pointer())
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
 
-    def export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         """ This method is an abstraction layer that handles the caching. """
         cache_key = self.make_name()
         if output_socket:
@@ -96,7 +96,7 @@ class LuxCoreNode:
             # Nodes can return a different luxcore_name than the one that
             # is passed in to sub_export, for example when an implicit scale
             # texture is added.
-            luxcore_name = self.sub_export(exporter, props, luxcore_name, output_socket)
+            luxcore_name = self.sub_export(exporter, depsgraph, props, luxcore_name, output_socket)
             exporter.node_cache[cache_key] = luxcore_name
             return luxcore_name
 
@@ -132,21 +132,21 @@ class LuxCoreNodeMaterial(LuxCoreNode):
         self.add_input("LuxCoreSocketBump", "Bump")
         self.add_input("LuxCoreSocketMatEmission", "Emission")
 
-    def export_common_inputs(self, exporter, props, definitions):
+    def export_common_inputs(self, exporter, depsgraph, props, definitions):
         """ Call from derived classes (in export method) """
-        transparency = self.inputs["Opacity"].export(exporter, props)
+        transparency = self.inputs["Opacity"].export(exporter, depsgraph, props)
         if transparency != 1.0:
             definitions["transparency"] = transparency
 
-        bump = self.inputs["Bump"].export(exporter, props)
+        bump = self.inputs["Bump"].export(exporter, depsgraph, props)
         if bump:
             definitions["bumptex"] = bump
 
         # The emission socket and node are special cases
         # with special export methods
-        self.inputs["Emission"].export_emission(exporter, props, definitions)
+        self.inputs["Emission"].export_emission(exporter, depsgraph, props, definitions)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
@@ -155,7 +155,7 @@ class LuxCoreNodeTexture(LuxCoreNode):
     suffix = "tex"
     prefix = "scene.textures."
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
@@ -183,12 +183,12 @@ class LuxCoreNodeVolume(LuxCoreNode):
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
         self.add_input("LuxCoreSocketColor", "Emission", (0, 0, 0))
 
-    def export_common_inputs(self, exporter, props, definitions):
+    def export_common_inputs(self, exporter, depsgraph, props, definitions):
         """ Call from derived classes (in export method) """
-        definitions["ior"] = self.inputs["IOR"].export(exporter, props)
+        definitions["ior"] = self.inputs["IOR"].export(exporter, depsgraph, props)
         definitions["priority"] = self.priority
 
-        abs_col = self.inputs["Absorption"].export(exporter, props)
+        abs_col = self.inputs["Absorption"].export(exporter, depsgraph, props)
         worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
         abs_depth = self.color_depth * worldscale
 
@@ -208,23 +208,23 @@ class LuxCoreNodeVolume(LuxCoreNode):
             abs_col = utils.absorption_at_depth_scaled(abs_col, abs_depth)
 
         if "Scattering" in self.inputs:
-            scattering_col = self.export_scattering(exporter, props)
+            scattering_col = self.export_scattering(exporter, depsgraph, props)
             definitions["scattering"] = scattering_col
 
         definitions["absorption"] = abs_col
-        definitions["emission"] = self.inputs["Emission"].export(exporter, props)
+        definitions["emission"] = self.inputs["Emission"].export(exporter, depsgraph, props)
 
         lightgroups = exporter.scene.luxcore.lightgroups
         lightgroup_id = lightgroups.get_id_by_name(self.lightgroup)
         definitions["emission.id"] = lightgroup_id
         exporter.lightgroup_cache.add(lightgroup_id)
 
-    def export_scattering(self, exporter, props):
+    def export_scattering(self, exporter, depsgraph, props):
         scattering_col_socket = self.inputs["Scattering"]
         scattering_scale_socket = self.inputs["Scattering Scale"]
 
-        scattering_col = scattering_col_socket.export(exporter, props)
-        scattering_scale = scattering_scale_socket.export(exporter, props)
+        scattering_col = scattering_col_socket.export(exporter, depsgraph, props)
+        scattering_scale = scattering_scale_socket.export(exporter, depsgraph, props)
 
         if scattering_scale_socket.is_linked or scattering_col_socket.is_linked:
             # Implicitly create a colordepth texture with unique name
@@ -244,7 +244,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
         return scattering_col
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
@@ -306,7 +306,7 @@ class LuxCoreNodeTreePointer(bpy.types.Node, LuxCoreNode):
         if self.node_tree == self.id_data:
             layout.label(text="Recursion!", icon=icons.WARNING)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         if self.node_tree == self.id_data:
             raise Exception("Recursion (pointer referencing its own node tree)")
 
@@ -323,7 +323,7 @@ class LuxCoreNodeTreePointer(bpy.types.Node, LuxCoreNode):
         # different shader instances for different sets of input parameters)
         luxcore_name = utils.get_luxcore_name(self.node_tree)
 
-        output.export(exporter, props, luxcore_name)
+        output.export(exporter, depsgraph, props, luxcore_name)
         return luxcore_name
 
 
@@ -420,12 +420,12 @@ class Roughness:
             utils_node.draw_uv_info(context, layout)
 
     @staticmethod
-    def export(node, exporter, props, definitions):
+    def export(node, exporter, depsgraph, props, definitions):
         if node.use_anisotropy:
-            uroughness = node.inputs["U-Roughness"].export(exporter, props)
-            vroughness = node.inputs["V-Roughness"].export(exporter, props)
+            uroughness = node.inputs["U-Roughness"].export(exporter, depsgraph, props)
+            vroughness = node.inputs["V-Roughness"].export(exporter, depsgraph, props)
         else:
-            uroughness = node.inputs["Roughness"].export(exporter, props)
+            uroughness = node.inputs["Roughness"].export(exporter, depsgraph, props)
             vroughness = uroughness
 
         definitions["uroughness"] = uroughness
@@ -433,10 +433,10 @@ class Roughness:
 
         if Roughness.has_backface(node):
             if node.use_anisotropy:
-                uroughness = node.inputs["BF U-Roughness"].export(exporter, props)
-                vroughness = node.inputs["BF V-Roughness"].export(exporter, props)
+                uroughness = node.inputs["BF U-Roughness"].export(exporter, depsgraph, props)
+                vroughness = node.inputs["BF V-Roughness"].export(exporter, depsgraph, props)
             else:
-                uroughness = node.inputs["BF Roughness"].export(exporter, props)
+                uroughness = node.inputs["BF Roughness"].export(exporter, depsgraph, props)
                 vroughness = uroughness
 
             definitions["uroughness_bf"] = uroughness

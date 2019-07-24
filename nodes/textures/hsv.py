@@ -13,7 +13,7 @@ class LuxCoreNodeTexHSV(bpy.types.Node, LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "hsv",
             "texture": self.inputs["Color"].export(exporter, props),

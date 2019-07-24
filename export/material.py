@@ -8,7 +8,7 @@ from . import cycles_node_reader
 GLOBAL_FALLBACK_MAT = "__CLAY__"
 
 
-def convert(exporter, material, is_viewport_render, obj_name=""):
+def convert(exporter, depsgraph, material, is_viewport_render, obj_name=""):
     try:
         if material is None:
             return fallback()
@@ -33,7 +33,7 @@ def convert(exporter, material, is_viewport_render, obj_name=""):
             return fallback(luxcore_name)
 
         # Now export the material node tree, starting at the output node
-        active_output.export(exporter, props, luxcore_name)
+        active_output.export(exporter, depsgraph, props, luxcore_name)
 
         return luxcore_name, props
     except Exception as error:

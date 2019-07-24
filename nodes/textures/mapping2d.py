@@ -52,8 +52,8 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
         row.prop(self, "udelta")
         row.prop(self, "vdelta")
 
-    def export(self, exporter, props, luxcore_name=None, output_socket=None):
-        input_uvscale, input_rotation, input_uvdelta = self.inputs["2D Mapping (optional)"].export(exporter, props)
+    def export(self, exporter, despgraph, props, luxcore_name=None, output_socket=None):
+        input_uvscale, input_rotation, input_uvdelta = self.inputs["2D Mapping (optional)"].export(exporter, despgraph, props)
 
         # Scale
         if self.use_uniform_scale:

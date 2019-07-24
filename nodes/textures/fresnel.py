@@ -54,11 +54,11 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
             layout.prop(self, "file_type", expand=True)            
             layout.prop(self, "filepath")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         if self.input_type == "color":
             definitions = {
                 "type": "fresnelcolor",
-                "kr": self.inputs["Reflection Color"].export(exporter, props),
+                "kr": self.inputs["Reflection Color"].export(exporter, depsgraph, props),
             }
         elif self.input_type == "preset":
             definitions = {

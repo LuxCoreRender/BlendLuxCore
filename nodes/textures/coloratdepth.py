@@ -19,8 +19,8 @@ class LuxCoreNodeTexColorAtDepth(bpy.types.Node, LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "color_depth")
     
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
-        abs_col = self.inputs["Absorption"].export(exporter, props)
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        abs_col = self.inputs["Absorption"].export(exporter, depsgraph, props)
 
         definitions = {
             "type": "colordepth",

@@ -53,25 +53,25 @@ class LuxCoreNodeMatMetal(bpy.types.Node, LuxCoreNodeMaterial):
         layout.prop(self, "input_type", expand=True)
         Roughness.draw(self, context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "metal2",
         }
 
         if self.input_type == "fresnel":
-            definitions["fresnel"] = self.inputs["Fresnel"].export(exporter, props)
+            definitions["fresnel"] = self.inputs["Fresnel"].export(exporter, depsgraph, props)
         else:            
             # Implicitly create a fresnelcolor texture with unique name
             tex_name = self.make_name() + "fresnel_helper"
             helper_prefix = "scene.textures." + tex_name + "."
             helper_defs = {
                 "type": "fresnelcolor",
-                "kr": self.inputs["Color"].export(exporter, props),
+                "kr": self.inputs["Color"].export(exporter, depsgraph, props),
             }
             props.Set(utils.create_props(helper_prefix, helper_defs))
 
             definitions["fresnel"] = tex_name
             
-        Roughness.export(self, exporter, props, definitions)
-        self.export_common_inputs(exporter, props, definitions)
+        Roughness.export(self, exporter, depsgraph, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

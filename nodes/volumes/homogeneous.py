@@ -30,11 +30,11 @@ class LuxCoreNodeVolHomogeneous(bpy.types.Node, LuxCoreNodeVolume):
         layout.prop(self, "multiscattering")
         self.draw_common_buttons(context, layout)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "homogeneous",
-            "asymmetry": self.inputs["Asymmetry"].export(exporter, props),
+            "asymmetry": self.inputs["Asymmetry"].export(exporter, depsgraph, props),
             "multiscattering": self.multiscattering,
         }        
-        self.export_common_inputs(exporter, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

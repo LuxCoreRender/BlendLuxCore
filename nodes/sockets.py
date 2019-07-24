@@ -77,11 +77,11 @@ class LuxCoreNodeSocket:
         """
         return None
 
-    def export(self, exporter, props, luxcore_name=None):
+    def export(self, exporter, depsgraph, props, luxcore_name=None):
         link = utils_node.get_link(self)
 
         if link:
-            return link.from_node.export(exporter, props, luxcore_name, link.from_socket)
+            return link.from_node.export(exporter, depsgraph, props, luxcore_name, link.from_socket)
         elif hasattr(self, "default_value"):
             return self.export_default()
         else:
@@ -129,12 +129,12 @@ class LuxCoreSocketMatEmission(bpy.types.NodeSocket, LuxCoreNodeSocket):
     default_node = "LuxCoreNodeMatEmission"
     # no default value
 
-    def export_emission(self, exporter, props, definitions):
+    def export_emission(self, exporter, depsgraph, props, definitions):
         if self.is_linked:
             linked_node = self.links[0].from_node
 
             if linked_node.bl_idname == "LuxCoreNodeMatEmission":
-                linked_node.export_emission(exporter, props, definitions)
+                linked_node.export_emission(exporter, depsgraph, props, definitions)
             else:
                 print("ERROR: can't export emission; not an emission node")
 

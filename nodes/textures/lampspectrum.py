@@ -211,7 +211,7 @@ class LuxCoreNodeTexLampSpectrum(bpy.types.Node, LuxCoreNodeTexture):
         else:
             raise NotImplementedError("Unknown lamp category")
     
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         if self.lamp_category == "Natural":
             spectrum_name = self.lamp_spectrum_natural
         elif self.lamp_category == "Incandescent":

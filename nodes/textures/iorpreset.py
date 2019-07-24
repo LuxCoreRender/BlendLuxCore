@@ -65,7 +65,7 @@ class LuxCoreNodeTexIORPreset(bpy.types.Node, LuxCoreNodeTexture):
             operator.node_name = self.name
             operator.node_tree_index = tree_index
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "constfloat1",
             "value": self.ior_value_float,

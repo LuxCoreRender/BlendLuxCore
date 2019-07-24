@@ -19,7 +19,7 @@ class LuxCoreNodeTexOutput(bpy.types.Node, LuxCoreNodeOutput):
         self.inputs["Color"].needs_link = True
         super().init(context)
 
-    def export(self, exporter, props, luxcore_name):
+    def export(self, exporter, depsgraph, props, luxcore_name):
         # Invalidate node cache
         # TODO have one global properties object so this is no longer necessary
         exporter.node_cache.clear()

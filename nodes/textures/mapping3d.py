@@ -55,8 +55,8 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
 
         scale_column.prop(self, "use_uniform_scale")
 
-    def export(self, exporter, props, luxcore_name=None, output_socket=None):
-        mapping_type, input_mapping = self.inputs["3D Mapping (optional)"].export(exporter, props)
+    def export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        mapping_type, input_mapping = self.inputs["3D Mapping (optional)"].export(exporter, depsgraph, props)
         # Use the mapping type of this node only when mapping type is not
         # already set by previous mapping node
         if not self.inputs["3D Mapping (optional)"].is_linked:
@@ -80,12 +80,12 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
         tex_rot0 = Matrix.Rotation(self.rotate[0], 4, "X")
         tex_rot1 = Matrix.Rotation(self.rotate[1], 4, "Y")
         tex_rot2 = Matrix.Rotation(self.rotate[2], 4, "Z")
-        tex_rot = tex_rot0 * tex_rot1 * tex_rot2
+        tex_rot = tex_rot0 @ tex_rot1 @ tex_rot2
 
         # combine transformations
-        transformation = tex_loc * tex_rot * tex_sca
+        transformation = tex_loc @ tex_rot @ tex_sca
 
         # Transform input matrix
-        output_mapping = input_mapping * transformation
+        output_mapping = input_mapping @ transformation
 
         return mapping_type, output_mapping

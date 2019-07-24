@@ -92,27 +92,27 @@ class LuxCoreNodeTexMath(bpy.types.Node, LuxCoreNodeTexture):
             if self.mode_clamp_min > self.mode_clamp_max:
                 layout.label(text="Min should be smaller than max!", icon=icons.WARNING)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": self.mode,
         }
 
         if self.mode == "abs":
-            definitions["texture"] = self.inputs[0].export(exporter, props)
+            definitions["texture"] = self.inputs[0].export(exporter, depsgraph, props)
         elif self.mode == "clamp":
-            definitions["texture"] = self.inputs[0].export(exporter, props)
+            definitions["texture"] = self.inputs[0].export(exporter, depsgraph, props)
             definitions["min"] = self.mode_clamp_min
             definitions["max"] = self.mode_clamp_max
         elif self.mode == "mix":
-            definitions["texture1"] = self.inputs[0].export(exporter, props)
-            definitions["texture2"] = self.inputs[1].export(exporter, props)
-            definitions["amount"] = self.inputs[2].export(exporter, props)
+            definitions["texture1"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["texture2"] = self.inputs[1].export(exporter, depsgraph, props)
+            definitions["amount"] = self.inputs[2].export(exporter, depsgraph, props)
         elif self.mode == "power":
-            definitions["base"] = self.inputs[0].export(exporter, props)
-            definitions["exponent"] = self.inputs[1].export(exporter, props)
+            definitions["base"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["exponent"] = self.inputs[1].export(exporter, depsgraph, props)
         else:
-            definitions["texture1"] = self.inputs[0].export(exporter, props)
-            definitions["texture2"] = self.inputs[1].export(exporter, props)
+            definitions["texture1"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["texture2"] = self.inputs[1].export(exporter, depsgraph, props)
 
         luxcore_name = self.create_props(props, definitions, luxcore_name)
 

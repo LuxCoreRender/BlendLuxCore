@@ -104,12 +104,12 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
 
         layout.prop(self, "dls_type")
 
-    def export_emission(self, exporter, props, definitions):
+    def export_emission(self, exporter, depsgraph, props, definitions):
         """
         The export method is different because this is not a normal material node.
         It is called from LuxCoreNodeMaterial.export_common_props()
         """
-        definitions["emission"] = self.inputs["Color"].export(exporter, props)
+        definitions["emission"] = self.inputs["Color"].export(exporter, depsgraph, props)
         definitions["emission.gain"] = [self.gain] * 3
         definitions["emission.power"] = self.power
         definitions["emission.efficency"] = self.efficacy
@@ -128,5 +128,5 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
                 msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
                 LuxCoreErrorLog.add_warning(msg)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("This node uses a special export method.")

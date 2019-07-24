@@ -11,7 +11,7 @@ class LuxCoreNodeMatNull(bpy.types.Node, LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "null",
         }
@@ -19,7 +19,7 @@ class LuxCoreNodeMatNull(bpy.types.Node, LuxCoreNodeMaterial):
         # This is a neat trick to get a colored transparent material:
         # Use a color or texture on the transparency property.
         # We only use it when we need it.
-        transparency = self.inputs["Transmission Color"].export(exporter, props)
+        transparency = self.inputs["Transmission Color"].export(exporter, depsgraph, props)
         if transparency != 1.0 and transparency != [1.0, 1.0, 1.0]:
             definitions["transparency"] = transparency
 
