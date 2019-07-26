@@ -85,8 +85,8 @@ class LuxCoreVisMapProps(bpy.types.PropertyGroup):
     ]
     type = EnumProperty(name="Visibility Map", items=vismap_types, default="none")
     # TODO descriptions
-    cache_map_width = IntProperty(name="Map Width", default=128, min=16, soft_max=256)
-    cache_samples = IntProperty(name="Samples", default=4, min=1, soft_max=32)
+    cache_map_width = IntProperty(name="Map Width", default=256, min=16, soft_max=256)
+    cache_samples = IntProperty(name="Samples", default=1, min=1, soft_max=32)
 
 
 class LuxCoreLightProps(bpy.types.PropertyGroup):
