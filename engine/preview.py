@@ -82,6 +82,11 @@ def enable_log_output():
 
 
 def _export_mat_scene(engine, depsgraph, active_mat):
+    from ..export.caches.exported_data import ExportedObject
+    from ..export.caches.exported_data import ExportedMesh
+    from ..export.caches.object_cache import get_material
+    from os import path
+
     exporter = engine.exporter
     scene = depsgraph.scene_eval
 
@@ -106,17 +111,52 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     cam_props.Set(pyluxcore.Property("scene.camera.fieldofview", field_of_view / zoom))
     luxcore_scene.Parse(cam_props)
 
-    # Objects    
+    # Objects
     for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
         if not obj.name == 'preview_hair' and not exporter.object_cache2._is_visible(dg_obj_instance, obj):
             continue
-        
+
+        # Use LuxBall instead of Blender Shaderball
+        if obj.name == "CurveCircle.002" or obj.name == "preview_shaderball.003":
+            continue
+        if obj.name == "preview_shaderball":
+            use_instancing = False
+            is_viewport_render = False
+            obj_key = utils.make_key_from_instance(dg_obj_instance)
+            mesh_key = exporter.object_cache2._get_mesh_key(obj, use_instancing, is_viewport_render)
+            obj_transform = dg_obj_instance.matrix_world
+
+            mesh_definitions = []
+            props = pyluxcore.Properties()
+            filepath = path.dirname(path.realpath(__file__))+"/../preview_scene/LuxCore_preview.ply"
+
+            prefix = "scene.shapes." + mesh_key + "."
+            props.Set(pyluxcore.Property(prefix + "type", "mesh"))
+            props.Set(pyluxcore.Property(prefix + "ply", path.abspath(filepath)))
+            mesh_definitions.append((mesh_key, 0))
+            scene_props.Set(props)
+
+            exported_mesh = ExportedMesh(mesh_definitions)
+
+            if exported_mesh:
+                mat_names = []
+                for shape_name, mat_index in exported_mesh.mesh_definitions:
+                    lux_mat_name, mat_props = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                    scene_props.Set(mat_props)
+                    mat_names.append(lux_mat_name)
+
+                exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, None)
+
+                if exported_obj:
+                    scene_props.Set(exported_obj.get_props())
+                    exporter.object_cache2.exported_objects[obj_key] = exported_obj
+
         # Don't export lights and floor from preview scene
-        if not (obj.type == 'LIGHT' or obj.name == 'Floor'):
+        elif not (obj.type == 'LIGHT' or obj.name == 'Floor'):
             exporter.object_cache2._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                 luxcore_scene, scene_props, False)
-    
+
     # Lights (either two area lights or a sun+sky setup)
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
 
@@ -134,46 +174,6 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     session = pyluxcore.RenderSession(renderconfig)
     
     return session
-
-
-##def _export_plane_scene(exporter, scene, mat, props, luxcore_scene):
-##    # The default plane from the Blender preview scene is ugly (wrong scale and UVs), so we make our own.
-##    # A quadratic texture (with UV mapping) is tiled exactly 2 times in horizontal directon on this plane,
-##    # so it's also a nice tiling preview
-##
-##    lux_mat_name, mat_props = export.material.convert(exporter, mat, scene, None)
-##    props.Set(mat_props)
-##
-##    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-##
-##    mesh_name = "mat_preview_planemesh"
-##    size_z_raw = 2
-##    size_z = size_z_raw * worldscale
-##    size_x = size_z_raw * 2 * worldscale
-##    ypos = 0
-##    zpos = 2 * worldscale
-##    vertices = [
-##        (-size_x / 2, ypos, zpos - size_z / 2),
-##        (size_x / 2, ypos, zpos - size_z / 2),
-##        (size_x / 2, ypos, zpos + size_z / 2),
-##        (-size_x / 2, ypos, zpos + size_z / 2),
-##    ]
-##    faces = [
-##        (0, 1, 2),
-##        (2, 3, 0)
-##    ]
-##    uv = [
-##        (1, 2),
-##        (1, 0),
-##        (0, 0),
-##        (0, 2)
-##    ]
-##    luxcore_scene.DefineMesh(mesh_name, vertices, faces, None, uv, None, None)
-##    # Create object
-##    obj_name = "mat_preview_planeobj"
-##    props.Set(pyluxcore.Property("scene.objects." + obj_name + ".ply", mesh_name))
-##    props.Set(pyluxcore.Property("scene.objects." + obj_name + ".material", lux_mat_name))
-
 
 def _create_lights(scene, luxcore_scene, props, is_world_sphere):
     if is_world_sphere:
@@ -307,7 +307,7 @@ def _create_config(scene, is_world_sphere):
     else:
         total_depth = 8
         diffuse_depth = 3
-        specular_depth = 4
+        specular_depth = 8
 
     definitions = {
         "film.width": width,
@@ -320,7 +320,7 @@ def _create_config(scene, is_world_sphere):
 
         "path.pathdepth.total": total_depth,
         "path.pathdepth.diffuse": diffuse_depth,
-        "path.pathdepth.glossy": 3,
+        "path.pathdepth.glossy": 5,
         "path.pathdepth.specular": specular_depth,
 
         "path.clamping.variance.maxvalue": 3,
