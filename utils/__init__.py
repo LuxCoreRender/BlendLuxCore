@@ -24,7 +24,12 @@ def make_key(datablock):
     # renamed during viewport render.
     # Note that the memory address changes on undo/redo, but in this case the viewport render
     # is stopped and re-started anyway, so it should not be a problem.
-    return str(datablock.original.as_pointer())
+    if type(datablock) == bpy.types.ParticleSystem:
+        ret = str(datablock.as_pointer())
+    else:
+        ret = str(datablock.original.as_pointer())
+
+    return ret
 
 
 def make_key_from_instance(dg_obj_instance):
@@ -403,7 +408,7 @@ def is_obj_visible_to_cam(obj, scene, context=None):
 
         return visible_to_cam and on_visible_layer
     else:
-        # We don't account for render layer visiblity in viewport/preview render
+        # We don't account for render layer visibility in viewport/preview render
         return visible_to_cam
 
 

@@ -81,7 +81,7 @@ def enable_log_output():
     pyluxcore.SetLogHandler(LuxCoreLog.add)
 
 
-def _export_mat_scene(engine, depsgraph, active_mat):    
+def _export_mat_scene(engine, depsgraph, active_mat):
     exporter = engine.exporter
     scene = depsgraph.scene_eval
 
@@ -114,19 +114,8 @@ def _export_mat_scene(engine, depsgraph, active_mat):
         
         # Don't export lights and floor from preview scene
         if not (obj.type == 'LIGHT' or obj.name == 'Floor'):
-##ToDo 2.8 Rework hair export and hair preview
-##            if active_mat.preview_render_type == 'HAIR':
-##                for psys in obj.particle_systems:
-##                    settings = psys.settings
-##                    
-##                    if settings.type == "HAIR" and settings.render_type == "PATH":
-##                        # Make the strands in strand preview mode thicker so they are visible
-##                        settings.luxcore.hair.hair_size = 0.05
-##                        settings.luxcore.hair.tesseltype = "solid"
-##                        export.hair.convert_hair(exporter, obj, psys, luxcore_scene, depsgraph)
-
             exporter.object_cache2._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                                luxcore_scene, scene_props, False)        
+                                                luxcore_scene, scene_props, False)
     
     # Lights (either two area lights or a sun+sky setup)
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
