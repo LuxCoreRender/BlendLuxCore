@@ -25,14 +25,15 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         denoiser = context.scene.luxcore.denoiser
         
         layout = self.layout
-        layout.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
 
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.prop(denoiser, "type", expand=False)
+        col = layout.column(align=True)
+        col.prop(denoiser, "type", expand=False)
+        col.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
 
-        if denoiser.type == "BCD":
+        if denoiser.enabled and denoiser.type == "BCD":
             if config.sampler == "METROPOLIS" and not config.use_tiles:
                 layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
 

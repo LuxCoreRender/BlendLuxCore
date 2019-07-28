@@ -103,16 +103,16 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
     while True:
         now = time()
         # These two properties are shown as "buttons" in the UI
-        refresh_requested = scene.luxcore.display.refresh or scene.luxcore.denoiser.refresh
+        refresh_requested = depsgraph.scene.luxcore.display.refresh or depsgraph.scene.luxcore.denoiser.refresh
         update_stats = (now - last_stat_refresh) > _stat_refresh_interval(start, scene)
-        time_until_film_refresh = scene.luxcore.display.interval - (now - last_film_refresh)
+        time_until_film_refresh = depsgraph.scene.luxcore.display.interval - (now - last_film_refresh)
         fast_refresh = now - start < FAST_REFRESH_DURATION
 
-        if scene.luxcore.display.paused:
+        if depsgraph.scene.luxcore.display.paused:
             if not engine.session.IsInPause():
                 engine.session.Pause()
-                utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh=0)
-                engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
+                utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh=0)
+                engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=False)
                 engine.update_stats("", "Paused")
         else:
             if engine.session.IsInPause():
@@ -124,7 +124,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
 
         if engine.session.IsInPause():
             if changes or refresh_requested:
-                engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
+                engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=False)
         else:
             if fast_refresh or update_stats or refresh_requested:
                 # We have to check the stats often to see if a halt condition is met
@@ -137,7 +137,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
                 stats = utils_render.update_stats(engine.session)
                 if draw_film:
                     time_until_film_refresh = 0
-                utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh)
+                utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh)
 
                 # Check if the user cancelled during the expensive stats update
                 if engine.test_break() or engine.session.HasDone():
@@ -146,16 +146,16 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
                 last_stat_refresh = now
                 if draw_film:
                     # Show updated film (this operation is expensive)
-                    engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
+                    engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=False)
                     last_film_refresh = now
 
-            utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh)
+            utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh)
 
             # Compute and print the optimal clamp value. Done only once after a warmup phase.
             # Only do this if clamping is disabled, otherwise the value is meaningless.
             samples = stats.Get("stats.renderengine.pass").GetInt()
             if not checked_optimal_clamp and samples > clamp_warmup_samples:
-                clamp_value = utils_render.find_suggested_clamp_value(engine.session, scene)
+                clamp_value = utils_render.find_suggested_clamp_value(engine.session, depsgraph.scene)
                 print("Recommended clamp value:", clamp_value)
                 checked_optimal_clamp = True
 
@@ -175,8 +175,8 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
     # User wants to stop or halt condition is reached
     # Update stats to refresh film and draw the final result
     stats = utils_render.update_stats(engine.session)
-    utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh=0)
-    engine.framebuffer.draw(engine, engine.session, scene, render_stopped=True)
+    utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh=0)
+    engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=True)
     engine.update_stats("Render", "Stopping session...")
     if engine.session.IsInPause():
         engine.session.Resume()

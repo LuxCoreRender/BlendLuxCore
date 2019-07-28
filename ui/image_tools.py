@@ -25,9 +25,6 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
 
     def draw(self, context):
         layout = self.layout
-
-        #TODO 2.8 Fix pause/resume and refresh film, render engine uses evaluated scene not context.scene
-        # and therefore scene.luxcore.display is not updated in engine to pause render
         scene = context.scene
 
         display = scene.luxcore.display
@@ -61,14 +58,14 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
         config = context.scene.luxcore.config
         denoiser = context.scene.luxcore.denoiser
 
-        layout.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
-
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.prop(denoiser, "type", expand=False)
+        col = layout.column(align=True)
+        col.prop(denoiser, "type", expand=False)
+        col.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
 
-        if denoiser.type == "BCD":
+        if denoiser.enabled and denoiser.type == "BCD":
             if config.sampler == "METROPOLIS" and not config.use_tiles:
                 layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
 
