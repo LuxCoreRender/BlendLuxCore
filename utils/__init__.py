@@ -24,12 +24,12 @@ def make_key(datablock):
     # renamed during viewport render.
     # Note that the memory address changes on undo/redo, but in this case the viewport render
     # is stopped and re-started anyway, so it should not be a problem.
-    if type(datablock) == bpy.types.ParticleSystem:
-        ret = str(datablock.as_pointer())
-    else:
-        ret = str(datablock.original.as_pointer())
+    assert isinstance(datablock, bpy.types.ID)
+    return str(datablock.original.as_pointer())
 
-    return ret
+
+def make_key_from_bpy_struct(bpy_struct):
+    return str(bpy_struct.as_pointer())
 
 
 def make_key_from_instance(dg_obj_instance):

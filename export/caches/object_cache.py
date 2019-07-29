@@ -146,6 +146,7 @@ class ObjectCache2:
                 scene_props.Set(exported_obj.get_props())
                 self.exported_objects[obj_key] = exported_obj
 
+    # TODO 2.8 this should be moved back to export/hair.py at some point
     def _convert_hair(self, exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_render, engine=None):
         from time import time
         import math
@@ -257,7 +258,7 @@ class ObjectCache2:
             if engine and engine.test_break():
                 return
 
-            luxcore_shape_name = utils.get_luxcore_name(obj, is_viewport_render) + "_" + utils.get_luxcore_name(psys)
+            luxcore_shape_name = utils.get_luxcore_name(obj, is_viewport_render) + "_" + utils.make_key_from_bpy_struct(psys)
 
             if engine:
                 engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)

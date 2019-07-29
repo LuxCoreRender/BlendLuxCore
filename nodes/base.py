@@ -76,7 +76,7 @@ class LuxCoreNode:
         return input
 
     def make_name(self):
-        return str(self.as_pointer())
+        return utils.make_key_from_bpy_struct(self)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
