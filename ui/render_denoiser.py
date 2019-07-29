@@ -43,7 +43,7 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         template_refresh_button(denoiser, "refresh", sub, "Running denoiser...")
 
         col = layout.column(align=True)
-        col.label(text="These settings are also available in the image editor tool shelf (press T)", icon=icons.INFO)
+        col.label(text="These settings are also available in the image editor tool shelf (press N)", icon=icons.INFO)
 
         if denoiser.type == "BCD":
             sub = layout.column(align=True)
