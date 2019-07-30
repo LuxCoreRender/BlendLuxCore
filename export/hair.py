@@ -6,13 +6,11 @@ from .image import ImageExporter
 from time import time
 from ..utils.errorlog import LuxCoreErrorLog
 
-
 def find_psys_modifier(obj, psys):
     for mod in obj.modifiers:
         if mod.type == "PARTICLE_SYSTEM" and mod.particle_system.name == psys.name:
             return mod
     return None
-
 
 def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, dupli_count, mod, num_children):
     failure = np.empty(shape=0, dtype=np.float32)
@@ -43,7 +41,6 @@ def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, 
                       count=(dupli_count - start) * 2)
     return uvs
 
-
 def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, start, dupli_count, mod, num_children):
     failure = np.empty(shape=0, dtype=np.float32)
 
@@ -73,7 +70,6 @@ def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, st
                          count=(dupli_count - start) * 3)
     return colors
 
-
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
     from ..utils import node as utils_node
     from . import material
@@ -102,7 +98,6 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
     else:
         return material.fallback()
 
-
 def convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_render, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
@@ -128,13 +123,6 @@ def convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_rend
         width_offset = settings.width_offset / 100
 
         if not is_viewport_render:
-            # TODO 2.8 Check if we have to switch between render and viewport
-            # set_res_start = time()
-            # psys.set_resolution(scene, obj, "RENDER")
-            # print("Changing resolution to RENDER took %.3f s" % (time() - set_res_start))
-            # if engine and engine.test_break():
-            #    restore_resolution(scene, obj, psys, final_render)
-            #    return
             steps = 2 ** psys.settings.render_step
         else:
             steps = 2 ** psys.settings.display_step
@@ -156,6 +144,7 @@ def convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_rend
         # (unfortunately this can't be accelerated in C++)
         collection_start = time()
         strands_count = dupli_count - start
+
         # Point coordinates as a flattened numpy array
         point_count = strands_count * points_per_strand
         if engine:
@@ -200,8 +189,6 @@ def convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_rend
         if len(uvs) == 0:
             copy_uvs = False
 
-        # TODO 2.8 Check if we have to switch between render and viewport
-        # restore_resolution(scene, obj, psys, final_render)
         print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
         if engine and engine.test_break():
             return

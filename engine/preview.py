@@ -107,6 +107,7 @@ def _export_mat_scene(engine, depsgraph, active_mat):
 
     # Apply zoom
     field_of_view = cam_props.Get("scene.camera.fieldofview").GetFloat()
+    cam_props.Set(pyluxcore.Property("scene.camera.autovolume.enable", 0))
     zoom = active_mat.luxcore.preview.zoom
     cam_props.Set(pyluxcore.Property("scene.camera.fieldofview", field_of_view / zoom))
     luxcore_scene.Parse(cam_props)
@@ -120,12 +121,12 @@ def _export_mat_scene(engine, depsgraph, active_mat):
         # Use LuxBall instead of Blender Shaderball
         if obj.name == "CurveCircle.002" or obj.name == "preview_shaderball.003":
             continue
+
         if obj.name == "preview_shaderball":
             use_instancing = False
             is_viewport_render = False
             obj_key = utils.make_key_from_instance(dg_obj_instance)
             mesh_key = exporter.object_cache2._get_mesh_key(obj, use_instancing, is_viewport_render)
-            obj_transform = dg_obj_instance.matrix_world
 
             mesh_definitions = []
             props = pyluxcore.Properties()
@@ -161,10 +162,10 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
 
 ##  #TODO: Decide if the ground plane should be visible with world sphere enabled
-##    if not is_world_sphere:
-##        _create_backplates(scene, luxcore_scene, scene_props)
-    # Ground plane
-    _create_backplates(scene, luxcore_scene, scene_props)
+    if not is_world_sphere:
+        _create_backplates(scene, luxcore_scene, scene_props)
+    _create_ground(scene, luxcore_scene, scene_props)
+
 
     luxcore_scene.Parse(scene_props)
 
@@ -189,27 +190,27 @@ def _create_lights(scene, luxcore_scene, props, is_world_sphere):
         props.Set(pyluxcore.Property("scene.lights.sun.visibility.indirect.specular.enable", False))
     else:
         # Key light
-        color_key = [70] * 3
-        position_key = [-10, -15, 10]
-        rotation_key = Matrix(((0.8578430414199829, 0.22907057404518127, -0.4600348174571991),
-                               (-0.5139118432998657, 0.3823741674423218, -0.7679092884063721),
-                               (2.1183037546279593e-09, 0.8951629400253296, 0.44573909044265747)))
-        scale_key = 2
+        color_key = [80] * 3
+        position_key = [4.5, -6, 5]
+        rotation_key = Matrix(((0.523222804069519, 0.6480597257614136, 0.5534044504165649),
+                (-0.22214478254318237, 0.7306543588638306, -0.6455973386764526),
+                (-0.8227329850196838, 0.21485532820224762, 0.526258111000061)))
+        scale_key = 1
         _create_area_light(scene, luxcore_scene, props, "key", color_key,
                            position_key, rotation_key, scale_key)
 
         # Fill light
-        color_fill = [1.5] * 3
-        position_fill = [20, -30, 12]
-        rotation_fill = Matrix(((0.6418147087097168, -0.3418193459510803, 0.6864644289016724),
-                                (0.766859769821167, 0.2860819101333618, -0.5745287537574768),
-                                (2.1183037546279593e-09, 0.8951629400253296, 0.44573909044265747)))
-        scale_fill = 12
+        color_fill = [4] * 3
+        position_fill = [-5.5, -2.5, 2.5]
+        rotation_fill = Matrix(((0.19458825886249542, -0.4306204617023468, -0.8813066482543945),
+                (0.13679763674736023, 0.9016143679618835, -0.4103388786315918, ),
+                (0.9712990522384644, -0.04071354120969772, 0.23435142636299133 )))
+        scale_fill = 2
         _create_area_light(scene, luxcore_scene, props, "fill", color_fill,
-                           position_fill, rotation_fill, scale_fill)
+                           position_fill, rotation_fill, scale_fill, False)
 
 
-def _create_area_light(scene, luxcore_scene, props, name, color, position, rotation_matrix, scale):
+def _create_area_light(scene, luxcore_scene, props, name, color, position, rotation_matrix, scale, visible=True):
     mat_name = name + "_mat"
     mesh_name = name + "_mesh"
 
@@ -219,6 +220,8 @@ def _create_area_light(scene, luxcore_scene, props, name, color, position, rotat
     props.Set(pyluxcore.Property("scene.materials." + mat_name + ".emission", color))
     # assign material to object
     props.Set(pyluxcore.Property("scene.objects." + name + ".material", [mat_name]))
+    props.Set(pyluxcore.Property("scene.objects." + name + ".camerainvisible", not visible))
+
 
     scale_matrix = Matrix()
     scale_matrix[0][0] = scale
@@ -253,7 +256,37 @@ def _create_backplates(scene, luxcore_scene, props):
     worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
     # Ground plane
-    size = worldscale
+    size = 20*worldscale
+    zpos = 0.0
+    vertices = [
+        (size, size, zpos),
+        (size, -size, zpos),
+        (-size, -size, zpos),
+        (-size, size, zpos),
+        (size, size, 0.5*size),
+        (size, -size, 0.5*size),
+        (-size, -size, 0.5*size),
+        (-size, size, 0.5*size)
+    ]
+    faces = [
+        (6, 5, 4),
+        (4, 7, 6),
+        (2, 3, 7),
+        (7, 6, 2),
+        (2, 6, 5),
+        (5, 1, 2),
+        (7, 3, 0),
+        (0, 4, 7),
+        (4, 0, 1),
+        (1, 5, 4)
+    ]
+    _create_walls(luxcore_scene, props, "walls", vertices, faces, worldscale)
+
+def _create_ground(scene, luxcore_scene, props):
+    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+
+    # Ground plane
+    size = 20*worldscale
     zpos = 0.0
     vertices = [
         (size, size, zpos),
@@ -263,7 +296,7 @@ def _create_backplates(scene, luxcore_scene, props):
     ]
     faces = [
         (0, 1, 2),
-        (2, 3, 0)
+        (2, 3, 0),
     ]
     _create_checker_plane(luxcore_scene, props, "ground_plane", vertices, faces, worldscale)
 
@@ -278,7 +311,10 @@ def _create_checker_plane(luxcore_scene, props, name, vertices, faces, worldscal
     # Texture
     # (we scale the default sphere to be 10cm by default and we want the squares to be 5cm in size)
     checker_size = 5
-    checker_trans = [checker_size, 0, 0, 0, 0, checker_size, 0, 0, 0, 0, checker_size, 0, 0, 0, 0, 1]
+    checker_trans = [checker_size, 0, 0, 0,
+                     0, checker_size, 0, 0,
+                     0, 0, checker_size, 0,
+                     0, 0, 0, 1]
     props.Set(pyluxcore.Property("scene.textures." + tex_name + ".type", "checkerboard3d"))
     props.Set(pyluxcore.Property("scene.textures." + tex_name + ".texture1", 0.7))
     props.Set(pyluxcore.Property("scene.textures." + tex_name + ".texture2", 0.2))
@@ -294,6 +330,24 @@ def _create_checker_plane(luxcore_scene, props, name, vertices, faces, worldscal
     props.Set(pyluxcore.Property("scene.objects." + name + ".shape", mesh_name))
     props.Set(pyluxcore.Property("scene.objects." + name + ".material", mat_name))
 
+def _create_walls(luxcore_scene, props, name, vertices, faces, worldscale):
+    mesh_name = name + "_mesh"
+    mat_name = name + "_mat"
+    tex_name = name + "_tex"
+
+    # Mesh
+    luxcore_scene.DefineMesh(mesh_name, vertices, faces, None, None, None, None)
+    # Texture
+    # Material
+    props.Set(pyluxcore.Property("scene.materials." + mat_name + ".type", "matte"))
+    props.Set(pyluxcore.Property("scene.materials." + mat_name + ".kd", 0.7))
+    # Invisible for indirect diffuse rays to eliminate fireflies
+    props.Set(pyluxcore.Property("scene.materials." + mat_name + ".visibility.indirect.diffuse.enable", False))
+
+    # Object
+    props.Set(pyluxcore.Property("scene.objects." + name + ".shape", mesh_name))
+    props.Set(pyluxcore.Property("scene.objects." + name + ".material", mat_name))
+
 
 def _create_config(scene, is_world_sphere):
     prefix = ""
@@ -301,13 +355,13 @@ def _create_config(scene, is_world_sphere):
     width, height = utils.calc_filmsize(scene)
 
     if is_world_sphere:
-        total_depth = 4
-        diffuse_depth = 1
-        specular_depth = 3
+        total_depth = 8
+        diffuse_depth = 3
+        specular_depth = 5
     else:
         total_depth = 8
         diffuse_depth = 3
-        specular_depth = 8
+        specular_depth = 5
 
     definitions = {
         "film.width": width,
@@ -335,7 +389,7 @@ def _create_config(scene, is_world_sphere):
         "film.imagepipeline.0.scale": 1.0,
 
         # Preview quality
-        "batch.halttime": 6,
+        "batch.halttime": 30,
 
         "batch.haltthreshold": 8 / 256,
         "batch.haltthreshold.warmup": 3,
