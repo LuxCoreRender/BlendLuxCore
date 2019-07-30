@@ -196,11 +196,15 @@ class Exporter(object):
             self._init_stats(stats, config_props, scene)
 
         if engine:
-            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
-                message = "Creating RenderSession and compiling OpenCL kernels..."
-            else:
-                message = "Creating RenderSession..."
+            message = "Creating RenderSession"
 
+            if (config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
+                    or config_props.Get("path.photongi.caustic.enabled", [False]).GetBool()):
+                message += ", computing PhotonGI cache"
+            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
+                message += ", compiling OpenCL kernels"
+
+            message += " ..."
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 
         session = pyluxcore.RenderSession(renderconfig)
