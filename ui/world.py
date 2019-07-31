@@ -33,7 +33,7 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
             col.prop(world.luxcore, "rgb_gain", text="Color")
 
             is_sky = world.luxcore.light == "sky2"
-            has_sun = world.luxcore.sun and world.luxcore.sun.type == "LAMP"
+            has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
 
             col = layout.column(align=True)
             if is_sky and has_sun and world.luxcore.use_sun_gain_for_sky:
@@ -76,7 +76,7 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
         layout.prop(world.luxcore, "sun")
         sun = world.luxcore.sun
         if sun:
-            is_really_a_sun = sun.type == "LAMP" and sun.data and sun.data.type == "SUN"
+            is_really_a_sun = sun.type == "LIGHT" and sun.data and sun.data.type == "SUN"
 
             if is_really_a_sun:
                 layout.label(text="Using turbidity of sun light:", icon=icons.INFO)
