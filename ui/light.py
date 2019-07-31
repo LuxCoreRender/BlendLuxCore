@@ -193,16 +193,17 @@ class LUXCORE_LAMP_PT_visibility(DataButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
+        if engine != "LUXCORE":
+            return False
 
-        visible = False
-        if context.lamp:
-            # Visible for sky2, sun, infinite, constantinfinite
-            if context.lamp.type == "SUN" and context.lamp.luxcore.sun_type == "sun":
-                visible = True
-            elif context.lamp.type == "HEMI":
-                visible = True
+        light = context.lamp
+        if not light:
+            return False
 
-        return context.lamp and engine == "LUXCORE" and visible
+        # Visible for sky2, sun, infinite, constantinfinite, area
+        return ((light.type == "SUN" and light.luxcore.sun_type == "sun")
+                or light.type == "HEMI"
+                or (light.type == "AREA" and not light.luxcore.is_laser))
 
     def draw(self, context):
         layout = self.layout
