@@ -27,6 +27,7 @@ URL = "URL"
 COPY_TO_CLIPBOARD = "COPYDOWN"
 SHOW_NODETREE = "SCREEN_BACK"
 REFRESH = "FILE_REFRESH"  # used in display/denoiser refresh buttons
+DUPLICATE = "DUPLICATE"
 
 CAMERA = "CAMERA_DATA"  # this should show a recognizable camera icon. Might need to be changed for 2.80.
 WORLD = "WORLD"

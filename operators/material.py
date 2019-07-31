@@ -38,6 +38,23 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class LUXCORE_OT_material_unlink(bpy.types.Operator):
+    bl_idname = "luxcore.material_unlink"
+    bl_label = ""
+    bl_description = "Unlink data-block"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return poll_object(context)
+
+    def execute(self, context):
+        obj = context.active_object
+        if obj.material_slots:
+            obj.material_slots[obj.active_material_index].material = None
+        return {"FINISHED"}
+
+
 class LUXCORE_OT_material_copy(bpy.types.Operator):
     bl_idname = "luxcore.material_copy"
     bl_label = "Copy"
@@ -171,16 +188,26 @@ class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.object
-        return obj and obj.active_material and obj.active_material.luxcore.node_tree
+        if not obj:
+            return False
+
+        mat = obj.active_material
+        if not mat:
+            return False
+
+        if mat.luxcore.use_cycles_nodes:
+            return mat.node_tree
+        else:
+            return mat.luxcore.node_tree
 
     def execute(self, context):
         mat = context.active_object.active_material
-        node_tree = mat.luxcore.node_tree
+        node_tree = mat.node_tree if mat.luxcore.use_cycles_nodes else mat.luxcore.node_tree
 
         for area in context.screen.areas:
             if area.type == "NODE_EDITOR":
                 for space in area.spaces:
-                    if space.type == "NODE_EDITOR":
+                    if space.type == "NODE_EDITOR" and not space.pin:
                         space.tree_type = node_tree.bl_idname
                         space.node_tree = node_tree
                         return {"FINISHED"}

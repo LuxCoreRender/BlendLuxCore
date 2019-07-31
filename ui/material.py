@@ -56,30 +56,37 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                 row.operator("object.material_slot_select", text="Select")
                 row.operator("object.material_slot_deselect", text="Deselect")
 
-        split = layout.split(factor=0.65)
-
         if obj:
-            # TODO 2.8 recreate our own version of this template with our custom new/copy operators
-            split.template_ID(obj, "active_material", new="material.new")
-            row = split.row()
+            # Note that we don't use layout.template_ID() because we can't
+            # control the copy operator in that template.
+            # So we mimic our own template_ID.
+
+            row = layout.row(align=True)
+            row.operator("luxcore.material_select", icon=icons.MATERIAL, text="")
+
+            if obj.active_material:
+                row.prop(obj.active_material, "name", text="")
+                if obj.active_material.users > 1:
+                    # TODO this thing is too wide
+                    row.operator("luxcore.material_copy", text=str(obj.active_material.users))
+                row.prop(obj.active_material, "use_fake_user", text="")
+                row.operator("luxcore.material_copy", text="", icon=icons.DUPLICATE)
+                row.operator("luxcore.material_unlink", text="", icon=icons.CLEAR)
+            else:
+                row.operator("luxcore.material_new", text="New", icon=icons.ADD)
 
             if slot:
+                row = row.row()
                 row.prop(slot, "link", text="")
             else:
                 row.label()
         elif mat:
-            split.template_ID(space, "pin_id")
-            split.separator()
+            layout.template_ID(space, "pin_id")
+            layout.separator()
 
         if mat:
             if mat.luxcore.node_tree:
-                row = layout.row()
-                split = row.split(factor=0.25)
-                split.label(text=utils.pluralize("%d User", mat.users))
-                if not mat.luxcore.use_cycles_nodes:
-                    tree_name = utils.get_name_with_lib(mat.luxcore.node_tree)
-                    split.label(text='Nodes: "%s"' % tree_name, icon="NODETREE")
-                    split.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
+                layout.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
 
             if mat.use_nodes and mat.node_tree:
                 layout.prop(mat.luxcore, "use_cycles_nodes")
