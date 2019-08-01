@@ -381,7 +381,7 @@ class LuxCoreConfig(PropertyGroup):
         ("TXT", "Text", "Save as .scn and .cfg text files", 0),
         ("BIN", "Binary", "Save as .bcf binary file", 1),
     ]
-    filesaver_format: EnumProperty(name="", items=filesaver_format_items, default="BIN")
+    filesaver_format: EnumProperty(name="", items=filesaver_format_items, default="TXT")
     filesaver_path: StringProperty(name="", subtype="DIR_PATH")
 
     # Seed
