@@ -4,6 +4,8 @@ from ..draw.final import FrameBufferFinal
 from ..utils import render as utils_render
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
+from ..properties.denoiser import LuxCoreDenoiser
+from ..properties.display import LuxCoreDisplaySettings
 
 
 def render(engine, depsgraph):
@@ -103,7 +105,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
     while True:
         now = time()
         # These two properties are shown as "buttons" in the UI
-        refresh_requested = depsgraph.scene.luxcore.display.refresh or depsgraph.scene.luxcore.denoiser.refresh
+        refresh_requested = LuxCoreDisplaySettings.refresh or LuxCoreDenoiser.refresh
         update_stats = (now - last_stat_refresh) > _stat_refresh_interval(start, scene)
         time_until_film_refresh = depsgraph.scene.luxcore.display.interval - (now - last_film_refresh)
         fast_refresh = now - start < FAST_REFRESH_DURATION

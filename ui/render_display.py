@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ..utils.refresh_button import template_refresh_button
+from ..properties.display import LuxCoreDisplaySettings
 
 class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -32,4 +33,5 @@ class LUXCORE_RENDER_PT_display_settings(RenderButtonsPanel, Panel):
             box.prop(display, "show_passcounts")
         
         layout.prop(display, "interval")
-        template_refresh_button(display, "refresh", layout, "Refreshing film...")
+        template_refresh_button(LuxCoreDisplaySettings.refresh, "luxcore.request_display_refresh",
+                                layout, "Refreshing film...")

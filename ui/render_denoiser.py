@@ -3,6 +3,7 @@ from bpy.types import Panel
 from ..utils.refresh_button import template_refresh_button
 from ..engine.base import LuxCoreRenderEngine
 from . import icons
+from ..properties.denoiser import LuxCoreDenoiser
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
@@ -40,7 +41,8 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         sub = layout.column(align=True)
         # The user should not be able to request a refresh when denoiser is disabled
         sub.enabled = denoiser.enabled
-        template_refresh_button(denoiser, "refresh", sub, "Running denoiser...")
+        template_refresh_button(LuxCoreDenoiser.refresh, "luxcore.request_denoiser_refresh",
+                                sub, "Running denoiser...")
 
         col = layout.column(align=True)
         col.label(text="These settings are also available in the image editor tool shelf (press N)", icon=icons.INFO)

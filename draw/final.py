@@ -3,6 +3,8 @@ from ..bin import pyluxcore
 from .. import utils
 from ..export.aovs import get_denoiser_imgpipeline_props
 from ..properties.denoiser_log import DenoiserLogEntry
+from ..properties.denoiser import LuxCoreDenoiser
+from ..properties.display import LuxCoreDisplaySettings
 from ..utils import view_layer as utils_view_layer
 
 
@@ -96,7 +98,8 @@ class FrameBufferFinal(object):
 
         engine.end_result(result)
         # Reset the refresh button
-        self._reset_button(scene.luxcore.display, "refresh")
+        LuxCoreDisplaySettings.refresh = False
+        print("refresh button reset")
 
     def _import_aov(self, output_name, output_type, render_layer, session, engine,
                     execute_imagepipeline=True, index=0, lightgroup_name=""):
@@ -139,7 +142,7 @@ class FrameBufferFinal(object):
         output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
         # Refresh when ending the render (Esc/halt condition) or when the user presses the refresh button
-        refresh_denoised = render_stopped or scene.luxcore.denoiser.refresh
+        refresh_denoised = render_stopped or LuxCoreDenoiser.refresh
 
         stats = engine.session.GetStats()
         samples = stats.Get("stats.renderengine.pass").GetInt()
@@ -196,20 +199,10 @@ class FrameBufferFinal(object):
             scene.luxcore.denoiser_log.add(log_entry)
 
             # Reset the refresh button
-            self._reset_button(scene.luxcore.denoiser, "refresh")
+            LuxCoreDenoiser.refresh = False
             engine.update_stats("Denoiser Done", "Elapsed: {} s".format(elapsed))
         else:
             # If we do not write something into the result, the image will be black.
             # So we re-use the result from the last denoiser run.
             self._import_aov(output_name, output_type, render_layer, session, engine,
                              execute_imagepipeline=False)
-
-    def _reset_button(self, data, property_name):
-        if getattr(data, property_name):
-            try:
-                setattr(data, property_name, False)
-            except AttributeError as error:
-                # Sometimes Blender raises this exception, not sure when and why:
-                # AttributeError: Writing to ID classes in this context is not allowed:
-                # Scene, Scene datablock, error setting LuxCoreDisplaySettings.refresh
-                print(error)

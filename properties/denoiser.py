@@ -22,6 +22,8 @@ FILTER_SPIKES_DESC = "Filter outliers from the input samples"
 
 
 class LuxCoreDenoiser(PropertyGroup):
+    refresh = False
+
     enabled: BoolProperty(name="", default=False, description="Enable/disable denoiser")
     type_items = [
         ("BCD", "BCD", "Bayesian Collaborative Denoiser", 0),
@@ -30,9 +32,6 @@ class LuxCoreDenoiser(PropertyGroup):
     type: EnumProperty(name="Type", items=type_items, default="OIDN")
     show_advanced: BoolProperty(name="Show Advanced", default=False,
                                  description="Show advanced settings. They usually don't need to get tweaked")
-
-    refresh: BoolProperty(name="Run Denoiser", default=False,
-                           description=REFRESH_DESC)
 
     # BCD settings
     scales: IntProperty(name="Scales", default=3, min=1, soft_max=5,

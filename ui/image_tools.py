@@ -3,6 +3,8 @@ from ..utils.refresh_button import template_refresh_button
 from ..utils import ui as utils_ui
 from ..engine.base import LuxCoreRenderEngine
 from . import icons
+from ..properties.denoiser import LuxCoreDenoiser
+from ..properties.display import LuxCoreDisplaySettings
 
 
 class LuxCoreImagePanel:
@@ -36,7 +38,8 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
         row.enabled = LuxCoreRenderEngine.final_running
         row.prop(display, "paused", text=text, icon=icon, toggle=True)
 
-        template_refresh_button(display, "refresh", layout, "Refreshing film...")
+        template_refresh_button(LuxCoreDisplaySettings.refresh, "luxcore.request_display_refresh",
+                                layout, "Refreshing film...")
         layout.prop(display, "interval")
 
         if config.engine == "PATH" and config.use_tiles:
@@ -72,7 +75,8 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
         sub = layout.column(align=True)
         # The user should not be able to request a refresh when denoiser is disabled
         sub.enabled = denoiser.enabled
-        template_refresh_button(denoiser, "refresh", sub, "Running denoiser...")
+        template_refresh_button(LuxCoreDenoiser.refresh, "luxcore.request_denoiser_refresh",
+                                sub, "Running denoiser...")
 
         col = layout.column()
         col.label(text="Change the pass to see the result", icon=icons.INFO)
@@ -113,9 +117,8 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
         statistics_collection = context.scene.luxcore.statistics
         active_index = image.render_slots.active_index
 
-        #TODO 2.8 adapt to new API
-        # if len(context.scene.render.layers) > 1:
-        #    layout.label(text="Only stats of last rendered render layer are shown", icon=icons.WARNING)
+        if len(context.scene.view_layers) > 1:
+           layout.label(text="Only stats of last rendered render layer are shown", icon=icons.WARNING)
 
         layout.prop(statistics_collection, "compare")
 
@@ -135,15 +138,17 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
     @staticmethod
     def icon(stat, other_stat):
-        if not stat.can_compare():
-            return "NONE"
-
-        if stat.is_better(other_stat):
-            return "COLOR_GREEN"
-        elif stat.is_equal(other_stat):
-            return "COLOR_BLUE"
-        else:
-            return "COLOR_RED"
+        return "NONE"
+        # TODO 2.8 try to find good icons for better/worse/equal
+        # if not stat.can_compare():
+        #     return "NONE"
+        #
+        # if stat.is_better(other_stat):
+        #     return "COLOR_GREEN"
+        # elif stat.is_equal(other_stat):
+        #     return "COLOR_BLUE"
+        # else:
+        #     return "COLOR_RED"
 
     def stat_lists_by_category(self, stats):
         stat_lists = []
