@@ -20,5 +20,14 @@ class LUXCORE_OT_request_display_refresh(bpy.types.Operator):
 
     def execute(self, context):
         LuxCoreDisplaySettings.refresh = True
-        print("refresh requested")
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_toggle_pause(bpy.types.Operator):
+    bl_idname = "luxcore.toggle_pause"
+    bl_label = ""
+    bl_description = "Pause/Resume render"
+
+    def execute(self, context):
+        LuxCoreDisplaySettings.paused = not LuxCoreDisplaySettings.paused
         return {"FINISHED"}

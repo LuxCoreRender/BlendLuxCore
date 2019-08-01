@@ -110,7 +110,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
         time_until_film_refresh = depsgraph.scene.luxcore.display.interval - (now - last_film_refresh)
         fast_refresh = now - start < FAST_REFRESH_DURATION
 
-        if depsgraph.scene.luxcore.display.paused:
+        if LuxCoreDisplaySettings.paused:
             if not engine.session.IsInPause():
                 engine.session.Pause()
                 utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh=0)

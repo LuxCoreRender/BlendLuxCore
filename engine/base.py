@@ -5,6 +5,7 @@ from ..handlers.draw_imageeditor import TileStats
 from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
+from ..properties.display import LuxCoreDisplaySettings
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -77,7 +78,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def render_final(self, depsgraph):
         try:
             LuxCoreRenderEngine.final_running = True
-            # scene.luxcore.display.paused = False  # TODO 2.8 this should not be a property
+            LuxCoreDisplaySettings.paused = False
             TileStats.reset()
             LuxCoreLog.add_listener(self.log_listener)
             final.render(self, depsgraph)

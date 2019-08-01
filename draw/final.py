@@ -99,7 +99,6 @@ class FrameBufferFinal(object):
         engine.end_result(result)
         # Reset the refresh button
         LuxCoreDisplaySettings.refresh = False
-        print("refresh button reset")
 
     def _import_aov(self, output_name, output_type, render_layer, session, engine,
                     execute_imagepipeline=True, index=0, lightgroup_name=""):

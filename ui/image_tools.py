@@ -32,11 +32,11 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
         display = scene.luxcore.display
         config = scene.luxcore.config
 
-        text = "Resume" if display.paused else "Pause"
-        icon = "PLAY" if display.paused else "PAUSE"
+        text = "Resume" if LuxCoreDisplaySettings.paused else "Pause"
+        icon = "PLAY" if LuxCoreDisplaySettings.paused else "PAUSE"
         row = layout.row()
         row.enabled = LuxCoreRenderEngine.final_running
-        row.prop(display, "paused", text=text, icon=icon, toggle=True)
+        row.operator("luxcore.toggle_pause", text=text, icon=icon)
 
         template_refresh_button(LuxCoreDisplaySettings.refresh, "luxcore.request_display_refresh",
                                 layout, "Refreshing film...")
