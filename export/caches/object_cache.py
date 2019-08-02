@@ -142,7 +142,8 @@ class ObjectCache2:
 
 
     def diff(self, depsgraph):
-        return depsgraph.id_type_updated("OBJECT")
+        only_scene = len(depsgraph.updates) == 1 and isinstance(depsgraph.updates[0].id, bpy.types.Scene)
+        return depsgraph.id_type_updated("OBJECT") and not only_scene
 
     def update(self, exporter, depsgraph, luxcore_scene, scene_props, is_viewport_render=True):
         print("object cache update")

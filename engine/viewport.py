@@ -33,11 +33,6 @@ def view_update(engine, context, depsgraph, changes=None):
         # Prevent deadlock
         return
 
-    scene = depsgraph.scene_eval
-
-    if engine.framebuffer:
-        engine.framebuffer.reset_denoiser()
-
     LuxCoreErrorLog.clear()
 
     if engine.session is None:
@@ -67,16 +62,13 @@ def view_update(engine, context, depsgraph, changes=None):
     if changes is None:
         changes = engine.exporter.get_changes(depsgraph, context)
 
-    # TODO 2.8 remove
-    # if changes & export.Change.CONFIG:
-    #     # Film resize requires a new framebuffer
-    #     engine.framebuffer = FrameBuffer(context)
-
-    # We have to re-assign the session because it might have been replaced due to filmsize change
-    engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
-
     if changes:
+        # We have to re-assign the session because it might have been replaced due to filmsize change
+        engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
+
+        if engine.framebuffer:
+            engine.framebuffer.reset_denoiser()
 
 
 def view_draw(engine, context, depsgraph):
