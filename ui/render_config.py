@@ -189,13 +189,15 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
         layout.use_property_decorate = False
         layout.enabled = config.path.hybridbackforward_enable
 
-        row = layout.row()
         if config.device == "CPU":
-            row.prop(config.path, "hybridbackforward_lightpartition")
-        elif self.error(context):
-            col = layout.column()
-            col.label(text='Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
-            col.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True)
+            layout.prop(config.path, "hybridbackforward_lightpartition")
+            layout.prop(config.path, "hybridbackforward_glossinessthresh")
+        elif config.device == "OCL":
+            layout.prop(config.path, "hybridbackforward_glossinessthresh")
+
+        if self.error(context):
+            layout.label(text='Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
+            layout.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True, text="Fix this problem")
 
 
 class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
