@@ -180,6 +180,17 @@ class LuxCore_OT_material_select(bpy.types.Operator):
 # Node tree related operators
 
 
+def show_nodetree(context, node_tree):
+    for area in context.screen.areas:
+        if area.type == "NODE_EDITOR":
+            for space in area.spaces:
+                if space.type == "NODE_EDITOR":
+                    space.tree_type = node_tree.bl_idname
+                    space.node_tree = node_tree
+                    return True
+    return False
+
+
 class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
     bl_idname = "luxcore.material_show_nodetree"
     bl_label = "Show Nodes"
@@ -204,13 +215,8 @@ class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
         mat = context.active_object.active_material
         node_tree = mat.node_tree if mat.luxcore.use_cycles_nodes else mat.luxcore.node_tree
 
-        for area in context.screen.areas:
-            if area.type == "NODE_EDITOR":
-                for space in area.spaces:
-                    if space.type == "NODE_EDITOR" and not space.pin:
-                        space.tree_type = node_tree.bl_idname
-                        space.node_tree = node_tree
-                        return {"FINISHED"}
+        if show_nodetree(context, node_tree):
+            return {"FINISHED"}
 
         self.report({"ERROR"}, "Open a node editor first")
         return {"CANCELLED"}
@@ -227,7 +233,8 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         return poll_object(context)
 
     def execute(self, context):
-        if getattr(context, "material", None):
+        mat = getattr(context, "material", None)
+        if mat:
             name = make_nodetree_name(context.material.name)
         else:
             name = "Material Node Tree"
@@ -235,9 +242,10 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         node_tree = bpy.data.node_groups.new(name=name, type="luxcore_material_nodes")
         init_mat_node_tree(node_tree)
 
-        if getattr(context, "material", None):
+        if mat:
             context.material.luxcore.node_tree = node_tree
 
+        show_nodetree(context, node_tree)
         return {"FINISHED"}
 
 
