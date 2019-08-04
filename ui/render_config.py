@@ -1,4 +1,3 @@
-#from bpy.types import RENDER_PT_context
 from . import bpy
 from . import icons
 from .. import utils
@@ -7,9 +6,6 @@ from bpy.types import Panel
 from bl_ui.properties_render import RENDER_PT_context
 from bl_ui.properties_render import RenderButtonsPanel
 
-# Note: The main LuxCore config UI is defined in ui/config.py
-# Each of the other render panels is also defined in their
-# own specific files in the ui/ folder.
 
 def luxcore_render_draw(panel, context):
     layout = panel.layout
@@ -87,8 +83,6 @@ class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
         layout = self.layout
 
         config = context.scene.luxcore.config
-        denoiser = context.scene.luxcore.denoiser
-        scene = context.scene
 
         layout.use_property_split = True
         layout.use_property_decorate = False      
@@ -127,36 +121,13 @@ class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     bl_order = 2
 
     def draw(self, context):
-        layout = self.layout
-
-        config = context.scene.luxcore.config
-        denoiser = context.scene.luxcore.denoiser
-        scene = context.scene
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        if config.engine == "PATH":
-            # Path options
-            col = layout.column(align=True)
-            col.prop(config.path, "depth_total")
-        else:
-            # Bidir options         
-            col = layout.column(align=True)
-            col.prop(config, "bidir_path_maxdepth")
-            col.prop(config, "bidir_light_maxdepth")
+        pass
 
 
 class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
     bl_label = "Max Bounces"
-    #bl_options = {'DEFAULT_CLOSED'}    
-    
-    @classmethod
-    def poll(cls, context):        
-        config = context.scene.luxcore.config
-        return config.engine == "PATH"
 
     def draw(self, context):
         layout = self.layout
@@ -164,19 +135,75 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
 
         layout.use_property_split = True
         layout.use_property_decorate = False
-      
+
         col = layout.column(align=True)
-        col.prop(config.path, "depth_diffuse")
-        col.prop(config.path, "depth_glossy")
-        col.prop(config.path, "depth_specular")        
+        if config.engine == "PATH":
+            # Path options
+            col.prop(config.path, "depth_total")
+
+            def draw_bounce_prop(layout, name):
+                row = layout.row(align=True)
+                row.alert = getattr(config.path, name) > config.path.depth_total
+                row.prop(config.path, name)
+
+            col = layout.column(align=True)
+            draw_bounce_prop(col, "depth_diffuse")
+            draw_bounce_prop(col, "depth_glossy")
+            draw_bounce_prop(col, "depth_specular")
+        else:
+            # Bidir options
+            col.prop(config, "bidir_path_maxdepth")
+            col.prop(config, "bidir_light_maxdepth")
+
+
+class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
+    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_bounces"
+    bl_label = "Add Light Tracing"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return True
+        # return not context.scene.luxcore.config.use_tiles
+
+    def error(self, context):
+        use_native_cpu = context.scene.luxcore.opencl.use_native_cpu
+        config = context.scene.luxcore.config
+        return config.device == "OCL" and not use_native_cpu
+
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        layout.prop(config.path, "hybridbackforward_enable", text="")
+
+        if config.path.hybridbackforward_enable and self.error(context):
+            layout.label(icon=icons.WARNING)
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        layout.enabled = config.path.hybridbackforward_enable
+
+        row = layout.row()
+        if config.device == "CPU":
+            row.prop(config.path, "hybridbackforward_lightpartition")
+        elif self.error(context):
+            col = layout.column()
+            col.label(text='Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
+            col.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True)
 
 
 class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
+    lux_predecessor = "LUXCORE_RENDER_PT_add_light_tracing"
     bl_label = "Clamping"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_advanced"
     
     def draw_header(self, context):
         layout = self.layout
@@ -209,9 +236,9 @@ class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
 class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
+    lux_predecessor = "LUXCORE_RENDER_PT_clamping"
     bl_label = "Advanced"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_bounces"
 
     def draw(self, context):
         layout = self.layout
@@ -256,9 +283,9 @@ class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
 class LUXCORE_RENDER_PT_lightpaths_tiled(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
+    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_advanced"
     bl_label = "Tiled"
-    bl_options = {'DEFAULT_CLOSED'}    
-    lux_predecessor = "LUXCORE_RENDER_PT_clamping"
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):        
