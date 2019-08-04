@@ -105,7 +105,7 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "PhotonGI Cache"
     bl_parent_id = "LUXCORE_RENDER_PT_caches"
-    bl_options = {'DEFAULT_CLOSED'}    
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
@@ -118,7 +118,7 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         photongi = context.scene.luxcore.config.photongi
         layout = self.layout
         layout.use_property_split = True
-        layout.use_property_decorate = False      
+        layout.use_property_decorate = False
         
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
         layout.enabled = photongi.enabled and not engine_is_bidir
@@ -196,3 +196,27 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
                  text="Compute and overwrite" if file_exists else "Compute and save")
         col.prop(photongi, "file_path", text="")
         col.label(text=cache_status)
+
+
+class LUXCORE_RENDER_PT_caches_envlight(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Environment Light Cache"
+    bl_parent_id = "LUXCORE_RENDER_PT_caches"
+    lux_predecessor = "LUXCORE_RENDER_PT_caches_photongi"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE"
+
+    def draw_header(self, context):
+        self.layout.prop(context.scene.luxcore.config.envlight_cache, "enabled", text="")
+
+    def draw(self, context):
+        envlight_cache = context.scene.luxcore.config.envlight_cache
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.prop(envlight_cache, "map_width")
+        layout.prop(envlight_cache, "samples")

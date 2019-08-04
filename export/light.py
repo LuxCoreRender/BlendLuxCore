@@ -187,7 +187,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
 
     _indirect_light_visibility(definitions, light)
-    _visibilitymap(definitions, light)
+    _visibilitymap(definitions, light, scene)
 
     props = utils.create_props(prefix, definitions)
     return props, exported_light
@@ -237,7 +237,7 @@ def convert_world(exporter, world, scene):
             definitions["type"] = "constantinfinite"
 
         _indirect_light_visibility(definitions, world)
-        _visibilitymap(definitions, world)
+        _visibilitymap(definitions, world, scene)
 
         props = utils.create_props(prefix, definitions)
         return props
@@ -405,12 +405,6 @@ def _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain, imp
     return props, exported_obj
 
 
-# def _get_area_obj_name(luxcore_name):
-#     # Note: we append "000" to the luxcore name here as fake material index because the DefineBlenderMesh
-#     # function would do the same, and it is expected by other parts of the code.
-#     return luxcore_name + "000"
-
-
 def _indirect_light_visibility(definitions, light_or_world):
     definitions.update({
         "visibility.indirect.diffuse.enable": light_or_world.luxcore.visibility_indirect_diffuse,
@@ -419,18 +413,16 @@ def _indirect_light_visibility(definitions, light_or_world):
     })
 
 
-def _visibilitymap(definitions, light_or_world):
-    vismap = light_or_world.luxcore.vismap
-
-    definitions["visibilitymap.enable"] = vismap.type == "single"
-    use_cache = vismap.type == "cache"
-    definitions["visibilitymapcache.enable"] = use_cache
-
-    if use_cache:
-        map_width = vismap.cache_map_width
+def _visibilitymap(definitions, light_or_world, scene):
+    envlight_cache = scene.luxcore.config.envlight_cache
+    enabled = envlight_cache.enabled and light_or_world.luxcore.use_envlight_cache
+    definitions["visibilitymapcache.enable"] = enabled
+    if enabled:
+        # All env. light caches share the same properties (it is very rare to have more than one anyway)
+        map_width = envlight_cache.map_width
         definitions["visibilitymapcache.map.width"] = map_width
         definitions["visibilitymapcache.map.height"] = map_width / 2
-        definitions["visibilitymapcache.map.samplecount"] = vismap.cache_samples
+        definitions["visibilitymapcache.map.samplecount"] = envlight_cache.samples
         definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
 
 

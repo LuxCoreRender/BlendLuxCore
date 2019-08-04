@@ -174,7 +174,7 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
         layout.use_property_decorate = False
         
         layout.prop(world.luxcore, "importance")
-        draw_vismap_ui(layout, world)
+        draw_vismap_ui(layout, context.scene, world)
 
 
 class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):

@@ -130,12 +130,15 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             layout.prop(light.luxcore, "is_laser")
 
 
-def draw_vismap_ui(layout, light_or_world):
-    layout.prop(light_or_world.luxcore.vismap, "type")
-    if light_or_world.luxcore.vismap.type == "cache":
-        col = layout.column(align=True)
-        col.prop(light_or_world.luxcore.vismap, "cache_map_width")
-        col.prop(light_or_world.luxcore.vismap, "cache_samples")
+def draw_vismap_ui(layout, scene, light_or_world):
+    envlight_cache = scene.luxcore.config.envlight_cache
+    col = layout.column()
+    col.active = envlight_cache.enabled
+    col.prop(light_or_world.luxcore, "use_envlight_cache")
+
+    if not envlight_cache.enabled:
+        layout.label(text="Cache is disabled in render settings", icon=icons.INFO)
+        layout.prop(envlight_cache, "enabled", text="Enable cache", toggle=True)
 
 
 class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
@@ -161,9 +164,10 @@ class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
 
         layout.prop(light.luxcore, "importance")
 
+        # TODO 2.8 hemi was removed, replacement?
         if light.type == "HEMI":
             # infinite (with image) and constantinfinte lights
-            draw_vismap_ui(layout, light)
+            draw_vismap_ui(layout, context.scene, light)
 
 
 class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):

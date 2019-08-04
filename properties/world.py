@@ -10,7 +10,6 @@ from .light import (
     GAMMA_DESCRIPTION, SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION,
     LIGHTGROUP_DESC, TURBIDITY_DESC, VIS_INDIRECT_DIFFUSE_DESC,
     VIS_INDIRECT_GLOSSY_DESC, VIS_INDIRECT_SPECULAR_DESC,
-    LuxCoreVisMapProps
 )
 from .image_user import LuxCoreImageUser
 
@@ -91,7 +90,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     visibility_indirect_specular: BoolProperty(name="Specular", default=True, description=VIS_INDIRECT_SPECULAR_DESC)
 
     # sky2, infinite, constantinfinite
-    vismap: PointerProperty(type=LuxCoreVisMapProps)
+    # TODO description (import from light properties)
+    use_envlight_cache: BoolProperty(name="Use Env. Light Cache", default=True)
 
     volume: PointerProperty(type=bpy.types.NodeTree)
     

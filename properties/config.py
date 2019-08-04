@@ -296,6 +296,15 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                                  "If you want to use the saved cache, disable this option")
 
 
+class LuxCoreConfigEnvLightCache(PropertyGroup):
+    enabled: BoolProperty(name="Enabled", default=False,
+                          description="Compute a cache with multiple visibility maps for the scene (works like "
+                                      "automatic portals). Note that it might consume a lot of RAM")
+    # TODO descriptions
+    map_width: IntProperty(name="Map Width", default=256, min=16, soft_max=256)
+    samples: IntProperty(name="Samples", default=1, min=1, soft_max=32)
+
+
 class LuxCoreConfigNoiseEstimation(PropertyGroup):
     warmup: IntProperty(name="Warmup Samples", default=8, min=1,
                          description=NOISE_THRESH_WARMUP_DESC)
@@ -396,6 +405,8 @@ class LuxCoreConfig(PropertyGroup):
     dls_cache: PointerProperty(type=LuxCoreConfigDLSCache)
     # Special properties of the photon GI cache
     photongi: PointerProperty(type=LuxCoreConfigPhotonGI)
+    # Special properties of the env. light cache (aka automatic portals)
+    envlight_cache: PointerProperty(type=LuxCoreConfigEnvLightCache)
 
     # FILESAVER options
     use_filesaver: BoolProperty(name="Only write LuxCore scene", default=False)
