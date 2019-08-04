@@ -80,16 +80,20 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             self.draw_image_controls(context)
 
         elif light.type == "SUN":
-            layout.prop(light.luxcore, "sun_type", expand=False)
+            layout.prop(light.luxcore, "light_type", expand=False)
 
-            if light.luxcore.sun_type == "sun":
+            if light.luxcore.light_type == "sun":
                 layout.prop(light.luxcore, "relsize")
                 layout.prop(light.luxcore, "turbidity")
                 world = context.scene.world
                 if world and world.luxcore.light == "sky2" and world.luxcore.sun != context.object:
                     layout.operator("luxcore.attach_sun_to_sky", icon=icons.WORLD)
-            elif light.luxcore.sun_type == "distant":
+            elif light.luxcore.light_type == "distant":
                 layout.prop(light.luxcore, "theta")
+            elif light.luxcore.light_type == "hemi":
+                self.draw_image_controls(context)
+                layout.prop(light.luxcore, "sampleupperhemisphereonly")
+
 
         elif light.type == "SPOT":
             col = layout.column(align=True)
@@ -97,10 +101,6 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             col.prop(light.luxcore, "efficacy")
 
             self.draw_image_controls(context)
-
-        elif light.type == "HEMI":
-            self.draw_image_controls(context)
-            layout.prop(light.luxcore, "sampleupperhemisphereonly")
 
         elif light.type == "AREA":
             col = layout.column(align=True)
@@ -164,8 +164,7 @@ class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
 
         layout.prop(light.luxcore, "importance")
 
-        # TODO 2.8 hemi was removed, replacement?
-        if light.type == "HEMI":
+        if light.type == "SUN" and light.luxcore.light_type == "hemi":
             # infinite (with image) and constantinfinte lights
             draw_vismap_ui(layout, context.scene, light)
 
@@ -183,10 +182,9 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
         visible = False
         if context.light:
             # Visible for sky2, sun, infinite, constantinfinite
-            if context.light.type == "SUN" and context.light.luxcore.sun_type == "sun":
-                visible = True
-            elif context.light.type == "HEMI":
-                visible = True
+            if context.light.type == "SUN":
+                if context.light.luxcore.light_type == "sun" or context.light.luxcore.light_type == "hemi":
+                    visible = True
 
         return context.light and engine == "LUXCORE" and visible
 

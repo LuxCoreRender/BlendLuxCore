@@ -103,12 +103,19 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
     elif light.type == "SUN":
         distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
 
-        if light.luxcore.sun_type == "sun":
+        if light.luxcore.light_type == "sun":
             # sun
             definitions["type"] = "sun"
             definitions["dir"] = sun_dir
             definitions["turbidity"] = light.luxcore.turbidity
             definitions["relsize"] = light.luxcore.relsize
+        elif light.luxcore.light_type == "hemi":
+            # hemi
+            if light.luxcore.image:
+                _convert_infinite(definitions, light, scene, transform)
+            else:
+                # Fallback
+                definitions["type"] = "constantinfinite"
         elif light.luxcore.theta < 0.05:
             # sharpdistant
             definitions["type"] = "sharpdistant"
@@ -154,13 +161,6 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
         transformation = utils.matrix_to_list(transform @ spot_fix)
         definitions["transformation"] = transformation
-
-    elif light.type == "HEMI":
-        if light.luxcore.image:
-            _convert_infinite(definitions, light, scene, transform)
-        else:
-            # Fallback
-            definitions["type"] = "constantinfinite"
 
     elif light.type == "AREA":
         if light.luxcore.is_laser:
