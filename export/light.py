@@ -15,118 +15,158 @@ MISSING_IMAGE_COLOR = [1, 0, 1]
 
 def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
     try:
-        # luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
-        luxcore_name = obj_key
-        scene = depsgraph.scene_eval
+        if obj.data.luxcore.use_cycles_settings:
+            return convert_cycles_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render)
+        else:
+            return convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render)
+    except Exception as error:
+        msg = 'Light "%s": %s' % (obj.name, error)
+        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+        import traceback
+        traceback.print_exc()
+        return pyluxcore.Properties(), None
 
-        # If this light was previously defined as an area lamp, delete the area lamp mesh
-        luxcore_scene.DeleteObject(luxcore_name)
-        # If this light was previously defined as a light, delete it
-        luxcore_scene.DeleteLight(luxcore_name)
 
-        prefix = "scene.lights." + luxcore_name + "."
-        definitions = {}
-        exported_light = ExportedLight(luxcore_name, transform.copy())
-        light = obj.data
-        sun_dir = _calc_sun_dir(transform)
+def convert_cycles_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
+    ...
 
-        # Common light settings shared by all light types
-        # Note: these variables are also passed to the area light export function
-        gain, importance, lightgroup_id = _convert_common_props(exporter, scene, light)
-        definitions["gain"] = gain
-        definitions["importance"] = importance
-        definitions["id"] = lightgroup_id
 
-        if light.type == "POINT":
-            if light.luxcore.image or light.luxcore.ies.use:
-                # mappoint/mapsphere
-                definitions["type"] = "mappoint" if light.shadow_soft_size == 0 else "mapsphere"
+def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
+    # luxcore_name = utils.get_luxcore_name(obj, context) + dupli_suffix
+    luxcore_name = obj_key
+    scene = depsgraph.scene_eval
 
-                has_image = False
-                if light.luxcore.image:
-                    try:
-                        filepath = ImageExporter.export(light.luxcore.image,
-                                                        light.luxcore.image_user,
-                                                        scene)
-                        definitions["mapfile"] = filepath
-                        definitions["gamma"] = light.luxcore.gamma
-                        has_image = True
-                    except OSError as error:
-                        msg = 'Light "%s": %s' % (obj.name, error)
-                        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-                        # Fallback
-                        definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
-                        # Signal that the image is missing
-                        definitions["gain"] = [x * light.luxcore.gain for x in MISSING_IMAGE_COLOR]
+    # If this light was previously defined as an area lamp, delete the area lamp mesh
+    luxcore_scene.DeleteObject(luxcore_name)
+    # If this light was previously defined as a light, delete it
+    luxcore_scene.DeleteLight(luxcore_name)
 
-                has_ies = False
-                try:
-                    has_ies = export_ies(definitions, light.luxcore.ies, light.library)
-                except OSError as error:
-                    msg = 'Light "%s": %s' % (obj.name, error)
-                    LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-                finally:
-                    if not has_ies and not has_image:
-                        # Fallback
-                        definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
-            else:
-                # point/sphere
-                definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
+    prefix = "scene.lights." + luxcore_name + "."
+    definitions = {}
+    exported_light = ExportedLight(luxcore_name, transform.copy())
+    light = obj.data
+    sun_dir = _calc_sun_dir(transform)
 
-            definitions["efficency"] = light.luxcore.efficacy
-            definitions["power"] = light.luxcore.power
-            # Position is set by transformation property
-            definitions["position"] = [0, 0, 0]
-            transformation = utils.matrix_to_list(transform)
-            definitions["transformation"] = transformation
+    # Common light settings shared by all light types
+    # Note: these variables are also passed to the area light export function
+    gain, importance, lightgroup_id = _convert_common_props(exporter, scene, light)
+    definitions["gain"] = gain
+    definitions["importance"] = importance
+    definitions["id"] = lightgroup_id
 
-            if light.shadow_soft_size > 0:
-                definitions["radius"] = light.shadow_soft_size
+    if light.type == "POINT":
+        if light.luxcore.image or light.luxcore.ies.use:
+            # mappoint/mapsphere
+            definitions["type"] = "mappoint" if light.shadow_soft_size == 0 else "mapsphere"
 
-        elif light.type == "SUN":
-            distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
-
-            if light.luxcore.sun_type == "sun":
-                # sun
-                definitions["type"] = "sun"
-                definitions["dir"] = sun_dir
-                definitions["turbidity"] = light.luxcore.turbidity
-                definitions["relsize"] = light.luxcore.relsize
-            elif light.luxcore.theta < 0.05:
-                # sharpdistant
-                definitions["type"] = "sharpdistant"
-                definitions["direction"] = distant_dir
-            else:
-                # distant
-                definitions["type"] = "distant"
-                definitions["direction"] = distant_dir
-                definitions["theta"] = light.luxcore.theta
-
-        elif light.type == "SPOT":
-            coneangle = math.degrees(light.spot_size) / 2
-            conedeltaangle = math.degrees(light.spot_size / 2 * light.spot_blend)
-
+            has_image = False
             if light.luxcore.image:
-                # projection
                 try:
-                    definitions["mapfile"] = ImageExporter.export(light.luxcore.image,
-                                                                  light.luxcore.image_user,
-                                                                  scene)
-                    definitions["type"] = "projection"
-                    definitions["fov"] = coneangle * 2
+                    filepath = ImageExporter.export(light.luxcore.image,
+                                                    light.luxcore.image_user,
+                                                    scene)
+                    definitions["mapfile"] = filepath
                     definitions["gamma"] = light.luxcore.gamma
+                    has_image = True
                 except OSError as error:
                     msg = 'Light "%s": %s' % (obj.name, error)
                     LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
                     # Fallback
-                    definitions["type"] = "spot"
+                    definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
                     # Signal that the image is missing
                     definitions["gain"] = [x * light.luxcore.gain for x in MISSING_IMAGE_COLOR]
-            else:
-                # spot
+
+            has_ies = False
+            try:
+                has_ies = export_ies(definitions, light.luxcore.ies, light.library)
+            except OSError as error:
+                msg = 'Light "%s": %s' % (obj.name, error)
+                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+            finally:
+                if not has_ies and not has_image:
+                    # Fallback
+                    definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
+        else:
+            # point/sphere
+            definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
+
+        definitions["efficency"] = light.luxcore.efficacy
+        definitions["power"] = light.luxcore.power
+        # Position is set by transformation property
+        definitions["position"] = [0, 0, 0]
+        transformation = utils.matrix_to_list(transform)
+        definitions["transformation"] = transformation
+
+        if light.shadow_soft_size > 0:
+            definitions["radius"] = light.shadow_soft_size
+
+    elif light.type == "SUN":
+        distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
+
+        if light.luxcore.sun_type == "sun":
+            # sun
+            definitions["type"] = "sun"
+            definitions["dir"] = sun_dir
+            definitions["turbidity"] = light.luxcore.turbidity
+            definitions["relsize"] = light.luxcore.relsize
+        elif light.luxcore.theta < 0.05:
+            # sharpdistant
+            definitions["type"] = "sharpdistant"
+            definitions["direction"] = distant_dir
+        else:
+            # distant
+            definitions["type"] = "distant"
+            definitions["direction"] = distant_dir
+            definitions["theta"] = light.luxcore.theta
+
+    elif light.type == "SPOT":
+        coneangle = math.degrees(light.spot_size) / 2
+        conedeltaangle = math.degrees(light.spot_size / 2 * light.spot_blend)
+
+        if light.luxcore.image:
+            # projection
+            try:
+                definitions["mapfile"] = ImageExporter.export(light.luxcore.image,
+                                                              light.luxcore.image_user,
+                                                              scene)
+                definitions["type"] = "projection"
+                definitions["fov"] = coneangle * 2
+                definitions["gamma"] = light.luxcore.gamma
+            except OSError as error:
+                msg = 'Light "%s": %s' % (obj.name, error)
+                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+                # Fallback
                 definitions["type"] = "spot"
-                definitions["coneangle"] = coneangle
-                definitions["conedeltaangle"] = conedeltaangle
+                # Signal that the image is missing
+                definitions["gain"] = [x * light.luxcore.gain for x in MISSING_IMAGE_COLOR]
+        else:
+            # spot
+            definitions["type"] = "spot"
+            definitions["coneangle"] = coneangle
+            definitions["conedeltaangle"] = conedeltaangle
+
+        definitions["efficency"] = light.luxcore.efficacy
+        definitions["power"] = light.luxcore.power
+        # Position and direction are set by transformation property
+        definitions["position"] = [0, 0, 0]
+        definitions["target"] = [0, 0, -1]
+
+        spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
+        transformation = utils.matrix_to_list(transform @ spot_fix)
+        definitions["transformation"] = transformation
+
+    elif light.type == "HEMI":
+        if light.luxcore.image:
+            _convert_infinite(definitions, light, scene, transform)
+        else:
+            # Fallback
+            definitions["type"] = "constantinfinite"
+
+    elif light.type == "AREA":
+        if light.luxcore.is_laser:
+            # laser
+            definitions["type"] = "laser"
+            definitions["radius"] = light.size / 2
 
             definitions["efficency"] = light.luxcore.efficacy
             definitions["power"] = light.luxcore.power
@@ -137,49 +177,20 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
             spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
             transformation = utils.matrix_to_list(transform @ spot_fix)
             definitions["transformation"] = transformation
-
-        elif light.type == "HEMI":
-            if light.luxcore.image:
-                _convert_infinite(definitions, light, scene, transform)
-            else:
-                # Fallback
-                definitions["type"] = "constantinfinite"
-
-        elif light.type == "AREA":
-            if light.luxcore.is_laser:
-                # laser
-                definitions["type"] = "laser"
-                definitions["radius"] = light.size / 2
-
-                definitions["efficency"] = light.luxcore.efficacy
-                definitions["power"] = light.luxcore.power
-                # Position and direction are set by transformation property
-                definitions["position"] = [0, 0, 0]
-                definitions["target"] = [0, 0, -1]
-
-                spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-                transformation = utils.matrix_to_list(transform @ spot_fix)
-                definitions["transformation"] = transformation
-            else:
-                # area (mesh light)
-                return _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain,
-                                           importance, luxcore_name, transform)
-
         else:
-            # Can only happen if Blender changes its light types
-            raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
+            # area (mesh light)
+            return _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain,
+                                       importance, luxcore_name, transform)
 
-        _indirect_light_visibility(definitions, light)
-        _visibilitymap(definitions, light)
+    else:
+        # Can only happen if Blender changes its light types
+        raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
 
-        props = utils.create_props(prefix, definitions)
-        return props, exported_light
-    except Exception as error:
-        msg = 'Light "%s": %s' % (obj.name, error)
-        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-        import traceback
-        traceback.print_exc()
-        return pyluxcore.Properties(), None
+    _indirect_light_visibility(definitions, light)
+    _visibilitymap(definitions, light)
+
+    props = utils.create_props(prefix, definitions)
+    return props, exported_light
 
 
 def convert_world(exporter, world, scene):

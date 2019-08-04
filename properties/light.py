@@ -104,6 +104,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
             if self.is_laser:
                 context.light.shape = "SQUARE"
 
+    use_cycles_settings: BoolProperty(default=False)
+
     ##############################################
     # BlendLuxCore specific properties needed to translate LuxCore light concepts to Blender
     sun_types = [

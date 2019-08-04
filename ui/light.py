@@ -31,13 +31,26 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             col.prop(light.luxcore, "gamma")
         light.luxcore.image_user.draw(layout, context.scene)
 
-
     def draw(self, context):
         layout = self.layout
         light = context.light
 
         row = layout.row(align=True)
-        row.prop(light, "type", expand=True)        
+        row.prop(light, "type", expand=True)
+        # TODO 2.8 enable this once the exporter code works
+        # layout.prop(light.luxcore, "use_cycles_settings")
+
+        if context.light.luxcore.use_cycles_settings:
+            self.draw_cycles_settings(context)
+        else:
+            self.draw_luxcore_settings(context)
+
+    def draw_cycles_settings(self, context):
+        ...
+
+    def draw_luxcore_settings(self, context):
+        layout = self.layout
+        light = context.light
 
         layout.use_property_split = True
         layout.use_property_decorate = False
