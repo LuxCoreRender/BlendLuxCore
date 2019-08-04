@@ -145,16 +145,17 @@ class LUXCORE_RENDER_PT_performance_gpu_devices(RenderButtonsPanel, Panel):
 
     def draw(self, context):
         layout = self.layout
-        config = context.scene.luxcore.config
         opencl = context.scene.luxcore.opencl
 
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        if not opencl.devices:            
+        if not opencl.devices:
             layout.label(text="No OpenCL Devices available.", icon=icons.WARNING)
-            layout.operator("luxcore.update_opencl_devices")        
-        else:
+
+        layout.operator("luxcore.update_opencl_devices")
+
+        if opencl.devices:
             if self._show_openCL_device_warning(context):
                 layout.label(text="Select at least one OpenCL device!", icon=icons.WARNING)
 
