@@ -172,11 +172,10 @@ class FrameBufferFinal(object):
 
                 while not session.GetFilm().HasDoneAsyncExecuteImagePipeline():
                     elapsed = round(time() - start)
+                    msg = f"Elapsed: {elapsed} s"
                     if self.denoiser_last_elapsed_time:
-                        last = "%d s" % self.denoiser_last_elapsed_time
-                    else:
-                        last = "unkown"
-                    engine.update_stats("Denoising...", "Elapsed: {} s (last: {})".format(elapsed, last))
+                        msg += f" (last: {self.denoiser_last_elapsed_time})"
+                    engine.update_stats("Denoising...", msg)
                     sleep(1)
 
                 self.denoiser_last_elapsed_time = round(time() - start)
