@@ -138,7 +138,9 @@ def draw_vismap_ui(layout, scene, light_or_world):
 
     if not envlight_cache.enabled:
         layout.label(text="Cache is disabled in render settings", icon=icons.INFO)
-        layout.prop(envlight_cache, "enabled", text="Enable cache", toggle=True)
+        col = layout.column(align=True)
+        col.use_property_split = False
+        col.prop(envlight_cache, "enabled", text="Enable cache", toggle=True)
 
 
 class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
