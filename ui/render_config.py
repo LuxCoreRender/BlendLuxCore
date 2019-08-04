@@ -197,7 +197,10 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
 
         if self.error(context):
             layout.label(text='Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
-            layout.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True, text="Fix this problem")
+
+            col = layout.column(align=True)
+            col.use_property_split = False
+            col.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True, text="Fix this problem")
 
 
 class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
