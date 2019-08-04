@@ -567,14 +567,14 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
         layout.prop(contour_lines, "zero_grid_size")
 
 
-class LUXCORE_CAMERA_PT_dof_aperture(CameraButtonsPanel, Panel):
+class LUXCORE_CAMERA_PT_volume(CameraButtonsPanel, Panel):
     bl_label = "Volume"    
     bl_order = 8
     COMPAT_ENGINES = {"LUXCORE"}
 
     @classmethod
     def poll(cls, context):
-        return context.camera
+        return context.scene.render.engine == "LUXCORE" and context.camera
 
     def draw(self, context):
         layout = self.layout
