@@ -38,8 +38,12 @@ def render(engine, depsgraph):
 
         engine.end_result(dummy_result, cancel=True, do_merge_results=False)
 
+        #ToDO 2.8 check if we could use this
+        #if not layer.use:
+        #    continue
+
         # This property is used during export, e.g. to check for layer visibility
-        utils_view_layer.State.active_view_layer_index = layer_index
+        utils_view_layer.State.active_view_layer = layer.name
 
         _add_passes(engine, layer, scene)
         _render_layer(engine, depsgraph, statistics, layer)

@@ -60,8 +60,8 @@ class FrameBufferFinal(object):
         self.denoiser_last_samples = 0
 
     def draw(self, engine, session, scene, render_stopped):
-        active_layer_index = utils_view_layer.State.active_view_layer_index
-        scene_layer = scene.view_layers[active_layer_index]
+        active_layer = utils_view_layer.State.active_view_layer
+        scene_layer = scene.view_layers[active_layer]
 
         result = engine.begin_result(0, 0, self._width, self._height, layer=scene_layer.name)
         # Regardless of the scene render layers, the result always only contains one layer
