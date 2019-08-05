@@ -43,7 +43,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
 
     prefix = "scene.lights." + luxcore_name + "."
     definitions = {}
-    exported_light = ExportedLight(luxcore_name, transform.copy())
+    exported_light = ExportedLight(luxcore_name)
     light = obj.data
     sun_dir = _calc_sun_dir(transform)
 

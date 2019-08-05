@@ -13,7 +13,12 @@ class ExportedMesh:
         self.mesh_definitions = mesh_definitions
 
 
-class ExportedObject:
+class ExportedData:
+    def delete(self, luxcore_scene):
+        raise NotImplementedError()
+
+
+class ExportedObject(ExportedData):
     # TODO id, camera visibility etc.
     def __init__(self, lux_name_base, mesh_definitions, mat_names, transform):
         self.lux_name_base = lux_name_base
@@ -41,13 +46,9 @@ class ExportedObject:
             luxcore_scene.DeleteObject(part.lux_obj)
 
 
-class ExportedLight(ExportedObject):
-    def __init__(self, lux_light_name, transform):
-        super().__init__(None, lux_light_name, [], transform)
-
-    def get_props(self):
-        # Should never happen
-        raise NotImplementedError("get_props called on ExportedLight")
+class ExportedLight(ExportedData):
+    def __init__(self, lux_light_name):
+        self.lux_light_name = lux_light_name
 
     def delete(self, luxcore_scene):
-        luxcore_scene.DeleteLight(self.lux_name_base)
+        luxcore_scene.DeleteLight(self.lux_light_name)

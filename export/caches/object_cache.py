@@ -64,13 +64,15 @@ class ObjectCache2:
     def _debug_info(self):
         print("Objects in cache:", len(self.exported_objects))
         print("Meshes in cache:", len(self.exported_meshes))
-        for key, exported_mesh in self.exported_meshes.items():
-            if exported_mesh:
-                print(key, exported_mesh.mesh_definitions)
-            else:
-                print(key, "mesh is None")
+        # for key, exported_mesh in self.exported_meshes.items():
+        #     if exported_mesh:
+        #         print(key, exported_mesh.mesh_definitions)
+        #     else:
+        #         print(key, "mesh is None")
 
     def _is_visible(self, dg_obj_instance, obj):
+        # TODO if this code needs to be used elsewhere (e.g. in material preview),
+        #  move it to utils (it doesn't concern this cache class)
         return dg_obj_instance.show_self and obj.type in EXPORTABLE_OBJECTS
 
     def _get_mesh_key(self, obj, use_instancing, is_viewport_render=True):
@@ -92,8 +94,7 @@ class ObjectCache2:
         obj_key = utils.make_key_from_instance(dg_obj_instance)
 
         if obj.type in MESH_OBJECTS:
-            if obj_key in self.exported_objects:
-                raise Exception("key already in exp_obj:", obj_key)
+            # assert obj_key not in self.exported_objects
             self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
                                    luxcore_scene, scene_props, is_viewport_render)
         elif obj.type == "LIGHT":
@@ -153,7 +154,7 @@ class ObjectCache2:
         #  Would be better for performance with many particles, however I'm not sure
         #  we can find all instances corresponding to one particle system?
 
-        # For now, transforms and new instances only
+        # Currently, every update that doesn't require a mesh re-export happens here
         for dg_obj_instance in depsgraph.object_instances:
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
             if not self._is_visible(dg_obj_instance, obj):
