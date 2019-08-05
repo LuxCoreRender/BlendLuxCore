@@ -167,14 +167,25 @@ class ObjectCache2:
                 continue
 
             obj_key = utils.make_key_from_instance(dg_obj_instance)
-            transform = dg_obj_instance.matrix_world.copy()
 
             if obj_key in self.exported_objects and obj.type != "LIGHT":
                 exported_obj = self.exported_objects[obj_key]
-                last_transform = exported_obj.transform
-                if last_transform != transform:
-                    # Update transform
-                    exported_obj.transform = transform
+                updated = False
+
+                if exported_obj.transform != dg_obj_instance.matrix_world:
+                    exported_obj.transform = dg_obj_instance.matrix_world.copy()
+                    updated = True
+
+                obj_id = utils.make_object_id(dg_obj_instance)
+                if exported_obj.obj_id != obj_id:
+                    exported_obj.obj_id = obj_id
+                    updated = True
+
+                if exported_obj.visible_to_camera != obj.luxcore.visible_to_camera:
+                    exported_obj.visible_to_camera = obj.luxcore.visible_to_camera
+                    updated = True
+
+                if updated:
                     scene_props.Set(exported_obj.get_props())
             else:
                 # Object is new and not in LuxCore yet, or it is a light, do a full export

@@ -90,6 +90,10 @@ def persistent_id_to_str(persistent_id):
 
 
 def make_object_id(dg_obj_instance):
+    chosen_id = dg_obj_instance.object.original.luxcore.id
+    if chosen_id != -1:
+        return chosen_id
+
     key = dg_obj_instance.object.original.name
 
     if dg_obj_instance.is_instance:
