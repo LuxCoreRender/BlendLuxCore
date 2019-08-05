@@ -37,9 +37,7 @@ def make_key_from_instance(dg_obj_instance):
     if dg_obj_instance.is_instance:
         key = make_key(dg_obj_instance.object.original)
         key += "_" + make_key(dg_obj_instance.parent.original)
-        # Apparently we need all entries in persistent_id, otherwise
-        # there are collisions when instances are nested
-        key += "_".join([str(pid) for pid in dg_obj_instance.persistent_id])
+        key += persistent_id_to_str(dg_obj_instance.persistent_id)
     else:
         key = make_key(dg_obj_instance.object.original)
     return key
@@ -85,9 +83,23 @@ def obj_from_key(key, objects):
     return None
 
 
-def make_object_id(name):
-    # We do this similar to Cycles: hash the object's name to get a "stable" object ID
-    digest = hashlib.md5(name.encode("utf-8")).digest()
+def persistent_id_to_str(persistent_id):
+    # Apparently we need all entries in persistent_id, otherwise
+    # there are collisions when instances are nested
+    return "_".join([str(pid) for pid in persistent_id])
+
+
+def make_object_id(dg_obj_instance):
+    key = dg_obj_instance.object.original.name
+
+    if dg_obj_instance.is_instance:
+        # Make unique but stable for particles, duplis etc.
+        key += dg_obj_instance.parent.original.name
+        key += persistent_id_to_str(dg_obj_instance.persistent_id)
+
+    # We do this similar to Cycles: hash the object's name to get an ID that's stable over
+    # frames and between re-renders (as long as the object is not renamed).
+    digest = hashlib.md5(key.encode("utf-8")).digest()
     as_int = int.from_bytes(digest, byteorder="little")
     # Truncate to 4 bytes because LuxCore uses unsigned int for the object ID.
     # Make sure it's not exactly 0xffffffff because that's LuxCore's Null index for object IDs.

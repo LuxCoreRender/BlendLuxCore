@@ -147,11 +147,10 @@ def _export_mat_scene(engine, depsgraph, active_mat):
                     scene_props.Set(mat_props)
                     mat_names.append(lux_mat_name)
 
-                exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, None)
+                exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, None, True)
 
-                if exported_obj:
-                    scene_props.Set(exported_obj.get_props())
-                    exporter.object_cache2.exported_objects[obj_key] = exported_obj
+                scene_props.Set(exported_obj.get_props())
+                exporter.object_cache2.exported_objects[obj_key] = exported_obj
 
         # Don't export lights and floor from preview scene
         elif not (obj.type == 'LIGHT' or obj.name == 'Floor'):

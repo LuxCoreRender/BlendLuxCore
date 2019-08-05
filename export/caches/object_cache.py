@@ -136,10 +136,16 @@ class ObjectCache2:
                 mat_names.append(lux_mat_name)
 
             obj_transform = transform.copy() if use_instancing else None
-            exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, obj_transform)
-            if exported_obj:
-                scene_props.Set(exported_obj.get_props())
-                self.exported_objects[obj_key] = exported_obj
+
+            if obj.luxcore.id == -1:
+                obj_id = utils.make_object_id(dg_obj_instance)
+            else:
+                obj_id = obj.luxcore.id
+
+            exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names,
+                                          obj_transform, obj.luxcore.visible_to_camera, obj_id)
+            scene_props.Set(exported_obj.get_props())
+            self.exported_objects[obj_key] = exported_obj
 
 
     def diff(self, depsgraph):

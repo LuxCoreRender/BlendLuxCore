@@ -401,7 +401,7 @@ def _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain, imp
 
     fake_material_index = 0
     mesh_definition = [luxcore_name, fake_material_index]
-    exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"], transform.copy())
+    exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"], transform.copy(), obj.luxcore.visible_to_camera)
     return props, exported_obj
 
 
