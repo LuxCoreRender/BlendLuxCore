@@ -61,9 +61,9 @@ class FrameBufferFinal(object):
 
     def draw(self, engine, session, scene, render_stopped):
         active_layer = utils_view_layer.State.active_view_layer
-        scene_layer = scene.view_layers[active_layer]
+        scene_layer_name = scene.view_layers[active_layer].name if active_layer else ""
 
-        result = engine.begin_result(0, 0, self._width, self._height, layer=scene_layer.name)
+        result = engine.begin_result(0, 0, self._width, self._height, layer=scene_layer_name)
         # Regardless of the scene render layers, the result always only contains one layer
         render_layer = result.layers[0]
 
@@ -75,6 +75,7 @@ class FrameBufferFinal(object):
         if not engine.is_preview:
             for output_name, output_type in pyluxcore.FilmOutputType.names.items():
                 # Check if this AOV is enabled on this render layer
+                scene_layer = scene.view_layers[active_layer]
                 if getattr(scene_layer.luxcore.aovs, output_name.lower(), False):
                     try:
                         self._import_aov(output_name, output_type, render_layer, session, engine)
