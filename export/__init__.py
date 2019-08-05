@@ -236,13 +236,13 @@ class Exporter(object):
                 changes |= Change.WORLD
 
         # Relevant during final render
-        imagepipeline_props = imagepipeline.convert(scene, context)
+        imagepipeline_props = imagepipeline.convert(depsgraph.scene, context)
         if self.imagepipeline_cache.diff(imagepipeline_props):
             changes |= Change.IMAGEPIPELINE
 
         if final:
             # Halt conditions are only used during final render
-            halt_props = halt.convert(scene)
+            halt_props = halt.convert(depsgraph.scene)
             if self.halt_cache.diff(halt_props):
                 changes |= Change.HALT
 

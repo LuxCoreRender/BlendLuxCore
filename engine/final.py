@@ -132,7 +132,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
             if changes or refresh_requested:
                 engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=False)
         else:
-            if fast_refresh or update_stats or refresh_requested:
+            if fast_refresh or update_stats or changes or refresh_requested:
                 # We have to check the stats often to see if a halt condition is met
                 # But film drawing is expensive, so we don't do it every time we check stats
                 draw_film = fast_refresh or (time_until_film_refresh <= 0)
