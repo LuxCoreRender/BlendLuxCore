@@ -66,16 +66,16 @@ class LuxCoreNodeTexVectorMath(bpy.types.Node, LuxCoreNodeTexture):
         }
         
         if self.mode == "abs":
-            definitions["texture"] = self.inputs["Vector"].export(exporter, props)
+            definitions["texture"] = self.inputs["Vector"].export(exporter, depsgraph, props)
         elif self.mode == "clamp":
-            definitions["texture"] = self.inputs["Vector"].export(exporter, props)
+            definitions["texture"] = self.inputs["Vector"].export(exporter, depsgraph, props)
             definitions["min"] = self.mode_clamp_min
             definitions["max"] = self.mode_clamp_max
         else:
-            definitions["texture1"] = self.inputs["Vector 1"].export(exporter, props)
-            definitions["texture2"] = self.inputs["Vector 2"].export(exporter, props)
+            definitions["texture1"] = self.inputs["Vector 1"].export(exporter, depsgraph, props)
+            definitions["texture2"] = self.inputs["Vector 2"].export(exporter, depsgraph, props)
 
             if self.mode == "mix":
-                definitions["amount"] = self.inputs["Fac"].export(exporter, props)
+                definitions["amount"] = self.inputs["Fac"].export(exporter, depsgraph, props)
 
         return self.create_props(props, definitions, luxcore_name)

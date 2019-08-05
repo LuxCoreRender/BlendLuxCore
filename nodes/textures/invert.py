@@ -15,7 +15,7 @@ class LuxCoreNodeTexInvert(bpy.types.Node, LuxCoreNodeTexture):
         definitions = {
             "type": "subtract",
             "texture1": 1,
-            "texture2": self.inputs["Color"].export(exporter, props),
+            "texture2": self.inputs["Color"].export(exporter, depsgraph, props),
         }
 
         return self.create_props(props, definitions, luxcore_name)

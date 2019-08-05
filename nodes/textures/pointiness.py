@@ -83,7 +83,7 @@ class LuxCoreNodeTexPointiness(bpy.types.Node, LuxCoreNodeTexture):
 
             luxcore_name = name_clamp
 
-        multiplier = self.inputs["Multiplier"].export(exporter, props)
+        multiplier = self.inputs["Multiplier"].export(exporter, depsgraph, props)
 
         if multiplier != 1:
             multiplier_name = luxcore_name + "_multiplier"

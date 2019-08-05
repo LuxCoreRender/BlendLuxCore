@@ -24,7 +24,7 @@ class LuxCoreNodeTexSplitFloat3(bpy.types.Node, LuxCoreNodeTexture):
 
         definitions = {
             "type": "splitfloat3",
-            "texture": self.inputs[0].export(exporter, props),
+            "texture": self.inputs[0].export(exporter, depsgraph, props),
             "channel": channel,
         }
 
