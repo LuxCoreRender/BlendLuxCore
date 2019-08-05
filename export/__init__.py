@@ -185,11 +185,23 @@ class Exporter(object):
             self._init_stats(stats, config_props, scene)
 
         if engine:
-            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
-                message = "Creating RenderSession and compiling OpenCL kernels..."
-            else:
-                message = "Creating RenderSession..."
+            message = "Creating RenderSession"
+            # Inform about pre-computations that can take a long time to complete, like caches
+            caches = {
+                # The value in the list is used as fallback if the property is not set
+                "PhotonGI": config_props.Get("path.photongi.indirect.enabled", [False]).GetBool(),
+                "Caustics": config_props.Get("path.photongi.caustic.enabled", [False]).GetBool(),
+                "DLSC": config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE",
+            }
+            enabled_caches = [key for key, value in caches.items() if value]
 
+            if any(enabled_caches):
+                message += ", computing caches (" + ", ".join(enabled_caches) + ")"
+
+            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
+                message += ", compiling OpenCL kernels"
+
+            message += " ..."
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 
         # Do not hold reference to temporary data
