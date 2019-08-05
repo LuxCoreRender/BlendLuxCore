@@ -136,7 +136,7 @@ def draw_vismap_ui(layout, scene, light_or_world):
     col.active = envlight_cache.enabled
     col.prop(light_or_world.luxcore, "use_envlight_cache")
 
-    if not envlight_cache.enabled:
+    if light_or_world.luxcore.use_envlight_cache and not envlight_cache.enabled:
         layout.label(text="Cache is disabled in render settings", icon=icons.INFO)
         col = layout.column(align=True)
         col.use_property_split = False
