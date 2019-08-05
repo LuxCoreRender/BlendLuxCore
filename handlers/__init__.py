@@ -15,12 +15,12 @@ def register():
     bpy.app.handlers.load_post.append(load_post.handler)
     # bpy.app.handlers.scene_update_post.append(scene_update_post.handler)
 
-    # args = ()
-    # draw_imageeditor.handle = SpaceImageEditor.draw_handler_add(draw_imageeditor.handler,
-    #                                                             args, 'WINDOW', 'POST_PIXEL')
+    args = ()
+    draw_imageeditor.handle = SpaceImageEditor.draw_handler_add(draw_imageeditor.handler,
+                                                                args, 'WINDOW', 'POST_PIXEL')
 
 
 def unregister():
     bpy.app.handlers.load_post.remove(load_post.handler)
     # bpy.app.handlers.scene_update_post.remove(scene_update_post.handler)
-    # SpaceImageEditor.draw_handler_remove(draw_imageeditor.handle, 'WINDOW')
+    SpaceImageEditor.draw_handler_remove(draw_imageeditor.handle, 'WINDOW')
