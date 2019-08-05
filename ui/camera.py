@@ -315,7 +315,6 @@ class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
 class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
     bl_label = "Image pipeline"
     bl_order = 8
-    bl_options = {'DEFAULT_CLOSED'}
     COMPAT_ENGINES = {"LUXCORE"}
         
     def draw(self, context):
@@ -337,8 +336,7 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
 
 class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):
     bl_label = "Tonemapper"
-    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"    
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     
     COMPAT_ENGINES = {"LUXCORE"}    
     
