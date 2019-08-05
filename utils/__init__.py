@@ -110,14 +110,19 @@ def create_props(prefix, definitions):
 
 
 def get_worldscale(scene, as_scalematrix=True):
-    unit_settings = scene.unit_settings
+    # TODO 2.8 I want to change the way we handle unit scaling, see
+    #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
+    #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
+    ws = 1
 
-    if unit_settings.system in {"METRIC", "IMPERIAL"}:
-        # The units used in modelling are for display only. behind
-        # the scenes everything is in meters
-        ws = unit_settings.scale_length
-    else:
-        ws = 1
+    # unit_settings = scene.unit_settings
+    #
+    # if unit_settings.system in {"METRIC", "IMPERIAL"}:
+    #     # The units used in modelling are for display only. behind
+    #     # the scenes everything is in meters
+    #     ws = unit_settings.scale_length
+    # else:
+    #     ws = 1
 
     if as_scalematrix:
         return mathutils.Matrix.Scale(ws, 4)
@@ -126,14 +131,19 @@ def get_worldscale(scene, as_scalematrix=True):
 
 
 def get_scaled_to_world(matrix, scene):
-    matrix = matrix.copy()
-    sm = get_worldscale(scene)
-    matrix = matrix @ sm
-    ws = get_worldscale(scene, as_scalematrix=False)
-    matrix[0][3] *= ws
-    matrix[1][3] *= ws
-    matrix[2][3] *= ws
-    return matrix
+    # TODO 2.8 I want to change the way we handle unit scaling, see
+    #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
+    #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
+    return matrix.copy()  # Someone might rely on this being a copy
+
+    # matrix = matrix.copy()
+    # sm = get_worldscale(scene)
+    # matrix = matrix @ sm
+    # ws = get_worldscale(scene, as_scalematrix=False)
+    # matrix[0][3] *= ws
+    # matrix[1][3] *= ws
+    # matrix[2][3] *= ws
+    # return matrix
 
 
 def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
@@ -144,7 +154,11 @@ def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
     """
 
     if apply_worldscale:
-        matrix = get_scaled_to_world(matrix, scene)
+        # TODO 2.8 I want to change the way we handle unit scaling, see
+        #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
+        #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
+        pass
+        # matrix = get_scaled_to_world(matrix, scene)
 
     if invert:
         matrix = matrix.copy()

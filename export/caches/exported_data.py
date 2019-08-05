@@ -35,8 +35,6 @@ class ExportedObject(ExportedData):
         for part in self.parts:
             definitions[part.lux_obj + ".shape"] = part.lux_shape
             definitions[part.lux_obj + ".material"] = part.lux_mat
-            # Note, I'm not applying worldscale here, I hope we can get rid
-            # of that (https://github.com/LuxCoreRender/BlendLuxCore/issues/97)
             if self.transform:
                 definitions[part.lux_obj + ".transformation"] = utils.matrix_to_list(self.transform)
         return utils.create_props(prefix, definitions)
