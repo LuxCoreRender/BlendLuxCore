@@ -37,3 +37,9 @@ the hidden datablocks.
 
 The VRay addon uses this to create hidden helper textures, for example to use their colorramp in a custom node 
 (as a workaround to the fact that addons can't create colorramps).
+
+#### Subscribe to a Blender-defined property
+
+It is possible to attach a listener function to an existing property via `bpy.msgbus`:
+* https://devtalk.blender.org/t/addon-development-question-attaching-callback-to-buttons/8677/2
+* https://developer.blender.org/P563
