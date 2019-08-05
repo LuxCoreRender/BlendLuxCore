@@ -163,3 +163,65 @@ class LUXCORE_RENDER_PT_performance_gpu_devices(RenderButtonsPanel, Panel):
             for device in gpu_devices:
                 layout.prop(device, "enabled", text=device.name)
 
+
+class LUXCORE_RENDER_PT_performance_tiled(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_parent_id = "LUXCORE_RENDER_PT_performance"
+    lux_predecessor = "LUXCORE_RENDER_PT_performance_cpu_devices"
+    bl_label = "Tiled"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        config = context.scene.luxcore.config
+        return config.engine == "PATH"
+
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        layout.prop(config, "use_tiles", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.enabled = config.use_tiles
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.prop(config.tile, "size")
+        col.prop(config.tile, "path_sampling_aa_size")
+
+        if utils.use_two_tiled_passes(context.scene):
+            layout.label(text="(Doubling amount of samples because of denoiser)")
+
+class LUXCORE_RENDER_PT_performance_tiled_multipass(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_parent_id = "LUXCORE_RENDER_PT_performance_tiled"
+    bl_label = "Multipass"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        config = context.scene.luxcore.config
+        return config.use_tiles
+
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        layout.prop(config.tile, "multipass_enable", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = config.tile.multipass_enable
+
+        col = layout.column(align=True)
+        col.prop(config.tile, "multipass_convtest_threshold")
+        col.prop(config.tile, "multipass_convtest_threshold_reduction")
+        col.prop(config.tile, "multipass_convtest_warmup")
