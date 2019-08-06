@@ -6,11 +6,3 @@ from os import environ
 # spoof loader_path with symlinks)
 if system() == "Darwin":
     environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
-# Ensure initialization (note: no need to initialize utils)
-# TODO 2.8 remove
-from . import (
-    camera, camera_response_func, debug, general, ior_presets, lightgroups,
-    material, multi_image_import, node_tree_presets, pointer_node,
-    pyluxcoretools, texture, update, world,
-)

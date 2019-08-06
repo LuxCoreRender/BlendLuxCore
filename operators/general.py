@@ -90,6 +90,7 @@ class LUXCORE_OT_set_suggested_clamping_value(bpy.types.Operator):
 class LUXCORE_OT_update_opencl_devices(bpy.types.Operator):
     bl_idname = "luxcore.update_opencl_devices"
     bl_label = "Update OpenCL device list"
+    bl_description = "Use this button if the OpenCL device list below does not match your computer's devices"
 
     def execute(self, context):
         opencl = context.scene.luxcore.opencl

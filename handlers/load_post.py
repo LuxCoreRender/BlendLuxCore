@@ -21,7 +21,8 @@ def handler(_):
             scene.luxcore.config.film_opencl_enable = False
             scene.luxcore.config.film_opencl_device = "none"
             for i, device in enumerate(scene.luxcore.opencl.devices):
-                if device.type == "OPENCL_GPU":
+                # Intel GPU devices can lead to crashes, so disable them by default
+                if device.type == "OPENCL_GPU" and not "intel" in device.name.lower():
                     scene.luxcore.config.film_opencl_device = str(i)
                     scene.luxcore.config.film_opencl_enable = True
                     break
