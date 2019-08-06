@@ -154,8 +154,9 @@ class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
 
 
 def draw_vismap_ui(layout, light_or_world):
-    layout.prop(light_or_world.luxcore.vismap, "type")
-    if light_or_world.luxcore.vismap.type == "cache":
+    layout.prop(light_or_world.luxcore.vismap, "enabled")
+
+    if light_or_world.luxcore.vismap.enabled:
         col = layout.column(align=True)
         col.prop(light_or_world.luxcore.vismap, "cache_map_width")
         col.prop(light_or_world.luxcore.vismap, "cache_samples")

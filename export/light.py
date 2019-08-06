@@ -419,11 +419,9 @@ def _indirect_light_visibility(definitions, lamp_or_world):
 def _visibilitymap(definitions, lamp_or_world):
     vismap = lamp_or_world.luxcore.vismap
 
-    definitions["visibilitymap.enable"] = vismap.type == "single"
-    use_cache = vismap.type == "cache"
-    definitions["visibilitymapcache.enable"] = use_cache
+    definitions["visibilitymapcache.enable"] = vismap.enabled
 
-    if use_cache:
+    if vismap.enabled:
         map_width = vismap.cache_map_width
         definitions["visibilitymapcache.map.width"] = map_width
         definitions["visibilitymapcache.map.height"] = map_width / 2

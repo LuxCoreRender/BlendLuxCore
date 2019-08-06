@@ -62,14 +62,10 @@ VIS_INDIRECT_SPECULAR_DESC = VIS_INDIRECT_BASE.format(type="specular") + " (e.g.
 RELSIZE_DESC = "1.0 is the apparent size of the sun when observed from earth (at mean distance of 149,600,000 km)"
 THETA_DESC = "Half angle in degrees. Larger values make the light source appear larger and the shadows softer"
 
-VISMAP_NONE_DESC = "Do not build a visibility map. Use this settings in very open scenes (outdoors)"
-VISMAP_SINGLE_DESC = (
-    "Compute a single visibility map for this light to accelerate the rendering. "
-    "Less effective than the cache, but is computed faster and uses less memory"
-)
 VISMAP_CACHE_DESC = (
-    "Compute a cache with multiple visibility maps for the scene. The most effective "
-    "solution to accelerate rendering of this light in enclosed scenes (indoors)"
+    "Compute a cache with multiple visibility maps for the scene. "
+    "Accelerates rendering of this light in enclosed scenes (indoors). "
+    "Do not enable this setting in outdoor scenes"
 )
 
 
@@ -78,12 +74,8 @@ def init():
 
 
 class LuxCoreVisMapProps(bpy.types.PropertyGroup):
-    vismap_types = [
-        ("none", "None", VISMAP_NONE_DESC, 0),
-        ("single", "Single Map", VISMAP_SINGLE_DESC, 1),
-        ("cache", "Cache", VISMAP_CACHE_DESC, 2),
-    ]
-    type = EnumProperty(name="Visibility Map", items=vismap_types, default="none")
+    enabled = BoolProperty(name="Compute Environment Light Cache", default=False,
+                           description=VISMAP_CACHE_DESC)
     # TODO descriptions
     cache_map_width = IntProperty(name="Map Width", default=256, min=16, soft_max=256)
     cache_samples = IntProperty(name="Samples", default=1, min=1, soft_max=32)
