@@ -20,7 +20,8 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         layout.use_property_decorate = False      
 
         viewport = context.scene.luxcore.viewport
-        luxcore_engine = context.scene.luxcore.config.engine
+        config = context.scene.luxcore.config
+        luxcore_engine = config.engine
 
         layout.prop(viewport, "halt_time")
         col = layout.column(align=True)
@@ -39,6 +40,9 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         col.prop(viewport, "mag_filter")
 
         layout.prop(viewport, "denoise")
+
+        if luxcore_engine == "PATH" and not config.use_tiles and config.path.hybridbackforward_enable:
+            layout.prop(viewport, "add_light_tracing")
 
         if luxcore_engine == "BIDIR":
             layout.prop(viewport, "use_bidir")

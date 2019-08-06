@@ -47,6 +47,10 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
                                          "you need to preview them in the viewport render. If disabled, "
                                          "the RT Path engine is used in the viewport, which is optimized "
                                          "for quick feedback but can't handle complex light paths")
+    add_light_tracing: BoolProperty(name="Add Light Tracing in Viewport", default=True,
+                                    description="Add light tracing in viewport. If disabled, "
+                                         "the RT Path engine is used in the viewport, which is optimized "
+                                         "for quick feedback but can't handle complex light paths")
 
     denoise: BoolProperty(name="Denoise", default=True,
                            description="Denoise the viewport render once the halt time is reached. "

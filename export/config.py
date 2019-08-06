@@ -23,9 +23,11 @@ def convert(exporter, scene, context=None, engine=None):
         config = scene.luxcore.config
         width, height = utils.calc_filmsize(scene, context)
         use_bidir_in_viewport = config.engine == "BIDIR" and scene.luxcore.viewport.use_bidir
+        use_path_in_viewport = (config.engine == "PATH" and config.path.hybridbackforward_enable
+                                and not config.use_tiles and scene.luxcore.viewport.add_light_tracing)
         is_viewport_render = context is not None
 
-        if context and not use_bidir_in_viewport:
+        if is_viewport_render and not use_bidir_in_viewport and not use_path_in_viewport:
             # Viewport render
             luxcore_engine, sampler = _convert_viewport_engine(scene, definitions, config)
         else:
