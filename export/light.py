@@ -171,7 +171,9 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", 
             raise Exception("Unkown light type", lamp.type, 'in lamp "%s"' % obj.name)
 
         _indirect_light_visibility(definitions, lamp)
-        _visibilitymap(definitions, lamp)
+        # Only build env. light cache for final renders, not in viewport
+        if not context:
+            _visibilitymap(definitions, lamp)
 
         props = utils.create_props(prefix, definitions)
         return props, exported_light
@@ -183,7 +185,7 @@ def convert_lamp(exporter, obj, scene, context, luxcore_scene, dupli_suffix="", 
         return pyluxcore.Properties(), None
 
 
-def convert_world(exporter, world, scene):
+def convert_world(exporter, world, scene, context):
     try:
         assert isinstance(world, bpy.types.World)
         luxcore_name = WORLD_BACKGROUND_LIGHT_NAME
@@ -227,7 +229,9 @@ def convert_world(exporter, world, scene):
             definitions["type"] = "constantinfinite"
 
         _indirect_light_visibility(definitions, world)
-        _visibilitymap(definitions, world)
+        # Only build env. light cache for final renders, not in viewport
+        if not context:
+            _visibilitymap(definitions, world)
 
         props = utils.create_props(prefix, definitions)
         return props

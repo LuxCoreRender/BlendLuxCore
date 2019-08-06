@@ -6,7 +6,7 @@ from . import light
 # TODO: currently it is not possible to remove the world volume during viewport render
 
 
-def convert(exporter, scene):
+def convert(exporter, scene, context):
     props = pyluxcore.Properties()
     world = scene.world
 
@@ -15,7 +15,7 @@ def convert(exporter, scene):
 
     # World light (this is a BlendLuxCore concept)
     if world.luxcore.light != "none":
-        world_light_props = light.convert_world(exporter, world, scene)
+        world_light_props = light.convert_world(exporter, world, scene, context)
         props.Set(world_light_props)
 
     # World volume
