@@ -23,6 +23,7 @@ def convert(exporter, scene, context=None, engine=None):
         config = scene.luxcore.config
         width, height = utils.calc_filmsize(scene, context)
         use_bidir_in_viewport = config.engine == "BIDIR" and scene.luxcore.viewport.use_bidir
+        is_viewport_render = context is not None
 
         if context and not use_bidir_in_viewport:
             # Viewport render
@@ -36,6 +37,11 @@ def convert(exporter, scene, context=None, engine=None):
         else:
             filter_type = config.filter
 
+        light_strategy = config.light_strategy
+        if light_strategy == "DLS_CACHE" and is_viewport_render:
+            # Avoid building DLS cache when rendering in viewport, fall back to log power
+            light_strategy = "LOG_POWER"
+
         # Common properties that should be set regardless of engine configuration.
         definitions.update({
             "renderengine.type": luxcore_engine,
@@ -44,7 +50,7 @@ def convert(exporter, scene, context=None, engine=None):
             "film.height": height,
             "film.filter.type": filter_type,
             "film.filter.width": config.filter_width,
-            "lightstrategy.type": config.light_strategy,
+            "lightstrategy.type": light_strategy,
             "scene.epsilon.min": config.min_epsilon,
             "scene.epsilon.max": config.max_epsilon,
         })
@@ -55,10 +61,10 @@ def convert(exporter, scene, context=None, engine=None):
         else:
             definitions["film.opencl.enable"] = False
 
-        if config.light_strategy == "DLS_CACHE":
+        if light_strategy == "DLS_CACHE":
             _convert_dlscache_settings(scene, definitions, config)
 
-        if config.photongi.enabled:
+        if config.photongi.enabled and not is_viewport_render:
             _convert_photongi_settings(context, scene, definitions, config)
 
         if config.path.use_clamping:

@@ -11,6 +11,7 @@ from ..utils.errorlog import LuxCoreErrorLog
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
+TYPES_SUPPORTING_ENVLIGHTCACHE = {"sky2", "infinite", "constantinfinite"}
 
 
 def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
@@ -187,13 +188,15 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
 
     _indirect_light_visibility(definitions, light)
-    _visibilitymap(definitions, light, scene)
+
+    if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
+        _envlightcache(definitions, light, scene)
 
     props = utils.create_props(prefix, definitions)
     return props, exported_light
 
 
-def convert_world(exporter, world, scene):
+def convert_world(exporter, world, scene, is_viewport_render):
     try:
         assert isinstance(world, bpy.types.World)
         luxcore_name = WORLD_BACKGROUND_LIGHT_NAME
@@ -237,7 +240,9 @@ def convert_world(exporter, world, scene):
             definitions["type"] = "constantinfinite"
 
         _indirect_light_visibility(definitions, world)
-        _visibilitymap(definitions, world, scene)
+
+        if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
+            _envlightcache(definitions, world, scene)
 
         props = utils.create_props(prefix, definitions)
         return props
@@ -413,7 +418,7 @@ def _indirect_light_visibility(definitions, light_or_world):
     })
 
 
-def _visibilitymap(definitions, light_or_world, scene):
+def _envlightcache(definitions, light_or_world, scene):
     envlight_cache = scene.luxcore.config.envlight_cache
     enabled = envlight_cache.enabled and light_or_world.luxcore.use_envlight_cache
     definitions["visibilitymapcache.enable"] = enabled
