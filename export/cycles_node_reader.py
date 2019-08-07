@@ -2,8 +2,10 @@ from ..bin import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
 from ..utils.errorlog import LuxCoreErrorLog
+from .image import ImageExporter
 
 ERROR_VALUE = 0
+MISSING_IMAGE_COLOR = [1, 0, 1]
 
 math_operation_map = {
     "MULTIPLY": "scale",
@@ -135,11 +137,18 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
                 "EXTEND": "clamp",
                 "CLIP": "black",
             }
+
+            try:
+                filepath = ImageExporter.export_cycles_node_reader(node.image)
+            except OSError as error:
+                LuxCoreErrorLog.add_warning(f"Image error: {error}", obj_name=obj_name)
+                return MISSING_IMAGE_COLOR
+
             definitions = {
                 "type": "imagemap",
                 # TODO get filepath with image exporter (because of packed files)
                 # TODO image sequences
-                "file": utils.get_abspath(node.image.filepath),
+                "file": filepath,
                 "wrap": extension_map[node.extension],
                 "channel": "alpha" if output_socket == node.outputs["Alpha"] else "rgb",
                 # Crude approximation, not sure if we can do better
@@ -152,7 +161,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
                 "mapping.uvdelta": [0, 1],
             }
         else:
-            return [1, 0, 1]
+            return MISSING_IMAGE_COLOR
     elif node.bl_idname == "ShaderNodeBsdfGlass":
         prefix = "scene.materials."
         color = _socket(node.inputs["Color"], props, obj_name, group_node)

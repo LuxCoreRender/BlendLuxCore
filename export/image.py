@@ -74,6 +74,26 @@ class ImageExporter(object):
             raise Exception('Unsupported image source "%s" in image "%s"' % (image.source, image.name))
 
     @classmethod
+    def export_cycles_node_reader(cls, image):
+        # TODO deduplicate code, support image sequences
+        if image.source == "GENERATED":
+            return cls._save_to_temp_file(image)
+        elif image.source == "FILE":
+            if image.packed_file:
+                return cls._save_to_temp_file(image)
+            else:
+                try:
+                    filepath = utils.get_abspath(image.filepath, library=image.library,
+                                                 must_exist=True, must_be_existing_file=True)
+                    return filepath
+                except OSError as error:
+                    # Make the error message more precise
+                    raise OSError('Could not find image "%s" at path "%s" (%s)'
+                                  % (image.name, image.filepath, error))
+        else:
+            raise Exception('Unsupported image source "%s" in image "%s"' % (image.source, image.name))
+
+    @classmethod
     def cleanup(cls):
         for temp_image in cls.temp_images.values():
             print("Deleting temporary image:", temp_image.name)
