@@ -24,7 +24,7 @@ class LuxCoreNodeTexOutput(bpy.types.Node, LuxCoreNodeOutput):
         # TODO have one global properties object so this is no longer necessary
         exporter.node_cache.clear()
 
-        color = self.inputs["Color"].export(exporter, props, luxcore_name)
+        color = self.inputs["Color"].export(exporter, depsgraph, props, luxcore_name)
 
         if not self.inputs["Color"].is_linked:
             # We need a helper texture

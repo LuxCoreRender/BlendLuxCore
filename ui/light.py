@@ -2,6 +2,7 @@ from bl_ui.properties_data_light import DataButtonsPanel
 from . import bpy
 from . import icons
 from bpy.types import Panel
+from ..utils import ui as utils_ui
 
 # TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
 class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
@@ -54,8 +55,11 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
         layout.use_property_split = True
         layout.use_property_decorate = False
-        
-        layout.prop(light.luxcore, "rgb_gain", text="Color")        
+
+        if light.luxcore.node_tree:
+            layout.label(text="Light color is defined by emission node", icon=icons.INFO)
+        else:
+            layout.prop(light.luxcore, "rgb_gain", text="Color")
         layout.prop(light.luxcore, "gain")
 
         col = layout.column(align=True)
@@ -235,7 +239,6 @@ class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):
             col.prop(light, "spot_blend", text="Blend", slider=True)
         col.prop(light, "show_cone")
 
-
 class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
     bl_label = "IES Light"
     bl_context = "data"
@@ -250,7 +253,7 @@ class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
     def draw_header(self, context):
         layout = self.layout
         light = context.light
-        
+
         layout.prop(light.luxcore.ies, "use", text="")
 
     def draw(self, context):
@@ -258,9 +261,9 @@ class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
         light = context.light
 
         layout.use_property_split = True
-        layout.use_property_decorate = False      
+        layout.use_property_decorate = False
+
         layout.enabled = light.luxcore.ies.use
-    
         layout.prop(light.luxcore.ies, "file_type", text="IES Data", expand=False)
 
         if light.luxcore.ies.file_type == "TEXT":
@@ -276,6 +279,35 @@ class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
         col.prop(light.luxcore.ies, "flipz")
         col.prop(light.luxcore.ies, "map_width")
         col.prop(light.luxcore.ies, "map_height")
+
+
+class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
+    bl_label = "Nodes"
+    bl_context = "data"
+    bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 3
+
+    @classmethod
+    def poll(cls, context):
+        light = context.light
+        return light and (light.type == 'AREA') and context.engine == "LUXCORE"
+
+    def draw_header(self, context):
+        layout = self.layout
+        light = context.light
+
+    def draw(self, context):
+        layout = self.layout
+        light = context.light
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        utils_ui.template_node_tree(layout, light.luxcore, "node_tree", icons.NTREE_TEXTURE,
+                                    "LUXCORE_MT_texture_select_node_tree",
+                                    "luxcore.tex_show_nodetree",
+                                    "luxcore.tex_nodetree_new",
+                                    "luxcore.texture_unlink")
 
 
 def compatible_panels():

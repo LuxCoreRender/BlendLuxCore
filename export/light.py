@@ -7,7 +7,7 @@ from .. import utils
 from .caches.exported_data import ExportedObject, ExportedLight
 from .image import ImageExporter
 from ..utils.errorlog import LuxCoreErrorLog
-
+from ..nodes.output import get_active_output
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
@@ -180,7 +180,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
             definitions["transformation"] = transformation
         else:
             # area (mesh light)
-            return _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain,
+            return _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, luxcore_scene, gain,
                                        importance, luxcore_name, transform)
 
     else:
@@ -310,7 +310,7 @@ def calc_area_light_transformation(light, transform_matrix):
     return transform_matrix
 
 
-def _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain, importance, luxcore_name, transform):
+def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, luxcore_scene, gain, importance, luxcore_name, transform):
     """
     An area light is a plane object with emissive material in LuxCore
     """
@@ -337,6 +337,30 @@ def _convert_area_light(obj, scene, is_viewport_render, luxcore_scene, gain, imp
         # Note: do not add support for visibility.indirect.* settings, they are useless here
         # because the only sensible setting is to have them enabled, otherwise we lose MIS
     }
+
+    node_tree = light.luxcore.node_tree
+    if node_tree is not None:
+        try:
+            tex_props = pyluxcore.Properties()
+            tex_name = luxcore_name + "_AREA_LIGHT_TEX"
+
+            active_output = get_active_output(node_tree)
+
+            if active_output is None:
+                msg = 'Node tree "%s": Missing active output node' % node_tree.name
+                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+
+            # Now export the texture node tree, starting at the output node
+            active_output.export(exporter, depsgraph, tex_props, tex_name)
+            mat_definitions["emission.gain"] = [x*light.luxcore.gain for x in  [1, 1, 1]]
+            mat_definitions["emission"] = tex_name
+            props.Set(tex_props)
+
+        except Exception as error:
+            msg = 'light "%s": %s' % (obj.name, error)
+            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+            import traceback
+            traceback.print_exc()
 
     # IES data
     if light.luxcore.ies.use:
