@@ -418,7 +418,7 @@ class LuxCoreConfig(PropertyGroup):
     filesaver_path: StringProperty(name="", subtype="DIR_PATH")
 
     # Seed
-    seed: IntProperty(name="Seed", default=1, min=1, description=SEED_DESC)
+    seed: IntProperty(name="Seed", default=0, min=0, description=SEED_DESC)
     use_animated_seed: BoolProperty(name="Animated Seed", default=False, description=ANIM_SEED_DESC)
 
     # Min. epsilon settings (drawn in ui/units.py)
