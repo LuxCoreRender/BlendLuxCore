@@ -22,8 +22,8 @@ class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
     brickheight: FloatProperty(name="Brick Height", description="Height of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.1)
     brickdepth: FloatProperty(name="Brick Depth", description="Depth of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.15)
     mortarsize: FloatProperty(name="Mortar Size", description="Size of mortar", min=0, subtype="DISTANCE", unit="LENGTH", default=0.01)
-    brickrun: FloatProperty(name="Brick Run", description="Run of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.75)
-    brickbevel: FloatProperty(name="Brick Bevel", description="Bevel strengh of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.0)
+    brickrun: FloatProperty(name="Brick Run", description="Run of bricks", min=0, subtype="PERCENTAGE", default=0.75)
+    brickbevel: FloatProperty(name="Brick Bevel", description="Bevel strength of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.0)
     
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "bricktex", (0.7, 0.7, 0.7))
