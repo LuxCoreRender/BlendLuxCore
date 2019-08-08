@@ -56,7 +56,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        if light.luxcore.node_tree:
+        if light.type == "AREA" and light.luxcore.node_tree:
             layout.label(text="Light color is defined by emission node", icon=icons.INFO)
         else:
             layout.prop(light.luxcore, "rgb_gain", text="Color")
