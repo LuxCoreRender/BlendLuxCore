@@ -50,6 +50,7 @@ class LuxCoreNodeCategoryMaterial(NodeCategory):
 # In general it is a good idea to put often used nodes near the top.
 luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATERIAL", "Material", items=[
+        NodeItem("LuxCoreNodeMatDisney", label="Disney"),
         NodeItem("LuxCoreNodeMatMix", label="Mix"),
         NodeItem("LuxCoreNodeMatMatte", label="Matte"),
         NodeItem("LuxCoreNodeMatMatteTranslucent", label="Matte Translucent"),
