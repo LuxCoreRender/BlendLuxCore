@@ -1,6 +1,5 @@
 from bl_ui.properties_material import MaterialButtonsPanel
 from bpy.types import Panel, Menu
-from .. import utils
 from ..operators.node_tree_presets import LUXCORE_OT_preset_material
 from ..ui import icons
 

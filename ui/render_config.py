@@ -85,7 +85,7 @@ class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
         config = context.scene.luxcore.config
 
         layout.use_property_split = True
-        layout.use_property_decorate = False      
+        layout.use_property_decorate = False
 
         # Light strategy        
         layout.prop(config, "light_strategy")
@@ -97,22 +97,39 @@ class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
             if not dls_cache.entry_radius_auto:
                 col.prop(dls_cache, "entry_radius")
             col.prop(dls_cache, "entry_warmupsamples")
-            layout.prop(dls_cache, "show_advanced", toggle=True)
 
-            if dls_cache.show_advanced:
-                col = layout.column(align=True)
-                col.label(text="Entry Settings:")
-                col.prop(dls_cache, "entry_normalangle")
-                col.prop(dls_cache, "entry_maxpasses")
-                col.prop(dls_cache, "entry_convergencethreshold")
-                col.prop(dls_cache, "entry_volumes_enable")
 
-                col = layout.column(align=True)
-                col.label(text="General Cache Settings:")
-                col.prop(dls_cache, "lightthreshold")
-                col.prop(dls_cache, "targetcachehitratio")
-                col.prop(dls_cache, "maxdepth")
-                col.prop(dls_cache, "maxsamplescount")
+class LUXCORE_RENDER_PT_light_strategy_advanced(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Advanced"
+    bl_parent_id = "LUXCORE_RENDER_PT_light_strategy"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.light_strategy == "DLS_CACHE"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        config = context.scene.luxcore.config
+        dls_cache = config.dls_cache
+
+        col = layout.column(align=True)
+        col.label(text="Entry Settings:")
+        col.prop(dls_cache, "entry_normalangle")
+        col.prop(dls_cache, "entry_maxpasses")
+        col.prop(dls_cache, "entry_convergencethreshold")
+        col.prop(dls_cache, "entry_volumes_enable")
+
+        col = layout.column(align=True)
+        col.label(text="General Cache Settings:")
+        col.prop(dls_cache, "lightthreshold")
+        col.prop(dls_cache, "targetcachehitratio")
+        col.prop(dls_cache, "maxdepth")
+        col.prop(dls_cache, "maxsamplescount")
 
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
