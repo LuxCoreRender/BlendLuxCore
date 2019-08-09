@@ -30,8 +30,6 @@ class LuxCoreDenoiser(PropertyGroup):
         ("OIDN", "OIDN", "Intel Open Image Denoiser", 1),
     ]
     type: EnumProperty(name="Type", items=type_items, default="OIDN")
-    show_advanced: BoolProperty(name="Show Advanced", default=False,
-                                 description="Show advanced settings. They usually don't need to get tweaked")
 
     # BCD settings
     scales: IntProperty(name="Scales", default=3, min=1, soft_max=5,

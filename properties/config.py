@@ -193,8 +193,6 @@ class LuxCoreConfigTile(PropertyGroup):
 
 
 class LuxCoreConfigDLSCache(PropertyGroup):
-    show_advanced: BoolProperty(name="Show Advanced", default=False)
-
     entry_radius_auto: BoolProperty(name="Automatic Entry Radius", default=True,
                                      description="Automatically choose a good entry radius")
     entry_radius: FloatProperty(name="Entry Radius", default=0.15, min=0, subtype="DISTANCE",
