@@ -28,6 +28,7 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         mat = None
 
     if mat:
+        use_pointiness = False
         if mat.luxcore.node_tree:
             # Check if a pointiness node exists, better check would be if the node is linked
             use_pointiness = len(utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")) > 0

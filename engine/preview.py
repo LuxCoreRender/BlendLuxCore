@@ -142,10 +142,17 @@ def _export_mat_scene(engine, depsgraph, active_mat):
 
             if exported_mesh:
                 mat_names = []
-                for shape_name, mat_index in exported_mesh.mesh_definitions:
-                    lux_mat_name, mat_props = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
+                    lux_mat_name, mat_props, use_pointiness = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
                     scene_props.Set(mat_props)
                     mat_names.append(lux_mat_name)
+                    if use_pointiness:
+                        # Replace shape definition with pointiness shape
+                        pointiness_shape = shape_name + "_pointiness"
+                        prefix = "scene.shapes." + pointiness_shape + "."
+                        scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
+                        scene_props.Set(pyluxcore.Property(prefix + "source", shape_name))
+                        exported_mesh.mesh_definitions[idx] = [pointiness_shape, mat_index]
 
                 exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, None, True)
 
