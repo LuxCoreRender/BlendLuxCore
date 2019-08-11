@@ -1,6 +1,5 @@
 from ... import utils
 
-
 class ExportedPart:
     def __init__(self, lux_obj, lux_shape, lux_mat):
         self.lux_obj = lux_obj
@@ -29,6 +28,7 @@ class ExportedObject(ExportedData):
 
         for (shape_name, mat_index), mat_name in zip(mesh_definitions, mat_names):
             obj_name = lux_name_base + str(mat_index)
+
             self.parts.append(ExportedPart(obj_name, shape_name, mat_name))
 
     def get_props(self):

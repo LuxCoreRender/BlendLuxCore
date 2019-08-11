@@ -1,5 +1,6 @@
 import bpy
 from ... import utils
+from ...bin import pyluxcore
 from .. import mesh_converter
 from ..hair import convert_hair
 from .exported_data import ExportedObject
@@ -28,15 +29,19 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
 
     if mat:
         if mat.luxcore.node_tree:
+            # Check if a pointiness node exists, better check would be if the node is linked
+            use_pointiness = len(utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")) > 0
             imagemaps = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap")
             if imagemaps and not utils_node.has_valid_uv_map(obj):
                 msg = (utils.pluralize("%d image texture", len(imagemaps)) + " used, but no UVs defined. "
                        "In case of bumpmaps this can lead to artifacts")
                 LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
 
-        return material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
+        lux_mat_name, mat_props = material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
+        return lux_mat_name, mat_props, use_pointiness
     else:
-        return material.fallback()
+        lux_mat_name, mat_props = material.fallback()
+        return lux_mat_name, mat_props, False
 
 class ObjectCache2:
     def __init__(self):
@@ -129,11 +134,20 @@ class ObjectCache2:
             self.exported_meshes[mesh_key] = exported_mesh
 
         if exported_mesh:
+            print(exported_mesh.mesh_definitions)
             mat_names = []
-            for shape_name, mat_index in exported_mesh.mesh_definitions:
-                lux_mat_name, mat_props = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+            for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
+                lux_mat_name, mat_props, use_pointiness = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
+
+                if use_pointiness:
+                    # Replace shape definition with pointiness shape
+                    pointiness_shape = shape_name + "_pointiness"
+                    prefix = "scene.shapes." + pointiness_shape + "."
+                    scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
+                    scene_props.Set(pyluxcore.Property(prefix + "source", shape_name))
+                    exported_mesh.mesh_definitions[idx] = [pointiness_shape, mat_index]
 
             obj_transform = transform.copy() if use_instancing else None
 
