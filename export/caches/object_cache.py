@@ -135,7 +135,6 @@ class ObjectCache2:
             self.exported_meshes[mesh_key] = exported_mesh
 
         if exported_mesh:
-            print(exported_mesh.mesh_definitions)
             mat_names = []
             for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
                 lux_mat_name, mat_props, use_pointiness = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
