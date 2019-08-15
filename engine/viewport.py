@@ -41,7 +41,7 @@ def view_update(engine, context, depsgraph, changes=None):
         try:
             engine.update_stats("Creating Render Session...", "")
             engine.exporter = export.Exporter()
-            engine.session = engine.exporter.create_session(depsgraph, context)
+            engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
             # Start in separate thread to avoid blocking the UI
             engine.starting_session = True
             import _thread
