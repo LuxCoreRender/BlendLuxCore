@@ -71,7 +71,7 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         start_time = time()
         print("[Node Tree: %s][Smoke Domain: %s] Beginning smoke export of channel %s"
-              % (self.id_data.name, domain.name, self.source))
+              % (self.id_data.name, self.domain.name, self.source))
 
         if not self.domain:
             error = "No Domain object selected."
