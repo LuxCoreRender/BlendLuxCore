@@ -3,13 +3,10 @@ from .. import utils
 import array
 
 
-def convert(smoke_obj, channel, depsgraph):    
+def convert(smoke_obj, channel, depsgraph):
     start = time()
 
-    # Search smoke domain target for smoke modifiers
-    object_eval = smoke_obj.evaluated_get(depsgraph)
-
-    smoke_domain_mod = utils.find_smoke_domain_modifier(object_eval)
+    smoke_domain_mod = utils.find_smoke_domain_modifier(smoke_obj)
 
     if smoke_domain_mod is None:
         msg = 'Object "%s" is not a smoke domain' % smoke_obj.name

@@ -71,7 +71,7 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         start_time = time()
         print("[Node Tree: %s][Smoke Domain: %s] Beginning smoke export of channel %s"
-              % (self.id_data.name, self.domain.name, self.source))
+              % (self.id_data.name, domain.name, self.source))
 
         if not self.domain:
             error = "No Domain object selected."
@@ -84,9 +84,11 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             }
             return self.create_props(props, definitions, luxcore_name)
 
-        scale = self.domain.dimensions
-        translate = self.domain.matrix_world @ mathutils.Vector([v for v in self.domain.bound_box[0]])
-        rotate = self.domain.rotation_euler
+        domain = self.domain.evaluated_get(depsgraph)
+
+        scale = domain.dimensions
+        translate = domain.matrix_world @ mathutils.Vector([v for v in domain.bound_box[0]])
+        rotate = domain.rotation_euler
 
         # create a location matrix
         tex_loc = mathutils.Matrix.Translation(translate)
@@ -110,7 +112,7 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
                                                      apply_worldscale=True,
                                                      invert=True)
 
-        resolution, grid = smoke.convert(self.domain, self.source, depsgraph)
+        resolution, grid = smoke.convert(domain, self.source, depsgraph)
         nx, ny, nz = resolution
 
         definitions = {
