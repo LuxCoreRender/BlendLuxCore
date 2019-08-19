@@ -107,6 +107,13 @@ class Exporter(object):
         self.camera_cache.diff(self, scene, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
 
+        if utils.is_valid_camera(scene.camera):
+            blur_settings = scene.camera.data.luxcore.motion_blur
+            # Don't export camera blur in viewport
+            camera_blur = blur_settings.camera_blur and not context
+            self.motion_blur_enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)\
+                                       and (blur_settings.shutter > 0)
+
         # Objects and lights
         is_viewport_render = context is not None
         if not self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
@@ -117,13 +124,9 @@ class Exporter(object):
 
         # TODO 2.8
         # Motion blur
-        if utils.is_valid_camera(scene.camera):
-            blur_settings = scene.camera.data.luxcore.motion_blur
-            # Don't export camera blur in viewport
-            camera_blur = blur_settings.camera_blur and not context
-            self.motion_blur_enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
-
-            if self.motion_blur_enabled and blur_settings.shutter > 0:
+        # Motion blur seems not to work in viewport render, i.e. matrix_world is the same on every frame
+        if not context and utils.is_valid_camera(scene.camera):
+            if self.motion_blur_enabled:
                 motion_blur_props, cam_moving = motion_blur.convert(context, engine, scene, depsgraph,
                                                                     self.object_cache2)
 

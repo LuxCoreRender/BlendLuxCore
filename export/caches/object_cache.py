@@ -120,10 +120,9 @@ class ObjectCache2:
     def _convert_mesh_obj(self, exporter, dg_obj_instance, obj, obj_key, depsgraph,
                           luxcore_scene, scene_props, is_viewport_render):
         transform = dg_obj_instance.matrix_world
-        scene = depsgraph.eval_scene
 
         use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj.original) \
-                         or (exporter.motion_blur.enable and obj.luxcore.enable_motion_blur)
+                         or (exporter.motion_blur_enabled and obj.luxcore.enable_motion_blur)
 
         mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
         # print(obj.name, "mesh key:", mesh_key)

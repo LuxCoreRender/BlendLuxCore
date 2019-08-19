@@ -54,16 +54,14 @@ def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph=None, 
 
     frame_center = scene.frame_current
     subframe_center = scene.frame_subframe
-
     for step in range(steps):
         offset = frame_offsets[step]
         frame = frame_center + subframe_center + offset
         frame_int = math.floor(frame)
         subframe = frame - frame_int
         engine.frame_set(frame_int, subframe)
-
         if motion_blur.object_blur and depsgraph and object_cache2:
-            _append_object_matrices(scene, depsgraph, object_cache2, matrices, step)
+            _append_object_matrices(depsgraph, object_cache2, matrices, step)
 
         if motion_blur.camera_blur and not context:
             matrix = scene.camera.matrix_world
@@ -76,7 +74,7 @@ def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph=None, 
     return matrices
 
 
-def _append_object_matrices(scene, depsgraph, object_cache2, matrices, step):
+def _append_object_matrices(depsgraph, object_cache2, matrices, step):
     for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
         obj_key = utils.make_key_from_instance(dg_obj_instance)
