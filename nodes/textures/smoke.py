@@ -100,10 +100,10 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         tex_sca[2][2] = scale[2]  # Z
 
         # create a rotation matrix
-        tex_rot0 = mathutils.Matrix.Rotation(math.radians(rotate[0]), 4, 'X')
-        tex_rot1 = mathutils.Matrix.Rotation(math.radians(rotate[1]), 4, 'Y')
-        tex_rot2 = mathutils.Matrix.Rotation(math.radians(rotate[2]), 4, 'Z')
-        tex_rot = tex_rot0 @ tex_rot1 @ tex_rot2
+        tex_rot0 = mathutils.Matrix.Rotation(rotate[0], 4, 'X')
+        tex_rot1 = mathutils.Matrix.Rotation(rotate[1], 4, 'Y')
+        tex_rot2 = mathutils.Matrix.Rotation(rotate[2], 4, 'Z')
+        tex_rot = tex_rot2 @ tex_rot1 @ tex_rot0
 
         # combine transformations
         mapping_type = 'globalmapping3d'
