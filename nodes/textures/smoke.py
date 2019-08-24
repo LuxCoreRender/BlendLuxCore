@@ -22,24 +22,14 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
     
     domain: PointerProperty(name="Domain", type=bpy.types.Object, poll=poll_domain)
 
-    def update_source(self, context):
-        value_output = self.outputs["Value"]
-        color_output = self.outputs["Color"]
-        was_value_enabled = value_output.enabled
-
-        value_output.enabled = self.source in {"density", "fire", "heat"}
-        color_output.enabled = self.source in {"color", "velocity"}
-
-        utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
-
-    source_items = [
-        ("density", "Density", "Smoke density grid, 1 value per voxel", 0),
-        ("fire", "Fire", "Fire grid, 1 value per voxel", 1),
-        ("heat", "Heat", "Smoke heat grid, 1 value per voxel", 2),
-        ("color", "Color", "Smoke color grid, 3 values per voxel (RGB)", 3),
-        ("velocity", "Velocity", "Smoke velocity grid, 3 values per voxel", 4),
-    ]
-    source: EnumProperty(name="Grid Type", items=source_items, default="density", update=update_source)
+    #source_items = [
+    #    ("density", "Density", "Smoke density grid, 1 value per voxel", 0),
+    #    ("fire", "Fire", "Fire grid, 1 value per voxel", 1),
+    #    ("heat", "Heat", "Smoke heat grid, 1 value per voxel", 2),
+    #    ("color", "Color", "Smoke color grid, 3 values per voxel (RGB)", 3),
+    #    ("velocity", "Velocity", "Smoke velocity grid, 3 values per voxel", 4),
+    #]
+    #source: EnumProperty(name="Grid Type", items=source_items, default="density", update=update_source)
 
     precision_items = [
         ("byte", "Byte", "Only 1 byte per value. Required memory is 1/2 of Half and 1/4 of Float", 0),
@@ -52,9 +42,12 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
                                          "point precision can lead to artifacts when the smoke resolution is low")
 
     def init(self, context):
-        self.outputs.new("LuxCoreSocketFloatPositive", "Value")
-        color = self.outputs.new("LuxCoreSocketColor", "Color")
-        color.enabled = False
+        self.outputs.new("LuxCoreSocketFloatPositive", "density")
+        self.outputs.new("LuxCoreSocketFloatPositive", "fire")
+        self.outputs.new("LuxCoreSocketFloatPositive", "heat")
+        self.outputs.new("LuxCoreSocketColor", "color")
+        self.outputs.new("LuxCoreSocketColor", "velocity")
+
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "domain")
@@ -65,13 +58,13 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             layout.label(text="Select the smoke domain object", icon=icons.WARNING)
 
         col = layout.column()
-        col.prop(self, "source")
+        #col.prop(self, "source")
         col.prop(self, "precision")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         start_time = time()
         print("[Node Tree: %s][Smoke Domain: %s] Beginning smoke export of channel %s"
-              % (self.id_data.name, self.domain.name, self.source))
+              % (self.id_data.name, self.domain.name, output_socket.name))
 
         if not self.domain:
             error = "No Domain object selected."
@@ -112,7 +105,7 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
                                                      apply_worldscale=True,
                                                      invert=True)
 
-        resolution, grid = smoke.convert(domain, self.source, depsgraph)
+        resolution, grid = smoke.convert(domain, output_socket.name, depsgraph)
         nx, ny, nz = resolution
 
         definitions = {
@@ -131,12 +124,13 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         prefix = self.prefix + luxcore_name + "."
         # We use a fast path (AddAllFloat method) here to transfer the grid data to the properties
 
-        if self.source == "color":
+
+        if output_socket.name == "color":
             prop = pyluxcore.Property(prefix + "data3", [])
             # Omit every 4th element because the color_grid contains 4 values per cell
             # but LuxCore expects 3 values per cell (r, g, b)
             prop.AddAllFloat(grid, 3, 1)
-        elif self.source == "velocity":
+        elif output_socket.name == "velocity":
             prop = pyluxcore.Property(prefix + "data3", [])
             prop.AddAllFloat(grid)
         else:
@@ -153,6 +147,6 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
 
         elapsed_time = time() - start_time
         print("[Node Tree: %s][Smoke Domain: %s] Smoke export of channel %s took %.3f s"
-              % (self.id_data.name, self.domain.name, self.source, elapsed_time))
+              % (self.id_data.name, self.domain.name, output_socket.name, elapsed_time))
 
         return luxcore_name
