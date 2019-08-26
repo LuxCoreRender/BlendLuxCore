@@ -20,17 +20,15 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             self.outputs.clear()
             pyluxcore.GetOpenVDBGridNames(bpy.path.abspath(self.file_path), names)
             for n in names:
-                bbox = []
-                gridtype = []
-                pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), n, bbox, gridtype)
-                if gridtype[0] == "float":
+                bbox, gridtype = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), n)
+                if gridtype == "float":
                     self.outputs.new("LuxCoreSocketFloatPositive", n)
                 else:
                     self.outputs.new("LuxCoreSocketColor", n)
 
-                self.nx = abs(bbox[0]-bbox[3])
-                self.ny = abs(bbox[1]-bbox[4])
-                self.nz = abs(bbox[2]-bbox[5])
+                self.nx = abs(bbox[0][0]-bbox[1][0])
+                self.ny = abs(bbox[0][1]-bbox[1][1])
+                self.nz = abs(bbox[0][2]-bbox[1][2])
 
 
     domain: PointerProperty(name="Domain", type=bpy.types.Object)
