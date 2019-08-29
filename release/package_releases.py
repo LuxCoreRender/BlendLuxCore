@@ -37,9 +37,9 @@ OIDN_LINUX = "oidn-linux.tar.gz"
 OIDN_MAC = "oidn-macos.tar.gz"
 
 OIDN_urls = {
-    OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.9.0/oidn-0.9.0.x64.vc14.windows.zip",
-    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.9.0/oidn-0.9.0.x86_64.linux.tar.gz",
-    OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.9.0/oidn-0.9.0.x86_64.macos.tar.gz",
+    OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
+    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
+    OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
 }
 
 
@@ -226,9 +226,8 @@ def main():
 
     os.chdir("..")
 
-    # Delete developer stuff that is not needed by users (e.g. tests directory)
+    # Delete developer stuff that is not needed by users
     to_delete = [
-        os.path.join(repo_path, "tests"),
         os.path.join(repo_path, "doc"),
         os.path.join(repo_path, ".github"),
         os.path.join(repo_path, ".git"),
