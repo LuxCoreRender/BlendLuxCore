@@ -57,14 +57,7 @@ class Exporter(object):
         self.imagepipeline_cache = caches.StringCache()
         self.halt_cache = caches.StringCache()
         self.motion_blur_enabled = False
-        # TODO 2.8 remove
-        # This dict contains ExportedObject and ExportedLight instances
-        # self.exported_objects = {}
-        # Contains mesh_definitions for multi-user meshes.
-        # Keys are made with utils.make_key(blender_obj.data)
-        # self.shared_meshes = {}
-        # self.dupli_groups = {}
-
+        
         # A dictionary with the following mapping:
         # {node_key: luxcore_name}
         # Most of the time node_key == luxcore_name, but some nodes have to insert
@@ -260,9 +253,6 @@ class Exporter(object):
         print("[Exporter] Update because of:", Change.to_string(changes))
         # Invalidate node cache
         self.node_cache.clear()
-        # TODO 2.8 remove
-        # self.shared_meshes.clear()
-        # self.dupli_groups.clear()
 
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
