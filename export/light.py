@@ -417,7 +417,9 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         ]
         luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, None, None, None, mesh_transform)
 
-    obj_prefix = "scene.objects." + luxcore_name + "."
+    fake_material_index = 0
+    # The material index after the luxcore_name is expected by ExportedObject
+    obj_prefix = "scene.objects." + luxcore_name + str(fake_material_index) + "."
     obj_definitions = {
         "material": mat_name,
         "shape": shape_name,
@@ -430,7 +432,6 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     obj_props = utils.create_props(obj_prefix, obj_definitions)
     props.Set(obj_props)
 
-    fake_material_index = 0
     mesh_definition = [luxcore_name, fake_material_index]
     exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"], transform.copy(), obj.luxcore.visible_to_camera)
     return props, exported_obj
