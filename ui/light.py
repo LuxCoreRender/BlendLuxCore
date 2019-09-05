@@ -187,7 +187,7 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
         if engine != "LUXCORE":
             return False
 
-        light = context.lamp
+        light = context.light
         if not light:
             return False
 
