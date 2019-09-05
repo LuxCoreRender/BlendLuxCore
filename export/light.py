@@ -332,10 +332,12 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         "emission.theta": math.degrees(light.luxcore.spread_angle),
         "emission.id": scene.luxcore.lightgroups.get_id_by_name(light.luxcore.lightgroup),
         "emission.importance": importance,
-        # TODO: maybe transparency (hacky)
-
-        # Note: do not add support for visibility.indirect.* settings, they are useless here
-        # because the only sensible setting is to have them enabled, otherwise we lose MIS
+        # TODO: transparency
+        # Note: if any of these is disabled, we lose MIS, which can lead to more noise.
+        # However, in some rare cases it's needed to disable some of them.
+        "visibility.indirect.diffuse.enable": light.luxcore.visibility_indirect_diffuse,
+        "visibility.indirect.glossy.enable": light.luxcore.visibility_indirect_glossy,
+        "visibility.indirect.specular.enable": light.luxcore.visibility_indirect_specular,
     }
 
     node_tree = light.luxcore.node_tree
