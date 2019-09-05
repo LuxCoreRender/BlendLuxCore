@@ -6,11 +6,11 @@ from . import icons
 
 
 def draw(layout, context, halt):
-    layout.enabled = halt.enable
+    layout.active = halt.enable
     
     layout.prop(halt, "use_time")
     col = layout.column(align=True)
-    col.enabled = halt.use_time    
+    col.active = halt.use_time
     col.prop(halt, "time")
 
     if halt.use_time and halt.time > 60:
@@ -21,7 +21,7 @@ def draw(layout, context, halt):
 
     layout.prop(halt, "use_samples")
     col = layout.column(align=True)
-    col.enabled = halt.use_samples
+    col.active = halt.use_samples
     col.prop(halt, "samples")
 
     config = context.scene.luxcore.config
