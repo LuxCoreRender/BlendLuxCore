@@ -1,13 +1,14 @@
 import bpy
 from bpy.props import FloatProperty
 from ..base import LuxCoreNodeTexture
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexBlackbody(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blackbody"
     bl_width_default = 200
 
-    temperature: FloatProperty(name="Temperature", description="Blackbody Temperature",
+    temperature: FloatProperty(update=utils_node.force_viewport_update, name="Temperature", description="Blackbody Temperature",
                                 default=6500, min=0, soft_max=10000, step=10)
     
     def init(self, context):

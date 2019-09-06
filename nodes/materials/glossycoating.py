@@ -12,8 +12,9 @@ class LuxCoreNodeMatGlossyCoating(bpy.types.Node, LuxCoreNodeMaterial):
     def update_use_ior(self, context):
         self.inputs["IOR"].enabled = self.use_ior
         self.inputs["Specular Color"].enabled = not self.use_ior
+        utils_node.force_viewport_update(self, context)
 
-    multibounce: BoolProperty(name="Multibounce", default=False)
+    multibounce: BoolProperty(update=utils_node.force_viewport_update, name="Multibounce", default=False)
     use_ior: BoolProperty(name="Use IOR", default=False,
                            update=update_use_ior,
                            description=IOR_DESCRIPTION)

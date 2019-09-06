@@ -12,17 +12,18 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
     def update_uniform_scale(self, context):
         self["uscale"] = self.uniform_scale
         self["vscale"] = self.uniform_scale
+        utils_node.force_viewport_update(self, context)
 
     # TODO descriptions
-    use_uniform_scale: BoolProperty(name="Uniform Scale", default=True)
+    use_uniform_scale: BoolProperty(update=utils_node.force_viewport_update, name="Uniform Scale", default=True)
     uniform_scale: FloatProperty(name="UV Scale", default=1, update=update_uniform_scale)
-    uscale: FloatProperty(name="U", default=1)
-    vscale: FloatProperty(name="V", default=1)
-    rotation: FloatProperty(name="Rotation", default=0, min=(-math.pi * 2),
+    uscale: FloatProperty(update=utils_node.force_viewport_update, name="U", default=1)
+    vscale: FloatProperty(update=utils_node.force_viewport_update, name="V", default=1)
+    rotation: FloatProperty(update=utils_node.force_viewport_update, name="Rotation", default=0, min=(-math.pi * 2),
                              max=(math.pi * 2), subtype="ANGLE", unit="ROTATION")
-    udelta: FloatProperty(name="U", default=0)
-    vdelta: FloatProperty(name="V", default=0)
-    center_map: BoolProperty(name="Center Map", default=False)
+    udelta: FloatProperty(update=utils_node.force_viewport_update, name="U", default=0)
+    vdelta: FloatProperty(update=utils_node.force_viewport_update, name="V", default=0)
+    center_map: BoolProperty(update=utils_node.force_viewport_update, name="Center Map", default=False)
 
     def init(self, context):
         # Instead of creating a new mapping, the user can also

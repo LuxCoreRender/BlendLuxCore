@@ -4,8 +4,8 @@ from ..base import LuxCoreNodeTexture
 
 from .. import NOISE_BASIS_ITEMS
 
-from .. import sockets
 from ... import utils
+from ...utils import node as utils_node
 
 class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Musgrave"
@@ -19,17 +19,17 @@ class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
         ("fbm", "FBM", ""),
     ]
 
-    musgrave_type: EnumProperty(name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
-    noise_basis: EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
-    noise_size: FloatProperty(name="Noise Size", default=0.25, min=0)
-    h =FloatProperty(name="Dimension", default=1.0, min=0)
-    lacu: FloatProperty(name="Lacunarity", default=2.0)
-    octs: FloatProperty(name="Octaves", default=2.0, min=0)
-    offset: FloatProperty(name="Offset", default=1.0)
-    gain: FloatProperty(name="Gain", default=1.0, min=0)
-    iscale: FloatProperty(name="Intensity", default=1.0)
-    bright: FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast: FloatProperty(name="Contrast", default=1.0, min=0)
+    musgrave_type: EnumProperty(update=utils_node.force_viewport_update, name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
+    noise_basis: EnumProperty(update=utils_node.force_viewport_update, name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
+    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
+    h =FloatProperty(update=utils_node.force_viewport_update, name="Dimension", default=1.0, min=0)
+    lacu: FloatProperty(update=utils_node.force_viewport_update, name="Lacunarity", default=2.0)
+    octs: FloatProperty(update=utils_node.force_viewport_update, name="Octaves", default=2.0, min=0)
+    offset: FloatProperty(update=utils_node.force_viewport_update, name="Offset", default=1.0)
+    gain: FloatProperty(update=utils_node.force_viewport_update, name="Gain", default=1.0, min=0)
+    iscale: FloatProperty(update=utils_node.force_viewport_update, name="Intensity", default=1.0)
+    bright: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(update=utils_node.force_viewport_update, name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

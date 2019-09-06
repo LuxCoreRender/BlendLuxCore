@@ -3,26 +3,29 @@ from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty, StringProperty
 from ..base import LuxCoreNodeTexture
 from ...ui import icons
+from ...utils import node as utils_node
 
 
 class ColorRampItem(PropertyGroup):
-    offset: FloatProperty(name="Offset", default=0.0, min=0, max=1)
-    value: FloatVectorProperty(name="", min=0, soft_max=1, subtype="COLOR")
+    offset: FloatProperty(update=utils_node.force_viewport_update, name="Offset", default=0.0, min=0, max=1)
+    value: FloatVectorProperty(update=utils_node.force_viewport_update, name="", min=0, soft_max=1, subtype="COLOR")
     # For internal use
-    index: IntProperty()
-    node_name: StringProperty()
+    index: IntProperty(update=utils_node.force_viewport_update, )
+    node_name: StringProperty(update=utils_node.force_viewport_update, )
 
     def update_add_keyframe(self, context):
         data_path = 'nodes["%s"].ramp_items[%d]' % (self.node_name, self.index)
         self.id_data.keyframe_insert(data_path=data_path + ".offset")
         self.id_data.keyframe_insert(data_path=data_path + ".value")
         self["add_keyframe"] = False
+        utils_node.force_viewport_update(self, context)
 
     def update_remove_keyframe(self, context):
         data_path = 'nodes["%s"].ramp_items[%d]' % (self.node_name, self.index)
         self.id_data.keyframe_delete(data_path=data_path + ".offset")
         self.id_data.keyframe_delete(data_path=data_path + ".value")
         self["remove_keyframe"] = False
+        utils_node.force_viewport_update(self, context)
 
     # This is a bit of a hack, we use BoolProperties as buttons
     add_keyframe: BoolProperty(name="", description="Add a keyframe on the current frame",
@@ -40,7 +43,7 @@ class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
         ("cubic", "Cubic", "Cubic interpolation between values, smooth transition", 1),
         ("none", "None", "No interpolation between values, sharp transition", 2),
     ]
-    interpolation: EnumProperty(name="Mode", description="Interpolation type of band values",
+    interpolation: EnumProperty(update=utils_node.force_viewport_update, name="Mode", description="Interpolation type of band values",
                                  items=interpolation_items, default="linear")
 
     def update_add(self, context):
@@ -64,11 +67,13 @@ class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
         new_item.node_name = self.name
 
         self["add_item"] = False
+        utils_node.force_viewport_update(self, context)
 
     def update_remove(self, context):
         if len(self.ramp_items) > 2:
             self.ramp_items.remove(len(self.ramp_items) - 1)
         self["remove_item"] = False
+        utils_node.force_viewport_update(self, context)
 
     # This is a bit of a hack, we use BoolProperties as buttons
     add_item: BoolProperty(name="Add", description="Add an offset",

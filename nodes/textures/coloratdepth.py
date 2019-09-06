@@ -1,14 +1,14 @@
 import bpy
 from bpy.props import FloatProperty
 from ..base import LuxCoreNodeTexture
-from ... import utils
+from ...utils import node as utils_node
 from .. import COLORDEPTH_DESC
 
 class LuxCoreNodeTexColorAtDepth(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Color at depth"
     bl_width_default = 200
     
-    color_depth: FloatProperty(name="Absorption Depth", default=1.0, min=0,
+    color_depth: FloatProperty(update=utils_node.force_viewport_update, name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
 

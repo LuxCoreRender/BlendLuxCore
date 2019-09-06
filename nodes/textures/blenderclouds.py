@@ -6,20 +6,21 @@ from .. import NOISE_BASIS_ITEMS
 from .. import NOISE_TYPE_ITEMS
 
 from ... import utils
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexBlenderClouds(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Clouds"
     bl_width_default = 200
 
-    noise_type: EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
+    noise_type: EnumProperty(update=utils_node.force_viewport_update, name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
                                        default="soft_noise")
-    noise_basis: EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
+    noise_basis: EnumProperty(update=utils_node.force_viewport_update, name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
-    noise_size: FloatProperty(name="Noise Size", default=0.25, min=0)
-    noise_depth: IntProperty(name="Noise Depth", default=2, min=0)
-    bright: FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast: FloatProperty(name="Contrast", default=1.0, min=0)
+    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
+    noise_depth: IntProperty(update=utils_node.force_viewport_update, name="Noise Depth", default=2, min=0)
+    bright: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(update=utils_node.force_viewport_update, name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

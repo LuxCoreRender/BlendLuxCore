@@ -2,6 +2,7 @@ import bpy
 from bpy.props import EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
@@ -17,13 +18,13 @@ class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
         ("chain link", "Chain link", ""),
     ]
     
-    brickbond: EnumProperty(name="Bond type", description="Type of brick bond used", items=bond_type_items, default="running")
-    brickwidth: FloatProperty(name="Brick Width", description="Width of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.3)
-    brickheight: FloatProperty(name="Brick Height", description="Height of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.1)
-    brickdepth: FloatProperty(name="Brick Depth", description="Depth of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.15)
-    mortarsize: FloatProperty(name="Mortar Size", description="Size of mortar", min=0, subtype="DISTANCE", unit="LENGTH", default=0.01)
-    brickrun: FloatProperty(name="Brick Run", description="Run of bricks", min=0, subtype="PERCENTAGE", precision=1, default=75)
-    brickbevel: FloatProperty(name="Brick Bevel", description="Bevel strength of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.0)
+    brickbond: EnumProperty(update=utils_node.force_viewport_update, name="Bond type", description="Type of brick bond used", items=bond_type_items, default="running")
+    brickwidth: FloatProperty(update=utils_node.force_viewport_update, name="Brick Width", description="Width of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.3)
+    brickheight: FloatProperty(update=utils_node.force_viewport_update, name="Brick Height", description="Height of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.1)
+    brickdepth: FloatProperty(update=utils_node.force_viewport_update, name="Brick Depth", description="Depth of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.15)
+    mortarsize: FloatProperty(update=utils_node.force_viewport_update, name="Mortar Size", description="Size of mortar", min=0, subtype="DISTANCE", unit="LENGTH", default=0.01)
+    brickrun: FloatProperty(update=utils_node.force_viewport_update, name="Brick Run", description="Run of bricks", min=0, subtype="PERCENTAGE", precision=1, default=75)
+    brickbevel: FloatProperty(update=utils_node.force_viewport_update, name="Brick Bevel", description="Bevel strength of bricks", min=0, subtype="DISTANCE", unit="LENGTH", default=0.0)
     
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "bricktex", (0.7, 0.7, 0.7))

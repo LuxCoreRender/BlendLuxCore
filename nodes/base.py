@@ -395,6 +395,8 @@ class Roughness:
         if Roughness.has_backface(node):
             update(node, True)
 
+        utils_node.force_viewport_update(node, context)
+
     aniso_name = "Anisotropic Roughness"
     aniso_desc = ("Use different roughness values for "
                   "U- and V-directions (needs UV mapping)")

@@ -3,7 +3,6 @@ from bpy.props import FloatProperty, BoolProperty
 from ..base import LuxCoreNodeMaterial, Roughness
 from ..sockets import LuxCoreSocketFloat
 from ..output import get_active_output
-from ...utils import node as utils_node
 from ...ui import icons
 from ...utils import node as utils_node
 
@@ -51,7 +50,7 @@ class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
                          default=False,
                          description="Rough glass surface instead of a smooth one",
                          update=Roughness.toggle_roughness)
-    architectural: BoolProperty(name="Architectural",
+    architectural: BoolProperty(update=utils_node.force_viewport_update, name="Architectural",
                                  default=False,
                                  description=ARCHGLASS_DESCRIPTION)
 

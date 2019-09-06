@@ -17,6 +17,7 @@ class LuxCoreNodeTexObjectID(bpy.types.Node, LuxCoreNodeTexture):
         value_output.enabled = self.mode in {"objectid", "objectidnormalized"}
 
         utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
+        utils_node.force_viewport_update(self, context)
 
     mode_items = [
         ("objectidcolor", "Color", "Object ID interpreted as color", 0),

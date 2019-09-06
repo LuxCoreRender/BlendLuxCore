@@ -6,6 +6,7 @@ import bpy
 from bpy.props import FloatProperty, StringProperty
 from ..base import LuxCoreNodeTexture
 from ...operators import ior_presets
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexIORPreset(bpy.types.Node, LuxCoreNodeTexture):
@@ -13,9 +14,9 @@ class LuxCoreNodeTexIORPreset(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "IOR Preset"
     bl_width_default = 180
 
-    ior_name_text: StringProperty(name="IOR Name", description="The name of"
+    ior_name_text: StringProperty(update=utils_node.force_viewport_update, name="IOR Name", description="The name of"
                                    " the selected Index of Refraction preset")
-    ior_value_text: StringProperty(name="IOR Value", description="The value "
+    ior_value_text: StringProperty(update=utils_node.force_viewport_update, name="IOR Value", description="The value "
                                     "of the selected Index of Refraction"
                                     " preset")
 
@@ -23,6 +24,7 @@ class LuxCoreNodeTexIORPreset(bpy.types.Node, LuxCoreNodeTexture):
         # Change the node label to indicate the selected IOR preset
         self.label = "IOR: {} ({})".format(self.ior_name_text,
                                            self.ior_value_text)
+        utils_node.force_viewport_update(self, context)
         return None
 
     ior_value_float: FloatProperty(name="IOR Float",

@@ -39,6 +39,7 @@ class LuxCoreNodeMatCarpaint(bpy.types.Node, LuxCoreNodeMaterial):
         self.inputs['R1'].enabled = enabled
         self.inputs['R2'].enabled = enabled
         self.inputs['R3'].enabled = enabled
+        utils_node.force_viewport_update(self, context)
 
     preset_items = [
         ("manual", "Manual settings", "", 0),

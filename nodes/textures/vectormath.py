@@ -3,6 +3,7 @@ from bpy.props import BoolProperty, EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 from ...ui import icons
 from .math import MIX_DESCRIPTION
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexVectorMath(bpy.types.Node, LuxCoreNodeTexture):
@@ -31,10 +32,12 @@ class LuxCoreNodeTexVectorMath(bpy.types.Node, LuxCoreNodeTexture):
         else:
             self.inputs["Fac"].enabled = False
 
+        utils_node.force_viewport_update(self, context)
+
     mode: EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
-    mode_clamp_min: FloatProperty(name="Min", description="", default=0)
-    mode_clamp_max: FloatProperty(name="Max", description="", default=1)
+    mode_clamp_min: FloatProperty(update=utils_node.force_viewport_update, name="Min", description="", default=0)
+    mode_clamp_max: FloatProperty(update=utils_node.force_viewport_update, name="Max", description="", default=1)
 
     def draw_label(self):
         # Use the name of the selected operation as displayed node name
