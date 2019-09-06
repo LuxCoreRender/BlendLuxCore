@@ -138,6 +138,11 @@ def find_nodes(node_tree, bl_idname):
     return result
 
 
+def force_viewport_update(_, context):
+    mat = context.object.active_material
+    mat.diffuse_color = mat.diffuse_color
+
+
 def update_opengl_materials(_, context):
     if not hasattr(context, "object") or not context.object or not context.object.active_material or not context.object.active_material.luxcore.auto_vp_color:
         return

@@ -170,11 +170,13 @@ class LuxCoreSocketFloat(LuxCoreNodeSocket):
 # Use this socket for normal float values without min/max bounds.
 # For some unkown reason, we can't use the LuxCoreSocketFloat directly.
 class LuxCoreSocketFloatUnbounded(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(description="Float value")
+    default_value: FloatProperty(description="Float value",
+                                 update=utils_node.force_viewport_update)
 
 
 class LuxCoreSocketFloatPositive(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, description="Positive float value")
+    default_value: FloatProperty(min=0, description="Positive float value",
+                                 update=utils_node.force_viewport_update)
 
 
 class LuxCoreSocketFloat0to1(bpy.types.NodeSocket, LuxCoreSocketFloat):
@@ -184,13 +186,15 @@ class LuxCoreSocketFloat0to1(bpy.types.NodeSocket, LuxCoreSocketFloat):
 
 
 class LuxCoreSocketFloat0to2(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, max=2, description="Float value between 0 and 2")
+    default_value: FloatProperty(min=0, max=2, description="Float value between 0 and 2",
+                                 update=utils_node.force_viewport_update)
     slider = True
 
 
 class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.vector_texture
-    default_value: FloatVectorProperty(name="", subtype="XYZ", precision=3)
+    default_value: FloatVectorProperty(name="", subtype="XYZ", precision=3,
+                                       update=utils_node.force_viewport_update)
     expand: BoolProperty(default=False)
 
     def draw_prop(self, context, layout, node, text):
@@ -221,13 +225,15 @@ class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
 class LuxCoreSocketRoughness(bpy.types.NodeSocket, LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
     default_value: FloatProperty(min=0.001, soft_max=0.8, max=1.0, precision=4,
-                                  description=ROUGHNESS_DESCRIPTION)
+                                  description=ROUGHNESS_DESCRIPTION,
+                                  update=utils_node.force_viewport_update)
     slider = True
 
 
 class LuxCoreSocketIOR(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value: FloatProperty(name="IOR", min=1, soft_max=2.0, max=25, step=0.1,
-                                  precision=4, description=IOR_DESCRIPTION)
+                                 precision=4, description=IOR_DESCRIPTION,
+                                 update=utils_node.force_viewport_update)
 
     def draw(self, context, layout, node, text):
         if hasattr(node, "get_interior_volume") and node.get_interior_volume():
@@ -241,8 +247,9 @@ class LuxCoreSocketIOR(bpy.types.NodeSocket, LuxCoreSocketFloat):
 class LuxCoreSocketVolumeAsymmetry(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.vector_texture
     default_value: FloatVectorProperty(name="", default=(0, 0, 0), min=-1, max=1, subtype="COLOR",
-                                        description="Scattering asymmetry. -1 means back scatter, "
-                                                    "0 is isotropic, 1 is forwards scattering")
+                                       description="Scattering asymmetry. -1 means back scatter, "
+                                                   "0 is isotropic, 1 is forwards scattering",
+                                       update=utils_node.force_viewport_update)
 
     def draw_prop(self, context, layout, node, text):
         split = layout.split()

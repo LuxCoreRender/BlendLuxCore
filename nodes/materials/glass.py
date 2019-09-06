@@ -5,6 +5,7 @@ from ..sockets import LuxCoreSocketFloat
 from ..output import get_active_output
 from ...utils import node as utils_node
 from ...ui import icons
+from ...utils import node as utils_node
 
 CAUCHYC_DESCRIPTION = (
     "Dispersion strength (cauchy C coefficient)\n"
@@ -20,7 +21,8 @@ ARCHGLASS_DESCRIPTION = (
 
 class LuxCoreSocketCauchyC(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value: FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.1,
-                                  step=0.1, precision=5, description=CAUCHYC_DESCRIPTION)
+                                 step=0.1, precision=5, description=CAUCHYC_DESCRIPTION,
+                                 update=utils_node.force_viewport_update)
 
     def draw(self, context, layout, node, text):
         if getattr(node, "architectural", False):
