@@ -217,7 +217,7 @@ def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
     if scene.luxcore.denoiser.type == "BCD":
         index = get_BCD_props(definitions, scene, index)
     elif scene.luxcore.denoiser.type == "OIDN":
-        index = get_OIDN_props(definitions, index)
+        index = get_OIDN_props(definitions, scene, index)
 
     index = imagepipeline.convert_defs(context, scene, definitions, index)
 
@@ -242,8 +242,10 @@ def get_BCD_props(definitions, scene, index):
     return index + 1
 
 
-def get_OIDN_props(definitions, index):
+def get_OIDN_props(definitions, scene, index):
+    denoiser = scene.luxcore.denoiser
     definitions[str(index) + ".type"] = "INTEL_OIDN"
+    definitions[str(index) + ".oidnmemory"] = denoiser.max_memory_MB
     return index + 1
 
 
