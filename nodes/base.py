@@ -177,6 +177,16 @@ class LuxCoreNodeVolume(LuxCoreNode):
                            icon=icons.LIGHTGROUP, text="")
         layout.prop(self, "color_depth")
 
+        # Warn the user if he tries to use a 2D texture in a volume because it doesn't work
+        has_2D_input = False
+        for socket in self.inputs:
+            node = utils_node.get_linked_node(socket)
+            if node and "2D Mapping" in node.inputs:
+                has_2D_input = True
+                break
+        if has_2D_input:
+            layout.label(text="Can't use 2D textures!", icon=icons.WARNING)
+
     def add_common_inputs(self):
         """ Call from derived classes (in init method) """
         self.add_input("LuxCoreSocketColor", "Absorption", (1, 1, 1))
