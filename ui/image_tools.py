@@ -65,8 +65,11 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
         layout.use_property_decorate = False
 
         col = layout.column(align=True)
-        col.prop(denoiser, "type", expand=False)
         col.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
+        col.prop(denoiser, "type", expand=False)
+
+        if denoiser.type == "OIDN":
+            layout.prop(denoiser, "max_memory_MB")
 
         if denoiser.enabled and denoiser.type == "BCD":
             if config.sampler == "METROPOLIS" and not config.use_tiles:
