@@ -192,7 +192,7 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
             return False
 
         # Visible for sky2, sun, infinite, constantinfinite, area
-        return ((light.type == "SUN" and light.luxcore.sun_type == "sun")
+        return ((light.type == "SUN" and light.luxcore.light_type == "sun")
                 or light.type == "HEMI"
                 or (light.type == "AREA" and not light.luxcore.is_laser))
 
