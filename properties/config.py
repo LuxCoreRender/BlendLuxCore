@@ -193,6 +193,9 @@ class LuxCoreConfigTile(PropertyGroup):
 
 
 class LuxCoreConfigDLSCache(PropertyGroup):
+    # Overrides other light strategies when enabled
+    enabled: BoolProperty(name="Enabled", default=False)
+
     entry_radius_auto: BoolProperty(name="Automatic Entry Radius", default=True,
                                      description="Automatically choose a good entry radius")
     entry_radius: FloatProperty(name="Entry Radius", default=0.15, min=0, subtype="DISTANCE",
@@ -394,7 +397,6 @@ class LuxCoreConfig(PropertyGroup):
         ("LOG_POWER", "Log Power", LOG_POWER_DESC, 0),
         ("POWER", "Power", POWER_DESC, 1),
         ("UNIFORM", "Uniform", UNIFORM_DESC, 2),
-        ("DLS_CACHE", "Direct Light Sampling Cache", DLSC_DESC, 3),
     ]
     light_strategy: EnumProperty(name="Light Strategy", items=light_strategy_items, default="LOG_POWER",
                                   description="Decides how the lights in the scene are sampled")

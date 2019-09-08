@@ -19,6 +19,16 @@ def run():
         update_cloth_remove_repeat_sockets(node_tree)
         update_imagemap_add_alpha_output(node_tree)
 
+    for scene in bpy.data.scenes:
+        config = scene.luxcore.config
+        # Reworked after v2.2beta4, DLSC is no longer a light strategy
+        if config.light_strategy == "":
+            # It was probably DLS_CACHE. We have no way to find out,
+            # but that is the only entry that was ever removed.
+            # Restore the default here and enable the new DLSC BoolProperty
+            config.light_strategy = "LOG_POWER"
+            config.dls_cache.enabled = True
+
 
 def update_output_nodes_volume_change(node_tree):
     # commit 3078719a9a33a7e2a798965294463dce6c8b7749

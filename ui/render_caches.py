@@ -1,6 +1,5 @@
 import os
 from bl_ui.properties_render import RenderButtonsPanel
-from ..operators.config import LUXCORE_OT_config_set_dlsc
 from bpy.types import Panel
 from . import icons
 from .. import utils
@@ -152,24 +151,22 @@ class LUXCORE_RENDER_PT_caches_DLSC(RenderButtonsPanel, Panel):
     def poll(cls, context):
         return context.scene.render.engine == "LUXCORE"
 
+    def draw_header(self, context):
+        self.layout.prop(context.scene.luxcore.config.dls_cache, "enabled", text="")
+
     def draw(self, context):
-        dls_cache = context.scene.luxcore.config.dls_cache
-        use_dlsc = context.scene.luxcore.config.light_strategy == 'DLS_CACHE'
+        config = context.scene.luxcore.config
+        dls_cache = config.dls_cache
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
 
         col = layout.column(align=True)
-        if not context.scene.luxcore.config.light_strategy == 'DLS_CACHE':
-            col.operator("luxcore.config_set_dlsc")
-        else:
-            col.label(text="DLS Cache can be disabled in Light Strategy Menu", icon=icons.INFO)
-            col = layout.column(align=True)
-            col.active = use_dlsc
-            col.prop(dls_cache, "entry_radius_auto")
-            if not dls_cache.entry_radius_auto:
-                col.prop(dls_cache, "entry_radius")
-            col.prop(dls_cache, "entry_warmupsamples")
+        col.active = dls_cache.enabled
+        col.prop(dls_cache, "entry_radius_auto")
+        if not dls_cache.entry_radius_auto:
+            col.prop(dls_cache, "entry_radius")
+        col.prop(dls_cache, "entry_warmupsamples")
 
 
 class LUXCORE_RENDER_PT_caches_DLSC_advanced(RenderButtonsPanel, Panel):
@@ -180,17 +177,16 @@ class LUXCORE_RENDER_PT_caches_DLSC_advanced(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.light_strategy == 'DLS_CACHE'
+        return context.scene.render.engine == "LUXCORE"
 
     def draw(self, context):
         config = context.scene.luxcore.config
         dls_cache = config.dls_cache
-        use_dlsc = context.scene.luxcore.config.light_strategy == 'DLS_CACHE'
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.active = use_dlsc
+        layout.active = context.scene.luxcore.config.dls_cache.enabled
 
         col = layout.column(align=True)
         col.label(text="Entry Settings:")

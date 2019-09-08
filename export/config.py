@@ -36,10 +36,14 @@ def convert(exporter, scene, context=None, engine=None):
         else:
             filter_type = config.filter
 
-        light_strategy = config.light_strategy
-        if light_strategy == "DLS_CACHE" and is_viewport_render:
-            # Avoid building DLS cache when rendering in viewport, fall back to log power
-            light_strategy = "LOG_POWER"
+        if config.dls_cache.enabled:
+            if is_viewport_render:
+                # Avoid building DLS cache when rendering in viewport, fall back to log power
+                light_strategy = "LOG_POWER"
+            else:
+                light_strategy = "DLS_CACHE"
+        else:
+            light_strategy = config.light_strategy
 
         # Common properties that should be set regardless of engine configuration.
         definitions.update({
