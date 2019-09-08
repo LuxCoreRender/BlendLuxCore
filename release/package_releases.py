@@ -365,7 +365,7 @@ def main(blender_280):
 
     print()
     print_divider()
-    print("Results can be found in: release-" + args.version_string)
+    print("Results can be found in: " + release_dir)
     print_divider()
 
 
