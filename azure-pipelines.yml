@@ -13,8 +13,8 @@ resources:
   - container: LinuxContainer
     image: ubuntu:14.04
 
-# variables:
-# - group: BuildPipelinesGroup
+variables:
+- group: BuildPipelinesGroup
 
 #trigger:
 #  branches:
@@ -73,32 +73,29 @@ jobs:
 # - this is a daily build
 # - at least one of the build jobs was successful 
 # - the pipeline has been triggered by master branch and not by a pull request
-# - job: DeleteLatestTag
-  # dependsOn: 
-  # - DetectBuildType
-  # - LuxCoreRenderLinux
-  # - LuxCoreRenderWindows
-  # # - LuxCoreRenderMacOS
-  # variables:
-    # version_string: $[ dependencies.DetectBuildType.outputs['setvarStep.version_string'] ]
-  # condition: |
-    # and
-    # (
-      # eq(variables['System.PullRequest.IsFork'], 'False'),
-      # eq(variables['Build.SourceBranchName'], 'master'),
-      # eq(dependencies.DetectBuildType.outputs['setvarStep.version_string'], 'latest'),
-      # in(dependencies.LuxCoreRenderLinux.result, 'Succeeded', 'SucceededWithIssues'),
-      # in(dependencies.LuxCoreRenderWindows.result, 'Succeeded', 'SucceededWithIssues')
-    # )
-  # timeoutInMinutes: 0
-  # pool:
-    # vmImage: 'ubuntu-16.04'
+- job: DeleteLatestTag
+  dependsOn: 
+  - DetectBuildType
+  - BlendLuxCoreLinux
+  variables:
+    version_string: $[ dependencies.DetectBuildType.outputs['setvarStep.version_string'] ]
+  condition: |
+    and
+    (
+      eq(variables['System.PullRequest.IsFork'], 'False'),
+      eq(variables['Build.SourceBranchName'], 'master'),
+      eq(dependencies.DetectBuildType.outputs['setvarStep.version_string'], 'latest'),
+      in(dependencies.BlendLuxCoreLinux.result, 'Succeeded', 'SucceededWithIssues')
+    )
+  timeoutInMinutes: 0
+  pool:
+    vmImage: 'ubuntu-16.04'
     
-  # steps:
-  # - task: InstallSSHKey@0
-    # inputs:
-      # hostName: github.com,140.82.118.3 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
-      # sshPublicKey: $(PubKey)
-      # sshKeySecureFile: luxcore_id_rsa
-  # - script: ./scripts/azurepipeline/delete-latest-tag.sh
-    # displayName: Deleting tag to update latest build
+  steps:
+  - task: InstallSSHKey@0
+    inputs:
+      hostName: github.com,140.82.118.3 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+      sshPublicKey: $(PubKey)
+      sshKeySecureFile: luxcore_id_rsa
+  - script: ./scripts/azurepipeline/delete-latest-tag.sh
+    displayName: Deleting tag to update latest build
