@@ -60,7 +60,7 @@ jobs:
     inputs:
       pathtoPublish: '$(Build.ArtifactStagingDirectory)'
       artifactName: BlendLuxCore
-    displayName: 'Upload BlendLuxCore-<version>-linux64.zip'
+    displayName: 'Upload BlendLuxCore packages'
     condition: eq(variables['System.PullRequest.IsFork'], 'False')
 
 
