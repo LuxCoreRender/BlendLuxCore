@@ -276,8 +276,9 @@ def main(blender_280):
         os.path.join(repo_path, "doc"),
         os.path.join(repo_path, ".github"),
         os.path.join(repo_path, ".git"),
-        os.path.join(repo_path, "scripts"),
     ]
+    if blender_280:
+        to_delete.append(os.path.join(repo_path, "scripts"))
     for path in to_delete:
         rmtree(path)
 
