@@ -21,7 +21,7 @@ def run():
 
     for scene in bpy.data.scenes:
         config = scene.luxcore.config
-        # Reworked after v2.2beta4, DLSC is no longer a light strategy
+        # Reworked after v2.2beta4, DLSC is no longer part of the light strategy enum, but a separate checkbox.
         # Commit: 87ef293cdac2011da28365941414f88ff2658903
         if config.light_strategy == "":
             # It was probably DLS_CACHE. We have no way to find out,
