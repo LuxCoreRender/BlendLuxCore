@@ -40,7 +40,8 @@ class LuxCoreNodeMatGlossyTranslucent(bpy.types.Node, LuxCoreNodeMaterial):
             else:
                 self.inputs[socket].enabled = self.use_backface
 
-        utils_node.force_viewport_update(self, context)
+        if context:
+            utils_node.force_viewport_update(self, context)
 
     # This enables/disables anisotropic roughness for both front and back face
     use_anisotropy: BoolProperty(name=Roughness.aniso_name,
