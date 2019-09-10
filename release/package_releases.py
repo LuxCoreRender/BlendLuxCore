@@ -188,7 +188,10 @@ def main(blender_280):
     args = parser.parse_args()
 
     # Archives we need.
-    url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/luxcorerender_"
+    if args.version_string == "latest":
+        url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/"
+    else:
+        url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/luxcorerender_"
     prefix = "luxcorerender-"
     suffixes = [
         "-linux64.tar.bz2",
@@ -274,6 +277,8 @@ def main(blender_280):
         os.path.join(repo_path, ".github"),
         os.path.join(repo_path, ".git"),
     ]
+    # if blender_280:
+        # to_delete.append(os.path.join(repo_path, "scripts"))
     for path in to_delete:
         rmtree(path)
 
@@ -360,7 +365,7 @@ def main(blender_280):
 
     print()
     print_divider()
-    print("Results can be found in: release-" + args.version_string)
+    print("Results can be found in: " + release_dir)
     print_divider()
 
 
