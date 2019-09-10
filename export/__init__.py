@@ -97,7 +97,7 @@ class Exporter(object):
         scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.kd", [0.5] * 3))
 
         # Camera (needs to be parsed first because it is needed for hair tesselation)
-        self.camera_cache.diff(self, scene, context)  # Init camera cache
+        self.camera_cache.diff(self, scene, depsgraph, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
 
         if utils.is_valid_camera(scene.camera):
@@ -126,7 +126,7 @@ class Exporter(object):
                 if cam_moving:
                     # Re-export the camera with motion blur enabled
                     # (This is fast and we only have to step through the scene once in total, not twice)
-                    camera_props = camera.convert(self, scene, context, cam_moving)
+                    camera_props = camera.convert(self, scene, depsgraph, context, cam_moving)
                     motion_blur_props.Set(camera_props)
 
                 scene_props.Set(motion_blur_props)
@@ -218,7 +218,7 @@ class Exporter(object):
             if self.config_cache.diff(config_props):
                 changes |= Change.CONFIG
 
-            if self.camera_cache.diff(self, scene, context):
+            if self.camera_cache.diff(self, scene, depsgraph, context):
                 changes |= Change.CAMERA
 
             if self.object_cache2.diff(depsgraph):
