@@ -132,7 +132,7 @@ class Exporter(object):
                 scene_props.Set(motion_blur_props)
 
         # World
-        world_props = world.convert(self, scene, is_viewport_render)
+        world_props = world.convert(self, depsgraph, scene, is_viewport_render)
         scene_props.Set(world_props)
 
         luxcore_scene.Parse(scene_props)
@@ -398,7 +398,7 @@ class Exporter(object):
             if not context.scene.world or context.scene.world.luxcore.light == "none":
                 luxcore_scene.DeleteLight(WORLD_BACKGROUND_LIGHT_NAME)
 
-            world_props = world.convert(self, context.scene, is_viewport_render=True)
+            world_props = world.convert(self, depsgraph, context.scene, is_viewport_render=True)
             props.Set(world_props)
 
         return props
