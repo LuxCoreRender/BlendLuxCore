@@ -378,6 +378,20 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "emission.power": 0,
             "emission.efficency": 0,
         }
+    elif node.bl_idname == "ShaderNodeValue":
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "constfloat1",
+            "value": node.outputs[0].default_value,
+        }
+    elif node.bl_idname == "ShaderNodeRGB":
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "constfloat3",
+            "value": list(node.outputs[0].default_value)[:3],
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
