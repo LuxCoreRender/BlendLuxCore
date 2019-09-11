@@ -280,6 +280,11 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                                            "radius. Smaller values lead to sharper caustics, but worse "
                                                            "rendering performance. Larger values lead to blurred "
                                                            "caustics, but faster rendering")
+    caustic_periodic_update: BoolProperty(name="Periodic Update", default=True,
+                                          description="Rebuild the caustic cache periodically to clean up photon noise. "
+                                                       "The step samples parameter controls how often the cache is rebuilt")
+    caustic_updatespp: IntProperty(name="Step Samples", default=30, min=0,
+                                   description="How often to rebuild the cache if periodic update is enabled")
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),

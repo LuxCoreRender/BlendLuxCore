@@ -138,6 +138,11 @@ class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
         sub = col.column(align=True)
         sub.enabled = photongi.caustic_merge_enabled
         sub.prop(photongi, "caustic_merge_radius_scale")
+        sub = col.column(align=True)
+        sub.prop(photongi, "caustic_periodic_update")
+        sub = col.column(align=True)
+        sub.enabled = photongi.caustic_periodic_update
+        sub.prop(photongi, "caustic_updatespp")
 
 class LUXCORE_RENDER_PT_caches_photongi_persistence(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
