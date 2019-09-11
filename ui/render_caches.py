@@ -30,6 +30,7 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
+        self.layout.active = context.scene.luxcore.config.engine != "BIDIR"
         self.layout.prop(context.scene.luxcore.config.photongi, "enabled", text="")
 
     def draw(self, context):
@@ -37,14 +38,14 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        
-        engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
-        layout.enabled = photongi.enabled and not engine_is_bidir
 
-        if engine_is_bidir:
+        if context.scene.luxcore.config.engine == "BIDIR":
             layout.label(text="Not supported by Bidir", icon=icons.INFO)
+            return
 
-        if not photongi.indirect_enabled and not photongi.caustic_enabled:
+        layout.active = photongi.enabled
+
+        if photongi.enabled and not photongi.indirect_enabled and not photongi.caustic_enabled:
             layout.label(text="All caches disabled", icon=icons.WARNING)
 
         col = layout.column(align=True)
@@ -52,10 +53,37 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         col.prop(photongi, "photon_maxdepth")
 
         col = layout.column(align=True)
-        col.prop(photongi, "indirect_enabled")
+        col.prop(photongi, "debug")
+        if ((photongi.debug == "showindirect" or photongi.debug == "showindirectpathmix")
+                and not photongi.indirect_enabled) or (
+                photongi.debug == "showcaustic" and not photongi.caustic_enabled):
+            col.label(text="Can't show this cache (disabled)", icon=icons.WARNING)
 
-        col = layout.column(align=True)
-        col.enabled = photongi.indirect_enabled
+
+class LUXCORE_RENDER_PT_caches_photongi_indirect(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
+    bl_parent_id = "LUXCORE_RENDER_PT_caches_photongi"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine == "PATH"
+
+    def draw_header(self, context):
+        self.layout.active = context.scene.luxcore.config.photongi.enabled
+        row = self.layout.row(align=True)
+        row.prop(context.scene.luxcore.config.photongi, "indirect_enabled", text="")
+        row.label(text="Indirect Light Cache")
+
+    def draw(self, context):
+        photongi = context.scene.luxcore.config.photongi
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
+        layout.active = photongi.enabled and photongi.indirect_enabled and not engine_is_bidir
 
         col = layout.column(align=True)
         col.prop(photongi, "indirect_haltthreshold_preset")
@@ -69,8 +97,33 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         if not photongi.indirect_lookup_radius_auto:
             col.prop(photongi, "indirect_lookup_radius")
 
-        col = layout.column(align=True)
-        col.prop(photongi, "caustic_enabled")
+
+class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
+    bl_parent_id = "LUXCORE_RENDER_PT_caches_photongi"
+    lux_predecessor = "LUXCORE_RENDER_PT_caches_photongi_indirect"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine == "PATH"
+
+    def draw_header(self, context):
+        self.layout.active = context.scene.luxcore.config.photongi.enabled
+        row = self.layout.row(align=True)
+        row.prop(context.scene.luxcore.config.photongi, "caustic_enabled", text="")
+        row.label(text="Caustic Light Cache")
+
+    def draw(self, context):
+        photongi = context.scene.luxcore.config.photongi
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
+        layout.active = photongi.enabled and photongi.caustic_enabled and not engine_is_bidir
+
         col = layout.column(align=True)
         col.enabled = photongi.caustic_enabled
         sub = col.column(align=True)
@@ -86,12 +139,29 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         sub.enabled = photongi.caustic_merge_enabled
         sub.prop(photongi, "caustic_merge_radius_scale")
 
-        col = layout.column(align=True)
-        col.prop(photongi, "debug")
-        if ((photongi.debug == "showindirect" or photongi.debug == "showindirectpathmix")
-                and not photongi.indirect_enabled) or (
-                photongi.debug == "showcaustic" and not photongi.caustic_enabled):
-            col.label(text="Can't show this cache (disabled)", icon=icons.WARNING)
+class LUXCORE_RENDER_PT_caches_photongi_persistence(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
+    bl_parent_id = "LUXCORE_RENDER_PT_caches_photongi"
+    lux_predecessor = "LUXCORE_RENDER_PT_caches_photongi_caustic"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine == "PATH"
+
+    def draw_header(self, context):
+        self.layout.active = context.scene.luxcore.config.photongi.enabled
+        self.layout.label(text="Persistence")
+
+    def draw(self, context):
+        photongi = context.scene.luxcore.config.photongi
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
+        layout.active = photongi.enabled and not engine_is_bidir
 
         file_abspath = utils.get_abspath(photongi.file_path, library=context.scene.library)
         file_exists = os.path.isfile(file_abspath)

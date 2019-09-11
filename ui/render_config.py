@@ -147,8 +147,8 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        return True
-        # return not context.scene.luxcore.config.use_tiles
+        config = context.scene.luxcore.config
+        return config.engine == "PATH" and not config.use_tiles
 
     def error(self, context):
         use_native_cpu = context.scene.luxcore.opencl.use_native_cpu

@@ -68,8 +68,7 @@ UNIFORM_DESC = "Sample all lights equally, not according to their brightness"
 
 DLSC_DESC = (
     "Use the DLSC in scenes with many light sources if each of them only "
-    "lights up a small part of the scene (example: a city at night). "
-    "The DLSC is built before the rendering starts"
+    "lights up a small part of the scene (example: a city at night)"
 )
 
 LARGE_STEP_RATE_DESC = (
@@ -194,7 +193,7 @@ class LuxCoreConfigTile(PropertyGroup):
 
 class LuxCoreConfigDLSCache(PropertyGroup):
     # Overrides other light strategies when enabled
-    enabled: BoolProperty(name="Enabled", default=False)
+    enabled: BoolProperty(name="Enabled", default=False, description=DLSC_DESC)
 
     entry_radius_auto: BoolProperty(name="Automatic Entry Radius", default=True,
                                      description="Automatically choose a good entry radius")
@@ -219,7 +218,7 @@ class LuxCoreConfigDLSCache(PropertyGroup):
 
 
 class LuxCoreConfigPhotonGI(PropertyGroup):
-    enabled: BoolProperty(name="Enabled", default=False)
+    enabled: BoolProperty(name="Use PhotonGI cache to accelerate indirect and/or caustic light rendering", default=False)
 
     # Shared settings
     photon_maxcount: FloatProperty(name="Photon Count (Millions)", default=20, min=1, soft_max=100,
@@ -228,7 +227,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     photon_maxdepth: IntProperty(name="Photon Depth", default=8, min=3, max=64,
                                   description="Max. depth of photon paths. At each bounce, a photon might be stored")
     # Indirect cache
-    indirect_enabled: BoolProperty(name="Indirect Cache", default=True)
+    indirect_enabled: BoolProperty(name="Use Indirect Cache", default=True,
+                                   description="Accelerates rendering of indirect light")
     indirect_haltthreshold_preset_items = [
         ("final", "Final Render", "Halt Threshold 5%", 0),
         ("preview", "Preview", "Halt Threshold 15%", 1),
@@ -261,7 +261,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                                              "value if you encounter such artifacts")
 
     # Caustic cache
-    caustic_enabled: BoolProperty(name="Caustic Cache", default=False)
+    caustic_enabled: BoolProperty(name="Use Caustic Cache", default=False,
+                                  description="Accelerates rendering of caustics at the cost of blurring them")
     caustic_maxsize: FloatProperty(name="Max. Size (Millions)", default=1, soft_min=0.1, min=0.01, soft_max=10,
                                     precision=0, step=1,
                                     description="Max. number of photons stored in caustic cache (value in millions)")

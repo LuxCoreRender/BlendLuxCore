@@ -375,12 +375,11 @@ def _convert_dlscache_settings(scene, definitions, config):
 
 def _convert_photongi_settings(context, scene, definitions, config):
     photongi = config.photongi
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
     if photongi.indirect_lookup_radius_auto:
         indirect_radius = 0
     else:
-        indirect_radius = photongi.indirect_lookup_radius * worldscale
+        indirect_radius = photongi.indirect_lookup_radius
 
     if photongi.indirect_haltthreshold_preset == "final":
         indirect_haltthreshold = 0.05
@@ -391,7 +390,7 @@ def _convert_photongi_settings(context, scene, definitions, config):
     else:
         raise Exception("Unknown preset mode")
 
-    caustic_radius = photongi.caustic_lookup_radius * worldscale
+    caustic_radius = photongi.caustic_lookup_radius
     caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
 
     file_path_abs = utils.get_abspath(photongi.file_path, library=scene.library)
