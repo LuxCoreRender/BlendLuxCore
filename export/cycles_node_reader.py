@@ -79,6 +79,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "sheentint": _socket(node.inputs["Sheen Tint"], props, obj_name, group_node),
             "clearcoat": _socket(node.inputs["Clearcoat"], props, obj_name, group_node),
             #"clearcoatgloss": convert_cycles_socket(node.inputs["Clearcoat Roughness"], props, obj_name, group_node),  # TODO
+            # TODO: emission, alpha, transmission, transmission roughness
         }
     elif node.bl_idname == "ShaderNodeMixShader":
         prefix = "scene.materials."
@@ -342,7 +343,6 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "saturation": saturation,
             "value": value,
         }
-
     elif node.bl_idname == "ShaderNodeGroup":
         active_output = None
         for subnode in node.node_tree.nodes:
@@ -364,6 +364,20 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             LuxCoreErrorLog.add_warning("Nested groups are not supported yet", obj_name=obj_name)
             return ERROR_VALUE
         return _socket(group_node.inputs[output_socket.name], props, obj_name, None)
+    elif node.bl_idname == "ShaderNodeEmission":
+        prefix = "scene.materials."
+
+        # According to the Blender manual, strength is in Watts/m² when the node is used on meshes.
+        strength = _socket(node.inputs["Strength"], props, obj_name, group_node)
+
+        definitions = {
+            "type": "matte",
+            "kd": [0, 0, 0],
+            "emission": _socket(node.inputs["Color"], props, obj_name, group_node),
+            "emission.gain": [strength] * 3,
+            "emission.power": 0,
+            "emission.efficency": 0,
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
