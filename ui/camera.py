@@ -60,7 +60,7 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
         col.separator()
         col.prop(cam.luxcore, "use_clipping")        
         sub = col.column(align=True)
-        sub.enabled = cam.luxcore.use_clipping        
+        sub.active = cam.luxcore.use_clipping
         sub.prop(cam, "clip_start", text="Clip Start")
         sub.prop(cam, "clip_end", text="End")
 
