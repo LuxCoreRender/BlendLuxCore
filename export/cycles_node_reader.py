@@ -147,7 +147,6 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
 
             definitions = {
                 "type": "imagemap",
-                # TODO get filepath with image exporter (because of packed files)
                 # TODO image sequences
                 "file": filepath,
                 "wrap": extension_map[node.extension],
