@@ -22,7 +22,7 @@ class LUXCORE_OT_camera_new_volume_node_tree(bpy.types.Operator):
         name += "_Volume"
 
         node_tree = bpy.data.node_groups.new(name=name, type="luxcore_volume_nodes")
-        init_vol_node_tree(node_tree)
+        init_vol_node_tree(node_tree, default_IOR=1)
 
         if context.camera:
             context.camera.luxcore.volume = node_tree

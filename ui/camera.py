@@ -154,15 +154,11 @@ class LUXCORE_CAMERA_PT_camera_display(CameraButtonsPanel, Panel):
         cam = context.camera
 
         col = layout.column(align=True)
-
         col.separator()
-
         col.prop(cam, "display_size", text="Size")
-
         col.separator()
 
         flow = layout.grid_flow(row_major=False, columns=0, even_columns=False, even_rows=False, align=False)
-
         col = flow.column()
         col.prop(cam, "show_limits", text="Limits")
         col = flow.column()
@@ -224,6 +220,7 @@ class LUXCORE_CAMERA_PT_camera_display_passepartout(CameraButtonsPanel, Panel):
 
         layout.active = cam.show_passepartout
         layout.prop(cam, "passepartout_alpha", text="Opacity", slider=True)
+
 
 class LUXCORE_CAMERA_PT_camera_safe_areas(CameraButtonsPanel, Panel):
     bl_label = "Safe Areas"
@@ -606,6 +603,7 @@ def compatible_panels():
      ]
      types = bpy.types
      return [getattr(types, p) for p in panels if hasattr(types, p)]
+
 
 def register():
     for panel in compatible_panels():        
