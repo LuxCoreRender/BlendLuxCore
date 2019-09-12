@@ -2,6 +2,7 @@ import bpy
 from bpy.props import FloatProperty, BoolProperty, EnumProperty
 from ..base import LuxCoreNodeMaterial, Roughness
 from ... import utils
+from ...utils import node as utils_node
 
 class LuxCoreNodeMatMetal(bpy.types.Node, LuxCoreNodeMaterial):
     """metal material node"""
@@ -9,7 +10,7 @@ class LuxCoreNodeMatMetal(bpy.types.Node, LuxCoreNodeMaterial):
     bl_width_default = 200
 
     # For internal use, do not show in UI
-    is_first_input_change: BoolProperty(default=True)
+    is_first_input_change: BoolProperty(update=utils_node.force_viewport_update, default=True)
 
     def change_input_type(self, context):
         is_fresnel = self.input_type == "fresnel"
@@ -26,6 +27,7 @@ class LuxCoreNodeMatMetal(bpy.types.Node, LuxCoreNodeMaterial):
             fresnel_tex = node_tree.nodes.new("LuxCoreNodeTexFresnel")
             fresnel_tex.location = (self.location.x - 300, self.location.y)
             node_tree.links.new(fresnel_tex.outputs[0], self.inputs["Fresnel"])
+        utils_node.force_viewport_update(self, context)
 
     input_type_items = [
         ("color", "Color", "Use custom color as input", 0),

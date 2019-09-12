@@ -31,9 +31,10 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             # User counting does not work reliably with Python PointerProperty.
             # Sometimes, this node is not counted as user.
             self.image.use_fake_user = True
+        utils_node.force_viewport_update(self, context)
 
     image: PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
-    image_user: PointerProperty(type=LuxCoreImageUser)
+    image_user: PointerProperty(update=utils_node.force_viewport_update, type=LuxCoreImageUser)
 
     channel_items = [
         ("default", "Default", "Do not convert the image cannels", 0),
@@ -45,7 +46,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         ("mean", "Mean (Average)", "Greyscale", 6),
         ("colored_mean", "Mean (Luminance)", "Greyscale", 7),
     ]
-    channel: EnumProperty(name="Channel", items=channel_items, default="default")
+    channel: EnumProperty(update=utils_node.force_viewport_update, name="Channel", items=channel_items, default="default")
 
     wrap_items = [
         ("repeat", "Repeat", "", 0),
@@ -53,12 +54,12 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         ("black", "Black", "", 1),
         ("white", "White", "", 2),
     ]
-    wrap: EnumProperty(name="Wrap", items=wrap_items, default="repeat")
+    wrap: EnumProperty(update=utils_node.force_viewport_update, name="Wrap", items=wrap_items, default="repeat")
 
-    gamma: FloatProperty(name="Gamma", default=2.2, soft_min=0, soft_max=5,
+    gamma: FloatProperty(update=utils_node.force_viewport_update, name="Gamma", default=2.2, soft_min=0, soft_max=5,
                           description="Most LDR images with sRgb colors use gamma 2.2, "
                                       "while most HDR images with linear colors use gamma 1")
-    brightness: FloatProperty(name="Brightness", default=1,
+    brightness: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1,
                                description="Brightness multiplier")
 
     def update_is_normal_map(self, context):
@@ -72,47 +73,50 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         bump_output.enabled = self.is_normal_map
 
         utils_node.copy_links_after_socket_swap(color_output, bump_output, was_color_enabled)
+        utils_node.force_viewport_update(self, context)
 
     is_normal_map: BoolProperty(name="Normalmap", default=False, update=update_is_normal_map,
                                  description=NORMAL_MAP_DESC)
-    normal_map_scale: FloatProperty(name="Height", default=1, min=0, soft_max=5,
+    normal_map_scale: FloatProperty(update=utils_node.force_viewport_update, name="Height", default=1, min=0, soft_max=5,
                                      description=NORMAL_SCALE_DESC)
     normal_map_orientation_items = [
         ("opengl", "OpenGL", "Select if the image is a left-handed normal map", 0),
         ("directx", "DirectX", "Select if the image is a right-handed normal map (inverted green channel)", 1),
     ]
-    normal_map_orientation: EnumProperty(name="Orientation", items=normal_map_orientation_items, default="opengl")
+    normal_map_orientation: EnumProperty(update=utils_node.force_viewport_update, name="Orientation", items=normal_map_orientation_items, default="opengl")
 
     # This function assigns self.image to all faces of all objects using this material
     # and assigns self.image to all image editors that do not have their image pinned.
     def update_set_as_active_uvmap(self, context):
-        if not self.set_as_active_uvmap:
-            return
-        # Reset button to "unclicked"
-        self["set_as_active_uvmap"] = False
-
-        if not context.object:
-            return
-        material = context.object.active_material
-
-        for obj in context.scene.objects:
-            for mat_index, slot in enumerate(obj.material_slots):
-                if slot.material == material:
-                    mesh = obj.data
-                    if hasattr(mesh, "uv_textures") and mesh.uv_textures:
-                        uv_faces = mesh.uv_textures.active.data
-                        polygons = mesh.polygons
-                        # Unfortunately the uv_face has no information about the material
-                        # that is assigned to the face, so we have to get this information
-                        # from the polygons of the mesh
-                        for uv_face, polygon in zip(uv_faces, polygons):
-                            if polygon.material_index == mat_index:
-                                uv_face.image = self.image
-
-        for space in utils_ui.get_all_spaces(context, "IMAGE_EDITOR", "IMAGE_EDITOR"):
-            # Assign image in all image editors that do not have pinning enabled
-            if not space.use_image_pin:
-                space.image = self.image
+        # TODO 2.8 (Do we even still need this, or can we do something better with Eevee nodes?)
+        raise NotImplementedError()
+        # if not self.set_as_active_uvmap:
+        #     return
+        # # Reset button to "unclicked"
+        # self["set_as_active_uvmap"] = False
+        #
+        # if not context.object:
+        #     return
+        # material = context.object.active_material
+        #
+        # for obj in context.scene.objects:
+        #     for mat_index, slot in enumerate(obj.material_slots):
+        #         if slot.material == material:
+        #             mesh = obj.data
+        #             if hasattr(mesh, "uv_textures") and mesh.uv_textures:
+        #                 uv_faces = mesh.uv_textures.active.data
+        #                 polygons = mesh.polygons
+        #                 # Unfortunately the uv_face has no information about the material
+        #                 # that is assigned to the face, so we have to get this information
+        #                 # from the polygons of the mesh
+        #                 for uv_face, polygon in zip(uv_faces, polygons):
+        #                     if polygon.material_index == mat_index:
+        #                         uv_face.image = self.image
+        #
+        # for space in utils_ui.get_all_spaces(context, "IMAGE_EDITOR", "IMAGE_EDITOR"):
+        #     # Assign image in all image editors that do not have pinning enabled
+        #     if not space.use_image_pin:
+        #         space.image = self.image
 
     # Note: the old "use a property as a button because it is so much simpler" trick
     set_as_active_uvmap: BoolProperty(name="Show in Viewport", default=False,
@@ -138,7 +142,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         row = layout.row()
         row.prop(self, "show_thumbnail", icon=icons.IMAGE)
-        row.prop(self, "set_as_active_uvmap", toggle=True)
+        # row.prop(self, "set_as_active_uvmap", toggle=True)  # TODO 2.8
         if self.show_thumbnail:
             layout.template_ID_preview(self, "image", open="image.open")
         else:

@@ -18,6 +18,7 @@ class LuxCoreNodeTexHitpoint(bpy.types.Node, LuxCoreNodeTexture):
         value_output.enabled = self.mode == "hitpointgrey"
 
         utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
+        utils_node.force_viewport_update(self, context)
 
     mode_items = [
         ("hitpointcolor", "Color", "Vertex Color", 0),
@@ -33,7 +34,7 @@ class LuxCoreNodeTexHitpoint(bpy.types.Node, LuxCoreNodeTexture):
         ("1", "G", "Green luminance", 2),
         ("2", "B", "Blue luminance", 3),
     ]
-    channel: EnumProperty(name="Channel", items=channel_items, default="-1")
+    channel: EnumProperty(update=utils_node.force_viewport_update, name="Channel", items=channel_items, default="-1")
 
     def init(self, context):
         self.outputs.new("LuxCoreSocketColor", "Color")

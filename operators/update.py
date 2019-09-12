@@ -144,19 +144,21 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
             # Assets are the different .zip packages for various OS, with/without OpenCL etc.
             for asset in release_info["assets"]:
                 # The name has the form
-                # "BlendLuxCore-v2.0alpha7-linux64-opencl.zip" or
-                # "BlendLuxCore-v2.0alpha7-linux64.zip" (non-opencl builds)
+                # "BlendLuxCore-v2.2beta4-blender2.80-linux64-opencl.zip" or
+                # "BlendLuxCore-v2.2beta4-blender2.80-linux64.zip" (non-opencl builds)
                 middle = asset["name"].replace("BlendLuxCore-", "").replace(".zip", "")
                 parts = middle.split("-")
-                if len(parts) == 2:
-                    version, system = parts
-                    is_opencl = False
-                elif len(parts) == 3:
-                    version, system, _ = parts
-                    is_opencl = True
-                else:
-                    # Older alpha releases used a different naming scheme, we don't support them
+
+                if not "blender2.80" in parts:
+                    # Do not offer to downgrade to a non-Blender 2.80 release
                     continue
+
+                is_opencl = "opencl" in parts
+                if (is_opencl and not current_is_opencl) or (not is_opencl and current_is_opencl):
+                    continue
+
+                # parts is for example: ["v2.2beta4", "blender2.80", "linux64", "opencl"]
+                system = parts[2]
 
                 if system == current_system and is_opencl == current_is_opencl:
                     # Found the right asset

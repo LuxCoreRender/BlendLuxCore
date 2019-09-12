@@ -11,6 +11,7 @@ class LuxCoreNodeMatVelvet(bpy.types.Node, LuxCoreNodeMaterial):
         self.inputs["p1"].enabled = self.advanced
         self.inputs["p2"].enabled = self.advanced
         self.inputs["p3"].enabled = self.advanced
+        utils_node.force_viewport_update(self, context)
 
     advanced: BoolProperty(name="Advanced Options", description="Advanced Velvet Parameters", default=False, update=update_advanced)
 

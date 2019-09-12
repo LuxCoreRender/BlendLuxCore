@@ -70,13 +70,11 @@ def _prepare_mesh(obj, depsgraph):
                     object_eval.to_mesh_clear()
                     mesh = None
 
-                # TODO autosmooth
-
-            # if mesh:
-            #     if mesh.use_auto_smooth and not mesh.has_custom_normals:
-            #         mesh.calc_normals()
-            #         mesh.split_faces()
-            #     mesh.calc_tessface()
+            if mesh:
+                if mesh.use_auto_smooth and not mesh.has_custom_normals:
+                    mesh.calc_normals()
+                    mesh.split_faces()
+                mesh.calc_loop_triangles()
 
         yield mesh
     finally:

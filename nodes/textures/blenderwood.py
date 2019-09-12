@@ -6,6 +6,7 @@ from .. import NOISE_BASIS_ITEMS
 from .. import NOISE_TYPE_ITEMS
 
 from ... import utils
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexBlenderWood(bpy.types.Node, LuxCoreNodeTexture):
@@ -25,17 +26,17 @@ class LuxCoreNodeTexBlenderWood(bpy.types.Node, LuxCoreNodeTexture):
         ("tri", "Tri", ""),
     ]
 
-    wood_type: EnumProperty(name="Type", description="Type of noise used", items=wood_type_items, default="bands")
-    noise_basis: EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
+    wood_type: EnumProperty(update=utils_node.force_viewport_update, name="Type", description="Type of noise used", items=wood_type_items, default="bands")
+    noise_basis: EnumProperty(update=utils_node.force_viewport_update, name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
-    noise_basis2: EnumProperty(name="Noise Basis 2", description="Second basis of noise used",
+    noise_basis2: EnumProperty(update=utils_node.force_viewport_update, name="Noise Basis 2", description="Second basis of noise used",
                                          items=wood_noise_items, default="sin")
-    noise_type: EnumProperty(name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
+    noise_type: EnumProperty(update=utils_node.force_viewport_update, name="Noise Type", description="Soft or hard noise", items=NOISE_TYPE_ITEMS,
                                        default="soft_noise")
-    noise_size: FloatProperty(name="Noise Size", default=0.25, min=0)
-    turbulence: FloatProperty(name="Turbulence", default=5.0, min=0)
-    bright: FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast: FloatProperty(name="Contrast", default=1.0, min=0)
+    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
+    turbulence: FloatProperty(update=utils_node.force_viewport_update, name="Turbulence", default=5.0, min=0)
+    bright: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(update=utils_node.force_viewport_update, name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

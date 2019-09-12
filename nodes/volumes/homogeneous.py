@@ -3,6 +3,7 @@ from bpy.props import IntProperty, BoolProperty, FloatProperty, StringProperty
 from .. import COLORDEPTH_DESC
 from ..base import LuxCoreNodeVolume
 from ...properties.light import LIGHTGROUP_DESC
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeVolHomogeneous(bpy.types.Node, LuxCoreNodeVolume):
@@ -10,13 +11,13 @@ class LuxCoreNodeVolHomogeneous(bpy.types.Node, LuxCoreNodeVolume):
     bl_width_default = 175
 
     # TODO: get name, default, description etc. from super class or something
-    priority: IntProperty(name="Priority", default=0, min=0)
-    color_depth: FloatProperty(name="Absorption Depth", default=1.0, min=0,
+    priority: IntProperty(update=utils_node.force_viewport_update, name="Priority", default=0, min=0)
+    color_depth: FloatProperty(update=utils_node.force_viewport_update, name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
-    lightgroup: StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
+    lightgroup: StringProperty(update=utils_node.force_viewport_update, name="Light Group", description=LIGHTGROUP_DESC)
 
-    multiscattering: BoolProperty(name="Multiscattering", default=False)
+    multiscattering: BoolProperty(update=utils_node.force_viewport_update, name="Multiscattering", default=False)
 
     def init(self, context):
         self.add_common_inputs()

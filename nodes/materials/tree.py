@@ -22,7 +22,6 @@ class LuxCoreMaterialNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
             mat = obj.active_material
 
             if mat:
-                # ID pointer
                 node_tree = mat.luxcore.node_tree
 
                 if node_tree:

@@ -44,9 +44,6 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         template_refresh_button(LuxCoreDenoiser.refresh, "luxcore.request_denoiser_refresh",
                                 sub, "Running denoiser...")
 
-        col = layout.column(align=True)
-        col.label(text="These settings are also available in the image editor tool shelf (press N)", icon=icons.INFO)
-
         if denoiser.type == "BCD":
             sub = layout.column(align=True)
             # The user should be able to adjust settings even when denoiser is disabled            
@@ -55,6 +52,8 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
             sub.prop(denoiser, "hist_dist_thresh")
             sub = layout.column(align=True)
             sub.prop(denoiser, "search_window_radius")
+        elif denoiser.type == "OIDN":
+            col.prop(denoiser, "max_memory_MB")
 
 
 class LUXCORE_RENDER_PT_denoiser_bcd_advanced(RenderButtonsPanel, Panel):

@@ -1,8 +1,7 @@
 import bpy
 from bpy.props import EnumProperty, FloatProperty, IntProperty
 from ..base import LuxCoreNodeTexture
-
-from .. import sockets
+from ...utils import node as utils_node
 from ... import utils
 
 class LuxCoreNodeTexWrinkled(bpy.types.Node, LuxCoreNodeTexture):
@@ -10,8 +9,8 @@ class LuxCoreNodeTexWrinkled(bpy.types.Node, LuxCoreNodeTexture):
     bl_width_default = 200
 
 
-    octaves: IntProperty(name="Octaves", default=8, min=1, max=29)
-    roughness: FloatProperty(name="Roughness", default=0.5, min=0, max=1)
+    octaves: IntProperty(update=utils_node.force_viewport_update, name="Octaves", default=8, min=1, max=29)
+    roughness: FloatProperty(update=utils_node.force_viewport_update, name="Roughness", default=0.5, min=0, max=1)
     
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")

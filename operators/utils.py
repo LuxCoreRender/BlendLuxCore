@@ -69,7 +69,7 @@ def init_tex_node_tree(node_tree):
     output.select = False
 
 
-def init_vol_node_tree(node_tree):
+def init_vol_node_tree(node_tree, default_IOR=1.5):
     # Seems like we still need this.
     # User counting does not work reliably with Python PointerProperty.
     # Sometimes, the material this tree is linked to is not counted as user.
@@ -83,6 +83,7 @@ def init_vol_node_tree(node_tree):
 
     clear = nodes.new("LuxCoreNodeVolClear")
     clear.location = 50, 200
+    clear.inputs["IOR"].default_value = default_IOR
 
     node_tree.links.new(clear.outputs[0], output.inputs[0])
 

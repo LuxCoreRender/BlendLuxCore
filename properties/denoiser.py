@@ -19,6 +19,11 @@ SEARCH_WINDOW_RADIUS_DESC = (
     "Higher values improve the denoiser result, but lead to longer computation time"
 )
 FILTER_SPIKES_DESC = "Filter outliers from the input samples"
+MAX_MEMORY_DESC = (
+    "Approximate maximum amount of memory to use in megabytes (actual memory usage "
+    "may be higher). Limiting memory usage may cause slower denoising due to internally "
+    "splitting the image into overlapping tiles"
+)
 
 
 class LuxCoreDenoiser(PropertyGroup):
@@ -42,3 +47,7 @@ class LuxCoreDenoiser(PropertyGroup):
                                        description=SEARCH_WINDOW_RADIUS_DESC)
     filter_spikes: BoolProperty(name="Remove Fireflies", default=False,
                                  description=FILTER_SPIKES_DESC)
+
+    # OIDN settings
+    max_memory_MB: IntProperty(name="Max. Memory (MB)", default=6000, min=100, soft_min=1000,
+                               description=MAX_MEMORY_DESC)

@@ -4,6 +4,7 @@ from bpy.props import FloatVectorProperty, BoolProperty, EnumProperty, StringPro
 from ..base import LuxCoreNodeTexture
 from mathutils import Color
 from ...ui import icons
+from ...utils import node as utils_node
 
 
 def channel_linear_to_srgb(channel):
@@ -45,6 +46,7 @@ class LuxCoreNodeTexConstfloat3(bpy.types.Node, LuxCoreNodeTexture):
 
     def update_value(self, context):
         self["value_hsv"] = linear_to_srgb(self.value).hsv
+        utils_node.force_viewport_update(self, context)
 
     value: FloatVectorProperty(name="Color", description="A constant color",
                                 soft_min=0, soft_max=1, subtype="COLOR",
@@ -55,6 +57,7 @@ class LuxCoreNodeTexConstfloat3(bpy.types.Node, LuxCoreNodeTexture):
         col = Color()
         col.hsv = self.value_hsv
         self["value"] = srgb_to_linear(col)
+        utils_node.force_viewport_update(self, context)
 
     # This is a helper property to offer an "HSV view" on the value property
     value_hsv: FloatVectorProperty(soft_min=0, soft_max=1, precision=3,

@@ -138,8 +138,24 @@ def find_nodes(node_tree, bl_idname):
     return result
 
 
+def force_viewport_update(_, context):
+    """
+    Since Blender 2.80, properties on custom sockets and custom nodes are not listed
+    in the depsgraph updates. This function is a workaround to flag the material as
+    updated, so we can update it during viewport render.
+    Corresponding bug report: https://developer.blender.org/T66521
+    """
+    if not getattr(context, "object", None) or not getattr(context.object, "active_material", None):
+        return
+    mat = context.object.active_material
+    mat.diffuse_color = mat.diffuse_color
+
+
 def update_opengl_materials(_, context):
-    if not hasattr(context, "object") or not context.object or not context.object.active_material or not context.object.active_material.luxcore.auto_vp_color:
+    if (not hasattr(context, "object")
+            or not context.object
+            or not context.object.active_material
+            or not context.object.active_material.luxcore.auto_vp_color):
         return
 
     mat = context.object.active_material

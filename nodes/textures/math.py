@@ -3,6 +3,7 @@ from bpy.props import EnumProperty, FloatProperty, BoolProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
 from ...ui import icons
+from ...utils import node as utils_node
 
 MIX_DESCRIPTION = (
     "Linear interpolation between two values/textures according to the amount "
@@ -54,6 +55,7 @@ class LuxCoreNodeTexMath(bpy.types.Node, LuxCoreNodeTexture):
             # Set a sensible default value for the increment.
             # Usually, rounding results in an integer.
             self.inputs[1].default_value = 1
+        utils_node.force_viewport_update(self, context)
 
     mode_items = [
         ("scale", "Multiply", "Value 1 * Value 2", 0),
@@ -71,10 +73,10 @@ class LuxCoreNodeTexMath(bpy.types.Node, LuxCoreNodeTexture):
     ]
     mode: EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
-    mode_clamp_min: FloatProperty(name="Min", description="", default=0)
-    mode_clamp_max: FloatProperty(name="Max", description="", default=1)
+    mode_clamp_min: FloatProperty(update=utils_node.force_viewport_update, name="Min", description="", default=0)
+    mode_clamp_max: FloatProperty(update=utils_node.force_viewport_update, name="Max", description="", default=1)
 
-    clamp_output: BoolProperty(name="Clamp", default=False,
+    clamp_output: BoolProperty(update=utils_node.force_viewport_update, name="Clamp", default=False,
                                 description="Limit the output value to 0..1 range")
 
     def init(self, context):

@@ -4,6 +4,8 @@ from .. import utils
 from .caches.exported_data import ExportedObject
 
 
+# TODO fix motion blur of area lights, they get a wrong transformation
+
 def convert(context, engine, scene, depsgraph, object_cache2):
     assert scene.camera
     motion_blur = scene.camera.data.luxcore.motion_blur

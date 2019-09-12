@@ -103,7 +103,7 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     is_world_sphere = active_mat.use_preview_world
 
     # Camera
-    cam_props = export.camera.convert(exporter, scene)
+    cam_props = export.camera.convert(exporter, scene, depsgraph)
 
     # Apply zoom
     field_of_view = cam_props.Get("scene.camera.fieldofview").GetFloat()

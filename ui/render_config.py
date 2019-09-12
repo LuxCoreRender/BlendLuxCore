@@ -87,49 +87,14 @@ class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
+        col = layout.column()
+        if config.dls_cache.enabled:
+            col.label(text="Using direct light sampling cache", icon=icons.INFO)
+            col = layout.column()
+            col.active = False
+
         # Light strategy        
-        layout.prop(config, "light_strategy")
-
-        if config.light_strategy == "DLS_CACHE":
-            dls_cache = config.dls_cache
-            col = layout.column(align=True)
-            col.prop(dls_cache, "entry_radius_auto")
-            if not dls_cache.entry_radius_auto:
-                col.prop(dls_cache, "entry_radius")
-            col.prop(dls_cache, "entry_warmupsamples")
-
-
-class LUXCORE_RENDER_PT_light_strategy_advanced(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "Advanced"
-    bl_parent_id = "LUXCORE_RENDER_PT_light_strategy"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.light_strategy == "DLS_CACHE"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        config = context.scene.luxcore.config
-        dls_cache = config.dls_cache
-
-        col = layout.column(align=True)
-        col.label(text="Entry Settings:")
-        col.prop(dls_cache, "entry_normalangle")
-        col.prop(dls_cache, "entry_maxpasses")
-        col.prop(dls_cache, "entry_convergencethreshold")
-        col.prop(dls_cache, "entry_volumes_enable")
-
-        col = layout.column(align=True)
-        col.label(text="General Cache Settings:")
-        col.prop(dls_cache, "lightthreshold")
-        col.prop(dls_cache, "targetcachehitratio")
-        col.prop(dls_cache, "maxdepth")
-        col.prop(dls_cache, "maxsamplescount")
+        col.prop(config, "light_strategy")
 
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
@@ -182,8 +147,8 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        return True
-        # return not context.scene.luxcore.config.use_tiles
+        config = context.scene.luxcore.config
+        return config.engine == "PATH" and not config.use_tiles
 
     def error(self, context):
         use_native_cpu = context.scene.luxcore.opencl.use_native_cpu

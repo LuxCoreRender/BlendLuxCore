@@ -152,7 +152,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # area light emission nodes
     node_tree: PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
 
-    # sky2, sun, infinite, constantinfinite
+    # sky2, sun, infinite, constantinfinite, area
     visibility_indirect_diffuse: BoolProperty(name="Diffuse", default=True, description=VIS_INDIRECT_DIFFUSE_DESC)
     visibility_indirect_glossy: BoolProperty(name="Glossy", default=True, description=VIS_INDIRECT_GLOSSY_DESC)
     visibility_indirect_specular: BoolProperty(name="Specular", default=True, description=VIS_INDIRECT_SPECULAR_DESC)

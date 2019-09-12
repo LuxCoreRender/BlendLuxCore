@@ -1,5 +1,6 @@
 from os.path import basename, dirname
 from bpy.types import AddonPreferences
+from ..ui import icons
 
 
 class LuxCoreAddonPreferences(AddonPreferences):
@@ -15,6 +16,13 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         row = layout.row()
         row.label(text="Update or downgrade:")
-        row.operator("luxcore.change_version")
+        row.operator("luxcore.change_version", icon=icons.DOWNLOAD)
         # Add empty space to the right of the button
         row.label(text="")
+
+        row = layout.row()
+        row.label(text="Community:")
+        op = row.operator("luxcore.open_website", text="Forums", icon=icons.URL)
+        op.url = "https://forums.luxcorerender.org/"
+        op = row.operator("luxcore.open_website", text="Discord", icon=icons.URL)
+        op.url = "https://discord.gg/chPGsKV"

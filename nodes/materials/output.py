@@ -34,11 +34,11 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
     bl_width_default = 220
 
     active: BoolProperty(name="Active", default=True, update=update_active)
-    is_shadow_catcher: BoolProperty(name="Shadow Catcher", default=False,
+    is_shadow_catcher: BoolProperty(update=utils_node.force_viewport_update, name="Shadow Catcher", default=False,
                                      description=SHADOWCATCHER_DESC)
-    shadow_catcher_only_infinite: BoolProperty(name="Only Infinite Lights", default=False,
+    shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
                                                 description=ONLY_INFINITE_DESC)
-    id: IntProperty(name="Material ID", default=-1, min=-1, soft_max=32767,
+    id: IntProperty(update=utils_node.force_viewport_update, name="Material ID", default=-1, min=-1, soft_max=32767,
                      description=MATERIAL_ID_DESC)
     use_photongi: BoolProperty(name="Use PhotonGI Cache", default=True,
                                 description="Disable for mirror-like surfaces like "

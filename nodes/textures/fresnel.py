@@ -3,6 +3,7 @@ from bpy.props import PointerProperty, EnumProperty, StringProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
 from ...utils.errorlog import LuxCoreErrorLog
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
@@ -11,7 +12,7 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
     
     def change_input_type(self, context):
         self.inputs["Reflection Color"].enabled = self.input_type == "color"
-        
+        utils_node.force_viewport_update(self, context)
 
     input_type_items = [
         ("color", "Color", "Use custom color as input", 0),
@@ -19,13 +20,13 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
         ("nk", "File", "Use a fresnel texture file (.nk) as input", 2)
     ]
     input_type: EnumProperty(name="Type", description="Input Type", items=input_type_items, default="preset",
-                                        update=change_input_type)
+                             update=change_input_type)
 
     file_type_items = [
         ("luxpop", "Lux Pop", "Use Luxpop format for NK data file", 0),
         ("sopra", "Sopra", "Use Sopra format for NK data file", 1),
     ]
-    file_type: EnumProperty(name="FileType", description="File Type", items=file_type_items, default="luxpop")
+    file_type: EnumProperty(update=utils_node.force_viewport_update, name="FileType", description="File Type", items=file_type_items, default="luxpop")
 
     preset_items = [
                 ("amorphous carbon", "Amorphous carbon", "amorphous carbon", 0),
@@ -34,10 +35,10 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
                 ("silver", "Silver", "silver", 3),
                 ("aluminium", "Aluminium", "aluminium", 4)
     ]
-    preset: EnumProperty(name="Preset", description="NK data presets", items=preset_items,
-                                           default="aluminium")
+    preset: EnumProperty(update=utils_node.force_viewport_update, name="Preset", description="NK data presets", items=preset_items,
+                         default="aluminium")
 
-    filepath: StringProperty(name="Nk File", description="Nk file path", subtype="FILE_PATH")
+    filepath: StringProperty(update=utils_node.force_viewport_update, name="Nk File", description="Nk file path", subtype="FILE_PATH")
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Reflection Color", (0.7, 0.7, 0.7))

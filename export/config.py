@@ -22,12 +22,9 @@ def convert(exporter, scene, context=None, engine=None):
         # See properties/config.py
         config = scene.luxcore.config
         width, height = utils.calc_filmsize(scene, context)
-        use_bidir_in_viewport = config.engine == "BIDIR" and scene.luxcore.viewport.use_bidir
-        use_path_in_viewport = (config.engine == "PATH" and config.path.hybridbackforward_enable
-                                and not config.use_tiles and scene.luxcore.viewport.add_light_tracing)
         is_viewport_render = context is not None
 
-        if is_viewport_render and not use_bidir_in_viewport and not use_path_in_viewport:
+        if is_viewport_render:
             # Viewport render
             luxcore_engine, sampler = _convert_viewport_engine(scene, definitions, config)
         else:
@@ -39,10 +36,14 @@ def convert(exporter, scene, context=None, engine=None):
         else:
             filter_type = config.filter
 
-        light_strategy = config.light_strategy
-        if light_strategy == "DLS_CACHE" and is_viewport_render:
-            # Avoid building DLS cache when rendering in viewport, fall back to log power
-            light_strategy = "LOG_POWER"
+        if config.dls_cache.enabled:
+            if is_viewport_render:
+                # Avoid building DLS cache when rendering in viewport, fall back to log power
+                light_strategy = "LOG_POWER"
+            else:
+                light_strategy = "DLS_CACHE"
+        else:
+            light_strategy = config.light_strategy
 
         # Common properties that should be set regardless of engine configuration.
         definitions.update({
@@ -140,37 +141,58 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
 
 
 def _convert_viewport_engine(scene, definitions, config):
-    _convert_path(config, definitions)
-
     viewport = scene.luxcore.viewport
+    use_bidir_in_viewport = config.engine == "BIDIR" and viewport.use_bidir
+    use_hybridbackforward = (config.engine == "PATH" and config.path.hybridbackforward_enable
+                             and not config.use_tiles and viewport.add_light_tracing)
 
-    use_cpu = viewport.device == "CPU"
-    if not use_cpu and not utils.is_opencl_build():
+    device = viewport.device
+    if device == "OCL" and not utils.is_opencl_build():
         msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
         LuxCoreErrorLog.add_warning(msg)
-        use_cpu = True
+        device = "CPU"
 
+    _convert_path(config, definitions, use_hybridbackforward, device)
     resolutionreduction = viewport.resolution_reduction if viewport.reduce_resolution_on_edit else 1
 
-    if use_cpu:
-        luxcore_engine = "RTPATHCPU"
-        sampler = "RTPATHCPUSAMPLER"
-        # Size of the blocks right after a scene edit (in pixels)
-        definitions["rtpathcpu.zoomphase.size"] = resolutionreduction
-        # How to blend new samples over old ones.
-        # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
-        definitions["rtpathcpu.zoomphase.weight"] = 0
+    if use_bidir_in_viewport:
+        luxcore_engine = "BIDIRCPU"
+        definitions["light.maxdepth"] = config.bidir_light_maxdepth
+        definitions["path.maxdepth"] = config.bidir_path_maxdepth
+        sampler = config.sampler
+        definitions["sampler.sobol.adaptive.strength"] = 0
+        definitions["sampler.random.adaptive.strength"] = 0
+        _convert_metropolis_settings(definitions, config)
+    elif device == "CPU":
+        if use_hybridbackforward:
+            luxcore_engine = "PATHCPU"
+            sampler = "SOBOL"
+            definitions["sampler.sobol.adaptive.strength"] = 0
+        else:
+            luxcore_engine = "RTPATHCPU"
+            sampler = "RTPATHCPUSAMPLER"
+            # Size of the blocks right after a scene edit (in pixels)
+            definitions["rtpathcpu.zoomphase.size"] = resolutionreduction
+            # How to blend new samples over old ones.
+            # Set to 0 because otherwise bright pixels (e.g. meshlights) stay blocky for a long time.
+            definitions["rtpathcpu.zoomphase.weight"] = 0
     else:
-        luxcore_engine = "RTPATHOCL"
-        sampler = "TILEPATHSAMPLER"
-        # Render a sample every n x n pixels in the first passes.
-        # For instance 4x4 then 2x2 and then always 1x1.
-        definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
-        # Each preview step is rendered for n frames.
-        definitions["rtpath.resolutionreduction.step"] = 1
-        # Render a sample every n x n pixels, outside the preview phase,
-        # in order to reduce the per frame rendering time.
-        definitions["rtpath.resolutionreduction"] = 1
+        assert device == "OCL"
+        if use_hybridbackforward:
+            luxcore_engine = "PATHOCL"
+            sampler = "SOBOL"
+            definitions["sampler.sobol.adaptive.strength"] = 0
+        else:
+            luxcore_engine = "RTPATHOCL"
+            sampler = "TILEPATHSAMPLER"
+            # Render a sample every n x n pixels in the first passes.
+            # For instance 4x4 then 2x2 and then always 1x1.
+            definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
+            # Each preview step is rendered for n frames.
+            definitions["rtpath.resolutionreduction.step"] = 1
+            # Render a sample every n x n pixels, outside the preview phase,
+            # in order to reduce the per frame rendering time.
+            definitions["rtpath.resolutionreduction"] = 1
 
         # Enable a bunch of often-used features to minimize the need for kernel recompilations
         enabled_opencl_features = " ".join([
@@ -193,7 +215,7 @@ def _convert_viewport_engine(scene, definitions, config):
             "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
         ])
         definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
-        _convert_opencl_settings(scene, definitions, False)
+        _convert_opencl_settings(scene, definitions, use_hybridbackforward)
 
     return luxcore_engine, sampler
 
@@ -201,7 +223,7 @@ def _convert_viewport_engine(scene, definitions, config):
 def _convert_final_engine(scene, definitions, config):
     if config.engine == "PATH":
         # Specific settings for PATH and TILEPATH
-        _convert_path(config, definitions)
+        _convert_path(config, definitions, config.path.hybridbackforward_enable, config.device)
 
         if config.use_tiles:
             luxcore_engine = "TILEPATH"
@@ -249,10 +271,12 @@ def _convert_final_engine(scene, definitions, config):
     return luxcore_engine, sampler
 
 
-def _convert_path(config, definitions):
+def _convert_path(config, definitions, use_hybridbackforward, device):
     path = config.path
-    # Note that for non-specular paths +1 is added to the path depth.
-    # For details see http://www.luxrender.net/forum/viewtopic.php?f=11&t=11101&start=390#p114959
+    # Note that for non-specular paths +1 is added to the path depth in order to have behaviour
+    # that feels intuitive for the user. LuxCore does only MIS on the last path bounce, but no
+    # other shading, so depth 1 would be only direct light without MIS, depth 2 would be only
+    # direct light with MIS, and depth 3 onwards would finally be direct + indirect light with MIS.
     definitions["path.pathdepth.total"] = path.depth_total + 1
     definitions["path.pathdepth.diffuse"] = path.depth_diffuse + 1
     definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
@@ -261,8 +285,8 @@ def _convert_path(config, definitions):
     # When a GPU is used, the CPU should only handle light paths (partition == 0)
     # Note that our partition property is inverted compared to LuxCore's (it is the probability to
     # sample a light path, not the probability to sample a camera path)
-    partition = 0 if config.device == "OCL" else (1 - path.hybridbackforward_lightpartition / 100)
-    definitions["path.hybridbackforward.enable"] = path.hybridbackforward_enable
+    partition = 0 if device == "OCL" else (1 - path.hybridbackforward_lightpartition / 100)
+    definitions["path.hybridbackforward.enable"] = use_hybridbackforward
     definitions["path.hybridbackforward.partition"] = partition
     definitions["path.hybridbackforward.glossinessthreshold"] = path.hybridbackforward_glossinessthresh
 
@@ -351,12 +375,11 @@ def _convert_dlscache_settings(scene, definitions, config):
 
 def _convert_photongi_settings(context, scene, definitions, config):
     photongi = config.photongi
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
     if photongi.indirect_lookup_radius_auto:
         indirect_radius = 0
     else:
-        indirect_radius = photongi.indirect_lookup_radius * worldscale
+        indirect_radius = photongi.indirect_lookup_radius
 
     if photongi.indirect_haltthreshold_preset == "final":
         indirect_haltthreshold = 0.05
@@ -367,8 +390,9 @@ def _convert_photongi_settings(context, scene, definitions, config):
     else:
         raise Exception("Unknown preset mode")
 
-    caustic_radius = photongi.caustic_lookup_radius * worldscale
+    caustic_radius = photongi.caustic_lookup_radius
     caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
+    caustic_updatespp = photongi.caustic_updatespp if photongi.caustic_periodic_update else 0
 
     file_path_abs = utils.get_abspath(photongi.file_path, library=scene.library)
     if not os.path.isfile(file_path_abs) and not photongi.save_or_overwrite:
@@ -404,6 +428,7 @@ def _convert_photongi_settings(context, scene, definitions, config):
         "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
         "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),
         "path.photongi.caustic.merge.radiusscale": caustic_merge_radius_scale,
+        "path.photongi.caustic.updatespp": caustic_updatespp,
 
         "path.photongi.persistent.file": file_path
     })
