@@ -1,6 +1,7 @@
 import mathutils
 from ..bin import pyluxcore
 from . import find_active_uv
+from .errorlog import LuxCoreErrorLog
 from ..ui import icons
 
 
@@ -131,7 +132,16 @@ def find_nodes(node_tree, bl_idname):
 
     for node in node_tree.nodes:
         if node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
-            result += find_nodes(node.node_tree, bl_idname)
+            try:
+                result += find_nodes(node.node_tree, bl_idname)
+            except RecursionError:
+                msg = (f'Pointer nodes in node trees "{node_tree.name}" and "{node.node_tree.name}" '
+                       "create a dependency cycle! Delete one of them.")
+                LuxCoreErrorLog.add_error(msg)
+                # Mark the faulty nodes in red
+                node.use_custom_color = True
+                node.color = (0.9, 0, 0)
+                return result
         if node.bl_idname == bl_idname:
             result.append(node)
 
