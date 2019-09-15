@@ -391,6 +391,29 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "type": "constfloat3",
             "value": list(node.outputs[0].default_value)[:3],
         }
+    elif node.bl_idname == "ShaderNodeValToRGB":
+        # Color ramp
+        prefix = "scene.textures."
+        ramp = node.color_ramp
+
+        if ramp.interpolation == "CONSTANT":
+            interpolation = "none"
+        elif ramp.interpolation == "LINEAR":
+            interpolation = "linear"
+        else:
+            # TODO: not all interpolation modes are supported by LuxCore
+            interpolation = "cubic"
+
+        definitions = {
+            "type": "band",
+            "amount": _socket(node.inputs["Fac"], props, obj_name, group_node),
+            "offsets": len(ramp.elements),
+            "interpolation": interpolation,
+        }
+
+        for i in range(len(ramp.elements)):
+            definitions[f"offset{i}"] = ramp.elements[i].position
+            definitions[f"value{i}"] = list(ramp.elements[i].color[:3])  # Ignore alpha
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
