@@ -3,6 +3,7 @@ from .. import utils
 from ..utils import node as utils_node
 from ..utils.errorlog import LuxCoreErrorLog
 from .image import ImageExporter
+from mathutils import Matrix
 
 ERROR_VALUE = 0
 MISSING_IMAGE_COLOR = [1, 0, 1]
@@ -414,6 +415,21 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         for i in range(len(ramp.elements)):
             definitions[f"offset{i}"] = ramp.elements[i].position
             definitions[f"value{i}"] = list(ramp.elements[i].color[:3])  # Ignore alpha
+    elif node.bl_idname == "ShaderNodeTexChecker":
+        prefix = "scene.textures."
+
+        # Note: Only "Object" texture coordinates are supported. Textured scale is not supported.
+        scale = Matrix()
+        for i in range(3):
+            scale[i][i] = node.inputs["Scale"].default_value
+
+        definitions = {
+            "type": "checkerboard3d",
+            "texture1": _socket(node.inputs["Color2"], props, obj_name, group_node),
+            "texture2": _socket(node.inputs["Color1"], props, obj_name, group_node),
+            "mapping.type": "localmapping3d",
+            "mapping.transformation": utils.matrix_to_list(scale),
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
