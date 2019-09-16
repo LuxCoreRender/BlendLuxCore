@@ -430,6 +430,35 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "mapping.type": "localmapping3d",
             "mapping.transformation": utils.matrix_to_list(scale),
         }
+    elif node.bl_idname == "ShaderNodeInvert":
+        prefix = "scene.textures."
+
+        fac_input = node.inputs["Fac"]
+        fac = _socket(fac_input, props, obj_name, group_node)
+        if fac_input.is_linked and fac == ERROR_VALUE:
+            fac = 1
+
+        tex = _socket(node.inputs["Color"], props, obj_name, group_node)
+
+        if fac == 0:
+            return tex
+
+        definitions = {
+            "type": "subtract",
+            "texture1": 1,
+            "texture2": tex,
+        }
+
+        if isinstance(fac, str) or (fac > 0 and fac < 1):
+            # Here we need to insert a helper texture *after* the current texture
+            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            definitions = {
+                "type": "mix",
+                "texture1": tex,
+                "texture2": luxcore_name,
+                "amount": fac,
+            }
+            luxcore_name = luxcore_name + "fac"
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
