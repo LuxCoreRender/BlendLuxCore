@@ -493,6 +493,15 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             # intern/cycles/render/shader.cpp:726: float ShaderManager::linear_rgb_to_gray(float3 c)
             "texture2": [0.2126729, 0.7151522, 0.0721750],
         }
+    elif node.bl_idname == "ShaderNodeBrightContrast":
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "brightcontrast",
+            "texture": _socket(node.inputs["Color"], props, obj_name, group_node),
+            "brightness": _socket(node.inputs["Bright"], props, obj_name, group_node),
+            "contrast": _socket(node.inputs["Contrast"], props, obj_name, group_node),
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
