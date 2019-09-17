@@ -459,6 +459,21 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
                 "amount": fac,
             }
             luxcore_name = luxcore_name + "fac"
+    elif node.bl_idname in {"ShaderNodeSeparateRGB", "ShaderNodeSeparateXYZ"}:
+        prefix = "scene.textures."
+
+        if node.bl_idname == "ShaderNodeSeparateRGB":
+            channels = ["R", "G", "B"]
+            tex_socket_name = "Image"
+        else:
+            channels = ["X", "Y", "Z"]
+            tex_socket_name = "Vector"
+
+        definitions = {
+            "type": "splitfloat3",
+            "texture": _socket(node.inputs[tex_socket_name], props, obj_name, group_node),
+            "channel": channels.index(output_socket.name),
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
