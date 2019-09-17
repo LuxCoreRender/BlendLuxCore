@@ -483,6 +483,16 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "texture2": _socket(node.inputs[1], props, obj_name, group_node),
             "texture3": _socket(node.inputs[2], props, obj_name, group_node),
         }
+    elif node.bl_idname == "ShaderNodeRGBToBW":
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "dotproduct",
+            "texture1": _socket(node.inputs["Color"], props, obj_name, group_node),
+            # From Cycles source code:
+            # intern/cycles/render/shader.cpp:726: float ShaderManager::linear_rgb_to_gray(float3 c)
+            "texture2": [0.2126729, 0.7151522, 0.0721750],
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
