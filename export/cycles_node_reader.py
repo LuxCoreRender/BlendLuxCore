@@ -474,6 +474,15 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "texture": _socket(node.inputs[tex_socket_name], props, obj_name, group_node),
             "channel": channels.index(output_socket.name),
         }
+    elif node.bl_idname in {"ShaderNodeCombineRGB", "ShaderNodeCombineXYZ"}:
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "makefloat3",
+            "texture1": _socket(node.inputs[0], props, obj_name, group_node),
+            "texture2": _socket(node.inputs[1], props, obj_name, group_node),
+            "texture3": _socket(node.inputs[2], props, obj_name, group_node),
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
