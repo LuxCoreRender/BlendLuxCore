@@ -46,6 +46,7 @@ class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Pixel Filter"
     bl_order = 4
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
@@ -78,6 +79,7 @@ class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Strategy"
     bl_order = 3
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout

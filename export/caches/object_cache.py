@@ -224,9 +224,11 @@ class ObjectCache2:
                         print(f"Geometry of obj {obj.name} was updated")
                         use_instancing = True
                         mesh_key = self._get_mesh_key(obj, use_instancing)
-                        if mesh_key not in self.exported_meshes:
-                            # Debug
-                            raise Exception("NO MESH KEY FOUND")
+
+                        # if mesh_key not in self.exported_meshes:
+                        # TODO this can happen if a deforming modifier is added
+                        #  to an already-exported object. how to handle this case?
+
                         transform = None  # In viewport render, everything is instanced
                         exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
                                                                is_viewport_render, use_instancing, transform)
