@@ -7,7 +7,7 @@ This is the new Blender integration addon for LuxCore, rewritten from scratch. Y
 ### Important
 
 The stable versions of this addon only works with Blender 2.79a or 2.79b. [Download](https://www.blender.org/download/)  
-There is a testbuild for Blender 2.80, available [here](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2beta3).
+There are testbuilds for Blender 2.80, available [here](https://github.com/LuxCoreRender/BlendLuxCore/releases/).
 
 Custom Blender builds and buildbot builds are not supported.
 
