@@ -64,6 +64,7 @@ The manual is not finished yet.
 * [x] Render layers
 * [x] Material preview
 * [x] Image sequences
+* [x] Viewport denoising
 * [ ] Saving a resumable film
 * [ ] Periodic film saving
 * And more ...
