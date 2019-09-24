@@ -367,14 +367,24 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
     elif node.bl_idname == "ShaderNodeEmission":
         prefix = "scene.materials."
 
+        color = _socket(node.inputs["Color"], props, obj_name, group_node)
         # According to the Blender manual, strength is in Watts/m² when the node is used on meshes.
         strength = _socket(node.inputs["Strength"], props, obj_name, group_node)
+
+        emission_col = luxcore_name + "emission_col"
+        helper_prefix = "scene.textures." + emission_col + "."
+        helper_defs = {
+            "type": "scale",
+            "texture1": strength,
+            "texture2": color,
+        }
+        props.Set(utils.create_props(helper_prefix, helper_defs))
 
         definitions = {
             "type": "matte",
             "kd": [0, 0, 0],
-            "emission": _socket(node.inputs["Color"], props, obj_name, group_node),
-            "emission.gain": [strength] * 3,
+            "emission": emission_col,
+            "emission.gain": [1] * 3,
             "emission.power": 0,
             "emission.efficency": 0,
         }
