@@ -515,6 +515,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
     else:
         LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
 
+        # TODO do this for unsupported mixRGB and math modes, too
         # Try to skip this node by looking at its internal links (the same that are used when the node is muted)
         if node.internal_links:
             links = node.internal_links[0].from_socket.links

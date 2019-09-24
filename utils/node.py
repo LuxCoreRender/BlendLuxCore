@@ -67,8 +67,8 @@ def draw_transmission_info(node, layout):
         layout.label(text="Transmitted: %.2f" % transmitted, icon=icons.INFO)
 
 
-def export_material_input(input, exporter, props, luxcore_name=None):
-    material_name = input.export(exporter, props, luxcore_name)
+def export_material_input(input, exporter, depsgraph, props, luxcore_name=None):
+    material_name = input.export(exporter, depsgraph, props, luxcore_name)
 
     if material_name:
         return material_name
