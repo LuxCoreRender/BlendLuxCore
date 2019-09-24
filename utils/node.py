@@ -73,7 +73,7 @@ def export_material_input(input, exporter, depsgraph, props, luxcore_name=None):
     if material_name:
         return material_name
     else:
-        print("WARNING: No material linked on input", input.name, "of node", input.node.name)
+        LuxCoreErrorLog.add_warning(f"WARNING: No material linked on input {input.name} of node {input.node.name}")
         if luxcore_name is None:
             luxcore_name = "__BLACK__"
         props.Set(pyluxcore.Property("scene.materials.%s.type" % luxcore_name, "matte"))
