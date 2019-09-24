@@ -143,7 +143,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             try:
                 filepath = ImageExporter.export_cycles_node_reader(node.image)
             except OSError as error:
-                LuxCoreErrorLog.add_warning(f"Image error: {error}", obj_name=obj_name)
+                LuxCoreErrorLog.add_warning(error, obj_name=obj_name)
                 return MISSING_IMAGE_COLOR
 
             definitions = {
