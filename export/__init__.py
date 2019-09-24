@@ -135,6 +135,11 @@ class Exporter(object):
         world_props = world.convert(self, depsgraph, scene, is_viewport_render)
         scene_props.Set(world_props)
 
+        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
+            print("-" * 50)
+            print("DEBUG: Scene Properties:\n")
+            print(scene_props)
+            print("-" * 50)
         luxcore_scene.Parse(scene_props)
 
         # Regularly check if we should abort the export (important in heavy scenes)
@@ -169,7 +174,11 @@ class Exporter(object):
             stats.light_count.value = light_count
 
         # Create the renderconfig
-        self._print_debug_info(scene, config_props, luxcore_scene)
+        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
+            print("-" * 50)
+            print("DEBUG: Config Properties:\n")
+            print(config_props)
+            print("-" * 50)
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
         # Regularly check if we should abort the export (important in heavy scenes)
@@ -432,12 +441,3 @@ class Exporter(object):
             stats.clamping.value = path_settings.clamping
         else:
             stats.clamping.value = 0
-
-    def _print_debug_info(self, scene, config_props, luxcore_scene):
-        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
-            print("-" * 50)
-            print("DEBUG: Config Properties:\n")
-            print(config_props)
-            print("DEBUG: Scene Properties:\n")
-            print(luxcore_scene.ToProperties())
-            print("-" * 50)
