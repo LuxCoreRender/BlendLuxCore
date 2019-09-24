@@ -171,6 +171,46 @@ class ObjectCache2:
     def update(self, exporter, depsgraph, luxcore_scene, scene_props, is_viewport_render=True):
         print("object cache update")
 
+        redefine_objs_with_these_mesh_keys = []
+        # Always instance in viewport so we can move objects around
+        use_instancing = True
+
+        # Geometry updates (mesh edit, modifier edit etc.)
+        if depsgraph.id_type_updated("OBJECT"):
+            print("exported meshes:", self.exported_meshes.keys())
+
+            for dg_update in depsgraph.updates:
+                print(f"update id: {dg_update.id}, geom: {dg_update.is_updated_geometry}, trans: {dg_update.is_updated_transform}")
+
+                if dg_update.is_updated_geometry and isinstance(dg_update.id, bpy.types.Object):
+                    obj = dg_update.id
+                    obj_key = utils.make_key(obj)
+
+                    if obj.type in MESH_OBJECTS:
+                        print(f"Geometry of obj {obj.name} was updated")
+                        mesh_key = self._get_mesh_key(obj, use_instancing)
+
+                        # if mesh_key not in self.exported_meshes:
+                        # TODO this can happen if a deforming modifier is added
+                        #  to an already-exported object. how to handle this case?
+
+                        transform = None  # In viewport render, everything is instanced
+                        exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
+                                                               is_viewport_render, use_instancing, transform)
+                        self.exported_meshes[mesh_key] = exported_mesh
+
+                        # We arrive here not only when the mesh is edited, but also when the material 
+                        # of the object is changed in Blender. In this case we have to re-define all
+                        # objects using this mesh (just the properties, the mesh is not re-exported).
+                        redefine_objs_with_these_mesh_keys.append(mesh_key)
+                    elif obj.type == "LIGHT":
+                        print(f"Light obj {obj.name} was updated")
+                        props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
+                                                                    obj.matrix_world.copy(), is_viewport_render)
+                        if exported_stuff:
+                            self.exported_objects[obj_key] = exported_stuff
+                            scene_props.Set(props)
+
         # TODO maybe not loop over all instances, instead only loop over updated
         #  objects and check if they have a particle system that needs to be updated?
         #  Would be better for performance with many particles, however I'm not sure
@@ -183,8 +223,9 @@ class ObjectCache2:
                 continue
 
             obj_key = utils.make_key_from_instance(dg_obj_instance)
+            mesh_key = self._get_mesh_key(obj, use_instancing)
 
-            if obj_key in self.exported_objects and obj.type != "LIGHT":
+            if (obj_key in self.exported_objects and obj.type != "LIGHT") and not mesh_key in redefine_objs_with_these_mesh_keys:
                 exported_obj = self.exported_objects[obj_key]
                 updated = False
 
@@ -208,38 +249,5 @@ class ObjectCache2:
                 # TODO use luxcore_scene.DuplicateObjects for instances
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                   luxcore_scene, scene_props, is_viewport_render)
-
-        # Geometry updates (mesh edit, modifier edit etc.)
-        if depsgraph.id_type_updated("OBJECT"):
-            print("exported meshes:", self.exported_meshes.keys())
-
-            for dg_update in depsgraph.updates:
-                print(f"update id: {dg_update.id}, geom: {dg_update.is_updated_geometry}, trans: {dg_update.is_updated_transform}")
-
-                if dg_update.is_updated_geometry and isinstance(dg_update.id, bpy.types.Object):
-                    obj = dg_update.id
-                    obj_key = utils.make_key(obj)
-
-                    if obj.type in MESH_OBJECTS:
-                        print(f"Geometry of obj {obj.name} was updated")
-                        use_instancing = True
-                        mesh_key = self._get_mesh_key(obj, use_instancing)
-
-                        # if mesh_key not in self.exported_meshes:
-                        # TODO this can happen if a deforming modifier is added
-                        #  to an already-exported object. how to handle this case?
-
-                        transform = None  # In viewport render, everything is instanced
-                        exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
-                                                               is_viewport_render, use_instancing, transform)
-                        self.exported_meshes[mesh_key] = exported_mesh
-                        print(self.exported_meshes[mesh_key].mesh_definitions)
-                    elif obj.type == "LIGHT":
-                        print(f"Light obj {obj.name} was updated")
-                        props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
-                                                                    obj.matrix_world.copy(), is_viewport_render)
-                        if exported_stuff:
-                            self.exported_objects[obj_key] = exported_stuff
-                            scene_props.Set(props)
 
         self._debug_info()
