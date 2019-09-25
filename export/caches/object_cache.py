@@ -199,7 +199,7 @@ class ObjectCache2:
                                                                is_viewport_render, use_instancing, transform)
                         self.exported_meshes[mesh_key] = exported_mesh
 
-                        # We arrive here not only when the mesh is edited, but also when the material 
+                        # We arrive here not only when the mesh is edited, but also when the material
                         # of the object is changed in Blender. In this case we have to re-define all
                         # objects using this mesh (just the properties, the mesh is not re-exported).
                         redefine_objs_with_these_mesh_keys.append(mesh_key)
