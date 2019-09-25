@@ -23,6 +23,8 @@ def convert(exporter, scene, context=None, engine=None):
         config = scene.luxcore.config
         width, height = utils.calc_filmsize(scene, context)
         is_viewport_render = context is not None
+        denoiser_enabled = ((not is_viewport_render and scene.luxcore.denoiser.enabled)
+                            or (is_viewport_render and scene.luxcore.viewport.denoise))
 
         if is_viewport_render:
             # Viewport render
@@ -31,7 +33,7 @@ def convert(exporter, scene, context=None, engine=None):
             # Final render
             luxcore_engine, sampler = _convert_final_engine(scene, definitions, config)
 
-        if luxcore_engine == "BIDIRCPU" and scene.luxcore.denoiser.enabled:
+        if luxcore_engine == "BIDIRCPU" and denoiser_enabled:
             filter_type = "NONE"
         else:
             filter_type = config.filter
