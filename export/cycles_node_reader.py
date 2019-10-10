@@ -81,6 +81,8 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "clearcoat": _socket(node.inputs["Clearcoat"], props, obj_name, group_node),
             #"clearcoatgloss": convert_cycles_socket(node.inputs["Clearcoat Roughness"], props, obj_name, group_node),  # TODO
             # TODO: emission, alpha, transmission, transmission roughness
+
+            "bumptex": _socket(node.inputs["Normal"], props, obj_name, group_node),
         }
     elif node.bl_idname == "ShaderNodeMixShader":
         prefix = "scene.materials."
@@ -252,7 +254,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
                     print("yolo")
                     return tex2
         else:
-            LuxCoreErrorLog.add_warning(f"Unknown MixRGB mode: {blend_type}", obj_name=obj_name)
+            LuxCoreErrorLog.add_warning(f"Unsupported MixRGB mode: {blend_type}", obj_name=obj_name)
             return ERROR_VALUE
 
         if (isinstance(fac, str) or (fac > 0 and fac < 1)) and blend_type != "MIX":
@@ -325,7 +327,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             definitions["texture"] = tex1
             definitions["modulo"] = tex2
         else:
-            LuxCoreErrorLog.add_warning(f"Unknown Math mode: {node.operation}", obj_name=obj_name)
+            LuxCoreErrorLog.add_warning(f"Unsupported Math mode: {node.operation}", obj_name=obj_name)
             return ERROR_VALUE
     elif node.bl_idname == "ShaderNodeHueSaturation":
         prefix = "scene.textures."
@@ -512,8 +514,33 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "brightness": _socket(node.inputs["Bright"], props, obj_name, group_node),
             "contrast": _socket(node.inputs["Contrast"], props, obj_name, group_node),
         }
+    elif node.bl_idname == "ShaderNodeNormalMap":
+        if node.space != "TANGENT":
+            LuxCoreErrorLog.add_warning(f"Unsupported normal map space: {node.space}", obj_name=obj_name)
+            return ERROR_VALUE
+
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "normalmap",
+            "texture": _socket(node.inputs["Color"], props, obj_name, group_node),
+        }
+
+        strength_socket = node.inputs["Strength"]
+        if strength_socket.is_linked:
+            # Use scale texture because normalmap scale can't be textured
+            # Here we need to insert a helper texture *after* the current texture
+            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            definitions = {
+                "type": "scale",
+                "texture1": luxcore_name,
+                "texture2": _socket(strength_socket, props, obj_name, group_node),
+            }
+            luxcore_name = luxcore_name + "strength"
+        else:
+            definitions["scale"] = strength_socket.default_value
     else:
-        LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
+        LuxCoreErrorLog.add_warning(f"Unsupported node type: {node.name}", obj_name=obj_name)
 
         # TODO do this for unsupported mixRGB and math modes, too
         # Try to skip this node by looking at its internal links (the same that are used when the node is muted)
