@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import BoolProperty, PointerProperty, IntProperty
+from bpy.props import BoolProperty, PointerProperty, IntProperty, FloatVectorProperty
 from ...bin import pyluxcore
 from ... import utils
 from ...utils import node as utils_node
@@ -43,6 +43,8 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
     use_photongi: BoolProperty(name="Use PhotonGI Cache", default=True,
                                 description="Disable for mirror-like surfaces like "
                                             "metal or glossy with low roughness")
+    shadow_color: FloatVectorProperty(name="Shadow Color", subtype="COLOR", default=(0, 0, 0), min=0, max=1,
+                                      update=utils_node.update_opengl_materials)
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
@@ -104,8 +106,15 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
                     layout.prop(luxcore_world, "sampleupperhemisphereonly",
                                 icon=icons.WORLD, toggle=True)
 
+        row = layout.row()
+        row.active = not engine_is_bidir
+        row.alignment = "LEFT"
+        row.prop(self, "shadow_color", text="")
+        row.label(text="Shadow Color")
+
     def export(self, exporter, depsgraph, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."
+        definitions = {}
 
         # Invalidate node cache
         # TODO have one global properties object so this is no longer necessary
@@ -122,9 +131,9 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
 
         # Attach the volumes
         if interior_volume_name:
-            props.Set(pyluxcore.Property(prefix + "volume.interior", interior_volume_name))
+            definitions["volume.interior"] = interior_volume_name
         if exterior_volume_name:
-            props.Set(pyluxcore.Property(prefix + "volume.exterior", exterior_volume_name))
+            definitions["volume.exterior"] = exterior_volume_name
 
         if exported_name is None or exported_name != luxcore_name:
             # Export failed, e.g. because no node is linked or it's not a material node
@@ -133,10 +142,13 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
 
         if self.id != -1:
             # LuxCore only assigns a random ID if the ID is not set at all
-            props.Set(pyluxcore.Property(prefix + "id", self.id))
-        props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
-        props.Set(pyluxcore.Property(prefix + "shadowcatcher.onlyinfinitelights", self.shadow_catcher_only_infinite))
-        props.Set(pyluxcore.Property(prefix + "photongi.enable", self.use_photongi))
+            definitions["id"] = self.id
+        definitions["shadowcatcher.enable"] = self.is_shadow_catcher
+        definitions["shadowcatcher.onlyinfinitelights"] = self.shadow_catcher_only_infinite
+        definitions["photongi.enable"] = self.use_photongi
+        definitions["transparency.shadow"] = list(self.shadow_color)
+
+        props.Set(utils.create_props(prefix, definitions))
 
     def _convert_volume(self, exporter, depsgraph, node_tree, props):
         if node_tree is None:

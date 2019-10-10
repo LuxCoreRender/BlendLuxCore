@@ -273,7 +273,7 @@ class LUXCORE_RENDER_PT_filesaver(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Filesaver"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 1
+    bl_order = 100
 
     def draw_header(self, context):
         layout = self.layout
