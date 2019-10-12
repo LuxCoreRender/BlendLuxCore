@@ -65,6 +65,9 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
         if pipeline.contour_lines.enabled:
             index = _contour_lines(definitions, index, pipeline.contour_lines)
 
+        if pipeline.white_balance.enabled:
+            index = _white_balance(definitions, index, pipeline.white_balance)
+
     if use_filesaver:
         # Needs gamma correction (Blender applies it for us,
         # but now we export for luxcoreui)
@@ -176,6 +179,10 @@ def _vignetting(definitions, index, vignetting):
     definitions[str(index) + ".scale"] = vignetting.scale / 100
     return index + 1
 
+def _white_balance(definitions, index, white_balance):
+    definitions[str(index) + ".type"] = "WHITE_BALANCE"
+    definitions[str(index) + ".temperature"] = white_balance.temperature
+    return index + 1
 
 def _camera_response_func(definitions, index, camera_response_func, scene):
     if camera_response_func.type == "PRESET":

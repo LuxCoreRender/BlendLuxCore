@@ -93,6 +93,12 @@ class LuxCoreImagepipelineVignetting(PropertyGroup):
     scale: FloatProperty(name="Strength", default=40, min=0, soft_max=60, max=100, precision=1,
                           subtype="PERCENTAGE", description="Strength of the vignette")
 
+class LuxCoreImagepipelineWhiteBalance(PropertyGroup):
+    NAME = "White Balance"
+    enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+
+    temperature: FloatProperty(name="temperature", default=6500, min=1000, soft_max=10000, max=10000, precision=50,
+                          subtype="PERCENTAGE", description="White point temperature")
 
 class LuxCoreImagepipelineColorAberration(PropertyGroup):
     NAME = "Color Aberration"
@@ -168,6 +174,7 @@ class LuxCoreImagepipeline(PropertyGroup):
     bloom: PointerProperty(type=LuxCoreImagepipelineBloom)
     mist: PointerProperty(type=LuxCoreImagepipelineMist)
     vignetting: PointerProperty(type=LuxCoreImagepipelineVignetting)
+    white_balance: PointerProperty(type=LuxCoreImagepipelineWhiteBalance)
     coloraberration: PointerProperty(type=LuxCoreImagepipelineColorAberration)
     backgroundimage: PointerProperty(type=LuxCoreImagepipelineBackgroundImage)
     camera_response_func: PointerProperty(type=LuxCoreImagepipelineCameraResponseFunc)
