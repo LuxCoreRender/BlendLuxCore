@@ -535,12 +535,33 @@ class LUXCORE_CAMERA_PT_image_pipeline_camera_response_function(CameraButtonsPan
         else:
             layout.prop(camera_response_func, "file")
 
+class LUXCORE_CAMERA_PT_image_pipeline_white_balance(CameraButtonsPanel, Panel):
+    bl_label = "White Balance"
+    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
+    bl_options = {'DEFAULT_CLOSED'}
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_camera_response_function"
+    COMPAT_ENGINES = {"LUXCORE"}    
+    
+    def draw_header(self, context):        
+        pipeline = context.camera.luxcore.imagepipeline        
+        self.layout.prop(pipeline.white_balance, "enabled", text="")
+        
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        
+        pipeline = context.camera.luxcore.imagepipeline
+        white_balance = pipeline.white_balance
+        layout.enabled = white_balance.enabled
+
+        layout.prop(white_balance, "temperature", slider=True)
 
 class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
     bl_label = "Irradiance Contour Lines"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_camera_response_function"
+    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_white_balance"
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):        
@@ -561,27 +582,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
         layout.prop(contour_lines, "steps")
         layout.prop(contour_lines, "zero_grid_size")
 
-class LUXCORE_CAMERA_PT_image_pipeline_white_balance(CameraButtonsPanel, Panel):
-    bl_label = "White Balance"
-    bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
-    bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_contour_lines"
-    COMPAT_ENGINES = {"LUXCORE"}    
-    
-    def draw_header(self, context):        
-        pipeline = context.camera.luxcore.imagepipeline        
-        self.layout.prop(pipeline.white_balance, "enabled", text="")
-        
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-        
-        pipeline = context.camera.luxcore.imagepipeline
-        white_balance = pipeline.white_balance
-        layout.enabled = white_balance.enabled
-
-        layout.prop(white_balance, "temperature", slider=True)
 
 class LUXCORE_CAMERA_PT_volume(CameraButtonsPanel, Panel):
     bl_label = "Volume"    

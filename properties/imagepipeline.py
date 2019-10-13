@@ -97,8 +97,8 @@ class LuxCoreImagepipelineWhiteBalance(PropertyGroup):
     NAME = "White Balance"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
 
-    temperature: FloatProperty(name="temperature", default=6500, min=1000, soft_max=10000, max=10000, precision=50,
-                          subtype="PERCENTAGE", description="White point temperature")
+    temperature: FloatProperty(name="temperature", default=6500, min=1000, max=10000, precision=50,
+                          description="White point temperature")
 
 class LuxCoreImagepipelineColorAberration(PropertyGroup):
     NAME = "Color Aberration"

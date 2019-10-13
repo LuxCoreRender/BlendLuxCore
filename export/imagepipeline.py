@@ -62,11 +62,12 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
         if pipeline.camera_response_func.enabled:
             index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
 
+        if pipeline.white_balance.enabled:
+            index = _white_balance(definitions, index, pipeline.white_balance)
+                
         if pipeline.contour_lines.enabled:
             index = _contour_lines(definitions, index, pipeline.contour_lines)
 
-        if pipeline.white_balance.enabled:
-            index = _white_balance(definitions, index, pipeline.white_balance)
 
     if use_filesaver:
         # Needs gamma correction (Blender applies it for us,
