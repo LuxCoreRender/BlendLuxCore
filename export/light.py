@@ -38,7 +38,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
     scene = depsgraph.scene_eval
 
     # If this light was previously defined as an area lamp, delete the area lamp mesh
-    luxcore_scene.DeleteObject(luxcore_name)
+    luxcore_scene.DeleteObject(_get_area_obj_name(luxcore_name))
     # If this light was previously defined as a light, delete it
     luxcore_scene.DeleteLight(luxcore_name)
 
@@ -310,6 +310,12 @@ def calc_area_light_transformation(light, transform_matrix):
     return transform_matrix
 
 
+def _get_area_obj_name(luxcore_name):
+    fake_material_index = 0
+    # The material index after the luxcore_name is expected by ExportedObject
+    return luxcore_name + str(fake_material_index)
+
+
 def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, luxcore_scene, gain, importance, luxcore_name, transform):
     """
     An area light is a plane object with emissive material in LuxCore
@@ -419,7 +425,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
 
     fake_material_index = 0
     # The material index after the luxcore_name is expected by ExportedObject
-    obj_prefix = "scene.objects." + luxcore_name + str(fake_material_index) + "."
+    obj_prefix = "scene.objects." + _get_area_obj_name(luxcore_name) + "."
     obj_definitions = {
         "material": mat_name,
         "shape": shape_name,
