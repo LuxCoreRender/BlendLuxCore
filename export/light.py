@@ -409,11 +409,11 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
             (1, 1, 0),
             (1, -1, 0),
             (-1, -1, 0),
-            (-1, 1, 0)
+            (-1, 1, 0),
         ]
         faces = [
             (0, 1, 2),
-            (2, 3, 0)
+            (2, 3, 0),
         ]
         normals = [
             (0, 0, -1),
@@ -421,7 +421,13 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
             (0, 0, -1),
             (0, 0, -1),
         ]
-        luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, None, None, None, mesh_transform)
+        uvs = [
+            (1, 1),
+            (1, 0),
+            (0, 0),
+            (0, 1),
+        ]
+        luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, uvs, None, None, mesh_transform)
 
     fake_material_index = 0
     # The material index after the luxcore_name is expected by ExportedObject
