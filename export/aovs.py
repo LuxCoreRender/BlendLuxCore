@@ -119,6 +119,12 @@ def convert(exporter, scene, context=None, engine=None):
             if scene.luxcore.denoiser.enabled:
                 pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,
                                                               pipeline_index, definitions)
+                                                              
+            using_adaptive_sampler = True  # TODO check if adaptive sampling is enabled
+                                           # with something like (config.sampler in {"SOBOL", "RANDOM"} and config.sobol_adaptive_strength > 0)
+            if using_adaptive_sampler:
+                pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props, engine,
+                                                                     pipeline_index, definitions)
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
@@ -253,4 +259,27 @@ def _make_denoiser_imagepipeline(context, scene, props, engine, pipeline_index, 
     props.Set(get_denoiser_imgpipeline_props(context, scene, pipeline_index))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
     engine.aov_imagepipelines["DENOISED"] = pipeline_index
+    return pipeline_index + 1
+
+# At the bottom of the file
+def _make_noise_detection_imagepipeline(context, scene, props, engine, pipeline_index, output_definitions):
+    prefix = "film.imagepipelines." + str(pipeline_index) + "."
+    definitions = OrderedDict()
+
+    # Index is the plugin index, needed only if you want to insert plugins before/after all other plugins of this pipeline
+    index = 0
+    index = imagepipeline.convert_defs(context, scene, definitions, index, define_radiancescales=True)
+    definitions['{}.type'.format(index)] = 'GAMMA_CORRECTION'
+    definitions['{}.value'.format(index)] = 2.2
+    # if you don't need the index, you can also write:
+    #   imagepipeline.convert_defs(context, scene, definitions, 0, define_radiancescales=True)
+    props.Set(utils.create_props(prefix, definitions))
+    _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
+
+    # For debugging
+git p    print("Noise detection pipeline created with index:", pipeline_index)
+    print('context: ', context)
+    print('scene: ', scene)
+    print('definitions: ', definitions)
+
     return pipeline_index + 1
