@@ -277,7 +277,7 @@ def _make_noise_detection_imagepipeline(context, scene, props, engine, pipeline_
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
 
     # For debugging
-git p    print("Noise detection pipeline created with index:", pipeline_index)
+    print("Noise detection pipeline created with index:", pipeline_index)
     print('context: ', context)
     print('scene: ', scene)
     print('definitions: ', definitions)
