@@ -121,13 +121,18 @@ def convert(exporter, scene, context=None, engine=None):
                                                               pipeline_index, definitions)
                                                               
             config = scene.luxcore.config
-            if config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0:
-                
+            use_adaptive_sampling = True if config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0 else False
+
+            if use_adaptive_sampling:
+                adaptive_sampling_film_pipeline_index = pipeline_index
                 pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props, engine,
                                                                      pipeline_index, definitions)
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
+
+        if use_adaptive_sampling:
+            props.Set(pyluxcore.Property("film.noiseestimation.index", adaptive_sampling_film_pipeline_index))
 
         return props
     except Exception as error:

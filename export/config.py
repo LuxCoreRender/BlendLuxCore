@@ -268,7 +268,6 @@ def _convert_final_engine(scene, definitions, config):
             definitions["film.noiseestimation.step"] = config.noise_estimation.step
         definitions["sampler.sobol.adaptive.strength"] = adaptive_strength
         definitions["sampler.random.adaptive.strength"] = adaptive_strength
-        definitions["film.noiseestimation.index"] = 1
         _convert_metropolis_settings(definitions, config)
 
     return luxcore_engine, sampler
