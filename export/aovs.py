@@ -266,20 +266,13 @@ def _make_noise_detection_imagepipeline(context, scene, props, engine, pipeline_
     prefix = "film.imagepipelines." + str(pipeline_index) + "."
     definitions = OrderedDict()
 
-    # Index is the plugin index, needed only if you want to insert plugins before/after all other plugins of this pipeline
     index = 0
     index = imagepipeline.convert_defs(context, scene, definitions, index, define_radiancescales=True)
     definitions['{}.type'.format(index)] = 'GAMMA_CORRECTION'
     definitions['{}.value'.format(index)] = 2.2
-    # if you don't need the index, you can also write:
-    #   imagepipeline.convert_defs(context, scene, definitions, 0, define_radiancescales=True)
+
     props.Set(utils.create_props(prefix, definitions))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
 
-    # For debugging
-    print("Noise detection pipeline created with index:", pipeline_index)
-    print('context: ', context)
-    print('scene: ', scene)
-    print('definitions: ', definitions)
 
     return pipeline_index + 1
