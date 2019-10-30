@@ -121,18 +121,16 @@ def convert(exporter, scene, context=None, engine=None):
                                                               pipeline_index, definitions)
                                                               
             config = scene.luxcore.config
-            use_adaptive_sampling = True if config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0 else False
+            use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
 
             if use_adaptive_sampling:
-                adaptive_sampling_film_pipeline_index = pipeline_index
-                pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props, engine,
+                noise_detection_pipeline_index = pipeline_index
+                pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props,
                                                                      pipeline_index, definitions)
+                pipeline_props.Set(pyluxcore.Property("film.noiseestimation.index", noise_detection_pipeline_index))
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
-
-        if use_adaptive_sampling:
-            props.Set(pyluxcore.Property("film.noiseestimation.index", adaptive_sampling_film_pipeline_index))
 
         return props
     except Exception as error:
@@ -266,18 +264,17 @@ def _make_denoiser_imagepipeline(context, scene, props, engine, pipeline_index, 
     engine.aov_imagepipelines["DENOISED"] = pipeline_index
     return pipeline_index + 1
 
-# At the bottom of the file
-def _make_noise_detection_imagepipeline(context, scene, props, engine, pipeline_index, output_definitions):
-    prefix = "film.imagepipelines." + str(pipeline_index) + "."
+
+def _make_noise_detection_imagepipeline(context, scene, props, pipeline_index, output_definitions):
+    prefix = f"film.imagepipelines.{pipeline_index}."
     definitions = OrderedDict()
 
     index = 0
-    index = imagepipeline.convert_defs(context, scene, definitions, index, define_radiancescales=True)
-    definitions['{}.type'.format(index)] = 'GAMMA_CORRECTION'
-    definitions['{}.value'.format(index)] = 2.2
+    index = imagepipeline.convert_defs(context, scene, definitions, index)
+    definitions[f"{index}.type"] = "GAMMA_CORRECTION"
+    definitions[f"{index}.value"] = 2.2
 
     props.Set(utils.create_props(prefix, definitions))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
-
 
     return pipeline_index + 1
