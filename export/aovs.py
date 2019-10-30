@@ -120,9 +120,9 @@ def convert(exporter, scene, context=None, engine=None):
                 pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,
                                                               pipeline_index, definitions)
                                                               
-            using_adaptive_sampler = True  # TODO check if adaptive sampling is enabled
-                                           # with something like (config.sampler in {"SOBOL", "RANDOM"} and config.sobol_adaptive_strength > 0)
-            if using_adaptive_sampler:
+            config = scene.luxcore.config
+            if config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0:
+                
                 pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props, engine,
                                                                      pipeline_index, definitions)
 
