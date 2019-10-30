@@ -152,6 +152,8 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         col.active = self.image is not None
 
         col.prop(self, "is_normal_map")
+        if self.image:
+            col.prop(self.image, "source")
 
         if self.is_normal_map:
             col.prop(self, "normal_map_scale")
