@@ -283,8 +283,14 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     caustic_periodic_update: BoolProperty(name="Periodic Update", default=True,
                                           description="Rebuild the caustic cache periodically to clean up photon noise. "
                                                        "The step samples parameter controls how often the cache is rebuilt")
-    caustic_updatespp: IntProperty(name="Step Samples", default=30, min=0,
+    caustic_updatespp: IntProperty(name="Step Samples", default=8, min=1,
                                    description="How often to rebuild the cache if periodic update is enabled")
+    # TODO description
+    caustic_updatespp_radiusreduction: FloatProperty(name="Radius Reduction", default=96, min=1, soft_min=70,
+                                                     max=99.9, soft_max=99, subtype="PERCENTAGE")
+    # TODO description
+    caustic_updatespp_minradius: FloatProperty(name="Minimum Radius", default=0.003, min=0.00001,
+                                               subtype="DISTANCE")
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),

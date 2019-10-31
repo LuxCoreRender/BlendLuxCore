@@ -431,6 +431,8 @@ def _convert_photongi_settings(context, scene, definitions, config):
         "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),
         "path.photongi.caustic.merge.radiusscale": caustic_merge_radius_scale,
         "path.photongi.caustic.updatespp": caustic_updatespp,
+        "path.photongi.caustic.updatespp.radiusreduction": photongi.caustic_updatespp_radiusreduction / 100,
+        "path.photongi.caustic.updatespp.minradius": photongi.caustic_updatespp_minradius,
 
         "path.photongi.persistent.file": file_path
     })
