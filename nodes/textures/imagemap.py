@@ -11,6 +11,7 @@ from ...utils import node as utils_node
 from ...utils import ui as utils_ui
 from ...utils.errorlog import LuxCoreErrorLog
 from ...ui import icons
+from ...handlers import frame_change_pre
 
 
 NORMAL_MAP_DESC = (
@@ -180,6 +181,9 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
                 return [0.5, 0.5, 1.0]
             else:
                 return [0, 0, 0]
+
+        if self.image.source == "SEQUENCE":
+            frame_change_pre.using_image_sequences = True
 
         try:
             filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
