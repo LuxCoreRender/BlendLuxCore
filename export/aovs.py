@@ -131,7 +131,7 @@ def convert(exporter, scene, context=None, engine=None):
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
 
-        if use_adaptive_sampling:
+        if (use_adaptive_sampling and final):
             props.Set(pyluxcore.Property("film.noiseestimation.index", adaptive_sampling_film_pipeline_index))
 
         return props
