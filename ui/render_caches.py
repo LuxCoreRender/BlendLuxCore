@@ -129,17 +129,8 @@ class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
         col.enabled = photongi.caustic_enabled
         sub = col.column(align=True)
         sub.prop(photongi, "caustic_maxsize")
-        sub = col.column(align=True)
         sub.prop(photongi, "caustic_lookup_radius")
-        sub.prop(photongi, "caustic_lookup_maxcount")
-        sub = col.column(align=True)
         sub.prop(photongi, "caustic_normalangle")
-        sub = col.column(align=True)
-        sub.prop(photongi, "caustic_merge_enabled")
-        sub = col.column(align=True)
-        sub.enabled = photongi.caustic_merge_enabled
-        sub.prop(photongi, "caustic_merge_radius_scale")
-        sub = col.column(align=True)
         sub.prop(photongi, "caustic_periodic_update")
         sub = col.column(align=True)
         sub.enabled = photongi.caustic_periodic_update
