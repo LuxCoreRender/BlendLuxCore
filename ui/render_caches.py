@@ -125,29 +125,42 @@ class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
         layout.active = photongi.enabled and photongi.caustic_enabled and not engine_is_bidir
 
+        # col = layout.column(align=True)
+        # col.enabled = photongi.caustic_enabled
+        # sub = col.column(align=True)
+        # sub.prop(photongi, "caustic_maxsize")
+        # sub.prop(photongi, "caustic_lookup_radius")
+        # sub.prop(photongi, "caustic_normalangle")
+        # sub.prop(photongi, "caustic_periodic_update")
+        # sub = col.column(align=True)
+        # sub.enabled = photongi.caustic_periodic_update
+        # sub.prop(photongi, "caustic_updatespp")
+        # sub.prop(photongi, "caustic_updatespp_radiusreduction")
+        # sub.prop(photongi, "caustic_updatespp_minradius")
+        #
+        # radius = photongi.caustic_lookup_radius
+        # minradius = photongi.caustic_updatespp_minradius
+        #
+        # if minradius >= radius:
+        #     sub.label(text="Radius reduction disabled (min radius >= radius)")
+        # else:
+        #     radius_multiplier = photongi.caustic_updatespp_radiusreduction / 100
+        #     steps = (math.log(minradius / radius) / math.log(radius_multiplier))
+        #     steps = math.ceil(steps)
+        #     sub.label(text=f"Min radius reached after {steps} steps ({steps * photongi.caustic_updatespp} samples)")
+
+
+        ##############
         col = layout.column(align=True)
         col.enabled = photongi.caustic_enabled
         sub = col.column(align=True)
-        sub.prop(photongi, "caustic_maxsize")
-        sub.prop(photongi, "caustic_lookup_radius")
+        sub.prop(photongi, "caustic_maxsize", text="Photons per Step (Millions)")
+        sub.prop(photongi, "caustic_lookup_radius", text="Photon Radius")
         sub.prop(photongi, "caustic_normalangle")
         sub.prop(photongi, "caustic_periodic_update")
         sub = col.column(align=True)
         sub.enabled = photongi.caustic_periodic_update
-        sub.prop(photongi, "caustic_updatespp")
-        sub.prop(photongi, "caustic_updatespp_radiusreduction")
-        sub.prop(photongi, "caustic_updatespp_minradius")
-
-        radius = photongi.caustic_lookup_radius
-        minradius = photongi.caustic_updatespp_minradius
-
-        if minradius >= radius:
-            sub.label(text="Radius reduction disabled (min radius >= radius)")
-        else:
-            radius_multiplier = photongi.caustic_updatespp_radiusreduction / 100
-            steps = (math.log(minradius / radius) / math.log(radius_multiplier))
-            steps = math.ceil(steps)
-            sub.label(text=f"Min radius reached after {steps} steps ({steps * photongi.caustic_updatespp} samples)")
+        sub.prop(photongi, "caustic_updatespp", text="Samples per Step")
 
 class LUXCORE_RENDER_PT_caches_photongi_persistence(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
