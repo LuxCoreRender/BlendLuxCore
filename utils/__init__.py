@@ -637,6 +637,37 @@ def image_sequence_resolve_all(image):
 
     return sorted(indexed_filepaths, key=lambda elem: elem[0])
 
+def openVDB_sequence_resolve_all(file):
+    """
+    From https://blender.stackexchange.com/a/21093/29401
+    Returns a list of tuples: (index, filepath)
+    index is the frame number, parsed from the filepath
+    """
+    filepath = get_abspath(file)
+    basedir, filename = os.path.split(filepath)
+    filename_noext, ext = os.path.splitext(filename)
+
+    from string import digits
+    if isinstance(filepath, bytes):
+        digits = digits.encode()
+    filename_nodigits = filename_noext.rstrip(digits)
+
+    if len(filename_nodigits) == len(filename_noext):
+        # Input isn't from a sequence
+        return []
+
+    indexed_filepaths = []
+    for f in os.scandir(basedir):
+        index_str = f.name[len(filename_nodigits):-len(ext) if ext else -1]
+
+        if (f.is_file()
+                and f.name.startswith(filename_nodigits)
+                and f.name.endswith(ext)
+                and index_str.isdigit()):
+            elem = (int(index_str), f.path)
+            indexed_filepaths.append(elem)
+
+    return sorted(indexed_filepaths, key=lambda elem: elem[0])
 
 def is_valid_camera(obj):
     return obj and hasattr(obj, "type") and obj.type == "CAMERA"
