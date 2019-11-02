@@ -1,10 +1,10 @@
 from ..ui import icons
 
-TREE_TYPES = (
+TREE_TYPES = {
     "luxcore_material_nodes",
     "luxcore_texture_nodes",
     "luxcore_volume_nodes",
-)
+}
 
 TREE_ICONS = {
     "luxcore_material_nodes": icons.NTREE_MATERIAL,

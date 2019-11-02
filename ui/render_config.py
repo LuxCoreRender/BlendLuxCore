@@ -18,20 +18,15 @@ def luxcore_render_draw(panel, context):
 
     # Device
     col_device = layout.column(align=True)
+    col_device.active = config.engine == "PATH"
+    col_device.prop(config, "device", text="Device")
     if config.device == "OCL" and not utils.is_opencl_build():
         # pyluxcore was compiled without OpenCL support
         col_device.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
-    else:
-        col_device.prop(config, "device", text="Device")
-        col_device.active = config.engine == "PATH"
 
     # Engine
     col = layout.column(align=True)
     col.prop(config, "engine", expand=False)
-    col.active = True
-
-    if config.device == "OCL":
-        col.active = False
 
     # Buttons for Network Render and Wiki
     flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=True)
@@ -46,6 +41,7 @@ class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Pixel Filter"
     bl_order = 4
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
@@ -78,6 +74,7 @@ class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Strategy"
     bl_order = 3
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
@@ -271,7 +268,7 @@ class LUXCORE_RENDER_PT_filesaver(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Filesaver"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 1
+    bl_order = 100
 
     def draw_header(self, context):
         layout = self.layout

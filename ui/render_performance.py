@@ -5,6 +5,13 @@ from .. import utils
 from . import icons
 
 
+def _show_hybrid_metropolis_warning(context):
+    config = context.scene.luxcore.config
+    opencl = context.scene.luxcore.opencl
+    return (config.engine == "PATH" and config.device == "OCL" and not config.path.hybridbackforward_enable
+            and config.sampler == "METROPOLIS" and opencl.use_native_cpu)
+
+
 class LUXCORE_RENDER_PT_performance(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
@@ -19,12 +26,6 @@ class LUXCORE_RENDER_PT_performance(RenderButtonsPanel, Panel):
         layout.use_property_decorate = False      
         for device in devices:
             layout.prop(device, "enabled", text=device.name)
-
-    def _show_hybrid_metropolis_warning(self, context):
-        config = context.scene.luxcore.config
-        opencl = context.scene.luxcore.opencl
-        return (config.engine == "PATH" and config.device == "OCL"
-                and config.sampler == "METROPOLIS" and opencl.use_native_cpu)
 
     def _show_openCL_device_warning(self, context):
         config = context.scene.luxcore.config
@@ -44,7 +45,7 @@ class LUXCORE_RENDER_PT_performance(RenderButtonsPanel, Panel):
         opencl = context.scene.luxcore.opencl
         layout = self.layout
         
-        if self._show_hybrid_metropolis_warning(context):
+        if _show_hybrid_metropolis_warning(context):
             self.layout.label(text="", icon=icons.WARNING)
 
         if self._show_openCL_device_warning(context):
@@ -81,12 +82,6 @@ class LUXCORE_RENDER_PT_performance_cpu_devices(RenderButtonsPanel, Panel):
         config = context.scene.luxcore.config        
         return context.scene.render.engine == "LUXCORE" and config.engine == "PATH" and config.device == "OCL"
 
-    def _show_hybrid_metropolis_warning(self, context):
-        config = context.scene.luxcore.config
-        opencl = context.scene.luxcore.opencl
-        return (config.engine == "PATH" and config.device == "OCL"
-                and config.sampler == "METROPOLIS" and opencl.use_native_cpu)
-
     def draw_header(self, context):
         opencl = context.scene.luxcore.opencl
         layout = self.layout
@@ -108,7 +103,7 @@ class LUXCORE_RENDER_PT_performance_cpu_devices(RenderButtonsPanel, Panel):
         sub.enabled = context.scene.render.threads_mode == 'FIXED'
         sub.prop(context.scene.render, "threads")
 
-        if self._show_hybrid_metropolis_warning(context):
+        if _show_hybrid_metropolis_warning(context):
             col = layout.column(align=True)
             col.label(text="CPU should be disabled if Metropolis", icon=icons.WARNING)
             col.label(text="sampler is used (can cause artifacts)")

@@ -181,7 +181,7 @@ def extract_luxcore_zip(prefix, platform_suffixes, file_names, version_string):
         extract_files_from_archive(zip_name, file_names, destination)
 
 
-def main(blender_280):
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("version_string",
                         help='E.g. "v2.0alpha1" or "v2.0". Used to download the LuxCore zips')
@@ -201,10 +201,6 @@ def main(blender_280):
         "-mac64.tar.gz",
         "-mac64-opencl.tar.gz",
     ]
-
-    if blender_280:
-        for i in range(len(suffixes)):
-            suffixes[i] = "-blender2.80" + suffixes[i]
 
     # Download LuxCore binaries for all platforms
     print_divider()
@@ -254,20 +250,16 @@ def main(blender_280):
     # This is used in case we re-package a release
     os.chdir("BlendLuxCore")
 
-    if blender_280:
-        print("Checking out master for 2.80")
-        subprocess.check_output(["git", "checkout", "master"])
+    print("Checking out master")
+    subprocess.check_output(["git", "checkout", "master"])
 
-        tags_raw = subprocess.check_output(["git", "tag", "-l"])
-        tags = [tag.decode("utf-8") for tag in tags_raw.splitlines()]
+    tags_raw = subprocess.check_output(["git", "tag", "-l"])
+    tags = [tag.decode("utf-8") for tag in tags_raw.splitlines()]
 
-        current_version_tag = "blendluxcore_" + args.version_string
-        if current_version_tag in tags:
-            print("Checking out tag", current_version_tag)
-            subprocess.check_output(["git", "checkout", "tags/" + current_version_tag])
-    else:
-        print("Checking out 2_79_maintenance")
-        subprocess.check_output(["git", "checkout", "2_79_maintenance"])
+    current_version_tag = "blendluxcore_" + args.version_string
+    if current_version_tag in tags:
+        print("Checking out tag", current_version_tag)
+        subprocess.check_output(["git", "checkout", "tags/" + current_version_tag])
 
     os.chdir("..")
 
@@ -276,9 +268,8 @@ def main(blender_280):
         os.path.join(repo_path, "doc"),
         os.path.join(repo_path, ".github"),
         os.path.join(repo_path, ".git"),
+        os.path.join(repo_path, "scripts"),
     ]
-    if blender_280:
-        to_delete.append(os.path.join(repo_path, "scripts"))
     for path in to_delete:
         rmtree(path)
 
@@ -347,8 +338,6 @@ def main(blender_280):
     print_divider()
 
     release_dir = os.path.join(script_dir, "release-" + args.version_string)
-    if blender_280:
-        release_dir += "-blender2.80"
     if os.path.exists(release_dir):
         rmtree(release_dir)
     os.mkdir(release_dir)
@@ -370,5 +359,4 @@ def main(blender_280):
 
 
 if __name__ == "__main__":
-    main(True)
-    main(False)
+    main()

@@ -3,6 +3,7 @@ from bpy.props import BoolProperty
 from ..base import LuxCoreNodeMaterial, Roughness
 from ...utils import node as utils_node
 from .glossytranslucent import IOR_DESCRIPTION
+from ...ui import icons
 
 
 class LuxCoreNodeMatGlossyCoating(bpy.types.Node, LuxCoreNodeMaterial):
@@ -41,6 +42,9 @@ class LuxCoreNodeMatGlossyCoating(bpy.types.Node, LuxCoreNodeMaterial):
         layout.prop(self, "multibounce")
         layout.prop(self, "use_ior")
         Roughness.draw(self, context, layout)
+
+        if not self.inputs["Base Material"].is_linked:
+            layout.label(text="No base material!", icon=icons.WARNING)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         base = utils_node.export_material_input(self.inputs["Base Material"], exporter, depsgraph, props)

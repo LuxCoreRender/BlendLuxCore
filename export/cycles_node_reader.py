@@ -3,6 +3,7 @@ from .. import utils
 from ..utils import node as utils_node
 from ..utils.errorlog import LuxCoreErrorLog
 from .image import ImageExporter
+from mathutils import Matrix
 
 ERROR_VALUE = 0
 MISSING_IMAGE_COLOR = [1, 0, 1]
@@ -80,6 +81,8 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "clearcoat": _socket(node.inputs["Clearcoat"], props, obj_name, group_node),
             #"clearcoatgloss": convert_cycles_socket(node.inputs["Clearcoat Roughness"], props, obj_name, group_node),  # TODO
             # TODO: emission, alpha, transmission, transmission roughness
+
+            "bumptex": _socket(node.inputs["Normal"], props, obj_name, group_node),
         }
     elif node.bl_idname == "ShaderNodeMixShader":
         prefix = "scene.materials."
@@ -142,7 +145,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             try:
                 filepath = ImageExporter.export_cycles_node_reader(node.image)
             except OSError as error:
-                LuxCoreErrorLog.add_warning(f"Image error: {error}", obj_name=obj_name)
+                LuxCoreErrorLog.add_warning(error, obj_name=obj_name)
                 return MISSING_IMAGE_COLOR
 
             definitions = {
@@ -251,7 +254,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
                     print("yolo")
                     return tex2
         else:
-            LuxCoreErrorLog.add_warning(f"Unknown MixRGB mode: {blend_type}", obj_name=obj_name)
+            LuxCoreErrorLog.add_warning(f"Unsupported MixRGB mode: {blend_type}", obj_name=obj_name)
             return ERROR_VALUE
 
         if (isinstance(fac, str) or (fac > 0 and fac < 1)) and blend_type != "MIX":
@@ -324,7 +327,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             definitions["texture"] = tex1
             definitions["modulo"] = tex2
         else:
-            LuxCoreErrorLog.add_warning(f"Unknown Math mode: {node.operation}", obj_name=obj_name)
+            LuxCoreErrorLog.add_warning(f"Unsupported Math mode: {node.operation}", obj_name=obj_name)
             return ERROR_VALUE
     elif node.bl_idname == "ShaderNodeHueSaturation":
         prefix = "scene.textures."
@@ -366,14 +369,24 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
     elif node.bl_idname == "ShaderNodeEmission":
         prefix = "scene.materials."
 
+        color = _socket(node.inputs["Color"], props, obj_name, group_node)
         # According to the Blender manual, strength is in Watts/m² when the node is used on meshes.
         strength = _socket(node.inputs["Strength"], props, obj_name, group_node)
+
+        emission_col = luxcore_name + "emission_col"
+        helper_prefix = "scene.textures." + emission_col + "."
+        helper_defs = {
+            "type": "scale",
+            "texture1": strength,
+            "texture2": color,
+        }
+        props.Set(utils.create_props(helper_prefix, helper_defs))
 
         definitions = {
             "type": "matte",
             "kd": [0, 0, 0],
-            "emission": _socket(node.inputs["Color"], props, obj_name, group_node),
-            "emission.gain": [strength] * 3,
+            "emission": emission_col,
+            "emission.gain": [1] * 3,
             "emission.power": 0,
             "emission.efficency": 0,
         }
@@ -391,16 +404,152 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "type": "constfloat3",
             "value": list(node.outputs[0].default_value)[:3],
         }
-    else:
-        LuxCoreErrorLog.add_warning(f"Unknown node type: {node.name}", obj_name=obj_name)
+    elif node.bl_idname == "ShaderNodeValToRGB":
+        # Color ramp
+        prefix = "scene.textures."
+        ramp = node.color_ramp
 
+        if ramp.interpolation == "CONSTANT":
+            interpolation = "none"
+        elif ramp.interpolation == "LINEAR":
+            interpolation = "linear"
+        else:
+            # TODO: not all interpolation modes are supported by LuxCore
+            interpolation = "cubic"
+
+        definitions = {
+            "type": "band",
+            "amount": _socket(node.inputs["Fac"], props, obj_name, group_node),
+            "offsets": len(ramp.elements),
+            "interpolation": interpolation,
+        }
+
+        for i in range(len(ramp.elements)):
+            definitions[f"offset{i}"] = ramp.elements[i].position
+            definitions[f"value{i}"] = list(ramp.elements[i].color[:3])  # Ignore alpha
+    elif node.bl_idname == "ShaderNodeTexChecker":
+        prefix = "scene.textures."
+
+        # Note: Only "Object" texture coordinates are supported. Textured scale is not supported.
+        scale = Matrix()
+        for i in range(3):
+            scale[i][i] = node.inputs["Scale"].default_value
+
+        definitions = {
+            "type": "checkerboard3d",
+            "texture1": _socket(node.inputs["Color2"], props, obj_name, group_node),
+            "texture2": _socket(node.inputs["Color1"], props, obj_name, group_node),
+            "mapping.type": "localmapping3d",
+            "mapping.transformation": utils.matrix_to_list(scale),
+        }
+    elif node.bl_idname == "ShaderNodeInvert":
+        prefix = "scene.textures."
+
+        fac_input = node.inputs["Fac"]
+        fac = _socket(fac_input, props, obj_name, group_node)
+        if fac_input.is_linked and fac == ERROR_VALUE:
+            fac = 1
+
+        tex = _socket(node.inputs["Color"], props, obj_name, group_node)
+
+        if fac == 0:
+            return tex
+
+        definitions = {
+            "type": "subtract",
+            "texture1": 1,
+            "texture2": tex,
+        }
+
+        if isinstance(fac, str) or (fac > 0 and fac < 1):
+            # Here we need to insert a helper texture *after* the current texture
+            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            definitions = {
+                "type": "mix",
+                "texture1": tex,
+                "texture2": luxcore_name,
+                "amount": fac,
+            }
+            luxcore_name = luxcore_name + "fac"
+    elif node.bl_idname in {"ShaderNodeSeparateRGB", "ShaderNodeSeparateXYZ"}:
+        prefix = "scene.textures."
+
+        if node.bl_idname == "ShaderNodeSeparateRGB":
+            channels = ["R", "G", "B"]
+            tex_socket_name = "Image"
+        else:
+            channels = ["X", "Y", "Z"]
+            tex_socket_name = "Vector"
+
+        definitions = {
+            "type": "splitfloat3",
+            "texture": _socket(node.inputs[tex_socket_name], props, obj_name, group_node),
+            "channel": channels.index(output_socket.name),
+        }
+    elif node.bl_idname in {"ShaderNodeCombineRGB", "ShaderNodeCombineXYZ"}:
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "makefloat3",
+            "texture1": _socket(node.inputs[0], props, obj_name, group_node),
+            "texture2": _socket(node.inputs[1], props, obj_name, group_node),
+            "texture3": _socket(node.inputs[2], props, obj_name, group_node),
+        }
+    elif node.bl_idname == "ShaderNodeRGBToBW":
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "dotproduct",
+            "texture1": _socket(node.inputs["Color"], props, obj_name, group_node),
+            # From Cycles source code:
+            # intern/cycles/render/shader.cpp:726: float ShaderManager::linear_rgb_to_gray(float3 c)
+            "texture2": [0.2126729, 0.7151522, 0.0721750],
+        }
+    elif node.bl_idname == "ShaderNodeBrightContrast":
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "brightcontrast",
+            "texture": _socket(node.inputs["Color"], props, obj_name, group_node),
+            "brightness": _socket(node.inputs["Bright"], props, obj_name, group_node),
+            "contrast": _socket(node.inputs["Contrast"], props, obj_name, group_node),
+        }
+    elif node.bl_idname == "ShaderNodeNormalMap":
+        if node.space != "TANGENT":
+            LuxCoreErrorLog.add_warning(f"Unsupported normal map space: {node.space}", obj_name=obj_name)
+            return ERROR_VALUE
+
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "normalmap",
+            "texture": _socket(node.inputs["Color"], props, obj_name, group_node),
+        }
+
+        strength_socket = node.inputs["Strength"]
+        if strength_socket.is_linked:
+            # Use scale texture because normalmap scale can't be textured
+            # Here we need to insert a helper texture *after* the current texture
+            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            definitions = {
+                "type": "scale",
+                "texture1": luxcore_name,
+                "texture2": _socket(strength_socket, props, obj_name, group_node),
+            }
+            luxcore_name = luxcore_name + "strength"
+        else:
+            definitions["scale"] = strength_socket.default_value
+    else:
+        LuxCoreErrorLog.add_warning(f"Unsupported node type: {node.name}", obj_name=obj_name)
+
+        # TODO do this for unsupported mixRGB and math modes, too
         # Try to skip this node by looking at its internal links (the same that are used when the node is muted)
         if node.internal_links:
             links = node.internal_links[0].from_socket.links
             if links:
                 link = links[0]
                 print("current node", node.name, "failed, testing next node:", link.from_node.name)
-                return _node(link.from_node, link.from_socket, props, None, obj_name, group_node)
+                return _node(link.from_node, link.from_socket, props, luxcore_name, obj_name, group_node)
 
         return ERROR_VALUE
 

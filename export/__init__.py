@@ -6,8 +6,8 @@ from ..utils import render as utils_render
 from ..utils import compatibility as utils_compatibility
 from ..utils.errorlog import LuxCoreErrorLog
 from . import (
-    blender_object, caches, camera, config, duplis,
-    group_instance, imagepipeline, light, material,
+    caches, camera, config,
+    imagepipeline, light, material,
     motion_blur, hair, halt, world,
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
@@ -135,6 +135,11 @@ class Exporter(object):
         world_props = world.convert(self, depsgraph, scene, is_viewport_render)
         scene_props.Set(world_props)
 
+        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
+            print("-" * 50)
+            print("DEBUG: Scene Properties:\n")
+            print(scene_props)
+            print("-" * 50)
         luxcore_scene.Parse(scene_props)
 
         # Regularly check if we should abort the export (important in heavy scenes)
@@ -169,7 +174,11 @@ class Exporter(object):
             stats.light_count.value = light_count
 
         # Create the renderconfig
-        self._print_debug_info(scene, config_props, luxcore_scene)
+        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
+            print("-" * 50)
+            print("DEBUG: Config Properties:\n")
+            print(config_props)
+            print("-" * 50)
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
         # Regularly check if we should abort the export (important in heavy scenes)
@@ -301,53 +310,6 @@ class Exporter(object):
         if changes & Change.HALT:
             session.Parse(self.halt_cache.props)
 
-    # TODO 2.8 remove
-    # def _convert_object(self, props, obj, scene, context, luxcore_scene,
-    #                     update_mesh=False, dupli_suffix="", engine=None,
-    #                     check_dupli_parent=False):
-    #     key = utils.make_key(obj)
-    #     old_exported_obj = None
-    #
-    #     if key not in self.exported_objects:
-    #         # We have to update the mesh because the object was not yet exported
-    #         update_mesh = True
-    #
-    #     if not update_mesh:
-    #         # We need the previously exported mesh defintions
-    #         old_exported_obj = self.exported_objects[key]
-    #
-    #     # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
-    #     obj_props, exported_obj = blender_object.convert(self, obj, scene, context, luxcore_scene, old_exported_obj,
-    #                                                      update_mesh, dupli_suffix)
-    #
-    #     # Convert particles and dupliverts/faces
-    #     if obj.is_duplicator:
-    #         if obj.dupli_type == "GROUP":
-    #             group_instance.convert(self, obj, scene, context, luxcore_scene, props)
-    #         else:
-    #             duplis.convert(self, obj, scene, context, luxcore_scene, engine)
-    #
-    #     # When moving a duplicated object, update the parent, too (concerns dupliverts/faces)
-    #     if check_dupli_parent and obj.parent and obj.parent.is_duplicator:
-    #         self._convert_object(props, obj.parent, scene, context, luxcore_scene,
-    #                              update_mesh, dupli_suffix, engine, check_dupli_parent)
-    #
-    #     # Convert hair
-    #     for psys in obj.particle_systems:
-    #         settings = psys.settings
-    #         # render_type OBJECT and GROUP are handled by duplis.convert() above
-    #         if settings.type == "HAIR" and settings.render_type == "PATH":
-    #             hair.convert_hair(self, obj, psys, luxcore_scene, scene, context, engine)
-    #
-    #     if exported_obj is None:
-    #         # Object is not visible or an error happened.
-    #         # In case of an error, it was already reported by blender_object.convert()
-    #         return
-    #
-    #     props.Set(obj_props)
-    #     self.exported_objects[key] = exported_obj
-    #     return exported_obj
-
     def _update_config(self, session, config_props):
         renderconfig = session.GetRenderConfig()
         session.Stop()
@@ -432,12 +394,3 @@ class Exporter(object):
             stats.clamping.value = path_settings.clamping
         else:
             stats.clamping.value = 0
-
-    def _print_debug_info(self, scene, config_props, luxcore_scene):
-        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
-            print("-" * 50)
-            print("DEBUG: Config Properties:\n")
-            print(config_props)
-            print("DEBUG: Scene Properties:\n")
-            print(luxcore_scene.ToProperties())
-            print("-" * 50)

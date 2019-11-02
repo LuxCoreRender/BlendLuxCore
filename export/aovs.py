@@ -119,6 +119,15 @@ def convert(exporter, scene, context=None, engine=None):
             if scene.luxcore.denoiser.enabled:
                 pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,
                                                               pipeline_index, definitions)
+                                                              
+            config = scene.luxcore.config
+            use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
+
+            if use_adaptive_sampling and not utils.use_filesaver(context, scene):
+                noise_detection_pipeline_index = pipeline_index
+                pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props,
+                                                                     pipeline_index, definitions)
+                pipeline_props.Set(pyluxcore.Property("film.noiseestimation.index", noise_detection_pipeline_index))
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
@@ -253,4 +262,19 @@ def _make_denoiser_imagepipeline(context, scene, props, engine, pipeline_index, 
     props.Set(get_denoiser_imgpipeline_props(context, scene, pipeline_index))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
     engine.aov_imagepipelines["DENOISED"] = pipeline_index
+    return pipeline_index + 1
+
+
+def _make_noise_detection_imagepipeline(context, scene, props, pipeline_index, output_definitions):
+    prefix = f"film.imagepipelines.{pipeline_index}."
+    definitions = OrderedDict()
+
+    index = 0
+    index = imagepipeline.convert_defs(context, scene, definitions, index)
+    definitions[f"{index}.type"] = "GAMMA_CORRECTION"
+    definitions[f"{index}.value"] = 2.2
+
+    props.Set(utils.create_props(prefix, definitions))
+    _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
+
     return pipeline_index + 1

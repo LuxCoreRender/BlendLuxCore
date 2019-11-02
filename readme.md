@@ -2,88 +2,20 @@
 
 ## BlendLuxCore
 
-This is the new Blender integration addon for LuxCore, rewritten from scratch. You can find information and updates about the ongoing development in [this thread](https://forums.luxcorerender.org/viewtopic.php?f=5&t=9).
+This addon integrates the LuxCore render engine into Blender. It offers advanced features like accelerated rendering of indirect light and efficient rendering of caustics.
 
-### Important
+### Supported Blender Versions
 
-The stable versions of this addon only works with Blender 2.79a or 2.79b. [Download](https://www.blender.org/download/)  
-There is a testbuild for Blender 2.80, available [here](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2beta3).
+Blender 2.79 is supported by BlendLuxCore v2.0, v2.1 and v2.2.  
+Blender 2.80 is supported by BlendLuxCore v2.2.
 
-Custom Blender builds and buildbot builds are not supported.
+### Download
 
-If you have the old LuxBlend addon installed, disable it, save the user preferences 
-and restart Blender before you can enable the new addon.
+See the [release section](https://github.com/LuxCoreRender/BlendLuxCore/releases) for stable and experimental versions.  
+Information about installation and usage are available [in the manual](https://wiki.luxcorerender.org/Category:BlendLuxCore).
 
-Note that if you save a .blend file that was opened with this addon enabled, you will not be able to open it with older Blender versions anymore.
-This is because of a bug in Blender versions prior to 2.79.
-See the [Blender 2.79 release notes](https://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.79/PythonAPI#Data-block_Pointer_Properties):
-> Unfortunately, this new custom property type revealed a critical bug in current code, which crashes Blender on unknown property types. This bug has been fixed in 15189baa52 for the future, but it is impossible to fix this for existing releases. 
-**This means that trying to load a .blend file using new data-block custom properties will crash on any version prior to 2.79.**
+### Example Scenes
 
-So if you want to render an important scene with LuxCore, please save it as a copy.
+Can be found here: https://luxcorerender.org/download/#ExampleScenes
 
-### [Download](https://luxcorerender.org/download/)
-
-### [Installation/Update](https://wiki.luxcorerender.org/BlendLuxCore_Installation)
-
-BlendLuxCore releases are fully self-contained.<br>
-Just [install the .zip](https://docs.blender.org/manual/en/dev/preferences/addons.html#header), enable the addon, switch to the "LuxCore" engine and you are done.<br>
-You do not need to install the standalone release of LuxCoreRender.
-
-### [Example Scenes](https://luxcorerender.org/download/#ExampleScenes)
-
-### [Manual](https://wiki.luxcorerender.org/Category:BlendLuxCore)
-
-The manual is not finished yet.
-
-### [Report a Bug](https://github.com/LuxCoreRender/BlendLuxCore/issues/new)
-
-### Features
-
-* [x] Viewport and final render
-* [x] All LuxCore materials, textures, volumes and lights
-* [x] Glass dispersion
-* [x] IES lighting
-* [x] Shadow catcher
-* [x] Light groups
-* [x] Visibility map for environment lights [(automatic portals)](https://wiki.luxcorerender.org/Visibility_Map)
-* [x] Cameras (perspective, ortographic, panoramic)
-* [x] Depth of field
-* [x] Arbitrary clipping plane
-* [x] Filesaver engine (scene export to LuxCore scn/cfg files)
-* [x] Object and camera motion blur
-* [x] Particles
-* [x] Duplis
-* [x] Hair
-* [x] Tonemapping settings
-* [x] Imagepipeline plugins for quick effects (bloom, vignette etc.)
-* [x] Transparent film
-* [x] Smoke/Fire
-* [x] Pointiness
-* [x] AOVs (aka render passes)
-* [x] Render layers
-* [x] Material preview
-* [x] Image sequences
-* [ ] Saving a resumable film
-* [ ] Periodic film saving
-* And more ...
-
-### Great new features
-
-The reason why we are rewriting this addon. These are features that were not available in LuxBlend:
-
-* We are now using Blender's updated PointerProperty (with ID links) for all links (node trees, images etc.) which means that if you append or link an object from another .blend file, all required node trees, image textures and so on will be appended or linked along with it.
-* Much better implementation of Blender's [RenderEngine API](https://docs.blender.org/api/2.79/bpy.types.RenderEngine.html). This means that old problems like a LuxCore session rendering in the background even if you stopped the viewport render should be gone.
-* AOVs (aka render passes) are now completely integrated in Blender. No more weird image hacks.
-
-### Developer Documentation
-
-The [doc folder](https://github.com/LuxCoreRender/BlendLuxCore/tree/master/doc) contains the documentation.
-
-[Description of the project structure](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/doc/project_structure.md)
-
-To create a working BlendLuxCore that can be loaded into Blender, 
-you first have to copy the LuxCore binaries into the bin folder.
-See [bin/readme](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/bin/readme.md) for more details.
-
-![Example Render](https://luxcorerender.org/wp-content/uploads/2017/12/wallpaper_lux_05_rend1b.jpg)
+![Example Render](https://luxcorerender.org/wp-content/uploads/2019/10/dark_mode.jpg)

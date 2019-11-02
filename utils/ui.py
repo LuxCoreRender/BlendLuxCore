@@ -67,11 +67,12 @@ def get_all_regions(context, area_type, region_type):
     Region types: https://docs.blender.org/api/2.79/bpy.types.Region.html?highlight=region#bpy.types.Region.type
     """
     regions = []
-    for area in context.screen.areas:
-        if area.type == area_type:
-            for region in area.regions:
-                if region.type == region_type:
-                    regions.append(region)
+    for window in context.window_manager.windows:
+        for area in window.screen.areas:
+            if area.type == area_type:
+                for region in area.regions:
+                    if region.type == region_type:
+                        regions.append(region)
     return regions
 
 

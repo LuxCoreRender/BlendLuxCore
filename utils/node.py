@@ -1,6 +1,7 @@
 import mathutils
 from ..bin import pyluxcore
 from . import find_active_uv
+from .errorlog import LuxCoreErrorLog
 from ..ui import icons
 
 
@@ -66,13 +67,13 @@ def draw_transmission_info(node, layout):
         layout.label(text="Transmitted: %.2f" % transmitted, icon=icons.INFO)
 
 
-def export_material_input(input, exporter, props, luxcore_name=None):
-    material_name = input.export(exporter, props, luxcore_name)
+def export_material_input(input, exporter, depsgraph, props, luxcore_name=None):
+    material_name = input.export(exporter, depsgraph, props, luxcore_name)
 
     if material_name:
         return material_name
     else:
-        print("WARNING: No material linked on input", input.name, "of node", input.node.name)
+        LuxCoreErrorLog.add_warning(f"WARNING: No material linked on input {input.name} of node {input.node.name}")
         if luxcore_name is None:
             luxcore_name = "__BLACK__"
         props.Set(pyluxcore.Property("scene.materials.%s.type" % luxcore_name, "matte"))
@@ -131,7 +132,16 @@ def find_nodes(node_tree, bl_idname):
 
     for node in node_tree.nodes:
         if node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
-            result += find_nodes(node.node_tree, bl_idname)
+            try:
+                result += find_nodes(node.node_tree, bl_idname)
+            except RecursionError:
+                msg = (f'Pointer nodes in node trees "{node_tree.name}" and "{node.node_tree.name}" '
+                       "create a dependency cycle! Delete one of them.")
+                LuxCoreErrorLog.add_error(msg)
+                # Mark the faulty nodes in red
+                node.use_custom_color = True
+                node.color = (0.9, 0, 0)
+                return result
         if node.bl_idname == bl_idname:
             result.append(node)
 

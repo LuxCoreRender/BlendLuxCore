@@ -87,8 +87,8 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
 
         if self.auto_step_settings and self.domain:
             # Search smoke domain target for smoke modifiers
-            domain_eval  = self.domain.evaluated_get(depsgraph)
-            smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval )
+            domain_eval = self.domain.evaluated_get(depsgraph)
+            smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
 
             if smoke_domain_mod is None:
                 msg = 'Object "%s" is not a smoke domain' % domain_eval.name
@@ -101,7 +101,8 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
                 resolutions = [res * (settings.amplify + 1) for res in resolutions]
 
             worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
-            dimensions = [dim * worldscale for dim in domain_eval .dimensions]
+            dimensions = [dim * worldscale for dim in domain_eval.dimensions]
+
             # The optimal step size on each axis
             step_sizes = [dim / res for dim, res in zip(dimensions, resolutions)]
             # Use the smallest step size in LuxCore

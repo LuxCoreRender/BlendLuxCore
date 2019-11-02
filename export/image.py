@@ -25,17 +25,23 @@ class ImageExporter(object):
                 extension = "." + image.file_format.lower()
 
             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=extension)
-            cls.temp_images[key] = temp_image
 
             print('Unpacking image "%s" to temp file "%s"' % (image.name, temp_image.name))
             orig_filepath = image.filepath_raw
             orig_source = image.source
             image.filepath_raw = temp_image.name
-            image.save()
-            # This changes the source to "FILE", so we have to restore the original source
-            image.filepath_raw = orig_filepath
-            image.source = orig_source
 
+            try:
+                image.save()
+            except RuntimeError as error:
+                raise OSError(str(error))
+            finally:
+                # The changes above altered the source to "FILE", so we have to restore the original source
+                image.filepath_raw = orig_filepath
+                image.source = orig_source
+
+        # Only store the key once we are sure that everything went OK
+        cls.temp_images[key] = temp_image
         return temp_image.name
 
     @classmethod

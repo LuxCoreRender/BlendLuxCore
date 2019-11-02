@@ -5,6 +5,7 @@ from bpy.app.handlers import persistent
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import compatibility
+from . import frame_change_pre
 
 
 @persistent
@@ -23,9 +24,12 @@ def handler(_):
             for i, device in enumerate(scene.luxcore.opencl.devices):
                 # Intel GPU devices can lead to crashes, so disable them by default
                 if device.type == "OPENCL_GPU" and not "intel" in device.name.lower():
-                    scene.luxcore.config.film_opencl_device = str(i)
-                    scene.luxcore.config.film_opencl_enable = True
-                    break
+                    try:
+                        scene.luxcore.config.film_opencl_device = str(i)
+                        scene.luxcore.config.film_opencl_enable = True
+                        break
+                    except TypeError:
+                        pass
 
         if pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool():
             # OpenCL not available, make sure we are using CPU device
@@ -46,3 +50,5 @@ def handler(_):
 
     # Run converters for backwards compatibility
     compatibility.run()
+
+    frame_change_pre.using_image_sequences = False

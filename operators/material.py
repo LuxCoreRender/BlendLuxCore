@@ -34,6 +34,7 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
         # For viewport render, we have to update the luxcore object
         # because the newly created material is not yet assigned there
         obj.update_tag()
+        show_nodetree(context, node_tree)
 
         return {"FINISHED"}
 
