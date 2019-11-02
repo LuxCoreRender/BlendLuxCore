@@ -70,13 +70,14 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                     pass
 
     def update_domain(self, context):
+        self.use_internal_cachefiles = False
         if self.domain != None and utils.find_smoke_domain_modifier(self.domain) and self.use_internal_cachefiles:
             depsgraph = context.evaluated_depsgraph_get()
             frame = depsgraph.scene_eval.frame_current
             domain_eval = self.domain.evaluated_get(depsgraph)
             self.file_path = self.get_cachefile_name(domain_eval, frame, 0)
             self.creator = "blender"
-
+            self.use_internal_cachefiles = True
 
     def get_cachefile_name(self, domain, frame, index):
         mod = utils.find_smoke_domain_modifier(self.domain)
@@ -184,11 +185,13 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             col = layout.column(align=True)
             if utils.find_smoke_domain_modifier(self.domain):
                 col.prop(self, "use_internal_cachefiles")
+
             col = layout.column(align=True)
-            col.enabled = not self.use_internal_cachefiles
+            col.enabled = True
             col.prop(self, "creator")
 
             if utils.find_smoke_domain_modifier(self.domain) and self.use_internal_cachefiles:
+                col.enabled = False
                 mod = utils.find_smoke_domain_modifier(self.domain)
                 settings = mod.domain_settings
                 col = layout.column(align=True)
@@ -196,6 +199,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                 col.prop(settings.point_cache.point_caches[0], "frame_start", text="Start frame")
                 col.prop(settings.point_cache.point_caches[0], "frame_end", text="End frame")
             else:
+                col = layout.column(align=True)
                 col.prop(self, "file_path")
                 col = layout.column(align=True)
                 col.prop(self, "first_frame")
@@ -235,6 +239,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
 
         #Get correct data file according to current frame
         smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
+        file_path = self.file_path
         if self.use_internal_cachefiles:
             if smoke_domain_mod:
                 settings = smoke_domain_mod.domain_settings
@@ -243,7 +248,6 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
 
                 file_path = self.get_cachefile_name(domain_eval, utils.clamp(frame, frame_start, frame_end), 0)
         else:
-            file_path = self.file_path
             indexed_filepaths = utils.openVDB_sequence_resolve_all(self.file_path)
             if len(indexed_filepaths) > 1:
                 index, file_path = indexed_filepaths[utils.clamp(frame, self.first_frame, self.last_frame)-1]
