@@ -52,3 +52,4 @@ def handler(_):
     compatibility.run()
 
     frame_change_pre.using_image_sequences = False
+    frame_change_pre.using_smoke_sequences = False

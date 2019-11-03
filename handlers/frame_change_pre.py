@@ -8,41 +8,42 @@ from ..utils import clamp
 # Set in image node export method, reset when new .blend is loaded in load_post.
 using_image_sequences = False
 
+# Flag that saves us from having to iterate all node trees when no image sequences are used (the common case).
+# Set in openVDB node export method, reset when new .blend is loaded in load_post.
+using_smoke_sequences = False
+
 
 @persistent
 def handler(scene):
     global using_image_sequences
-    if not using_image_sequences or scene.render.engine != "LUXCORE":
+    global using_smoke_sequences
+
+    if not (using_image_sequences or using_smoke_sequences) or scene.render.engine != "LUXCORE":
         return
 
-    found_sequence = False
+    found_image_sequence = False
+    found_smoke_sequence = False
     for mat in bpy.data.materials:
         if not mat.luxcore.node_tree:
             continue
 
+        if utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexOpenVDB") or \
+                utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexSmoke"):
+            found_smoke_sequence = True
+            for n in mat.luxcore.node_tree.nodes:
+                if n.active and n.name.split('.')[0] == "Material Output":
+                    # Force a viewport update
+                    mat.luxcore.node_tree.links.new(n.inputs["Material"], n.inputs["Material"].links[0].from_socket)
+
         for node in utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap"):
             if node.image and node.image.source == "SEQUENCE":
-                found_sequence = True
+                found_image_sequence = True
                 # Force a viewport update
                 mat.diffuse_color = mat.diffuse_color
                 break
 
-        for node in utils_node.find_nodes(node_tree, "LuxCoreNodeTexSmoke"):
-            #if node.domain:
-            #    node.domain = node.domain
-            # Force a viewport update
-            mat.diffuse_color = mat.diffuse_color
-            break
-
-        if utils_node.find_nodes(node_tree, "LuxCoreNodeTexOpenVDB"):
-            #for n in node_tree.nodes:
-            #    if n.name.split('.')[0] == "Material Output" and n.active:
-            #        node_tree.links.new(n.inputs["Material"], n.inputs["Material"].links[0].from_socket)
-            # Force a viewport update
-            mat.diffuse_color = mat.diffuse_color
-            break
-
-    using_image_sequences = found_sequence
+    using_image_sequences = found_image_sequence
+    using_smoke_sequences = found_smoke_sequence
 
     # TODO we are not handling area lights with image sequence textures right now
     #  because I can't think of a check with good performance in large scenes.

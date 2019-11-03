@@ -9,6 +9,7 @@ from ...bin import pyluxcore
 
 from ...ui import icons
 from ...utils.errorlog import LuxCoreErrorLog
+from ...handlers import frame_change_pre
 
 
 FIRST_FRAME_DESC = (
@@ -255,10 +256,14 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                 frame_end = settings.point_cache.point_caches[0].frame_end
 
                 file_path = self.get_cachefile_name(domain_eval, utils.clamp(frame, frame_start, frame_end), 0)
+                if frame_end > frame_start:
+                    frame_change_pre.using_smoke_sequences = True
         else:
             indexed_filepaths = utils.openVDB_sequence_resolve_all(self.file_path)
             if len(indexed_filepaths) > 1:
                 index, file_path = indexed_filepaths[utils.clamp(frame, self.first_frame, self.last_frame)-1]
+                if self.last_frame > self.first_frame:
+                    frame_change_pre.using_smoke_sequences = True
 
         #Get transformation of domain bounding box, local center is lower bounding box corner
         scale = domain_eval.dimensions
