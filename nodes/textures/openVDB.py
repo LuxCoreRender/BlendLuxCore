@@ -69,9 +69,17 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                 except KeyError:
                     pass
 
+    def update_use_internal(self, context):
+        if self.domain != None and utils.find_smoke_domain_modifier(self.domain) and self.use_internal_cachefiles:
+            depsgraph = context.evaluated_depsgraph_get()
+            frame = depsgraph.scene_eval.frame_current
+            domain_eval = self.domain.evaluated_get(depsgraph)
+            self.file_path = self.get_cachefile_name(domain_eval, frame, 0)
+            self.creator = "blender"
+
     def update_domain(self, context):
         self.use_internal_cachefiles = False
-        if self.domain != None and utils.find_smoke_domain_modifier(self.domain) and self.use_internal_cachefiles:
+        if self.domain != None and utils.find_smoke_domain_modifier(self.domain):
             depsgraph = context.evaluated_depsgraph_get()
             frame = depsgraph.scene_eval.frame_current
             domain_eval = self.domain.evaluated_get(depsgraph)
@@ -140,7 +148,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
     # TODO description?
     frame_offset: IntProperty(name="Offset", default=0)
 
-    use_internal_cachefiles: BoolProperty(name="Use Internal Cache Files", default=True, update=update_domain)
+    use_internal_cachefiles: BoolProperty(name="Use Internal Cache Files", default=True, update=update_use_internal)
     use_bbox_offset: BoolProperty(name="Use Bounding Box Offset", default=True)
 
     creator_items = [
@@ -306,9 +314,8 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             fluidmat[1][1] = ny/resolution[1]
             fluidmat[2][2] = nz/resolution[2]
 
-            fluidmat = fluidmat @ mathutils.Matrix.Translation(mathutils.Vector((bbox[0]/nx,
-                                                                                    bbox[1]/ny,
-                                                                                    bbox[2]/nz))+ 0.5*cell_size)
+            fluidmat = fluidmat @ mathutils.Matrix.Translation(mathutils.Vector(0.5*cell_size))
+
         else:
             if self.creator != "other":
                 fluidmat[0][0] = nx/self.nx
@@ -325,9 +332,8 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
         # e.g. in smoke / flame simulations
 
         if self.use_bbox_offset:
-            fluidmat = fluidmat @ mathutils.Matrix.Translation(mathutils.Vector((bbox[0]/nx,
-                                                                                    bbox[1]/ny,
-                                                                                    bbox[2]/nz)))
+            fluidmat = fluidmat @ mathutils.Matrix.Translation(
+                mathutils.Vector((bbox[0]/nx, bbox[1]/ny,bbox[2]/nz)))
 
 
         mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
@@ -338,7 +344,6 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                                                      scene=exporter.scene,
                                                      apply_worldscale=True,
                                                      invert=True)
-
 
         definitions = {
             "type": "densitygrid",

@@ -78,17 +78,10 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             }
             return self.create_props(props, definitions, luxcore_name)
 
-        # Add frame update handler because image sequence doesn't get updated automatically
-        self.register_frame_handler()
-
         domain = self.domain.evaluated_get(depsgraph)
 
         scale = domain.dimensions
         translate = domain.matrix_world @ mathutils.Vector([v for v in domain.bound_box[0]])
-        smoke_domain_mod = utils.find_smoke_domain_modifier(domain)
-        
-        translate = translate + 0.5*smoke_domain_mod.domain_settings.cell_size    
-        
         rotate = domain.rotation_euler
 
         # create a location matrix
