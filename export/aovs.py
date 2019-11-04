@@ -123,7 +123,7 @@ def convert(exporter, scene, context=None, engine=None):
             config = scene.luxcore.config
             use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
 
-            if use_adaptive_sampling:
+            if use_adaptive_sampling and not utils.use_filesaver(context, scene):
                 noise_detection_pipeline_index = pipeline_index
                 pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props,
                                                                      pipeline_index, definitions)
