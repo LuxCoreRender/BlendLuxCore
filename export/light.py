@@ -275,7 +275,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
                                         light_or_world.luxcore.image_user,
                                         scene)
     except OSError as error:
-        error_context = "Light" if isinstance(light_or_world, bpy.types.light) else "World"
+        error_context = "Light" if isinstance(light_or_world, bpy.types.Light) else "World"
         msg = '%s "%s": %s' % (error_context, light_or_world.name, error)
         LuxCoreErrorLog.add_warning(msg)
         # Fallback
