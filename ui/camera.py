@@ -614,12 +614,7 @@ def compatible_panels():
         "DATA_PT_context_camera",
         "DATA_PT_camera_stereoscopy",
         "DATA_PT_camera",
-        #"DATA_PT_camera_background_image",
-        #"DATA_PT_camera_display",
-        #"DATA_PT_camera_display_composition_guides",
-        #"DATA_PT_camera_display_passepartout",
-        #"DATA_PT_camera_safe_areas",
-        #"DATA_PT_camera_safe_areas_center_cut",
+        "DATA_PT_camera_background_image",
         "DATA_PT_custom_props_camera",
      ]
      types = bpy.types
