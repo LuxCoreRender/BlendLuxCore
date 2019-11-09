@@ -31,7 +31,7 @@ def handler(scene):
                 utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexSmoke"):
             found_smoke_sequence = True
             for n in mat.luxcore.node_tree.nodes:
-                if n.active and n.name.split('.')[0] == "Material Output":
+                if n.name.split('.')[0] == "Material Output" and n.active:
                     # Force a viewport update
                     mat.luxcore.node_tree.links.new(n.inputs["Material"], n.inputs["Material"].links[0].from_socket)
 

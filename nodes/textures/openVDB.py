@@ -20,6 +20,9 @@ LAST_FRAME_DESC = (
     "Lower this value if you want to leave out frames from the end of the sequence"
 )
 
+HIGH_RES_DESC= (
+    "The high resolution amplification used for generating the smoke data"
+)
 class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "OpenVDB File"
     bl_width_default = 200
@@ -48,18 +51,43 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
 
             self.outputs.clear()
             names = pyluxcore.GetOpenVDBGridNames(bpy.path.abspath(self.file_path))
+            self.has_high_resolution = False
+            self.use_high_resolution = False
+
             for n in names:
-                bbox, gridtype = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), n)
+                # metadata is only exposed for blender cache files, its a list with the following data
+                # [min_bbox, max_bbox, res, min_res, max_res, base_res, obmat, obj_shift_f]
+                creator, bbox, gridtype, metadata = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), n)
+                if creator == "Blender/Smoke":
+                    if "low" in n:
+                        self.has_high_resolution = True
+                        self.use_high_resolution = True
+                        continue
+
+                    self.creator = "blender"
+                    base_res = metadata[5]
+
+                    self.nx = base_res[0]
+                    self.ny = base_res[1]
+                    self.nz = base_res[2]
+
+                elif "Houdini" in creator:
+                    self.creator = "houdini"
+                    if n == "density" or len(names) == 1:
+                        self.nx = abs(bbox[0] - bbox[3])
+                        self.ny = abs(bbox[1] - bbox[4])
+                        self.nz = abs(bbox[2] - bbox[5])
+                else:
+                    self.creator = "other"
+                    if n == "density" or len(names) == 1:
+                        self.nx = abs(bbox[0] - bbox[3])
+                        self.ny = abs(bbox[1] - bbox[4])
+                        self.nz = abs(bbox[2] - bbox[5])
 
                 if gridtype == "float":
                     self.outputs.new("LuxCoreSocketFloatPositive", n)
                 else:
                     self.outputs.new("LuxCoreSocketColor", n)
-
-                if n == "density" or len(names) == 1:
-                    self.nx = abs(bbox[0] - bbox[3])
-                    self.ny = abs(bbox[1] - bbox[4])
-                    self.nz = abs(bbox[2] - bbox[5])
 
             # Reconnect output sockets with same name as previously connected ones
             for e in self.outputs:
@@ -136,30 +164,30 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
         "float", "Float", "4 bytes per value. Required memory is 2 times the size of half and 4 times the size of Byte",
         2),
     ]
+    creator_items = [
+        ("blender", "Blender File", "The OpenVDB files were generated with Blender", 0),
+        ("houdini", "Houdini File", "The OpenVDB files were generated with Houdini", 1),
+        ("other", "other File", "The OpenVDB files were generated with other programm", 2),
+    ]
 
     precision: EnumProperty(name="Precision", items=precision_items, default="half",
                             description="How many bytes to use per value. The floating point precision "
                                         "increases/decreases when more/less bytes are used. Low floating "
                                         "point precision can lead to artifacts when the smoke resolution is low")
 
+    amplify: IntProperty(name="High Resolution Devisions", default=1, min=1,  description=HIGH_RES_DESC)
     file_path: StringProperty(name="OpenVDB File", subtype="FILE_PATH", update=update_file_path, description="Specify path to OpenVDB file. Only portable if a relative path is used")
-
     first_frame: IntProperty(name="First Frame", default=1, min=1,  description=FIRST_FRAME_DESC)
     last_frame: IntProperty(name="Last Frame", default=2, min=1, description=LAST_FRAME_DESC)
     # TODO description?
     frame_offset: IntProperty(name="Offset", default=0)
 
     use_internal_cachefiles: BoolProperty(name="Use Internal Cache Files", default=True, update=update_use_internal)
+    use_high_resolution: BoolProperty(name="Use High Resolution", default=True)
+    has_high_resolution: BoolProperty(name="Has High Resolution", default=False)
     use_bbox_offset: BoolProperty(name="Use Bounding Box Offset", default=True)
-
-    creator_items = [
-        ("blender", "Blender File", "The OpenVDB files were generated with Blender.", 0),
-        ("houdini", "Houdini File", "The OpenVDB files were generated with Houdini.", 1),
-        ("other", "other File", "The OpenVDB files were generated with other programm.", 2),
-    ]
     creator: EnumProperty(name="Creator", items=creator_items, default="blender",
                             description="The 3D programm which generated the OpenVDB files.")
-
 
     nx: IntProperty(name="nx", description="Number of cells in x direction", default=32)
     ny: IntProperty(name="ny", description="Number of cells in y direction", default=32)
@@ -175,7 +203,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             self.outputs.clear()
             names = pyluxcore.GetOpenVDBGridNames(bpy.path.abspath(self.file_path))
             for n in names:
-                bbox, gridtype = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), n)
+                creator, bbox, gridtype, metadata = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), n)
 
                 if gridtype[0] == "float":
                     self.outputs.new("LuxCoreSocketFloatPositive", n)
@@ -198,6 +226,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             col = layout.column(align=True)
             col.enabled = True
             col.prop(self, "creator")
+            layout.prop(self, "precision")
 
             if utils.find_smoke_domain_modifier(self.domain) and self.use_internal_cachefiles:
                 col.enabled = False
@@ -216,8 +245,17 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                 col.prop(self, "frame_offset")
 
                 layout.prop(self, "use_bbox_offset")
+                if self.has_high_resolution:
+                    layout.prop(self, "use_high_resolution")
 
                 col = layout.column(align=True)
+                if self.creator == "blender":
+                    if self.use_high_resolution:
+                        col.prop(self, "amplify")
+                    col = layout.column(align=True)
+                    col.enabled = False
+                else:
+                    col.enabled = True
                 col.prop(self, "nx")
                 col.prop(self, "ny")
                 col.prop(self, "nz")
@@ -288,8 +326,13 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
         # Combine transformations of domain bounding box
         obmat = tex_loc @ tex_rot @ tex_sca
 
+        grid_name = output_socket.name
+        if self.has_high_resolution and not self.use_high_resolution and grid_name in \
+                {"density", "flame", "fuel", "heat", "react"}:
+            grid_name = grid_name + "_low"
+
         # Get grid information from OpenVDB file, i.e. grid bounding box and type
-        bbox, gridtype = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(file_path), output_socket.name)
+        creator, bbox, gridtype, metadata = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(file_path), grid_name)
 
         fluidmat = mathutils.Matrix()
         houdini_transform = mathutils.Matrix()
@@ -302,7 +345,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             amplify = 1
             use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
 
-            if use_high_resolution and output_socket.name not in {"density_low", "flame_low", "fuel_low",
+            if use_high_resolution and grid_name not in {"density_low", "flame_low", "fuel_low",
                                                                   "react_low", "velocity", "heat"}:
                 # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
                 amplify = smoke_domain_mod.domain_settings.amplify + 1
@@ -322,15 +365,39 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             fluidmat = fluidmat @ mathutils.Matrix.Translation(mathutils.Vector(0.5*cell_size))
 
         else:
-            if self.creator != "other":
+            if self.creator == "blender":
+                base_res = metadata[5]
+                min_res = metadata[3]
+                min_bbox = mathutils.Vector(metadata[0])
+                max_bbox = mathutils.Vector(metadata[1])
+
+                amp = 1
+                if self.use_high_resolution:
+                    amp = self.amplify + 1
+
+                cell_size = ((max_bbox[0] - min_bbox[0]) / base_res[0] / amp,
+                             (max_bbox[1] - min_bbox[1]) / base_res[1] / amp,
+                             (max_bbox[2] - min_bbox[2]) / base_res[2] / amp)
+
+                offset = mathutils.Matrix.Translation(((max_bbox[0] - min_bbox[0]) * min_res[0] / base_res[0],
+                (max_bbox[1] - min_bbox[1]) * min_res[1] / base_res[1],
+                (max_bbox[2] - min_bbox[2]) * min_res[2] / base_res[2]))
+
+                # Construct fluid matrix
+                fluidmat[0][0] = nx / base_res[0] / amp
+                fluidmat[1][1] = ny / base_res[1] / amp
+                fluidmat[2][2] = nz / base_res[2] / amp
+
+                fluidmat = fluidmat @ offset @ mathutils.Matrix.Translation(0.5*mathutils.Vector(cell_size))
+            elif self.creator == "houdini":
                 fluidmat[0][0] = nx/self.nx
                 fluidmat[1][1] = ny/self.ny
                 fluidmat[2][2] = nz/self.nz
 
-            if self.creator == "houdini":
                 # As y is Up in Houdini, switch y and z axis to fit coordonate frame of Blender
                 houdini_transform = mathutils.Matrix.Translation((0.5, 0.5, 0.5)) @ mathutils.Matrix.Rotation(radians(90.0), 4, 'X') \
                                     @ mathutils.Matrix.Translation((-0.5, -0.5, -0.5))
+
 
         # LuxCore normalize grid dimensions to [0..1] range, if the dimension of the bounding box of different grids
         # in one file is different the bounding box offset, e.g. lower corner of the box has to be considered,
@@ -358,7 +425,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             "ny": ny,
             "nz": nz,
             "openvdb.file": bpy.path.abspath(file_path),
-            "openvdb.grid": output_socket.name,
+            "openvdb.grid": grid_name,
             # Mapping
             "mapping.type": mapping_type,
             "mapping.transformation": matrix_transformation,
