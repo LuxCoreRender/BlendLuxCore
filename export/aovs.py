@@ -54,7 +54,7 @@ def convert(exporter, scene, context=None, engine=None):
             # (they are a render layer property and those are not evaluated for viewport)
             aovs = None
 
-        use_transparent_film = pipeline.transparent_film and not utils.use_filesaver(context, scene)
+        use_transparent_film = pipeline.transparent_film and not utils.using_filesaver(context, scene)
 
         # Some AOVs need tonemapping with a custom imagepipeline
         pipeline_index = 0
@@ -123,7 +123,7 @@ def convert(exporter, scene, context=None, engine=None):
             config = scene.luxcore.config
             use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
 
-            if use_adaptive_sampling and not utils.use_filesaver(context, scene):
+            if use_adaptive_sampling and not utils.using_filesaver(context, scene):
                 noise_detection_pipeline_index = pipeline_index
                 pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props,
                                                                      pipeline_index, definitions)

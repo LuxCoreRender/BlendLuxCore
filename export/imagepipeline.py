@@ -27,7 +27,7 @@ def convert(scene, context=None, index=0):
 
 def convert_defs(context, scene, definitions, plugin_index, define_radiancescales=True):
     pipeline = scene.camera.data.luxcore.imagepipeline
-    use_filesaver = utils.use_filesaver(context, scene)
+    use_filesaver = utils.using_filesaver(context, scene)
     # Start index of plugins. Some AOVs prepend their own plugins.
     index = plugin_index
 
