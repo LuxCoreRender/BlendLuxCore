@@ -27,7 +27,7 @@ def convert(scene, context=None, index=0):
 
 def convert_defs(context, scene, definitions, plugin_index, define_radiancescales=True):
     pipeline = scene.camera.data.luxcore.imagepipeline
-    use_filesaver = utils.using_filesaver(context, scene)
+    using_filesaver = utils.using_filesaver(context, scene)
     # Start index of plugins. Some AOVs prepend their own plugins.
     index = plugin_index
 
@@ -38,38 +38,35 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
     if pipeline.tonemapper.enabled:
         index = convert_tonemapper(definitions, index, pipeline.tonemapper)
 
-    if not (context and scene.luxcore.viewport.denoise):
+    if use_backgroundimage(context, scene):
         # Note: Blender expects the alpha to be NOT premultiplied, so we only
         # premultiply it when the backgroundimage plugin is used
-        if use_backgroundimage(context, scene):
-            index = _premul_alpha(definitions, index)
+        index = _premul_alpha(definitions, index)
+        index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
 
-        if use_backgroundimage(context, scene):
-            index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
+    if pipeline.mist.is_enabled(context):
+        index = _mist(definitions, index, pipeline.mist, scene)
 
-        if pipeline.mist.enabled:
-            index = _mist(definitions, index, pipeline.mist, scene)
+    if pipeline.bloom.is_enabled(context):
+        index = _bloom(definitions, index, pipeline.bloom)
 
-        if pipeline.bloom.enabled:
-            index = _bloom(definitions, index, pipeline.bloom)
+    if pipeline.coloraberration.is_enabled(context):
+        index = _coloraberration(definitions, index, pipeline.coloraberration)
 
-        if pipeline.coloraberration.enabled:
-            index = _coloraberration(definitions, index, pipeline.coloraberration)
+    if pipeline.vignetting.is_enabled(context):
+        index = _vignetting(definitions, index, pipeline.vignetting)
 
-        if pipeline.vignetting.enabled:
-            index = _vignetting(definitions, index, pipeline.vignetting)
+    if pipeline.camera_response_func.is_enabled(context):
+        index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
 
-        if pipeline.camera_response_func.enabled:
-            index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
+    if pipeline.white_balance.is_enabled(context):
+        index = _white_balance(definitions, index, pipeline.white_balance)
 
-        if pipeline.white_balance.enabled:
-            index = _white_balance(definitions, index, pipeline.white_balance)
-                
-        if pipeline.contour_lines.enabled:
-            index = _contour_lines(definitions, index, pipeline.contour_lines)
+    if pipeline.contour_lines.is_enabled(context):
+        index = _contour_lines(definitions, index, pipeline.contour_lines)
 
 
-    if use_filesaver:
+    if using_filesaver:
         # Needs gamma correction (Blender applies it for us,
         # but now we export for luxcoreui)
         index = _gamma(definitions, index)
@@ -83,7 +80,7 @@ def use_backgroundimage(context, scene):
     viewport_in_camera_view = context and context.region_data.view_perspective == "CAMERA"
     final_render = not context
     pipeline = scene.camera.data.luxcore.imagepipeline
-    return pipeline.backgroundimage.enabled and (final_render or viewport_in_camera_view)
+    return pipeline.backgroundimage.is_enabled(context) and (final_render or viewport_in_camera_view)
 
 
 def _fallback(definitions):
