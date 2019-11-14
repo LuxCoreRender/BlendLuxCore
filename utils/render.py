@@ -1,3 +1,4 @@
+import math
 from . import calc_filmsize
 from .. import utils
 from ..handlers.draw_imageeditor import TileStats
@@ -85,7 +86,7 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
         else:
             refresh_message = "Refreshing film..."
     else:
-        refresh_message = "Film refresh in %ds" % time_until_film_refresh
+        refresh_message = "Film refresh in %d s" % math.ceil(time_until_film_refresh)
 
     # Note: the first argument is only shown in the UI.
     # The second argument is shown in the UI and printed in the console
