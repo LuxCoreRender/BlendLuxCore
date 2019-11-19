@@ -13,8 +13,11 @@ CAUCHYC_DESCRIPTION = (
 )
 
 ARCHGLASS_DESCRIPTION = (
-    "Use for thin sheets of glass like window panes, where refraction does not matter\n"
-    "(skips refraction during transmission, propagates alpha and shadow rays)"
+    "Use for thin sheets of glass like window panes, where refraction does not matter "
+    "(skips refraction during transmission, propagates alpha and shadow rays).\n\n"
+    "Note that instead of using this option, you can also set the shadow color in the "
+    "output node to white, which achieves the same effect while keeping the refraction "
+    "for camera rays, which looks better if the edges of the glass sheets are visible"
 )
 
 
