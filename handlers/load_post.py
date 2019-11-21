@@ -6,6 +6,7 @@ from ..bin import pyluxcore
 from .. import utils
 from ..utils import compatibility
 from . import frame_change_pre
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 @persistent
@@ -52,3 +53,5 @@ def handler(_):
     compatibility.run()
 
     frame_change_pre.using_image_sequences = False
+
+    LuxCoreErrorLog.clear()
