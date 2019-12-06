@@ -60,6 +60,9 @@ class ObjectCache2:
             if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
                 continue
 
+            if not is_viewport_render and obj.is_instancer and not obj.show_instancer_for_render:
+                continue
+
             self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                               luxcore_scene, scene_props, is_viewport_render)
             if engine:
