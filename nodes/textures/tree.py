@@ -84,7 +84,7 @@ luxcore_node_categories_texture = [
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_LIGHT", "Light", items=[
         NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
-        NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
+        NodeItem("LuxCoreNodeTexBlackbody", label="Blackbody Temperature"),
         NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 

@@ -139,7 +139,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatEmission", label="Light Emission"),
         Separator(),
         NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
-        NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
+        NodeItem("LuxCoreNodeTexBlackbody", label="Blackbody Temperature"),
         NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 
