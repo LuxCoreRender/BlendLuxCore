@@ -42,9 +42,9 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup, LuxCoreImagepipelinePlugin):
                         description="The tonemapper converts the image from HDR to LDR")
 
     # Settings for TONEMAP_LINEAR
-    use_autolinear: BoolProperty(name="Auto Brightness", default=True,
+    use_autolinear: BoolProperty(name="Auto Brightness", default=False,
                                   description="Auto-detect the optimal image brightness")
-    linear_scale: FloatProperty(name="Gain", default=0.5, min=0, soft_min=0.00001, soft_max=100,
+    linear_scale: FloatProperty(name="Gain", default=1.0, min=0, soft_min=0.00001, soft_max=100,
                                  precision=5,
                                  description="Image brightness is multiplied with this value")
 
