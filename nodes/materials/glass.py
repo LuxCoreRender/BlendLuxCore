@@ -22,7 +22,7 @@ ARCHGLASS_DESCRIPTION = (
 
 
 class LuxCoreSocketCauchyC(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.1,
+    default_value: FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.01342,
                                  step=0.1, precision=5, description=CAUCHYC_DESCRIPTION,
                                  update=utils_node.force_viewport_update)
 
