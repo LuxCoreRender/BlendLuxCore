@@ -656,6 +656,7 @@ def openVDB_sequence_resolve_all(file):
 
     name = ""
 
+
     if matchObj:
         name = matchObj.group(1)
     else:

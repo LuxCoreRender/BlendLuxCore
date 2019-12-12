@@ -23,6 +23,7 @@ LAST_FRAME_DESC = (
 HIGH_RES_DESC= (
     "The high resolution amplification used for generating the smoke data"
 )
+
 class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "OpenVDB File"
     bl_width_default = 200
@@ -105,6 +106,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             domain_eval = self.domain.evaluated_get(depsgraph)
             self.file_path = self.get_cachefile_name(domain_eval, frame, 0)
             self.creator = "blender"
+            self.use_bbox_offset = True
 
     def update_domain(self, context):
         self.use_internal_cachefiles = False
@@ -120,15 +122,15 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
         mod = utils.find_smoke_domain_modifier(self.domain)
         file_format = mod.domain_settings.cache_file_format
 
-        frame_start = mod.domain_settings.point_cache.point_caches[0].frame_start
-        frame_end = mod.domain_settings.point_cache.point_caches[0].frame_end
+        frame_start = mod.domain_settings.point_cache.frame_start
+        frame_end = mod.domain_settings.point_cache.frame_end
 
         if file_format == 'OPENVDB':
             ext = "vdb"
         else:
             ext = "bphys"
 
-        p = mod.domain_settings.point_cache.point_caches[index]
+        p = mod.domain_settings.point_cache
         print('name:', p.name)
 
         id = p.name
@@ -220,9 +222,13 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
 
         if self.domain:
             col = layout.column(align=True)
-            if utils.find_smoke_domain_modifier(self.domain):
+            mod = utils.find_smoke_domain_modifier(self.domain)
+            if mod:
                 col.prop(self, "use_internal_cachefiles")
 
+                if not self.use_internal_cachefiles and mod.domain_settings.use_adaptive_domain:
+                    col = layout.column(align=True)
+                    col.label(text="Internal Cache found!", icon=icons.WARNING)
             col = layout.column(align=True)
             col.enabled = True
             col.prop(self, "creator")
@@ -282,16 +288,16 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             return self.create_props(props, definitions, luxcore_name)
 
         domain_eval = self.domain.evaluated_get(depsgraph)
+        smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
         frame = depsgraph.scene_eval.frame_current
 
         #Get correct data file according to current frame
-        smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
         file_path = self.file_path
         if self.use_internal_cachefiles:
             if smoke_domain_mod:
                 settings = smoke_domain_mod.domain_settings
-                frame_start = settings.point_cache.point_caches[0].frame_start
-                frame_end = settings.point_cache.point_caches[0].frame_end
+                frame_start = settings.point_cache.frame_start
+                frame_end = settings.point_cache.frame_end
 
                 file_path = self.get_cachefile_name(domain_eval, utils.clamp(frame, frame_start, frame_end), 0)
                 if frame_end > frame_start:
@@ -305,7 +311,8 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
 
         #Get transformation of domain bounding box, local center is lower bounding box corner
         scale = domain_eval.dimensions
-        translate = domain_eval.matrix_world @ mathutils.Vector([v for v in domain_eval.bound_box[0]])
+
+        translate = domain_eval.matrix_world @ mathutils.Vector(domain_eval.bound_box[0][:])
         rotate = domain_eval.rotation_euler
 
         # create a location matrix
@@ -362,33 +369,62 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             fluidmat[1][1] = ny/resolution[1]
             fluidmat[2][2] = nz/resolution[2]
 
-            fluidmat = fluidmat @ mathutils.Matrix.Translation(mathutils.Vector(0.5*cell_size))
-
+            fluidmat = fluidmat @ mathutils.Matrix.Translation(mathutils.Vector(0.5 * cell_size))
         else:
             if self.creator == "blender":
                 base_res = metadata[5]
+                resolution = metadata[2]
                 min_res = metadata[3]
+                max_res = metadata[4]
                 min_bbox = mathutils.Vector(metadata[0])
                 max_bbox = mathutils.Vector(metadata[1])
 
                 amp = 1
                 if self.use_high_resolution:
                     amp = self.amplify + 1
+                resolution[0] *= amp
+                resolution[1] *= amp
+                resolution[2] *= amp
 
-                cell_size = ((max_bbox[0] - min_bbox[0]) / base_res[0] / amp,
-                             (max_bbox[1] - min_bbox[1]) / base_res[1] / amp,
-                             (max_bbox[2] - min_bbox[2]) / base_res[2] / amp)
+                base_res[0] *= amp
+                base_res[1] *= amp
+                base_res[2] *= amp
 
-                offset = mathutils.Matrix.Translation(((max_bbox[0] - min_bbox[0]) * min_res[0] / base_res[0],
-                (max_bbox[1] - min_bbox[1]) * min_res[1] / base_res[1],
-                (max_bbox[2] - min_bbox[2]) * min_res[2] / base_res[2]))
+                min_res[0] *= amp
+                min_res[1] *= amp
+                min_res[2] *= amp
+
+                max_res[0] *= amp
+                max_res[1] *= amp
+                max_res[2] *= amp
+
+                cell_size = ((max_bbox[0] - min_bbox[0]) / base_res[0],
+                             (max_bbox[1] - min_bbox[1]) / base_res[1],
+                             (max_bbox[2] - min_bbox[2]) / base_res[2])
+
+
+                offset = mathutils.Matrix()
+                if not smoke_domain_mod:
+                    offset = mathutils.Matrix.Translation((min_res[0]/base_res[0]*scale[0],
+                    min_res[1]/base_res[1]*scale[1],
+                    min_res[2]/base_res[2]*scale[2]))
 
                 # Construct fluid matrix
-                fluidmat[0][0] = nx / base_res[0] / amp
-                fluidmat[1][1] = ny / base_res[1] / amp
-                fluidmat[2][2] = nz / base_res[2] / amp
+                fluidmat[0][0] = nx / resolution[0]
+                fluidmat[1][1] = ny / resolution[1]
+                fluidmat[2][2] = nz / resolution[2]
 
-                fluidmat = fluidmat @ offset @ mathutils.Matrix.Translation(0.5*mathutils.Vector(cell_size))
+                ob_scale = mathutils.Matrix()
+                ob_scale[0][0] = resolution[0] / base_res[0]
+                ob_scale[1][1] = resolution[1] / base_res[1]
+                ob_scale[2][2] = resolution[2] / base_res[2]
+
+                obmat = obmat @ ob_scale
+
+                if self.use_bbox_offset:
+                    obmat = offset @ obmat
+
+                fluidmat = fluidmat @ mathutils.Matrix.Translation(0.5*mathutils.Vector(cell_size))
             elif self.creator == "houdini":
                 fluidmat[0][0] = nx/self.nx
                 fluidmat[1][1] = ny/self.ny
@@ -407,7 +443,6 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             fluidmat = fluidmat @ mathutils.Matrix.Translation(
                 mathutils.Vector((bbox[0]/nx, bbox[1]/ny,bbox[2]/nz)))
 
-
         mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
         mapping_type = 'globalmapping3d'
 
@@ -416,7 +451,6 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                                                      scene=exporter.scene,
                                                      apply_worldscale=True,
                                                      invert=True)
-
         definitions = {
             "type": "densitygrid",
             "wrap": "black",
