@@ -37,7 +37,9 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
 
     reduce_resolution_on_edit: BoolProperty(name="Reduce first sample resolution", default=True,
                                              description="Render the first sample after editing the scene "
-                                                         "with reduced resolution to provide a quicker response")
+                                                         "with reduced resolution to provide a quicker response "
+                                                         "(does not work when light tracing or bidir are used "
+                                                         "for viewport rendering)")
     resolution_reduction: IntProperty(name="Block Size", default=4, min=2,
                                        description="Size of the startup blocks in pixels. A size of 4 means that "
                                                    "one sample is spread over 4x4 pixels on startup")

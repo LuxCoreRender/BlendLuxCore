@@ -108,8 +108,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
 
     while True:
         now = time()
-        # These two properties are shown as "buttons" in the UI
-        refresh_requested = LuxCoreDisplaySettings.refresh or LuxCoreDenoiser.refresh
+        manual_refresh_requested = LuxCoreDisplaySettings.refresh or LuxCoreDenoiser.refresh
         update_stats = (now - last_stat_refresh) > _stat_refresh_interval(start, scene)
         time_until_film_refresh = depsgraph.scene.luxcore.display.interval - (now - last_film_refresh)
         fast_refresh = now - start < FAST_REFRESH_DURATION
@@ -129,16 +128,16 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
         engine.exporter.update_session(changes, engine.session)
 
         if engine.session.IsInPause():
-            if changes or refresh_requested:
+            if changes or manual_refresh_requested:
                 engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=False)
         else:
-            if fast_refresh or update_stats or changes or refresh_requested:
+            if fast_refresh or update_stats or changes or manual_refresh_requested or (time_until_film_refresh <= 0):
                 # We have to check the stats often to see if a halt condition is met
                 # But film drawing is expensive, so we don't do it every time we check stats
                 draw_film = fast_refresh or (time_until_film_refresh <= 0)
 
                 # Refresh quickly when user changed something or requested a refresh via button
-                draw_film |= changes or refresh_requested
+                draw_film |= changes or manual_refresh_requested
 
                 stats = utils_render.update_stats(engine.session)
                 if draw_film:

@@ -50,6 +50,7 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
         self.inputs.new("LuxCoreSocketVolume", "Interior Volume")
         self.inputs.new("LuxCoreSocketVolume", "Exterior Volume")
+        # self.inputs.new("LuxCoreSocketFloatUnbounded", "Displacement")
         super().init(context)
 
     def copy(self, orig_node):

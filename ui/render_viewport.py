@@ -53,12 +53,14 @@ class LUXCORE_RENDER_PT_viewport_settings_advanced(RenderButtonsPanel, Panel):
         config = context.scene.luxcore.config
         luxcore_engine = config.engine
 
+        resolution_reduction_supported = not (utils.using_bidir_in_viewport(context.scene)
+                                              or utils.using_hybridbackforward_in_viewport(context.scene))
         col = layout.column(align=True)
-        col.enabled = not (luxcore_engine == "BIDIR" and viewport.use_bidir)
+        col.enabled = resolution_reduction_supported
         col.prop(viewport, "reduce_resolution_on_edit")
 
         col = layout.column(align=True)
-        col.enabled = viewport.reduce_resolution_on_edit and not luxcore_engine == "BIDIR"
+        col.enabled = viewport.reduce_resolution_on_edit and resolution_reduction_supported
         col.prop(viewport, "resolution_reduction")
 
         col = layout.column(align=True)

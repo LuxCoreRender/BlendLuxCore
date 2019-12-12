@@ -8,9 +8,18 @@ from .light import GAMMA_DESCRIPTION
 from .image_user import LuxCoreImageUser
 
 
-class LuxCoreImagepipelineTonemapper(PropertyGroup):
+class LuxCoreImagepipelinePlugin:
+    def is_enabled(self, context):
+        using_viewport_denoiser = context and context.scene.luxcore.viewport.denoise
+        if using_viewport_denoiser and not self.compatible_with_viewport_denoising:
+            return False
+        return self.enabled
+
+
+class LuxCoreImagepipelineTonemapper(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Tonemapper"
     enabled: BoolProperty(name=NAME, default=True, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
 
     FSTOP_DESC = "Camera aperture, lower values result in a brighter image"
     EXPOSURE_DESC = (
@@ -33,9 +42,9 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup):
                         description="The tonemapper converts the image from HDR to LDR")
 
     # Settings for TONEMAP_LINEAR
-    use_autolinear: BoolProperty(name="Auto Brightness", default=True,
+    use_autolinear: BoolProperty(name="Auto Brightness", default=False,
                                   description="Auto-detect the optimal image brightness")
-    linear_scale: FloatProperty(name="Gain", default=0.5, min=0, soft_min=0.00001, soft_max=100,
+    linear_scale: FloatProperty(name="Gain", default=1.0, min=0, soft_min=0.00001, soft_max=100,
                                  precision=5,
                                  description="Image brightness is multiplied with this value")
 
@@ -59,9 +68,10 @@ class LuxCoreImagepipelineTonemapper(PropertyGroup):
         return autolinear or self.type == "TONEMAP_REINHARD02"
 
 
-class LuxCoreImagepipelineBloom(PropertyGroup):
+class LuxCoreImagepipelineBloom(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Bloom"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
 
     radius: FloatProperty(name="Radius", default=7, min=0.1, max=100, precision=1, subtype="PERCENTAGE",
                            description="Size of the bloom effect (percent of the image size)")
@@ -69,9 +79,10 @@ class LuxCoreImagepipelineBloom(PropertyGroup):
                            description="Strength of the bloom effect (a linear mix factor)")
 
 
-class LuxCoreImagepipelineMist(PropertyGroup):
+class LuxCoreImagepipelineMist(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Mist"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
 
     EXCLUDE_BACKGROUND_DESC = "Disable mist over background parts of the image (where distance = infinity)"
 
@@ -86,31 +97,35 @@ class LuxCoreImagepipelineMist(PropertyGroup):
                                       description=EXCLUDE_BACKGROUND_DESC)
 
 
-class LuxCoreImagepipelineVignetting(PropertyGroup):
+class LuxCoreImagepipelineVignetting(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Vignetting"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
 
     scale: FloatProperty(name="Strength", default=40, min=0, soft_max=60, max=100, precision=1,
                           subtype="PERCENTAGE", description="Strength of the vignette")
 
-class LuxCoreImagepipelineWhiteBalance(PropertyGroup):
+class LuxCoreImagepipelineWhiteBalance(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "White Balance"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
 
     temperature: FloatProperty(name="temperature", default=6500, min=1000, max=10000, precision=50,
                           description="White point temperature")
 
-class LuxCoreImagepipelineColorAberration(PropertyGroup):
+class LuxCoreImagepipelineColorAberration(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Color Aberration"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = False
 
     amount: FloatProperty(name="Strength", default=0.5, min=0, soft_max=10, max=100, precision=1,
                            subtype="PERCENTAGE", description="Strength of the color aberration effect")
 
 
-class LuxCoreImagepipelineBackgroundImage(PropertyGroup):
+class LuxCoreImagepipelineBackgroundImage(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Background Image"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
 
     def update_image(self, context):
         self.image_user.update(self.image)
@@ -126,9 +141,10 @@ class LuxCoreImagepipelineBackgroundImage(PropertyGroup):
     storage: EnumProperty(name="Storage", items=storage_items, default="byte")
 
 
-class LuxCoreImagepipelineCameraResponseFunc(PropertyGroup):
+class LuxCoreImagepipelineCameraResponseFunc(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Analog Film Simulation"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
 
     # TODO: Support CRF file as Blender text block (similar to IES files)
     type_items = [
@@ -144,9 +160,10 @@ class LuxCoreImagepipelineCameraResponseFunc(PropertyGroup):
     preset: StringProperty(name="")
 
 
-class LuxCoreImagepipelineContourLines(PropertyGroup):
+class LuxCoreImagepipelineContourLines(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Irradiance Contour Lines"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = False
 
     ZERO_GRID_SIZE_DESC = (
         "Size of the black grid to draw on image where irradiance values are not avilable "

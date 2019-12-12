@@ -326,9 +326,6 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
         layout.prop(context.scene.luxcore.config, "film_opencl_enable")
         if context.scene.luxcore.config.film_opencl_enable:
             layout.prop(context.scene.luxcore.config, "film_opencl_device", text="")
-
-        if context.scene.luxcore.viewport.denoise:
-            layout.label(text="Most plugins are disabled in viewport because of viewport denoising", icon=icons.INFO)
             
 
 class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):
@@ -475,6 +472,9 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_aberration(CameraButtonsPanel, Pane
         coloraberration = pipeline.coloraberration
         layout.enabled = coloraberration.enabled
 
+        if context.scene.luxcore.viewport.denoise:
+            self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
+
         layout.prop(coloraberration, "amount", slider=True)
 
 
@@ -576,6 +576,9 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
         pipeline = context.camera.luxcore.imagepipeline
         contour_lines = pipeline.contour_lines
         layout.enabled = contour_lines.enabled
+
+        if context.scene.luxcore.viewport.denoise:
+            self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
 
         layout.prop(contour_lines, "scale")
         layout.prop(contour_lines, "contour_range")
