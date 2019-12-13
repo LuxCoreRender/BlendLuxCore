@@ -79,11 +79,11 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             return self.create_props(props, definitions, luxcore_name)
 
         frame_change_pre.using_smoke_sequences = True
-        domain = self.domain.evaluated_get(depsgraph)
+        domain_eval = self.domain.evaluated_get(depsgraph)
 
-        scale = domain.dimensions
-        translate = domain.matrix_world @ mathutils.Vector([v for v in domain.bound_box[0]])
-        rotate = domain.rotation_euler
+        scale = domain_eval.dimensions
+        translate = domain_eval.matrix_world @ mathutils.Vector(domain_eval.bound_box[0][:])
+        rotate = domain_eval.rotation_euler
 
         # create a location matrix
         tex_loc = mathutils.Matrix.Translation(translate)
@@ -100,15 +100,29 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         tex_rot2 = mathutils.Matrix.Rotation(rotate[2], 4, 'Z')
         tex_rot = tex_rot2 @ tex_rot1 @ tex_rot0
 
+        resolution, grid = smoke.convert(domain_eval, output_socket.name, depsgraph)
+        nx, ny, nz = resolution
+
+        smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
+        use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
+        grid_name = output_socket.name
+
+        cell_size = mathutils.Vector((0, 0, 0))
+        amplify = 1
+        if use_high_resolution and grid_name not in {"density_low", "flame_low", "fuel_low",
+                                                     "react_low", "velocity", "heat"}:
+            # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
+            amplify = smoke_domain_mod.domain_settings.amplify + 1
+
+        for i in range(3):
+            cell_size[i] = smoke_domain_mod.domain_settings.cell_size[i] * 1/amplify
+
         # combine transformations
         mapping_type = 'globalmapping3d'
-        matrix_transformation = utils.matrix_to_list(tex_loc @ tex_rot @ tex_sca,
+        matrix_transformation = utils.matrix_to_list(tex_loc @ tex_rot @ tex_sca @ mathutils.Matrix.Translation(0.25 * mathutils.Vector(cell_size)),
                                                      scene=exporter.scene,
                                                      apply_worldscale=True,
                                                      invert=True)
-
-        resolution, grid = smoke.convert(domain, output_socket.name, depsgraph)
-        nx, ny, nz = resolution
 
         definitions = {
             "type": "densitygrid",
