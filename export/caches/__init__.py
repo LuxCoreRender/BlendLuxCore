@@ -87,7 +87,7 @@ class VisibilityCache:
         for dg_obj_instance in depsgraph.object_instances:
             if dg_obj_instance.show_self:
                 obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-                if obj.type in EXPORTABLE_OBJECTS:
+                if not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS:
                     keys.add(utils.make_key_from_instance(dg_obj_instance))
         return keys
 
