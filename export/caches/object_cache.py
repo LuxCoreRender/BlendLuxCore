@@ -86,10 +86,7 @@ class ObjectCache2:
     def _is_visible(self, dg_obj_instance, obj):
         # TODO if this code needs to be used elsewhere (e.g. in material preview),
         #  move it to utils (it doesn't concern this cache class)
-        if obj.luxcore.exclude_from_render:
-            return not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS
-        else:
-            return dg_obj_instance.show_self and obj.type in EXPORTABLE_OBJECTS
+        return dg_obj_instance.show_self and not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS
 
     def _get_mesh_key(self, obj, use_instancing, is_viewport_render=True):
         # Important: we need the data of the original object, not the evaluated one.
