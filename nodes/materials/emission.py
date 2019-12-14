@@ -40,6 +40,7 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
     bl_width_default = 160
 
     gain: FloatProperty(update=utils_node.force_viewport_update, name="Gain", default=1, min=0, description="Brightness multiplier")
+    use_advanced: BoolProperty(name="Advanced", default=False)
     power: FloatProperty(update=utils_node.force_viewport_update, name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
     efficacy: FloatProperty(update=utils_node.force_viewport_update, name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
     ies: PointerProperty(update=utils_node.force_viewport_update, type=LuxCoreIESProps)
@@ -65,9 +66,13 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
 
     def draw_buttons(self, context, layout):
         col = layout.column(align=True)
-        col.prop(self, "gain")
-        col.prop(self, "power")
-        col.prop(self, "efficacy")
+        col.prop(self, "use_advanced")
+        col = layout.column(align=True)
+        if self.use_advanced:
+            col.prop(self, "power")
+            col.prop(self, "efficacy")
+        else:
+            col.prop(self, "gain")
 
         layout.prop(self, "importance")
 
@@ -111,9 +116,13 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         It is called from LuxCoreNodeMaterial.export_common_props()
         """
         definitions["emission"] = self.inputs["Color"].export(exporter, depsgraph, props)
-        definitions["emission.gain"] = [self.gain] * 3
-        definitions["emission.power"] = self.power
-        definitions["emission.efficency"] = self.efficacy
+        if self.use_advanced:
+            definitions["emission.power"] = self.power
+            definitions["emission.efficency"] = self.efficacy
+        else:
+            definitions["emission.power"] = 0
+            definitions["emission.efficency"] = 0
+            definitions["emission.gain"] = [self.gain] * 3
         definitions["emission.importance"] = self.importance
         definitions["emission.theta"] = math.degrees(self.spread_angle)
         lightgroups = exporter.scene.luxcore.lightgroups

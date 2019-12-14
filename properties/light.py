@@ -129,6 +129,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
                            description="If radius is greater than 0, a sphere light is used")
 
     # point, mappoint, spot, laser
+    use_advanced: BoolProperty(name="Advanced", default=False,
+                               description = "Use power/efficacy values instead of gain to control emission")
     power: FloatProperty(name="Power", default=100, min=0, description=POWER_DESCRIPTION, unit='POWER')
     efficacy: FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
 
