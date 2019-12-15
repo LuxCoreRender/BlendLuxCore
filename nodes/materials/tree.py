@@ -143,6 +143,11 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 
+LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_SHAPE", "Shape Modifiers", items=[
+        NodeItem("LuxCoreNodeShapeSubdiv", label="Subdivision"),
+        NodeItem("LuxCoreNodeShapeDisplacement", label="Displacement"),
+    ]),
+
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_POINTER", "Pointer", items=[
         NodeItem("LuxCoreNodeTreePointer", label="Pointer"),
     ]),
