@@ -119,6 +119,8 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         if self.use_advanced:
             definitions["emission.power"] = self.power
             definitions["emission.efficency"] = self.efficacy
+            if self.power == 0 or self.efficacy == 0:
+                definitions["emission.gain"] = 0
         else:
             definitions["emission.power"] = 0
             definitions["emission.efficency"] = 0
