@@ -146,6 +146,7 @@ luxcore_node_categories_material = [
 LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_SHAPE", "Shape Modifiers", items=[
         NodeItem("LuxCoreNodeShapeSubdiv", label="Subdivision"),
         NodeItem("LuxCoreNodeShapeDisplacement", label="Displacement"),
+        NodeItem("LuxCoreNodeShapeHarlequin", label="Harlequin"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_POINTER", "Pointer", items=[
