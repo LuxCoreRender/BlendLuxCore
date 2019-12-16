@@ -88,14 +88,8 @@ def _fallback(definitions):
     Fallback imagepipeline if no camera is in the scene
     """
     index = 0
-    definitions[str(index) + ".type"] = "NOP"
-    index += 1
-    definitions[str(index) + ".type"] = "TONEMAP_AUTOLINEAR"
-    index += 1
-    # The result of autolinear looks too bright in Blender.
-    # Apply the default scale of 0.5 that is also the default in the camera settings
     definitions[str(index) + ".type"] = "TONEMAP_LINEAR"
-    definitions[str(index) + ".scale"] = 0.5
+    definitions[str(index) + ".scale"] = 1
 
 
 def convert_tonemapper(definitions, index, tonemapper):

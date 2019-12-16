@@ -56,11 +56,21 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
+        if light.type in {"POINT", "SPOT", "AREA"}:
+            layout.prop(light.luxcore, "use_advanced")
+
         if light.type == "AREA" and light.luxcore.node_tree:
             layout.label(text="Light color is defined by emission node", icon=icons.INFO)
         else:
-            layout.prop(light.luxcore, "rgb_gain", text="Color")
-        layout.prop(light.luxcore, "gain")
+            if not (light.type == "SUN" and light.luxcore.light_type == "sun"):
+                layout.prop(light.luxcore, "rgb_gain", text="Color")
+
+        if light.luxcore.use_advanced and light.type in {"POINT", "SPOT", "AREA"}:
+            col = layout.column(align=True)
+            col.prop(light.luxcore, "power")
+            col.prop(light.luxcore, "efficacy")
+        else:
+            layout.prop(light.luxcore, "gain")
 
         col = layout.column(align=True)
         op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
@@ -69,16 +79,11 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         col.prop_search(light.luxcore, "lightgroup",
                         lightgroups, "custom",
                         icon=icons.LIGHTGROUP, text="")
-        
 
         layout.separator()
 
         # TODO: split this stuff into separate panels for each light type?
         if light.type == "POINT":
-            col = layout.column(align=True)
-            col.prop(light.luxcore, "power")
-            col.prop(light.luxcore, "efficacy")
-            
             layout.prop(light, "shadow_soft_size", text="Radius")                        
             
             self.draw_image_controls(context)
@@ -100,17 +105,9 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
 
         elif light.type == "SPOT":
-            col = layout.column(align=True)
-            col.prop(light.luxcore, "power")
-            col.prop(light.luxcore, "efficacy")
-
             self.draw_image_controls(context)
 
         elif light.type == "AREA":
-            col = layout.column(align=True)
-            col.prop(light.luxcore, "power")
-            col.prop(light.luxcore, "efficacy")
-
             if light.luxcore.is_laser:
                 col = layout.column(align=True)
                 col.prop(light, "size", text="Size")
