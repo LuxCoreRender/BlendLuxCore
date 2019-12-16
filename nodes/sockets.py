@@ -277,10 +277,11 @@ class LuxCoreSocketMapping2D(bpy.types.NodeSocket, LuxCoreNodeSocket):
     def export_default(self):
         # These are not the LuxCore API default values because
         # we have to compensate Blenders mirrored V axis
+        uvindex = 0
         uvscale = [1, -1]
         uvrotation = 0
         uvdelta = [0, 1]
-        return uvscale, uvrotation, uvdelta
+        return uvindex, uvscale, uvrotation, uvdelta
 
 
 class LuxCoreSocketMapping3D(bpy.types.NodeSocket, LuxCoreNodeSocket):
@@ -293,9 +294,10 @@ class LuxCoreSocketMapping3D(bpy.types.NodeSocket, LuxCoreNodeSocket):
     default_value = None
 
     def export_default(self):
+        uvindex = 0
         mapping_type = "globalmapping3d"
         transformation = mathutils.Matrix()
-        return mapping_type, transformation
+        return mapping_type, uvindex, transformation
 
 
 # Specify the allowed inputs of sockets. Subclasses inherit the settings of their parents.

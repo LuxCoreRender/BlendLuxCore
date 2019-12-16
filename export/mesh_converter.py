@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import numpy as np
 from .. import utils
 from .caches.exported_data import ExportedMesh
 
@@ -14,19 +15,20 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         vertPtr = mesh.vertices[0].as_pointer()
         polyPtr = mesh.polygons[0].as_pointer()
 
+        loopUVsPtrList = []
+        loopColsPtrList = []
+
         if mesh.uv_layers:
-            # TODO get actual active layer
-            active_uv_layer = 0
-            loopUVsPtr = mesh.uv_layers[active_uv_layer].data[0].as_pointer()
+            for uv in mesh.uv_layers:
+                loopUVsPtrList.append(uv.data[0].as_pointer())
         else:
-            loopUVsPtr = 0
+            loopUVsPtrList.append(0)
 
         if mesh.vertex_colors:
-            # TODO get actual active layer
-            active_vcol_layer = 0
-            loopColsPtr = mesh.vertex_colors[active_vcol_layer].data[0].as_pointer()
+            for vcol in mesh.vertex_colors:
+                loopColsPtrList.append(vcol.data[0].as_pointer())
         else:
-            loopColsPtr = 0
+            loopColsPtrList.append(0)
 
         material_count = max(1, len(mesh.materials))
 
@@ -35,9 +37,25 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         else:
             mesh_transform = utils.matrix_to_list(transform)
 
-        mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                           vertPtr, polyPtr, loopUVsPtr, loopColsPtr,
-                                                           material_count, mesh_transform)
+        nploopUVsPtrList = np.array(loopUVsPtrList, dtype=np.uintp)
+        nploopColsPtrList = np.array(loopColsPtrList, dtype=np.uintp)
+
+        if len(loopUVsPtrList) <= 1 and len(loopColsPtrList) <= 1:
+            loopUVsPtr = 0
+            loopColsPtr = 0
+            if mesh.uv_layers:
+                loopUVsPtr = mesh.uv_layers[0].data[0].as_pointer()
+            if mesh.vertex_colors:
+                loopColsPtr = mesh.vertex_colors[0].data[0].as_pointer()
+
+            mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
+                                                               vertPtr, polyPtr, loopUVsPtr, loopColsPtr,
+                                                               material_count, mesh_transform)
+        else:
+            mesh_definitions = luxcore_scene.DefineBlenderMeshExt(mesh_key, loopTriCount, loopTriPtr, loopPtr,
+                                                                  vertPtr, polyPtr, nploopUVsPtrList, nploopColsPtrList,
+                                                                  material_count, mesh_transform)
+
         return ExportedMesh(mesh_definitions)
 
 
