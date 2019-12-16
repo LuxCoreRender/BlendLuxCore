@@ -30,10 +30,11 @@ def handler(scene):
         if utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexOpenVDB") or \
                 utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexSmoke"):
             found_smoke_sequence = True
-            for n in mat.luxcore.node_tree.nodes:
-                if n.name.split('.')[0] == "Material Output" and n.active:
+            for node in mat.luxcore.node_tree.nodes:
+                if node.bl_idname == "LuxCoreNodeMatOutput" and node.active:
                     # Force a viewport update
-                    mat.luxcore.node_tree.links.new(n.inputs["Material"], n.inputs["Material"].links[0].from_socket)
+                    mat.luxcore.node_tree.links.new(node.inputs["Material"], node.inputs["Material"].links[0].from_socket)
+                    break
 
         for node in utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap"):
             if node.image and node.image.source == "SEQUENCE":

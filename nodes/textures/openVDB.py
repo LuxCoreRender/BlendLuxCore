@@ -55,12 +55,12 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             self.has_high_resolution = False
             self.use_high_resolution = False
 
-            for n in names:
+            for name in names:
                 # metadata is only exposed for blender cache files, its a list with the following data
                 # [min_bbox, max_bbox, res, min_res, max_res, base_res, obmat, obj_shift_f]
-                creator, bbox, gridtype, metadata = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), n)
+                creator, bbox, gridtype, metadata = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), name)
                 if creator == "Blender/Smoke":
-                    if "low" in n:
+                    if "low" in name:
                         self.has_high_resolution = True
                         self.use_high_resolution = True
                         continue
@@ -74,13 +74,13 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
 
                 elif "Houdini" in creator:
                     self.creator = "houdini"
-                    if n == "density" or len(names) == 1:
+                    if name == "density" or len(names) == 1:
                         self.nx = abs(bbox[0] - bbox[3])
                         self.ny = abs(bbox[1] - bbox[4])
                         self.nz = abs(bbox[2] - bbox[5])
                 else:
                     self.creator = "other"
-                    if n == "density" or len(names) == 1:
+                    if name == "density" or len(names) == 1:
                         self.nx = abs(bbox[0] - bbox[3])
                         self.ny = abs(bbox[1] - bbox[4])
                         self.nz = abs(bbox[2] - bbox[5])
@@ -91,11 +91,11 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                     self.outputs.new("LuxCoreSocketColor", n)
 
             # Reconnect output sockets with same name as previously connected ones
-            for e in self.outputs:
+            for output in self.outputs:
                 try:
                     node_tree = self.id_data
-                    for link in old_sockets[e.name]:
-                        node_tree.links.new(e, link)
+                    for link in old_sockets[output.name]:
+                        node_tree.links.new(output, link)
                 except KeyError:
                     pass
 
@@ -130,30 +130,26 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
         else:
             ext = "bphys"
 
-        p = mod.domain_settings.point_cache
-        print('name:', p.name)
+        point_cache = mod.domain_settings.point_cache
 
-        id = p.name
+        id = point_cache.name
         if id == '':
             # Calculate cache ID
             for i in range(len(domain.name)):
                 id = id + str(hex(ord(domain.name[i])))[-2:]
 
-        if p.use_library_path:
+        if point_cache.use_library_path:
             print("use_library_path has not been implemented yet")
 
-        if p.use_external:
-            folder = p.filepath
-            filename = '%s_%06d_%02d.%s' % (id, utils.clamp(frame, frame_start, frame_end), p.index, ext)
+        if point_cache.use_external:
+            folder = point_cache.filepath
+            filename = '%s_%06d_%02d.%s' % (id, utils.clamp(frame, frame_start, frame_end), point_cache.index, ext)
             filepath = folder + '\\' + filename
         else:
             folder = os.path.dirname(bpy.data.filepath)
             subfolder = 'blendcache_' + os.path.split(bpy.data.filepath)[1].split(".")[0]
-            filename = '%s_%06d_%02d.%s' % (id, utils.clamp(frame, frame_start, frame_end), p.index, ext)
+            filename = '%s_%06d_%02d.%s' % (id, utils.clamp(frame, frame_start, frame_end), point_cache.index, ext)
             filepath = folder + '\\' + subfolder + '\\' + filename
-
-        print('use_disk_cache:', p.use_disk_cache)
-        print('filepath:', bpy.path.abspath(filepath))
 
         return filepath
 
@@ -204,13 +200,13 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             names = []
             self.outputs.clear()
             names = pyluxcore.GetOpenVDBGridNames(bpy.path.abspath(self.file_path))
-            for n in names:
-                creator, bbox, gridtype, metadata = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), n)
+            for name in names:
+                creator, bbox, gridtype, metadata = pyluxcore.GetOpenVDBGridInfo(bpy.path.abspath(self.file_path), name)
 
                 if gridtype[0] == "float":
-                    self.outputs.new("LuxCoreSocketFloatPositive", n)
+                    self.outputs.new("LuxCoreSocketFloatPositive", name)
                 else:
-                    self.outputs.new("LuxCoreSocketColor", n)
+                    self.outputs.new("LuxCoreSocketColor", name)
 
 
     def draw_buttons(self, context, layout):
@@ -218,7 +214,6 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
         layout.use_property_decorate = False
 
         layout.prop(self, "domain")
-
 
         if self.domain:
             col = layout.column(align=True)
