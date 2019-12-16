@@ -86,9 +86,9 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                         self.nz = abs(bbox[2] - bbox[5])
 
                 if gridtype == "float":
-                    self.outputs.new("LuxCoreSocketFloatPositive", n)
+                    self.outputs.new("LuxCoreSocketFloatPositive", name)
                 else:
-                    self.outputs.new("LuxCoreSocketColor", n)
+                    self.outputs.new("LuxCoreSocketColor", name)
 
             # Reconnect output sockets with same name as previously connected ones
             for output in self.outputs:
