@@ -3,8 +3,8 @@ from bpy.props import IntProperty, FloatProperty, BoolProperty
 from ..base import LuxCoreNodeShape
 
 
-class LuxCoreNodeShapeDisplacement(bpy.types.Node, LuxCoreNodeShape):
-    bl_label = "Displacement"
+class LuxCoreNodeShapeHeightDisplacement(bpy.types.Node, LuxCoreNodeShape):
+    bl_label = "Height Displacement"
 
     max_level: IntProperty(name="Max. Level", default=2, min=1)
     max_edge_screen_size: FloatProperty(name="Max. Edge Screen Size", default=0, min=0)

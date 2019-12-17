@@ -145,7 +145,8 @@ luxcore_node_categories_material = [
 
 LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_SHAPE", "Shape Modifiers", items=[
         NodeItem("LuxCoreNodeShapeSubdiv", label="Subdivision"),
-        NodeItem("LuxCoreNodeShapeDisplacement", label="Displacement"),
+        NodeItem("LuxCoreNodeShapeHeightDisplacement", label="Height Displacement"),
+        NodeItem("LuxCoreNodeShapeVectorDisplacement", label="Vector Displacement"),
         NodeItem("LuxCoreNodeShapeSimplify", label="Simplify"),
         NodeItem("LuxCoreNodeShapeHarlequin", label="Harlequin"),
     ]),
