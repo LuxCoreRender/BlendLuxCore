@@ -123,7 +123,7 @@ class LuxCoreNode:
 
 class LuxCoreNodeMaterial(LuxCoreNode):
     """Base class for material nodes"""
-    suffix = "mat"
+    suffix = "mat"  # To avoid collisions with volume names
     prefix = "scene.materials."
 
     def add_common_inputs(self):
@@ -152,7 +152,7 @@ class LuxCoreNodeMaterial(LuxCoreNode):
 
 class LuxCoreNodeTexture(LuxCoreNode):
     """Base class for texture nodes"""
-    suffix = "tex"
+    suffix = ""
     prefix = "scene.textures."
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
@@ -161,7 +161,7 @@ class LuxCoreNodeTexture(LuxCoreNode):
 
 class LuxCoreNodeVolume(LuxCoreNode):
     """Base class for volume nodes"""
-    suffix = "vol"
+    suffix = "vol"  # To avoid collisions with material names
     prefix = "scene.volumes."
 
     # Common properties that every derived class needs to add
@@ -255,6 +255,15 @@ class LuxCoreNodeVolume(LuxCoreNode):
         return scattering_col
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        raise NotImplementedError("Subclasses have to implement this method!")
+
+
+class LuxCoreNodeShape(LuxCoreNode):
+    """Base class for shape nodes"""
+    suffix = ""
+    prefix = "scene.shapes."
+
+    def export_shape(self, exporter, depsgraph, props, base_shape_name):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
