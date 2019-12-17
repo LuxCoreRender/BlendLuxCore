@@ -157,21 +157,15 @@ class ObjectCache2:
                 if node_tree:
                     warn_about_missing_uvs(obj, node_tree)
 
-                    # output_node = get_active_output(node_tree)
-                    # if output_node:
-                    #     # TODO subdiv, displacement, simplify
-                    #     disp_map = utils_node.get_linked_node(output_node.inputs["Displacement"])
-                    #
-                    #     if disp_map:
-                    #         # Not sure if I should use scene_props here or better use new props
-                    #         disp_map_name = disp_map.export(exporter, depsgraph, scene_props)
-                    #         # Replace shape definition with displacement shape
-                    #         disp_shape = shape + "_displacement"
-                    #         prefix = "scene.shapes." + disp_shape + "."
-                    #         scene_props.Set(pyluxcore.Property(prefix + "type", "displacement"))
-                    #         scene_props.Set(pyluxcore.Property(prefix + "map", disp_map_name))
-                    #         scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-                    #         shape = disp_shape
+                    output_node = get_active_output(node_tree)
+                    if output_node:
+                        try:
+                            # Convert the whole shape stack
+                            # TODO support for instances
+                            shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
+                        except KeyError:
+                            # TODO remove this try/except, instead add the socket in utils/compatibility.py
+                            pass
 
                     if uses_pointiness(node_tree):
                         # Replace shape definition with pointiness shape

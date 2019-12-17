@@ -1,7 +1,8 @@
 import bpy
 import mathutils
 from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty, BoolProperty
-from .. utils import node as utils_node
+from ..utils import node as utils_node
+from ..utils.errorlog import LuxCoreErrorLog
 from ..ui import icons
 
 # The rules for socket classes are these:
@@ -55,9 +56,10 @@ class LuxCoreNodeSocket:
             # Sockets that only accept one node (e.g. volume, emission, fresnel) should have a default_node member
             show_operator = not self.is_output and not self.is_linked and hasattr(self, "default_node")
             # Don't show for volume sockets on volume output
-            is_vol_socket_on_vol_output = self.bl_idname == "LuxCoreSocketVolume" and node.bl_idname == "LuxCoreNodeVolOutput"
+            if self.bl_idname == "LuxCoreSocketVolume" and node.bl_idname == "LuxCoreNodeVolOutput":
+                show_operator = False
 
-            if show_operator and not is_vol_socket_on_vol_output:
+            if show_operator:
                 op = layout.operator("luxcore.add_node", icon=icons.ADD)
                 op.node_type = self.default_node
                 op.socket_type = self.bl_idname
@@ -98,6 +100,7 @@ class Color:
     mat_emission = (0.9, 0.9, 0.9, 1.0)
     mapping_2d = (0.65, 0.55, 0.75, 1.0)
     mapping_3d = (0.50, 0.25, 0.60, 1.0)
+    shape = (0.3, 1.0, 0.0, 1.0)
 
 
 class LuxCoreSocketMaterial(bpy.types.NodeSocket, LuxCoreNodeSocket):
@@ -131,7 +134,7 @@ class LuxCoreSocketMatEmission(bpy.types.NodeSocket, LuxCoreNodeSocket):
 
     def export_emission(self, exporter, depsgraph, props, definitions):
         if self.is_linked:
-            linked_node = self.links[0].from_node
+            linked_node = utils_node.get_linked_node(self)
 
             if linked_node.bl_idname == "LuxCoreNodeMatEmission":
                 linked_node.export_emission(exporter, depsgraph, props, definitions)
@@ -298,6 +301,26 @@ class LuxCoreSocketMapping3D(bpy.types.NodeSocket, LuxCoreNodeSocket):
         return mapping_type, transformation
 
 
+class LuxCoreSocketShape(bpy.types.NodeSocket, LuxCoreNodeSocket):
+    color = Color.shape
+    # Default value is the base mesh (correct name is passed during export)
+    default_value = "[Base Mesh]"
+
+    def draw_prop(self, context, layout, node, text):
+        layout.label(text=text + " [Base Mesh]")
+
+    def export_shape(self, exporter, depsgraph, props, base_shape_name):
+        link = utils_node.get_link(self)
+
+        if link:
+            try:
+                return link.from_node.export_shape(exporter, depsgraph, props, base_shape_name)
+            except Exception as error:
+                LuxCoreErrorLog.add_warning("Error during shape export:", str(error))
+
+        return base_shape_name
+
+
 # Specify the allowed inputs of sockets. Subclasses inherit the settings of their parents.
 # We have to do this here because some sockets (e.g. Material) need to refer to their own class.
 LuxCoreSocketMaterial.allowed_inputs = {LuxCoreSocketMaterial}
@@ -311,3 +334,4 @@ LuxCoreSocketFloat.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat, Lux
 LuxCoreSocketVector.allowed_inputs = {LuxCoreSocketVector, LuxCoreSocketColor, LuxCoreSocketFloat}
 LuxCoreSocketMapping2D.allowed_inputs = {LuxCoreSocketMapping2D}
 LuxCoreSocketMapping3D.allowed_inputs = {LuxCoreSocketMapping3D}
+LuxCoreSocketShape.allowed_inputs = {LuxCoreSocketShape}

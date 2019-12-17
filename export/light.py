@@ -96,7 +96,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         if light.luxcore.light_unit == "power":
             definitions["efficency"] = light.luxcore.efficacy
             definitions["power"] = light.luxcore.power
-            # Set Gain to 0 if Power or Efficacy is 0
+
             if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
                 definitions["gain"] = [0, 0, 0]
             else:
@@ -174,7 +174,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         if light.luxcore.light_unit == "power":
             definitions["efficency"] = light.luxcore.efficacy
             definitions["power"] = light.luxcore.power
-            # Set Gain to 0 if Power or Efficacy is 0
+
             if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
                 definitions["gain"] = [0, 0, 0]
             else:
@@ -203,7 +203,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
             if light.luxcore.light_unit == "power":
                 definitions["efficency"] = light.luxcore.efficacy
                 definitions["power"] = light.luxcore.power
-                # Set Gain to 0 if Power or Efficacy is 0
+
                 if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
                     definitions["gain"] = [0, 0, 0]
                 else:
@@ -390,7 +390,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     if light.luxcore.light_unit == "power":
         mat_definitions["emission.power"] = light.luxcore.power
         mat_definitions["emission.efficency"] = light.luxcore.efficacy
-        # Set Gain to 0 if Power or Efficacy is 0
+
         if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
             mat_definitions["emission.gain"] = [0, 0, 0]
         else:
