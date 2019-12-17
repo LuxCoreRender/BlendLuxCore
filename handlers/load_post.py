@@ -53,5 +53,4 @@ def handler(_):
     compatibility.run()
 
     frame_change_pre.using_image_sequences = False
-
     LuxCoreErrorLog.clear()
