@@ -100,7 +100,7 @@ class Color:
     mat_emission = (0.9, 0.9, 0.9, 1.0)
     mapping_2d = (0.65, 0.55, 0.75, 1.0)
     mapping_3d = (0.50, 0.25, 0.60, 1.0)
-    shape = (0.3, 1.0, 0.0, 1.0)
+    shape = (0.0, 0.68, 0.51, 1.0)
 
 
 class LuxCoreSocketMaterial(bpy.types.NodeSocket, LuxCoreNodeSocket):
