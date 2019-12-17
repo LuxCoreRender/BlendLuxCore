@@ -161,6 +161,19 @@ def force_viewport_update(_, context):
     mat.diffuse_color = mat.diffuse_color
 
 
+def force_viewport_mesh_update(_, context):
+    """ For updates on shape modifier changes (displacement, simplify etc.) """
+    # TODO ensure shape update on input texture changes. Need to evaluate the node tree ...
+    # TODO ensure shape update on socket connection changes
+    mat = context.object.active_material
+    for obj in context.visible_objects:
+        for slot in obj.material_slots:
+            if slot.material == mat:
+                if obj.data:
+                    obj.data.update_tag()
+                    continue
+
+
 def update_opengl_materials(_, context):
     if (not hasattr(context, "object")
             or not context.object
