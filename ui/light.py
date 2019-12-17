@@ -57,7 +57,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_decorate = False
 
         if light.type in {"POINT", "SPOT", "AREA"}:
-            layout.prop(light.luxcore, "use_advanced")
+            layout.prop(light.luxcore, "light_unit")
 
         if light.type == "AREA" and light.luxcore.node_tree:
             layout.label(text="Light color is defined by emission node", icon=icons.INFO)
@@ -65,12 +65,14 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             if not (light.type == "SUN" and light.luxcore.light_type == "sun"):
                 layout.prop(light.luxcore, "rgb_gain", text="Color")
 
-        if light.luxcore.use_advanced and light.type in {"POINT", "SPOT", "AREA"}:
+        if light.luxcore.light_unit == "power" and light.type in {"POINT", "SPOT", "AREA"}:
             col = layout.column(align=True)
             col.prop(light.luxcore, "power")
             col.prop(light.luxcore, "efficacy")
         else:
-            layout.prop(light.luxcore, "gain")
+            col = layout.column(align=True)
+            col.prop(light.luxcore, "gain")
+            col.prop(light.luxcore, "exposure", slider=True)
 
         col = layout.column(align=True)
         op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")

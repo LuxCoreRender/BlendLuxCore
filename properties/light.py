@@ -24,6 +24,11 @@ POWER_DESCRIPTION = (
     "this feature and uses only the light gain"
 )
 
+EXPOSURE_DESCRIPTION = (
+    "Power-of-2 step multiplier. "
+    "An EV step of 1 will double the brightness of the light"
+)
+
 EFFICACY_DESCRIPTION = (
     "Luminous efficacy in lumens per watt; setting 0 for both power "
     "and efficacy bypasses this feature and uses only the light gain"
@@ -95,6 +100,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     ##############################################
     # Generic properties shared by all light types
     gain: FloatProperty(name="Gain", default=1, min=0, precision=4, description="Brightness multiplier")
+    exposure: FloatProperty(name="Exposure", default=0, soft_min=-10, soft_max=10, precision=2, description=EXPOSURE_DESCRIPTION)
     rgb_gain: FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
                                    description=RGB_GAIN_DESC)
     importance: FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
@@ -129,8 +135,10 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
                            description="If radius is greater than 0, a sphere light is used")
 
     # point, mappoint, spot, laser
-    use_advanced: BoolProperty(name="Advanced", default=False,
-                               description = "Use power/efficacy values instead of gain to control emission")
+    light_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
+        ("power", "Power", "Radiant flux in Watts")
+    ]
+    light_unit: EnumProperty(name="Unit", items=light_units, default="artistic")
     power: FloatProperty(name="Power", default=100, min=0, description=POWER_DESCRIPTION, unit='POWER')
     efficacy: FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
 
