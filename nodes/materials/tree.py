@@ -88,6 +88,7 @@ luxcore_node_categories_material = [
         Separator(),
         NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexOpenVDB", label="OpenVDB File"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
     ]),
 
