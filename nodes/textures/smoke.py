@@ -9,7 +9,7 @@ from ...export import smoke
 from ...utils import node as utils_node
 from ...ui import icons
 from ...utils.errorlog import LuxCoreErrorLog
-
+from ...handlers import frame_change_pre
 
 class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Smoke"
@@ -32,15 +32,6 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
         utils_node.force_viewport_update(self, context)
 
-    source_items = [
-        ("density", "Density", "Smoke density grid, 1 value per voxel", 0),
-        ("fire", "Fire", "Fire grid, 1 value per voxel", 1),
-        ("heat", "Heat", "Smoke heat grid, 1 value per voxel", 2),
-        ("color", "Color", "Smoke color grid, 3 values per voxel (RGB)", 3),
-        ("velocity", "Velocity", "Smoke velocity grid, 3 values per voxel", 4),
-    ]
-    source: EnumProperty(name="Grid Type", items=source_items, default="density", update=update_source)
-
     precision_items = [
         ("byte", "Byte", "Only 1 byte per value. Required memory is 1/2 of Half and 1/4 of Float", 0),
         ("half", "Half", "2 bytes per value. Required memory is 1/2 of Float, but 2 times the size of Byte", 1),
@@ -52,9 +43,12 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
                                          "point precision can lead to artifacts when the smoke resolution is low")
 
     def init(self, context):
-        self.outputs.new("LuxCoreSocketFloatPositive", "Value")
-        color = self.outputs.new("LuxCoreSocketColor", "Color")
-        color.enabled = False
+        self.outputs.new("LuxCoreSocketFloatPositive", "density")
+        self.outputs.new("LuxCoreSocketFloatPositive", "fire")
+        self.outputs.new("LuxCoreSocketFloatPositive", "heat")
+        self.outputs.new("LuxCoreSocketColor", "color")
+        self.outputs.new("LuxCoreSocketColor", "velocity")
+
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "domain")
@@ -65,13 +59,13 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             layout.label(text="Select the smoke domain object", icon=icons.WARNING)
 
         col = layout.column()
-        col.prop(self, "source")
+        #col.prop(self, "source")
         col.prop(self, "precision")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         start_time = time()
         print("[Node Tree: %s][Smoke Domain: %s] Beginning smoke export of channel %s"
-              % (self.id_data.name, self.domain.name, self.source))
+              % (self.id_data.name, self.domain.name, output_socket.name))
 
         if not self.domain:
             error = "No Domain object selected."
@@ -84,11 +78,12 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             }
             return self.create_props(props, definitions, luxcore_name)
 
-        domain = self.domain.evaluated_get(depsgraph)
+        frame_change_pre.using_smoke_sequences = True
+        domain_eval = self.domain.evaluated_get(depsgraph)
 
-        scale = domain.dimensions
-        translate = domain.matrix_world @ mathutils.Vector([v for v in domain.bound_box[0]])
-        rotate = domain.rotation_euler
+        scale = domain_eval.dimensions
+        translate = domain_eval.matrix_world @ mathutils.Vector(domain_eval.bound_box[0][:])
+        rotate = domain_eval.rotation_euler
 
         # create a location matrix
         tex_loc = mathutils.Matrix.Translation(translate)
@@ -105,15 +100,29 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         tex_rot2 = mathutils.Matrix.Rotation(rotate[2], 4, 'Z')
         tex_rot = tex_rot2 @ tex_rot1 @ tex_rot0
 
+        resolution, grid = smoke.convert(domain_eval, output_socket.name, depsgraph)
+        nx, ny, nz = resolution
+
+        smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
+        use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
+        grid_name = output_socket.name
+
+        cell_size = mathutils.Vector((0, 0, 0))
+        amplify = 1
+        if use_high_resolution and grid_name not in {"density_low", "flame_low", "fuel_low",
+                                                     "react_low", "velocity", "heat"}:
+            # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
+            amplify = smoke_domain_mod.domain_settings.amplify + 1
+
+        for i in range(3):
+            cell_size[i] = smoke_domain_mod.domain_settings.cell_size[i] * 1/amplify
+
         # combine transformations
         mapping_type = 'globalmapping3d'
-        matrix_transformation = utils.matrix_to_list(tex_loc @ tex_rot @ tex_sca,
+        matrix_transformation = utils.matrix_to_list(tex_loc @ tex_rot @ tex_sca @ mathutils.Matrix.Translation(0.25 * mathutils.Vector(cell_size)),
                                                      scene=exporter.scene,
                                                      apply_worldscale=True,
                                                      invert=True)
-
-        resolution, grid = smoke.convert(domain, self.source, depsgraph)
-        nx, ny, nz = resolution
 
         definitions = {
             "type": "densitygrid",
@@ -131,12 +140,13 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         prefix = self.prefix + luxcore_name + "."
         # We use a fast path (AddAllFloat method) here to transfer the grid data to the properties
 
-        if self.source == "color":
+
+        if output_socket.name == "color":
             prop = pyluxcore.Property(prefix + "data3", [])
             # Omit every 4th element because the color_grid contains 4 values per cell
             # but LuxCore expects 3 values per cell (r, g, b)
             prop.AddAllFloat(grid, 3, 1)
-        elif self.source == "velocity":
+        elif output_socket.name == "velocity":
             prop = pyluxcore.Property(prefix + "data3", [])
             prop.AddAllFloat(grid)
         else:
@@ -153,6 +163,6 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
 
         elapsed_time = time() - start_time
         print("[Node Tree: %s][Smoke Domain: %s] Smoke export of channel %s took %.3f s"
-              % (self.id_data.name, self.domain.name, self.source, elapsed_time))
+              % (self.id_data.name, self.domain.name, output_socket.name, elapsed_time))
 
         return luxcore_name

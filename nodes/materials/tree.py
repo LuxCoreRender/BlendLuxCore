@@ -88,6 +88,7 @@ luxcore_node_categories_material = [
         Separator(),
         NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexOpenVDB", label="OpenVDB File"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
     ]),
 
@@ -141,6 +142,14 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
         NodeItem("LuxCoreNodeTexBlackbody", label="Blackbody Temperature"),
         NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
+    ]),
+
+LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_SHAPE", "Shape Modifiers", items=[
+        NodeItem("LuxCoreNodeShapeSubdiv", label="Subdivision"),
+        NodeItem("LuxCoreNodeShapeHeightDisplacement", label="Height Displacement"),
+        NodeItem("LuxCoreNodeShapeVectorDisplacement", label="Vector Displacement"),
+        NodeItem("LuxCoreNodeShapeSimplify", label="Simplify"),
+        NodeItem("LuxCoreNodeShapeHarlequin", label="Harlequin"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_POINTER", "Pointer", items=[
