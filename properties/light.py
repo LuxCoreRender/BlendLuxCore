@@ -58,7 +58,7 @@ TURBIDITY_DESC = (
 
 VIS_INDIRECT_BASE = (
     "Visibility for indirect {type} rays. "
-    "If disabled, this light will appear black in indirect bounces on {type} materials"
+    "If disabled, this light will appear black in indirect bounces on {type} materials."
 )
 VIS_INDIRECT_DIFFUSE_DESC = VIS_INDIRECT_BASE.format(type="diffuse") + " (e.g. matte)"
 VIS_INDIRECT_GLOSSY_DESC = VIS_INDIRECT_BASE.format(type="glossy") + " (e.g. glossy, roughglass, metal)"
@@ -165,7 +165,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # sky2, sun, infinite, constantinfinite, area
     visibility_indirect_diffuse: BoolProperty(name="Diffuse", default=True, description=VIS_INDIRECT_DIFFUSE_DESC)
     visibility_indirect_glossy: BoolProperty(name="Glossy", default=True, description=VIS_INDIRECT_GLOSSY_DESC)
-    visibility_indirect_specular: BoolProperty(name="Specular", default=True, description=VIS_INDIRECT_SPECULAR_DESC)
+    visibility_indirect_specular: BoolProperty(name="Specular", default=False, description=VIS_INDIRECT_SPECULAR_DESC)
 
     # sky2, infinite, constantinfinite
     # TODO description
