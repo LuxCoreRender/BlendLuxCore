@@ -51,7 +51,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
     # Common light settings shared by all light types
     # Note: these variables are also passed to the area light export function
     gain, importance, lightgroup_id = _convert_common_props(exporter, scene, light)
-    definitions["gain"] = [x * pow(2, light.luxcore.exposure) for x in gain]
+    definitions["gain"] = apply_exposure(gain, light.luxcore.exposure)
     definitions["importance"] = importance
     definitions["id"] = lightgroup_id
 
@@ -246,7 +246,7 @@ def convert_world(exporter, world, scene, is_viewport_render):
         definitions = {}
 
         gain, importance, lightgroup_id = _convert_common_props(exporter, scene, world)
-        definitions["gain"] = [x * pow(2, world.luxcore.exposure) for x in gain]
+        definitions["gain"] = apply_exposure(gain, world.luxcore.exposure)
         definitions["importance"] = importance
         definitions["id"] = lightgroup_id
 
@@ -373,7 +373,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         # Black base material to avoid any bounce light from the mesh
         "kd": [0, 0, 0],
         "emission": [x for x in light.luxcore.rgb_gain],
-        "emission.gain": [x * pow(2, light.luxcore.exposure) for x in gain],
+        "emission.gain": apply_exposure(gain, light.luxcore.exposure),
         "emission.power": 0.0,
         "emission.efficency": 0.0,
         "emission.theta": math.degrees(light.luxcore.spread_angle),
@@ -518,6 +518,8 @@ def _envlightcache(definitions, light_or_world, scene):
         definitions["visibilitymapcache.map.samplecount"] = envlight_cache.samples
         definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
 
+def apply_exposure(gain, exposure):
+    return [x * pow(2, exposure) for x in gain]
 
 def export_ies(definitions, ies, library, is_meshlight=False):
     """
