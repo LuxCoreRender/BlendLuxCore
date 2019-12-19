@@ -204,21 +204,17 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
 
         # These settings only work with PATH and TILEPATH, not with BIDIR
         enabled = context.scene.luxcore.config.engine == "PATH"
-        
-        if not enabled:
-            layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
 
         col = layout.column()
         col.enabled = enabled
         col.label(text="Visibility for indirect light rays:")
-        col = col.column()        
+        col = layout.column()        
         col.prop(light.luxcore, "visibility_indirect_diffuse")
         col.prop(light.luxcore, "visibility_indirect_glossy")
         col.prop(light.luxcore, "visibility_indirect_specular")
-        
-        if light.luxcore.visibility_indirect_specular:
-            col.label(text="Indirect Specular rays can create unwanted fireflies", icon=icons.WARNING)
 
+        if not enabled:
+            layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
 
 
 class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):
