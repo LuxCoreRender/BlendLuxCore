@@ -14,7 +14,6 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         loopPtr = mesh.loops[0].as_pointer()
         vertPtr = mesh.vertices[0].as_pointer()
         polyPtr = mesh.polygons[0].as_pointer()
-
         loopUVsPtrList = []
         loopColsPtrList = []
 
@@ -37,24 +36,9 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         else:
             mesh_transform = utils.matrix_to_list(transform)
 
-        nploopUVsPtrList = np.array(loopUVsPtrList, dtype=np.uintp)
-        nploopColsPtrList = np.array(loopColsPtrList, dtype=np.uintp)
-
-        if len(loopUVsPtrList) <= 1 and len(loopColsPtrList) <= 1:
-            loopUVsPtr = 0
-            loopColsPtr = 0
-            if mesh.uv_layers:
-                loopUVsPtr = mesh.uv_layers[0].data[0].as_pointer()
-            if mesh.vertex_colors:
-                loopColsPtr = mesh.vertex_colors[0].data[0].as_pointer()
-
-            mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                               vertPtr, polyPtr, loopUVsPtr, loopColsPtr,
-                                                               material_count, mesh_transform)
-        else:
-            mesh_definitions = luxcore_scene.DefineBlenderMeshExt(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                                  vertPtr, polyPtr, nploopUVsPtrList, nploopColsPtrList,
-                                                                  material_count, mesh_transform)
+        mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
+                                                              vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
+                                                              material_count, mesh_transform)
 
         return ExportedMesh(mesh_definitions)
 
