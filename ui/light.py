@@ -57,7 +57,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_decorate = False
 
         if light.type in {"POINT", "SPOT", "AREA"}:
-            layout.prop(light.luxcore, "use_advanced")
+            layout.prop(light.luxcore, "light_unit")
 
         if light.type == "AREA" and light.luxcore.node_tree:
             layout.label(text="Light color is defined by emission node", icon=icons.INFO)
@@ -65,12 +65,14 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             if not (light.type == "SUN" and light.luxcore.light_type == "sun"):
                 layout.prop(light.luxcore, "rgb_gain", text="Color")
 
-        if light.luxcore.use_advanced and light.type in {"POINT", "SPOT", "AREA"}:
+        if light.luxcore.light_unit == "power" and light.type in {"POINT", "SPOT", "AREA"}:
             col = layout.column(align=True)
             col.prop(light.luxcore, "power")
             col.prop(light.luxcore, "efficacy")
         else:
-            layout.prop(light.luxcore, "gain")
+            col = layout.column(align=True)
+            col.prop(light.luxcore, "gain")
+            col.prop(light.luxcore, "exposure", slider=True)
 
         col = layout.column(align=True)
         op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
@@ -202,17 +204,21 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
 
         # These settings only work with PATH and TILEPATH, not with BIDIR
         enabled = context.scene.luxcore.config.engine == "PATH"
+        
+        if not enabled:
+            layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
 
         col = layout.column()
         col.enabled = enabled
         col.label(text="Visibility for indirect light rays:")
-        col = layout.column()        
+        col = col.column()        
         col.prop(light.luxcore, "visibility_indirect_diffuse")
         col.prop(light.luxcore, "visibility_indirect_glossy")
         col.prop(light.luxcore, "visibility_indirect_specular")
+        
+        if light.luxcore.visibility_indirect_specular:
+            col.label(text="Indirect Specular rays can create unwanted fireflies", icon=icons.WARNING)
 
-        if not enabled:
-            layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
 
 
 class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):

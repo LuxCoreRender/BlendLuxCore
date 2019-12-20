@@ -18,6 +18,11 @@ USE_SUN_GAIN_FOR_SKY_DESC = (
     "(so you adjust both sun and sky gain at the same time)"
 )
 
+EXPOSURE_DESCRIPTION = (
+    "Power-of-2 step multiplier. "
+    "An EV step of 1 will double the brightness of the light"
+)
+
 SUN_DESC = (
     "If a sun is selected, the gain, turbidity and rotation from the sun are used for the sky"
 )
@@ -46,6 +51,7 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
 
     # Generic properties shared by all background light types
     gain: FloatProperty(name="Gain", default=1, min=0, precision=4, description="Brightness multiplier")
+    exposure: FloatProperty(name="Exposure", default=0, soft_min=-10, soft_max=10, precision=2, description=EXPOSURE_DESCRIPTION )
     rgb_gain: FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
                                    description=RGB_GAIN_DESC)
     importance: FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)

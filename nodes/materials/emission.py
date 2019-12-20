@@ -39,8 +39,13 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
     bl_label = "Emission"
     bl_width_default = 160
 
+    emission_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
+        ("power", "Power", "Radiant flux in Watts")
+    ]
+    emission_unit: EnumProperty(update=utils_node.force_viewport_update, name="Unit", items=emission_units, default="artistic")
     gain: FloatProperty(update=utils_node.force_viewport_update, name="Gain", default=1, min=0, description="Brightness multiplier")
-    use_advanced: BoolProperty(name="Advanced", default=False)
+    exposure: FloatProperty(update=utils_node.force_viewport_update, name="Exposure", default=0, soft_min=-10, soft_max=10, precision=2,
+                            description="Power-of-2 step multiplier. An EV step of 1 will double the brightness of the light")
     power: FloatProperty(update=utils_node.force_viewport_update, name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
     efficacy: FloatProperty(update=utils_node.force_viewport_update, name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
     ies: PointerProperty(update=utils_node.force_viewport_update, type=LuxCoreIESProps)
@@ -66,13 +71,14 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
 
     def draw_buttons(self, context, layout):
         col = layout.column(align=True)
-        col.prop(self, "use_advanced")
+        col.prop(self, "emission_unit")
         col = layout.column(align=True)
-        if self.use_advanced:
+        if self.emission_unit == "power":
             col.prop(self, "power")
             col.prop(self, "efficacy")
         else:
             col.prop(self, "gain")
+            col.prop(self, "exposure", slider=True)
 
         layout.prop(self, "importance")
 
@@ -116,7 +122,7 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         It is called from LuxCoreNodeMaterial.export_common_props()
         """
         definitions["emission"] = self.inputs["Color"].export(exporter, depsgraph, props)
-        if self.use_advanced:
+        if self.emission_unit == "power":
             definitions["emission.power"] = self.power
             definitions["emission.efficency"] = self.efficacy
             if self.power == 0 or self.efficacy == 0:
@@ -124,7 +130,7 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         else:
             definitions["emission.power"] = 0
             definitions["emission.efficency"] = 0
-            definitions["emission.gain"] = [self.gain] * 3
+            definitions["emission.gain"] = [self.gain * pow(2, self.exposure)] * 3
         definitions["emission.importance"] = self.importance
         definitions["emission.theta"] = math.degrees(self.spread_angle)
         lightgroups = exporter.scene.luxcore.lightgroups
