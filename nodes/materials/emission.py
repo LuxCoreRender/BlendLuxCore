@@ -42,9 +42,10 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
     emission_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
         ("power", "Power", "Radiant flux in Watts")
     ]
-    emission_unit: EnumProperty(name="Unit", items=emission_units, default="artistic")
+    emission_unit: EnumProperty(update=utils_node.force_viewport_update, name="Unit", items=emission_units, default="artistic")
     gain: FloatProperty(update=utils_node.force_viewport_update, name="Gain", default=1, min=0, description="Brightness multiplier")
-    exposure: FloatProperty(name="Exposure", default=0, soft_min=-10, soft_max=10, precision=2, description="Power-of-2 step multiplier. An EV step of 1 will double the brightness of the light")
+    exposure: FloatProperty(update=utils_node.force_viewport_update, name="Exposure", default=0, soft_min=-10, soft_max=10, precision=2,
+                            description="Power-of-2 step multiplier. An EV step of 1 will double the brightness of the light")
     power: FloatProperty(update=utils_node.force_viewport_update, name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
     efficacy: FloatProperty(update=utils_node.force_viewport_update, name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
     ies: PointerProperty(update=utils_node.force_viewport_update, type=LuxCoreIESProps)
