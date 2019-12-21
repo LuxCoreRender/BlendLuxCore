@@ -36,12 +36,12 @@ def handler(scene):
                     mat.luxcore.node_tree.links.new(node.inputs["Material"], node.inputs["Material"].links[0].from_socket)
                     break
 
-        for node in utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap"):
-            if node.image and node.image.source == "SEQUENCE":
-                found_image_sequence = True
-                # Force a viewport update
-                mat.diffuse_color = mat.diffuse_color
-                break
+        for node in utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap") or \
+                utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexTimeInfo"):
+            found_image_sequence = True
+            # Force a viewport update
+            mat.diffuse_color = mat.diffuse_color
+            break
 
     using_image_sequences = found_image_sequence
     using_smoke_sequences = found_smoke_sequence
