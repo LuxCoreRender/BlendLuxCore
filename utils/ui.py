@@ -1,6 +1,7 @@
 from . import get_name_with_lib
 from . import pluralize
 from ..ui import icons
+from bpy_extras.node_utils import find_node_input
 
 
 def template_node_tree(layout, data, property, icon,
@@ -109,3 +110,23 @@ def humanize_time(seconds, show_subseconds=False, subsecond_places=3):
         return ", ".join(strings)
     else:
         return "0 seconds"
+
+
+def panel_node_draw(layout, id_data, output_type, input_name):
+    if not id_data.use_nodes:
+        layout.operator("cycles.use_shading_nodes", icon='NODETREE')
+        return False
+
+    ntree = id_data.node_tree
+
+    node = ntree.get_output_node('CYCLES')
+    if node:
+        input = find_node_input(node, input_name)
+        if input:
+            layout.template_node_view(ntree, node, input)
+        else:
+            layout.label(text="Incompatible output node")
+    else:
+        layout.label(text="No output node")
+
+    return True

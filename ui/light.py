@@ -34,12 +34,17 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_decorate = False
         light = context.light
 
-        row = layout.row(align=True)
-        row.prop(light, "type", expand=True)
-        # TODO 2.8 enable this once the exporter code works
-        # layout.prop(light.luxcore, "use_cycles_settings")
+        if self.bl_space_type == 'PROPERTIES':
+            layout.row().prop(light, "type", expand=True)
+            layout.use_property_split = True
+        else:
+            layout.use_property_split = True
+            layout.row().prop(light, "type")
+
+        layout.prop(light.luxcore, "use_cycles_settings")
 
         if context.light.luxcore.use_cycles_settings:
             self.draw_cycles_settings(context)
@@ -47,7 +52,43 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             self.draw_luxcore_settings(context)
 
     def draw_cycles_settings(self, context):
-        ...
+        layout = self.layout
+        light = context.light
+        clamp = light.cycles
+
+        col = layout.column()
+
+        col.prop(light, "color")
+        col.prop(light, "energy")
+        col.separator()
+        if light.type in {'POINT', 'SPOT'}:
+            col.prop(light, "shadow_soft_size", text="Size")
+        elif light.type == 'SUN':
+            col.prop(light, "angle")
+        elif light.type == 'AREA':
+            col.prop(light, "shape", text="Shape")
+            sub = col.column(align=True)
+
+            if light.shape in {'SQUARE'}:
+                sub.prop(light, "size")
+            elif light.shape in {'RECTANGLE'}:
+                sub.prop(light, "size", text="Size X")
+                sub.prop(light, "size_y", text="Y")
+            else:
+                sub.label("Shape not supported!", icon=icons.WARNING)
+
+        sub = col.column(align=True)
+        sub.prop(clamp, "cast_shadow")
+
+        col = layout.column(align=True)
+        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
+        op.target = "SCENE"
+        lightgroups = context.scene.luxcore.lightgroups
+        col.prop_search(light.luxcore, "lightgroup",
+                        lightgroups, "custom",
+                        icon=icons.LIGHTGROUP, text="")
+
+
 
     def draw_luxcore_settings(self, context):
         layout = self.layout

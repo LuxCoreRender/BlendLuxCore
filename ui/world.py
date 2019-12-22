@@ -26,25 +26,33 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         layout.row().prop(world.luxcore, "light", expand=True)
 
         layout.use_property_split = True
-        layout.use_property_decorate = False       
+        layout.use_property_decorate = False
 
         if world.luxcore.light != "none":
             col = layout.column(align=True)
-            col.prop(world.luxcore, "rgb_gain", text="Color")
+            col.prop(world.luxcore, "use_cycles_settings")
+            if world.luxcore.use_cycles_settings:
+                col = layout.column(align=True)
 
-            is_sky = world.luxcore.light == "sky2"
-            has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
-
-            col = layout.column(align=True)
-            if is_sky and has_sun and world.luxcore.use_sun_gain_for_sky:
-                col.prop(world.luxcore.sun.data.luxcore, "gain")
-                col.prop(world.luxcore.sun.data.luxcore, "exposure", slider=True)
+                if not utils_ui.panel_node_draw(col, world, 'OUTPUT_WORLD', 'Surface'):
+                    col = layout.column(align=True)
+                    col.prop(world, "color")
             else:
-                col.prop(world.luxcore, "gain")
-                col.prop(world.luxcore, "exposure", slider=True)
+                col.prop(world.luxcore, "rgb_gain", text="Color")
 
-            if is_sky and has_sun:
-                col.prop(world.luxcore, "use_sun_gain_for_sky")
+                is_sky = world.luxcore.light == "sky2"
+                has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
+
+                col = layout.column(align=True)
+                if is_sky and has_sun and world.luxcore.use_sun_gain_for_sky:
+                    col.prop(world.luxcore.sun.data.luxcore, "gain")
+                    col.prop(world.luxcore.sun.data.luxcore, "exposure", slider=True)
+                else:
+                    col.prop(world.luxcore, "gain")
+                    col.prop(world.luxcore, "exposure", slider=True)
+
+                if is_sky and has_sun:
+                    col.prop(world.luxcore, "use_sun_gain_for_sky")
 
             col = layout.column(align=True)
             op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")

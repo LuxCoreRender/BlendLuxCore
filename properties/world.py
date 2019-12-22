@@ -47,15 +47,16 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
         ("constantinfinite", "Flat Color", "Flat background color", 2),
         ("none", "None", "No background light", 3),
     ]
-    light: EnumProperty(name="Background", items=lights, default="sky2")
+    light: EnumProperty(name="Background", items=lights, default="constantinfinite")
 
     # Generic properties shared by all background light types
     gain: FloatProperty(name="Gain", default=1, min=0, precision=4, description="Brightness multiplier")
-    exposure: FloatProperty(name="Exposure", default=0, soft_min=-10, soft_max=10, precision=2, description=EXPOSURE_DESCRIPTION )
-    rgb_gain: FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
+    exposure: FloatProperty(name="Exposure", default=-4, soft_min=-10, soft_max=10, precision=2, description=EXPOSURE_DESCRIPTION )
+    rgb_gain: FloatVectorProperty(name="Tint", default=(0.050876, 0.050876, 0.050876), min=0, max=1, subtype="COLOR",
                                    description=RGB_GAIN_DESC)
     importance: FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     lightgroup: StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
+    use_cycles_settings: BoolProperty(name="Use Cycles Settings", default=False)
 
     # sky2 settings
     def poll_sun(self, obj):

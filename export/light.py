@@ -29,7 +29,84 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
 
 
 def convert_cycles_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
-    ...
+    luxcore_name = obj_key
+    scene = depsgraph.scene_eval
+
+    # If this light was previously defined as an area lamp, delete the area lamp mesh
+    luxcore_scene.DeleteObject(_get_area_obj_name(luxcore_name))
+    # If this light was previously defined as a light, delete it
+    luxcore_scene.DeleteLight(luxcore_name)
+
+    prefix = "scene.lights." + luxcore_name + "."
+    definitions = {}
+    exported_light = ExportedLight(luxcore_name)
+    light = obj.data
+    sun_dir = _calc_sun_dir(transform)
+
+    # Common light settings shared by all light types
+    # Note: these variables are also passed to the area light export function
+    gain, importance, lightgroup_id = _convert_common_props(exporter, scene, light)
+    definitions["gain"] = apply_exposure(gain, light.luxcore.exposure)
+    definitions["importance"] = importance
+    definitions["id"] = lightgroup_id
+
+    if light.type == "POINT":
+        # TODO: Adapt to Cycles behaviour
+        if light.luxcore.image or light.luxcore.ies.use:
+            # mappoint/mapsphere
+            definitions["type"] = "mappoint" if light.shadow_soft_size == 0 else "mapsphere"
+
+            has_image = False
+            if light.luxcore.image:
+                try:
+                    filepath = ImageExporter.export(light.luxcore.image,
+                                                    light.luxcore.image_user,
+                                                    scene)
+                    definitions["mapfile"] = filepath
+                    definitions["gamma"] = light.luxcore.gamma
+                    has_image = True
+                except OSError as error:
+                    msg = 'Light "%s": %s' % (obj.name, error)
+                    LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+                    # Fallback
+                    definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
+                    # Signal that the image is missing
+                    definitions["gain"] = [x * light.luxcore.gain * pow(2, light.luxcore.exposure) for x in MISSING_IMAGE_COLOR]
+
+            has_ies = False
+            try:
+                has_ies = export_ies(definitions, light.luxcore.ies, light.library)
+            except OSError as error:
+                msg = 'Light "%s": %s' % (obj.name, error)
+                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+            finally:
+                if not has_ies and not has_image:
+                    # Fallback
+                    definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
+        else:
+            # point/sphere
+            definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
+
+        definitions["color"] = [x for x in light.color]
+        definitions["gain"] = [light.energy * x for x in [1, 1, 1]]
+        definitions["power"] = 0.0
+        definitions["efficency"] = 0.0
+
+        # Position is set by transformation property
+        definitions["position"] = [0, 0, 0]
+        transformation = utils.matrix_to_list(transform)
+        definitions["transformation"] = transformation
+
+        if light.shadow_soft_size > 0:
+            definitions["radius"] = light.shadow_soft_size
+
+    else:
+        # Can only happen if Blender changes its light types
+        raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
+
+    props = utils.create_props(prefix, definitions)
+    return props, exported_light
+
 
 
 def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):

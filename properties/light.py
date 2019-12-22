@@ -83,7 +83,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
             if self.is_laser:
                 context.light.shape = "SQUARE"
 
-    use_cycles_settings: BoolProperty(default=False)
+    use_cycles_settings: BoolProperty(name="Use Cycles Settings", default=False)
 
     ##############################################
     # BlendLuxCore specific properties needed to translate LuxCore light concepts to Blender
