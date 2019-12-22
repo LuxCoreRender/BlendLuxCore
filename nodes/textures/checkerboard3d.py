@@ -15,7 +15,7 @@ class LuxCoreNodeTexCheckerboard3D(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
+        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
 
         definitions = {
             "type": "checkerboard3d",
@@ -25,4 +25,8 @@ class LuxCoreNodeTexCheckerboard3D(bpy.types.Node, LuxCoreNodeTexture):
             "mapping.type": mapping_type,
             "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
         }
+
+        if mapping_type == "uvmapping3d":
+            definitions["mapping.uvindex"] = uvindex
+
         return self.create_props(props, definitions, luxcore_name)

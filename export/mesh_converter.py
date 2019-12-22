@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import numpy as np
 from .. import utils
 from .caches.exported_data import ExportedMesh
 
@@ -13,20 +14,20 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         loopPtr = mesh.loops[0].as_pointer()
         vertPtr = mesh.vertices[0].as_pointer()
         polyPtr = mesh.polygons[0].as_pointer()
+        loopUVsPtrList = []
+        loopColsPtrList = []
 
         if mesh.uv_layers:
-            # TODO get actual active layer
-            active_uv_layer = 0
-            loopUVsPtr = mesh.uv_layers[active_uv_layer].data[0].as_pointer()
+            for uv in mesh.uv_layers:
+                loopUVsPtrList.append(uv.data[0].as_pointer())
         else:
-            loopUVsPtr = 0
+            loopUVsPtrList.append(0)
 
         if mesh.vertex_colors:
-            # TODO get actual active layer
-            active_vcol_layer = 0
-            loopColsPtr = mesh.vertex_colors[active_vcol_layer].data[0].as_pointer()
+            for vcol in mesh.vertex_colors:
+                loopColsPtrList.append(vcol.data[0].as_pointer())
         else:
-            loopColsPtr = 0
+            loopColsPtrList.append(0)
 
         material_count = max(1, len(mesh.materials))
 
@@ -36,8 +37,9 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             mesh_transform = utils.matrix_to_list(transform)
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                           vertPtr, polyPtr, loopUVsPtr, loopColsPtr,
-                                                           material_count, mesh_transform)
+                                                              vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
+                                                              material_count, mesh_transform)
+
         return ExportedMesh(mesh_definitions)
 
 

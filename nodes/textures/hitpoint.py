@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import EnumProperty
+from bpy.props import EnumProperty, StringProperty, IntProperty
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
@@ -20,12 +20,20 @@ class LuxCoreNodeTexHitpoint(bpy.types.Node, LuxCoreNodeTexture):
         utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
         utils_node.force_viewport_update(self, context)
 
+    def update_vcol(self, context):
+        for i, e in enumerate(context.object.data.vertex_colors.keys()):
+            if e == self.vcol:
+                self.vcolindex = i
+        utils_node.force_viewport_update(self, context)
+
     mode_items = [
         ("hitpointcolor", "Color", "Vertex Color", 0),
         ("hitpointgrey", "Grey", "Convert color to grey", 1),
     ]
     mode: EnumProperty(name="Mode", items=mode_items, default="hitpointcolor",
                         update=change_mode)
+    vcol: StringProperty(update=update_vcol, name="Vertex Color")
+    vcolindex: IntProperty(name="Vertex Color Index", default=0)
 
     # Only used for hitpointgrey
     channel_items = [
@@ -47,10 +55,15 @@ class LuxCoreNodeTexHitpoint(bpy.types.Node, LuxCoreNodeTexture):
         if self.mode == "hitpointgrey":
             layout.prop(self, "channel", expand=True)
 
+        layout.prop_search(self, "vcol", context.object.data, "vertex_colors", text="Vertex Color", icon='GROUP_VCOL')
+
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+
         definitions = {
             "type": self.mode,
         }
+        if self.vcol:
+            definitions["dataindex"] = self.vcolindex
 
         if self.mode == "hitpointgrey":
             definitions["channel"] = self.channel
