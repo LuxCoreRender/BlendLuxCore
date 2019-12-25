@@ -22,12 +22,7 @@ def draw_uv_info(context, layout):
                 warning_no_uvmap(row)
                 row.prop(obj.data, "use_uv_as_generated", toggle=True, text="Enable UV")
         elif obj.type == "MESH":
-            if len(obj.data.uv_layers) > 1:
-                box = layout.box()
-                box.label(text="LuxCore only supports one UV map", icon=icons.INFO)
-                active_uv = find_active_uv(obj.data.uv_layers)
-                box.label(text='Active: "%s"' % active_uv.name, icon="GROUP_UVS")
-            elif len(obj.data.uv_layers) == 0:
+            if len(obj.data.uv_layers) == 0:
                 row = layout.row()
                 warning_no_uvmap(row)
                 row.operator("mesh.uv_texture_add")

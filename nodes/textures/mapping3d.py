@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import FloatProperty, BoolProperty, FloatVectorProperty, EnumProperty
+from bpy.props import FloatProperty, BoolProperty, FloatVectorProperty, EnumProperty, StringProperty, IntProperty
 from mathutils import Matrix
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
@@ -8,6 +8,12 @@ from ...utils import node as utils_node
 class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "3D Mapping"
     bl_width_default = 260
+
+    def update_uvmap(self, context):
+        for i, e in enumerate(context.object.data.uv_layers.keys()):
+            if e == self.uvmap:
+                self.uvindex = i
+        utils_node.force_viewport_update(self, context)
 
     mapping_types = [
         ("globalmapping3d", "Global", "World coordinate system", 0),
@@ -24,6 +30,8 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
                                   description="Scales the texture uniformly along all axis")
     use_uniform_scale: BoolProperty(update=utils_node.force_viewport_update, name="Uniform", default=False,
                                      description="Use the same scale value for all axis")
+    uvmap: StringProperty(update=update_uvmap, name="UV Map")
+    uvindex: IntProperty(name="UV Index", default=0)
 
     def init(self, context):
         # Instead of creating a new mapping, the user can also
@@ -38,8 +46,10 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
         if not self.inputs["3D Mapping (optional)"].is_linked:
             layout.prop(self, "mapping_type")
 
-        if self.mapping_type == "uvmapping3d":
-            utils_node.draw_uv_info(context, layout)
+            if self.mapping_type == "uvmapping3d":
+                utils_node.draw_uv_info(context, layout)
+                if not self.inputs["3D Mapping (optional)"].is_linked:
+                    layout.prop_search(self, "uvmap", context.object.data, "uv_layers", text="UV Map", icon='GROUP_UVS')
 
         row = layout.row()
 
@@ -56,11 +66,12 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
         scale_column.prop(self, "use_uniform_scale")
 
     def export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        mapping_type, input_mapping = self.inputs["3D Mapping (optional)"].export(exporter, depsgraph, props)
+        mapping_type, uvindex, input_mapping = self.inputs["3D Mapping (optional)"].export(exporter, depsgraph, props)
         # Use the mapping type of this node only when mapping type is not
         # already set by previous mapping node
         if not self.inputs["3D Mapping (optional)"].is_linked:
             mapping_type = self.mapping_type
+            uvindex = self.uvindex
 
         # create a location matrix
         tex_loc = Matrix.Translation(self.translate)
@@ -88,4 +99,4 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
         # Transform input matrix
         output_mapping = input_mapping @ transformation
 
-        return mapping_type, output_mapping
+        return mapping_type, uvindex, output_mapping
