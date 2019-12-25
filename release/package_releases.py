@@ -149,7 +149,7 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
     print("Extracting dmg file:", dmg_path)
     vol_name = dmg_path.replace(".dmg", "")                                            
     cmd = ("7z e -odestination " + dmg_path + " " + vol_name + "/pyluxcore*")      
-    os.command(cmd)
+    os.system(cmd)
     
 
 def extract_files_from_archive(archive_path, files_to_extract, destination):
