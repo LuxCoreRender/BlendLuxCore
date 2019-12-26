@@ -152,7 +152,8 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
     for f in files_to_extract:
         print('Extracting "%s" to "%s"' % (f, destination))
         
-        cmd = ("7z e -odestination " + dmg_path + " " + vol_name + "/pyluxcore/" + f)      
+        cmd = ("7z e -odestination " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
+        print(cmd)
         os.system(cmd)
     
 
