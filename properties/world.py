@@ -51,8 +51,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
 
     # Generic properties shared by all background light types
     gain: FloatProperty(name="Gain", default=1, min=0, precision=4, description="Brightness multiplier")
-    exposure: FloatProperty(name="Exposure", default=-4, soft_min=-10, soft_max=10, precision=2, description=EXPOSURE_DESCRIPTION )
-    rgb_gain: FloatVectorProperty(name="Tint", default=(0.050876, 0.050876, 0.050876), min=0, max=1, subtype="COLOR",
+    exposure: FloatProperty(name="Exposure", default=0, soft_min=-10, soft_max=10, precision=2, description=EXPOSURE_DESCRIPTION )
+    rgb_gain: FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
                                    description=RGB_GAIN_DESC)
     importance: FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     lightgroup: StringProperty(name="Light Group", description=LIGHTGROUP_DESC)

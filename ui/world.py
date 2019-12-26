@@ -22,23 +22,25 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
     def draw(self, context):
         layout = self.layout
         world = context.world
-
-        layout.row().prop(world.luxcore, "light", expand=True)
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        if world.luxcore.light != "none":
-            col = layout.column(align=True)
-            col.prop(world.luxcore, "use_cycles_settings")
-            if world.luxcore.use_cycles_settings:
+        col = layout.column(align=True)
+        col.use_property_split = True
+        col.use_property_decorate = False
+        col.row().prop(world.luxcore, "use_cycles_settings")
+        if world.luxcore.use_cycles_settings:
+            layout.use_property_split = True
+            layout.use_property_decorate = False
+            if not utils_ui.panel_node_draw(col, world, 'OUTPUT_WORLD', 'Surface'):
                 col = layout.column(align=True)
+                col.prop(world, "color")
+        else:
+            layout.prop(world.luxcore, "light", expand=True)
+            layout.use_property_split = True
+            layout.use_property_decorate = False
 
-                if not utils_ui.panel_node_draw(col, world, 'OUTPUT_WORLD', 'Surface'):
-                    col = layout.column(align=True)
-                    col.prop(world, "color")
-            else:
-                col.prop(world.luxcore, "rgb_gain", text="Color")
+            if world.luxcore.light != "none":
+                col = layout.column(align=True)
+                if world.luxcore.light == "constantinfinite":
+                    col.prop(world.luxcore, "rgb_gain", text="Color")
 
                 is_sky = world.luxcore.light == "sky2"
                 has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
@@ -54,13 +56,13 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
                 if is_sky and has_sun:
                     col.prop(world.luxcore, "use_sun_gain_for_sky")
 
-            col = layout.column(align=True)
-            op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
-            op.target = "SCENE"
-            lightgroups = context.scene.luxcore.lightgroups
-            col.prop_search(world.luxcore, "lightgroup",
-                            lightgroups, "custom",
-                            icon=icons.LIGHTGROUP, text="")
+                col = layout.column(align=True)
+                op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
+                op.target = "SCENE"
+                lightgroups = context.scene.luxcore.lightgroups
+                col.prop_search(world.luxcore, "lightgroup",
+                                lightgroups, "custom",
+                                icon=icons.LIGHTGROUP, text="")
 
 
 class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
@@ -74,7 +76,8 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "sky2"
+        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "sky2" \
+               and not context.world.luxcore.use_cycles_settings
 
     def draw(self, context):
         layout = self.layout
@@ -115,7 +118,8 @@ class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "infinite"
+        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "infinite" \
+               and not context.world.luxcore.use_cycles_settings
 
     def draw(self, context):
         layout = self.layout

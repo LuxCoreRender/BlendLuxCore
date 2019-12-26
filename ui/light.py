@@ -336,7 +336,7 @@ class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         light = context.light
-        return light and (light.type == 'AREA') and context.engine == "LUXCORE"
+        return light and (light.type == 'AREA' or light.luxcore.use_cycles_settings) and context.engine == "LUXCORE"
 
     def draw_header(self, context):
         layout = self.layout
@@ -349,11 +349,14 @@ class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        utils_ui.template_node_tree(layout, light.luxcore, "node_tree", icons.NTREE_TEXTURE,
-                                    "LUXCORE_MT_texture_select_node_tree",
-                                    "luxcore.tex_show_nodetree",
-                                    "luxcore.tex_nodetree_new",
-                                    "luxcore.texture_unlink")
+        if not light.luxcore.use_cycles_settings:
+            utils_ui.template_node_tree(layout, light.luxcore, "node_tree", icons.NTREE_TEXTURE,
+                                        "LUXCORE_MT_texture_select_node_tree",
+                                        "luxcore.tex_show_nodetree",
+                                        "luxcore.tex_nodetree_new",
+                                        "luxcore.texture_unlink")
+        else:
+            utils_ui.panel_node_draw(layout, light, 'OUTPUT_LIGHT', 'Surface')
 
 
 def compatible_panels():

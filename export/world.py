@@ -3,6 +3,8 @@ from .. import utils
 from ..nodes.output import get_active_output
 from . import light
 from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import node as utils_node
+from mathutils import Matrix
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 
@@ -18,13 +20,92 @@ def convert_cycles_settings(exporter, depsgraph, scene, is_viewport_render):
     prefix = "scene.lights." + luxcore_name + "."
     definitions = {}
 
-    definitions["type"] = "constantinfinite"
     definitions["importance"] = world.luxcore.importance
     definitions["id"] = lightgroup_id
 
     if world.use_nodes:
-        #TODO: Implement node tree export
-        print("Not implemented yet")
+        if world.node_tree:
+            error = False
+            output = world.node_tree.get_output_node("CYCLES")
+            if output is None:
+                error = True
+            else:
+                link = utils_node.get_link(output.inputs["Surface"])
+                if link is None:
+                    error = True
+                else:
+                    node = link.from_node
+
+                    if node.bl_idname == "ShaderNodeBackground":
+                        if node.inputs["Color"].is_linked:
+                            colornode = node.inputs['Color'].links[0].from_node
+                            name = colornode.bl_idname
+
+                            if name == "ShaderNodeTexSky":
+                                if colornode.sky_type == "HOSEK_WILKIE":
+                                    definitions["type"] = "sky2"
+                                    definitions["dir"] = list(colornode.sun_direction)
+                                    definitions["turbidity"] = colornode.turbidity
+                                    definitions["groundalbedo"] = [colornode.ground_albedo*x for x in [1, 1, 1]]
+                                    gain = node.inputs["Strength"].default_value
+                                    #Adjust gain to match cycles sky intensity
+                                    definitions["gain"] = [0.00002*gain * x for x in [1, 1, 1]]
+
+                                else:
+                                    LuxCoreErrorLog.add_warning(
+                                        f"Unsupported sky type: Only HOSEK_WILKIE is supported: {node.name}",
+                                        obj_name=luxcore_name)
+
+                            elif name == "ShaderNodeTexEnvironment" and colornode.image:
+                                definitions["type"] = "infinite"
+                                definitions["file"] = colornode.image.filepath
+                                #TODO: Implement other color spaces (cycles colorspace input)
+                                definitions["gamma"] = 1.0
+
+                                infinite_fix = Matrix.Scale(1.0, 4)
+                                infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
+                                
+                                #TODO: Implement transformation (vector input from cycles)
+                                transformation = utils.matrix_to_list(infinite_fix)
+                                definitions["transformation"] = transformation
+
+                            elif name == "ShaderNodeRGB":
+                                definitions["type"] = "constantinfinite"
+                                gain = node.inputs["Strength"].default_value
+                                # Adjust gain to match cycles sky intensity
+                                definitions["gain"] = [gain * x for x in [0.0001, 0.0001, 0.0001]]
+                                definitions["color"] = list(colornode.outputs["Color"].default_value)[:3]
+                            else:
+                                # TODO: Add support for further constant float/color nodes
+                                # Fallback light
+                                definitions["type"] = "constantinfinite"
+                                LuxCoreErrorLog.add_warning(
+                                    f"Unsupported setup: Input socket is linked: {node.name}",
+                                    obj_name=luxcore_name)
+                        else:
+                            definitions["type"] = "constantinfinite"
+                            definitions["color"] = list(node.inputs["Color"].default_value)[:3]
+
+                        if node.inputs["Strength"].is_linked:
+                            # TODO: Add support for linked strength socket in case of constant float nodes
+                            LuxCoreErrorLog.add_warning(
+                                f"Unsupported setup: Input socket 'Strength' is linked: {node.name}",
+                                obj_name=luxcore_name)
+                        else:
+                            gain = node.inputs["Strength"].default_value
+                            definitions["gain"] = [gain*x  for x in [1, 1, 1]]
+
+                    else:
+                        LuxCoreErrorLog.add_warning(f"Unsupported node type: {node.name}", obj_name=luxcore_name)
+            if error:
+                definitions["color"] = [0, 0, 0]
+                msg = 'World "%s": %s' % (world.name, "Could not convert node tree")
+                LuxCoreErrorLog.add_warning(msg)
+        else:
+            msg = 'World "%s": %s' % (world.name, "No node tree found")
+            LuxCoreErrorLog.add_warning(msg)
+
+
     else:
         # Adjust gain to 0.75 to match color of cycles background intensity
         definitions["gain"] = [0.75, 0.75, 0.75]
@@ -32,6 +113,7 @@ def convert_cycles_settings(exporter, depsgraph, scene, is_viewport_render):
 
     props = utils.create_props(prefix, definitions)
     return props
+
 
 def convert_luxcore_settings(exporter, depsgraph, scene, is_viewport_render):
     props = pyluxcore.Properties()
@@ -55,6 +137,7 @@ def convert_luxcore_settings(exporter, depsgraph, scene, is_viewport_render):
             msg = 'World "%s": %s' % (world.name, error)
             LuxCoreErrorLog.add_warning(msg)
     return props
+
 
 def convert(exporter, depsgraph, scene, is_viewport_render):
     props = pyluxcore.Properties()
