@@ -145,16 +145,32 @@ def extract_files_from_zip(zip_path, files_to_extract, destination):
     
     
 def extract_files_from_dmg(dmg_path, files_to_extract, destination):
+    # have to use a temp dir (weird extract behaviour)
+    temp_dir = os.path.join(script_dir, "temp")
+    # Make sure we don't delete someone's beloved temp folder later
+    while os.path.exists(temp_dir):
+        temp_dir += "_"
+    os.mkdir(temp_dir)
 
     print("Extracting dmg file:", dmg_path)
+    
     vol_name = dmg_path.replace(".dmg", "")  
     print("Volume Name is :", vol_name)
+    
     for f in files_to_extract:
-        print('Extracting "%s" to "%s"' % (f, destination))
         
-        cmd = ("7z e -odestination " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
+        print('Extracting "%s" to "%s"' % (f, temp_dir))
+        
+        cmd = ("7z e -otemp_dir " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
         print(cmd)
         os.system(cmd)
+        
+        # move to real target directory
+        src = os.path.join(temp_dir, f)
+        dst = os.path.join(destination, f)
+        print('Moving "%s" to "%s"' % (src, dst))
+        shutil.move(src, dst)
+        
     
 
 def extract_files_from_archive(archive_path, files_to_extract, destination):
