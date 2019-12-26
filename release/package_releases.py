@@ -161,12 +161,12 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
         
         print('Extracting "%s" to "%s"' % (f, temp_dir))
         
-        cmd = ("7z e -otemp_dir " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
+        cmd = ("7z e -o./temp_osx " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
         print(cmd)
         os.system(cmd)
         
         # move to real target directory
-        src = os.path.join(temp_dir, f)
+        src = os.path.join("./temp_osx/", f)
         dst = os.path.join(destination, f)
         print('Moving "%s" to "%s"' % (src, dst))
         shutil.move(src, dst)
