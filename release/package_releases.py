@@ -146,7 +146,7 @@ def extract_files_from_zip(zip_path, files_to_extract, destination):
     
 def extract_files_from_dmg(dmg_path, files_to_extract, destination):
     # have to use a temp dir (weird extract behaviour)
-    temp_dir = os.path.join(script_dir, "temposx")
+    temp_dir = os.path.join(script_dir, "temp")
     # Make sure we don't delete someone's beloved temp folder later
     while os.path.exists(temp_dir):
         temp_dir += "_"
@@ -154,21 +154,18 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
 
     print("Extracting dmg file:", dmg_path)
     
-    vol_name = dmg_path.replace(".dmg", "")  
-    print("Volume Name is :", vol_name)
-    os.system("sudo mount -t hfsplus " + dmg_path + " /mnt")
-    pylu = os.path.join("/mnt/", "pyluxcore")
+    vol_name = dmg_path.replace(".dmg", "") 
     
     for f in files_to_extract:
         
-        #print('Extracting "%s" to "%s"' % (f, temp_dir))
+        print('Extracting "%s" to "%s"' % (f, temp_dir))
         
-        #cmd = ("7z e -o./temp " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
-        #print(cmd)
-        #os.system(cmd)
+        cmd = ("7z e -o./temp " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
+        print(cmd)
+        os.system(cmd)
         
         # move to real target directory
-        src = os.path.join(pylu, f)
+        src = os.path.join(temp_dir, f)
         dst = os.path.join(destination, f)
         print('Moving "%s" to "%s"' % (src, dst))
         shutil.move(src, dst)
