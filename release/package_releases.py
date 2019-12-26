@@ -56,19 +56,19 @@ WINDOWS_FILES = [
 ]
 
 MAC_FILES = [
-    "libembree3.dylib", "libembree3.3.dylib", "libtbb.dylib",
-    "libtbbmalloc.dylib", "pyluxcore.so",
-    "pyluxcoretools.zip", "libomp.dylib",
+    "libembree3.3.dylib", "libomp.dylib", "libOpenImageDenoise.1.0.0.dylib", "libOpenImageIO.1.8.dylib", "libtbb.dylib",
+    "libtbbmalloc.dylib", "libtiff.5.dylib", "pyluxcore.so", "pyluxcoretools.zip", "denoise"
 ]
 
 OIDN_WIN = "oidn-windows.zip"
 OIDN_LINUX = "oidn-linux.tar.gz"
-OIDN_MAC = "oidn-macos.tar.gz"
+#OIDN_MAC = "oidn-macos.tar.gz"
 
 OIDN_urls = {
     OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
     OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
-    OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
+    #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
+    #already provided with mac.dmg
 }
 
 
@@ -81,7 +81,7 @@ def build_name(prefix, version_string, suffix):
 
 
 def build_zip_name(version_string, suffix):
-    suffix_without_extension = suffix.replace(".tar.bz2", "").replace(".zip", "").replace(".tar.gz", "")
+    suffix_without_extension = suffix.replace(".tar.bz2", "").replace(".zip", "").replace(".tar.gz", "").replace(".dmg", "")
     return "BlendLuxCore-" + version_string + suffix_without_extension
 
 
@@ -142,13 +142,23 @@ def extract_files_from_zip(zip_path, files_to_extract, destination):
             shutil.move(src, dst)
 
     rmtree(temp_dir)
+    
+    
+def extract_files_from_dmg(dmg_path, files_to_extract, destination):
 
+    print("Extracting dmg file:", dmg_path)
+    vol_name = dmg_path.replace(".dmg", "")                                            
+    cmd = ("7z e -odestination " + dmg_path + " " + vol_name + "/pyluxcore*")      
+    os.system(cmd)
+    
 
 def extract_files_from_archive(archive_path, files_to_extract, destination):
     if archive_path.endswith(".zip"):
         extract_files_from_zip(archive_path, files_to_extract, destination)
     elif archive_path.endswith(".tar.gz") or archive_path.endswith(".tar.bz2"):
         extract_files_from_tar(archive_path, files_to_extract, destination)
+    elif archive_path.endswith(".dmg"):
+        extract_files_from_dmg(archive_path, files_to_extract, destination)
     else:
         raise Exception("Unknown archive type:", archive_path)
 
@@ -165,6 +175,20 @@ def extract_luxcore_tar(prefix, platform_suffixes, file_names, version_string):
 
         tar_name = build_name(prefix, version_string, suffix)
         extract_files_from_archive(tar_name, file_names, destination)
+        
+def extract_luxcore_dmg(prefix, platform_suffixes, file_names, version_string):
+    for suffix in platform_suffixes:
+        dst_name = build_zip_name(version_string, suffix)
+        destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
+        
+        print()
+        print_divider()
+        print("Extracting dmg to", dst_name)
+        print_divider()
+        
+        dmg_name = build_name(prefix, version_string, suffix)
+        
+        extract_files_from_dmg(dmg_name, file_names, destination)
 
 
 def extract_luxcore_zip(prefix, platform_suffixes, file_names, version_string):
@@ -198,8 +222,8 @@ def main():
         "-linux64-opencl.tar.bz2",
         "-win64.zip",
         "-win64-opencl.zip",
-        "-mac64.tar.gz",
-        "-mac64-opencl.tar.gz",
+        "-mac64.dmg",
+        "-mac64-opencl.dmg",
     ]
 
     # Download LuxCore binaries for all platforms
@@ -316,16 +340,16 @@ def main():
             extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
         elif "linux64" in suffix:
             extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
-        elif "mac64" in suffix:
-            extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
+        #elif "mac64" in suffix:
+        #    extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
 
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if "-linux" in suffix]
     extract_luxcore_tar(prefix, linux_suffixes, LINUX_FILES, args.version_string)
 
-    # Mac archives are tar.gz
+    # Mac archives are dmg
     mac_suffixes = [suffix for suffix in suffixes if "-mac" in suffix]
-    extract_luxcore_tar(prefix, mac_suffixes, MAC_FILES, args.version_string)
+    extract_luxcore_dmg(prefix, mac_suffixes, MAC_FILES, args.version_string)
 
     # Windows archives are zip
     windows_suffixes = [suffix for suffix in suffixes if "-win" in suffix]
