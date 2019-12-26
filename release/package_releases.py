@@ -148,6 +148,7 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
 
     print("Extracting dmg file:", dmg_path)
     vol_name = dmg_path.replace(".dmg", "")  
+    print("Volume Name is :", vol_name)
     for f in files_to_extract:
         print('Extracting "%s" to "%s"' % (f, destination))
         
