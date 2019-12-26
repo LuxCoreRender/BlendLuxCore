@@ -157,7 +157,7 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
     vol_name = dmg_path.replace(".dmg", "")  
     print("Volume Name is :", vol_name)
     os.system("sudo mount -t hfsplus " + dmg_path + " /mnt")
-    pylu = os.path.join("/mnt/", vol_name, "pyluxcore")
+    pylu = os.path.join("/mnt/", "pyluxcore")
     
     for f in files_to_extract:
         
