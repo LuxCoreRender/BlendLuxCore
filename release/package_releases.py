@@ -148,13 +148,9 @@ def extract_files_from_zip(zip_path, files_to_extract, destination):
 def extract_files_from_dmg(dmg_path, files_to_extract, destination):
 
     print("Extracting dmg file:", dmg_path)
-    
     vol_name = dmg_path.replace(".dmg", "") 
-    
     for f in files_to_extract:
-        
         print('Extracting "%s" to "%s"' % (f, destination))
-        
         cmd = ("7z e -o" + destination + " " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
         print(cmd)
         os.system(cmd)
