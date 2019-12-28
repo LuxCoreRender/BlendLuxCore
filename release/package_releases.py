@@ -166,10 +166,9 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
         
         # move to real target directory
         src = os.path.join(temp_dir, f)
-        dst = os.path.join(destination, f)
-        print('Moving "%s" to "%s"' % (src, dst))
-        shutil.move(src, dst)
-    os.system("chmod +x " + destination + "/denoise")
+        #dst = os.path.join(destination, f)
+        print('Copying "%s" to "%s"' % (src, destination))
+        shutil.copy(src, destination)
         
     rmtree(temp_dir)
         
