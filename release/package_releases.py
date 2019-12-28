@@ -56,19 +56,20 @@ WINDOWS_FILES = [
 ]
 
 MAC_FILES = [
-    "libembree3.3.dylib", "libomp.dylib", "libOpenImageDenoise.1.0.0.dylib", "libOpenImageIO.1.8.dylib", "libtbb.dylib",
-    "libtbbmalloc.dylib", "libtiff.5.dylib", "pyluxcore.so", "pyluxcoretools.zip", "denoise"
+    "libembree3.3.dylib", "libomp.dylib", 
+    "libOpenImageDenoise.1.0.0.dylib", "libOpenImageIO.1.8.dylib", 
+    "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
+    "pyluxcore.so", "pyluxcoretools.zip"
 ]
 
 OIDN_WIN = "oidn-windows.zip"
 OIDN_LINUX = "oidn-linux.tar.gz"
-#OIDN_MAC = "oidn-macos.tar.gz"
+OIDN_MAC = "oidn-macos.tar.gz"
 
 OIDN_urls = {
     OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
     OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
-    #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
-    #already provided with mac.dmg
+    OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
 }
 
 
@@ -145,12 +146,6 @@ def extract_files_from_zip(zip_path, files_to_extract, destination):
     
     
 def extract_files_from_dmg(dmg_path, files_to_extract, destination):
-    # have to use a temp dir (weird extract behaviour)
-    #temp_dir = os.path.join(script_dir, "temp")
-    # Make sure we don't delete someone's beloved temp folder later
-    #while os.path.exists(temp_dir):
-    #    temp_dir += "_"
-    #os.mkdir(temp_dir)
 
     print("Extracting dmg file:", dmg_path)
     
@@ -164,15 +159,6 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
         print(cmd)
         os.system(cmd)
         
-        # move to real target directory
-        #src = os.path.join(temp_dir, f)
-        #dst = os.path.join(destination, f)
-        #print('Copying "%s" to "%s"' % (src, destination))
-        #shutil.copy(src, destination)
-        
-    #rmtree(temp_dir)
-        
-    
 
 def extract_files_from_archive(archive_path, files_to_extract, destination):
     if archive_path.endswith(".zip"):
@@ -209,7 +195,6 @@ def extract_luxcore_dmg(prefix, platform_suffixes, file_names, version_string):
         print_divider()
         
         dmg_name = build_name(prefix, version_string, suffix)
-        
         extract_files_from_dmg(dmg_name, file_names, destination)
 
 
@@ -362,8 +347,8 @@ def main():
             extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
         elif "linux64" in suffix:
             extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
-        #elif "mac64" in suffix:
-        #    extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
+        elif "mac64" in suffix:
+            extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
 
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if "-linux" in suffix]
