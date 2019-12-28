@@ -146,11 +146,11 @@ def extract_files_from_zip(zip_path, files_to_extract, destination):
     
 def extract_files_from_dmg(dmg_path, files_to_extract, destination):
     # have to use a temp dir (weird extract behaviour)
-    temp_dir = os.path.join(script_dir, "temp")
+    #temp_dir = os.path.join(script_dir, "temp")
     # Make sure we don't delete someone's beloved temp folder later
-    while os.path.exists(temp_dir):
-        temp_dir += "_"
-    os.mkdir(temp_dir)
+    #while os.path.exists(temp_dir):
+    #    temp_dir += "_"
+    #os.mkdir(temp_dir)
 
     print("Extracting dmg file:", dmg_path)
     
@@ -158,19 +158,19 @@ def extract_files_from_dmg(dmg_path, files_to_extract, destination):
     
     for f in files_to_extract:
         
-        print('Extracting "%s" to "%s"' % (f, temp_dir))
+        print('Extracting "%s" to "%s"' % (f, destination))
         
-        cmd = ("7z e -o./temp " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
+        cmd = ("7z e -o" + destination + " " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
         print(cmd)
         os.system(cmd)
         
         # move to real target directory
-        src = os.path.join(temp_dir, f)
+        #src = os.path.join(temp_dir, f)
         #dst = os.path.join(destination, f)
-        print('Copying "%s" to "%s"' % (src, destination))
-        shutil.copy(src, destination)
+        #print('Copying "%s" to "%s"' % (src, destination))
+        #shutil.copy(src, destination)
         
-    rmtree(temp_dir)
+    #rmtree(temp_dir)
         
     
 
