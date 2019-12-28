@@ -59,17 +59,17 @@ MAC_FILES = [
     "libembree3.3.dylib", "libomp.dylib", 
     "libOpenImageDenoise.1.0.0.dylib", "libOpenImageIO.1.8.dylib", 
     "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
-    "pyluxcore.so", "pyluxcoretools.zip"
+    "pyluxcore.so", "pyluxcoretools.zip", "denoise"
 ]
 
 OIDN_WIN = "oidn-windows.zip"
 OIDN_LINUX = "oidn-linux.tar.gz"
-OIDN_MAC = "oidn-macos.tar.gz"
+#OIDN_MAC = "oidn-macos.tar.gz"
 
 OIDN_urls = {
     OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
     OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
-    OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
+    #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
 }
 
 
@@ -347,8 +347,8 @@ def main():
             extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
         elif "linux64" in suffix:
             extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
-        elif "mac64" in suffix:
-            extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
+        #elif "mac64" in suffix:
+        #    extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
 
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if "-linux" in suffix]
