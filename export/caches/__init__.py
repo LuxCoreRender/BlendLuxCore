@@ -64,35 +64,6 @@ class MaterialCache:
             props.Set(mat_props)
         self.changed_materials.clear()
 
-# def diff(self, ignored_mats=None):
-    #     self._reset()
-    #
-    #     if bpy.data.materials.is_updated:
-    #         for mat in bpy.data.materials:
-    #             if ignored_mats and mat in ignored_mats:
-    #                 continue
-    #
-    #             node_tree = mat.luxcore.node_tree
-    #             mat_updated = False
-    #
-    #             if mat.is_updated:
-    #                 mat_updated = True
-    #             elif node_tree:
-    #                 if node_tree.is_updated or node_tree.is_updated_data:
-    #                     mat_updated = True
-    #
-    #                 # Check pointer nodes for changes
-    #                 pointer_nodes = utils_node.find_nodes(node_tree, "LuxCoreNodeTreePointer")
-    #                 for node in pointer_nodes:
-    #                     pointer_tree = node.node_tree
-    #                     if pointer_tree and (pointer_tree.is_updated or pointer_tree.is_updated_data):
-    #                         mat_updated = True
-    #
-    #             if mat_updated:
-    #                 self.changed_materials.add(mat)
-    #
-    #     return self.changed_materials
-
 
 class VisibilityCache:
     def __init__(self):
@@ -116,7 +87,7 @@ class VisibilityCache:
         for dg_obj_instance in depsgraph.object_instances:
             if dg_obj_instance.show_self:
                 obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-                if obj.type in EXPORTABLE_OBJECTS:
+                if not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS:
                     keys.add(utils.make_key_from_instance(dg_obj_instance))
         return keys
 

@@ -326,9 +326,6 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
         layout.prop(context.scene.luxcore.config, "film_opencl_enable")
         if context.scene.luxcore.config.film_opencl_enable:
             layout.prop(context.scene.luxcore.config, "film_opencl_device", text="")
-
-        if context.scene.luxcore.viewport.denoise:
-            layout.label(text="Most plugins are disabled in viewport because of viewport denoising", icon=icons.INFO)
             
 
 class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):
@@ -475,6 +472,9 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_aberration(CameraButtonsPanel, Pane
         coloraberration = pipeline.coloraberration
         layout.enabled = coloraberration.enabled
 
+        if context.scene.luxcore.viewport.denoise:
+            self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
+
         layout.prop(coloraberration, "amount", slider=True)
 
 
@@ -577,6 +577,9 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
         contour_lines = pipeline.contour_lines
         layout.enabled = contour_lines.enabled
 
+        if context.scene.luxcore.viewport.denoise:
+            self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
+
         layout.prop(contour_lines, "scale")
         layout.prop(contour_lines, "contour_range")
         layout.prop(contour_lines, "steps")
@@ -614,12 +617,7 @@ def compatible_panels():
         "DATA_PT_context_camera",
         "DATA_PT_camera_stereoscopy",
         "DATA_PT_camera",
-        #"DATA_PT_camera_background_image",
-        #"DATA_PT_camera_display",
-        #"DATA_PT_camera_display_composition_guides",
-        #"DATA_PT_camera_display_passepartout",
-        #"DATA_PT_camera_safe_areas",
-        #"DATA_PT_camera_safe_areas_center_cut",
+        "DATA_PT_camera_background_image",
         "DATA_PT_custom_props_camera",
      ]
      types = bpy.types

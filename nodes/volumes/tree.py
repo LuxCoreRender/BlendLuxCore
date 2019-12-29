@@ -35,6 +35,7 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexWindy", label="Windy"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexOpenVDB", label="OpenVDB File"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_BLENDERTEXTURE", "Texture (Blender)", items=[
@@ -79,7 +80,7 @@ luxcore_node_categories_volume = [
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_LIGHT", "Light", items=[
         NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
-        NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
+        NodeItem("LuxCoreNodeTexBlackbody", label="Blackbody Temperature"),
         NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 

@@ -1,7 +1,6 @@
 import bpy
 from ..base import LuxCoreNodeTexture
 
-
 class LuxCoreNodeTexCheckerboard2D(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "2D Checkerboard"
     bl_width_default = 160
@@ -13,8 +12,16 @@ class LuxCoreNodeTexCheckerboard2D(bpy.types.Node, LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
+    def draw_buttons(self, context, layout):
+        col = layout.row()
+        if not self.inputs["2D Mapping"].is_linked:
+            layout.prop_search(self, "uvmap", context.object.data, "uv_layers", text="UV Map", icon='GROUP_UVS')
+
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
+        uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
+
+        if not self.inputs["2D Mapping"].is_linked:
+            uvindex = 0
 
         definitions = {
             "type": "checkerboard2d",
@@ -23,6 +30,7 @@ class LuxCoreNodeTexCheckerboard2D(bpy.types.Node, LuxCoreNodeTexture):
             # Mapping
             "mapping.type": "uvmapping2d",
             "mapping.uvscale": uvscale,
+            "mapping.uvindex": uvindex,
             "mapping.rotation": uvrotation,
             "mapping.uvdelta": uvdelta,
         }

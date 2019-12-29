@@ -24,6 +24,11 @@ POWER_DESCRIPTION = (
     "this feature and uses only the light gain"
 )
 
+EXPOSURE_DESCRIPTION = (
+    "Power-of-2 step multiplier. "
+    "An EV step of 1 will double the brightness of the light"
+)
+
 EFFICACY_DESCRIPTION = (
     "Luminous efficacy in lumens per watt; setting 0 for both power "
     "and efficacy bypasses this feature and uses only the light gain"
@@ -53,7 +58,7 @@ TURBIDITY_DESC = (
 
 VIS_INDIRECT_BASE = (
     "Visibility for indirect {type} rays. "
-    "If disabled, this light will appear black in indirect bounces on {type} materials"
+    "If disabled, this light will appear black in indirect bounces on {type} materials."
 )
 VIS_INDIRECT_DIFFUSE_DESC = VIS_INDIRECT_BASE.format(type="diffuse") + " (e.g. matte)"
 VIS_INDIRECT_GLOSSY_DESC = VIS_INDIRECT_BASE.format(type="glossy") + " (e.g. glossy, roughglass, metal)"
@@ -95,6 +100,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     ##############################################
     # Generic properties shared by all light types
     gain: FloatProperty(name="Gain", default=1, min=0, precision=4, description="Brightness multiplier")
+    exposure: FloatProperty(name="Exposure", default=0, soft_min=-10, soft_max=10, precision=2, description=EXPOSURE_DESCRIPTION)
     rgb_gain: FloatVectorProperty(name="Tint", default=(1, 1, 1), min=0, max=1, subtype="COLOR",
                                    description=RGB_GAIN_DESC)
     importance: FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
@@ -129,6 +135,10 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
                            description="If radius is greater than 0, a sphere light is used")
 
     # point, mappoint, spot, laser
+    light_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
+        ("power", "Power", "Radiant flux in Watts")
+    ]
+    light_unit: EnumProperty(name="Unit", items=light_units, default="artistic")
     power: FloatProperty(name="Power", default=100, min=0, description=POWER_DESCRIPTION, unit='POWER')
     efficacy: FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
 
@@ -156,6 +166,21 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     visibility_indirect_diffuse: BoolProperty(name="Diffuse", default=True, description=VIS_INDIRECT_DIFFUSE_DESC)
     visibility_indirect_glossy: BoolProperty(name="Glossy", default=True, description=VIS_INDIRECT_GLOSSY_DESC)
     visibility_indirect_specular: BoolProperty(name="Specular", default=True, description=VIS_INDIRECT_SPECULAR_DESC)
+
+    # sun indirect specular
+    def update_visibility_indirect_specular(self, context):
+        self["sun_visibility_indirect_specular"] = self.visibility_indirect_specular
+
+    visibility_indirect_specular: BoolProperty(name="Specular", default=True, 
+        description=VIS_INDIRECT_SPECULAR_DESC, 
+        update=update_visibility_indirect_specular)
+
+    def update_sun_visibility_indirect_specular(self, context):
+        self["visibility_indirect_specular"] = self.sun_visibility_indirect_specular
+
+    sun_visibility_indirect_specular: BoolProperty(name="Specular", default=False, 
+        description=VIS_INDIRECT_SPECULAR_DESC, 
+        update=update_sun_visibility_indirect_specular)
 
     # sky2, infinite, constantinfinite
     # TODO description

@@ -92,11 +92,6 @@ LOOKUP_RADIUS_DESC = (
     "Larger values can degrade rendering performance"
 )
 
-LOOKUP_MAXCOUNT_DESC = (
-    "How many photons to consider at most per lookup. Larger values can give "
-    "more accurate results, but may slow down rendering"
-)
-
 NORMAL_ANGLE_DESC = (
     "Only if the angle between two faces is smaller than this value, "
     "cache entries can be shared by the surfaces"
@@ -268,23 +263,19 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                     description="Max. number of photons stored in caustic cache (value in millions)")
     caustic_lookup_radius: FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
                                           description=LOOKUP_RADIUS_DESC)
-    caustic_lookup_maxcount: IntProperty(name="Lookup Max. Count", default=128, min=1,
-                                          description=LOOKUP_MAXCOUNT_DESC)
     caustic_normalangle: FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
                                         subtype="ANGLE", description=NORMAL_ANGLE_DESC)
-    caustic_merge_enabled: BoolProperty(name="Merge Caustic Photons", default=True,
-                                         description="Merge clumped up photons. Improves rendering speed, "
-                                                     "but leads to blurring if the radius is too large")
-    caustic_merge_radius_scale: FloatProperty(name="Radius Scale", default=0.25, min=0, max=0.4, step=0.1,
-                                               description="Scale factor for the merge radius, multiplied with lookup "
-                                                           "radius. Smaller values lead to sharper caustics, but worse "
-                                                           "rendering performance. Larger values lead to blurred "
-                                                           "caustics, but faster rendering")
     caustic_periodic_update: BoolProperty(name="Periodic Update", default=True,
                                           description="Rebuild the caustic cache periodically to clean up photon noise. "
                                                        "The step samples parameter controls how often the cache is rebuilt")
-    caustic_updatespp: IntProperty(name="Step Samples", default=30, min=0,
+    caustic_updatespp: IntProperty(name="Step Samples", default=8, min=1,
                                    description="How often to rebuild the cache if periodic update is enabled")
+    # TODO description
+    caustic_updatespp_radiusreduction: FloatProperty(name="Radius Reduction", default=96, min=1, soft_min=70,
+                                                     max=99.9, soft_max=99, subtype="PERCENTAGE")
+    # TODO description
+    caustic_updatespp_minradius: FloatProperty(name="Minimum Radius", default=0.003, min=0.00001,
+                                               subtype="DISTANCE")
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),

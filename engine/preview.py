@@ -1,8 +1,10 @@
 from enum import Enum
 from time import sleep
+from os.path import dirname, realpath
 from mathutils import Matrix
 from ..bin import pyluxcore
 from .. import utils
+from ..utils import node as utils_node
 from .. import export
 from ..draw.final import FrameBufferFinal
 from ..utils.log import LuxCoreLog
@@ -82,10 +84,8 @@ def enable_log_output():
 
 
 def _export_mat_scene(engine, depsgraph, active_mat):
-    from ..export.caches.exported_data import ExportedObject
-    from ..export.caches.exported_data import ExportedMesh
-    from ..export.caches.object_cache import get_material
-    from os import path
+    from ..export.caches.exported_data import ExportedObject, ExportedMesh
+    from ..export.caches.object_cache import get_material, uses_pointiness
 
     exporter = engine.exporter
     scene = depsgraph.scene_eval
@@ -130,11 +130,11 @@ def _export_mat_scene(engine, depsgraph, active_mat):
 
             mesh_definitions = []
             props = pyluxcore.Properties()
-            filepath = path.dirname(path.realpath(__file__))+"/../preview_scene/LuxCore_preview.ply"
+            filepath = dirname(dirname(realpath(__file__))) + "/preview_scene/LuxCore_preview.ply"
 
             prefix = "scene.shapes." + mesh_key + "."
             props.Set(pyluxcore.Property(prefix + "type", "mesh"))
-            props.Set(pyluxcore.Property(prefix + "ply", path.abspath(filepath)))
+            props.Set(pyluxcore.Property(prefix + "ply", filepath))
             mesh_definitions.append((mesh_key, 0))
             scene_props.Set(props)
 
@@ -143,10 +143,11 @@ def _export_mat_scene(engine, depsgraph, active_mat):
             if exported_mesh:
                 mat_names = []
                 for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
-                    lux_mat_name, mat_props, use_pointiness = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                    lux_mat_name, mat_props, node_tree = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
                     scene_props.Set(mat_props)
                     mat_names.append(lux_mat_name)
-                    if use_pointiness:
+
+                    if node_tree and uses_pointiness(node_tree):
                         # Replace shape definition with pointiness shape
                         pointiness_shape = shape_name + "_pointiness"
                         prefix = "scene.shapes." + pointiness_shape + "."
@@ -404,20 +405,6 @@ def _create_config(scene, is_world_sphere):
     }
 
     return utils.create_props(prefix, definitions)
-
-
-def _convert_obj(exporter, obj, scene, luxcore_scene, props):
-    obj_props, exported_obj = export.blender_object.convert(exporter, obj, scene, None, luxcore_scene, update_mesh=True)
-
-    for psys in obj.particle_systems:
-        settings = psys.settings
-        if settings.type == "HAIR" and settings.render_type == "PATH":
-            # Make the strands in strand preview mode thicker so they are visible
-            settings.luxcore.hair.hair_size = 0.05
-            settings.luxcore.hair.tesseltype = "solid"
-            export.hair.convert_hair(exporter, obj, psys, luxcore_scene, scene)
-
-    props.Set(obj_props)
 
 
 def _get_preview_settings(exporter, depsgraph):    

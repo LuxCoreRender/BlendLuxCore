@@ -4,16 +4,29 @@ from ...bin import pyluxcore
 from .. import mesh_converter
 from ..hair import convert_hair
 from .exported_data import ExportedObject
-from .. import light
+from .. import light, material
+from ...utils.errorlog import LuxCoreErrorLog
+from ...utils import node as utils_node
+from ...nodes.output import get_active_output
 
 MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 
 
+def uses_pointiness(node_tree):
+    # Check if a pointiness node exists, better check would be if the node is linked
+    return len(utils_node.find_nodes(node_tree, "LuxCoreNodeTexPointiness")) > 0
+
+
+def warn_about_missing_uvs(obj, node_tree):
+    imagemaps = utils_node.find_nodes(node_tree, "LuxCoreNodeTexImagemap")
+    if imagemaps and not utils_node.has_valid_uv_map(obj):
+        msg = (utils.pluralize("%d image texture", len(imagemaps)) + " used, but no UVs defined. "
+                                                                     "In case of bumpmaps this can lead to artifacts")
+        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+
+
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
-    from ...utils.errorlog import LuxCoreErrorLog
-    from ...utils import node as utils_node
-    from .. import material
     if material_index < len(obj.material_slots):
         mat = obj.material_slots[material_index].material
 
@@ -28,21 +41,12 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         mat = None
 
     if mat:
-        use_pointiness = False
-        if mat.luxcore.node_tree:
-            # Check if a pointiness node exists, better check would be if the node is linked
-            use_pointiness = len(utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexPointiness")) > 0
-            imagemaps = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap")
-            if imagemaps and not utils_node.has_valid_uv_map(obj):
-                msg = (utils.pluralize("%d image texture", len(imagemaps)) + " used, but no UVs defined. "
-                       "In case of bumpmaps this can lead to artifacts")
-                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-
         lux_mat_name, mat_props = material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
-        return lux_mat_name, mat_props, use_pointiness
+        node_tree = mat.luxcore.node_tree
+        return lux_mat_name, mat_props, node_tree
     else:
         lux_mat_name, mat_props = material.fallback()
-        return lux_mat_name, mat_props, False
+        return lux_mat_name, mat_props, None
 
 class ObjectCache2:
     def __init__(self):
@@ -54,6 +58,9 @@ class ObjectCache2:
         for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
             if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
+                continue
+
+            if not is_viewport_render and obj.is_instancer and not obj.show_instancer_for_render:
                 continue
 
             self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
@@ -79,7 +86,10 @@ class ObjectCache2:
     def _is_visible(self, dg_obj_instance, obj):
         # TODO if this code needs to be used elsewhere (e.g. in material preview),
         #  move it to utils (it doesn't concern this cache class)
-        return dg_obj_instance.show_self and obj.type in EXPORTABLE_OBJECTS
+        return dg_obj_instance.show_self and self._is_obj_visible(obj)
+
+    def _is_obj_visible(self, obj):
+        return not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS
 
     def _get_mesh_key(self, obj, use_instancing, is_viewport_render=True):
         # Important: we need the data of the original object, not the evaluated one.
@@ -139,17 +149,33 @@ class ObjectCache2:
         if exported_mesh:
             mat_names = []
             for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
-                lux_mat_name, mat_props, use_pointiness = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                shape = shape_name
+                lux_mat_name, mat_props, node_tree = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 
-                if use_pointiness:
-                    # Replace shape definition with pointiness shape
-                    pointiness_shape = shape_name + "_pointiness"
-                    prefix = "scene.shapes." + pointiness_shape + "."
-                    scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
-                    scene_props.Set(pyluxcore.Property(prefix + "source", shape_name))
-                    exported_mesh.mesh_definitions[idx] = [pointiness_shape, mat_index]
+                if node_tree:
+                    warn_about_missing_uvs(obj, node_tree)
+
+                    output_node = get_active_output(node_tree)
+                    if output_node:
+                        try:
+                            # Convert the whole shape stack
+                            # TODO support for instances
+                            shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
+                        except KeyError:
+                            # TODO remove this try/except, instead add the socket in utils/compatibility.py
+                            pass
+
+                    if uses_pointiness(node_tree):
+                        # Replace shape definition with pointiness shape
+                        pointiness_shape = shape + "_pointiness"
+                        prefix = "scene.shapes." + pointiness_shape + "."
+                        scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
+                        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+                        shape = pointiness_shape
+
+                exported_mesh.mesh_definitions[idx] = [shape, mat_index]
 
             obj_transform = transform.copy() if use_instancing else None
 
@@ -184,6 +210,9 @@ class ObjectCache2:
 
                 if dg_update.is_updated_geometry and isinstance(dg_update.id, bpy.types.Object):
                     obj = dg_update.id
+                    if not self._is_obj_visible(obj):
+                        continue
+
                     obj_key = utils.make_key(obj)
 
                     if obj.type in MESH_OBJECTS:

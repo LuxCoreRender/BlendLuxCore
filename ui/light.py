@@ -56,11 +56,23 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
+        if light.type in {"POINT", "SPOT", "AREA"}:
+            layout.prop(light.luxcore, "light_unit")
+
         if light.type == "AREA" and light.luxcore.node_tree:
             layout.label(text="Light color is defined by emission node", icon=icons.INFO)
         else:
-            layout.prop(light.luxcore, "rgb_gain", text="Color")
-        layout.prop(light.luxcore, "gain")
+            if not (light.type == "SUN" and light.luxcore.light_type == "sun"):
+                layout.prop(light.luxcore, "rgb_gain", text="Color")
+
+        if light.luxcore.light_unit == "power" and light.type in {"POINT", "SPOT", "AREA"}:
+            col = layout.column(align=True)
+            col.prop(light.luxcore, "power")
+            col.prop(light.luxcore, "efficacy")
+        else:
+            col = layout.column(align=True)
+            col.prop(light.luxcore, "gain")
+            col.prop(light.luxcore, "exposure", slider=True)
 
         col = layout.column(align=True)
         op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
@@ -69,16 +81,11 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         col.prop_search(light.luxcore, "lightgroup",
                         lightgroups, "custom",
                         icon=icons.LIGHTGROUP, text="")
-        
 
         layout.separator()
 
         # TODO: split this stuff into separate panels for each light type?
         if light.type == "POINT":
-            col = layout.column(align=True)
-            col.prop(light.luxcore, "power")
-            col.prop(light.luxcore, "efficacy")
-            
             layout.prop(light, "shadow_soft_size", text="Radius")                        
             
             self.draw_image_controls(context)
@@ -100,17 +107,9 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
 
         elif light.type == "SPOT":
-            col = layout.column(align=True)
-            col.prop(light.luxcore, "power")
-            col.prop(light.luxcore, "efficacy")
-
             self.draw_image_controls(context)
 
         elif light.type == "AREA":
-            col = layout.column(align=True)
-            col.prop(light.luxcore, "power")
-            col.prop(light.luxcore, "efficacy")
-
             if light.luxcore.is_laser:
                 col = layout.column(align=True)
                 col.prop(light, "size", text="Size")
@@ -205,17 +204,25 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
 
         # These settings only work with PATH and TILEPATH, not with BIDIR
         enabled = context.scene.luxcore.config.engine == "PATH"
+        
+        if not enabled:
+            layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
 
         col = layout.column()
         col.enabled = enabled
         col.label(text="Visibility for indirect light rays:")
-        col = layout.column()        
+        col = col.column()        
         col.prop(light.luxcore, "visibility_indirect_diffuse")
         col.prop(light.luxcore, "visibility_indirect_glossy")
-        col.prop(light.luxcore, "visibility_indirect_specular")
+        
+        if light.type == "SUN":
+            col.prop(light.luxcore, "sun_visibility_indirect_specular")
+            if light.luxcore.sun_visibility_indirect_specular:
+                col.label(text="Indirect Specular rays can create unwanted fireflies", icon=icons.WARNING)
+        else: 
+            col.prop(light.luxcore, "visibility_indirect_specular")
 
-        if not enabled:
-            layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+
 
 
 class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):

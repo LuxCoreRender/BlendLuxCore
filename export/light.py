@@ -51,7 +51,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
     # Common light settings shared by all light types
     # Note: these variables are also passed to the area light export function
     gain, importance, lightgroup_id = _convert_common_props(exporter, scene, light)
-    definitions["gain"] = gain
+    definitions["gain"] = apply_exposure(gain, light.luxcore.exposure)
     definitions["importance"] = importance
     definitions["id"] = lightgroup_id
 
@@ -75,7 +75,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
                     # Fallback
                     definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
                     # Signal that the image is missing
-                    definitions["gain"] = [x * light.luxcore.gain for x in MISSING_IMAGE_COLOR]
+                    definitions["gain"] = [x * light.luxcore.gain * pow(2, light.luxcore.exposure) for x in MISSING_IMAGE_COLOR]
 
             has_ies = False
             try:
@@ -91,8 +91,21 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
             # point/sphere
             definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
 
-        definitions["efficency"] = light.luxcore.efficacy
-        definitions["power"] = light.luxcore.power
+        definitions["color"] = [x for x in light.luxcore.rgb_gain]
+
+        if light.luxcore.light_unit == "power":
+            definitions["efficency"] = light.luxcore.efficacy
+            definitions["power"] = light.luxcore.power
+
+            if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
+                definitions["gain"] = [0, 0, 0]
+            else:
+                definitions["gain"] = [1, 1, 1]
+
+        else:
+            definitions["efficency"] = 0.0
+            definitions["power"] = 0.0
+
         # Position is set by transformation property
         definitions["position"] = [0, 0, 0]
         transformation = utils.matrix_to_list(transform)
@@ -117,15 +130,18 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
             else:
                 # Fallback
                 definitions["type"] = "constantinfinite"
+                definitions["color"] = [x for x in light.luxcore.rgb_gain]
         elif light.luxcore.theta < 0.05:
             # sharpdistant
             definitions["type"] = "sharpdistant"
             definitions["direction"] = distant_dir
+            definitions["color"] = [x for x in light.luxcore.rgb_gain]
         else:
             # distant
             definitions["type"] = "distant"
             definitions["direction"] = distant_dir
             definitions["theta"] = light.luxcore.theta
+            definitions["color"] = [x for x in light.luxcore.rgb_gain]
 
     elif light.type == "SPOT":
         coneangle = math.degrees(light.spot_size) / 2
@@ -146,15 +162,28 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
                 # Fallback
                 definitions["type"] = "spot"
                 # Signal that the image is missing
-                definitions["gain"] = [x * light.luxcore.gain for x in MISSING_IMAGE_COLOR]
+                definitions["gain"] = [x * light.luxcore.gain * pow(2, light.luxcore.exposure) for x in MISSING_IMAGE_COLOR]
         else:
             # spot
             definitions["type"] = "spot"
             definitions["coneangle"] = coneangle
             definitions["conedeltaangle"] = conedeltaangle
 
-        definitions["efficency"] = light.luxcore.efficacy
-        definitions["power"] = light.luxcore.power
+        definitions["color"] = [x for x in light.luxcore.rgb_gain]
+
+        if light.luxcore.light_unit == "power":
+            definitions["efficency"] = light.luxcore.efficacy
+            definitions["power"] = light.luxcore.power
+
+            if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
+                definitions["gain"] = [0, 0, 0]
+            else:
+                definitions["gain"] = [1, 1, 1]
+
+        else:
+            definitions["efficency"] = 0.0
+            definitions["power"] = 0.0
+
         # Position and direction are set by transformation property
         definitions["position"] = [0, 0, 0]
         definitions["target"] = [0, 0, -1]
@@ -169,8 +198,21 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
             definitions["type"] = "laser"
             definitions["radius"] = light.size / 2
 
-            definitions["efficency"] = light.luxcore.efficacy
-            definitions["power"] = light.luxcore.power
+            definitions["color"] = [x for x in light.luxcore.rgb_gain]
+
+            if light.luxcore.light_unit == "power":
+                definitions["efficency"] = light.luxcore.efficacy
+                definitions["power"] = light.luxcore.power
+
+                if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
+                    definitions["gain"] = [0, 0, 0]
+                else:
+                    definitions["gain"] = [1, 1, 1]
+
+            else:
+                definitions["efficency"] = 0.0
+                definitions["power"] = 0.0
+
             # Position and direction are set by transformation property
             definitions["position"] = [0, 0, 0]
             definitions["target"] = [0, 0, -1]
@@ -204,7 +246,7 @@ def convert_world(exporter, world, scene, is_viewport_render):
         definitions = {}
 
         gain, importance, lightgroup_id = _convert_common_props(exporter, scene, world)
-        definitions["gain"] = gain
+        definitions["gain"] = apply_exposure(gain, world.luxcore.exposure)
         definitions["importance"] = importance
         definitions["id"] = lightgroup_id
 
@@ -219,7 +261,7 @@ def convert_world(exporter, world, scene, is_viewport_render):
                 definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
 
                 if world.luxcore.use_sun_gain_for_sky:
-                    gain = [x * world.luxcore.sun.data.luxcore.gain for x in world.luxcore.rgb_gain]
+                    gain = [x * world.luxcore.sun.data.luxcore.gain * pow(2, world.luxcore.sun.data.luxcore.exposure) for x in world.luxcore.rgb_gain]
                     definitions["gain"] = gain
 
             if world.luxcore.sun and world.luxcore.sun.data:
@@ -260,7 +302,7 @@ def _calc_sun_dir(transform):
 
 
 def _convert_common_props(exporter, scene, light_or_world):
-    gain = [x * light_or_world.luxcore.gain for x in light_or_world.luxcore.rgb_gain]
+    gain = [x * light_or_world.luxcore.gain for x in [1, 1, 1]]
     importance = light_or_world.luxcore.importance
     lightgroup_id = scene.luxcore.lightgroups.get_id_by_name(light_or_world.luxcore.lightgroup)
     exporter.lightgroup_cache.add(lightgroup_id)
@@ -275,7 +317,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
                                         light_or_world.luxcore.image_user,
                                         scene)
     except OSError as error:
-        error_context = "Light" if isinstance(light_or_world, bpy.types.light) else "World"
+        error_context = "Light" if isinstance(light_or_world, bpy.types.Light) else "World"
         msg = '%s "%s": %s' % (error_context, light_or_world.name, error)
         LuxCoreErrorLog.add_warning(msg)
         # Fallback
@@ -330,11 +372,10 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         "type": "matte",
         # Black base material to avoid any bounce light from the mesh
         "kd": [0, 0, 0],
-        # Color is controlled by gain
-        "emission": [1, 1, 1],
-        "emission.gain": gain,
-        "emission.power": light.luxcore.power,
-        "emission.efficency": light.luxcore.efficacy,
+        "emission": [x for x in light.luxcore.rgb_gain],
+        "emission.gain": apply_exposure(gain, light.luxcore.exposure),
+        "emission.power": 0.0,
+        "emission.efficency": 0.0,
         "emission.theta": math.degrees(light.luxcore.spread_angle),
         "emission.id": scene.luxcore.lightgroups.get_id_by_name(light.luxcore.lightgroup),
         "emission.importance": importance,
@@ -345,6 +386,15 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         "visibility.indirect.glossy.enable": light.luxcore.visibility_indirect_glossy,
         "visibility.indirect.specular.enable": light.luxcore.visibility_indirect_specular,
     }
+
+    if light.luxcore.light_unit == "power":
+        mat_definitions["emission.power"] = light.luxcore.power
+        mat_definitions["emission.efficency"] = light.luxcore.efficacy
+
+        if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
+            mat_definitions["emission.gain"] = [0, 0, 0]
+        else:
+            mat_definitions["emission.gain"] = [1, 1, 1]
 
     node_tree = light.luxcore.node_tree
     if node_tree is not None:
@@ -360,7 +410,6 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
 
             # Now export the texture node tree, starting at the output node
             active_output.export(exporter, depsgraph, tex_props, tex_name)
-            mat_definitions["emission.gain"] = [x*light.luxcore.gain for x in  [1, 1, 1]]
             mat_definitions["emission"] = tex_name
             props.Set(tex_props)
 
@@ -469,6 +518,8 @@ def _envlightcache(definitions, light_or_world, scene):
         definitions["visibilitymapcache.map.samplecount"] = envlight_cache.samples
         definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
 
+def apply_exposure(gain, exposure):
+    return [x * pow(2, exposure) for x in gain]
 
 def export_ies(definitions, ies, library, is_meshlight=False):
     """

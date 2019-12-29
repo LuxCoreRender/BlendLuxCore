@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import (
-    PointerProperty, EnumProperty,
+    PointerProperty, EnumProperty, StringProperty, IntProperty,
     BoolProperty, FloatProperty,
 )
 from ..base import LuxCoreNodeTexture
@@ -8,9 +8,9 @@ from ...export.image import ImageExporter
 from ...properties.image_user import LuxCoreImageUser
 from ... import utils
 from ...utils import node as utils_node
-from ...utils import ui as utils_ui
 from ...utils.errorlog import LuxCoreErrorLog
 from ...ui import icons
+from ...handlers import frame_change_pre
 
 
 NORMAL_MAP_DESC = (
@@ -141,6 +141,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
 
     def draw_buttons(self, context, layout):
         row = layout.row()
+
         row.prop(self, "show_thumbnail", icon=icons.IMAGE)
         # row.prop(self, "set_as_active_uvmap", toggle=True)  # TODO 2.8
         if self.show_thumbnail:
@@ -167,9 +168,9 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             col.prop(self, "gamma")
             col.prop(self, "brightness")
 
-        # Info about UV mapping (only show if default is used,
-        # when no mapping node is linked)
         if not self.inputs["2D Mapping"].is_linked:
+            # Info about UV mapping (only show if default is used,
+            # when no mapping node is linked)
             utils_node.draw_uv_info(context, col)
 
         self.image_user.draw(col, context.scene)
@@ -181,6 +182,9 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             else:
                 return [0, 0, 0]
 
+        if self.image.source == "SEQUENCE":
+            frame_change_pre.using_image_sequences = True
+
         try:
             filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
         except OSError as error:
@@ -188,7 +192,10 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             LuxCoreErrorLog.add_warning(msg)
             return [1, 0, 1]
 
-        uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
+        uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
+
+        if not self.inputs["2D Mapping"].is_linked:
+            uvindex = 0
 
         definitions = {
             "type": "imagemap",
@@ -197,6 +204,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             # Mapping
             "mapping.type": "uvmapping2d",
             "mapping.uvscale": uvscale,
+            "mapping.uvindex": uvindex,
             "mapping.rotation": uvrotation,
             "mapping.uvdelta": uvdelta,
         }

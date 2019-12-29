@@ -87,11 +87,11 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
 
         if self.auto_step_settings and self.domain:
             # Search smoke domain target for smoke modifiers
-            object_eval = self.domain.evaluated_get(depsgraph)
-            smoke_domain_mod = utils.find_smoke_domain_modifier(object_eval)
+            domain_eval = self.domain.evaluated_get(depsgraph)
+            smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
 
             if smoke_domain_mod is None:
-                msg = 'Object "%s" is not a smoke domain' % self.domain.name
+                msg = 'Object "%s" is not a smoke domain' % domain_eval.name
                 raise Exception(msg)
 
             settings = smoke_domain_mod.domain_settings
@@ -101,7 +101,8 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
                 resolutions = [res * (settings.amplify + 1) for res in resolutions]
 
             worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
-            dimensions = [dim * worldscale for dim in self.domain.dimensions]
+            dimensions = [dim * worldscale for dim in domain_eval.dimensions]
+
             # The optimal step size on each axis
             step_sizes = [dim / res for dim, res in zip(dimensions, resolutions)]
             # Use the smallest step size in LuxCore
@@ -109,7 +110,7 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
             definitions["steps.size"] = step_size
 
             # Find the max. count required in the worst case
-            diagonal = self.domain.dimensions.length * worldscale
+            diagonal = domain_eval.dimensions.length * worldscale
             worst_case_maxcount = math.ceil(diagonal / step_size)
             definitions["steps.maxcount"] = worst_case_maxcount
 

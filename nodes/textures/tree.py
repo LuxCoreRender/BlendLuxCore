@@ -38,6 +38,7 @@ luxcore_node_categories_texture = [
         Separator(),
         NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexOpenVDB", label="OpenVDB File"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_BLENDERTEXTURE", "Texture (Blender)", items=[
@@ -75,6 +76,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
+        NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
     ]),
 
@@ -85,7 +87,7 @@ luxcore_node_categories_texture = [
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_LIGHT", "Light", items=[
         NodeItem("LuxCoreNodeTexLampSpectrum", label="Lamp Spectrum"),
-        NodeItem("LuxCoreNodeTexBlackbody", label="Lamp Blackbody Temperature"),
+        NodeItem("LuxCoreNodeTexBlackbody", label="Blackbody Temperature"),
         NodeItem("LuxCoreNodeTexIrregularData", label="Irregular Data"),
     ]),
 

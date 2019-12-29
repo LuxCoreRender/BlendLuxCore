@@ -79,7 +79,7 @@ def convert(exporter, scene, context=None, engine=None):
         if config.filter == "GAUSSIAN":
             definitions["film.filter.gaussian.alpha"] = config.gaussian_alpha
 
-        use_filesaver = utils.use_filesaver(context, scene)
+        use_filesaver = utils.using_filesaver(context, scene)
 
         # Transparent film settings
         black_background = False
@@ -144,9 +144,7 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
 
 def _convert_viewport_engine(scene, definitions, config):
     viewport = scene.luxcore.viewport
-    use_bidir_in_viewport = config.engine == "BIDIR" and viewport.use_bidir
-    use_hybridbackforward = (config.engine == "PATH" and config.path.hybridbackforward_enable
-                             and not config.use_tiles and viewport.add_light_tracing)
+    using_hybridbackforward = utils.using_hybridbackforward_in_viewport(scene)
 
     device = viewport.device
     if device == "OCL" and not utils.is_opencl_build():
@@ -154,10 +152,10 @@ def _convert_viewport_engine(scene, definitions, config):
         LuxCoreErrorLog.add_warning(msg)
         device = "CPU"
 
-    _convert_path(config, definitions, use_hybridbackforward, device)
+    _convert_path(config, definitions, using_hybridbackforward, device)
     resolutionreduction = viewport.resolution_reduction if viewport.reduce_resolution_on_edit else 1
 
-    if use_bidir_in_viewport:
+    if utils.using_bidir_in_viewport(scene):
         luxcore_engine = "BIDIRCPU"
         definitions["light.maxdepth"] = config.bidir_light_maxdepth
         definitions["path.maxdepth"] = config.bidir_path_maxdepth
@@ -166,7 +164,7 @@ def _convert_viewport_engine(scene, definitions, config):
         definitions["sampler.random.adaptive.strength"] = 0
         _convert_metropolis_settings(definitions, config)
     elif device == "CPU":
-        if use_hybridbackforward:
+        if using_hybridbackforward:
             luxcore_engine = "PATHCPU"
             sampler = "SOBOL"
             definitions["sampler.sobol.adaptive.strength"] = 0
@@ -180,7 +178,7 @@ def _convert_viewport_engine(scene, definitions, config):
             definitions["rtpathcpu.zoomphase.weight"] = 0
     else:
         assert device == "OCL"
-        if use_hybridbackforward:
+        if using_hybridbackforward:
             luxcore_engine = "PATHOCL"
             sampler = "SOBOL"
             definitions["sampler.sobol.adaptive.strength"] = 0
@@ -217,7 +215,7 @@ def _convert_viewport_engine(scene, definitions, config):
             "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
         ])
         definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
-        _convert_opencl_settings(scene, definitions, use_hybridbackforward)
+        _convert_opencl_settings(scene, definitions, using_hybridbackforward)
 
     return luxcore_engine, sampler
 
@@ -393,7 +391,6 @@ def _convert_photongi_settings(context, scene, definitions, config):
         raise Exception("Unknown preset mode")
 
     caustic_radius = photongi.caustic_lookup_radius
-    caustic_merge_radius_scale = photongi.caustic_merge_radius_scale if photongi.caustic_merge_enabled else 0
     caustic_updatespp = photongi.caustic_updatespp if photongi.caustic_periodic_update else 0
 
     file_path_abs = utils.get_abspath(photongi.file_path, library=scene.library)
@@ -401,7 +398,7 @@ def _convert_photongi_settings(context, scene, definitions, config):
         # Do not save the cache file
         file_path = ""
     else:
-        if utils.use_filesaver(context, scene) and photongi.file_path.startswith("//"):
+        if utils.using_filesaver(context, scene) and photongi.file_path.startswith("//"):
             # It is a relative path and we are using filesaver - don't make it
             # an absolute path, just strip the leading "//"
             file_path = photongi.file_path[2:]
@@ -427,10 +424,10 @@ def _convert_photongi_settings(context, scene, definitions, config):
         "path.photongi.caustic.enabled": photongi.caustic_enabled,
         "path.photongi.caustic.maxsize": round(photongi.caustic_maxsize * 1000000),
         "path.photongi.caustic.lookup.radius": caustic_radius,
-        "path.photongi.caustic.lookup.maxcount": photongi.caustic_lookup_maxcount,
         "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),
-        "path.photongi.caustic.merge.radiusscale": caustic_merge_radius_scale,
         "path.photongi.caustic.updatespp": caustic_updatespp,
+        "path.photongi.caustic.updatespp.radiusreduction": photongi.caustic_updatespp_radiusreduction / 100,
+        "path.photongi.caustic.updatespp.minradius": photongi.caustic_updatespp_minradius,
 
         "path.photongi.persistent.file": file_path
     })

@@ -1,4 +1,5 @@
 import os
+import math
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from . import icons
@@ -128,21 +129,25 @@ class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
         col.enabled = photongi.caustic_enabled
         sub = col.column(align=True)
         sub.prop(photongi, "caustic_maxsize")
-        sub = col.column(align=True)
         sub.prop(photongi, "caustic_lookup_radius")
-        sub.prop(photongi, "caustic_lookup_maxcount")
-        sub = col.column(align=True)
         sub.prop(photongi, "caustic_normalangle")
-        sub = col.column(align=True)
-        sub.prop(photongi, "caustic_merge_enabled")
-        sub = col.column(align=True)
-        sub.enabled = photongi.caustic_merge_enabled
-        sub.prop(photongi, "caustic_merge_radius_scale")
-        sub = col.column(align=True)
         sub.prop(photongi, "caustic_periodic_update")
         sub = col.column(align=True)
         sub.enabled = photongi.caustic_periodic_update
         sub.prop(photongi, "caustic_updatespp")
+        sub.prop(photongi, "caustic_updatespp_radiusreduction")
+        sub.prop(photongi, "caustic_updatespp_minradius")
+
+        radius = photongi.caustic_lookup_radius
+        minradius = photongi.caustic_updatespp_minradius
+
+        if minradius >= radius:
+            sub.label(text="Radius reduction disabled (min radius >= radius)")
+        else:
+            radius_multiplier = photongi.caustic_updatespp_radiusreduction / 100
+            steps = (math.log(minradius / radius) / math.log(radius_multiplier))
+            steps = math.ceil(steps)
+            sub.label(text=f"Min radius reached after {steps} steps ({steps * photongi.caustic_updatespp} samples)")
 
 class LUXCORE_RENDER_PT_caches_photongi_persistence(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
