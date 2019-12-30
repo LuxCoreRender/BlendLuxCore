@@ -438,7 +438,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             fluidmat = fluidmat @ mathutils.Matrix.Translation(
                 mathutils.Vector((bbox[0]/nx, bbox[1]/ny,bbox[2]/nz)))
 
-        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
+        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
         mapping_type = 'globalmapping3d'
 
         # combine transformations
