@@ -45,6 +45,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             layout.row().prop(light, "type")
 
         layout.prop(light.luxcore, "use_cycles_settings")
+        layout.operator("luxcore.use_cycles_settings_everywhere")
 
         if context.light.luxcore.use_cycles_settings:
             self.draw_cycles_settings(context)
@@ -87,7 +88,6 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         col.prop_search(light.luxcore, "lightgroup",
                         lightgroups, "custom",
                         icon=icons.LIGHTGROUP, text="")
-
 
 
     def draw_luxcore_settings(self, context):
