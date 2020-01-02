@@ -257,19 +257,20 @@ def convert_world(exporter, world, scene, is_viewport_render):
             definitions["ground.color"] = list(world.luxcore.ground_color)
             definitions["groundalbedo"] = list(world.luxcore.groundalbedo)
 
-            if world.luxcore.sun:
-                definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
-
-                if world.luxcore.use_sun_gain_for_sky:
-                    gain = [x * world.luxcore.sun.data.luxcore.gain * pow(2, world.luxcore.sun.data.luxcore.exposure) for x in world.luxcore.rgb_gain]
-                    definitions["gain"] = gain
-
+            gain = apply_exposure(gain, world.luxcore.exposure)
             if world.luxcore.sun and world.luxcore.sun.data:
-                # Use sun turbidity so the user does not have to keep two values in sync
+                # Use sun turbidity and direction so the user does not have to keep two values in sync
                 definitions["turbidity"] = world.luxcore.sun.data.luxcore.turbidity
+                definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
+                if world.luxcore.use_sun_gain_for_sky:
+                    sun = world.luxcore.sun.data
+                    gain, importance, lightgroup_id = _convert_common_props(exporter, scene, sun)
+                    gain = apply_exposure(gain, sun.luxcore.exposure)
             else:
                 # Use world turbidity
                 definitions["turbidity"] = world.luxcore.turbidity
+
+            definitions["gain"] = gain
 
         elif light_type == "infinite":
             if world.luxcore.image:
@@ -278,8 +279,11 @@ def convert_world(exporter, world, scene, is_viewport_render):
             else:
                 # Fallback if no image is set
                 definitions["type"] = "constantinfinite"
+                definitions["color"] = list(world.luxcore.rgb_gain)
         else:
             definitions["type"] = "constantinfinite"
+            definitions["color"] = list(world.luxcore.rgb_gain)
+
 
         _indirect_light_visibility(definitions, world)
 
