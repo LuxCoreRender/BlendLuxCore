@@ -278,8 +278,10 @@ def convert_world(exporter, world, scene, is_viewport_render):
             else:
                 # Fallback if no image is set
                 definitions["type"] = "constantinfinite"
+                definitions["color"] = list(world.luxcore.rgb_gain)
         else:
             definitions["type"] = "constantinfinite"
+            definitions["color"] = list(world.luxcore.rgb_gain)
 
         _indirect_light_visibility(definitions, world)
 
@@ -518,8 +520,10 @@ def _envlightcache(definitions, light_or_world, scene):
         definitions["visibilitymapcache.map.samplecount"] = envlight_cache.samples
         definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
 
+
 def apply_exposure(gain, exposure):
     return [x * pow(2, exposure) for x in gain]
+
 
 def export_ies(definitions, ies, library, is_meshlight=False):
     """
