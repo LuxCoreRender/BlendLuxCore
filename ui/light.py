@@ -264,8 +264,6 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
             col.prop(light.luxcore, "visibility_indirect_specular")
 
 
-
-
 class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):
     bl_label = "Spot Shape"
     bl_context = "data"    

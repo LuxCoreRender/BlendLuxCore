@@ -144,12 +144,12 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
         if point_cache.use_external:
             folder = point_cache.filepath
             filename = '%s_%06d_%02d.%s' % (id, utils.clamp(frame, frame_start, frame_end), point_cache.index, ext)
-            filepath = folder + '\\' + filename
+            filepath = folder + '/' + filename
         else:
             folder = os.path.dirname(bpy.data.filepath)
             subfolder = 'blendcache_' + os.path.split(bpy.data.filepath)[1].split(".")[0]
             filename = '%s_%06d_%02d.%s' % (id, utils.clamp(frame, frame_start, frame_end), point_cache.index, ext)
-            filepath = folder + '\\' + subfolder + '\\' + filename
+            filepath = folder + '/' + subfolder + '/' + filename
 
         return filepath
 
@@ -397,7 +397,6 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                              (max_bbox[1] - min_bbox[1]) / base_res[1],
                              (max_bbox[2] - min_bbox[2]) / base_res[2])
 
-
                 offset = mathutils.Matrix()
                 if not smoke_domain_mod:
                     offset = mathutils.Matrix.Translation((min_res[0]/base_res[0]*scale[0],
@@ -418,8 +417,8 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
 
                 if self.use_bbox_offset:
                     obmat = offset @ obmat
-
-                fluidmat = fluidmat @ mathutils.Matrix.Translation(0.5*mathutils.Vector(cell_size))
+                    
+                fluidmat = fluidmat @ mathutils.Matrix.Translation(0.5 * mathutils.Vector(cell_size))
             elif self.creator == "houdini":
                 fluidmat[0][0] = nx/self.nx
                 fluidmat[1][1] = ny/self.ny
