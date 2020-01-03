@@ -119,7 +119,7 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
 
         # combine transformations
         mapping_type = 'globalmapping3d'
-        matrix_transformation = utils.matrix_to_list(tex_loc @ tex_rot @ tex_sca @ mathutils.Matrix.Translation(0.25 * mathutils.Vector(cell_size)),
+        matrix_transformation = utils.matrix_to_list(mathutils.Matrix.Translation(0.5*mathutils.Vector(cell_size)) @ tex_loc @ tex_rot @ tex_sca,
                                                      scene=exporter.scene,
                                                      apply_worldscale=True,
                                                      invert=True)
