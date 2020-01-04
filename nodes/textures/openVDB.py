@@ -144,12 +144,12 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
         if point_cache.use_external:
             folder = point_cache.filepath
             filename = '%s_%06d_%02d.%s' % (id, utils.clamp(frame, frame_start, frame_end), point_cache.index, ext)
-            filepath = folder + '/' + filename
+            filepath = os.path.join(folder, filename)
         else:
             folder = os.path.dirname(bpy.data.filepath)
             subfolder = 'blendcache_' + os.path.split(bpy.data.filepath)[1].split(".")[0]
             filename = '%s_%06d_%02d.%s' % (id, utils.clamp(frame, frame_start, frame_end), point_cache.index, ext)
-            filepath = folder + '/' + subfolder + '/' + filename
+            filepath = os.path.join(folder, subfolder, filename)
 
         return filepath
 
@@ -424,7 +424,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                 fluidmat[1][1] = ny/self.ny
                 fluidmat[2][2] = nz/self.nz
 
-                # As y is Up in Houdini, switch y and z axis to fit coordonate frame of Blender
+                # As y is up in Houdini, switch y and z axis to fit coordinate frame of Blender
                 houdini_transform = mathutils.Matrix.Translation((0.5, 0.5, 0.5)) @ mathutils.Matrix.Rotation(radians(90.0), 4, 'X') \
                                     @ mathutils.Matrix.Translation((-0.5, -0.5, -0.5))
 
