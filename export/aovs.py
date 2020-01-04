@@ -83,8 +83,6 @@ def convert(exporter, scene, context=None, engine=None):
 
         pipeline_props = pyluxcore.Properties()
 
-        config = scene.luxcore.config
-        use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
         # These AOVs only make sense in final renders
         if final:
             for output_name, output_type in pyluxcore.FilmOutputType.names.items():
@@ -122,6 +120,8 @@ def convert(exporter, scene, context=None, engine=None):
                 pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,
                                                               pipeline_index, definitions)
                                                               
+            config = scene.luxcore.config
+            use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
 
             if use_adaptive_sampling and not utils.using_filesaver(context, scene):
                 noise_detection_pipeline_index = pipeline_index
@@ -131,9 +131,6 @@ def convert(exporter, scene, context=None, engine=None):
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
-
-        if (use_adaptive_sampling and final):
-            props.Set(pyluxcore.Property("film.noiseestimation.index", adaptive_sampling_film_pipeline_index))
 
         return props
     except Exception as error:
