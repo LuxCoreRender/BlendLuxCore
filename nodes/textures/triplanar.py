@@ -30,6 +30,11 @@ class LuxCoreNodeTriplanar(bpy.types.Node, LuxCoreNodeTexture):
             "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
         }
 
+        if not self.inputs["3D Mapping"].is_linked:
+            definitions.update({
+                "mapping.type": "localmapping3d",
+            })
+
         if mapping_type == "uvmapping3d":
             definitions["mapping.uvindex"] = uvindex
 

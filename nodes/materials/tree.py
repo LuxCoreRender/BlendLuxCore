@@ -75,7 +75,6 @@ luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_TEXTURE", "Texture", items=[
         NodeItemMultiImageImport(),
         NodeItem("LuxCoreNodeTexImagemap", label="Image"),
-        NodeItem("LuxCoreNodeTriplanar", label="Triplanar Mapping"),
         Separator(),
         # Procedurals
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
@@ -136,6 +135,7 @@ luxcore_node_categories_material = [
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
+        NodeItem("LuxCoreNodeTriplanar", label="Triplanar Mapping"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[
