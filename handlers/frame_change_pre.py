@@ -27,8 +27,8 @@ def handler(scene):
         if not mat.luxcore.node_tree:
             continue
 
-        if utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexOpenVDB") or \
-                utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexSmoke"):
+        if (utils_node.has_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexOpenVDB") or
+                utils_node.has_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexSmoke")):
             found_smoke_sequence = True
             for node in mat.luxcore.node_tree.nodes:
                 if node.bl_idname == "LuxCoreNodeMatOutput" and node.active:

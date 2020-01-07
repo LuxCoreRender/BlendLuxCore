@@ -1,16 +1,19 @@
 import math
 import numpy as np
 from .. import utils
+from ..utils import node as utils_node
 from ..bin import pyluxcore
 from .image import ImageExporter
 from time import time
 from ..utils.errorlog import LuxCoreErrorLog
+
 
 def find_psys_modifier(obj, psys):
     for mod in obj.modifiers:
         if mod.type == "PARTICLE_SYSTEM" and mod.particle_system.name == psys.name:
             return mod
     return None
+
 
 def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, dupli_count, mod, num_children):
     failure = np.empty(shape=0, dtype=np.float32)
@@ -41,6 +44,7 @@ def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, 
                       count=(dupli_count - start) * 2)
     return uvs
 
+
 def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, start, dupli_count, mod, num_children):
     failure = np.empty(shape=0, dtype=np.float32)
 
@@ -70,8 +74,18 @@ def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, st
                          count=(dupli_count - start) * 3)
     return colors
 
+
+def warn_about_missing_uvs(obj, node_tree):
+    # TODO once we have a triplanar option for imagemaps, ignore imagemaps with
+    #  triplanar in this check because they have no problems with missing UVs
+    has_imagemaps = utils_node.has_nodes(node_tree, "LuxCoreNodeTexImagemap")
+    if has_imagemaps and not utils_node.has_valid_uv_map(obj):
+        msg = ("Image textures used, but no UVs defined. "
+               "In case of bumpmaps this can lead to artifacts")
+        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+
+
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
-    from ..utils import node as utils_node
     from . import material
     if material_index < len(obj.material_slots):
         mat = obj.material_slots[material_index].material
@@ -88,11 +102,7 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
 
     if mat:
         if mat.luxcore.node_tree:
-            imagemaps = utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap")
-            if imagemaps and not utils_node.has_valid_uv_map(obj):
-                msg = (utils.pluralize("%d image texture", len(imagemaps)) + " used, but no UVs defined. "
-                       "In case of bumpmaps this can lead to artifacts")
-                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+            warn_about_missing_uvs(obj, mat.luxcore.node_tree)
 
         return material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
     else:

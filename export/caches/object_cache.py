@@ -2,7 +2,7 @@ import bpy
 from ... import utils
 from ...bin import pyluxcore
 from .. import mesh_converter
-from ..hair import convert_hair
+from ..hair import convert_hair, warn_about_missing_uvs
 from .exported_data import ExportedObject
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
@@ -15,15 +15,7 @@ EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 
 def uses_pointiness(node_tree):
     # Check if a pointiness node exists, better check would be if the node is linked
-    return len(utils_node.find_nodes(node_tree, "LuxCoreNodeTexPointiness")) > 0
-
-
-def warn_about_missing_uvs(obj, node_tree):
-    imagemaps = utils_node.find_nodes(node_tree, "LuxCoreNodeTexImagemap")
-    if imagemaps and not utils_node.has_valid_uv_map(obj):
-        msg = (utils.pluralize("%d image texture", len(imagemaps)) + " used, but no UVs defined. "
-                                                                     "In case of bumpmaps this can lead to artifacts")
-        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+    return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness")
 
 
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):

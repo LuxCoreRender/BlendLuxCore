@@ -143,6 +143,26 @@ def find_nodes(node_tree, bl_idname):
     return result
 
 
+def has_nodes(node_tree, bl_idname):
+    for node in node_tree.nodes:
+        if node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
+            try:
+                if has_nodes(node.node_tree, bl_idname):
+                    return True
+            except RecursionError:
+                msg = (f'Pointer nodes in node trees "{node_tree.name}" and "{node.node_tree.name}" '
+                       "create a dependency cycle! Delete one of them.")
+                LuxCoreErrorLog.add_error(msg)
+                # Mark the faulty nodes in red
+                node.use_custom_color = True
+                node.color = (0.9, 0, 0)
+                return result
+        if node.bl_idname == bl_idname:
+            return True
+
+    return False
+
+
 def force_viewport_update(_, context):
     """
     Since Blender 2.80, properties on custom sockets and custom nodes are not listed
