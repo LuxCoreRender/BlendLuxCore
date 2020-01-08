@@ -1,4 +1,6 @@
 import bpy
+from array import array
+
 from ... import utils
 from ...bin import pyluxcore
 from .. import mesh_converter
@@ -40,31 +42,104 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         lux_mat_name, mat_props = material.fallback()
         return lux_mat_name, mat_props, None
 
+
+class Duplis:
+    def __init__(self, exported_obj, matrix, object_id):
+        self.exported_obj = exported_obj
+        self.matrices = array("f", matrix)
+        self.object_ids = array("I", [object_id])
+
+    def add(self, matrix, object_id):
+        self.matrices.extend(matrix)
+        self.object_ids.append(object_id)
+
+    def get_count(self):
+        return len(self.object_ids)
+
+
 class ObjectCache2:
     def __init__(self):
         self.exported_objects = {}
         self.exported_meshes = {}
 
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
-        # TODO use luxcore_scene.DuplicateObjects for instances
-        for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
+        instances = {}
+        dupli_props = pyluxcore.Properties()
+        obj_count_estimate = len(depsgraph.objects)
+
+        for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-            if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
-                continue
 
-            if not is_viewport_render and obj.is_instancer and not obj.show_instancer_for_render:
-                continue
+            # TODO HAIR! Detect when hair is instanced, e.g. when used on particles.
+            if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
+                transformation = utils.matrix_to_list(dg_obj_instance.matrix_world)
+                obj_id = utils.make_object_id(dg_obj_instance)
 
-            self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                              luxcore_scene, scene_props, is_viewport_render)
+                try:
+                    duplis = instances[obj]
+                    duplis.add(transformation, obj_id)
+                except KeyError:
+                    exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
+                                                     luxcore_scene, dupli_props, is_viewport_render,
+                                                     keep_track_of=False)
+                    assert isinstance(exported_obj, ExportedObject)  # TODO remove this
+                    instances[obj] = Duplis(exported_obj, transformation, obj_id)
+            else:
+                # It's a regular object, not a dupli
+                if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
+                    continue
+                self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
+                                  luxcore_scene, scene_props, is_viewport_render)
+
             if engine:
                 # Objects are the most expensive to export, so they dictate the progress
-                # engine.update_progress(index / obj_amount)
+                engine.update_progress(index / obj_count_estimate)
                 if engine.test_break():
                     return False
 
+        # Need to parse so we have the dupli objects available for DuplicateObject
+        luxcore_scene.Parse(dupli_props)
+
+        for obj, duplis in instances.items():
+            print("obj", obj.name, "has", duplis.get_count(), "instances")
+
+            for part in duplis.exported_obj.parts:
+                src_name = part.lux_obj
+                dst_name = src_name + "dupli"
+                transformations = array("f", duplis.matrices)
+                object_ids = array("I", duplis.object_ids)
+                luxcore_scene.DuplicateObject(src_name, dst_name, duplis.get_count(), transformations, object_ids)
+
+                # TODO: support steps and times (motion blur)
+                # steps = 0 # TODO
+                # times = array("f", [])
+                # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
+
+                # Delete the object we used for duplication, we don't want it to show up in the scene
+                luxcore_scene.DeleteObject(src_name)
+
         self._debug_info()
         return True
+
+        # # TODO use luxcore_scene.DuplicateObjects for instances
+        # for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
+        #     obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+        #     if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
+        #         continue
+        #
+        #     if not is_viewport_render and obj.is_instancer and not obj.show_instancer_for_render:
+        #         continue
+        #
+        #     self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
+        #                       luxcore_scene, scene_props, is_viewport_render)
+        #     if engine:
+        #         # Objects are the most expensive to export, so they dictate the progress
+        #         # engine.update_progress(index / obj_amount)
+        #         if engine.test_break():
+        #             return False
+        #
+        # self._debug_info()
+        # return True
 
     def _debug_info(self):
         print("Objects in cache:", len(self.exported_objects))
@@ -94,23 +169,29 @@ class ObjectCache2:
             key += "_instance"
         return key
 
-    def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render):
+    def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
+                     scene_props, is_viewport_render, keep_track_of=True):
         """ Convert one DepsgraphObjectInstance amd keep track of it """
         if obj.type == "EMPTY" or obj.data is None:
             return
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
+        exported_stuff = None
+        props = pyluxcore.Properties()
 
         if obj.type in MESH_OBJECTS:
             # assert obj_key not in self.exported_objects
-            self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                                   luxcore_scene, scene_props, is_viewport_render)
+            exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
+                                                    luxcore_scene, scene_props, is_viewport_render, keep_track_of)
+            props = exported_stuff.get_props()
         elif obj.type == "LIGHT":
             props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
                                                         dg_obj_instance.matrix_world.copy(), is_viewport_render)
-            if exported_stuff:
+
+        if exported_stuff:
+            scene_props.Set(props)
+            if keep_track_of:
                 self.exported_objects[obj_key] = exported_stuff
-                scene_props.Set(props)
 
         # Convert hair
         for psys in obj.particle_systems:
@@ -119,8 +200,10 @@ class ObjectCache2:
             if settings.type == "HAIR" and settings.render_type == "PATH":
                 convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_render)
 
+        return exported_stuff
+
     def _convert_mesh_obj(self, exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                          luxcore_scene, scene_props, is_viewport_render):
+                          luxcore_scene, scene_props, is_viewport_render, keep_track_of):
         transform = dg_obj_instance.matrix_world
 
         use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj.original) \
@@ -170,16 +253,10 @@ class ObjectCache2:
                 exported_mesh.mesh_definitions[idx] = [shape, mat_index]
 
             obj_transform = transform.copy() if use_instancing else None
+            obj_id = utils.make_object_id(dg_obj_instance)
 
-            if obj.luxcore.id == -1:
-                obj_id = utils.make_object_id(dg_obj_instance)
-            else:
-                obj_id = obj.luxcore.id
-
-            exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names,
-                                          obj_transform, obj.luxcore.visible_to_camera, obj_id)
-            scene_props.Set(exported_obj.get_props())
-            self.exported_objects[obj_key] = exported_obj
+            return ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names,
+                                  obj_transform, obj.luxcore.visible_to_camera, obj_id)
 
 
     def diff(self, depsgraph):
