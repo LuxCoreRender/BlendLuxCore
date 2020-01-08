@@ -29,6 +29,7 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
 
 
 def convert_cycles_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
+    # TODO! See https://github.com/LuxCoreRender/BlendLuxCore/issues/272
     ...
 
 
