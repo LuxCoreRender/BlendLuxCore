@@ -65,7 +65,7 @@ class ObjectCache2:
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
         instances = {}
         dupli_props = pyluxcore.Properties()
-        obj_count_estimate = len(depsgraph.objects)
+        obj_count_estimate = max(len(depsgraph.objects), 1)
 
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
@@ -130,26 +130,6 @@ class ObjectCache2:
         self._debug_info()
         return True
 
-        # # TODO use luxcore_scene.DuplicateObjects for instances
-        # for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
-        #     obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-        #     if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
-        #         continue
-        #
-        #     if not is_viewport_render and obj.is_instancer and not obj.show_instancer_for_render:
-        #         continue
-        #
-        #     self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-        #                       luxcore_scene, scene_props, is_viewport_render)
-        #     if engine:
-        #         # Objects are the most expensive to export, so they dictate the progress
-        #         # engine.update_progress(index / obj_amount)
-        #         if engine.test_break():
-        #             return False
-        #
-        # self._debug_info()
-        # return True
-
     def _debug_info(self):
         print("Objects in cache:", len(self.exported_objects))
         print("Meshes in cache:", len(self.exported_meshes))
@@ -180,7 +160,7 @@ class ObjectCache2:
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
                      scene_props, is_viewport_render, keep_track_of=True):
-        """ Convert one DepsgraphObjectInstance amd keep track of it """
+        """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
         if obj.type == "EMPTY" or obj.data is None:
             return
 
@@ -191,7 +171,7 @@ class ObjectCache2:
         if obj.type in MESH_OBJECTS:
             # assert obj_key not in self.exported_objects
             exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                                                    luxcore_scene, scene_props, is_viewport_render, keep_track_of)
+                                                    luxcore_scene, scene_props, is_viewport_render)
             if exported_stuff:
                 props = exported_stuff.get_props()
         elif obj.type == "LIGHT":
@@ -213,7 +193,7 @@ class ObjectCache2:
         return exported_stuff
 
     def _convert_mesh_obj(self, exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                          luxcore_scene, scene_props, is_viewport_render, keep_track_of):
+                          luxcore_scene, scene_props, is_viewport_render):
         transform = dg_obj_instance.matrix_world
 
         use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj.original) \
