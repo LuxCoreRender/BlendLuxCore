@@ -77,13 +77,18 @@ class ObjectCache2:
 
                 try:
                     duplis = instances[obj]
-                    duplis.add(transformation, obj_id)
+                    # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
+                    if duplis:
+                        duplis.add(transformation, obj_id)
                 except KeyError:
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                      luxcore_scene, dupli_props, is_viewport_render,
                                                      keep_track_of=False)
-                    assert isinstance(exported_obj, ExportedObject)  # TODO remove this
-                    instances[obj] = Duplis(exported_obj, transformation, obj_id)
+                    if exported_obj:
+                        instances[obj] = Duplis(exported_obj, transformation, obj_id)
+                    else:
+                        # Could not export the object, happens e.g. with curve objects with zero faces
+                        instances[obj] = None
             else:
                 # It's a regular object, not a dupli
                 if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
@@ -101,6 +106,10 @@ class ObjectCache2:
         luxcore_scene.Parse(dupli_props)
 
         for obj, duplis in instances.items():
+            if duplis is None:
+                # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
+                continue
+
             print("obj", obj.name, "has", duplis.get_count(), "instances")
 
             for part in duplis.exported_obj.parts:
@@ -183,7 +192,8 @@ class ObjectCache2:
             # assert obj_key not in self.exported_objects
             exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
                                                     luxcore_scene, scene_props, is_viewport_render, keep_track_of)
-            props = exported_stuff.get_props()
+            if exported_stuff:
+                props = exported_stuff.get_props()
         elif obj.type == "LIGHT":
             props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
                                                         dg_obj_instance.matrix_world.copy(), is_viewport_render)
