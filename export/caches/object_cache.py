@@ -65,10 +65,18 @@ class ObjectCache2:
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
         instances = {}
         dupli_props = pyluxcore.Properties()
-        obj_count_estimate = max(len(depsgraph.objects), 1)
+        obj_count_estimate = len(depsgraph.object_instances)
 
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+
+            if engine:
+                if engine.test_break():
+                    return False
+                if obj_count_estimate < 1000 or index % 100 == 0:
+                    instance_info = " (instance)" if dg_obj_instance.is_instance else ""
+                    engine.update_stats("Export", f"Object: {obj.name}{instance_info} ({index}/{obj_count_estimate})")
+                    engine.update_progress(index / obj_count_estimate)
 
             # TODO HAIR! Detect when hair is instanced, e.g. when used on particles.
             if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
@@ -95,12 +103,6 @@ class ObjectCache2:
                     continue
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                   luxcore_scene, scene_props, is_viewport_render)
-
-            if engine:
-                # Objects are the most expensive to export, so they dictate the progress
-                engine.update_progress(index / obj_count_estimate)
-                if engine.test_break():
-                    return False
 
         # Need to parse so we have the dupli objects available for DuplicateObject
         luxcore_scene.Parse(dupli_props)
