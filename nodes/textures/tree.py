@@ -53,6 +53,26 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
     ]),
 
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MATH", "Math", items=[
+        NodeItem("LuxCoreNodeTexBump", label="Bump"),
+        # Possibly confusing, better deactivate (only needed in very rare cases anyway)
+        # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
+        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
+        NodeItem("LuxCoreNodeTexHSV", label="HSV"),
+        NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
+        NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
+        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
+        NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
+        NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
+        NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
+        NodeItem("LuxCoreNodeTexUV", label="UV Test"),
+    ]),
+
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),

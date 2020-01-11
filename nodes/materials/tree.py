@@ -105,7 +105,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
     ]),
 
-    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
+LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
@@ -113,14 +113,17 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
-        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
-        Separator(),
+    ]),
+
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
         # Possibly confusing, better deactivate (only needed in very rare cases anyway)
         # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
-        NodeItem("LuxCoreNodeTexBand", label="Band"),
+        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
+        Separator(),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
