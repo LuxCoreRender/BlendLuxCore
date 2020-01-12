@@ -71,22 +71,6 @@ class Duplis:
         self.matrices = array("f", matrix)
         self.object_ids = array("I", [object_id])
 
-    def add(self, matrix, object_id):
-        # Inlined form of utils.matrix_to_list() for better performance when using millions of instances
-        l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-             matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-             matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-             matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
-
-        if matrix.determinant() == 0:
-            # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
-            # Prevent a RuntimeError from LuxCore by adding a small epsilon.
-            for i in range(4):
-                l[i][i] += 1e-5
-
-        self.matrices.extend(l)
-        self.object_ids.append(object_id)
-
     def get_count(self):
         return len(self.object_ids)
 
@@ -116,11 +100,30 @@ class ObjectCache2:
                     _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
 
                 try:
+                    # The code in this try block is performance-critical, as it is
+                    # executed most often when exporting millions of instances.
                     duplis = instances[obj]
                     # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
                     if duplis:
-                        obj_id = utils.make_object_id(dg_obj_instance)
-                        duplis.add(dg_obj_instance.matrix_world, obj_id)
+                        obj_id = dg_obj_instance.object.original.luxcore.id
+                        if obj_id == -1:
+                            obj_id = dg_obj_instance.random_id & 0xfffffffe
+
+                        # Inlined form of utils.matrix_to_list() for better performance when using millions of instances
+                        matrix = dg_obj_instance.matrix_world
+                        l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
+                             matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
+                             matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
+                             matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
+
+                        if matrix.determinant() == 0:
+                            # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
+                            # Prevent a RuntimeError from LuxCore by adding a small epsilon.
+                            for i in range(4):
+                                l[i][i] += 1e-5
+
+                        duplis.matrices.extend(l)
+                        duplis.object_ids.append(obj_id)
                 except KeyError:
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                      luxcore_scene, dupli_props, is_viewport_render,
@@ -172,7 +175,6 @@ class ObjectCache2:
 
         s2 = time()
         print("%.3f s - duplicating objects" % (s2 - s1))
-        # return False # TODO remove
 
         self._debug_info()
         return True
