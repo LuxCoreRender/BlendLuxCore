@@ -94,12 +94,11 @@ def make_object_id(dg_obj_instance):
     if chosen_id != -1:
         return chosen_id
 
-    key = dg_obj_instance.object.original.name
-
     if dg_obj_instance.is_instance:
-        # Make unique but stable for particles, duplis etc.
-        key += dg_obj_instance.parent.original.name
-        key += persistent_id_to_str(dg_obj_instance.persistent_id)
+        # random_id seems to be a 4-Byte integer in range -0xffffffff to 0xffffffff.
+        return dg_obj_instance.random_id & 0xfffffffe
+
+    key = dg_obj_instance.object.original.name
 
     # We do this similar to Cycles: hash the object's name to get an ID that's stable over
     # frames and between re-renders (as long as the object is not renamed).

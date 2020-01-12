@@ -43,6 +43,28 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         return lux_mat_name, mat_props, None
 
 
+def _update_stats(engine, current_obj_name, extra_obj_info, current_index, total_object_count):
+    engine.update_stats("Export", f"Object: {current_obj_name}{extra_obj_info} ({current_index}/{total_object_count})")
+    engine.update_progress(current_index / total_object_count)
+
+
+def get_obj_count_estimate(depsgraph):
+    # This is faster than len(depsgraph.object_instances)
+    # TODO: count dupliverts and dupliframes
+    obj_count = len(depsgraph.ids)
+    for id in depsgraph.ids:
+        try:
+            for psys in id.particle_systems:
+                settings = psys.settings
+                particle_count = settings.count
+                if settings.child_type != "NONE":
+                    particle_count *= settings.rendered_child_count
+                obj_count += particle_count
+        except AttributeError:
+            pass
+    return obj_count
+
+
 class Duplis:
     def __init__(self, exported_obj, matrix, object_id):
         self.exported_obj = exported_obj
@@ -62,24 +84,26 @@ class ObjectCache2:
         self.exported_objects = {}
         self.exported_meshes = {}
 
+    # TODO remove scene_props argument?
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
         instances = {}
         dupli_props = pyluxcore.Properties()
-        obj_count_estimate = len(depsgraph.object_instances)
+        if engine:
+            obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
 
+        from time import time
+        s = time()
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
 
-            if engine:
-                if engine.test_break():
-                    return False
-                if obj_count_estimate < 1000 or index % 100 == 0:
-                    instance_info = " (instance)" if dg_obj_instance.is_instance else ""
-                    engine.update_stats("Export", f"Object: {obj.name}{instance_info} ({index}/{obj_count_estimate})")
-                    engine.update_progress(index / obj_count_estimate)
-
             # TODO HAIR! Detect when hair is instanced, e.g. when used on particles.
             if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
+                if engine and index % 5000 == 0:
+                    if engine.test_break():
+                        return False
+                    _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
+
+                # TODO optimize matrix to list conversion
                 transformation = utils.matrix_to_list(dg_obj_instance.matrix_world)
                 obj_id = utils.make_object_id(dg_obj_instance)
 
@@ -101,8 +125,16 @@ class ObjectCache2:
                 # It's a regular object, not a dupli
                 if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
                     continue
+
+                if engine:
+                    if engine.test_break():
+                        return False
+                    _update_stats(engine, obj.name, "", index, obj_count_estimate)
+
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                  luxcore_scene, scene_props, is_viewport_render)
+                                  luxcore_scene, dupli_props, is_viewport_render)
+        s1 = time()
+        print("%.3f s - iterating through depsgraph.object_instances" % (s1 - s))
 
         # Need to parse so we have the dupli objects available for DuplicateObject
         luxcore_scene.Parse(dupli_props)
@@ -117,9 +149,7 @@ class ObjectCache2:
             for part in duplis.exported_obj.parts:
                 src_name = part.lux_obj
                 dst_name = src_name + "dupli"
-                transformations = array("f", duplis.matrices)
-                object_ids = array("I", duplis.object_ids)
-                luxcore_scene.DuplicateObject(src_name, dst_name, duplis.get_count(), transformations, object_ids)
+                luxcore_scene.DuplicateObject(src_name, dst_name, duplis.get_count(), duplis.matrices, duplis.object_ids)
 
                 # TODO: support steps and times (motion blur)
                 # steps = 0 # TODO
@@ -128,6 +158,10 @@ class ObjectCache2:
 
                 # Delete the object we used for duplication, we don't want it to show up in the scene
                 luxcore_scene.DeleteObject(src_name)
+
+        s2 = time()
+        print("%.3f s - duplicating objects" % (s2 - s1))
+        # return False # TODO remove
 
         self._debug_info()
         return True
