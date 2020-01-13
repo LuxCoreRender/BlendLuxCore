@@ -20,9 +20,6 @@ class LuxCoreNodeTexCheckerboard2D(bpy.types.Node, LuxCoreNodeTexture):
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
 
-        if not self.inputs["2D Mapping"].is_linked:
-            uvindex = 0
-
         definitions = {
             "type": "checkerboard2d",
             "texture1": self.inputs["Color 1"].export(exporter, depsgraph, props),

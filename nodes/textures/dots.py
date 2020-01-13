@@ -19,9 +19,6 @@ class LuxCoreNodeTexDots(bpy.types.Node, LuxCoreNodeTexture):
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
 
-        if not self.inputs["2D Mapping"].is_linked:
-            uvindex = 0
-
         definitions = {
             "type": "dots",
             "inside": self.inputs["Inside"].export(exporter, depsgraph, props),

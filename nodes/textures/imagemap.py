@@ -194,9 +194,6 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
 
         uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
 
-        if not self.inputs["2D Mapping"].is_linked:
-            uvindex = 0
-
         definitions = {
             "type": "imagemap",
             "file": filepath,
