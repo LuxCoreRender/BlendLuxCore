@@ -10,9 +10,7 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
     bl_width_default = 160
 
     def update_uvmap(self, context):
-        for i, e in enumerate(context.object.data.uv_layers.keys()):
-            if e == self.uvmap:
-                self.uvindex = i
+        self.uvindex = context.object.data.uv_layers.find(self.uvmap)
         utils_node.force_viewport_update(self, context)
 
     def update_uniform_scale(self, context):
@@ -64,7 +62,14 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
         row.prop(self, "vdelta")
 
     def export(self, exporter, despgraph, props, luxcore_name=None, output_socket=None):
-        input_uvindex, input_uvscale, input_rotation, input_uvdelta = self.inputs["2D Mapping (optional)"].export(exporter, despgraph, props)
+        input_socket = self.inputs["2D Mapping (optional)"]
+        if utils_node.get_link(input_socket):
+            uvindex, input_uvscale, input_rotation, input_uvdelta = input_socket.export(exporter, despgraph, props)
+        else:
+            uvindex = self.uvindex
+            input_uvscale = [1, -1]
+            input_rotation = 0
+            input_uvdelta = [0, 0]
 
         # Scale
         if self.use_uniform_scale:
@@ -84,10 +89,6 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
         else:
             uvdelta = [self.udelta,
                        self.vdelta + 1]
-
         output_uvdelta = [a + b for a, b in zip(input_uvdelta, uvdelta)]
 
-        if not self.inputs["2D Mapping (optional)"].is_linked:
-            input_uvindex = self.uvindex
-
-        return input_uvindex, output_uvscale, output_rotation, output_uvdelta
+        return uvindex, output_uvscale, output_rotation, output_uvdelta
