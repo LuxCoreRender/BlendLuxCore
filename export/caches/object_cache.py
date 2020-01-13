@@ -125,9 +125,15 @@ class ObjectCache2:
                         duplis.matrices.extend(l)
                         duplis.object_ids.append(obj_id)
                 except KeyError:
+                    if engine:
+                        if engine.test_break():
+                            return False
+                        _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
+
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                      luxcore_scene, dupli_props, is_viewport_render,
                                                      keep_track_of=False)
+
                     if exported_obj:
                         transformation = utils.matrix_to_list(dg_obj_instance.matrix_world)
                         obj_id = utils.make_object_id(dg_obj_instance)
