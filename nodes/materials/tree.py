@@ -88,6 +88,7 @@ luxcore_node_categories_material = [
         Separator(),
         NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexOpenVDB", label="OpenVDB File"),
         NodeItem("LuxCoreNodeTexFresnel", label="Fresnel"),
     ]),
 
@@ -104,7 +105,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
     ]),
 
-    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
+LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
@@ -112,14 +113,17 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
-        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
-        Separator(),
+    ]),
+
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
         # Possibly confusing, better deactivate (only needed in very rare cases anyway)
         # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
-        NodeItem("LuxCoreNodeTexBand", label="Band"),
+        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
+        Separator(),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
@@ -127,12 +131,14 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
+        NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
+        NodeItem("LuxCoreNodeTriplanar", label="Triplanar Mapping"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[
@@ -145,7 +151,8 @@ luxcore_node_categories_material = [
 
 LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_SHAPE", "Shape Modifiers", items=[
         NodeItem("LuxCoreNodeShapeSubdiv", label="Subdivision"),
-        NodeItem("LuxCoreNodeShapeDisplacement", label="Displacement"),
+        NodeItem("LuxCoreNodeShapeHeightDisplacement", label="Height Displacement"),
+        NodeItem("LuxCoreNodeShapeVectorDisplacement", label="Vector Displacement"),
         NodeItem("LuxCoreNodeShapeSimplify", label="Simplify"),
         NodeItem("LuxCoreNodeShapeHarlequin", label="Harlequin"),
     ]),

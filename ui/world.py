@@ -29,10 +29,11 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         layout.use_property_decorate = False       
 
         if world.luxcore.light != "none":
-            col = layout.column(align=True)
-            col.prop(world.luxcore, "rgb_gain", text="Color")
-
             is_sky = world.luxcore.light == "sky2"
+            col = layout.column(align=True)
+            if not is_sky:
+                col.prop(world.luxcore, "rgb_gain", text="Color")
+
             has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
 
             col = layout.column(align=True)

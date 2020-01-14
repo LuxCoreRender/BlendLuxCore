@@ -22,7 +22,7 @@ class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
     musgrave_type: EnumProperty(update=utils_node.force_viewport_update, name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
     noise_basis: EnumProperty(update=utils_node.force_viewport_update, name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
     noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
-    h =FloatProperty(update=utils_node.force_viewport_update, name="Dimension", default=1.0, min=0)
+    h: FloatProperty(update=utils_node.force_viewport_update, name="Dimension", default=1.0, min=0)
     lacu: FloatProperty(update=utils_node.force_viewport_update, name="Lacunarity", default=2.0)
     octs: FloatProperty(update=utils_node.force_viewport_update, name="Octaves", default=2.0, min=0)
     offset: FloatProperty(update=utils_node.force_viewport_update, name="Offset", default=1.0)
@@ -61,7 +61,7 @@ class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
         column.prop(self, "contrast")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
+        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
        
         definitions = {
             "type": "blender_musgrave",
@@ -86,4 +86,7 @@ class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
         if self.musgrave_type != 'fbm':
             definitions["iscale"] = self.iscale            
         
+        if mapping_type == "uvmapping3d":
+            definitions["mapping.uvindex"] = uvindex
+
         return self.create_props(props, definitions, luxcore_name)

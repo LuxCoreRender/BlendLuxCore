@@ -1,21 +1,19 @@
 import bpy
 from bpy.props import IntProperty, FloatProperty, BoolProperty
 from ..base import LuxCoreNodeShape
+from ...utils import node as utils_node
 
 
-class LuxCoreNodeShapeDisplacement(bpy.types.Node, LuxCoreNodeShape):
-    bl_label = "Displacement"
+class LuxCoreNodeShapeVectorDisplacement(bpy.types.Node, LuxCoreNodeShape):
+    bl_label = "Vector Displacement"
 
-    max_level: IntProperty(name="Max. Level", default=2, min=1)
-    max_edge_screen_size: FloatProperty(name="Max. Edge Screen Size", default=0, min=0)
-
-    scale: FloatProperty(name="Scale", default=1)
-    offset: FloatProperty(name="Offset", default=0)
-    normal_smooth: BoolProperty(name="Smooth Normals", default=True)
+    scale: FloatProperty(name="Scale", default=1, update=utils_node.force_viewport_mesh_update)
+    offset: FloatProperty(name="Offset", default=0, update=utils_node.force_viewport_mesh_update)
+    normal_smooth: BoolProperty(name="Smooth Normals", default=True, update=utils_node.force_viewport_mesh_update)
 
     def init(self, context):
         self.add_input("LuxCoreSocketShape", "Shape")
-        self.add_input("LuxCoreSocketFloatUnbounded", "Height", 0)
+        self.add_input("LuxCoreSocketColor", "Vector", (0, 0, 0))
         self.outputs.new("LuxCoreSocketShape", "Shape")
 
     def draw_buttons(self, context, layout):
@@ -27,10 +25,11 @@ class LuxCoreNodeShapeDisplacement(bpy.types.Node, LuxCoreNodeShape):
         definitions = {
             "type": "displacement",
             "source": self.inputs["Shape"].export_shape(exporter, depsgraph, props, base_shape_name),
-            "map": self.inputs["Height"].export(exporter, depsgraph, props),
-            "map.type": "height",
+            "map": self.inputs["Vector"].export(exporter, depsgraph, props),
+            "map.type": "vector",
+            "map.channels": [2, 0, 1],
             "scale": self.scale,
             "offset": self.offset,
             "normalsmooth": self.normal_smooth,
         }
-        return self.create_props(props, definitions, self.make_name())
+        return self.create_props(props, definitions, self.make_shape_name(base_shape_name))

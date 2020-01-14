@@ -94,12 +94,11 @@ def make_object_id(dg_obj_instance):
     if chosen_id != -1:
         return chosen_id
 
-    key = dg_obj_instance.object.original.name
-
     if dg_obj_instance.is_instance:
-        # Make unique but stable for particles, duplis etc.
-        key += dg_obj_instance.parent.original.name
-        key += persistent_id_to_str(dg_obj_instance.persistent_id)
+        # random_id seems to be a 4-Byte integer in range -0xffffffff to 0xffffffff.
+        return dg_obj_instance.random_id & 0xfffffffe
+
+    key = dg_obj_instance.object.original.name
 
     # We do this similar to Cycles: hash the object's name to get an ID that's stable over
     # frames and between re-renders (as long as the object is not renamed).
@@ -647,6 +646,42 @@ def image_sequence_resolve_all(image):
 
     return sorted(indexed_filepaths, key=lambda elem: elem[0])
 
+def openVDB_sequence_resolve_all(file):
+    filepath = get_abspath(file)
+    basedir, filename = os.path.split(filepath)
+    filename_noext, ext = os.path.splitext(filename)
+
+    # A file sequence has a running number at the end of the filename, e.g. name001.ext
+    # in case of the Blender cache files the structure is name_frame_index.ext
+
+    #Test if the filename structure matches the Blender nomenclature
+    matchstr = r'(.*)_([0-9]{6})_([0-9]{2})'
+    matchObj = re.match(matchstr, filename_noext)
+
+    if not matchObj:
+        matchstr = r'(\D*)([0-9]+)'
+        # Test if the filename structure matches a general sequence structure
+        matchObj = re.match(matchstr, filename_noext)
+
+    name = ""
+
+
+    if matchObj:
+        name = matchObj.group(1)
+    else:
+        # Input isn't from a sequence
+        return []
+
+    indexed_filepaths = []
+    for f in os.scandir(basedir):
+        filename_noext2, ext2 = os.path.splitext(f.name)
+        if ext == ext2:
+            matchObj = re.match(matchstr, filename_noext2)
+            if matchObj and name == matchObj.group(1):
+                elem = (int(matchObj.group(2)), f.path)
+                indexed_filepaths.append(elem)
+
+    return sorted(indexed_filepaths, key=lambda elem: elem[0])
 
 def is_valid_camera(obj):
     return obj and hasattr(obj, "type") and obj.type == "CAMERA"

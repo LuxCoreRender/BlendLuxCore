@@ -1,5 +1,4 @@
 import bpy
-from bpy.props import IntProperty, FloatProperty
 from ..base import LuxCoreNodeShape
 
 
@@ -19,4 +18,4 @@ class LuxCoreNodeShapeHarlequin(bpy.types.Node, LuxCoreNodeShape):
             "type": "harlequin",
             "source": self.inputs["Shape"].export_shape(exporter, depsgraph, props, base_shape_name),
         }
-        return self.create_props(props, definitions, self.make_name())
+        return self.create_props(props, definitions, self.make_shape_name(base_shape_name))

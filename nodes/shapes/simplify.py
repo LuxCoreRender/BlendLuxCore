@@ -1,14 +1,18 @@
 import bpy
 from bpy.props import BoolProperty, FloatProperty
 from ..base import LuxCoreNodeShape
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeShapeSimplify(bpy.types.Node, LuxCoreNodeShape):
     bl_label = "Simplify"
 
-    target: FloatProperty(name="Target", default=25, min=0, max=100, subtype="PERCENTAGE")
-    edge_screen_size: FloatProperty(name="Edge Screen Size", default=0, min=0, max=1)
-    preserve_border: BoolProperty(name="Preserve Border", default=False)
+    target: FloatProperty(name="Target", default=25, min=0, max=100, subtype="PERCENTAGE",
+                          update=utils_node.force_viewport_mesh_update)
+    edge_screen_size: FloatProperty(name="Edge Screen Size", default=0, min=0, max=1,
+                                    update=utils_node.force_viewport_mesh_update)
+    preserve_border: BoolProperty(name="Preserve Border", default=False,
+                                  update=utils_node.force_viewport_mesh_update)
 
     def init(self, context):
         self.add_input("LuxCoreSocketShape", "Shape")
@@ -27,4 +31,4 @@ class LuxCoreNodeShapeSimplify(bpy.types.Node, LuxCoreNodeShape):
             "edgescreensize": self.edge_screen_size,
             "preserveborder": self.preserve_border,
         }
-        return self.create_props(props, definitions, self.make_name())
+        return self.create_props(props, definitions, self.make_shape_name(base_shape_name))

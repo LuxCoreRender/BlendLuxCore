@@ -35,6 +35,7 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexWindy", label="Windy"),
         NodeItem("LuxCoreNodeTexWrinkled", label="Wrinkled"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexOpenVDB", label="OpenVDB File"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_BLENDERTEXTURE", "Texture (Blender)", items=[
@@ -50,7 +51,7 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
     ]),
 
-    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_UTILS", "Utils", items=[
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MATH", "Math", items=[
         # Note: 2D textures make no sense for volumes
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
@@ -59,12 +60,16 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
-        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
-        Separator(),
-        NodeItem("LuxCoreNodeTexBand", label="Band"),
+    ]),
+
+    LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_UTILS", "Utils", items=[
+        # Note: 2D textures make no sense for volumes
+        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
         NodeItem("LuxCoreNodeTexColorAtDepth", label="Color at depth"),
+        Separator(),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),

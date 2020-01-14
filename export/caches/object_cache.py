@@ -1,8 +1,10 @@
 import bpy
+from array import array
+
 from ... import utils
 from ...bin import pyluxcore
 from .. import mesh_converter
-from ..hair import convert_hair
+from ..hair import convert_hair, warn_about_missing_uvs
 from .exported_data import ExportedObject
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
@@ -15,15 +17,7 @@ EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 
 def uses_pointiness(node_tree):
     # Check if a pointiness node exists, better check would be if the node is linked
-    return len(utils_node.find_nodes(node_tree, "LuxCoreNodeTexPointiness")) > 0
-
-
-def warn_about_missing_uvs(obj, node_tree):
-    imagemaps = utils_node.find_nodes(node_tree, "LuxCoreNodeTexImagemap")
-    if imagemaps and not utils_node.has_valid_uv_map(obj):
-        msg = (utils.pluralize("%d image texture", len(imagemaps)) + " used, but no UVs defined. "
-                                                                     "In case of bumpmaps this can lead to artifacts")
-        LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+    return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness")
 
 
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
@@ -48,28 +42,145 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         lux_mat_name, mat_props = material.fallback()
         return lux_mat_name, mat_props, None
 
+
+def _update_stats(engine, current_obj_name, extra_obj_info, current_index, total_object_count):
+    engine.update_stats("Export", f"Object: {current_obj_name}{extra_obj_info} ({current_index}/{total_object_count})")
+    engine.update_progress(current_index / total_object_count)
+
+
+def get_obj_count_estimate(depsgraph):
+    # This is faster than len(depsgraph.object_instances)
+    # TODO: count dupliverts and dupliframes
+    obj_count = len(depsgraph.ids)
+    for id in depsgraph.ids:
+        try:
+            for psys in id.particle_systems:
+                settings = psys.settings
+                particle_count = settings.count
+                if settings.child_type != "NONE":
+                    particle_count *= settings.rendered_child_count
+                obj_count += particle_count
+        except AttributeError:
+            pass
+    return obj_count
+
+
+class Duplis:
+    def __init__(self, exported_obj, matrix, object_id):
+        self.exported_obj = exported_obj
+        self.matrices = array("f", matrix)
+        self.object_ids = array("I", [object_id])
+
+    def get_count(self):
+        return len(self.object_ids)
+
+
 class ObjectCache2:
     def __init__(self):
         self.exported_objects = {}
         self.exported_meshes = {}
 
+    # TODO remove scene_props argument?
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
-        # TODO use luxcore_scene.DuplicateObjects for instances
-        for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
+        instances = {}
+        dupli_props = pyluxcore.Properties()
+        if engine:
+            obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
+
+        from time import time
+        s = time()
+        for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-            if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
+
+            # TODO HAIR! Detect when hair is instanced, e.g. when used on particles.
+            if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
+                if engine and index % 5000 == 0:
+                    if engine.test_break():
+                        return False
+                    _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
+
+                try:
+                    # The code in this try block is performance-critical, as it is
+                    # executed most often when exporting millions of instances.
+                    duplis = instances[obj]
+                    # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
+                    if duplis:
+                        obj_id = dg_obj_instance.object.original.luxcore.id
+                        if obj_id == -1:
+                            obj_id = dg_obj_instance.random_id & 0xfffffffe
+
+                        # Inlined form of utils.matrix_to_list() for better performance when using millions of instances
+                        matrix = dg_obj_instance.matrix_world
+                        l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
+                             matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
+                             matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
+                             matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
+
+                        if matrix.determinant() == 0:
+                            # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
+                            # Prevent a RuntimeError from LuxCore by adding a small epsilon.
+                            for i in range(4):
+                                l[i][i] += 1e-5
+
+                        duplis.matrices.extend(l)
+                        duplis.object_ids.append(obj_id)
+                except KeyError:
+                    if engine:
+                        if engine.test_break():
+                            return False
+                        _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
+
+                    exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
+                                                     luxcore_scene, dupli_props, is_viewport_render,
+                                                     keep_track_of=False)
+
+                    if exported_obj:
+                        transformation = utils.matrix_to_list(dg_obj_instance.matrix_world)
+                        obj_id = utils.make_object_id(dg_obj_instance)
+                        instances[obj] = Duplis(exported_obj, transformation, obj_id)
+                    else:
+                        # Could not export the object, happens e.g. with curve objects with zero faces
+                        instances[obj] = None
+            else:
+                # It's a regular object, not a dupli
+                if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
+                    continue
+
+                if engine:
+                    if engine.test_break():
+                        return False
+                    _update_stats(engine, obj.name, "", index, obj_count_estimate)
+
+                self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
+                                  luxcore_scene, dupli_props, is_viewport_render)
+        s1 = time()
+        print("%.3f s - iterating through depsgraph.object_instances" % (s1 - s))
+
+        # Need to parse so we have the dupli objects available for DuplicateObject
+        luxcore_scene.Parse(dupli_props)
+
+        for obj, duplis in instances.items():
+            if duplis is None:
+                # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
                 continue
 
-            if not is_viewport_render and obj.is_instancer and not obj.show_instancer_for_render:
-                continue
+            print("obj", obj.name, "has", duplis.get_count(), "instances")
 
-            self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                              luxcore_scene, scene_props, is_viewport_render)
-            if engine:
-                # Objects are the most expensive to export, so they dictate the progress
-                # engine.update_progress(index / obj_amount)
-                if engine.test_break():
-                    return False
+            for part in duplis.exported_obj.parts:
+                src_name = part.lux_obj
+                dst_name = src_name + "dupli"
+                luxcore_scene.DuplicateObject(src_name, dst_name, duplis.get_count(), duplis.matrices, duplis.object_ids)
+
+                # TODO: support steps and times (motion blur)
+                # steps = 0 # TODO
+                # times = array("f", [])
+                # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
+
+                # Delete the object we used for duplication, we don't want it to show up in the scene
+                luxcore_scene.DeleteObject(src_name)
+
+        s2 = time()
+        print("%.3f s - duplicating objects" % (s2 - s1))
 
         self._debug_info()
         return True
@@ -102,23 +213,30 @@ class ObjectCache2:
             key += "_instance"
         return key
 
-    def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene, scene_props, is_viewport_render):
-        """ Convert one DepsgraphObjectInstance amd keep track of it """
+    def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
+                     scene_props, is_viewport_render, keep_track_of=True):
+        """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
         if obj.type == "EMPTY" or obj.data is None:
             return
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
+        exported_stuff = None
+        props = pyluxcore.Properties()
 
         if obj.type in MESH_OBJECTS:
             # assert obj_key not in self.exported_objects
-            self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                                   luxcore_scene, scene_props, is_viewport_render)
+            exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
+                                                    luxcore_scene, scene_props, is_viewport_render)
+            if exported_stuff:
+                props = exported_stuff.get_props()
         elif obj.type == "LIGHT":
             props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
                                                         dg_obj_instance.matrix_world.copy(), is_viewport_render)
-            if exported_stuff:
+
+        if exported_stuff:
+            scene_props.Set(props)
+            if keep_track_of:
                 self.exported_objects[obj_key] = exported_stuff
-                scene_props.Set(props)
 
         # Convert hair
         for psys in obj.particle_systems:
@@ -126,6 +244,8 @@ class ObjectCache2:
 
             if settings.type == "HAIR" and settings.render_type == "PATH":
                 convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_render)
+
+        return exported_stuff
 
     def _convert_mesh_obj(self, exporter, dg_obj_instance, obj, obj_key, depsgraph,
                           luxcore_scene, scene_props, is_viewport_render):
@@ -178,16 +298,10 @@ class ObjectCache2:
                 exported_mesh.mesh_definitions[idx] = [shape, mat_index]
 
             obj_transform = transform.copy() if use_instancing else None
+            obj_id = utils.make_object_id(dg_obj_instance)
 
-            if obj.luxcore.id == -1:
-                obj_id = utils.make_object_id(dg_obj_instance)
-            else:
-                obj_id = obj.luxcore.id
-
-            exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names,
-                                          obj_transform, obj.luxcore.visible_to_camera, obj_id)
-            scene_props.Set(exported_obj.get_props())
-            self.exported_objects[obj_key] = exported_obj
+            return ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names,
+                                  obj_transform, obj.luxcore.visible_to_camera, obj_id)
 
 
     def diff(self, depsgraph):

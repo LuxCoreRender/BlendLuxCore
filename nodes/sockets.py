@@ -100,7 +100,7 @@ class Color:
     mat_emission = (0.9, 0.9, 0.9, 1.0)
     mapping_2d = (0.65, 0.55, 0.75, 1.0)
     mapping_3d = (0.50, 0.25, 0.60, 1.0)
-    shape = (0.3, 1.0, 0.0, 1.0)
+    shape = (0.0, 0.68, 0.51, 1.0)
 
 
 class LuxCoreSocketMaterial(bpy.types.NodeSocket, LuxCoreNodeSocket):
@@ -280,10 +280,11 @@ class LuxCoreSocketMapping2D(bpy.types.NodeSocket, LuxCoreNodeSocket):
     def export_default(self):
         # These are not the LuxCore API default values because
         # we have to compensate Blenders mirrored V axis
+        uvindex = 0
         uvscale = [1, -1]
         uvrotation = 0
         uvdelta = [0, 1]
-        return uvscale, uvrotation, uvdelta
+        return uvindex, uvscale, uvrotation, uvdelta
 
 
 class LuxCoreSocketMapping3D(bpy.types.NodeSocket, LuxCoreNodeSocket):
@@ -296,9 +297,10 @@ class LuxCoreSocketMapping3D(bpy.types.NodeSocket, LuxCoreNodeSocket):
     default_value = None
 
     def export_default(self):
+        uvindex = 0
         mapping_type = "globalmapping3d"
         transformation = mathutils.Matrix()
-        return mapping_type, transformation
+        return mapping_type, uvindex, transformation
 
 
 class LuxCoreSocketShape(bpy.types.NodeSocket, LuxCoreNodeSocket):

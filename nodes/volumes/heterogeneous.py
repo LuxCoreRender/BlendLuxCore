@@ -102,6 +102,7 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
 
             worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
             dimensions = [dim * worldscale for dim in domain_eval.dimensions]
+
             # The optimal step size on each axis
             step_sizes = [dim / res for dim, res in zip(dimensions, resolutions)]
             # Use the smallest step size in LuxCore

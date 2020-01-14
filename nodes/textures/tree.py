@@ -37,6 +37,7 @@ luxcore_node_categories_texture = [
         Separator(),
         NodeItem("LuxCoreNodeTexHitpoint", label="Vertex Color"),
         NodeItem("LuxCoreNodeTexSmoke", label="Smoke Data"),
+        NodeItem("LuxCoreNodeTexOpenVDB", label="OpenVDB File"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_BLENDERTEXTURE", "Texture (Blender)", items=[
@@ -50,6 +51,26 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
+    ]),
+
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MATH", "Math", items=[
+        NodeItem("LuxCoreNodeTexBump", label="Bump"),
+        # Possibly confusing, better deactivate (only needed in very rare cases anyway)
+        # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
+        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
+        NodeItem("LuxCoreNodeTexHSV", label="HSV"),
+        NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
+        NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
+        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
+        Separator(),
+        NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
+        NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
+        NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
+        NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
+        NodeItem("LuxCoreNodeTexUV", label="UV Test"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
@@ -74,12 +95,14 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
         NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
         NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
+        NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
+        NodeItem("LuxCoreNodeTriplanar", label="Triplanar Mapping"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_LIGHT", "Light", items=[

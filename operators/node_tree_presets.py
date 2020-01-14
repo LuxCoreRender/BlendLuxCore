@@ -162,7 +162,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             smoke_node.domain = obj
             heterogeneous.auto_step_settings = True
             heterogeneous.domain = obj
-        smoke_node.source = "density"
+
         smoke_node.wrap = "black"
         # Use IOR of air (doesn't really matter)
         heterogeneous.inputs["IOR"].default_value = 1
@@ -191,20 +191,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         vol_output.location = 300, 200
 
         heterogeneous = new_node("LuxCoreNodeVolHeterogeneous", vol_node_tree, vol_output)
-        # Scattering
-        heterogeneous.inputs["Scattering Scale"].default_value = 10
-        smoke_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, heterogeneous, 0, "Scattering")
-        # Use IOR of air (doesn't really matter)
-        heterogeneous.inputs["IOR"].default_value = 1
 
-        if is_smoke_domain:
-            smoke_node.domain = obj
-            heterogeneous.auto_step_settings = True
-            heterogeneous.domain = obj
-        smoke_node.source = "density"
-        smoke_node.wrap = "black"
-
-        # Emission (fire) - these nodes need to be below the others
         fire_gain = new_node("LuxCoreNodeTexMath", vol_node_tree, heterogeneous, 0, "Emission")
         fire_gain.location.y -= 200
         fire_gain.mode = "scale"
@@ -232,11 +219,24 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         fire_band.ramp_items[4].offset = 1
         fire_band.ramp_items[4].value = (1, 1, 1)
 
-        fire_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, fire_band, 0, "Amount")
+        # Scattering
+        heterogeneous.inputs["Scattering Scale"].default_value = 10
+        smoke_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, heterogeneous, 0, "Scattering")
+
+        # Emission (fire) - these nodes need to be below the others
+        vol_node_tree.links.new(smoke_node.outputs["fire"], fire_band.inputs["Amount"])
+
+        smoke_node.location.y += 200
+
+
+        # Use IOR of air (doesn't really matter)
+        heterogeneous.inputs["IOR"].default_value = 1
+
         if is_smoke_domain:
-            fire_node.domain = obj
-        fire_node.source = "fire"
-        fire_node.wrap = "black"
+            smoke_node.domain = obj
+            heterogeneous.auto_step_settings = True
+            heterogeneous.domain = obj
+        smoke_node.wrap = "black"
 
         # A smoke material setup only makes sense on the smoke domain object
         if not is_smoke_domain:

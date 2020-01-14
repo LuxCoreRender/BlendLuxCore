@@ -214,11 +214,13 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
         col = col.column()        
         col.prop(light.luxcore, "visibility_indirect_diffuse")
         col.prop(light.luxcore, "visibility_indirect_glossy")
-        col.prop(light.luxcore, "visibility_indirect_specular")
         
-        if light.luxcore.visibility_indirect_specular:
-            col.label(text="Indirect Specular rays can create unwanted fireflies", icon=icons.WARNING)
-
+        if light.type == "SUN":
+            col.prop(light.luxcore, "sun_visibility_indirect_specular")
+            if light.luxcore.sun_visibility_indirect_specular:
+                col.label(text="Indirect Specular rays can create unwanted fireflies", icon=icons.WARNING)
+        else: 
+            col.prop(light.luxcore, "visibility_indirect_specular")
 
 
 class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):

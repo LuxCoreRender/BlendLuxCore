@@ -22,12 +22,7 @@ def draw_uv_info(context, layout):
                 warning_no_uvmap(row)
                 row.prop(obj.data, "use_uv_as_generated", toggle=True, text="Enable UV")
         elif obj.type == "MESH":
-            if len(obj.data.uv_layers) > 1:
-                box = layout.box()
-                box.label(text="LuxCore only supports one UV map", icon=icons.INFO)
-                active_uv = find_active_uv(obj.data.uv_layers)
-                box.label(text='Active: "%s"' % active_uv.name, icon="GROUP_UVS")
-            elif len(obj.data.uv_layers) == 0:
+            if len(obj.data.uv_layers) == 0:
                 row = layout.row()
                 warning_no_uvmap(row)
                 row.operator("mesh.uv_texture_add")
@@ -148,6 +143,26 @@ def find_nodes(node_tree, bl_idname):
     return result
 
 
+def has_nodes(node_tree, bl_idname):
+    for node in node_tree.nodes:
+        if node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
+            try:
+                if has_nodes(node.node_tree, bl_idname):
+                    return True
+            except RecursionError:
+                msg = (f'Pointer nodes in node trees "{node_tree.name}" and "{node.node_tree.name}" '
+                       "create a dependency cycle! Delete one of them.")
+                LuxCoreErrorLog.add_error(msg)
+                # Mark the faulty nodes in red
+                node.use_custom_color = True
+                node.color = (0.9, 0, 0)
+                return result
+        if node.bl_idname == bl_idname:
+            return True
+
+    return False
+
+
 def force_viewport_update(_, context):
     """
     Since Blender 2.80, properties on custom sockets and custom nodes are not listed
@@ -159,6 +174,19 @@ def force_viewport_update(_, context):
         return
     mat = context.object.active_material
     mat.diffuse_color = mat.diffuse_color
+
+
+def force_viewport_mesh_update(_, context):
+    """ For updates on shape modifier changes (displacement, simplify etc.) """
+    # TODO ensure shape update on input texture changes. Need to evaluate the node tree ...
+    # TODO ensure shape update on socket connection changes
+    mat = context.object.active_material
+    for obj in context.visible_objects:
+        for slot in obj.material_slots:
+            if slot.material == mat:
+                if obj.data:
+                    obj.data.update_tag()
+                    continue
 
 
 def update_opengl_materials(_, context):

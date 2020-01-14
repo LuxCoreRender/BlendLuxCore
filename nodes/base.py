@@ -263,6 +263,9 @@ class LuxCoreNodeShape(LuxCoreNode):
     suffix = ""
     prefix = "scene.shapes."
 
+    def make_shape_name(self, base_shape_name):
+        return base_shape_name + "_" + utils.make_key_from_bpy_struct(self)
+
     def export_shape(self, exporter, depsgraph, props, base_shape_name):
         raise NotImplementedError("Subclasses have to implement this method!")
 
