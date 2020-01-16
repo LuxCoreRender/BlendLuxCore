@@ -6,7 +6,7 @@ from ...utils import node as utils_node
 
 
 
-class LuxCoreNodeTriplanar(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexTriplanar(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Triplanar Mapping"
     bl_width_default = 160
 

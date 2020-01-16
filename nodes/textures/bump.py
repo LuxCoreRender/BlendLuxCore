@@ -1,9 +1,7 @@
 import bpy
-from bpy.props import FloatProperty
 from ..base import LuxCoreNodeTexture
-from ..sockets import LuxCoreSocketFloat
-from ... import utils
 from ...utils import node as utils_node
+from ...ui import icons
 
 
 class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
@@ -15,6 +13,19 @@ class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
         self.add_input("LuxCoreSocketBumpHeight", "Bump Height", 0.001)
 
         self.outputs.new("LuxCoreSocketBump", "Bump")
+
+    def draw_buttons(self, context, layout):
+        show_triplanar_warning = False
+        value_node = utils_node.get_linked_node(self.inputs["Value"])
+        if value_node and value_node.bl_idname == "LuxCoreNodeTexTriplanar":
+            show_triplanar_warning = True
+        else:
+            height_node = utils_node.get_linked_node(self.inputs["Bump Height"])
+            if height_node and height_node.bl_idname == "LuxCoreNodeTexTriplanar":
+                show_triplanar_warning = True
+
+        if show_triplanar_warning:
+            layout.label(text="Use triplanar bump node instead!", icon=icons.WARNING)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {

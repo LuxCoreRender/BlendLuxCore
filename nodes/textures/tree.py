@@ -102,8 +102,8 @@ luxcore_node_categories_texture = [
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
-        NodeItem("LuxCoreNodeTriplanar", label="Triplanar Mapping"),
-        NodeItem("LuxCoreNodeTriplanarBump", label="Triplanar Bump Mapping"),
+        NodeItem("LuxCoreNodeTexTriplanar", label="Triplanar Mapping"),
+        NodeItem("LuxCoreNodeTexTriplanarBump", label="Triplanar Bump Mapping"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_LIGHT", "Light", items=[
