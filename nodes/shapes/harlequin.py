@@ -4,6 +4,7 @@ from ..base import LuxCoreNodeShape
 
 class LuxCoreNodeShapeHarlequin(bpy.types.Node, LuxCoreNodeShape):
     bl_label = "Harlequin"
+    bl_width_default = 150
 
     def init(self, context):
         self.add_input("LuxCoreSocketShape", "Shape")

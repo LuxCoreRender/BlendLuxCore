@@ -153,10 +153,9 @@ class LuxCoreSocketColor(bpy.types.NodeSocket, LuxCoreNodeSocket):
                                        update=utils_node.update_opengl_materials)
 
     def draw_prop(self, context, layout, node, text):
-        row = layout.row()
-        row.alignment = "LEFT"
-        row.prop(self, "default_value", text="")
-        row.label(text=text)
+        split = layout.split(factor=0.7)
+        split.label(text=text)
+        split.prop(self, "default_value", text="")
 
     def export_default(self):
         return list(self.default_value)
@@ -318,7 +317,7 @@ class LuxCoreSocketShape(bpy.types.NodeSocket, LuxCoreNodeSocket):
     default_value = "[Base Mesh]"
 
     def draw_prop(self, context, layout, node, text):
-        layout.label(text=text + " [Base Mesh]")
+        layout.label(text=text + " [Using Base Mesh]")
 
     def export_shape(self, exporter, depsgraph, props, base_shape_name):
         link = utils_node.get_link(self)

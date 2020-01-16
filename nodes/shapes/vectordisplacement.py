@@ -6,6 +6,7 @@ from ...utils import node as utils_node
 
 class LuxCoreNodeShapeVectorDisplacement(bpy.types.Node, LuxCoreNodeShape):
     bl_label = "Vector Displacement"
+    bl_width_default = 150
 
     scale: FloatProperty(name="Scale", default=1, update=utils_node.force_viewport_mesh_update)
     offset: FloatProperty(name="Offset", default=0, update=utils_node.force_viewport_mesh_update)
