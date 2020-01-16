@@ -140,10 +140,6 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             return self.bl_label
 
     def draw_buttons(self, context, layout):
-        row = layout.row()
-
-        row.prop(self, "show_thumbnail", icon=icons.IMAGE)
-        # row.prop(self, "set_as_active_uvmap", toggle=True)  # TODO 2.8
         if self.show_thumbnail:
             layout.template_ID_preview(self, "image", open="image.open")
         else:
@@ -152,7 +148,10 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         col = layout.column()
         col.active = self.image is not None
 
-        col.prop(self, "is_normal_map")
+        row = col.row()
+        row.prop(self, "is_normal_map")
+        row.prop(self, "show_thumbnail", icon=icons.IMAGE)
+
         if self.image:
             col.prop(self.image, "source")
 
