@@ -139,6 +139,7 @@ LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
         NodeItem("LuxCoreNodeTexMapping2D", label="2D Mapping"),
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
         NodeItem("LuxCoreNodeTriplanar", label="Triplanar Mapping"),
+        NodeItem("LuxCoreNodeTriplanarBump", label="Triplanar Bump Mapping"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[

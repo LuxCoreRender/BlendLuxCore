@@ -194,6 +194,15 @@ class LuxCoreSocketFloat0to2(bpy.types.NodeSocket, LuxCoreSocketFloat):
     slider = True
 
 
+# Just another float socket with different defaults and finer controls
+class LuxCoreSocketBumpHeight(bpy.types.NodeSocket, LuxCoreSocketFloat):
+    # Allow negative values for inverting the bump.
+    default_value: FloatProperty(default=0.001, soft_min=-0.01, soft_max=0.01,
+                                  precision=3, step=0.001,
+                                  subtype="DISTANCE", description="Bump height",
+                                  update=utils_node.force_viewport_update)
+
+
 class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.vector_texture
     default_value: FloatVectorProperty(name="", subtype="XYZ", precision=3,

@@ -67,12 +67,13 @@ class LuxCoreNode:
                         node_tree.requested_links.add((old_link.from_socket, socket))
                         break
 
-    def add_input(self, type, name, default=None):
+    def add_input(self, type, name, default=None, enabled=True):
         input = self.inputs.new(type, name)
 
         if hasattr(input, "default_value"):
             input.default_value = default
 
+        input.enabled = enabled
         return input
 
     def make_name(self):
@@ -425,17 +426,13 @@ class Roughness:
 
     @staticmethod
     def init(node, default=0.05, init_enabled=True):
-        node.add_input("LuxCoreSocketRoughness", "Roughness", default)
-        node.inputs["Roughness"].enabled = init_enabled
-        node.add_input("LuxCoreSocketRoughness", "V-Roughness", default)
-        node.inputs["V-Roughness"].enabled = False
+        node.add_input("LuxCoreSocketRoughness", "Roughness", default, enabled=init_enabled)
+        node.add_input("LuxCoreSocketRoughness", "V-Roughness", default, enabled=False)
 
     @staticmethod
     def init_backface(node, default=0.05, init_enabled=True):
-        node.add_input("LuxCoreSocketRoughness", "BF Roughness", default)
-        node.inputs["BF Roughness"].enabled = init_enabled
-        node.add_input("LuxCoreSocketRoughness", "BF V-Roughness", default)
-        node.inputs["BF V-Roughness"].enabled = False
+        node.add_input("LuxCoreSocketRoughness", "BF Roughness", default, enabled=init_enabled)
+        node.add_input("LuxCoreSocketRoughness", "BF V-Roughness", default, enabled=False)
 
     @staticmethod
     def draw(node, context, layout):
