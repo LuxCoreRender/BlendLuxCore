@@ -6,7 +6,7 @@ from ...ui import icons
 
 class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Bump"
-    bl_width_default = 180
+    bl_width_default = 190
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value", 0.0)
@@ -15,6 +15,8 @@ class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketBump", "Bump")
 
     def draw_buttons(self, context, layout):
+        utils_node.draw_uv_info(context, layout)
+
         show_triplanar_warning = False
         value_node = utils_node.get_linked_node(self.inputs["Value"])
         if value_node and value_node.bl_idname == "LuxCoreNodeTexTriplanar":
