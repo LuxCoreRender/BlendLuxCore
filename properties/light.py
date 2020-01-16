@@ -24,6 +24,11 @@ POWER_DESCRIPTION = (
     "this feature and uses only the light gain"
 )
 
+NORMALIZEBYCOLOR_DESCRIPTION = (
+    "Normalize intensity by the Color Luminance; Radiometric units like Power should not be "
+    "normalized, while Photometric units like Lumen, Candela, Lux should."
+)
+
 EXPOSURE_DESCRIPTION = (
     "Power-of-2 step multiplier. "
     "An EV step of 1 will double the brightness of the light"
@@ -141,6 +146,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     light_unit: EnumProperty(name="Unit", items=light_units, default="artistic")
     power: FloatProperty(name="Power", default=100, min=0, description=POWER_DESCRIPTION, unit='POWER')
     efficacy: FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
+    normalizebycolor: BoolProperty(name="Normalize by Color Luminance", default=False, description=NORMALIZEBYCOLOR_DESCRIPTION)
 
     # mappoint
     ies: PointerProperty(type=LuxCoreIESProps)

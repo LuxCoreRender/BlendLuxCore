@@ -6,7 +6,7 @@ from bpy.props import (
 )
 from ..base import LuxCoreNode
 from ...properties.light import (
-    POWER_DESCRIPTION, EFFICACY_DESCRIPTION,
+    POWER_DESCRIPTION, EFFICACY_DESCRIPTION, NORMALIZEBYCOLOR_DESCRIPTION,
     SPREAD_ANGLE_DESCRIPTION, LIGHTGROUP_DESC, IMPORTANCE_DESCRIPTION,
 )
 from ...properties.ies import LuxCoreIESProps
@@ -48,6 +48,8 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
                             description="Power-of-2 step multiplier. An EV step of 1 will double the brightness of the light")
     power: FloatProperty(update=utils_node.force_viewport_update, name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
     efficacy: FloatProperty(update=utils_node.force_viewport_update, name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
+    normalizebycolor: BoolProperty(update=utils_node.force_viewport_update, name="Normalize by Color Luminance", default=False,
+                                    description=NORMALIZEBYCOLOR_DESCRIPTION)
     ies: PointerProperty(update=utils_node.force_viewport_update, type=LuxCoreIESProps)
     importance: FloatProperty(update=utils_node.force_viewport_update, name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     # We use unit="ROTATION" because angles are radians, so conversion is necessary for the UI
@@ -76,6 +78,7 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         if self.emission_unit == "power":
             col.prop(self, "power")
             col.prop(self, "efficacy")
+            layout.prop(self, "normalizebycolor")
         else:
             col.prop(self, "gain")
             col.prop(self, "exposure", slider=True)
@@ -125,12 +128,14 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         if self.emission_unit == "power":
             definitions["emission.power"] = self.power
             definitions["emission.efficency"] = self.efficacy
+            definitions["emission.normalizebycolor"] = self.normalizebycolor
             if self.power == 0 or self.efficacy == 0:
                 definitions["emission.gain"] = [0, 0, 0]
         else:
             definitions["emission.power"] = 0
             definitions["emission.efficency"] = 0
             definitions["emission.gain"] = [self.gain * pow(2, self.exposure)] * 3
+            definitions["emission.normalizebycolor"] = False
         definitions["emission.importance"] = self.importance
         definitions["emission.theta"] = math.degrees(self.spread_angle)
         lightgroups = exporter.scene.luxcore.lightgroups
