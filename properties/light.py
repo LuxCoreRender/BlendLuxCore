@@ -26,7 +26,7 @@ POWER_DESCRIPTION = (
 
 NORMALIZEBYCOLOR_DESCRIPTION = (
     "Normalize intensity by the Color Luminance; Radiometric units like Power should not be "
-    "normalized, while Photometric units like Lumen, Candela, Lux should."
+    "normalized, while Photometric units like Lumen, Candela, Lux should"
 )
 
 EXPOSURE_DESCRIPTION = (
