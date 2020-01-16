@@ -69,6 +69,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             col = layout.column(align=True)
             col.prop(light.luxcore, "power")
             col.prop(light.luxcore, "efficacy")
+            layout.prop(light.luxcore, "normalizebycolor")
         else:
             col = layout.column(align=True)
             col.prop(light.luxcore, "gain")

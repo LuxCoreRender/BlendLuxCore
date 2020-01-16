@@ -97,6 +97,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         if light.luxcore.light_unit == "power":
             definitions["efficency"] = light.luxcore.efficacy
             definitions["power"] = light.luxcore.power
+            definitions["normalizebycolor"] = light.luxcore.normalizebycolor
 
             if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
                 definitions["gain"] = [0, 0, 0]
@@ -106,6 +107,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         else:
             definitions["efficency"] = 0.0
             definitions["power"] = 0.0
+            definitions["normalizebycolor"] = False
 
         # Position is set by transformation property
         definitions["position"] = [0, 0, 0]
@@ -175,6 +177,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         if light.luxcore.light_unit == "power":
             definitions["efficency"] = light.luxcore.efficacy
             definitions["power"] = light.luxcore.power
+            definitions["normalizebycolor"] = light.luxcore.normalizebycolor
 
             if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
                 definitions["gain"] = [0, 0, 0]
@@ -184,6 +187,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
         else:
             definitions["efficency"] = 0.0
             definitions["power"] = 0.0
+            definitions["normalizebycolor"] = False
 
         # Position and direction are set by transformation property
         definitions["position"] = [0, 0, 0]
@@ -204,6 +208,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
             if light.luxcore.light_unit == "power":
                 definitions["efficency"] = light.luxcore.efficacy
                 definitions["power"] = light.luxcore.power
+                definitions["normalizebycolor"] = light.luxcore.normalizebycolor
 
                 if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
                     definitions["gain"] = [0, 0, 0]
@@ -213,6 +218,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
             else:
                 definitions["efficency"] = 0.0
                 definitions["power"] = 0.0
+                definitions["normalizebycolor"] = False
 
             # Position and direction are set by transformation property
             definitions["position"] = [0, 0, 0]
@@ -381,6 +387,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         "emission.gain": apply_exposure(gain, light.luxcore.exposure),
         "emission.power": 0.0,
         "emission.efficency": 0.0,
+        "emission.normalizebycolor": False,
         "emission.theta": math.degrees(light.luxcore.spread_angle),
         "emission.id": scene.luxcore.lightgroups.get_id_by_name(light.luxcore.lightgroup),
         "emission.importance": importance,
@@ -395,6 +402,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     if light.luxcore.light_unit == "power":
         mat_definitions["emission.power"] = light.luxcore.power
         mat_definitions["emission.efficency"] = light.luxcore.efficacy
+        mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
 
         if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
             mat_definitions["emission.gain"] = [0, 0, 0]
