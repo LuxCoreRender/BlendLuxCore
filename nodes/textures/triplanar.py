@@ -10,18 +10,18 @@ class LuxCoreNodeTriplanar(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Triplanar Mapping"
     bl_width_default = 160
 
-    def update_individual_textures(self, context):
-        if self.individual_textures:
+    def update_multiple_textures(self, context):
+        if self.multiple_textures:
             self.inputs["Color"].name = "Color X"
         else:
             self.inputs["Color X"].name = "Color"
 
-        self.inputs["Color Y"].enabled = self.individual_textures
-        self.inputs["Color Z"].enabled = self.individual_textures
+        self.inputs["Color Y"].enabled = self.multiple_textures
+        self.inputs["Color Z"].enabled = self.multiple_textures
         utils_node.force_viewport_update(self, context)
 
-    individual_textures: BoolProperty(update=update_individual_textures, name="Individual Textures",
-                                      default=False)
+    multiple_textures: BoolProperty(update=update_multiple_textures, name="Multiple Textures", default=False,
+                                    description="Makes it possible to assign textures to each axis individually")
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Color", [0.8, 0.0, 0.0])
@@ -34,12 +34,12 @@ class LuxCoreNodeTriplanar(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "individual_textures")
+        layout.prop(self, "multiple_textures")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
 
-        if self.individual_textures:
+        if self.multiple_textures:
             tex1 = self.inputs["Color X"].export(exporter, depsgraph, props)
             tex2 = self.inputs["Color Y"].export(exporter, depsgraph, props)
             tex3 = self.inputs["Color Z"].export(exporter, depsgraph, props)
