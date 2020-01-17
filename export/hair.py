@@ -108,7 +108,7 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
     else:
         return material.fallback()
 
-def convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_render, engine=None):
+def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_viewport_render, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
         scene = depsgraph.scene_eval
@@ -124,10 +124,8 @@ def convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_rend
         if engine:
             engine.update_stats('Exporting...', msg)
 
-        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-
         settings = psys.settings.luxcore.hair
-        strand_diameter = settings.hair_size * worldscale
+        strand_diameter = settings.hair_size
         root_width = settings.root_width / 100
         tip_width = settings.tip_width / 100
         width_offset = settings.width_offset / 100
@@ -203,11 +201,12 @@ def convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_rend
         if engine and engine.test_break():
             return
 
-        luxcore_shape_name = utils.get_luxcore_name(obj, is_viewport_render) + "_" + utils.make_key_from_bpy_struct(
-            psys)
+        luxcore_shape_name = obj_key + "_" + utils.make_key_from_bpy_struct(psys)
 
         if engine:
             engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)
+        worldscale = 1
+        # TODO map into local space if required
         success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand,
                                                      points, colors, uvs, image_filename, settings.gamma,
                                                      copy_uvs, worldscale, strand_diameter,
@@ -219,31 +218,35 @@ def convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_rend
 
         # Sometimes no hair shape could be created, e.g. if the length
         # of all hairs is 0 (can happen e.g. during animations or if hair length is textured)
-        if success:
-            # For some reason this index is not starting at 0 but at 1 (Blender is strange)
-            lux_mat_name, mat_props = get_material(obj, psys.settings.material - 1, exporter, depsgraph,
-                                                   is_viewport_render)
+        if not success:
+            return None, None
 
-            strandsProps = pyluxcore.Properties()
-            strandsProps.Set(mat_props)
-            prefix = "scene.objects." + luxcore_shape_name + "."
+        # For some reason this index is not starting at 0 but at 1 (Blender is strange)
+        lux_mat_name, mat_props = get_material(obj, psys.settings.material - 1, exporter, depsgraph,
+                                               is_viewport_render)
 
-            strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
-            strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
-            strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not obj.luxcore.visible_to_camera))
+        strandsProps = pyluxcore.Properties()
+        strandsProps.Set(mat_props)
+        prefix = "scene.objects." + luxcore_shape_name + "."
 
-            if settings.instancing == "enabled":
-                # We don't actually need to transform anything, just set an identity matrix so the mesh is instanced
-                from mathutils import Matrix
-                transform = utils.matrix_to_list(Matrix.Identity(4))
-                strandsProps.Set(pyluxcore.Property(prefix + "transformation", transform))
+        strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
+        strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
+        strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not obj.luxcore.visible_to_camera))
 
-            luxcore_scene.Parse(strandsProps)
+        if settings.instancing == "enabled":
+            # We don't actually need to transform anything, just set an identity matrix so the mesh is instanced
+            from mathutils import Matrix
+            transform = utils.matrix_to_list(Matrix.Identity(4))
+            strandsProps.Set(pyluxcore.Property(prefix + "transformation", transform))
+
+        luxcore_scene.Parse(strandsProps)
 
         time_elapsed = time() - start_time
         print("[%s: %s] Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
+        return luxcore_shape_name, lux_mat_name
     except Exception as error:
         msg = "[%s: %s] %s" % (obj.name, psys.name, error)
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
         import traceback
         traceback.print_exc()
+        return None, None

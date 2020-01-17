@@ -5,7 +5,7 @@ from ... import utils
 from ...bin import pyluxcore
 from .. import mesh_converter
 from ..hair import convert_hair, warn_about_missing_uvs
-from .exported_data import ExportedObject
+from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
@@ -243,7 +243,14 @@ class ObjectCache2:
             settings = psys.settings
 
             if settings.type == "HAIR" and settings.render_type == "PATH":
-                convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_render)
+                lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_viewport_render)
+
+                # TODO handle case when exported_stuff is None
+                if exported_stuff:
+                    # Should always be the case because lights can't have particle systems
+                    assert isinstance(exported_stuff, ExportedObject)
+                    # Hair export uses same name for object and shape
+                    exported_stuff.parts.append(ExportedPart(lux_obj, lux_obj, lux_mat))
 
         return exported_stuff
 
