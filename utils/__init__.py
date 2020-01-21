@@ -33,7 +33,6 @@ def make_key_from_bpy_struct(bpy_struct):
 
 
 def make_key_from_instance(dg_obj_instance):
-    # TODO optimize, since this will be used for particles as well
     if dg_obj_instance.is_instance:
         key = make_key(dg_obj_instance.object.original)
         key += "_" + make_key(dg_obj_instance.parent.original)

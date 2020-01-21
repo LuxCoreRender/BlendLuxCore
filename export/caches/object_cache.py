@@ -90,9 +90,8 @@ class ObjectCache2:
         from time import time
         s = time()
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
-            obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+            obj = dg_obj_instance.object
 
-            # TODO HAIR! Detect when hair is instanced, e.g. when used on particles.
             if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
                 if engine and index % 5000 == 0:
                     if engine.test_break():
@@ -150,6 +149,14 @@ class ObjectCache2:
         for obj, duplis in instances.items():
             if duplis is None:
                 # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
+                continue
+
+            if duplis.get_count() == 1:
+                # Nothing to do regarding duplication, just track the object
+                # TODO check if we can modify key generation so that we only create
+                #  keys from objects, not dg_obj_instance
+                # obj_key = utils.make_key_from_instance(dg_obj_instance)
+                # self.exported_objects[obj_key] = duplis.exported_obj
                 continue
 
             print("obj", obj.name, "has", duplis.get_count(), "instances")
