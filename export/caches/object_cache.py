@@ -108,22 +108,10 @@ class ObjectCache2:
                         obj_id = dg_obj_instance.object.original.luxcore.id
                         if obj_id == -1:
                             obj_id = dg_obj_instance.random_id & 0xfffffffe
-
-                        # Inlined form of utils.matrix_to_list() for better performance when using millions of instances
-                        matrix = dg_obj_instance.matrix_world
-                        l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-                             matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-                             matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-                             matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
-
-                        if matrix.determinant() == 0:
-                            # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
-                            # Prevent a RuntimeError from LuxCore by adding a small epsilon.
-                            for i in range(4):
-                                l[i][i] += 1e-5
-
-                        duplis.matrices.extend(l)
                         duplis.object_ids.append(obj_id)
+                        # We need a copy of matrix_world here, not sure why, but if we don't
+                        # make a copy, we only get an identity matrix in C++
+                        duplis.matrices.extend(pyluxcore.BlenderMatrix4x4ToList(dg_obj_instance.matrix_world.copy()))
                 except KeyError:
                     if engine:
                         if engine.test_break():

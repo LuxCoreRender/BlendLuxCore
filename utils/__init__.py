@@ -165,33 +165,17 @@ def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
     """
     Flatten a 4x4 matrix into a list
     Returns list[16]
-    You only have to pass a valid scene if apply_worldscale is True
     """
+    # TODO remove parameters scene and apply_worldscale everywhere in the code base
 
-    if apply_worldscale:
-        # TODO 2.8 I want to change the way we handle unit scaling, see
-        #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
-        #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
-        pass
-        # matrix = get_scaled_to_world(matrix, scene)
+    # Copy required for BlenderMatrix4x4ToList(), not sure why, but if we don't
+    # make a copy, we only get an identity matrix in C++
+    matrix = matrix.copy()
 
     if invert:
-        matrix = matrix.copy()
         matrix.invert_safe()
 
-    l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-         matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-         matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-         matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
-
-    if matrix.determinant() == 0:
-        # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
-        # Prevent a RuntimeError from LuxCore by adding a small random epsilon.
-        # TODO maybe look for a better way to handle this
-        from random import random
-        return [float(i) + (1e-5 + random() * 1e-5) for i in l]
-    else:
-        return [float(i) for i in l]
+    return pyluxcore.BlenderMatrix4x4ToList(matrix)
 
 
 def calc_filmsize_raw(scene, context=None):
