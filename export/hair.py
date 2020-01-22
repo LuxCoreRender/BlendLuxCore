@@ -108,7 +108,8 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
     else:
         return material.fallback()
 
-def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_viewport_render, engine=None):
+def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_viewport_render,
+                 is_for_duplication, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
         scene = depsgraph.scene_eval
@@ -198,18 +199,22 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_view
             copy_uvs = False
 
         print("Collecting Blender hair information took %.3f s" % (time() - collection_start))
-        if engine and engine.test_break():
-            return
+        if engine:
+            engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)
+            if engine.test_break():
+                return None, None
 
         luxcore_shape_name = obj_key + "_" + utils.make_key_from_bpy_struct(psys)
 
-        if engine:
-            engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)
-        worldscale = 1
-        # TODO map into local space if required
+        if is_for_duplication:
+            # We have to unapply the transformation which is baked into the Blender hair coordinates
+            transformation = utils.matrix_to_list(obj.matrix_world, invert=True)
+        else:
+            transformation = None
+
         success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand,
                                                      points, colors, uvs, image_filename, settings.gamma,
-                                                     copy_uvs, worldscale, strand_diameter,
+                                                     copy_uvs, transformation, strand_diameter,
                                                      root_width, tip_width, width_offset,
                                                      settings.tesseltype, settings.adaptive_maxdepth,
                                                      settings.adaptive_error, settings.solid_sidecount,
@@ -233,11 +238,11 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_view
         strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
         strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not obj.luxcore.visible_to_camera))
 
-        if settings.instancing == "enabled":
+        if not is_for_duplication and settings.instancing == "enabled":
             # We don't actually need to transform anything, just set an identity matrix so the mesh is instanced
             from mathutils import Matrix
-            transform = utils.matrix_to_list(Matrix.Identity(4))
-            strandsProps.Set(pyluxcore.Property(prefix + "transformation", transform))
+            identity_matrix = utils.matrix_to_list(Matrix.Identity(4))
+            strandsProps.Set(pyluxcore.Property(prefix + "transformation", identity_matrix))
 
         luxcore_scene.Parse(strandsProps)
 

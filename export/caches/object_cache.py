@@ -119,7 +119,7 @@ class ObjectCache2:
 
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                      luxcore_scene, dupli_props, is_viewport_render,
-                                                     keep_track_of=False)
+                                                     keep_track_of=False, engine=engine)
 
                     if exported_obj:
                         transformation = utils.matrix_to_list(dg_obj_instance.matrix_world)
@@ -138,8 +138,8 @@ class ObjectCache2:
                         return False
                     _update_stats(engine, obj.name, "", index, obj_count_estimate)
 
-                self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                  luxcore_scene, dupli_props, is_viewport_render)
+                self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
+                                  dupli_props, is_viewport_render, engine=engine)
         s1 = time()
         print("%.3f s - iterating through depsgraph.object_instances" % (s1 - s))
 
@@ -209,7 +209,7 @@ class ObjectCache2:
         return key
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                     scene_props, is_viewport_render, keep_track_of=True):
+                     scene_props, is_viewport_render, keep_track_of=True, engine=None):
         """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
         if obj.type == "EMPTY" or obj.data is None:
             return
@@ -238,7 +238,8 @@ class ObjectCache2:
             settings = psys.settings
 
             if settings.type == "HAIR" and settings.render_type == "PATH":
-                lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_viewport_render)
+                lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
+                                                is_viewport_render, dg_obj_instance.is_instance, engine)
 
                 # TODO handle case when exported_stuff is None
                 if exported_stuff:
