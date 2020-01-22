@@ -80,15 +80,12 @@ class ObjectCache2:
         self.exported_objects = {}
         self.exported_meshes = {}
 
-    # TODO remove scene_props argument?
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
         instances = {}
-        dupli_props = pyluxcore.Properties()
+
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
 
-        from time import time
-        s = time()
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.object
 
@@ -118,7 +115,7 @@ class ObjectCache2:
                         _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
 
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                                     luxcore_scene, dupli_props, is_viewport_render,
+                                                     luxcore_scene, scene_props, is_viewport_render,
                                                      keep_track_of=False, engine=engine)
 
                     if exported_obj:
@@ -139,12 +136,10 @@ class ObjectCache2:
                     _update_stats(engine, obj.name, "", index, obj_count_estimate)
 
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                                  dupli_props, is_viewport_render, engine=engine)
-        s1 = time()
-        print("%.3f s - iterating through depsgraph.object_instances" % (s1 - s))
+                                  scene_props, is_viewport_render, engine=engine)
 
         # Need to parse so we have the dupli objects available for DuplicateObject
-        luxcore_scene.Parse(dupli_props)
+        luxcore_scene.Parse(scene_props)
 
         for obj, duplis in instances.items():
             if duplis is None:
@@ -171,10 +166,7 @@ class ObjectCache2:
                 # times = array("f", [])
                 # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
 
-        s2 = time()
-        print("%.3f s - duplicating objects" % (s2 - s1))
-
-        self._debug_info()
+        #self._debug_info()
         return True
 
     def _debug_info(self):
