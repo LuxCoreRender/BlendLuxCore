@@ -66,10 +66,10 @@ def get_obj_count_estimate(depsgraph):
 
 
 class Duplis:
-    def __init__(self, exported_obj, matrix, object_id):
+    def __init__(self, exported_obj):
         self.exported_obj = exported_obj
-        self.matrices = array("f", matrix)
-        self.object_ids = array("I", [object_id])
+        self.matrices = array("f", [])
+        self.object_ids = array("I", [])
 
     def get_count(self):
         return len(self.object_ids)
@@ -122,9 +122,9 @@ class ObjectCache2:
                                                      keep_track_of=False, engine=engine)
 
                     if exported_obj:
-                        transformation = utils.matrix_to_list(dg_obj_instance.matrix_world)
-                        obj_id = utils.make_object_id(dg_obj_instance)
-                        instances[obj] = Duplis(exported_obj, transformation, obj_id)
+                        # Note, the transformation matrix and object ID of this first instance is not added
+                        # to the duplication list, since it already exists in the scene
+                        instances[obj] = Duplis(exported_obj)
                     else:
                         # Could not export the object, happens e.g. with curve objects with zero faces
                         instances[obj] = None
@@ -170,9 +170,6 @@ class ObjectCache2:
                 # steps = 0 # TODO
                 # times = array("f", [])
                 # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
-
-                # Delete the object we used for duplication, we don't want it to show up in the scene
-                luxcore_scene.DeleteObject(src_name)
 
         s2 = time()
         print("%.3f s - duplicating objects" % (s2 - s1))
