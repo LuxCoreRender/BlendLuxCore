@@ -8,6 +8,7 @@ import tempfile
 import urllib.request
 import urllib.error
 import zipfile
+import re
 from collections import OrderedDict
 
 import bpy
@@ -140,6 +141,17 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
             entry = Release()
             entry.version_string = release_info["name"].replace("BlendLuxCore ", "")
             entry.is_prerelease = release_info["prerelease"]
+
+            if entry.version_string == "latest build":
+                continue
+
+            version_string_cleaned = re.sub("(alpha\d*)|(beta\d*)|(rc\d*)|(\s).*", "", entry.version_string[1:].lower())
+            version = tuple(map(int, version_string_cleaned.split(".")))
+
+            if version < (2, 3):
+                # Don't allow downgrading to before v2.3, because v2.2 was the first to support
+                # Blender 2.80, but had a special naming scheme for these builds.
+                continue
 
             # Assets are the different .zip packages for various OS, with/without OpenCL etc.
             for asset in release_info["assets"]:
