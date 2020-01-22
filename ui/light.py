@@ -122,6 +122,8 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
                 col = layout.column(align=True)
                 col.prop(light, "shape", expand=False)
+                if light.shape not in {"SQUARE", "RECTANGLE"}:
+                    col.label(text="Unsupported shape", icon=icons.WARNING)
 
                 col = layout.column(align=True)
 
