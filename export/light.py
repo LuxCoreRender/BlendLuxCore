@@ -351,7 +351,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
 
 def calc_area_light_transformation(light, transform_matrix):
     scale_x = Matrix.Scale(light.size / 2, 4, (1, 0, 0))
-    if light.shape == "RECTANGLE":
+    if light.shape in {"RECTANGLE", "ELLIPSE"}:
         scale_y = Matrix.Scale(light.size_y / 2, 4, (0, 1, 0))
     else:
         # basically scale_x, but for the y axis (note the last tuple argument)
@@ -447,6 +447,8 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
 
     # Copy transformation of area light object
     transform_matrix = calc_area_light_transformation(light, transform)
+    if light.shape not in {"SQUARE", "RECTANGLE"}:
+        LuxCoreErrorLog.add_warning("Unsupported area light shape: " + light.shape.title(), obj_name=obj.name)
 
     if transform_matrix.determinant() == 0:
         # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)

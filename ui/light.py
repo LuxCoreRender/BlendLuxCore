@@ -127,11 +127,11 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
                 col = layout.column(align=True)
 
-                if light.shape == "SQUARE":
-                    col.prop(light, "size", text="Size")
-                else:
+                if light.shape in {"RECTANGLE", "ELLIPSE"}:
                     col.prop(light, "size", text="Size X")
                     col.prop(light, "size_y", text="Y")
+                else:
+                    col.prop(light, "size", text="Size")
 
             layout.prop(light.luxcore, "is_laser")
 
