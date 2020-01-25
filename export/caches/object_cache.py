@@ -228,7 +228,8 @@ class ObjectCache2:
 
             if settings.type == "HAIR" and settings.render_type == "PATH":
                 lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
-                                                is_viewport_render, dg_obj_instance.is_instance, engine)
+                                                is_viewport_render, dg_obj_instance.is_instance,
+                                                dg_obj_instance.matrix_world, engine)
 
                 # TODO handle case when exported_stuff is None
                 if exported_stuff:

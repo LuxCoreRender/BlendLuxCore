@@ -109,7 +109,7 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         return material.fallback()
 
 def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_viewport_render,
-                 is_for_duplication, engine=None):
+                 is_for_duplication, instance_matrix_world, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
         scene = depsgraph.scene_eval
@@ -238,7 +238,9 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_view
         strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
         strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not obj.luxcore.visible_to_camera))
 
-        if not is_for_duplication and settings.instancing == "enabled":
+        if is_for_duplication:
+            strandsProps.Set(pyluxcore.Property(prefix + "transformation", utils.matrix_to_list(instance_matrix_world)))
+        elif settings.instancing == "enabled":
             # We don't actually need to transform anything, just set an identity matrix so the mesh is instanced
             from mathutils import Matrix
             identity_matrix = utils.matrix_to_list(Matrix.Identity(4))
