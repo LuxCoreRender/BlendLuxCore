@@ -393,21 +393,7 @@ def _convert_photongi_settings(context, scene, definitions, config):
     caustic_radius = photongi.caustic_lookup_radius
     caustic_updatespp = photongi.caustic_updatespp if photongi.caustic_periodic_update else 0
 
-    file_path_abs = utils.get_abspath(photongi.file_path, library=scene.library)
-    if not os.path.isfile(file_path_abs) and not photongi.save_or_overwrite:
-        # Do not save the cache file
-        file_path = ""
-    else:
-        if utils.using_filesaver(context, scene) and photongi.file_path.startswith("//"):
-            # It is a relative path and we are using filesaver - don't make it
-            # an absolute path, just strip the leading "//"
-            file_path = photongi.file_path[2:]
-        else:
-            file_path = file_path_abs
-            if os.path.isfile(file_path) and photongi.save_or_overwrite:
-                # To overwrite the file, we first have to delete it, otherwise
-                # LuxCore loads the cache from this file
-                os.remove(file_path)
+    file_path = utils.get_persistent_cache_file_path(photongi.file_path, photongi.save_or_overwrite, context, scene)
 
     definitions.update({
         "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000000),

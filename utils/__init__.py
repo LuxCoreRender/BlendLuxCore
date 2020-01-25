@@ -666,6 +666,7 @@ def openVDB_sequence_resolve_all(file):
 
     return sorted(indexed_filepaths, key=lambda elem: elem[0])
 
+
 def is_valid_camera(obj):
     return obj and hasattr(obj, "type") and obj.type == "CAMERA"
 
@@ -673,3 +674,22 @@ def is_valid_camera(obj):
 def get_blendfile_name():
     basename = bpy.path.basename(bpy.data.filepath)
     return os.path.splitext(basename)[0]  # remove ".blend"
+
+
+def get_persistent_cache_file_path(file_path, save_or_overwrite, context, scene):
+    file_path_abs = get_abspath(file_path, library=scene.library)
+
+    if not os.path.isfile(file_path_abs) and not save_or_overwrite:
+        # Do not save the cache file
+        return ""
+    else:
+        if using_filesaver(context, scene) and file_path.startswith("//"):
+            # It is a relative path and we are using filesaver - don't make it
+            # an absolute path, just strip the leading "//"
+            return file_path[2:]
+        else:
+            if os.path.isfile(file_path) and save_or_overwrite:
+                # To overwrite the file, we first have to delete it, otherwise
+                # LuxCore loads the cache from this file
+                os.remove(file_path)
+            return file_path_abs
