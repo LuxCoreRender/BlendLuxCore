@@ -211,6 +211,12 @@ class LuxCoreConfigDLSCache(PropertyGroup):
     maxdepth: IntProperty(name="Max. Depth", default=4, min=0)
     maxsamplescount: IntProperty(name="Max. Samples", default=10000000, min=0)
 
+    file_path: StringProperty(name="File Path", subtype="FILE_PATH",
+                              description="File path to the DLS cache file")
+    save_or_overwrite: BoolProperty(name="", default=False,
+                                    description="Save the cache to a file or overwrite the existing cache file. "
+                                                "If you want to use the saved cache, disable this option")
+
 
 class LuxCoreConfigPhotonGI(PropertyGroup):
     enabled: BoolProperty(name="Use PhotonGI cache to accelerate indirect and/or caustic light rendering", default=False)

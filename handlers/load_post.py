@@ -16,7 +16,7 @@ def _init_persistent_cache_file_path(settings, suffix):
             pgi_path = "//" + blend_name + "." + suffix
         else:
             # Blend file was not saved yet
-            pgi_path = os.path.join(tempfile.gettempdir(), "Untitled.pgi")
+            pgi_path = os.path.join(tempfile.gettempdir(), "Untitled." + suffix)
         settings.file_path = pgi_path
 
 
@@ -53,6 +53,7 @@ def handler(_):
 
         _init_persistent_cache_file_path(scene.luxcore.config.photongi, "pgi")
         _init_persistent_cache_file_path(scene.luxcore.config.envlight_cache, "env")
+        _init_persistent_cache_file_path(scene.luxcore.config.dls_cache, "dlsc")
 
     # Run converters for backwards compatibility
     compatibility.run()

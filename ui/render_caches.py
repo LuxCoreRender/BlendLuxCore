@@ -302,3 +302,22 @@ class LUXCORE_RENDER_PT_caches_DLSC_advanced(RenderButtonsPanel, Panel):
         col.prop(dls_cache, "targetcachehitratio")
         col.prop(dls_cache, "maxdepth")
         col.prop(dls_cache, "maxsamplescount")
+
+
+class LUXCORE_RENDER_PT_caches_DLSC_persistence(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
+    bl_parent_id = "LUXCORE_RENDER_PT_caches_DLSC"
+    lux_predecessor = "LUXCORE_RENDER_PT_caches_DLSC_advanced"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine == "PATH"
+
+    def draw_header(self, context):
+        self.layout.active = context.scene.luxcore.config.dls_cache.enabled
+        self.layout.label(text="Persistence")
+
+    def draw(self, context):
+        draw_persistent_file_ui(context, self.layout, context.scene.luxcore.config.dls_cache)

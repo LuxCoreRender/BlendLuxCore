@@ -67,7 +67,7 @@ def convert(exporter, scene, context=None, engine=None):
             definitions["film.opencl.enable"] = False
 
         if light_strategy == "DLS_CACHE":
-            _convert_dlscache_settings(scene, definitions, config)
+            _convert_dlscache_settings(scene, definitions, config, is_viewport_render)
 
         if config.photongi.enabled and not is_viewport_render:
             _convert_photongi_settings(context, scene, definitions, config)
@@ -355,11 +355,12 @@ def _convert_metropolis_settings(definitions, config):
     definitions["sampler.metropolis.imagemutationrate"] = config.metropolis_imagemutationrate / 100
 
 
-def _convert_dlscache_settings(scene, definitions, config):
+def _convert_dlscache_settings(scene, definitions, config, is_viewport_render):
     dls_cache = config.dls_cache
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+    file_path = utils.get_persistent_cache_file_path(dls_cache.file_path, dls_cache.save_or_overwrite,
+                                                     is_viewport_render, scene)
     definitions.update({
-        "lightstrategy.entry.radius": 0 if dls_cache.entry_radius_auto else dls_cache.entry_radius * worldscale,
+        "lightstrategy.entry.radius": 0 if dls_cache.entry_radius_auto else dls_cache.entry_radius,
         "lightstrategy.entry.normalangle": degrees(dls_cache.entry_normalangle),
         "lightstrategy.entry.maxpasses": dls_cache.entry_maxpasses,
         "lightstrategy.entry.convergencethreshold": dls_cache.entry_convergencethreshold / 100,
@@ -370,6 +371,8 @@ def _convert_dlscache_settings(scene, definitions, config):
         "lightstrategy.targetcachehitratio": dls_cache.targetcachehitratio / 100,
         "lightstrategy.maxdepth": dls_cache.maxdepth,
         "lightstrategy.maxsamplescount": dls_cache.maxsamplescount,
+
+        "lightstrategy.persistent.file": file_path,
     })
 
 
