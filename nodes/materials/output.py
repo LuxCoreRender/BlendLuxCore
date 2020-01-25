@@ -15,7 +15,7 @@ SHADOWCATCHER_DESC = (
 
 ONLY_INFINITE_DESC = (
     "Only consider shadows of infinite lights (sky, HDRI, "
-    "flat colored background) for the shadowcatcher"
+    "flat colored background) for the shadow catcher"
 )
 
 MATERIAL_ID_DESC = (
@@ -34,10 +34,6 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
     bl_width_default = 220
 
     active: BoolProperty(name="Active", default=True, update=update_active)
-    is_shadow_catcher: BoolProperty(update=utils_node.force_viewport_update, name="Shadow Catcher", default=False,
-                                     description=SHADOWCATCHER_DESC)
-    shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
-                                                description=ONLY_INFINITE_DESC)
     id: IntProperty(update=utils_node.force_viewport_update, name="Material ID", default=-1, min=-1, soft_max=32767,
                      description=MATERIAL_ID_DESC)
     use_photongi: BoolProperty(name="Use PhotonGI Cache", default=True,
@@ -45,6 +41,10 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
                                             "metal or glossy with low roughness")
     shadow_color: FloatVectorProperty(name="Shadow Color", subtype="COLOR", default=(0, 0, 0), min=0, max=1,
                                       update=utils_node.update_opengl_materials)
+    is_shadow_catcher: BoolProperty(update=utils_node.force_viewport_update, name="Shadow Catcher", default=False,
+                                     description=SHADOWCATCHER_DESC)
+    shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
+                                                description=ONLY_INFINITE_DESC)
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
@@ -75,14 +75,21 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
         super().draw_buttons(context, layout)
 
         # PhotonGI currently only works with Path engine
-        if (context.scene.luxcore.config.photongi.enabled
-                and context.scene.luxcore.config.engine == "PATH"):
-            layout.prop(self, "use_photongi")
+        col = layout.column()
+        col.active = (context.scene.luxcore.config.photongi.enabled
+                      and context.scene.luxcore.config.engine == "PATH")
+        col.prop(self, "use_photongi")
 
         layout.prop(self, "id")
 
-        # Shadow catcher
+        row = layout.row()
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
+        row.active = not engine_is_bidir
+        row.alignment = "LEFT"
+        row.prop(self, "shadow_color", text="")
+        row.label(text="Shadow Color")
+
+        # Shadow catcher
         col = layout.column()
         col.active = not engine_is_bidir
         col.prop(self, "is_shadow_catcher")
@@ -106,12 +113,6 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
                 elif luxcore_world.light == "infinite" and not luxcore_world.sampleupperhemisphereonly:
                     layout.prop(luxcore_world, "sampleupperhemisphereonly",
                                 icon=icons.WORLD, toggle=True)
-
-        row = layout.row()
-        row.active = not engine_is_bidir
-        row.alignment = "LEFT"
-        row.prop(self, "shadow_color", text="")
-        row.label(text="Shadow Color")
 
     def export(self, exporter, depsgraph, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."
