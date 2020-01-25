@@ -546,8 +546,8 @@ def clamp(value, _min=0, _max=1):
     return max(_min, min(_max, value))
 
 
-def using_filesaver(context, scene):
-    return context is None and scene.luxcore.config.use_filesaver
+def using_filesaver(is_viewport_render, scene):
+    return not is_viewport_render and scene.luxcore.config.use_filesaver
 
 
 def using_bidir_in_viewport(scene):
@@ -676,14 +676,14 @@ def get_blendfile_name():
     return os.path.splitext(basename)[0]  # remove ".blend"
 
 
-def get_persistent_cache_file_path(file_path, save_or_overwrite, context, scene):
+def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_render, scene):
     file_path_abs = get_abspath(file_path, library=scene.library)
 
     if not os.path.isfile(file_path_abs) and not save_or_overwrite:
         # Do not save the cache file
         return ""
     else:
-        if using_filesaver(context, scene) and file_path.startswith("//"):
+        if using_filesaver(is_viewport_render, scene) and file_path.startswith("//"):
             # It is a relative path and we are using filesaver - don't make it
             # an absolute path, just strip the leading "//"
             return file_path[2:]

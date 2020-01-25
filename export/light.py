@@ -239,7 +239,7 @@ def convert_luxcore_settings(exporter, obj, obj_key, depsgraph, luxcore_scene, t
     _indirect_light_visibility(definitions, light)
 
     if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
-        _envlightcache(definitions, light, scene)
+        _envlightcache(definitions, light, scene, is_viewport_render)
 
     props = utils.create_props(prefix, definitions)
     return props, exported_light
@@ -295,7 +295,7 @@ def convert_world(exporter, world, scene, is_viewport_render):
         _indirect_light_visibility(definitions, world)
 
         if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
-            _envlightcache(definitions, world, scene)
+            _envlightcache(definitions, world, scene, is_viewport_render)
 
         props = utils.create_props(prefix, definitions)
         return props
@@ -521,17 +521,20 @@ def _indirect_light_visibility(definitions, light_or_world):
     })
 
 
-def _envlightcache(definitions, light_or_world, scene):
+def _envlightcache(definitions, light_or_world, scene, is_viewport_render):
     envlight_cache = scene.luxcore.config.envlight_cache
     enabled = envlight_cache.enabled and light_or_world.luxcore.use_envlight_cache
     definitions["visibilitymapcache.enable"] = enabled
     if enabled:
         # All env. light caches share the same properties (it is very rare to have more than one anyway)
+        file_path = utils.get_persistent_cache_file_path(envlight_cache.file_path, envlight_cache.save_or_overwrite,
+                                                         is_viewport_render, scene)
         map_width = envlight_cache.map_width
         definitions["visibilitymapcache.map.width"] = map_width
         definitions["visibilitymapcache.map.height"] = map_width / 2
         definitions["visibilitymapcache.map.samplecount"] = envlight_cache.samples
         definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
+        definitions["visibilitymapcache.persistent.file"] = file_path
 
 def apply_exposure(gain, exposure):
     return [x * pow(2, exposure) for x in gain]
