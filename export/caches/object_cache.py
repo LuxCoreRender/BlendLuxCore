@@ -302,19 +302,13 @@ class ObjectCache2:
         return depsgraph.id_type_updated("OBJECT") and not only_scene
 
     def update(self, exporter, depsgraph, luxcore_scene, scene_props, is_viewport_render=True):
-        print("object cache update")
-
         redefine_objs_with_these_mesh_keys = []
         # Always instance in viewport so we can move objects around
         use_instancing = True
 
         # Geometry updates (mesh edit, modifier edit etc.)
         if depsgraph.id_type_updated("OBJECT"):
-            print("exported meshes:", self.exported_meshes.keys())
-
             for dg_update in depsgraph.updates:
-                print(f"update id: {dg_update.id}, geom: {dg_update.is_updated_geometry}, trans: {dg_update.is_updated_transform}")
-
                 if dg_update.is_updated_geometry and isinstance(dg_update.id, bpy.types.Object):
                     obj = dg_update.id
                     if not self._is_obj_visible(obj):
@@ -323,7 +317,6 @@ class ObjectCache2:
                     obj_key = utils.make_key(obj)
 
                     if obj.type in MESH_OBJECTS:
-                        print(f"Geometry of obj {obj.name} was updated")
                         mesh_key = self._get_mesh_key(obj, use_instancing)
 
                         # if mesh_key not in self.exported_meshes:
@@ -386,4 +379,4 @@ class ObjectCache2:
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                   luxcore_scene, scene_props, is_viewport_render)
 
-        self._debug_info()
+        #self._debug_info()
