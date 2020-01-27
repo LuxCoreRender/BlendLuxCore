@@ -17,7 +17,7 @@ EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 
 def uses_pointiness(node_tree):
     # Check if a pointiness node exists, better check would be if the node is linked
-    return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness")
+    return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness", True)
 
 
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):

@@ -27,8 +27,8 @@ def handler(scene):
         if not mat.luxcore.node_tree:
             continue
 
-        if (utils_node.has_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexOpenVDB") or
-                utils_node.has_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexSmoke")):
+        if (utils_node.has_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexOpenVDB", True) or
+                utils_node.has_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexSmoke", True)):
             found_smoke_sequence = True
             for node in mat.luxcore.node_tree.nodes:
                 if node.bl_idname == "LuxCoreNodeMatOutput" and node.active:
@@ -36,8 +36,8 @@ def handler(scene):
                     mat.luxcore.node_tree.links.new(node.inputs["Material"], node.inputs["Material"].links[0].from_socket)
                     break
 
-        for node in utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap") or \
-                utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexTimeInfo"):
+        for node in utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap", True) or \
+                utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexTimeInfo", True):
             found_image_sequence = True
             # Force a viewport update
             mat.diffuse_color = mat.diffuse_color

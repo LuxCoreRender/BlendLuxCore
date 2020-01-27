@@ -78,7 +78,7 @@ def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, st
 def warn_about_missing_uvs(obj, node_tree):
     # TODO once we have a triplanar option for imagemaps, ignore imagemaps with
     #  triplanar in this check because they have no problems with missing UVs
-    has_imagemaps = utils_node.has_nodes(node_tree, "LuxCoreNodeTexImagemap")
+    has_imagemaps = utils_node.has_nodes(node_tree, "LuxCoreNodeTexImagemap", True)
     if has_imagemaps and not utils_node.has_valid_uv_map(obj):
         msg = ("Image textures used, but no UVs defined. "
                "In case of bumpmaps this can lead to artifacts")
