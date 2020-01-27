@@ -182,7 +182,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
                 return [0, 0, 0]
 
         if self.image.source == "SEQUENCE":
-            frame_change_pre.using_image_sequences = True
+            frame_change_pre.have_to_check_node_trees = True
 
         try:
             filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)

@@ -4,47 +4,33 @@ from ..utils import node as utils_node
 from ..utils import openVDB_sequence_resolve_all
 from ..utils import clamp
 
-# Flag that saves us from having to iterate all node trees when no image sequences are used (the common case).
-# Set in image node export method, reset when new .blend is loaded in load_post.
-using_image_sequences = False
+RELEVANT_NODES = {"LuxCoreNodeTexImagemap", "LuxCoreNodeTexOpenVDB", "LuxCoreNodeTexTimeInfo"}
 
-# Flag that saves us from having to iterate all node trees when no image sequences are used (the common case).
-# Set in openVDB node export method, reset when new .blend is loaded in load_post.
-using_smoke_sequences = False
+# Flags that save us from having to iterate all node trees when no related nodes are used (the common case).
+# Set in relevant node export methods, reset when new .blend is loaded in load_post.
+have_to_check_node_trees = False
 
-
+# Important: Since this function is executed on every frame, even milliseconds of processin time in here will
+# bring down the frame rate of animations considerably. Always assume the worst case: A big scene with many
+# materials and complex node trees, and optimize for it.
 @persistent
 def handler(scene):
-    global using_image_sequences
-    global using_smoke_sequences
+    global have_to_check_node_trees
 
-    if not (using_image_sequences or using_smoke_sequences) or scene.render.engine != "LUXCORE":
+    if not have_to_check_node_trees or scene.render.engine != "LUXCORE":
         return
 
-    found_image_sequence = False
-    found_smoke_sequence = False
+    found_relevant_node = False
     for mat in bpy.data.materials:
         if not mat.luxcore.node_tree:
             continue
 
-        if (utils_node.has_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexOpenVDB", True) or
-                utils_node.has_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexSmoke", True)):
-            found_smoke_sequence = True
-            for node in mat.luxcore.node_tree.nodes:
-                if node.bl_idname == "LuxCoreNodeMatOutput" and node.active:
-                    # Force a viewport update
-                    mat.luxcore.node_tree.links.new(node.inputs["Material"], node.inputs["Material"].links[0].from_socket)
-                    break
-
-        for node in utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexImagemap", True) or \
-                utils_node.find_nodes(mat.luxcore.node_tree, "LuxCoreNodeTexTimeInfo", True):
-            found_image_sequence = True
+        if utils_node.has_nodes_multi(mat.luxcore.node_tree, RELEVANT_NODES, True):
+            found_relevant_node = True
             # Force a viewport update
             mat.diffuse_color = mat.diffuse_color
-            break
 
-    using_image_sequences = found_image_sequence
-    using_smoke_sequences = found_smoke_sequence
+    have_to_check_node_trees = found_relevant_node
 
     # TODO we are not handling area lights with image sequence textures right now
     #  because I can't think of a check with good performance in large scenes.

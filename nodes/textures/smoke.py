@@ -9,7 +9,6 @@ from ...export import smoke
 from ...utils import node as utils_node
 from ...ui import icons
 from ...utils.errorlog import LuxCoreErrorLog
-from ...handlers import frame_change_pre
 
 class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Smoke"
@@ -76,7 +75,6 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             }
             return self.create_props(props, definitions, luxcore_name)
 
-        frame_change_pre.using_smoke_sequences = True
         domain_eval = self.domain.evaluated_get(depsgraph)
 
         scale = domain_eval.dimensions

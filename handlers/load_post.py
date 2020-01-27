@@ -58,5 +58,5 @@ def handler(_):
     # Run converters for backwards compatibility
     compatibility.run()
 
-    frame_change_pre.using_image_sequences = False
+    frame_change_pre.have_to_check_node_trees = False
     LuxCoreErrorLog.clear()
