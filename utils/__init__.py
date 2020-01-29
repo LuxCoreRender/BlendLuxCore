@@ -7,6 +7,8 @@ import hashlib
 from ..bin import pyluxcore
 from . import view_layer
 
+MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
+EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
 
 
@@ -374,71 +376,12 @@ def find_active_vertex_color_layer(vertex_colors):
     return None
 
 
-def is_obj_visible(obj, scene, context=None, is_dupli=False):
-    """
-    Find out if an object is visible.
-    Note: if the object is an emitter, check emitter visibility with is_duplicator_visible() below.
-    """
-    if is_dupli:
-        return True
-
-    # Mimic Blender behaviour: if object is duplicated via a parent, it should be invisible
-    if obj.parent and obj.parent.dupli_type != "NONE":
-        return False
-
-    # Check if object is used as camera clipping plane
-    if is_valid_camera(scene.camera) and obj == scene.camera.data.luxcore.clipping_plane:
-        return False
-
-    render_layer = view_layer.get_current_view_layer(scene)
-    if render_layer:
-        # We need the list of excluded layers in the settings of this render layer
-        exclude_layers = render_layer.layers_exclude
-    else:
-        # We don't account for render layer visiblity in viewport/preview render
-        # so we create a mock list here
-        exclude_layers = [False] * 20
-
-    # TODO 2.8 (do we even still need this method? new depsgraph should solve it easier)
-    on_visible_layer = False
-    for lv in [ol and sl and not el for ol, sl, el in zip(obj.layers, scene.layers, exclude_layers)]:
-        on_visible_layer |= lv
-
-    hidden_in_outliner = obj.hide if context else obj.hide_render
-    return on_visible_layer and not hidden_in_outliner
+def is_instance_visible(dg_obj_instance, obj):
+    return dg_obj_instance.show_self and is_obj_visible(obj)
 
 
-def is_obj_visible_to_cam(obj, scene, context=None):
-    visible_to_cam = obj.luxcore.visible_to_camera
-    render_layer = view_layer.get_current_view_layer(scene)
-
-    # TODO 2.8
-    if render_layer:
-        on_visible_layer = False
-        for lv in [ol and sl for ol, sl in zip(obj.layers, render_layer.layers)]:
-            on_visible_layer |= lv
-
-        return visible_to_cam and on_visible_layer
-    else:
-        # We don't account for render layer visibility in viewport/preview render
-        return visible_to_cam
-
-
-def is_duplicator_visible(obj):
-    """ Find out if a particle/hair emitter or duplicator is visible """
-    assert obj.is_duplicator
-
-    # obj.is_duplicator is also true if it has particle/hair systems - they allow to show the duplicator
-    for psys in obj.particle_systems:
-        if psys.settings.use_render_emitter:
-            return True
-
-    # Dupliframes duplicate the original object, so it must be visible
-    if obj.dupli_type == "FRAMES":
-        return True
-
-    # Duplicators (Dupliverts/faces) are always hidden
-    return False
+def is_obj_visible(obj):
+    return not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS
 
 
 # TODO 2.8 fix or remove

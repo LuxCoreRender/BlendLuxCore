@@ -115,7 +115,7 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     # Objects
     for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-        if not obj.name == 'preview_hair' and not exporter.object_cache2._is_visible(dg_obj_instance, obj):
+        if not obj.name == 'preview_hair' and not utils.is_instance_visible(dg_obj_instance, obj):
             continue
 
         # Use LuxBall instead of Blender Shaderball
@@ -413,7 +413,7 @@ def _get_preview_settings(exporter, depsgraph):
     for dg_obj_instance in depsgraph.object_instances:        
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object                
         
-        if not obj.name == 'preview_hair' and not exporter.object_cache2._is_visible(dg_obj_instance, obj):
+        if not obj.name == 'preview_hair' and not utils.is_instance_visible(dg_obj_instance, obj):
             continue        
 
         if obj.name.startswith("preview"):

@@ -9,10 +9,8 @@ from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
+from ...utils import MESH_OBJECTS
 from ...nodes.output import get_active_output
-
-MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
-EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 
 
 def uses_pointiness(node_tree):
@@ -113,7 +111,6 @@ class ObjectCache2:
                         if engine.test_break():
                             return False
                         _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
-
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                      luxcore_scene, scene_props, is_viewport_render,
                                                      keep_track_of=False, engine=engine)
@@ -127,7 +124,8 @@ class ObjectCache2:
                         instances[obj] = None
             else:
                 # It's a regular object, not a dupli
-                if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
+                if not (utils.is_instance_visible(dg_obj_instance, obj)
+                        and obj.visible_get(view_layer=view_layer)):
                     continue
 
                 if engine:
@@ -178,14 +176,6 @@ class ObjectCache2:
         #     else:
         #         print(key, "mesh is None")
 
-    def _is_visible(self, dg_obj_instance, obj):
-        # TODO if this code needs to be used elsewhere (e.g. in material preview),
-        #  move it to utils (it doesn't concern this cache class)
-        return dg_obj_instance.show_self and self._is_obj_visible(obj)
-
-    def _is_obj_visible(self, obj):
-        return not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS
-
     def _get_mesh_key(self, obj, use_instancing, is_viewport_render=True):
         # Important: we need the data of the original object, not the evaluated one.
         # The instancing state has to be part of the key because a non-instanced mesh
@@ -202,6 +192,8 @@ class ObjectCache2:
         """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
         if obj.type == "EMPTY" or obj.data is None:
             return
+
+        print("Converting:", obj.name)
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
         exported_stuff = None
@@ -311,7 +303,7 @@ class ObjectCache2:
             for dg_update in depsgraph.updates:
                 if dg_update.is_updated_geometry and isinstance(dg_update.id, bpy.types.Object):
                     obj = dg_update.id
-                    if not self._is_obj_visible(obj):
+                    if not utils.is_obj_visible(obj):
                         continue
 
                     obj_key = utils.make_key(obj)
@@ -348,7 +340,7 @@ class ObjectCache2:
         # Currently, every update that doesn't require a mesh re-export happens here
         for dg_obj_instance in depsgraph.object_instances:
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-            if not self._is_visible(dg_obj_instance, obj):
+            if not utils.is_instance_visible(dg_obj_instance, obj):
                 continue
 
             obj_key = utils.make_key_from_instance(dg_obj_instance)
