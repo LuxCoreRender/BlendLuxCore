@@ -124,8 +124,9 @@ class ObjectCache2:
                         instances[obj] = None
             else:
                 # It's a regular object, not a dupli
-                if not (utils.is_instance_visible(dg_obj_instance, obj)
-                        and obj.visible_get(view_layer=view_layer)):
+                if not utils.is_instance_visible(dg_obj_instance, obj):
+                    continue
+                if view_layer and not obj.visible_get(view_layer=view_layer):
                     continue
 
                 if engine:
