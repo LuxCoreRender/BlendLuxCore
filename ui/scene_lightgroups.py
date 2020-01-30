@@ -32,6 +32,10 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
+        config = context.scene.luxcore.config
+        if config.photongi.enabled and config.engine == "PATH":
+            layout.label(text="PhotonGI does not support lightgroups!", icon=icons.WARNING)
+
         if self._are_all_groups_disabled(context):
             layout.label(text="All groups disabled.", icon=icons.WARNING)
 

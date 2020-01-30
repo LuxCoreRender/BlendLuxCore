@@ -69,7 +69,7 @@ def convert(exporter, scene, context=None, engine=None):
         if light_strategy == "DLS_CACHE":
             _convert_dlscache_settings(scene, definitions, config, is_viewport_render)
 
-        if config.photongi.enabled and not is_viewport_render:
+        if luxcore_engine != "BIDIRCPU" and config.photongi.enabled and not is_viewport_render:
             _convert_photongi_settings(context, scene, definitions, config)
 
         if config.path.use_clamping:
@@ -423,3 +423,6 @@ def _convert_photongi_settings(context, scene, definitions, config):
 
     if photongi.debug != "off":
         definitions["path.photongi.debug.type"] = photongi.debug
+
+    if len(scene.luxcore.lightgroups.custom) > 0:
+        LuxCoreErrorLog.add_warning("PhotonGI does not support lightgroups!")
