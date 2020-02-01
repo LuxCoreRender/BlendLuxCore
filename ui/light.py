@@ -1,14 +1,11 @@
 from bl_ui.properties_data_light import DataButtonsPanel
-from . import bpy
+import bpy
 from . import icons
 from bpy.types import Panel
 from ..utils import ui as utils_ui
 
 # TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
 class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
-    """
-    Light UI Panel
-    """
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light"
     bl_order = 1
@@ -323,6 +320,7 @@ class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
 def compatible_panels():
      panels = [
         "DATA_PT_context_light",
+         "DATA_PT_EEVEE_light",
      ]
      types = bpy.types
      return [getattr(types, p) for p in panels if hasattr(types, p)]

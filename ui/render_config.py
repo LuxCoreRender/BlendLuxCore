@@ -1,4 +1,4 @@
-from . import bpy
+import bpy
 from . import icons
 from .. import utils
 

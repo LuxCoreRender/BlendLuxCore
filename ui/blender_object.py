@@ -1,6 +1,6 @@
 from bl_ui.properties_object import ObjectButtonsPanel
 from bpy.types import Panel
-from . import bpy
+import bpy
 from .. import utils
 from ..ui import icons
 

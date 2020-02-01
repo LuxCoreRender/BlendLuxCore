@@ -1,6 +1,6 @@
 from bl_ui.properties_world import WorldButtonsPanel
 from bpy.types import Panel
-from . import bpy
+import bpy
 from . import icons
 
 from ..utils import ui as utils_ui

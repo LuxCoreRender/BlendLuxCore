@@ -1,6 +1,6 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from . import bpy
+import bpy
 from .. import utils
 from . import icons
 

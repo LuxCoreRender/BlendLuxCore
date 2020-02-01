@@ -1,7 +1,7 @@
 from bl_ui.properties_scene import SceneButtonsPanel
 from bl_ui.properties_scene import SCENE_PT_scene
 from bpy.types import Panel
-from . import bpy
+import bpy
 from . import icons
 
 ##class LUXCORE_SCENE_PT_scene(SceneButtonsPanel, Panel):
