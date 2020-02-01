@@ -99,7 +99,8 @@ def convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform,
                     # Fallback
                     definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
                     # Signal that the image is missing
-                    definitions["gain"] = [x * light.luxcore.gain * pow(2, light.luxcore.exposure) for x in MISSING_IMAGE_COLOR]
+                    definitions["gain"] = [x * light.luxcore.gain * pow(2, light.luxcore.exposure)
+                                           for x in MISSING_IMAGE_COLOR]
 
             has_ies = False
             try:
@@ -115,22 +116,7 @@ def convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform,
             # point/sphere
             definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
 
-        definitions["color"] = list(light.luxcore.rgb_gain)
-
-        if light.luxcore.light_unit == "power":
-            definitions["efficency"] = light.luxcore.efficacy
-            definitions["power"] = light.luxcore.power
-            definitions["normalizebycolor"] = light.luxcore.normalizebycolor
-
-            if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
-                definitions["gain"] = [0, 0, 0]
-            else:
-                definitions["gain"] = [1, 1, 1]
-
-        else:
-            definitions["efficency"] = 0.0
-            definitions["power"] = 0.0
-            definitions["normalizebycolor"] = False
+        _define_brightness(light, definitions)
 
         # Position is set by transformation property
         definitions["position"] = [0, 0, 0]
@@ -187,29 +173,15 @@ def convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform,
                 # Fallback
                 definitions["type"] = "spot"
                 # Signal that the image is missing
-                definitions["gain"] = [x * light.luxcore.gain * pow(2, light.luxcore.exposure) for x in MISSING_IMAGE_COLOR]
+                definitions["gain"] = [x * light.luxcore.gain * pow(2, light.luxcore.exposure)
+                                       for x in MISSING_IMAGE_COLOR]
         else:
             # spot
             definitions["type"] = "spot"
             definitions["coneangle"] = coneangle
             definitions["conedeltaangle"] = conedeltaangle
 
-        definitions["color"] = list(light.luxcore.rgb_gain)
-
-        if light.luxcore.light_unit == "power":
-            definitions["efficency"] = light.luxcore.efficacy
-            definitions["power"] = light.luxcore.power
-            definitions["normalizebycolor"] = light.luxcore.normalizebycolor
-
-            if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
-                definitions["gain"] = [0, 0, 0]
-            else:
-                definitions["gain"] = [1, 1, 1]
-
-        else:
-            definitions["efficency"] = 0.0
-            definitions["power"] = 0.0
-            definitions["normalizebycolor"] = False
+        _define_brightness(light, definitions)
 
         # Position and direction are set by transformation property
         definitions["position"] = [0, 0, 0]
@@ -224,22 +196,7 @@ def convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform,
             definitions["type"] = "laser"
             definitions["radius"] = light.size / 2
 
-            definitions["color"] = list(light.luxcore.rgb_gain)
-
-            if light.luxcore.light_unit == "power":
-                definitions["efficency"] = light.luxcore.efficacy
-                definitions["power"] = light.luxcore.power
-                definitions["normalizebycolor"] = light.luxcore.normalizebycolor
-
-                if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
-                    definitions["gain"] = [0, 0, 0]
-                else:
-                    definitions["gain"] = [1, 1, 1]
-
-            else:
-                definitions["efficency"] = 0.0
-                definitions["power"] = 0.0
-                definitions["normalizebycolor"] = False
+            _define_brightness(light, definitions)
 
             # Position and direction are set by transformation property
             definitions["position"] = [0, 0, 0]
@@ -388,7 +345,8 @@ def _get_area_obj_name(luxcore_name):
     return luxcore_name + str(fake_material_index)
 
 
-def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, luxcore_scene, gain, importance, luxcore_name, transform):
+def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, luxcore_scene,
+                        gain, importance, luxcore_name, transform):
     """
     An area light is a plane object with emissive material in LuxCore
     """
@@ -528,7 +486,8 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     props.Set(obj_props)
 
     mesh_definition = [luxcore_name, fake_material_index]
-    exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"], transform.copy(), obj.luxcore.visible_to_camera)
+    exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"],
+                                  transform.copy(), obj.luxcore.visible_to_camera)
     return props, exported_obj
 
 
@@ -555,8 +514,29 @@ def _envlightcache(definitions, light_or_world, scene, is_viewport_render):
         definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
         definitions["visibilitymapcache.persistent.file"] = file_path
 
+
 def apply_exposure(gain, exposure):
     return [x * pow(2, exposure) for x in gain]
+
+
+def _define_brightness(light, definitions):
+    definitions["color"] = list(light.luxcore.rgb_gain)
+
+    if light.luxcore.light_unit == "power":
+        definitions["efficency"] = light.luxcore.efficacy
+        definitions["power"] = light.luxcore.power
+        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+
+        if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
+            definitions["gain"] = [0, 0, 0]
+        else:
+            definitions["gain"] = [1, 1, 1]
+
+    else:
+        definitions["efficency"] = 0.0
+        definitions["power"] = 0.0
+        definitions["normalizebycolor"] = False
+
 
 def export_ies(definitions, ies, library, is_meshlight=False):
     """
