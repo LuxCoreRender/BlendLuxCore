@@ -58,7 +58,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         col.prop(light, "energy")
         col.separator()
 
-        if light.type in {"POINT", "SPOT"}:
+        if light.type == "POINT":
             col.prop(light, "shadow_soft_size", text="Size")
         elif light.type == "SUN":
             col.prop(light, "angle")
@@ -83,6 +83,9 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             col = layout.column(align=True)
             col.label(text="LuxCore doesn't have portal lights,", icon=icons.INFO)
             col.label(text="use environment light cache instead")
+
+        if light.type == "SPOT" and light.shadow_soft_size > 0:
+            layout.label(text="Size (soft shadows) not supported by LuxCore", icon=icons.WARNING)
 
     def draw_luxcore_settings(self, context):
         layout = self.layout

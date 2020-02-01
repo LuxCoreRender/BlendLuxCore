@@ -59,6 +59,39 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
 
         if light.shadow_soft_size > 0:
             definitions["radius"] = light.shadow_soft_size
+    elif light.type == "SUN":
+        # TODO counteract brightness change when varying theta/half angle
+        sun_dir = _calc_sun_dir(transform)
+        distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
+        definitions["direction"] = distant_dir
+        definitions["color"] = list(light.luxcore.rgb_gain)
+
+        half_angle = math.degrees(light.angle) / 2
+
+        if half_angle < 0.05:
+            definitions["type"] = "sharpdistant"
+        else:
+            definitions["type"] = "distant"
+            definitions["theta"] = half_angle
+    elif light.type == "SPOT":
+        definitions["type"] = "spot"
+        # TODO Cycles has a different falloff, probably needs to be implemented in LuxCore
+        definitions["coneangle"] = math.degrees(light.spot_size) / 2
+        definitions["conedeltaangle"] = math.degrees(light.spot_size / 2 * light.spot_blend)
+
+        # Position and direction are set by transformation property
+        definitions["position"] = [0, 0, 0]
+        definitions["target"] = [0, 0, -1]
+
+        spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
+        definitions["transformation"] = utils.matrix_to_list(transform @ spot_fix)
+
+        # TODO For some reason we have to use this correction factor for the gain
+        #  (found by eyeballing).
+        definitions["gain"] = [light.energy * 0.07] * 3
+    elif light.type == "AREA":
+        # TODO
+        raise NotImplementedError("Area light not implemented yet")
     else:
         # Can only happen if Blender changes its light types
         raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
