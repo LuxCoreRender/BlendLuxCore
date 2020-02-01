@@ -6,6 +6,36 @@ from . import icons
 from .. import utils
 
 
+def draw_persistent_file_ui(context, layout, settings):
+    layout.use_property_split = True
+    layout.use_property_decorate = False
+
+    engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
+    layout.active = settings.enabled and not engine_is_bidir
+
+    file_abspath = utils.get_abspath(settings.file_path, library=context.scene.library)
+    file_exists = os.path.isfile(file_abspath)
+
+    if not file_abspath:
+        cache_status = "Cache file will not be saved"
+    elif settings.save_or_overwrite:
+        if file_exists:
+            cache_status = "Cache file exists, but will be overwritten"
+        else:
+            cache_status = "Cache file will be saved"
+    else:
+        if file_exists:
+            cache_status = "Will use cache from file"
+        else:
+            cache_status = "No cache file available"
+
+    col = layout.column(align=True)
+    col.prop(settings, "save_or_overwrite",
+             text="Compute and overwrite" if file_exists else "Compute and save")
+    col.prop(settings, "file_path", text="")
+    col.label(text=cache_status)
+
+
 class LUXCORE_RENDER_PT_caches(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore Caches"
@@ -43,6 +73,9 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         if context.scene.luxcore.config.engine == "BIDIR":
             layout.label(text="Not supported by Bidir", icon=icons.INFO)
             return
+
+        if len(context.scene.luxcore.lightgroups.custom) > 0:
+            layout.label(text="PhotonGI does not support lightgroups!", icon=icons.WARNING)
 
         layout.active = photongi.enabled
 
@@ -149,6 +182,7 @@ class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
             steps = math.ceil(steps)
             sub.label(text=f"Min radius reached after {steps} steps ({steps * photongi.caustic_updatespp} samples)")
 
+
 class LUXCORE_RENDER_PT_caches_photongi_persistence(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
@@ -165,35 +199,7 @@ class LUXCORE_RENDER_PT_caches_photongi_persistence(RenderButtonsPanel, Panel):
         self.layout.label(text="Persistence")
 
     def draw(self, context):
-        photongi = context.scene.luxcore.config.photongi
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
-        layout.active = photongi.enabled and not engine_is_bidir
-
-        file_abspath = utils.get_abspath(photongi.file_path, library=context.scene.library)
-        file_exists = os.path.isfile(file_abspath)
-
-        if not file_abspath:
-            cache_status = "Cache file will not be saved"
-        elif photongi.save_or_overwrite:
-            if file_exists:
-                cache_status = "Cache file exists, but will be overwritten"
-            else:
-                cache_status = "Cache file will be saved"
-        else:
-            if file_exists:
-                cache_status = "Will use cache from file"
-            else:
-                cache_status = "No cache file available"
-
-        col = layout.column(align=True)
-        col.prop(photongi, "save_or_overwrite",
-                 text="Compute and overwrite" if file_exists else "Compute and save")
-        col.prop(photongi, "file_path", text="")
-        col.label(text=cache_status)
+        draw_persistent_file_ui(context, self.layout, context.scene.luxcore.config.photongi)
 
 
 class LUXCORE_RENDER_PT_caches_envlight(RenderButtonsPanel, Panel):
@@ -218,6 +224,24 @@ class LUXCORE_RENDER_PT_caches_envlight(RenderButtonsPanel, Panel):
 
         layout.prop(envlight_cache, "map_width")
         layout.prop(envlight_cache, "samples")
+
+
+class LUXCORE_RENDER_PT_caches_envlight_persistence(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
+    bl_parent_id = "LUXCORE_RENDER_PT_caches_envlight"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine == "PATH"
+
+    def draw_header(self, context):
+        self.layout.active = context.scene.luxcore.config.envlight_cache.enabled
+        self.layout.label(text="Persistence")
+
+    def draw(self, context):
+        draw_persistent_file_ui(context, self.layout, context.scene.luxcore.config.envlight_cache)
 
 
 class LUXCORE_RENDER_PT_caches_DLSC(RenderButtonsPanel, Panel):
@@ -281,3 +305,22 @@ class LUXCORE_RENDER_PT_caches_DLSC_advanced(RenderButtonsPanel, Panel):
         col.prop(dls_cache, "targetcachehitratio")
         col.prop(dls_cache, "maxdepth")
         col.prop(dls_cache, "maxsamplescount")
+
+
+class LUXCORE_RENDER_PT_caches_DLSC_persistence(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
+    bl_parent_id = "LUXCORE_RENDER_PT_caches_DLSC"
+    lux_predecessor = "LUXCORE_RENDER_PT_caches_DLSC_advanced"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine == "PATH"
+
+    def draw_header(self, context):
+        self.layout.active = context.scene.luxcore.config.dls_cache.enabled
+        self.layout.label(text="Persistence")
+
+    def draw(self, context):
+        draw_persistent_file_ui(context, self.layout, context.scene.luxcore.config.dls_cache)

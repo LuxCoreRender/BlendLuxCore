@@ -27,8 +27,7 @@ class LuxCoreNodeMatGlossyCoating(bpy.types.Node, LuxCoreNodeMaterial):
     def init(self, context):
         self.add_input("LuxCoreSocketMaterial", "Base Material")
         self.add_input("LuxCoreSocketColor", "Specular Color", [0.05] * 3)
-        self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
-        self.inputs["IOR"].enabled = False
+        self.add_input("LuxCoreSocketIOR", "IOR", 1.5, enabled=False)
         self.add_input("LuxCoreSocketColor", "Absorption Color", [0] * 3)
         self.add_input("LuxCoreSocketFloatPositive", "Absorption Depth (nm)", 0)
         Roughness.init(self, 0.05)

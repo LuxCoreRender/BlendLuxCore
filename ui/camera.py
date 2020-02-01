@@ -1,5 +1,5 @@
 from bl_ui.properties_data_camera import CameraButtonsPanel
-from . import bpy
+import bpy
 from bpy.types import Panel
 from bl_ui.utils import PresetPanel
 from ..utils import ui as utils_ui

@@ -1,7 +1,7 @@
 import bpy
 from ... import utils
+from ...utils import EXPORTABLE_OBJECTS
 from .. import camera, material
-from .object_cache import EXPORTABLE_OBJECTS
 
 from .object_cache import ObjectCache2
 

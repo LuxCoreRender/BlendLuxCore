@@ -7,6 +7,8 @@ import hashlib
 from ..bin import pyluxcore
 from . import view_layer
 
+MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
+EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
 
 
@@ -33,7 +35,6 @@ def make_key_from_bpy_struct(bpy_struct):
 
 
 def make_key_from_instance(dg_obj_instance):
-    # TODO optimize, since this will be used for particles as well
     if dg_obj_instance.is_instance:
         key = make_key(dg_obj_instance.object.original)
         key += "_" + make_key(dg_obj_instance.parent.original)
@@ -165,33 +166,17 @@ def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
     """
     Flatten a 4x4 matrix into a list
     Returns list[16]
-    You only have to pass a valid scene if apply_worldscale is True
     """
+    # TODO remove parameters scene and apply_worldscale everywhere in the code base
 
-    if apply_worldscale:
-        # TODO 2.8 I want to change the way we handle unit scaling, see
-        #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
-        #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
-        pass
-        # matrix = get_scaled_to_world(matrix, scene)
+    # Copy required for BlenderMatrix4x4ToList(), not sure why, but if we don't
+    # make a copy, we only get an identity matrix in C++
+    matrix = matrix.copy()
 
     if invert:
-        matrix = matrix.copy()
         matrix.invert_safe()
 
-    l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-         matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-         matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-         matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
-
-    if matrix.determinant() == 0:
-        # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
-        # Prevent a RuntimeError from LuxCore by adding a small random epsilon.
-        # TODO maybe look for a better way to handle this
-        from random import random
-        return [float(i) + (1e-5 + random() * 1e-5) for i in l]
-    else:
-        return [float(i) for i in l]
+    return pyluxcore.BlenderMatrix4x4ToList(matrix)
 
 
 def calc_filmsize_raw(scene, context=None):
@@ -391,71 +376,12 @@ def find_active_vertex_color_layer(vertex_colors):
     return None
 
 
-def is_obj_visible(obj, scene, context=None, is_dupli=False):
-    """
-    Find out if an object is visible.
-    Note: if the object is an emitter, check emitter visibility with is_duplicator_visible() below.
-    """
-    if is_dupli:
-        return True
-
-    # Mimic Blender behaviour: if object is duplicated via a parent, it should be invisible
-    if obj.parent and obj.parent.dupli_type != "NONE":
-        return False
-
-    # Check if object is used as camera clipping plane
-    if is_valid_camera(scene.camera) and obj == scene.camera.data.luxcore.clipping_plane:
-        return False
-
-    render_layer = view_layer.get_current_view_layer(scene)
-    if render_layer:
-        # We need the list of excluded layers in the settings of this render layer
-        exclude_layers = render_layer.layers_exclude
-    else:
-        # We don't account for render layer visiblity in viewport/preview render
-        # so we create a mock list here
-        exclude_layers = [False] * 20
-
-    # TODO 2.8 (do we even still need this method? new depsgraph should solve it easier)
-    on_visible_layer = False
-    for lv in [ol and sl and not el for ol, sl, el in zip(obj.layers, scene.layers, exclude_layers)]:
-        on_visible_layer |= lv
-
-    hidden_in_outliner = obj.hide if context else obj.hide_render
-    return on_visible_layer and not hidden_in_outliner
+def is_instance_visible(dg_obj_instance, obj):
+    return dg_obj_instance.show_self and is_obj_visible(obj)
 
 
-def is_obj_visible_to_cam(obj, scene, context=None):
-    visible_to_cam = obj.luxcore.visible_to_camera
-    render_layer = view_layer.get_current_view_layer(scene)
-
-    # TODO 2.8
-    if render_layer:
-        on_visible_layer = False
-        for lv in [ol and sl for ol, sl in zip(obj.layers, render_layer.layers)]:
-            on_visible_layer |= lv
-
-        return visible_to_cam and on_visible_layer
-    else:
-        # We don't account for render layer visibility in viewport/preview render
-        return visible_to_cam
-
-
-def is_duplicator_visible(obj):
-    """ Find out if a particle/hair emitter or duplicator is visible """
-    assert obj.is_duplicator
-
-    # obj.is_duplicator is also true if it has particle/hair systems - they allow to show the duplicator
-    for psys in obj.particle_systems:
-        if psys.settings.use_render_emitter:
-            return True
-
-    # Dupliframes duplicate the original object, so it must be visible
-    if obj.dupli_type == "FRAMES":
-        return True
-
-    # Duplicators (Dupliverts/faces) are always hidden
-    return False
+def is_obj_visible(obj):
+    return not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS
 
 
 # TODO 2.8 fix or remove
@@ -519,7 +445,7 @@ def has_deforming_modifiers(obj):
 
 
 def can_share_mesh(obj):
-    if not obj.data or obj.data.users < 2:
+    if not obj.data or obj.data.users < 2 or obj.type == "META":
         return False
     return not has_deforming_modifiers(obj)
 
@@ -563,8 +489,8 @@ def clamp(value, _min=0, _max=1):
     return max(_min, min(_max, value))
 
 
-def using_filesaver(context, scene):
-    return context is None and scene.luxcore.config.use_filesaver
+def using_filesaver(is_viewport_render, scene):
+    return not is_viewport_render and scene.luxcore.config.use_filesaver
 
 
 def using_bidir_in_viewport(scene):
@@ -683,6 +609,7 @@ def openVDB_sequence_resolve_all(file):
 
     return sorted(indexed_filepaths, key=lambda elem: elem[0])
 
+
 def is_valid_camera(obj):
     return obj and hasattr(obj, "type") and obj.type == "CAMERA"
 
@@ -690,3 +617,22 @@ def is_valid_camera(obj):
 def get_blendfile_name():
     basename = bpy.path.basename(bpy.data.filepath)
     return os.path.splitext(basename)[0]  # remove ".blend"
+
+
+def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_render, scene):
+    file_path_abs = get_abspath(file_path, library=scene.library)
+
+    if not os.path.isfile(file_path_abs) and not save_or_overwrite:
+        # Do not save the cache file
+        return ""
+    else:
+        if using_filesaver(is_viewport_render, scene) and file_path.startswith("//"):
+            # It is a relative path and we are using filesaver - don't make it
+            # an absolute path, just strip the leading "//"
+            return file_path[2:]
+        else:
+            if os.path.isfile(file_path) and save_or_overwrite:
+                # To overwrite the file, we first have to delete it, otherwise
+                # LuxCore loads the cache from this file
+                os.remove(file_path)
+            return file_path_abs

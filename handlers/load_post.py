@@ -9,6 +9,17 @@ from . import frame_change_pre
 from ..utils.errorlog import LuxCoreErrorLog
 
 
+def _init_persistent_cache_file_path(settings, suffix):
+    if not settings.file_path:
+        blend_name = utils.get_blendfile_name()
+        if blend_name:
+            pgi_path = "//" + blend_name + "." + suffix
+        else:
+            # Blend file was not saved yet
+            pgi_path = os.path.join(tempfile.gettempdir(), "Untitled." + suffix)
+        settings.file_path = pgi_path
+
+
 @persistent
 def handler(_):
     """ Note: the only argument Blender passes is always None """
@@ -40,17 +51,12 @@ def handler(_):
         if not scene.luxcore.config.filesaver_path:
             scene.luxcore.config.filesaver_path = scene.render.filepath
 
-        if not scene.luxcore.config.photongi.file_path:
-            blend_name = utils.get_blendfile_name()
-            if blend_name:
-                pgi_path = "//" + blend_name + ".pgi"
-            else:
-                # Blend file was not saved yet
-                pgi_path = os.path.join(tempfile.gettempdir(), "Untitled.pgi")
-            scene.luxcore.config.photongi.file_path = pgi_path
+        _init_persistent_cache_file_path(scene.luxcore.config.photongi, "pgi")
+        _init_persistent_cache_file_path(scene.luxcore.config.envlight_cache, "env")
+        _init_persistent_cache_file_path(scene.luxcore.config.dls_cache, "dlsc")
 
     # Run converters for backwards compatibility
     compatibility.run()
 
-    frame_change_pre.using_image_sequences = False
+    frame_change_pre.have_to_check_node_trees = False
     LuxCoreErrorLog.clear()

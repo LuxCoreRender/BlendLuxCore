@@ -28,7 +28,7 @@ class LuxCoreNodeTexTimeInfo(bpy.types.Node, LuxCoreNodeTexture):
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         scene = depsgraph.scene_eval
-        frame_change_pre.using_image_sequences = True
+        frame_change_pre.have_to_check_node_trees = True
 
         definitions = {
             "type": "constfloat1",

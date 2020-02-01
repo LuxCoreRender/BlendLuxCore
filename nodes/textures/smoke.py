@@ -9,7 +9,6 @@ from ...export import smoke
 from ...utils import node as utils_node
 from ...ui import icons
 from ...utils.errorlog import LuxCoreErrorLog
-from ...handlers import frame_change_pre
 
 class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Smoke"
@@ -21,16 +20,15 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
     
     domain: PointerProperty(update=utils_node.force_viewport_update, name="Domain", type=bpy.types.Object, poll=poll_domain)
 
-    def update_source(self, context):
-        value_output = self.outputs["Value"]
-        color_output = self.outputs["Color"]
-        was_value_enabled = value_output.enabled
-
-        value_output.enabled = self.source in {"density", "fire", "heat"}
-        color_output.enabled = self.source in {"color", "velocity"}
-
-        utils_node.copy_links_after_socket_swap(value_output, color_output, was_value_enabled)
-        utils_node.force_viewport_update(self, context)
+    # NOTE: The source property is no longer used, just here for backwards compatibility (utils/compatibility.py)
+    source_items = [
+        ("density", "Density", "Smoke density grid, 1 value per voxel", 0),
+        ("fire", "Fire", "Fire grid, 1 value per voxel", 1),
+        ("heat", "Heat", "Smoke heat grid, 1 value per voxel", 2),
+        ("color", "Color", "Smoke color grid, 3 values per voxel (RGB)", 3),
+        ("velocity", "Velocity", "Smoke velocity grid, 3 values per voxel", 4),
+    ]
+    source: EnumProperty(name="Grid Type", items=source_items, default="density")
 
     precision_items = [
         ("byte", "Byte", "Only 1 byte per value. Required memory is 1/2 of Half and 1/4 of Float", 0),
@@ -59,7 +57,6 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             layout.label(text="Select the smoke domain object", icon=icons.WARNING)
 
         col = layout.column()
-        #col.prop(self, "source")
         col.prop(self, "precision")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
@@ -78,7 +75,6 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
             }
             return self.create_props(props, definitions, luxcore_name)
 
-        frame_change_pre.using_smoke_sequences = True
         domain_eval = self.domain.evaluated_get(depsgraph)
 
         scale = domain_eval.dimensions

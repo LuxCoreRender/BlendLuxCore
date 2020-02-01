@@ -5,19 +5,17 @@ from ... import utils
 from ...bin import pyluxcore
 from .. import mesh_converter
 from ..hair import convert_hair, warn_about_missing_uvs
-from .exported_data import ExportedObject
+from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
+from ...utils import MESH_OBJECTS
 from ...nodes.output import get_active_output
-
-MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
-EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 
 
 def uses_pointiness(node_tree):
     # Check if a pointiness node exists, better check would be if the node is linked
-    return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness")
+    return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness", True)
 
 
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
@@ -66,10 +64,10 @@ def get_obj_count_estimate(depsgraph):
 
 
 class Duplis:
-    def __init__(self, exported_obj, matrix, object_id):
+    def __init__(self, exported_obj):
         self.exported_obj = exported_obj
-        self.matrices = array("f", matrix)
-        self.object_ids = array("I", [object_id])
+        self.matrices = array("f", [])
+        self.object_ids = array("I", [])
 
     def get_count(self):
         return len(self.object_ids)
@@ -80,19 +78,15 @@ class ObjectCache2:
         self.exported_objects = {}
         self.exported_meshes = {}
 
-    # TODO remove scene_props argument?
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
         instances = {}
-        dupli_props = pyluxcore.Properties()
+
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
 
-        from time import time
-        s = time()
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
-            obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+            obj = dg_obj_instance.object
 
-            # TODO HAIR! Detect when hair is instanced, e.g. when used on particles.
             if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
                 if engine and index % 5000 == 0:
                     if engine.test_break():
@@ -108,42 +102,31 @@ class ObjectCache2:
                         obj_id = dg_obj_instance.object.original.luxcore.id
                         if obj_id == -1:
                             obj_id = dg_obj_instance.random_id & 0xfffffffe
-
-                        # Inlined form of utils.matrix_to_list() for better performance when using millions of instances
-                        matrix = dg_obj_instance.matrix_world
-                        l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-                             matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-                             matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-                             matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
-
-                        if matrix.determinant() == 0:
-                            # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
-                            # Prevent a RuntimeError from LuxCore by adding a small epsilon.
-                            for i in range(4):
-                                l[i][i] += 1e-5
-
-                        duplis.matrices.extend(l)
                         duplis.object_ids.append(obj_id)
+                        # We need a copy of matrix_world here, not sure why, but if we don't
+                        # make a copy, we only get an identity matrix in C++
+                        duplis.matrices.extend(pyluxcore.BlenderMatrix4x4ToList(dg_obj_instance.matrix_world.copy()))
                 except KeyError:
                     if engine:
                         if engine.test_break():
                             return False
                         _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
-
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                                     luxcore_scene, dupli_props, is_viewport_render,
-                                                     keep_track_of=False)
+                                                     luxcore_scene, scene_props, is_viewport_render,
+                                                     keep_track_of=False, engine=engine)
 
                     if exported_obj:
-                        transformation = utils.matrix_to_list(dg_obj_instance.matrix_world)
-                        obj_id = utils.make_object_id(dg_obj_instance)
-                        instances[obj] = Duplis(exported_obj, transformation, obj_id)
+                        # Note, the transformation matrix and object ID of this first instance is not added
+                        # to the duplication list, since it already exists in the scene
+                        instances[obj] = Duplis(exported_obj)
                     else:
                         # Could not export the object, happens e.g. with curve objects with zero faces
                         instances[obj] = None
             else:
                 # It's a regular object, not a dupli
-                if not (self._is_visible(dg_obj_instance, obj) or obj.visible_get(view_layer=view_layer)):
+                if not utils.is_instance_visible(dg_obj_instance, obj):
+                    continue
+                if view_layer and not obj.visible_get(view_layer=view_layer):
                     continue
 
                 if engine:
@@ -151,17 +134,23 @@ class ObjectCache2:
                         return False
                     _update_stats(engine, obj.name, "", index, obj_count_estimate)
 
-                self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                  luxcore_scene, dupli_props, is_viewport_render)
-        s1 = time()
-        print("%.3f s - iterating through depsgraph.object_instances" % (s1 - s))
+                self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
+                                  scene_props, is_viewport_render, engine=engine)
 
         # Need to parse so we have the dupli objects available for DuplicateObject
-        luxcore_scene.Parse(dupli_props)
+        luxcore_scene.Parse(scene_props)
 
         for obj, duplis in instances.items():
             if duplis is None:
                 # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
+                continue
+
+            if duplis.get_count() == 1:
+                # Nothing to do regarding duplication, just track the object
+                # TODO check if we can modify key generation so that we only create
+                #  keys from objects, not dg_obj_instance
+                # obj_key = utils.make_key_from_instance(dg_obj_instance)
+                # self.exported_objects[obj_key] = duplis.exported_obj
                 continue
 
             print("obj", obj.name, "has", duplis.get_count(), "instances")
@@ -176,13 +165,7 @@ class ObjectCache2:
                 # times = array("f", [])
                 # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
 
-                # Delete the object we used for duplication, we don't want it to show up in the scene
-                luxcore_scene.DeleteObject(src_name)
-
-        s2 = time()
-        print("%.3f s - duplicating objects" % (s2 - s1))
-
-        self._debug_info()
+        #self._debug_info()
         return True
 
     def _debug_info(self):
@@ -193,14 +176,6 @@ class ObjectCache2:
         #         print(key, exported_mesh.mesh_definitions)
         #     else:
         #         print(key, "mesh is None")
-
-    def _is_visible(self, dg_obj_instance, obj):
-        # TODO if this code needs to be used elsewhere (e.g. in material preview),
-        #  move it to utils (it doesn't concern this cache class)
-        return dg_obj_instance.show_self and self._is_obj_visible(obj)
-
-    def _is_obj_visible(self, obj):
-        return not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS
 
     def _get_mesh_key(self, obj, use_instancing, is_viewport_render=True):
         # Important: we need the data of the original object, not the evaluated one.
@@ -214,10 +189,12 @@ class ObjectCache2:
         return key
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                     scene_props, is_viewport_render, keep_track_of=True):
+                     scene_props, is_viewport_render, keep_track_of=True, engine=None):
         """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
         if obj.type == "EMPTY" or obj.data is None:
             return
+
+        print("Converting:", obj.name)
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
         exported_stuff = None
@@ -243,7 +220,16 @@ class ObjectCache2:
             settings = psys.settings
 
             if settings.type == "HAIR" and settings.render_type == "PATH":
-                convert_hair(exporter, obj, psys, depsgraph, luxcore_scene, is_viewport_render)
+                lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
+                                                is_viewport_render, dg_obj_instance.is_instance,
+                                                dg_obj_instance.matrix_world, engine)
+
+                # TODO handle case when exported_stuff is None
+                if exported_stuff:
+                    # Should always be the case because lights can't have particle systems
+                    assert isinstance(exported_stuff, ExportedObject)
+                    # Hair export uses same name for object and shape
+                    exported_stuff.parts.append(ExportedPart(lux_obj, lux_obj, lux_mat))
 
         return exported_stuff
 
@@ -309,28 +295,21 @@ class ObjectCache2:
         return depsgraph.id_type_updated("OBJECT") and not only_scene
 
     def update(self, exporter, depsgraph, luxcore_scene, scene_props, is_viewport_render=True):
-        print("object cache update")
-
         redefine_objs_with_these_mesh_keys = []
         # Always instance in viewport so we can move objects around
         use_instancing = True
 
         # Geometry updates (mesh edit, modifier edit etc.)
         if depsgraph.id_type_updated("OBJECT"):
-            print("exported meshes:", self.exported_meshes.keys())
-
             for dg_update in depsgraph.updates:
-                print(f"update id: {dg_update.id}, geom: {dg_update.is_updated_geometry}, trans: {dg_update.is_updated_transform}")
-
                 if dg_update.is_updated_geometry and isinstance(dg_update.id, bpy.types.Object):
                     obj = dg_update.id
-                    if not self._is_obj_visible(obj):
+                    if not utils.is_obj_visible(obj):
                         continue
 
                     obj_key = utils.make_key(obj)
 
                     if obj.type in MESH_OBJECTS:
-                        print(f"Geometry of obj {obj.name} was updated")
                         mesh_key = self._get_mesh_key(obj, use_instancing)
 
                         # if mesh_key not in self.exported_meshes:
@@ -362,7 +341,7 @@ class ObjectCache2:
         # Currently, every update that doesn't require a mesh re-export happens here
         for dg_obj_instance in depsgraph.object_instances:
             obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-            if not self._is_visible(dg_obj_instance, obj):
+            if not utils.is_instance_visible(dg_obj_instance, obj):
                 continue
 
             obj_key = utils.make_key_from_instance(dg_obj_instance)
@@ -393,4 +372,4 @@ class ObjectCache2:
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                   luxcore_scene, scene_props, is_viewport_render)
 
-        self._debug_info()
+        #self._debug_info()

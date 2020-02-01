@@ -6,6 +6,7 @@ from ...utils import node as utils_node
 
 class LuxCoreNodeShapeSubdiv(bpy.types.Node, LuxCoreNodeShape):
     bl_label = "Subdivision"
+    bl_width_default = 150
 
     max_level: IntProperty(name="Max. Level", default=2, min=1,
                            update=utils_node.force_viewport_mesh_update)

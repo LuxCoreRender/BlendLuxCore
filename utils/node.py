@@ -122,13 +122,13 @@ def get_linked_node(socket):
     return link.from_node
 
 
-def find_nodes(node_tree, bl_idname):
+def find_nodes(node_tree, bl_idname, follow_pointers):
     result = []
 
     for node in node_tree.nodes:
-        if node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
+        if follow_pointers and node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
             try:
-                result += find_nodes(node.node_tree, bl_idname)
+                result += find_nodes(node.node_tree, bl_idname, follow_pointers)
             except RecursionError:
                 msg = (f'Pointer nodes in node trees "{node_tree.name}" and "{node.node_tree.name}" '
                        "create a dependency cycle! Delete one of them.")
@@ -143,11 +143,11 @@ def find_nodes(node_tree, bl_idname):
     return result
 
 
-def has_nodes(node_tree, bl_idname):
+def has_nodes(node_tree, bl_idname, follow_pointers):
     for node in node_tree.nodes:
-        if node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
+        if follow_pointers and node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
             try:
-                if has_nodes(node.node_tree, bl_idname):
+                if has_nodes(node.node_tree, bl_idname, follow_pointers):
                     return True
             except RecursionError:
                 msg = (f'Pointer nodes in node trees "{node_tree.name}" and "{node.node_tree.name}" '
@@ -156,8 +156,28 @@ def has_nodes(node_tree, bl_idname):
                 # Mark the faulty nodes in red
                 node.use_custom_color = True
                 node.color = (0.9, 0, 0)
-                return result
+                return False
         if node.bl_idname == bl_idname:
+            return True
+
+    return False
+
+
+def has_nodes_multi(node_tree, bl_idname_set, follow_pointers):
+    for node in node_tree.nodes:
+        if follow_pointers and node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
+            try:
+                if has_nodes_multi(node.node_tree, bl_idname_set, follow_pointers):
+                    return True
+            except RecursionError:
+                msg = (f'Pointer nodes in node trees "{node_tree.name}" and "{node.node_tree.name}" '
+                       "create a dependency cycle! Delete one of them.")
+                LuxCoreErrorLog.add_error(msg)
+                # Mark the faulty nodes in red
+                node.use_custom_color = True
+                node.color = (0.9, 0, 0)
+                return False
+        if node.bl_idname in bl_idname_set:
             return True
 
     return False

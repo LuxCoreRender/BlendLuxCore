@@ -19,7 +19,6 @@ class ExportedData:
 
 class ExportedObject(ExportedData):
     def __init__(self, lux_name_base, mesh_definitions, mat_names, transform, visible_to_camera, obj_id=-1):
-        self.lux_name_base = lux_name_base
         self.transform = transform
         self.parts = []
         self.visible_to_camera = visible_to_camera

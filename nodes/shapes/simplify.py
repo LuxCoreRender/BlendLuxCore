@@ -6,6 +6,7 @@ from ...utils import node as utils_node
 
 class LuxCoreNodeShapeSimplify(bpy.types.Node, LuxCoreNodeShape):
     bl_label = "Simplify"
+    bl_width_default = 150
 
     target: FloatProperty(name="Target", default=25, min=0, max=100, subtype="PERCENTAGE",
                           update=utils_node.force_viewport_mesh_update)
