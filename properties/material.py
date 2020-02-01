@@ -39,7 +39,7 @@ class LuxCoreMaterialProps(PropertyGroup):
     def update_use_cycles_nodes(self, context):
         bpy.ops.luxcore.material_show_nodetree()
 
-    use_cycles_nodes: BoolProperty(name="Use Cycles nodes", default=False, update=update_use_cycles_nodes,
+    use_cycles_nodes: BoolProperty(name="Use Cycles Nodes", default=False, update=update_use_cycles_nodes,
                                    description="Use the Cycles nodes of this material instead of the LuxCore node tree "
                                                "(WARNING: This option is not fully implemented yet, only very few nodes work)")
 

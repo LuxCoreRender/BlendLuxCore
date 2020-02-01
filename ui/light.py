@@ -4,7 +4,7 @@ from . import icons
 from bpy.types import Panel
 from ..utils import ui as utils_ui
 
-# TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
+
 class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light"
@@ -35,8 +35,8 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
         row = layout.row(align=True)
         row.prop(light, "type", expand=True)
-        # TODO 2.8 enable this once the exporter code works
-        # layout.prop(light.luxcore, "use_cycles_settings")
+
+        layout.prop(light.luxcore, "use_cycles_settings")
 
         if context.light.luxcore.use_cycles_settings:
             self.draw_cycles_settings(context)
@@ -44,7 +44,45 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             self.draw_luxcore_settings(context)
 
     def draw_cycles_settings(self, context):
-        ...
+        layout = self.layout
+        light = context.light
+        is_area_light = light.type == "AREA"
+        is_portal = is_area_light and light.cycles.is_portal
+
+        layout.use_property_decorate = False
+        layout.use_property_split = True
+
+        col = layout.column()
+
+        col.prop(light, "color")
+        col.prop(light, "energy")
+        col.separator()
+
+        if light.type in {"POINT", "SPOT"}:
+            col.prop(light, "shadow_soft_size", text="Size")
+        elif light.type == "SUN":
+            col.prop(light, "angle")
+        elif is_area_light:
+            col.prop(light, "shape", text="Shape")
+            sub = col.column(align=True)
+
+            if light.shape in {"SQUARE", "DISK"}:
+                sub.prop(light, "size")
+            elif light.shape in {"RECTANGLE", "ELLIPSE"}:
+                sub.prop(light, "size", text="Size X")
+                sub.prop(light, "size_y", text="Y")
+
+        # Warnings and info regarding LuxCore use
+        if is_area_light and light.shape not in {"SQUARE", "RECTANGLE"}:
+            layout.label(text="Unsupported shape", icon=icons.WARNING)
+
+        if not is_portal and not light.cycles.cast_shadow:
+            layout.label(text="Cast Shadow is disabled, but unsupported by LuxCore", icon=icons.WARNING)
+
+        if is_portal:
+            col = layout.column(align=True)
+            col.label(text="LuxCore doesn't have portal lights,", icon=icons.INFO)
+            col.label(text="use environment light cache instead")
 
     def draw_luxcore_settings(self, context):
         layout = self.layout
@@ -320,7 +358,6 @@ class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
 def compatible_panels():
      panels = [
         "DATA_PT_context_light",
-         "DATA_PT_EEVEE_light",
      ]
      types = bpy.types
      return [getattr(types, p) for p in panels if hasattr(types, p)]
