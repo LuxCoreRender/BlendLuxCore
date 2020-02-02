@@ -140,10 +140,10 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                     layout.operator("luxcore.attach_sun_to_sky", icon=icons.WORLD)
             elif light.luxcore.light_type == "distant":
                 layout.prop(light.luxcore, "theta")
+                layout.prop(light.luxcore, "normalize_distant")
             elif light.luxcore.light_type == "hemi":
                 self.draw_image_controls(context)
                 layout.prop(light.luxcore, "sampleupperhemisphereonly")
-
 
         elif light.type == "SPOT":
             self.draw_image_controls(context)

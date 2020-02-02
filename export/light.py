@@ -213,6 +213,9 @@ def convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform,
             definitions["direction"] = distant_dir
             definitions["theta"] = light.luxcore.theta
             definitions["color"] = list(light.luxcore.rgb_gain)
+            if light.luxcore.normalize_distant:
+                normalization_factor = _get_distant_light_normalization_factor(light.luxcore.theta)
+                definitions["gain"] = [normalization_factor * x for x in definitions["gain"]]
 
     elif light.type == "SPOT":
         coneangle = math.degrees(light.spot_size) / 2

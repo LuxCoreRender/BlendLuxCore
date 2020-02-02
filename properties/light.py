@@ -71,6 +71,7 @@ VIS_INDIRECT_SPECULAR_DESC = VIS_INDIRECT_BASE.format(type="specular") + " (e.g.
 
 RELSIZE_DESC = "1.0 is the apparent size of the sun when observed from earth (at mean distance of 149,600,000 km)"
 THETA_DESC = "Half angle in degrees. Larger values make the light source appear larger and the shadows softer"
+NORMALIZE_DISTANT_DESC = "Make the brightness received at surfaces independent from the size of this light"
 
 
 class LuxCoreLightProps(bpy.types.PropertyGroup):
@@ -161,6 +162,7 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # distant
     theta: FloatProperty(name="Size", default=10, min=0, soft_min=0.05,
                           description=THETA_DESC)
+    normalize_distant: BoolProperty(name="Normalize", default=True, description=NORMALIZE_DISTANT_DESC)
 
     # laser
     # Note: radius is set with default Blender properties (area light size)
