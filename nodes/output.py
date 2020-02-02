@@ -85,10 +85,9 @@ class LuxCoreNodeOutput(LuxCoreNode):
         self["active"] = active
 
         # Update color
-        # theme = utils.get_theme(bpy.context)
-        # # We can only set a tuple with 3 elements, not 4
-        # color = theme.node_editor.node_backdrop[:3]
-        color = [0.3] * 3
+        theme = utils.get_theme(bpy.context)
+        # We can only set a tuple with 3 elements, not 4
+        color = theme.node_editor.node_backdrop[:3]
 
         if self["active"]:
             # Like the theme color, but a bit lighter and greener
