@@ -40,6 +40,7 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
         return pyluxcore.Properties(), None
 
 
+# TODO: warnings, similar to those in the cycles section in ui/light.py
 def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
                             luxcore_name, scene, prefix, definitions):
     light = obj.data
@@ -378,6 +379,76 @@ def _get_area_obj_name(luxcore_name):
     return luxcore_name + str(fake_material_index)
 
 
+def _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name, luxcore_scene,
+                              mat_name, visible_to_camera):
+    light = obj.data
+    transform_matrix = calc_area_light_transformation(light, transform)
+    if light.shape not in {"SQUARE", "RECTANGLE"}:
+        LuxCoreErrorLog.add_warning("Unsupported area light shape: " + light.shape.title(), obj_name=obj.name)
+
+    if transform_matrix.determinant() == 0:
+        # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)
+        # This happens if the light size is set to 0
+        raise Exception("Area light has size 0 (can not be exported)")
+
+    transform_list = utils.matrix_to_list(transform_matrix)
+    # Only bake the transform into the mesh for final renders (disables instancing which
+    # is needed for viewport render so we can move the light object)
+
+    # Instancing just means that we transform the object instead of the mesh
+    if use_instancing:
+        obj_transform = transform_list
+        mesh_transform = None
+    else:
+        obj_transform = None
+        mesh_transform = transform_list
+
+    shape_name = luxcore_name
+    if not luxcore_scene.IsMeshDefined(shape_name):
+        vertices = [
+            (1, 1, 0),
+            (1, -1, 0),
+            (-1, -1, 0),
+            (-1, 1, 0),
+        ]
+        faces = [
+            (0, 1, 2),
+            (2, 3, 0),
+        ]
+        normals = [
+            (0, 0, -1),
+            (0, 0, -1),
+            (0, 0, -1),
+            (0, 0, -1),
+        ]
+        uvs = [
+            (1, 1),
+            (1, 0),
+            (0, 0),
+            (0, 1),
+        ]
+        luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, uvs, None, None, mesh_transform)
+
+    fake_material_index = 0
+    # The material index after the luxcore_name is expected by ExportedObject
+    obj_prefix = "scene.objects." + _get_area_obj_name(luxcore_name) + "."
+    obj_definitions = {
+        "material": mat_name,
+        "shape": shape_name,
+        "camerainvisible": not visible_to_camera,
+    }
+    if obj_transform:
+        # Use instancing for viewport render so we can interactively move the light
+        obj_definitions["transformation"] = obj_transform
+
+    obj_props = utils.create_props(obj_prefix, obj_definitions)
+
+    mesh_definition = [luxcore_name, fake_material_index]
+    exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"],
+                                  transform.copy(), visible_to_camera)
+    return obj_props, exported_obj
+
+
 def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, luxcore_scene,
                         gain, importance, luxcore_name, transform):
     """
@@ -447,73 +518,10 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     props.Set(mat_props)
 
     # LuxCore object
-
-    # Copy transformation of area light object
-    transform_matrix = calc_area_light_transformation(light, transform)
-    if light.shape not in {"SQUARE", "RECTANGLE"}:
-        LuxCoreErrorLog.add_warning("Unsupported area light shape: " + light.shape.title(), obj_name=obj.name)
-
-    if transform_matrix.determinant() == 0:
-        # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)
-        # This happens if the light size is set to 0
-        raise Exception("Area light has size 0 (can not be exported)")
-
-    transform_list = utils.matrix_to_list(transform_matrix)
-    # Only bake the transform into the mesh for final renders (disables instancing which
-    # is needed for viewport render so we can move the light object)
-
-    # Instancing just means that we transform the object instead of the mesh
-    if utils.use_instancing(obj, scene, is_viewport_render):
-        obj_transform = transform_list
-        mesh_transform = None
-    else:
-        obj_transform = None
-        mesh_transform = transform_list
-
-    shape_name = luxcore_name
-    if not luxcore_scene.IsMeshDefined(shape_name):
-        vertices = [
-            (1, 1, 0),
-            (1, -1, 0),
-            (-1, -1, 0),
-            (-1, 1, 0),
-        ]
-        faces = [
-            (0, 1, 2),
-            (2, 3, 0),
-        ]
-        normals = [
-            (0, 0, -1),
-            (0, 0, -1),
-            (0, 0, -1),
-            (0, 0, -1),
-        ]
-        uvs = [
-            (1, 1),
-            (1, 0),
-            (0, 0),
-            (0, 1),
-        ]
-        luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, uvs, None, None, mesh_transform)
-
-    fake_material_index = 0
-    # The material index after the luxcore_name is expected by ExportedObject
-    obj_prefix = "scene.objects." + _get_area_obj_name(luxcore_name) + "."
-    obj_definitions = {
-        "material": mat_name,
-        "shape": shape_name,
-        "camerainvisible": not obj.luxcore.visible_to_camera,
-    }
-    if obj_transform:
-        # Use instancing for viewport render so we can interactively move the light
-        obj_definitions["transformation"] = obj_transform
-
-    obj_props = utils.create_props(obj_prefix, obj_definitions)
+    use_instancing = utils.use_instancing(obj, scene, is_viewport_render)
+    obj_props, exported_obj = _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name,
+                                                        luxcore_scene, mat_name, obj.luxcore.visible_to_camera)
     props.Set(obj_props)
-
-    mesh_definition = [luxcore_name, fake_material_index]
-    exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"],
-                                  transform.copy(), obj.luxcore.visible_to_camera)
     return props, exported_obj
 
 
