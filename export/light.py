@@ -420,27 +420,20 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
             mat_definitions["emission.gain"] = [1, 1, 1]
 
     node_tree = light.luxcore.node_tree
-    if node_tree is not None:
-        try:
-            tex_props = pyluxcore.Properties()
-            tex_name = luxcore_name + "_AREA_LIGHT_TEX"
+    if node_tree:
+        tex_props = pyluxcore.Properties()
+        tex_name = luxcore_name + "_AREA_LIGHT_TEX"
 
-            active_output = get_active_output(node_tree)
+        active_output = get_active_output(node_tree)
 
-            if active_output is None:
-                msg = 'Node tree "%s": Missing active output node' % node_tree.name
-                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-
+        if active_output is None:
+            msg = 'Node tree "%s": Missing active output node' % node_tree.name
+            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+        else:
             # Now export the texture node tree, starting at the output node
             active_output.export(exporter, depsgraph, tex_props, tex_name)
             mat_definitions["emission"] = tex_name
             props.Set(tex_props)
-
-        except Exception as error:
-            msg = 'light "%s": %s' % (obj.name, error)
-            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-            import traceback
-            traceback.print_exc()
 
     # IES data
     if light.luxcore.ies.use:
