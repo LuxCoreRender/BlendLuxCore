@@ -61,11 +61,10 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
         if light.shadow_soft_size > 0:
             definitions["radius"] = light.shadow_soft_size
     elif light.type == "SUN":
-        # TODO counteract brightness change when varying theta/half angle
         sun_dir = _calc_sun_dir(transform)
         distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
         definitions["direction"] = distant_dir
-        definitions["color"] = list(light.luxcore.rgb_gain)
+        definitions["color"] = list(light.color)
 
         half_angle = math.degrees(light.angle) / 2
 
@@ -74,6 +73,7 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
         else:
             definitions["type"] = "distant"
             definitions["theta"] = half_angle
+            definitions["gain"] = [light.energy * _get_distant_light_normalization_factor(half_angle)] * 3
     elif light.type == "SPOT":
         definitions["type"] = "spot"
         # TODO Cycles has a different falloff, probably needs to be implemented in LuxCore
@@ -341,6 +341,12 @@ def convert_world(exporter, world, scene, is_viewport_render):
         import traceback
         traceback.print_exc()
         return pyluxcore.Properties()
+
+
+def _get_distant_light_normalization_factor(theta):
+    epsilon = 1e-9
+    cos_theta_max = min(math.cos(math.radians(theta)), 1 - epsilon)
+    return 1 / (2 * math.pi * (1 - cos_theta_max))
 
 
 def _calc_sun_dir(transform):
