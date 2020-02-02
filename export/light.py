@@ -91,8 +91,34 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
         #  (found by eyeballing).
         definitions["gain"] = [light.energy * 0.07] * 3
     elif light.type == "AREA":
-        # TODO
-        raise NotImplementedError("Area light not implemented yet")
+        props = pyluxcore.Properties()
+
+        # Material
+        mat_name = luxcore_name + "_AREA_LIGHT_MAT"
+        mat_prefix = "scene.materials." + mat_name + "."
+        mat_definitions = {
+            "type": "matte",
+            # Black base material to avoid any bounce light from the mesh
+            "kd": [0, 0, 0],
+            "emission": list(light.color),
+            # TODO: counteract light size changes
+            "emission.gain": [light.energy] * 3,
+            "emission.power": 0.0,
+            "emission.efficency": 0.0,
+            "emission.normalizebycolor": False,
+            "transparency.shadow": [1, 1, 1],
+        }
+
+        mat_props = utils.create_props(mat_prefix, mat_definitions)
+        props.Set(mat_props)
+
+        # Object
+        use_instancing = utils.use_instancing(obj, scene, is_viewport_render)
+        visible_to_camera = False
+        obj_props, exported_obj = _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name,
+                                                            luxcore_scene, mat_name, visible_to_camera)
+        props.Set(obj_props)
+        return props, exported_obj
     else:
         # Can only happen if Blender changes its light types
         raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
