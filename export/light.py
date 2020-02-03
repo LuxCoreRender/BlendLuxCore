@@ -24,14 +24,13 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
         luxcore_scene.DeleteLight(luxcore_name)
 
         prefix = "scene.lights." + luxcore_name + "."
-        definitions = {}
 
         if obj.data.luxcore.use_cycles_settings:
-            return convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
-                                           luxcore_name, scene, prefix, definitions)
+            return _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
+                                         luxcore_name, scene, prefix)
         else:
-            return convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
-                                            luxcore_name, scene, prefix, definitions)
+            return _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
+                                          luxcore_name, scene, prefix)
     except Exception as error:
         msg = 'Light "%s": %s' % (obj.name, error)
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
@@ -41,8 +40,9 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
 
 
 # TODO: warnings, similar to those in the cycles section in ui/light.py
-def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
-                            luxcore_name, scene, prefix, definitions):
+def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
+                          luxcore_name, scene, prefix):
+    definitions = {}
     light = obj.data
 
     if light.use_nodes:
@@ -136,8 +136,9 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
     return props, ExportedLight(luxcore_name)
 
 
-def convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
-                             luxcore_name, scene, prefix, definitions):
+def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
+                           luxcore_name, scene, prefix):
+    definitions = {}
     light = obj.data
     sun_dir = _calc_sun_dir(transform)
 
@@ -299,60 +300,90 @@ def convert_world(exporter, world, scene, is_viewport_render):
         assert isinstance(world, bpy.types.World)
         luxcore_name = WORLD_BACKGROUND_LIGHT_NAME
         prefix = "scene.lights." + luxcore_name + "."
-        definitions = {}
 
-        gain, importance, lightgroup_id = _convert_common_props(exporter, scene, world)
-        definitions["gain"] = apply_exposure(gain, world.luxcore.exposure)
-        definitions["importance"] = importance
-        definitions["id"] = lightgroup_id
-
-        light_type = world.luxcore.light
-        if light_type == "sky2":
-            definitions["type"] = "sky2"
-            definitions["ground.enable"] = world.luxcore.ground_enable
-            definitions["ground.color"] = list(world.luxcore.ground_color)
-            definitions["groundalbedo"] = list(world.luxcore.groundalbedo)
-
-            gain = apply_exposure(gain, world.luxcore.exposure)
-            if world.luxcore.sun and world.luxcore.sun.data:
-                # Use sun turbidity and direction so the user does not have to keep two values in sync
-                definitions["turbidity"] = world.luxcore.sun.data.luxcore.turbidity
-                definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
-                if world.luxcore.use_sun_gain_for_sky:
-                    sun = world.luxcore.sun.data
-                    gain, importance, lightgroup_id = _convert_common_props(exporter, scene, sun)
-                    gain = apply_exposure(gain, sun.luxcore.exposure)
-            else:
-                # Use world turbidity
-                definitions["turbidity"] = world.luxcore.turbidity
-
-            definitions["gain"] = gain
-
-        elif light_type == "infinite":
-            if world.luxcore.image:
-                transformation = Matrix.Rotation(world.luxcore.rotation, 4, "Z")
-                _convert_infinite(definitions, world, scene, transformation)
-            else:
-                # Fallback if no image is set
-                definitions["type"] = "constantinfinite"
-                definitions["color"] = list(world.luxcore.rgb_gain)
+        if world.luxcore.use_cycles_settings:
+            definitions = _convert_cycles_world(exporter, scene, world, is_viewport_render)
         else:
-            definitions["type"] = "constantinfinite"
-            definitions["color"] = list(world.luxcore.rgb_gain)
+            definitions = _convert_luxcore_world(exporter, scene, world, is_viewport_render)
 
-
-        _indirect_light_visibility(definitions, world)
-
-        if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
-            _envlightcache(definitions, world, scene, is_viewport_render)
-
-        return utils.create_props(prefix, definitions)
+        if definitions:
+            return utils.create_props(prefix, definitions)
+        else:
+            return None
     except Exception as error:
         msg = 'World "%s": %s' % (world.name, error)
         LuxCoreErrorLog.add_warning(msg)
         import traceback
         traceback.print_exc()
-        return pyluxcore.Properties()
+        return None
+
+
+def _convert_cycles_world(exporter, scene, world, is_viewport_render):
+    definitions = {
+        "importance": world.luxcore.importance,
+    }
+
+    if not world.use_nodes:
+        color = list(world.color)
+        if color == [0, 0, 0]:
+            return None
+        definitions["type"] = "constantinfinite"
+        definitions["color"] = color
+
+    return definitions
+
+
+def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
+    if world.luxcore.light == "none":
+        return None
+
+    definitions = {}
+
+    gain, importance, lightgroup_id = _convert_common_props(exporter, scene, world)
+    definitions["gain"] = apply_exposure(gain, world.luxcore.exposure)
+    definitions["importance"] = importance
+    definitions["id"] = lightgroup_id
+
+    light_type = world.luxcore.light
+    if light_type == "sky2":
+        definitions["type"] = "sky2"
+        definitions["ground.enable"] = world.luxcore.ground_enable
+        definitions["ground.color"] = list(world.luxcore.ground_color)
+        definitions["groundalbedo"] = list(world.luxcore.groundalbedo)
+
+        gain = apply_exposure(gain, world.luxcore.exposure)
+        if world.luxcore.sun and world.luxcore.sun.data:
+            # Use sun turbidity and direction so the user does not have to keep two values in sync
+            definitions["turbidity"] = world.luxcore.sun.data.luxcore.turbidity
+            definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
+            if world.luxcore.use_sun_gain_for_sky:
+                sun = world.luxcore.sun.data
+                gain, importance, lightgroup_id = _convert_common_props(exporter, scene, sun)
+                gain = apply_exposure(gain, sun.luxcore.exposure)
+        else:
+            # Use world turbidity
+            definitions["turbidity"] = world.luxcore.turbidity
+
+        definitions["gain"] = gain
+
+    elif light_type == "infinite":
+        if world.luxcore.image:
+            transformation = Matrix.Rotation(world.luxcore.rotation, 4, "Z")
+            _convert_infinite(definitions, world, scene, transformation)
+        else:
+            # Fallback if no image is set
+            definitions["type"] = "constantinfinite"
+            definitions["color"] = list(world.luxcore.rgb_gain)
+    else:
+        definitions["type"] = "constantinfinite"
+        definitions["color"] = list(world.luxcore.rgb_gain)
+
+    _indirect_light_visibility(definitions, world)
+
+    if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
+        _envlightcache(definitions, world, scene, is_viewport_render)
+
+    return definitions
 
 
 def _get_distant_light_normalization_factor(theta):

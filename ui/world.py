@@ -1,8 +1,9 @@
+import bpy
 from bl_ui.properties_world import WorldButtonsPanel
 from bpy.types import Panel
-import bpy
-from . import icons
+from cycles.ui import panel_node_draw
 
+from . import icons
 from ..utils import ui as utils_ui
 from .light import draw_vismap_ui
 
@@ -21,7 +22,7 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         return context.world and engine == "LUXCORE"
 
     def draw(self, context):
-        # self.layout.prop(context.world.luxcore, "use_cycles_settings")
+        self.layout.prop(context.world.luxcore, "use_cycles_settings")
 
         if context.world.luxcore.use_cycles_settings:
             self.draw_cycles_settings(context)
@@ -29,7 +30,11 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
             self.draw_luxcore_settings(context)
 
     def draw_cycles_settings(self, context):
-        ...
+        layout = self.layout
+        world = context.world
+
+        if not panel_node_draw(layout, world, "OUTPUT_WORLD", "Surface"):
+            layout.prop(world, "color")
 
     def draw_luxcore_settings(self, context):
         layout = self.layout
@@ -79,7 +84,9 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "sky2"
+        world = context.world
+        return (world and not world.luxcore.use_cycles_settings
+                and engine == "LUXCORE" and world.luxcore.light == "sky2")
 
     def draw(self, context):
         layout = self.layout
@@ -120,7 +127,9 @@ class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "infinite"
+        world = context.world
+        return (world and not world.luxcore.use_cycles_settings
+                and engine == "LUXCORE" and world.luxcore.light == "infinite")
 
     def draw(self, context):
         layout = self.layout
@@ -201,8 +210,9 @@ class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        visible = context.world and context.world.luxcore.light != "none"
-        return engine == "LUXCORE" and visible
+        world = context.world
+        return (engine == "LUXCORE" and world and world.luxcore.light != "none"
+                and not world.luxcore.use_cycles_settings)
 
     def draw(self, context):
         layout = self.layout
