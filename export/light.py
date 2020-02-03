@@ -87,11 +87,18 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
         spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
         definitions["transformation"] = utils.matrix_to_list(transform @ spot_fix)
 
-        # TODO For some reason we have to use this correction factor for the gain
-        #  (found by eyeballing).
+        # Multiplier to reach similar brightness as Cycles, found by eyeballing.
         definitions["gain"] = [light.energy * 0.07] * 3
     elif light.type == "AREA":
         props = pyluxcore.Properties()
+
+        # Calculate gain similar to Cycles (scaling with light surface area)
+        transform_matrix = calc_area_light_transformation(light, transform)
+        scale = transform_matrix.to_scale()
+        gain = light.energy / (scale.x * scale.y)
+        # Multiplier to reach similar brightness as Cycles.
+        # Found through render comparisons, not super precise.
+        gain *= 0.06504
 
         # Material
         mat_name = luxcore_name + "_AREA_LIGHT_MAT"
@@ -101,8 +108,7 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
             # Black base material to avoid any bounce light from the mesh
             "kd": [0, 0, 0],
             "emission": list(light.color),
-            # TODO: counteract light size changes
-            "emission.gain": [light.energy] * 3,
+            "emission.gain": [gain] * 3,
             "emission.power": 0.0,
             "emission.efficency": 0.0,
             "emission.normalizebycolor": False,
