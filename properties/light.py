@@ -6,6 +6,7 @@ from bpy.props import (
 import math
 from .ies import LuxCoreIESProps
 from .image_user import LuxCoreImageUser
+from .config import ENVLIGHT_CACHE_DESC
 
 
 RGB_GAIN_DESC = (
@@ -191,8 +192,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
         update=update_sun_visibility_indirect_specular)
 
     # sky2, infinite, constantinfinite
-    # TODO description
-    use_envlight_cache: BoolProperty(name="Use Env. Light Cache", default=True)
+    use_envlight_cache: BoolProperty(name="Use Env. Light Cache", default=True,
+                                     description=ENVLIGHT_CACHE_DESC)
 
     # area
     # We use unit="ROTATION" because angles are radians, so conversion is necessary for the UI

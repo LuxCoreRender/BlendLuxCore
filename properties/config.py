@@ -115,6 +115,11 @@ HYBRID_BACKFORWARD_GLOSSINESS_DESC = (
     "otherwise it is sampled from the camera (normal path tracing)"
 )
 
+ENVLIGHT_CACHE_DESC = (
+    "Compute a cache with multiple visibility maps for the scene (works like "
+    "automatic portals). Note that it might consume a lot of RAM"
+)
+
 # Used in enum callback
 film_opencl_device_items = []
 
@@ -301,9 +306,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
 
 
 class LuxCoreConfigEnvLightCache(PropertyGroup):
-    enabled: BoolProperty(name="Enabled", default=False,
-                          description="Compute a cache with multiple visibility maps for the scene (works like "
-                                      "automatic portals). Note that it might consume a lot of RAM")
+    enabled: BoolProperty(name="Enabled", default=False, description=ENVLIGHT_CACHE_DESC)
     # TODO descriptions
     map_width: IntProperty(name="Map Width", default=256, min=16, soft_max=256)
     samples: IntProperty(name="Samples", default=1, min=1, soft_max=32)
