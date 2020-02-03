@@ -48,11 +48,13 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
     if light.use_nodes:
         LuxCoreErrorLog.add_warning("Cycles light node trees not supported yet", obj.name)
 
-    definitions["gain"] = [light.energy] * 3
-    definitions["efficency"] = 0.0
-    definitions["power"] = 0.0
-    definitions["normalizebycolor"] = False  # TODO not sure about this
-    definitions["color"] = list(light.color)
+    if light.type != "AREA":
+        definitions["gain"] = [light.energy] * 3
+        definitions["efficency"] = 0.0
+        definitions["power"] = 0.0
+        definitions["normalizebycolor"] = False
+        definitions["color"] = list(light.color)
+        definitions["importance"] = light.luxcore.importance
 
     if light.type == "POINT":
         definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
@@ -112,6 +114,7 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
             "emission.power": 0.0,
             "emission.efficency": 0.0,
             "emission.normalizebycolor": False,
+            "emission.importance": light.luxcore.importance,
             "transparency.shadow": [1, 1, 1],
         }
 
