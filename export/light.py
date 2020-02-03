@@ -6,6 +6,7 @@ from .. import utils
 from .caches.exported_data import ExportedObject, ExportedLight
 from .image import ImageExporter
 from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import node as utils_node
 from ..nodes.output import get_active_output
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
@@ -317,19 +318,106 @@ def convert_world(exporter, world, scene, is_viewport_render):
         traceback.print_exc()
         return None
 
+def _define_constantinfinite(definitions, color):
+    definitions["type"] = "constantinfinite"
+    definitions["color"] = color
+    return color != [0, 0, 0]
 
 def _convert_cycles_world(exporter, scene, world, is_viewport_render):
     definitions = {
         "importance": world.luxcore.importance,
     }
 
-    if not world.use_nodes:
-        color = list(world.color)
-        if color == [0, 0, 0]:
-            return None
-        definitions["type"] = "constantinfinite"
-        definitions["color"] = color
+    node_tree = world.node_tree
 
+    if not world.use_nodes or not node_tree:
+        if not _define_constantinfinite(definitions, list(world.color)):
+            return None
+
+    output_node = node_tree.get_output_node("CYCLES")
+    if not output_node:
+        return None
+
+    surface_node = utils_node.get_linked_node(output_node.inputs["Surface"])
+    if not surface_node:
+        return None
+
+    if surface_node.bl_idname == "ShaderNodeBackground":
+        gain = surface_node.inputs["Strength"].default_value
+
+        color_socket = surface_node.inputs["Color"]
+        color_node = utils_node.get_linked_node(color_socket)
+
+        if color_node:
+            if color_node.bl_idname == "ShaderNodeRGB":
+                color = list(color_node.outputs[0].default_value)[:3]
+                if not _define_constantinfinite(definitions, color):
+                    return None
+            elif color_node.bl_idname == "ShaderNodeTexEnvironment":
+                image = color_node.image
+                if not image:
+                    image_missing = True
+                else:
+                    try:
+                        filepath = ImageExporter.export_cycles_node_reader(image)
+                        image_missing = False
+                        definitions["type"] = "infinite"
+                        definitions["file"] = filepath
+                        definitions["gamma"] = 2.2 if image.colorspace_settings.name == "sRGB" else 1
+
+                        # Transformation
+                        mapping_node = utils_node.get_linked_node(color_node.inputs["Vector"])
+                        if mapping_node:
+                            # TODO fix transformation
+                            raise NotImplementedError("Mapping node not supported yet")
+
+                            # tex_loc = Matrix.Translation(mapping_node.inputs["Location"].default_value)
+                            #
+                            # tex_sca = Matrix()
+                            # scale = mapping_node.inputs["Scale"].default_value
+                            # tex_sca[0][0] = scale.x
+                            # tex_sca[1][1] = scale.y
+                            # tex_sca[2][2] = scale.z
+                            #
+                            # # Prevent "singular matrix in matrixinvert" error (happens if a scale axis equals 0)
+                            # for i in range(3):
+                            #     if tex_sca[i][i] == 0:
+                            #         tex_sca[i][i] = 0.0000000001
+                            #
+                            # rotation = mapping_node.inputs["Rotation"].default_value
+                            # tex_rot0 = Matrix.Rotation(rotation.x, 4, "X")
+                            # tex_rot1 = Matrix.Rotation(rotation.y, 4, "Y")
+                            # tex_rot2 = Matrix.Rotation(rotation.z, 4, "Z")
+                            # tex_rot = tex_rot0 @ tex_rot1 @ tex_rot2
+                            #
+                            # transformation = tex_loc @ tex_rot @ tex_sca
+                        else:
+                            infinite_fix = Matrix.Scale(1.0, 4)
+                            infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
+                            transformation = infinite_fix @ Matrix.Identity(4).inverted()
+
+                        definitions["transformation"] = utils.matrix_to_list(transformation)
+                    except OSError as image_missing:
+                        LuxCoreErrorLog.add_warning("World: " + str(image_missing))
+                        image_missing = True
+
+                if image_missing:
+                    _define_constantinfinite(definitions, MISSING_IMAGE_COLOR)
+        else:
+            # No color node linked
+            definitions["type"] = "constantinfinite"
+            # Alpha not supported
+            color = list(color_socket.default_value)[:3]
+            if not _define_constantinfinite(definitions, color):
+                return None
+    else:
+        raise Exception("Unsupported node type:", surface_node.bl_idname)
+
+    if gain == 0:
+        return None
+
+    definitions["gain"] = [gain] * 3
+    print(definitions)
     return definitions
 
 
@@ -429,6 +517,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
 
     if transformation:
         infinite_fix = Matrix.Scale(1.0, 4)
+        # TODO one axis still not correct
         infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
         transformation = utils.matrix_to_list(infinite_fix @ transformation.inverted())
         definitions["transformation"] = transformation
