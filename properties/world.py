@@ -42,6 +42,8 @@ GROUND_COLOR_DESC = GROUND_ENABLE_DESC
 
 
 class LuxCoreWorldProps(bpy.types.PropertyGroup):
+    use_cycles_settings: BoolProperty(name="Use Cycles Settings", default=False)
+
     lights = [
         ("sky2", "Sky", "Hosek and Wilkie sky model", 0),
         ("infinite", "HDRI", "High dynamic range image", 1),
