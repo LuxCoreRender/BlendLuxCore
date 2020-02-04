@@ -35,8 +35,30 @@ EXPOSURE_DESCRIPTION = (
 )
 
 EFFICACY_DESCRIPTION = (
-    "Luminous efficacy in lumens per watt; setting 0 for both power "
-    "and efficacy bypasses this feature and uses only the light gain"
+    "Luminous efficacy in lumens per watt"
+)
+
+LUMEN_DESCRIPTION = (
+    "Luminous flux in lumens, assuming a maximum possible luminous efficacy of 683 lm/W.\n"
+    "Photometric unit, it should be normalized by Color Luminance.\n"
+    "Best for Point lights, using Lightbulb packages as reference"
+)
+
+CANDELA_DESCRIPTION = (
+    "Luminous intensity in candela (luminous power per unit solid angle).\n"
+    "Photometric unit, it should be normalized by Color Luminance.\n"
+    "Best for Spot lights to maintain brighness when changing Angle" 
+)
+
+NIT_DESCRIPTION = (
+    "Luminance in candela per square meter (also called Nit).\n"
+    "Photometric unit, it should be normalized by Color Luminance.\n"
+    "Best for Area Lights to maintain brighness when changing Size" 
+)
+
+LUX_DESCRIPTION = (
+    "Illuminance in Lux (luminous flux incident on a surface in lumen per square meter).\n"
+    "Photometric unit, it should be normalized by Color Luminance"
 )
 
 GAMMA_DESCRIPTION = (
@@ -141,11 +163,15 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
 
     # point, mappoint, spot, laser
     light_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
-        ("power", "Power", "Radiant flux in Watts")
+        ("power", "Power", "Radiant flux in Watts"),
+        ("lumen", "Lumen", "Luminous flux in Lumens"),
+        ("candela", "Candela", "Luminous intensity in Candelas")
     ]
     light_unit: EnumProperty(name="Unit", items=light_units, default="artistic")
     power: FloatProperty(name="Power", default=100, min=0, description=POWER_DESCRIPTION, unit='POWER')
     efficacy: FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
+    lumen: FloatProperty(name="Lumen", default=650, min=0, description=LUMEN_DESCRIPTION)
+    candela: FloatProperty(name="Candela", default=52, min=0, description=CANDELA_DESCRIPTION)
     normalizebycolor: BoolProperty(name="Normalize by Color Luminance", default=False, description=NORMALIZEBYCOLOR_DESCRIPTION)
 
     # mappoint

@@ -522,16 +522,34 @@ def apply_exposure(gain, exposure):
 def _define_brightness(light, definitions):
     definitions["color"] = list(light.luxcore.rgb_gain)
 
-    if light.luxcore.light_unit == "power":
-        definitions["efficency"] = light.luxcore.efficacy
-        definitions["power"] = light.luxcore.power
-        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+    if light.type == 'SPOT':
+        spot_size = light.spot_size
+    else:
+        spot_size = 360
 
+    if light.luxcore.light_unit in {"power","lumen","candela"}:
+        
         if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
             definitions["gain"] = [0, 0, 0]
         else:
             definitions["gain"] = [1, 1, 1]
+            
+        if light.luxcore.light_unit == "power":
+            definitions["efficency"] = light.luxcore.efficacy
+            definitions["power"] = light.luxcore.power
+            definitions["normalizebycolor"] = light.luxcore.normalizebycolor
 
+        elif light.luxcore.light_unit == "lumen":
+            definitions["efficency"] = 1.0
+            definitions["power"] = light.luxcore.lumen
+            definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+        
+        elif light.luxcore.light_unit == "candela":
+            definitions["gain"] = [1, 1, 1]
+            definitions["efficency"] = 1.0
+            definitions["power"] = (light.luxcore.candela * ( 2 * math.pi * (1 - math.cos(spot_size/2)) ))
+            definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+        
     else:
         definitions["efficency"] = 0.0
         definitions["power"] = 0.0

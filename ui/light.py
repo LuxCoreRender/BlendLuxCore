@@ -105,10 +105,22 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             col.prop(light.luxcore, "power")
             col.prop(light.luxcore, "efficacy")
             layout.prop(light.luxcore, "normalizebycolor")
-        else:
+            
+        if light.luxcore.light_unit == "lumen" and light.type in {"POINT", "SPOT", "AREA"}:
+            col = layout.column(align=True)
+            col.prop(light.luxcore, "lumen")
+            layout.prop(light.luxcore, "normalizebycolor")
+            
+        if light.luxcore.light_unit == "candela" and light.type in {"POINT", "SPOT", "AREA"}:
+            col = layout.column(align=True)
+            col.prop(light.luxcore, "candela")
+            layout.prop(light.luxcore, "normalizebycolor")
+            
+        if light.luxcore.light_unit == "artistic":
             col = layout.column(align=True)
             col.prop(light.luxcore, "gain")
             col.prop(light.luxcore, "exposure", slider=True)
+            
 
         col = layout.column(align=True)
         op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
