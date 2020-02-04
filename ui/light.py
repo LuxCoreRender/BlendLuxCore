@@ -52,7 +52,13 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_decorate = False
         layout.use_property_split = True
 
+        if is_portal:
+            col = layout.column(align=True)
+            col.label(text="LuxCore doesn't have portal lights,", icon=icons.INFO)
+            col.label(text="use environment light cache instead")
+
         col = layout.column()
+        col.active = not is_portal
 
         col.prop(light, "color")
         col.prop(light, "energy")
@@ -79,13 +85,8 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         if not is_portal and not light.cycles.cast_shadow:
             layout.label(text="Cast Shadow is disabled, but unsupported by LuxCore", icon=icons.WARNING)
 
-        if is_portal:
-            col = layout.column(align=True)
-            col.label(text="LuxCore doesn't have portal lights,", icon=icons.INFO)
-            col.label(text="use environment light cache instead")
-
         if light.type == "SPOT" and light.shadow_soft_size > 0:
-            layout.label(text="Size (soft shadows) not supported by LuxCore", icon=icons.WARNING)
+            layout.label(text="Size (soft shadows) not supported by LuxCore spotlights", icon=icons.WARNING)
 
     def draw_luxcore_settings(self, context):
         layout = self.layout

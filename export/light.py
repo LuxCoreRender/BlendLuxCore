@@ -40,7 +40,6 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
         return pyluxcore.Properties(), None
 
 
-# TODO: warnings, similar to those in the cycles section in ui/light.py
 def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
                           luxcore_name, scene, prefix):
     definitions = {}
@@ -78,6 +77,9 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
             definitions["theta"] = half_angle
             definitions["gain"] = [light.energy * _get_distant_light_normalization_factor(half_angle)] * 3
     elif light.type == "SPOT":
+        if light.shadow_soft_size > 0:
+            LuxCoreErrorLog.add_warning("Size (soft shadows) not supported by LuxCore spotlights", obj.name)
+
         definitions["type"] = "spot"
         # TODO Cycles has a different falloff, probably needs to be implemented in LuxCore
         definitions["coneangle"] = math.degrees(light.spot_size) / 2
@@ -93,6 +95,12 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
         # Multiplier to reach similar brightness as Cycles, found by eyeballing.
         definitions["gain"] = [light.energy * 0.07] * 3
     elif light.type == "AREA":
+        if light.cycles.is_portal:
+            return pyluxcore.Properties(), None
+
+        if light.shape not in {"SQUARE", "RECTANGLE"}:
+            LuxCoreErrorLog.add_warning("Unsupported area light shape: " + light.shape.title(), obj.name)
+
         props = pyluxcore.Properties()
 
         # Calculate gain similar to Cycles (scaling with light surface area)
@@ -132,6 +140,9 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
     else:
         # Can only happen if Blender changes its light types
         raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
+
+    if not light.cycles.cast_shadow:
+        LuxCoreErrorLog.add_warning("Cast Shadow is disabled, but unsupported by LuxCore", obj.name)
 
     props = utils.create_props(prefix, definitions)
     return props, ExportedLight(luxcore_name)
@@ -428,7 +439,6 @@ def _convert_cycles_world(exporter, scene, world, is_viewport_render):
         return None
 
     definitions["gain"] = [gain] * 3
-    print(definitions)
     return definitions
 
 
