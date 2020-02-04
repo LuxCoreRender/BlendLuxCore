@@ -6,6 +6,7 @@ from .. import utils
 from .caches.exported_data import ExportedObject, ExportedLight
 from .image import ImageExporter
 from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import node as utils_node
 from ..nodes.output import get_active_output
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
@@ -24,14 +25,13 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
         luxcore_scene.DeleteLight(luxcore_name)
 
         prefix = "scene.lights." + luxcore_name + "."
-        definitions = {}
 
         if obj.data.luxcore.use_cycles_settings:
-            return convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
-                                           luxcore_name, scene, prefix, definitions)
+            return _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
+                                         luxcore_name, scene, prefix)
         else:
-            return convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
-                                            luxcore_name, scene, prefix, definitions)
+            return _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
+                                          luxcore_name, scene, prefix)
     except Exception as error:
         msg = 'Light "%s": %s' % (obj.name, error)
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
@@ -40,18 +40,21 @@ def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, i
         return pyluxcore.Properties(), None
 
 
-def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
-                            luxcore_name, scene, prefix, definitions):
+def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
+                          luxcore_name, scene, prefix):
+    definitions = {}
     light = obj.data
 
     if light.use_nodes:
         LuxCoreErrorLog.add_warning("Cycles light node trees not supported yet", obj.name)
 
-    definitions["gain"] = [light.energy] * 3
-    definitions["efficency"] = 0.0
-    definitions["power"] = 0.0
-    definitions["normalizebycolor"] = False  # TODO not sure about this
-    definitions["color"] = list(light.color)
+    if light.type != "AREA":
+        definitions["gain"] = [light.energy] * 3
+        definitions["efficency"] = 0.0
+        definitions["power"] = 0.0
+        definitions["normalizebycolor"] = False
+        definitions["color"] = list(light.color)
+        definitions["importance"] = light.luxcore.importance
 
     if light.type == "POINT":
         definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
@@ -59,16 +62,95 @@ def convert_cycles_settings(exporter, obj, depsgraph, luxcore_scene, transform, 
 
         if light.shadow_soft_size > 0:
             definitions["radius"] = light.shadow_soft_size
+    elif light.type == "SUN":
+        sun_dir = _calc_sun_dir(transform)
+        distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
+        definitions["direction"] = distant_dir
+        definitions["color"] = list(light.color)
+
+        half_angle = math.degrees(light.angle) / 2
+
+        if half_angle < 0.05:
+            definitions["type"] = "sharpdistant"
+        else:
+            definitions["type"] = "distant"
+            definitions["theta"] = half_angle
+            definitions["gain"] = [light.energy * _get_distant_light_normalization_factor(half_angle)] * 3
+    elif light.type == "SPOT":
+        if light.shadow_soft_size > 0:
+            LuxCoreErrorLog.add_warning("Size (soft shadows) not supported by LuxCore spotlights", obj.name)
+
+        definitions["type"] = "spot"
+        # TODO Cycles has a different falloff, probably needs to be implemented in LuxCore
+        definitions["coneangle"] = math.degrees(light.spot_size) / 2
+        definitions["conedeltaangle"] = math.degrees(light.spot_size / 2 * light.spot_blend)
+
+        # Position and direction are set by transformation property
+        definitions["position"] = [0, 0, 0]
+        definitions["target"] = [0, 0, -1]
+
+        spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
+        definitions["transformation"] = utils.matrix_to_list(transform @ spot_fix)
+
+        # Multiplier to reach similar brightness as Cycles, found by eyeballing.
+        definitions["gain"] = [light.energy * 0.07] * 3
+    elif light.type == "AREA":
+        if light.cycles.is_portal:
+            return pyluxcore.Properties(), None
+
+        if light.shape not in {"SQUARE", "RECTANGLE"}:
+            LuxCoreErrorLog.add_warning("Unsupported area light shape: " + light.shape.title(), obj.name)
+
+        props = pyluxcore.Properties()
+
+        # Calculate gain similar to Cycles (scaling with light surface area)
+        transform_matrix = calc_area_light_transformation(light, transform)
+        scale = transform_matrix.to_scale()
+        gain = light.energy / (scale.x * scale.y)
+        # Multiplier to reach similar brightness as Cycles.
+        # Found through render comparisons, not super precise.
+        gain *= 0.06504
+
+        # Material
+        mat_name = luxcore_name + "_AREA_LIGHT_MAT"
+        mat_prefix = "scene.materials." + mat_name + "."
+        mat_definitions = {
+            "type": "matte",
+            # Black base material to avoid any bounce light from the mesh
+            "kd": [0, 0, 0],
+            "emission": list(light.color),
+            "emission.gain": [gain] * 3,
+            "emission.power": 0.0,
+            "emission.efficency": 0.0,
+            "emission.normalizebycolor": False,
+            "emission.importance": light.luxcore.importance,
+            "transparency.shadow": [1, 1, 1],
+        }
+
+        mat_props = utils.create_props(mat_prefix, mat_definitions)
+        props.Set(mat_props)
+
+        # Object
+        use_instancing = utils.use_instancing(obj, scene, is_viewport_render)
+        visible_to_camera = False
+        obj_props, exported_obj = _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name,
+                                                            luxcore_scene, mat_name, visible_to_camera)
+        props.Set(obj_props)
+        return props, exported_obj
     else:
         # Can only happen if Blender changes its light types
         raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
+
+    if not light.cycles.cast_shadow:
+        LuxCoreErrorLog.add_warning("Cast Shadow is disabled, but unsupported by LuxCore", obj.name)
 
     props = utils.create_props(prefix, definitions)
     return props, ExportedLight(luxcore_name)
 
 
-def convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
-                             luxcore_name, scene, prefix, definitions):
+def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, is_viewport_render,
+                           luxcore_name, scene, prefix):
+    definitions = {}
     light = obj.data
     sun_dir = _calc_sun_dir(transform)
 
@@ -153,6 +235,9 @@ def convert_luxcore_settings(exporter, obj, depsgraph, luxcore_scene, transform,
             definitions["direction"] = distant_dir
             definitions["theta"] = light.luxcore.theta
             definitions["color"] = list(light.luxcore.rgb_gain)
+            if light.luxcore.normalize_distant:
+                normalization_factor = _get_distant_light_normalization_factor(light.luxcore.theta)
+                definitions["gain"] = [normalization_factor * x for x in definitions["gain"]]
 
     elif light.type == "SPOT":
         coneangle = math.degrees(light.spot_size) / 2
@@ -227,60 +312,193 @@ def convert_world(exporter, world, scene, is_viewport_render):
         assert isinstance(world, bpy.types.World)
         luxcore_name = WORLD_BACKGROUND_LIGHT_NAME
         prefix = "scene.lights." + luxcore_name + "."
-        definitions = {}
 
-        gain, importance, lightgroup_id = _convert_common_props(exporter, scene, world)
-        definitions["gain"] = apply_exposure(gain, world.luxcore.exposure)
-        definitions["importance"] = importance
-        definitions["id"] = lightgroup_id
-
-        light_type = world.luxcore.light
-        if light_type == "sky2":
-            definitions["type"] = "sky2"
-            definitions["ground.enable"] = world.luxcore.ground_enable
-            definitions["ground.color"] = list(world.luxcore.ground_color)
-            definitions["groundalbedo"] = list(world.luxcore.groundalbedo)
-
-            gain = apply_exposure(gain, world.luxcore.exposure)
-            if world.luxcore.sun and world.luxcore.sun.data:
-                # Use sun turbidity and direction so the user does not have to keep two values in sync
-                definitions["turbidity"] = world.luxcore.sun.data.luxcore.turbidity
-                definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
-                if world.luxcore.use_sun_gain_for_sky:
-                    sun = world.luxcore.sun.data
-                    gain, importance, lightgroup_id = _convert_common_props(exporter, scene, sun)
-                    gain = apply_exposure(gain, sun.luxcore.exposure)
-            else:
-                # Use world turbidity
-                definitions["turbidity"] = world.luxcore.turbidity
-
-            definitions["gain"] = gain
-
-        elif light_type == "infinite":
-            if world.luxcore.image:
-                transformation = Matrix.Rotation(world.luxcore.rotation, 4, "Z")
-                _convert_infinite(definitions, world, scene, transformation)
-            else:
-                # Fallback if no image is set
-                definitions["type"] = "constantinfinite"
-                definitions["color"] = list(world.luxcore.rgb_gain)
+        if world.luxcore.use_cycles_settings:
+            definitions = _convert_cycles_world(exporter, scene, world, is_viewport_render)
         else:
-            definitions["type"] = "constantinfinite"
-            definitions["color"] = list(world.luxcore.rgb_gain)
+            definitions = _convert_luxcore_world(exporter, scene, world, is_viewport_render)
 
-
-        _indirect_light_visibility(definitions, world)
-
-        if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
-            _envlightcache(definitions, world, scene, is_viewport_render)
-
-        return utils.create_props(prefix, definitions)
+        if definitions:
+            return utils.create_props(prefix, definitions)
+        else:
+            return None
     except Exception as error:
         msg = 'World "%s": %s' % (world.name, error)
         LuxCoreErrorLog.add_warning(msg)
         import traceback
         traceback.print_exc()
-        return pyluxcore.Properties()
+        return None
+
+def _define_constantinfinite(definitions, color):
+    definitions["type"] = "constantinfinite"
+    definitions["color"] = color
+    return color != [0, 0, 0]
+
+def _convert_cycles_world(exporter, scene, world, is_viewport_render):
+    definitions = {
+        "importance": world.luxcore.importance,
+    }
+
+    node_tree = world.node_tree
+
+    if not world.use_nodes or not node_tree:
+        if not _define_constantinfinite(definitions, list(world.color)):
+            return None
+
+    output_node = node_tree.get_output_node("CYCLES")
+    if not output_node:
+        return None
+
+    surface_node = utils_node.get_linked_node(output_node.inputs["Surface"])
+    if not surface_node:
+        return None
+
+    if surface_node.bl_idname == "ShaderNodeBackground":
+        gain = surface_node.inputs["Strength"].default_value
+
+        color_socket = surface_node.inputs["Color"]
+        color_node = utils_node.get_linked_node(color_socket)
+
+        if color_node:
+            if color_node.bl_idname == "ShaderNodeRGB":
+                color = list(color_node.outputs[0].default_value)[:3]
+                if not _define_constantinfinite(definitions, color):
+                    return None
+            elif color_node.bl_idname == "ShaderNodeTexEnvironment":
+                image = color_node.image
+                if not image:
+                    image_missing = True
+                else:
+                    try:
+                        filepath = ImageExporter.export_cycles_node_reader(image)
+                        image_missing = False
+                        definitions["type"] = "infinite"
+                        definitions["file"] = filepath
+                        definitions["gamma"] = 2.2 if image.colorspace_settings.name == "sRGB" else 1
+
+                        # Transformation
+                        mapping_node = utils_node.get_linked_node(color_node.inputs["Vector"])
+                        if mapping_node:
+                            # TODO fix transformation
+                            raise NotImplementedError("Mapping node not supported yet")
+
+                            # tex_loc = Matrix.Translation(mapping_node.inputs["Location"].default_value)
+                            #
+                            # tex_sca = Matrix()
+                            # scale = mapping_node.inputs["Scale"].default_value
+                            # tex_sca[0][0] = scale.x
+                            # tex_sca[1][1] = scale.y
+                            # tex_sca[2][2] = scale.z
+                            #
+                            # # Prevent "singular matrix in matrixinvert" error (happens if a scale axis equals 0)
+                            # for i in range(3):
+                            #     if tex_sca[i][i] == 0:
+                            #         tex_sca[i][i] = 0.0000000001
+                            #
+                            # rotation = mapping_node.inputs["Rotation"].default_value
+                            # tex_rot0 = Matrix.Rotation(rotation.x, 4, "X")
+                            # tex_rot1 = Matrix.Rotation(rotation.y, 4, "Y")
+                            # tex_rot2 = Matrix.Rotation(rotation.z, 4, "Z")
+                            # tex_rot = tex_rot0 @ tex_rot1 @ tex_rot2
+                            #
+                            # transformation = tex_loc @ tex_rot @ tex_sca
+                        else:
+                            infinite_fix = Matrix.Scale(1.0, 4)
+                            infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
+                            transformation = infinite_fix @ Matrix.Identity(4).inverted()
+
+                        definitions["transformation"] = utils.matrix_to_list(transformation)
+                    except OSError as image_missing:
+                        LuxCoreErrorLog.add_warning("World: " + str(image_missing))
+                        image_missing = True
+
+                if image_missing:
+                    _define_constantinfinite(definitions, MISSING_IMAGE_COLOR)
+            elif color_node.bl_idname == "ShaderNodeTexSky":
+                if color_node.sky_type != "HOSEK_WILKIE":
+                    LuxCoreErrorLog.add_warning("World: Unsupported sky type: " + color_node.sky_type)
+
+                definitions["type"] = "sky2"
+                definitions["ground.enable"] = False
+                definitions["groundalbedo"] = [color_node.ground_albedo] * 3
+                definitions["turbidity"] = color_node.turbidity
+                definitions["dir"] = list(color_node.sun_direction)
+                # Found by eyeballing, not super precise
+                gain *= 0.000014
+        else:
+            # No color node linked
+            definitions["type"] = "constantinfinite"
+            # Alpha not supported
+            color = list(color_socket.default_value)[:3]
+            if not _define_constantinfinite(definitions, color):
+                return None
+    else:
+        raise Exception("Unsupported node type:", surface_node.bl_idname)
+
+    if gain == 0:
+        return None
+
+    definitions["gain"] = [gain] * 3
+    return definitions
+
+
+def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
+    if world.luxcore.light == "none":
+        return None
+
+    definitions = {}
+
+    gain, importance, lightgroup_id = _convert_common_props(exporter, scene, world)
+    definitions["gain"] = apply_exposure(gain, world.luxcore.exposure)
+    definitions["importance"] = importance
+    definitions["id"] = lightgroup_id
+
+    light_type = world.luxcore.light
+    if light_type == "sky2":
+        definitions["type"] = "sky2"
+        definitions["ground.enable"] = world.luxcore.ground_enable
+        definitions["ground.color"] = list(world.luxcore.ground_color)
+        definitions["groundalbedo"] = list(world.luxcore.groundalbedo)
+
+        gain = apply_exposure(gain, world.luxcore.exposure)
+        if world.luxcore.sun and world.luxcore.sun.data:
+            # Use sun turbidity and direction so the user does not have to keep two values in sync
+            definitions["turbidity"] = world.luxcore.sun.data.luxcore.turbidity
+            definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
+            if world.luxcore.use_sun_gain_for_sky:
+                sun = world.luxcore.sun.data
+                gain, importance, lightgroup_id = _convert_common_props(exporter, scene, sun)
+                gain = apply_exposure(gain, sun.luxcore.exposure)
+        else:
+            # Use world turbidity
+            definitions["turbidity"] = world.luxcore.turbidity
+
+        definitions["gain"] = gain
+
+    elif light_type == "infinite":
+        if world.luxcore.image:
+            transformation = Matrix.Rotation(world.luxcore.rotation, 4, "Z")
+            _convert_infinite(definitions, world, scene, transformation)
+        else:
+            # Fallback if no image is set
+            definitions["type"] = "constantinfinite"
+            definitions["color"] = list(world.luxcore.rgb_gain)
+    else:
+        definitions["type"] = "constantinfinite"
+        definitions["color"] = list(world.luxcore.rgb_gain)
+
+    _indirect_light_visibility(definitions, world)
+
+    if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
+        _envlightcache(definitions, world, scene, is_viewport_render)
+
+    return definitions
+
+
+def _get_distant_light_normalization_factor(theta):
+    epsilon = 1e-9
+    cos_theta_max = min(math.cos(math.radians(theta)), 1 - epsilon)
+    return 1 / (2 * math.pi * (1 - cos_theta_max))
 
 
 def _calc_sun_dir(transform):
@@ -320,6 +538,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
 
     if transformation:
         infinite_fix = Matrix.Scale(1.0, 4)
+        # TODO one axis still not correct
         infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
         transformation = utils.matrix_to_list(infinite_fix @ transformation.inverted())
         definitions["transformation"] = transformation
@@ -343,6 +562,76 @@ def _get_area_obj_name(luxcore_name):
     fake_material_index = 0
     # The material index after the luxcore_name is expected by ExportedObject
     return luxcore_name + str(fake_material_index)
+
+
+def _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name, luxcore_scene,
+                              mat_name, visible_to_camera):
+    light = obj.data
+    transform_matrix = calc_area_light_transformation(light, transform)
+    if light.shape not in {"SQUARE", "RECTANGLE"}:
+        LuxCoreErrorLog.add_warning("Unsupported area light shape: " + light.shape.title(), obj_name=obj.name)
+
+    if transform_matrix.determinant() == 0:
+        # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)
+        # This happens if the light size is set to 0
+        raise Exception("Area light has size 0 (can not be exported)")
+
+    transform_list = utils.matrix_to_list(transform_matrix)
+    # Only bake the transform into the mesh for final renders (disables instancing which
+    # is needed for viewport render so we can move the light object)
+
+    # Instancing just means that we transform the object instead of the mesh
+    if use_instancing:
+        obj_transform = transform_list
+        mesh_transform = None
+    else:
+        obj_transform = None
+        mesh_transform = transform_list
+
+    shape_name = luxcore_name
+    if not luxcore_scene.IsMeshDefined(shape_name):
+        vertices = [
+            (1, 1, 0),
+            (1, -1, 0),
+            (-1, -1, 0),
+            (-1, 1, 0),
+        ]
+        faces = [
+            (0, 1, 2),
+            (2, 3, 0),
+        ]
+        normals = [
+            (0, 0, -1),
+            (0, 0, -1),
+            (0, 0, -1),
+            (0, 0, -1),
+        ]
+        uvs = [
+            (1, 1),
+            (1, 0),
+            (0, 0),
+            (0, 1),
+        ]
+        luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, uvs, None, None, mesh_transform)
+
+    fake_material_index = 0
+    # The material index after the luxcore_name is expected by ExportedObject
+    obj_prefix = "scene.objects." + _get_area_obj_name(luxcore_name) + "."
+    obj_definitions = {
+        "material": mat_name,
+        "shape": shape_name,
+        "camerainvisible": not visible_to_camera,
+    }
+    if obj_transform:
+        # Use instancing for viewport render so we can interactively move the light
+        obj_definitions["transformation"] = obj_transform
+
+    obj_props = utils.create_props(obj_prefix, obj_definitions)
+
+    mesh_definition = [luxcore_name, fake_material_index]
+    exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"],
+                                  transform.copy(), visible_to_camera)
+    return obj_props, exported_obj
 
 
 def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, luxcore_scene,
@@ -387,27 +676,20 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
             mat_definitions["emission.gain"] = [1, 1, 1]
 
     node_tree = light.luxcore.node_tree
-    if node_tree is not None:
-        try:
-            tex_props = pyluxcore.Properties()
-            tex_name = luxcore_name + "_AREA_LIGHT_TEX"
+    if node_tree:
+        tex_props = pyluxcore.Properties()
+        tex_name = luxcore_name + "_AREA_LIGHT_TEX"
 
-            active_output = get_active_output(node_tree)
+        active_output = get_active_output(node_tree)
 
-            if active_output is None:
-                msg = 'Node tree "%s": Missing active output node' % node_tree.name
-                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-
+        if active_output is None:
+            msg = 'Node tree "%s": Missing active output node' % node_tree.name
+            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+        else:
             # Now export the texture node tree, starting at the output node
             active_output.export(exporter, depsgraph, tex_props, tex_name)
             mat_definitions["emission"] = tex_name
             props.Set(tex_props)
-
-        except Exception as error:
-            msg = 'light "%s": %s' % (obj.name, error)
-            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-            import traceback
-            traceback.print_exc()
 
     # IES data
     if light.luxcore.ies.use:
@@ -421,73 +703,10 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     props.Set(mat_props)
 
     # LuxCore object
-
-    # Copy transformation of area light object
-    transform_matrix = calc_area_light_transformation(light, transform)
-    if light.shape not in {"SQUARE", "RECTANGLE"}:
-        LuxCoreErrorLog.add_warning("Unsupported area light shape: " + light.shape.title(), obj_name=obj.name)
-
-    if transform_matrix.determinant() == 0:
-        # Objects with non-invertible matrices cannot be loaded by LuxCore (RuntimeError)
-        # This happens if the light size is set to 0
-        raise Exception("Area light has size 0 (can not be exported)")
-
-    transform_list = utils.matrix_to_list(transform_matrix)
-    # Only bake the transform into the mesh for final renders (disables instancing which
-    # is needed for viewport render so we can move the light object)
-
-    # Instancing just means that we transform the object instead of the mesh
-    if utils.use_instancing(obj, scene, is_viewport_render):
-        obj_transform = transform_list
-        mesh_transform = None
-    else:
-        obj_transform = None
-        mesh_transform = transform_list
-
-    shape_name = luxcore_name
-    if not luxcore_scene.IsMeshDefined(shape_name):
-        vertices = [
-            (1, 1, 0),
-            (1, -1, 0),
-            (-1, -1, 0),
-            (-1, 1, 0),
-        ]
-        faces = [
-            (0, 1, 2),
-            (2, 3, 0),
-        ]
-        normals = [
-            (0, 0, -1),
-            (0, 0, -1),
-            (0, 0, -1),
-            (0, 0, -1),
-        ]
-        uvs = [
-            (1, 1),
-            (1, 0),
-            (0, 0),
-            (0, 1),
-        ]
-        luxcore_scene.DefineMesh(shape_name, vertices, faces, normals, uvs, None, None, mesh_transform)
-
-    fake_material_index = 0
-    # The material index after the luxcore_name is expected by ExportedObject
-    obj_prefix = "scene.objects." + _get_area_obj_name(luxcore_name) + "."
-    obj_definitions = {
-        "material": mat_name,
-        "shape": shape_name,
-        "camerainvisible": not obj.luxcore.visible_to_camera,
-    }
-    if obj_transform:
-        # Use instancing for viewport render so we can interactively move the light
-        obj_definitions["transformation"] = obj_transform
-
-    obj_props = utils.create_props(obj_prefix, obj_definitions)
+    use_instancing = utils.use_instancing(obj, scene, is_viewport_render)
+    obj_props, exported_obj = _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name,
+                                                        luxcore_scene, mat_name, obj.luxcore.visible_to_camera)
     props.Set(obj_props)
-
-    mesh_definition = [luxcore_name, fake_material_index]
-    exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"],
-                                  transform.copy(), obj.luxcore.visible_to_camera)
     return props, exported_obj
 
 

@@ -36,7 +36,7 @@ class LuxCoreMotionBlur(PropertyGroup):
 
 
 class LuxCoreCameraProps(PropertyGroup):
-    use_clipping: BoolProperty(name="Clipping", default=False,
+    use_clipping: BoolProperty(name="Clipping", default=True,
                                 description="Use near/far clipping for the LuxCore camera "
                                             "(clipping still affects the Blender OpenGL viewport even if disabled)")
     use_dof: BoolProperty(name="Use Depth of Field", default=False,

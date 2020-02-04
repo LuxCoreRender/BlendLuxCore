@@ -52,13 +52,19 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_decorate = False
         layout.use_property_split = True
 
+        if is_portal:
+            col = layout.column(align=True)
+            col.label(text="LuxCore doesn't have portal lights,", icon=icons.INFO)
+            col.label(text="use environment light cache instead")
+
         col = layout.column()
+        col.active = not is_portal
 
         col.prop(light, "color")
         col.prop(light, "energy")
         col.separator()
 
-        if light.type in {"POINT", "SPOT"}:
+        if light.type == "POINT":
             col.prop(light, "shadow_soft_size", text="Size")
         elif light.type == "SUN":
             col.prop(light, "angle")
@@ -79,10 +85,8 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         if not is_portal and not light.cycles.cast_shadow:
             layout.label(text="Cast Shadow is disabled, but unsupported by LuxCore", icon=icons.WARNING)
 
-        if is_portal:
-            col = layout.column(align=True)
-            col.label(text="LuxCore doesn't have portal lights,", icon=icons.INFO)
-            col.label(text="use environment light cache instead")
+        if light.type == "SPOT" and light.shadow_soft_size > 0:
+            layout.label(text="Size (soft shadows) not supported by LuxCore spotlights", icon=icons.WARNING)
 
     def draw_luxcore_settings(self, context):
         layout = self.layout
@@ -149,10 +153,10 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                     layout.operator("luxcore.attach_sun_to_sky", icon=icons.WORLD)
             elif light.luxcore.light_type == "distant":
                 layout.prop(light.luxcore, "theta")
+                layout.prop(light.luxcore, "normalize_distant")
             elif light.luxcore.light_type == "hemi":
                 self.draw_image_controls(context)
                 layout.prop(light.luxcore, "sampleupperhemisphereonly")
-
 
         elif light.type == "SPOT":
             self.draw_image_controls(context)
@@ -219,7 +223,7 @@ class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
 
         layout.prop(light.luxcore, "importance")
 
-        if light.type == "SUN" and light.luxcore.light_type == "hemi":
+        if not light.luxcore.use_cycles_settings and light.type == "SUN" and light.luxcore.light_type == "hemi":
             # infinite (with image) and constantinfinte lights
             draw_vismap_ui(layout, context.scene, light)
 
@@ -237,7 +241,7 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
             return False
 
         light = context.light
-        if not light:
+        if not light or light.luxcore.use_cycles_settings:
             return False
 
         # Visible for sky2, sun, infinite, constantinfinite, area
@@ -305,7 +309,8 @@ class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         light = context.light
-        return light and (light.type == 'AREA' or light.type == 'POINT') and context.engine == "LUXCORE"
+        return (light and not light.luxcore.use_cycles_settings
+                and light.type in {"AREA", "POINT"} and context.engine == "LUXCORE")
 
     def draw_header(self, context):
         layout = self.layout
@@ -347,11 +352,8 @@ class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         light = context.light
-        return light and (light.type == 'AREA') and context.engine == "LUXCORE"
-
-    def draw_header(self, context):
-        layout = self.layout
-        light = context.light
+        return (light and not light.luxcore.use_cycles_settings
+                and light.type == "AREA" and context.engine == "LUXCORE")
 
     def draw(self, context):
         layout = self.layout
@@ -374,10 +376,10 @@ def compatible_panels():
      types = bpy.types
      return [getattr(types, p) for p in panels if hasattr(types, p)]
 
+
 def register():
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.add("LUXCORE")
-    
 
 
 def unregister():
