@@ -1,17 +1,19 @@
+import bpy
 from bl_ui.properties_world import WorldButtonsPanel
 from bpy.types import Panel
-import bpy
-from . import icons
+from cycles.ui import panel_node_draw
 
+from . import icons
 from ..utils import ui as utils_ui
 from .light import draw_vismap_ui
 
+
 class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
-#     """
-#     World UI Panel
-#     """
+    """
+    World UI Panel
+    """
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "Surface"
+    bl_label = "World Light"
     bl_order = 1
 
     @classmethod
@@ -20,6 +22,21 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         return context.world and engine == "LUXCORE"
 
     def draw(self, context):
+        self.layout.prop(context.world.luxcore, "use_cycles_settings")
+
+        if context.world.luxcore.use_cycles_settings:
+            self.draw_cycles_settings(context)
+        else:
+            self.draw_luxcore_settings(context)
+
+    def draw_cycles_settings(self, context):
+        layout = self.layout
+        world = context.world
+
+        if not panel_node_draw(layout, world, "OUTPUT_WORLD", "Surface"):
+            layout.prop(world, "color")
+
+    def draw_luxcore_settings(self, context):
         layout = self.layout
         world = context.world
 
@@ -57,9 +74,9 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
 
 
 class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
-#     """
-#     Sky2 UI Panel
-#     """
+    """
+    Sky2 UI Panel
+    """
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Sky Settings"
     bl_parent_id = "LUXCORE_PT_context_world"
@@ -67,7 +84,9 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "sky2"
+        world = context.world
+        return (world and not world.luxcore.use_cycles_settings
+                and engine == "LUXCORE" and world.luxcore.light == "sky2")
 
     def draw(self, context):
         layout = self.layout
@@ -98,9 +117,9 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
 
 
 class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
-#     """
-#     Infinite UI Panel
-#     """
+    """
+    Infinite UI Panel
+    """
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "HDRI Settings"
     bl_parent_id = "LUXCORE_PT_context_world"
@@ -108,7 +127,9 @@ class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.world and engine == "LUXCORE" and context.world.luxcore.light == "infinite"
+        world = context.world
+        return (world and not world.luxcore.use_cycles_settings
+                and engine == "LUXCORE" and world.luxcore.light == "infinite")
 
     def draw(self, context):
         layout = self.layout
@@ -128,9 +149,9 @@ class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
 
 
 class LUXCORE_WORLD_PT_volume(WorldButtonsPanel, Panel):
-#     """
-#     World UI Panel, shows world volume settings
-#     """
+    """
+    World UI Panel, shows world volume settings
+    """
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Volume"
     bl_options = {"DEFAULT_CLOSED"}
@@ -156,9 +177,9 @@ class LUXCORE_WORLD_PT_volume(WorldButtonsPanel, Panel):
 
 
 class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
-#     """
-#     World UI Panel, shows stuff that affects the performance of the render
-#     """
+    """
+    World UI Panel, shows stuff that affects the performance of the render
+    """
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
     bl_options = {"DEFAULT_CLOSED"}
@@ -181,61 +202,60 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
 
 
 class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
-   COMPAT_ENGINES = {"LUXCORE"}
-   bl_label = "Visibility"
-   bl_options = {"DEFAULT_CLOSED"}
-   bl_order = 5
-   
-   @classmethod
-   def poll(cls, context):
-      engine = context.scene.render.engine
-      visible = context.world and context.world.luxcore.light != "none"
-      return engine == "LUXCORE" and visible
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Visibility"
+    bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 5
 
-   def draw(self, context):
-      layout = self.layout
-      world = context.world
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        world = context.world
+        return (engine == "LUXCORE" and world and world.luxcore.light != "none"
+                and not world.luxcore.use_cycles_settings)
 
-      layout.use_property_split = True
-      layout.use_property_decorate = False       
+    def draw(self, context):
+        layout = self.layout
+        world = context.world
 
-      # These settings only work with PATH and TILEPATH, not with BIDIR
-      enabled = context.scene.luxcore.config.engine == "PATH"
-      layout.use_property_split = True
-      layout.use_property_decorate = False
-      
-      
-      col = layout.column(align=True)
-      col.label(text="Visibility for indirect light rays:")
-      
-      flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
-      col = flow.column()
-      col.prop(world.luxcore, "visibility_indirect_diffuse")
-      col = flow.column()
-      col.prop(world.luxcore, "visibility_indirect_glossy")
-      col = flow.column()
-      col.prop(world.luxcore, "visibility_indirect_specular")
+        # These settings only work with PATH and TILEPATH, not with BIDIR
+        enabled = context.scene.luxcore.config.engine == "PATH"
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
-      if not enabled:
-         layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+        col = layout.column(align=True)
+        col.label(text="Visibility for indirect light rays:")
+
+        flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
+
+        col = flow.column()
+        col.prop(world.luxcore, "visibility_indirect_diffuse")
+        col = flow.column()
+        col.prop(world.luxcore, "visibility_indirect_glossy")
+        col = flow.column()
+        col.prop(world.luxcore, "visibility_indirect_specular")
+
+        if not enabled:
+            layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
 
 
 def compatible_panels():
-   panels = [
-      "WORLD_PT_context_world",
-      "WORLD_PT_custom_props",
-   ]
-   types = bpy.types
-   return [getattr(types, p) for p in panels if hasattr(types, p)]
+    panels = [
+        "WORLD_PT_context_world",
+        "WORLD_PT_custom_props",
+    ]
+    types = bpy.types
+    return [getattr(types, p) for p in panels if hasattr(types, p)]
 
 
 def register():
-   for panel in compatible_panels():
-      panel.COMPAT_ENGINES.add("LUXCORE")  
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.add("LUXCORE")
 
 
 def unregister():
-   for panel in compatible_panels():
-      panel.COMPAT_ENGINES.remove("LUXCORE")
-
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.remove("LUXCORE")

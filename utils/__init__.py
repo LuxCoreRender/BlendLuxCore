@@ -381,13 +381,22 @@ def is_instance_visible(dg_obj_instance, obj):
 
 
 def is_obj_visible(obj):
-    return not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS
+    if obj.type not in EXPORTABLE_OBJECTS or obj.luxcore.exclude_from_render:
+        return False
+
+    # Do not export the object if it's made completely invisible through Cycles settings
+    # (some addons like HardOps do this to hide objects)
+    return is_obj_visible_in_cycles(obj)
 
 
-# TODO 2.8 fix or remove
-# def get_theme(context):
-#     current_theme_name = context.user_preferences.themes.items()[0][0]
-#     return context.user_preferences.themes[current_theme_name]
+def is_obj_visible_in_cycles(obj):
+    c_vis = obj.cycles_visibility
+    return any((c_vis.camera, c_vis.diffuse, c_vis.glossy, c_vis.transmission, c_vis.scatter, c_vis.shadow))
+
+
+def get_theme(context):
+    current_theme_name = context.preferences.themes.items()[0][0]
+    return context.preferences.themes[current_theme_name]
 
 
 def get_abspath(path, library=None, must_exist=False, must_be_existing_file=False, must_be_existing_dir=False):

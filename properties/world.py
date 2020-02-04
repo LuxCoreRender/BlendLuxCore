@@ -12,6 +12,7 @@ from .light import (
     VIS_INDIRECT_GLOSSY_DESC, VIS_INDIRECT_SPECULAR_DESC,
 )
 from .image_user import LuxCoreImageUser
+from .config import ENVLIGHT_CACHE_DESC
 
 USE_SUN_GAIN_FOR_SKY_DESC = (
     "Use the gain setting of the attached sun "
@@ -41,6 +42,8 @@ GROUND_COLOR_DESC = GROUND_ENABLE_DESC
 
 
 class LuxCoreWorldProps(bpy.types.PropertyGroup):
+    use_cycles_settings: BoolProperty(name="Use Cycles Settings", default=False)
+
     lights = [
         ("sky2", "Sky", "Hosek and Wilkie sky model", 0),
         ("infinite", "HDRI", "High dynamic range image", 1),
@@ -96,8 +99,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     visibility_indirect_specular: BoolProperty(name="Specular", default=True, description=VIS_INDIRECT_SPECULAR_DESC)
 
     # sky2, infinite, constantinfinite
-    # TODO description (import from light properties)
-    use_envlight_cache: BoolProperty(name="Use Env. Light Cache", default=True)
+    use_envlight_cache: BoolProperty(name="Use Env. Light Cache", default=True,
+                                     description=ENVLIGHT_CACHE_DESC)
 
     volume: PointerProperty(type=bpy.types.NodeTree)
     

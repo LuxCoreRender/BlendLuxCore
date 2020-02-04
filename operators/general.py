@@ -5,6 +5,33 @@ from .utils import init_vol_node_tree, poll_node
 from ..utils.errorlog import LuxCoreErrorLog
 
 
+def _use_cycles_material_nodes():
+    for mat in bpy.data.materials:
+        if mat.use_nodes and mat.node_tree:
+            mat.luxcore.use_cycles_nodes = True
+
+
+class LUXCORE_OT_use_cycles_settings(bpy.types.Operator):
+    bl_idname = "luxcore.use_cycles_settings"
+    bl_label = "Use Cycles Settings"
+    bl_description = "Use Cycles material nodes, light settings, world settings etc. wherever possible"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        _use_cycles_material_nodes()
+
+        for light in bpy.data.lights:
+            light.luxcore.use_cycles_settings = True
+
+        for world in bpy.data.worlds:
+            world.luxcore.use_cycles_settings = True
+        return {"FINISHED"}
+
+
 class LUXCORE_OT_use_cycles_nodes_everywhere(bpy.types.Operator):
     bl_idname = "luxcore.use_cycles_nodes_everywhere"
     bl_label = "Use Cycles nodes on all materials"
@@ -16,9 +43,7 @@ class LUXCORE_OT_use_cycles_nodes_everywhere(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        for mat in bpy.data.materials:
-            if mat.use_nodes and mat.node_tree:
-                mat.luxcore.use_cycles_nodes = True
+        _use_cycles_material_nodes()
         return {"FINISHED"}
 
 

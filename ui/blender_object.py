@@ -21,9 +21,15 @@ class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.prop(obj.luxcore, "id")
-        layout.prop(obj.luxcore, "visible_to_camera")
-        layout.prop(obj.luxcore, "exclude_from_render")
+        col = layout.column()
+        if not utils.is_obj_visible_in_cycles(obj):
+            col.label(text="Object made invisible through Cycles settings", icon=icons.INFO)
+            col = layout.column()
+            col.active = False
+
+        col.prop(obj.luxcore, "id")
+        col.prop(obj.luxcore, "visible_to_camera")
+        col.prop(obj.luxcore, "exclude_from_render")
 
         # Motion blur settings
         cam = context.scene.camera
@@ -32,20 +38,20 @@ class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
             object_blur = motion_blur.enable and motion_blur.object_blur
 
             if not motion_blur.enable:
-                layout.label(text="Motion blur disabled in camera settings", icon=icons.INFO)
+                col.label(text="Motion blur disabled in camera settings", icon=icons.INFO)
             elif not motion_blur.object_blur:
-                layout.label(text="Object blur disabled in camera settings", icon=icons.INFO)
+                col.label(text="Object blur disabled in camera settings", icon=icons.INFO)
         else:
-            layout.label(text="No camera in scene", icon=icons.INFO)
+            col.label(text="No camera in scene", icon=icons.INFO)
             object_blur = False
 
-        col = layout.column(align=True)        
-        col.enabled = object_blur
-        col.prop(obj.luxcore, "enable_motion_blur")
+        sub = col.column(align=True)
+        sub.enabled = object_blur
+        sub.prop(obj.luxcore, "enable_motion_blur")
         
         # Instancing can cost performance, so inform the user when it happens
         if utils.use_obj_motion_blur(obj, context.scene):
-            layout.label(text="Object will be exported as instance", icon=icons.INFO)
+            col.label(text="Object will be exported as instance", icon=icons.INFO)
 
 
 def compatible_panels():

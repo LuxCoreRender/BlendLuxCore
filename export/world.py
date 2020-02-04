@@ -15,8 +15,8 @@ def convert(exporter, depsgraph, scene, is_viewport_render):
         return props
 
     # World light (this is a BlendLuxCore concept)
-    if world.luxcore.light != "none":
-        world_light_props = light.convert_world(exporter, world, scene, is_viewport_render)
+    world_light_props = light.convert_world(exporter, world, scene, is_viewport_render)
+    if world_light_props:
         props.Set(world_light_props)
 
     # World volume
