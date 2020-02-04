@@ -403,6 +403,17 @@ def _convert_cycles_world(exporter, scene, world, is_viewport_render):
 
                 if image_missing:
                     _define_constantinfinite(definitions, MISSING_IMAGE_COLOR)
+            elif color_node.bl_idname == "ShaderNodeTexSky":
+                if color_node.sky_type != "HOSEK_WILKIE":
+                    LuxCoreErrorLog.add_warning("World: Unsupported sky type: " + color_node.sky_type)
+
+                definitions["type"] = "sky2"
+                definitions["ground.enable"] = False
+                definitions["groundalbedo"] = [color_node.ground_albedo] * 3
+                definitions["turbidity"] = color_node.turbidity
+                definitions["dir"] = list(color_node.sun_direction)
+                # Found by eyeballing, not super precise
+                gain *= 0.000014
         else:
             # No color node linked
             definitions["type"] = "constantinfinite"
