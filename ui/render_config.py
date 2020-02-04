@@ -36,6 +36,8 @@ def luxcore_render_draw(panel, context):
     op = col.operator("luxcore.open_website", icon=icons.URL, text="Wiki")
     op.url = "https://wiki.luxcorerender.org/BlendLuxCore_Network_Rendering"
 
+    layout.operator("luxcore.use_cycles_settings")
+
             
 class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
