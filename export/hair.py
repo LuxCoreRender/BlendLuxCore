@@ -85,29 +85,6 @@ def warn_about_missing_uvs(obj, node_tree):
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
 
 
-def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
-    from . import material
-    if material_index < len(obj.material_slots):
-        mat = obj.material_slots[material_index].material
-
-        if mat is None:
-            # Note: material.convert returns the fallback material in this case
-            msg = "No material attached to slot %d" % (material_index + 1)
-            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-    else:
-        # The object has no material slots
-        LuxCoreErrorLog.add_warning("No material defined", obj_name=obj.name)
-        # Use fallback material
-        mat = None
-
-    if mat:
-        if mat.luxcore.node_tree:
-            warn_about_missing_uvs(obj, mat.luxcore.node_tree)
-
-        return material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
-    else:
-        return material.fallback()
-
 def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_viewport_render,
                  is_for_duplication, instance_matrix_world, engine=None):
     try:
@@ -226,9 +203,10 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_view
         if not success:
             return None, None
 
+        from .caches.object_cache import get_material
         # For some reason this index is not starting at 0 but at 1 (Blender is strange)
-        lux_mat_name, mat_props = get_material(obj, psys.settings.material - 1, exporter, depsgraph,
-                                               is_viewport_render)
+        lux_mat_name, mat_props, node_tree = get_material(obj, psys.settings.material - 1, exporter, depsgraph,
+                                                          is_viewport_render)
 
         strandsProps = pyluxcore.Properties()
         strandsProps.Set(mat_props)

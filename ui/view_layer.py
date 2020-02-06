@@ -35,7 +35,6 @@ class LUXCORE_VIEWLAYER_PT_override(ViewLayerButtonsPanel, Panel):
     bl_order = 3
     COMPAT_ENGINES = {"LUXCORE"}
 
-
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -46,4 +45,3 @@ class LUXCORE_VIEWLAYER_PT_override(ViewLayerButtonsPanel, Panel):
         layout.prop(view_layer, "material_override")
 #         layout.prop(view_layer, "samples")
 #         # TODO: we can add more useful checkboxes here, e.g. hair on/off
-
