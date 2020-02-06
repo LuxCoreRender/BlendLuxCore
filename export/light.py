@@ -45,16 +45,39 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
     definitions = {}
     light = obj.data
 
-    if light.use_nodes:
-        LuxCoreErrorLog.add_warning("Cycles light node trees not supported yet", obj.name)
+    color = list(light.color)
+    gain = light.energy
 
-    if light.type != "AREA":
-        definitions["gain"] = [light.energy] * 3
-        definitions["efficency"] = 0.0
-        definitions["power"] = 0.0
-        definitions["normalizebycolor"] = False
-        definitions["color"] = list(light.color)
-        definitions["importance"] = light.luxcore.importance
+    if light.use_nodes and light.node_tree:
+        # Modify color and gain according to node setup
+        output_node = light.node_tree.get_output_node("CYCLES")
+        if output_node:
+            surface_node = utils_node.get_linked_node(output_node.inputs["Surface"])
+            if surface_node:
+                node_gain = 1
+                node_color = [1, 1, 1]
+
+                if surface_node.bl_idname == "ShaderNodeEmission":
+                    strength_socket = surface_node.inputs["Strength"]
+                    node_gain = strength_socket.default_value
+                    if utils_node.get_linked_node(strength_socket):
+                        LuxCoreErrorLog.add_warning("Light strength nodes not supported", obj.name)
+
+                    color_socket = surface_node.inputs["Color"]
+                    color_node = utils_node.get_linked_node(color_socket)
+
+                    if color_node:
+                        if color_node.bl_idname == "ShaderNodeRGB":
+                            node_color = list(color_node.outputs[0].default_value)[:3]
+                        else:
+                            LuxCoreErrorLog.add_warning("Unsupported color node type: " + color_node.bl_idname, obj.name)
+                    else:
+                         node_color = list(color_socket.default_value)[:3]
+                else:
+                    LuxCoreErrorLog.add_warning("Unsupported surface node type: " + surface_node.bl_idname, obj.name)
+
+                gain *= node_gain
+                color = [a * b for a, b in zip(color, node_color)]
 
     if light.type == "POINT":
         definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
@@ -66,7 +89,6 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
         sun_dir = _calc_sun_dir(transform)
         distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
         definitions["direction"] = distant_dir
-        definitions["color"] = list(light.color)
 
         half_angle = math.degrees(light.angle) / 2
 
@@ -75,7 +97,7 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
         else:
             definitions["type"] = "distant"
             definitions["theta"] = half_angle
-            definitions["gain"] = [light.energy * _get_distant_light_normalization_factor(half_angle)] * 3
+            gain *= _get_distant_light_normalization_factor(half_angle)
     elif light.type == "SPOT":
         if light.shadow_soft_size > 0:
             LuxCoreErrorLog.add_warning("Size (soft shadows) not supported by LuxCore spotlights", obj.name)
@@ -93,7 +115,7 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
         definitions["transformation"] = utils.matrix_to_list(transform @ spot_fix)
 
         # Multiplier to reach similar brightness as Cycles, found by eyeballing.
-        definitions["gain"] = [light.energy * 0.07] * 3
+        gain *= 0.07
     elif light.type == "AREA":
         if light.cycles.is_portal:
             return pyluxcore.Properties(), None
@@ -106,10 +128,10 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
         # Calculate gain similar to Cycles (scaling with light surface area)
         transform_matrix = calc_area_light_transformation(light, transform)
         scale = transform_matrix.to_scale()
-        gain = light.energy / (scale.x * scale.y)
+        area_gain = gain / (scale.x * scale.y)
         # Multiplier to reach similar brightness as Cycles.
         # Found through render comparisons, not super precise.
-        gain *= 0.06504
+        area_gain *= 0.06504
 
         # Material
         mat_name = luxcore_name + "_AREA_LIGHT_MAT"
@@ -118,8 +140,8 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
             "type": "matte",
             # Black base material to avoid any bounce light from the mesh
             "kd": [0, 0, 0],
-            "emission": list(light.color),
-            "emission.gain": [gain] * 3,
+            "emission": color,
+            "emission.gain": [area_gain] * 3,
             "emission.power": 0.0,
             "emission.efficency": 0.0,
             "emission.normalizebycolor": False,
@@ -140,6 +162,13 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
     else:
         # Can only happen if Blender changes its light types
         raise Exception("Unkown light type", light.type, 'in light "%s"' % obj.name)
+
+    definitions["gain"] = [gain] * 3
+    definitions["color"] = color
+    definitions["efficency"] = 0.0
+    definitions["power"] = 0.0
+    definitions["normalizebycolor"] = False
+    definitions["importance"] = light.luxcore.importance
 
     if not light.cycles.cast_shadow:
         LuxCoreErrorLog.add_warning("Cast Shadow is disabled, but unsupported by LuxCore", obj.name)
