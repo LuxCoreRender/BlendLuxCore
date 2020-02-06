@@ -282,10 +282,9 @@ def _convert_path(config, definitions, use_hybridbackforward, device):
     definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
     definitions["path.pathdepth.specular"] = path.depth_specular
 
-    # When a GPU is used, the CPU should only handle light paths (partition == 0)
     # Note that our partition property is inverted compared to LuxCore's (it is the probability to
     # sample a light path, not the probability to sample a camera path)
-    partition = 0 if device == "OCL" else (1 - path.hybridbackforward_lightpartition / 100)
+    partition = 1 - path.hybridbackforward_lightpartition / 100
     definitions["path.hybridbackforward.enable"] = use_hybridbackforward
     definitions["path.hybridbackforward.partition"] = partition
     definitions["path.hybridbackforward.glossinessthreshold"] = path.hybridbackforward_glossinessthresh
