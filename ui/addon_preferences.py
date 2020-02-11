@@ -1,6 +1,11 @@
 from os.path import basename, dirname
 from bpy.types import AddonPreferences
+from bpy.props import (
+    IntProperty,
+    StringProperty,
+)
 from ..ui import icons
+from ..utils import LOLutils as utils
 
 
 class LuxCoreAddonPreferences(AddonPreferences):
@@ -10,6 +15,20 @@ class LuxCoreAddonPreferences(AddonPreferences):
     bl_idname = basename(dirname(dirname(__file__)))
 
     # We could add properties here
+    default_global_dict = utils.default_global_dict()
+
+    global_dir: StringProperty(
+        name="Global Files Directory",
+        description="Global storage for your assets, will use subdirectories for the contents",
+        subtype='DIR_PATH', default=default_global_dict, update=utils.save_prefs)
+
+    project_subdir: StringProperty(
+        name="Project Assets Subdirectory", description="where data will be stored for individual projects",
+        subtype='DIR_PATH', default="//assets",
+    )
+    max_assetbar_rows: IntProperty(name="Max Assetbar Rows", description="max rows of assetbar in the 3d view",
+                                   default=1, min=0, max=20)
+    thumb_size: IntProperty(name="Assetbar thumbnail Size", default=96, min=-1, max=256)
 
     def draw(self, context):
         layout = self.layout
@@ -26,3 +45,13 @@ class LuxCoreAddonPreferences(AddonPreferences):
         op.url = "https://forums.luxcorerender.org/"
         op = row.operator("luxcore.open_website", text="Discord", icon=icons.URL)
         op.url = "https://discord.gg/chPGsKV"
+
+        layout.separator()
+        col = layout.column()
+        col.label(text="LuxCore Online Library (LOL) Preferences:")
+        col = layout.column()
+
+        col.prop(self, "global_dir")
+        col.prop(self, "project_subdir")
+        col.prop(self, "thumb_size")
+        col.prop(self, "max_assetbar_rows")
