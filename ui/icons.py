@@ -1,5 +1,7 @@
 NONE = "NONE"
 
+RENDER_STILL = "RENDER_STILL"
+
 # Node tree icons
 NTREE_VOLUME = "MOD_FLUIDSIM"
 NTREE_MATERIAL = "MATERIAL"
@@ -15,6 +17,7 @@ ERROR = "CANCEL"
 ADD = "ADD"  # + sign
 REMOVE = "REMOVE"  # - sign, used to remove one element from a collection
 CLEAR = "X"  # x sign, used to clear a link (e.g. the world volume)
+TRASH = "TRASH"  # Trashcan
 
 ADD_KEYFRAME = "KEY_HLT"
 REMOVE_KEYFRAME = "KEY_DEHLT"
@@ -39,3 +42,6 @@ EXPANDABLE_OPENED = "TRIA_DOWN"
 
 FAKE_USER_ON = "FAKE_USER_ON"
 FAKE_USER_OFF = "FAKE_USER_OFF"
+
+PLAY = "PLAY"
+PAUSE = "PAUSE"
