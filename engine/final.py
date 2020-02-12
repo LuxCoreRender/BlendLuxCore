@@ -22,7 +22,18 @@ def render(engine, depsgraph):
                    "renderlayers will result in brightness differences")
             LuxCoreErrorLog.add_warning(msg)
 
-    _check_halt_conditions(engine, scene)
+    # Note: For some reason view layer settings are screwed up in scene_eval (seems to be intended)
+    enabled_layers = utils.get_enabled_view_layers(scene.original)
+    if len(enabled_layers) > 1 or engine.is_animation:
+        is_halt_enabled, layers_without_halt = utils.is_halt_condition_enabled(scene.original)
+
+        if not is_halt_enabled:
+            for layer_name in layers_without_halt:
+                LuxCoreErrorLog.add_error('Halt condition missing for render layer "%s"' % layer_name)
+            msg = "Missing halt condition"
+            if layers_without_halt:
+                msg += f" (on {len(layers_without_halt)} layers, check error log)"
+            raise Exception(msg)
 
     for layer_index, layer in enumerate(scene.view_layers):
         print('[Engine/Final] Rendering layer "%s"' % layer.name)
@@ -202,34 +213,6 @@ def _stat_refresh_interval(start, scene):
         return max(2**minutes, minimum)
     else:
         return maximum
-
-
-def _check_halt_conditions(engine, scene):
-    enabled_layers = [layer for layer in scene.view_layers if layer.use]
-    needs_halt_condition = len(enabled_layers) > 1 or engine.is_animation
-
-    is_halt_enabled = True
-
-    if len(enabled_layers) > 1:
-        # When we have multiple render layers, we need a halt condition for each one
-        for layer in enabled_layers:
-            layer_halt = layer.luxcore.halt
-            if layer_halt.enable:
-                # The layer overrides the global halt conditions
-                has_halt_condition = layer_halt.is_enabled()
-                is_halt_enabled &= has_halt_condition
-
-                if not has_halt_condition:
-                    LuxCoreErrorLog.add_error('Halt condition missing for render layer "%s"' % layer.name)
-            else:
-                is_halt_enabled = False
-
-    # Global halt conditions
-    if not is_halt_enabled:
-        is_halt_enabled = scene.luxcore.halt.is_enabled()
-
-    if needs_halt_condition and not is_halt_enabled:
-        raise Exception("Missing halt condition (check error log)")
 
 
 def _add_passes(engine, layer, scene):

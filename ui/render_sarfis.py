@@ -1,7 +1,17 @@
+from time import time
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from . import icons
 from ..utils import sarfis
+
+
+def format_time(time, show_frame=True):
+    frame, time_millis = time
+    time_s = round(time_millis / 1000, 1)
+    result = f"{time_s} s"
+    if show_frame:
+        result += f" (frame {frame})"
+    return result
 
 
 class LUXCORE_RENDER_PT_sarfis(RenderButtonsPanel, Panel):
@@ -41,7 +51,26 @@ class LUXCORE_RENDER_PT_sarfis(RenderButtonsPanel, Panel):
 
         if sarfis.Status.job_id:
             layout.label(text="Job ID: " + sarfis.Status.job_id)  # TODO remove
-            layout.label(text="Status: " + str(sarfis.Status.status))
+
+            col = layout.column(align=True)
+            status = sarfis.Status.status
+            col.label(text="Status: " + str(status))
+
+            p = sarfis.Status.progress
+            if p:
+                completed = p.finished + p.errored
+                percentage_completed = round(completed / p.frame_count * 100, 1)
+                col.label(text=f"{completed}/{p.frame_count} ({percentage_completed}%)")
+                if p.errored:
+                    col.label(text=f"{p.errored} frames", icon=icons.WARNING)
+
+                col.label(text=f"Times: Min {format_time(p.time_min)}, Max {format_time(p.time_max)}, Median {format_time(p.time_median, False)}")
+
+                time_start = sarfis.Status.time_start
+                if time_start:
+                    time_end = sarfis.Status.time_end
+                    if time_end is None:
+                        time_end = time()
+                    col.label(text=f"Elapsed Time: {round(time_end - time_start, 1)} s")
         else:
             layout.label(text="No jobs started yet")
-            layout.label(text="Status: " + str(sarfis.Status.status))  # TODO remove

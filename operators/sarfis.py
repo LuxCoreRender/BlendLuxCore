@@ -18,8 +18,18 @@ class LUXCORE_OT_sarfis_start(bpy.types.Operator):
         scene = context.scene
         settings = scene.luxcore.sarfis
 
+        # Check halt conditions
+        is_halt_enabled, layers_without_halt = utils.is_halt_condition_enabled(scene)
+        if not is_halt_enabled:
+            msg = "Missing halt condition"
+            if layers_without_halt:
+                msg += " (on view layers: " + ", ".join(layers_without_halt) + ")"
+            self.report({"ERROR"}, msg)
+            return {"CANCELLED"}
+
+        # Make sure file was saved
         blend_filepath = bpy.data.filepath
-        if not blend_filepath:
+        if not blend_filepath or bpy.data.is_dirty:
             self.report({"ERROR"}, "Please save the .blend file")
             return {"CANCELLED"}
 

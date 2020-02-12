@@ -645,3 +645,31 @@ def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_ren
                 # LuxCore loads the cache from this file
                 os.remove(file_path)
             return file_path_abs
+
+
+def get_enabled_view_layers(scene):
+    return [layer for layer in scene.view_layers if layer.use]
+
+
+def is_halt_condition_enabled(scene):
+    enabled_layers = get_enabled_view_layers(scene)
+    print(enabled_layers)
+
+    global_halt_enabled = scene.luxcore.halt.is_enabled()
+    is_halt_enabled = True
+    layers_without_halt = []
+
+    # When we have multiple render layers, we need a halt condition for each one
+    for layer in enabled_layers:
+        layer_halt = layer.luxcore.halt
+        if layer_halt.enable:
+            # The layer overrides the global halt conditions
+            has_halt_condition = layer_halt.is_enabled()
+            if not has_halt_condition:
+                is_halt_enabled = False
+                layers_without_halt.append(layer.name)
+        else:
+            is_halt_enabled &= global_halt_enabled
+
+    print("is_halt_enabled:", is_halt_enabled, layers_without_halt)
+    return is_halt_enabled, layers_without_halt
