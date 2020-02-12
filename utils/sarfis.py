@@ -29,12 +29,14 @@ class Status:
 
 
 def _upload(filepath):
+    # TODO progress report in UI?
     _json = {
         "file_name": os.path.basename(filepath),
         "bucket": "lux-test-bucket"
     }
     signed_url = requests.post(f"{server}api/signed_upload", json=_json).text
-    requests.put(signed_url, open(filepath, "rb"))
+    with open(filepath, "rb") as f:
+        requests.put(signed_url, f)
 
 
 def create_job(filepath, start_frame, end_frame):
@@ -89,6 +91,7 @@ def download_result(job_details, output_dir):
 
     # TODO Support extra files (from file output nodes or something else)
     # TODO Support extensions other than png
+    # TODO progress report in UI
 
     for frame in range(start_frame, end_frame + 1):
         print("Downloading frame", frame)
