@@ -9,6 +9,7 @@ from . import ui as utils_ui
 #  - throw error when halt conditions are missing (similar to animation render)
 #  - change OpenCL render engines to CPU in the background
 #  - threading
+#  - handle dependencies (external assets, simulation caches, textures etc.)
 
 server = ""
 
@@ -19,6 +20,7 @@ class Status:
     job_id = None
     status = None
 
+    # status types
     QUEUED = "queued"
     PAUSED = "paused"
     RUNNING = "running"
@@ -35,7 +37,9 @@ def _upload(filepath):
     requests.put(signed_url, open(filepath, "rb"))
 
 
-def create_job(filepath):
+def create_job(filepath, start_frame, end_frame):
+    assert start_frame <= end_frame
+
     _upload(filepath)
 
     _json = {
@@ -43,8 +47,8 @@ def create_job(filepath):
         "type": "blender",
         "version": "280",
         "operation": "render",
-        "start": "1",
-        "end": "1",
+        "start": str(start_frame),
+        "end": str(end_frame),
         "input": os.path.basename(filepath),
         "output": "output/"
     }
@@ -108,25 +112,3 @@ def auto_poll():
         filepath = bpy.data.filepath
         output_dir = os.path.dirname(filepath)
         download_result(Status.job_id, output_dir)
-
-
-# def test():
-#     filepath = bpy.data.filepath
-#
-#     print("Starting job for file:", filepath)
-#     job_id = create_job(filepath)
-#     poll_job_status(job_id)
-#
-#     from time import sleep
-#     while Status.status in {Status.QUEUED, Status.RUNNING}:
-#         sleep(1)
-#         try:
-#             poll_job_status(job_id)
-#             print("Status:", Status.status)
-#         except ConnectionError as error:
-#             print("Connection Error:", error)
-#
-#     if Status.status == Status.FINISHED:
-#         output_dir = os.path.dirname(filepath)
-#         print("Saving to", output_dir)
-#         download_result(job_id, output_dir)

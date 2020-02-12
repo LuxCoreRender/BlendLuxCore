@@ -6,7 +6,7 @@ from ..utils import sarfis
 
 class LUXCORE_RENDER_PT_sarfis(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "Sarfis"
+    bl_label = "SARFIS Render Farm"
     bl_options = {"DEFAULT_CLOSED"}
 
     @classmethod
@@ -18,6 +18,18 @@ class LUXCORE_RENDER_PT_sarfis(RenderButtonsPanel, Panel):
 
         layout.use_property_split = True
         layout.use_property_decorate = False
+
+        scene = context.scene
+        settings = scene.luxcore.sarfis
+        layout.prop(settings, "output_dir")
+        layout.prop(settings, "mode")
+        if settings.mode == "single_frame":
+            layout.label(text=f"Frame: {scene.frame_current}")
+        else:
+            col = layout.column(align=True)
+            col.label(text=f"First Frame: {scene.frame_start}")
+            col.label(text=f"Last Frame: {scene.frame_end}")
+            col.label(text=f"Frame Count: {scene.frame_end - scene.frame_start + 1}")
 
         row = layout.row()
         row.operator("luxcore.sarfis_start", icon=icons.RENDER_STILL)

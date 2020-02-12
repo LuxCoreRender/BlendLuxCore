@@ -1,4 +1,6 @@
 import bpy
+import os
+from .. import utils
 from ..utils import sarfis
 from ..utils.sarfis import Status
 
@@ -13,13 +15,37 @@ class LUXCORE_OT_sarfis_start(bpy.types.Operator):
         return Status.status in {None, Status.FINISHED}
 
     def execute(self, context):
-        # TODO: once user-selectable filepath is implemented, check here if we can create a testfile in the
-        #  output directory and throw an error if not (to prevent problems later when the results are retrieved)
+        scene = context.scene
+        settings = scene.luxcore.sarfis
 
-        filepath = bpy.data.filepath
+        blend_filepath = bpy.data.filepath
+        if not blend_filepath:
+            self.report({"ERROR"}, "Please save the .blend file")
+            return {"CANCELLED"}
 
-        print("Starting job for file:", filepath)
-        sarfis.create_job(filepath)
+        # Check if output path is valid
+        try:
+            output_dir = settings.output_dir
+            output_dir_abs = utils.get_abspath(output_dir, must_exist=True, must_be_existing_dir=True)
+
+            test_file_path = os.path.join(output_dir_abs, "__dummyfile__")
+            with open(test_file_path, "w") as f:
+                f.write("test")
+            os.remove(test_file_path)
+        except Exception as error:
+            self.report({"ERROR"}, str(error))
+            return {"CANCELLED"}
+
+        if settings.mode == "single_frame":
+            start_frame = end_frame = scene.frame_current
+        elif settings.mode == "animation":
+            start_frame = scene.frame_start
+            end_frame = scene.frame_end
+        else:
+            raise Exception("Unknown mode")
+
+        print("Starting job for file:", blend_filepath, "Frames:", start_frame, "to", end_frame)
+        sarfis.create_job(blend_filepath, start_frame, end_frame)
 
         sarfis.start_auto_polling()
         return {"FINISHED"}
