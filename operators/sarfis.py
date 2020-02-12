@@ -62,7 +62,7 @@ class LUXCORE_OT_sarfis_pause(bpy.types.Operator):
 
     def execute(self, context):
         # Make sure status is up to date
-        sarfis.poll_job_status(Status.job_id)
+        sarfis.poll_job_details(Status.job_id)
         if self.poll(context):
             sarfis.pause_job(Status.job_id)
         return {"FINISHED"}
@@ -79,7 +79,7 @@ class LUXCORE_OT_sarfis_resume(bpy.types.Operator):
 
     def execute(self, context):
         # Make sure status is up to date
-        sarfis.poll_job_status(Status.job_id)
+        sarfis.poll_job_details(Status.job_id)
         if self.poll(context):
             sarfis.queue_job(Status.job_id)
         return {"FINISHED"}
@@ -96,7 +96,7 @@ class LUXCORE_OT_sarfis_delete(bpy.types.Operator):
 
     def execute(self, context):
         # Make sure status is up to date
-        sarfis.poll_job_status(Status.job_id)
+        sarfis.poll_job_details(Status.job_id)
         if self.poll(context):
             sarfis.delete_job(Status.job_id)
         return {"FINISHED"}

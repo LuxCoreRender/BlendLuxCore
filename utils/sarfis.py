@@ -58,41 +58,49 @@ def create_job(filepath, start_frame, end_frame):
 
 
 def _set_job_status(job_id, status):
-    assert status in {"queued", "paused"}
+    assert status in {Status.QUEUED, Status.PAUSED}
     requests.post(f"{server}api/job_status", json={"job_id": job_id, "status": status})
 
 
 def pause_job(job_id):
-    _set_job_status(job_id, "paused")
+    _set_job_status(job_id, Status.PAUSED)
 
 
 # aka resume
 def queue_job(job_id):
-    _set_job_status(job_id, "queued")
+    _set_job_status(job_id, Status.QUEUED)
 
 
 def delete_job(job_id):
     requests.post(f"{server}api/delete_job", json={"job_id": job_id})
 
 
-def poll_job_status(job_id):
-    job_details = requests.get(f"{server}api/job_details", data={"job_id": job_id}).text
-    job_dict = json.loads(job_details)
-    Status.status = job_dict["status"]
-    return job_dict
+def poll_job_details(job_id):
+    job_details_json = requests.get(f"{server}api/job_details", data={"job_id": job_id}).text
+    job_details = json.loads(job_details_json)
+    Status.status = job_details["status"]
+    return job_details
 
 
-def download_result(job_id, output_dir):
-    # TODO actual filename(s)
-    filename = "0001.png"
-    data = {
-        "file_name": f"frames/{job_id}/{filename}",
-        "bucket": "lux-test-bucket"
-    }
-    signed_url = requests.post(f"{server}api/signed_download", json=data).text
-    data = requests.get(signed_url).content
-    with open(os.path.join(output_dir, filename), "wb") as f:
-        f.write(data)
+def download_result(job_details, output_dir):
+    job_id = job_details["job_id"]
+    start_frame = job_details["start"]
+    end_frame = job_details["end"]
+
+    # TODO Support extra files (from file output nodes or something else)
+    # TODO Support extensions other than png
+
+    for frame in range(start_frame, end_frame + 1):
+        print("Downloading frame", frame)
+        filename = "%04d.png" % frame
+        data = {
+            "file_name": f"frames/{job_id}/{filename}",
+            "bucket": "lux-test-bucket"
+        }
+        signed_url = requests.post(f"{server}api/signed_download", json=data).text
+        data = requests.get(signed_url).content
+        with open(os.path.join(output_dir, filename), "wb") as f:
+            f.write(data)
 
 
 def start_auto_polling():
@@ -100,7 +108,7 @@ def start_auto_polling():
 
 
 def auto_poll():
-    poll_job_status(Status.job_id)
+    job_details = poll_job_details(Status.job_id)
     utils_ui.tag_region_for_redraw(bpy.context, "PROPERTIES", "WINDOW")
     print("auto poll status:", Status.status)
 
@@ -111,4 +119,4 @@ def auto_poll():
         # TODO let user choose output dir
         filepath = bpy.data.filepath
         output_dir = os.path.dirname(filepath)
-        download_result(Status.job_id, output_dir)
+        download_result(job_details, output_dir)
