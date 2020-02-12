@@ -102,8 +102,10 @@ class ImageExporter(object):
     @classmethod
     def cleanup(cls):
         for temp_image in cls.temp_images.values():
-            print("Deleting temporary image:", temp_image.name)
-            os.remove(temp_image.name)
+            filepath = temp_image.name
+            temp_image.close()
+            print("Deleting temporary image:", filepath)
+            os.remove(filepath)
 
-        cls.temp_images = {}
+        cls.temp_images.clear()
 
