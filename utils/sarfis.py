@@ -61,7 +61,7 @@ def create_job(filepath, start_frame, end_frame):
 
 def _set_job_status(job_id, status):
     assert status in {Status.QUEUED, Status.PAUSED}
-    requests.post(f"{server}api/job_status", json={"job_id": job_id, "status": status})
+    requests.get(f"{server}api/job_status", data={"job_id": job_id, "status": status})
 
 
 def pause_job(job_id):
@@ -74,14 +74,25 @@ def queue_job(job_id):
 
 
 def delete_job(job_id):
-    requests.post(f"{server}api/delete_job", json={"job_id": job_id})
+    requests.get(f"{server}api/delete_job", data={"job_id": job_id})
 
 
 def poll_job_details(job_id):
-    job_details_json = requests.get(f"{server}api/job_details", data={"job_id": job_id}).text
-    job_details = json.loads(job_details_json)
-    Status.status = job_details["status"]
-    return job_details
+    response = requests.get(f"{server}api/job_details", data={"job_id": job_id})
+
+    if response.status_code == requests.codes.ok:
+        if response.text:
+            print("response.text:", response.text)
+            job_details = json.loads(response.text)
+            Status.status = job_details["status"]
+            return job_details
+        else:
+            # Job doesn't exist (e.g. because it was deleted)
+            Status.job_id = None
+            Status.status = None
+            return None
+    else:
+        raise Exception("Some error happened, status code: " + str(response.status_code))
 
 
 def download_result(job_details, output_dir):

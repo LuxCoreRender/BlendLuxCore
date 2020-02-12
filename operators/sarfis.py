@@ -70,7 +70,7 @@ class LUXCORE_OT_sarfis_pause(bpy.types.Operator):
 
 class LUXCORE_OT_sarfis_resume(bpy.types.Operator):
     bl_idname = "luxcore.sarfis_resume"
-    bl_label = "Pause"
+    bl_label = "Resume"
     bl_description = ""
 
     @classmethod
@@ -82,6 +82,7 @@ class LUXCORE_OT_sarfis_resume(bpy.types.Operator):
         sarfis.poll_job_details(Status.job_id)
         if self.poll(context):
             sarfis.queue_job(Status.job_id)
+            sarfis.start_auto_polling()
         return {"FINISHED"}
 
 
@@ -99,4 +100,5 @@ class LUXCORE_OT_sarfis_delete(bpy.types.Operator):
         sarfis.poll_job_details(Status.job_id)
         if self.poll(context):
             sarfis.delete_job(Status.job_id)
+            sarfis.start_auto_polling()
         return {"FINISHED"}
