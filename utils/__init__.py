@@ -671,5 +671,4 @@ def is_halt_condition_enabled(scene):
         else:
             is_halt_enabled &= global_halt_enabled
 
-    print("is_halt_enabled:", is_halt_enabled, layers_without_halt)
     return is_halt_enabled, layers_without_halt

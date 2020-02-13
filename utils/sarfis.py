@@ -23,21 +23,21 @@ class Progress:
         self.frame_count = len(job_tasks)
         self.finished = 0
         self.errored = 0
-        self.times = []
+        frame_times = []
 
         for frame, stats in job_tasks.items():
             status = stats["status"]
             if status == Status.FINISHED:
                 self.finished += 1
-                self.times.append((int(frame), stats["time"]))
+                frame_times.append((int(frame), stats["time"]))
             elif status == Status.ERROR:
                 self.errored += 1
 
-        if self.times:
-            self.times.sort(key=lambda elem: elem[1])
-            self.time_min = self.times[0]
-            self.time_max = self.times[-1]
-            self.time_median = self.times[(len(self.times) - 1) // 2]
+        if frame_times:
+            frame_times.sort(key=lambda elem: elem[1])
+            self.time_min = frame_times[0]
+            self.time_max = frame_times[-1]
+            self.time_median = frame_times[(len(frame_times) - 1) // 2]
         else:
             self.time_min = 0, 0
             self.time_max = 0, 0

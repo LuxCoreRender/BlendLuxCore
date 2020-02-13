@@ -57,7 +57,7 @@ class LUXCORE_RENDER_PT_sarfis(RenderButtonsPanel, Panel):
             col.label(text="Status: " + str(status))
 
             p = sarfis.Status.progress
-            if p:
+            if p and status in {sarfis.Status.RUNNING, sarfis.Status.ERROR, sarfis.Status.FINISHED}:
                 completed = p.finished + p.errored
                 percentage_completed = round(completed / p.frame_count * 100, 1)
                 col.label(text=f"{completed}/{p.frame_count} ({percentage_completed}%)")
