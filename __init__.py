@@ -38,6 +38,9 @@ bl_info = {
 from . import auto_load, nodes, properties, handlers
 auto_load.init()
 
+# Import here to make it available for third party scripts after a "import BlendLuxCore"
+from .utils.render import register_statistics_callback
+
 
 def register():
     auto_load.register()

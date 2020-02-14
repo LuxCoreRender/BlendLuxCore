@@ -39,6 +39,39 @@ LIGHT_STRATEGY_TO_STR = {
 }
 
 
+statistics_callback = None
+
+
+def register_statistics_callback(func):
+    """
+    Register a function that is called to compose the statistics message (shown both in the UI
+    and printed to console when Blender is started in background mode). The function takes one
+    argument, a pyluxcore.Properties instance that contains the render statistics, and must
+    return a string which is used as status message.
+
+    Arguments for the function:
+    - config: pyluxcore.Properties object that contains the render configuration (e.g. halt samples)
+    - stats: pyluxcore.Properties object that contains the statistics (e.g. rendered samples so far)
+    The function must return a string.
+
+    To access the contents of the pyluxcore.Properties instances, use the Get() method and call the
+    getter for the appropriate data type on the result, like in this example:
+    render_time = stats.Get("stats.renderengine.time").GetFloat()
+    You can find more example on this in the BlendLuxCore stats function in utils/render.py.
+
+    For details on the pyluxcore.Properties content and usage, see the following resources:
+    - for config: https://wiki.luxcorerender.org/LuxCore_SDL_Reference_Manual_v2.3#Render_configuration_file
+    - for stats: the method RenderSessionImpl::UpdateStats() in src/luxcore/luxcoreimpl.cpp
+    To check the contents, you can also simply print() the properties objects
+
+    To unregister your callback, pass None as argument to this function.
+    """
+    if func and not callable(func):
+        raise ValueError("Statistics callback must be callable")
+    global statistics_callback
+    statistics_callback = func
+
+
 def engine_to_str(engine):
     try:
         return ENGINE_TO_STR[engine]
@@ -75,23 +108,28 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
     Show stats string in UI.
     This function is only used for final renders, not viewport renders.
     """
-    pretty_stats = get_pretty_stats(config, stats, scene)
-    # Update the stats that are shown in the image tools area
-    render_slot_stats = engine.exporter.stats
-    render_slot_stats.update_from_luxcore_stats(stats)
-
-    if time_until_film_refresh <= 0:
-        if engine.has_denoiser() and scene.luxcore.denoiser.refresh:
-            refresh_message = "Running denoiser and refreshing film..."
-        else:
-            refresh_message = "Refreshing film..."
+    if statistics_callback:
+        msg = statistics_callback(config.GetProperties(), stats)
     else:
-        refresh_message = "Film refresh in %d s" % math.ceil(time_until_film_refresh)
+        pretty_stats = get_pretty_stats(config, stats, scene)
+        # Update the stats that are shown in the image tools area
+        render_slot_stats = engine.exporter.stats
+        render_slot_stats.update_from_luxcore_stats(stats)
+
+        if time_until_film_refresh <= 0:
+            if engine.has_denoiser() and scene.luxcore.denoiser.refresh:
+                refresh_message = "Running denoiser and refreshing film..."
+            else:
+                refresh_message = "Refreshing film..."
+        else:
+            refresh_message = "Film refresh in %d s" % math.ceil(time_until_film_refresh)
+
+        msg = pretty_stats + " | " + refresh_message
 
     # Note: the first argument is only shown in the UI.
     # The second argument is shown in the UI and printed in the console
     # when rendering in batch mode, so we use this to show the stats.
-    engine.update_stats("", pretty_stats + " | " + refresh_message)
+    engine.update_stats("", msg)
 
     # Update progress bar if we have halt conditions
     halt = utils.get_halt_conditions(scene)
