@@ -719,11 +719,11 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         if light.luxcore.per_square_meter:
             mat_definitions["emission.power"] = 0.0
             mat_definitions["emission.efficency"] = 0.0
-            mat_definitions["emission.gain"] = [light.luxcore.candela * 2.0908]*3
+            mat_definitions["emission.gain"] = [light.luxcore.candela]*3
             mat_definitions["emission.gain.normalizebycolor"] = light.luxcore.normalizebycolor
         else:
             # Multiply with pi to match brightness with other light types
-            mat_definitions["emission.power"] = light.luxcore.candela * 2.0908 * math.pi
+            mat_definitions["emission.power"] = light.luxcore.candela * math.pi
             mat_definitions["emission.efficency"] = 1.0
             mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
             if light.luxcore.candela == 0:

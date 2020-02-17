@@ -160,10 +160,10 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
             if self.per_square_meter:
                 definitions["emission.power"] = 0.0
                 definitions["emission.efficency"] = 0
-                definitions["emission.gain"] = [self.candela * 2.0908] * 3
+                definitions["emission.gain"] = [self.candela] * 3
                 definitions["emission.gain.normalizebycolor"] = self.normalizebycolor
             else:
-                definitions["emission.power"] = self.candela * math.pi * 2.0908
+                definitions["emission.power"] = self.candela * math.pi
                 definitions["emission.efficency"] = 1.0
                 definitions["emission.normalizebycolor"] = self.normalizebycolor
                 if self.candela == 0:
