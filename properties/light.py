@@ -28,7 +28,7 @@ POWER_DESCRIPTION = (
 NORMALIZEBYCOLOR_DESCRIPTION = (
     "Normalize intensity by the Color Luminance.\n"
     "Recommended for Photometric units (Lumen, Candela, Lux) to simulate \n"
-    "the luminous efficiency function."
+    "the luminous efficiency function"
 )
 
 EXPOSURE_DESCRIPTION = (
@@ -86,7 +86,7 @@ TURBIDITY_DESC = (
 
 VIS_INDIRECT_BASE = (
     "Visibility for indirect {type} rays. "
-    "If disabled, this light will appear black in indirect bounces on {type} materials."
+    "If disabled, this light will appear black in indirect bounces on {type} materials"
 )
 VIS_INDIRECT_DIFFUSE_DESC = VIS_INDIRECT_BASE.format(type="diffuse") + " (e.g. matte)"
 VIS_INDIRECT_GLOSSY_DESC = VIS_INDIRECT_BASE.format(type="glossy") + " (e.g. glossy, roughglass, metal)"
@@ -164,10 +164,11 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
                            description="If radius is greater than 0, a sphere light is used")
 
     # point, mappoint, spot, laser
-    light_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
-        ("power", "Power", "Radiant flux in Watt"),
-        ("lumen", "Lumen", "Luminous flux in Lumen"),
-        ("candela", "Candela", "Luminous intensity in Candela"),
+    light_units = [
+        ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure", 0),  
+        ("power", "Power", "Radiant flux in Watt", 1),
+        ("lumen", "Lumen", "Luminous flux in Lumen", 2),
+        ("candela", "Candela", "Luminous intensity in Candela", 3),
     ]
         
     light_unit: EnumProperty(name="Unit", items=light_units, default="artistic")

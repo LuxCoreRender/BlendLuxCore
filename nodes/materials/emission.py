@@ -40,10 +40,11 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
     bl_label = "Emission"
     bl_width_default = 160
 
-    emission_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
-        ("power", "Power", "Radiant flux in Watt"),
-        ("lumen", "Lumen", "Luminous flux in Lumen"),
-        ("candela", "Candela", "Luminous intensity in Candela")
+    emission_units = [
+        ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure", 0),  
+        ("power", "Power", "Radiant flux in Watt", 1),
+        ("lumen", "Lumen", "Luminous flux in Lumen", 2),
+        ("candela", "Candela", "Luminous intensity in Candela", 3)
     ]
     emission_unit: EnumProperty(update=utils_node.force_viewport_update, name="Unit", items=emission_units, default="artistic")
     gain: FloatProperty(update=utils_node.force_viewport_update, name="Gain", default=1, min=0, description="Brightness multiplier")
