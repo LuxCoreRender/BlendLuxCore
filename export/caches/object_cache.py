@@ -19,7 +19,11 @@ def uses_pointiness(node_tree):
 
 
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
-    if material_index < len(obj.material_slots):
+    material_override = depsgraph.view_layer_eval.material_override
+
+    if material_override:
+        mat = material_override
+    elif material_index < len(obj.material_slots):
         mat = obj.material_slots[material_index].material
 
         if mat is None:

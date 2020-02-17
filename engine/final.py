@@ -205,7 +205,6 @@ def _stat_refresh_interval(start, scene):
 
 
 def _check_halt_conditions(engine, scene):
-    # TODO 2.8
     enabled_layers = [layer for layer in scene.view_layers if layer.use]
     needs_halt_condition = len(enabled_layers) > 1 or engine.is_animation
 

@@ -10,6 +10,10 @@ GLOBAL_FALLBACK_MAT = "__CLAY__"
 
 def convert(exporter, depsgraph, material, is_viewport_render, obj_name=""):
     try:
+        # material_override = depsgraph.view_layer_eval.material_override
+        # if material_override:
+        #     material = material_override
+
         if material is None:
             return fallback()
 

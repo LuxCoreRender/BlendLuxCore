@@ -116,3 +116,31 @@ class LUXCORE_OT_world_set_ground_black(bpy.types.Operator):
         context.scene.world.luxcore.ground_enable = True
         context.scene.world.luxcore.ground_color = (0, 0, 0)
         return {"FINISHED"}
+
+
+class LUXCORE_OT_create_sun_hemi(bpy.types.Operator):
+    bl_idname = "luxcore.create_sun_hemi"
+    bl_label = "Create Sun Light"
+    bl_description = "Create a sun light and assign the HDRI"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.world
+
+    def execute(self, context):
+        light_data = bpy.data.lights.new(name="Hemi Sun", type="SUN")
+        light_data.luxcore.light_type = "hemi"
+        light_data.luxcore.image = context.world.luxcore.image
+
+        light_obj = bpy.data.objects.new(name="Hemi Sun", object_data=light_data)
+        context.collection.objects.link(light_obj)
+
+        for obj in context.selected_objects:
+            obj.select_set(False)
+        light_obj.select_set(True)
+        context.view_layer.objects.active = light_obj
+
+        context.world.luxcore.light = "none"
+        context.world.update_tag()
+        return {"FINISHED"}
