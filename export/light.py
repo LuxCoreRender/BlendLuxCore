@@ -680,6 +680,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         "kd": [0, 0, 0],
         "emission": list(light.luxcore.rgb_gain),
         "emission.gain": apply_exposure(gain, light.luxcore.exposure),
+        "emission.gain.normalizebycolor": False,
         "emission.power": 0.0,
         "emission.efficency": 0.0,
         "emission.normalizebycolor": False,
@@ -695,7 +696,8 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     }
 
     if light.luxcore.light_unit == "power":
-        mat_definitions["emission.power"] = light.luxcore.power
+        # Multiply intensity by 2pi*(1-cos(45/2))=2.0908 to match power brightness that was per unit angle in previous versions
+        mat_definitions["emission.power"] = light.luxcore.power / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) )) * 2.0908
         mat_definitions["emission.efficency"] = light.luxcore.efficacy
         mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
 
@@ -703,6 +705,31 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
             mat_definitions["emission.gain"] = [0, 0, 0]
         else:
             mat_definitions["emission.gain"] = [1, 1, 1]
+
+    if light.luxcore.light_unit == "lumen":
+        mat_definitions["emission.power"] = light.luxcore.lumen / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) )) * 2.0908
+        mat_definitions["emission.efficency"] = 1.0
+        mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
+        if light.luxcore.lumen == 0:
+            mat_definitions["emission.gain"] = [0, 0, 0]
+        else:
+            mat_definitions["emission.gain"] = [1, 1, 1]
+    
+    if light.luxcore.light_unit == "candela":
+        if light.luxcore.per_square_meter:
+            mat_definitions["emission.power"] = 0.0
+            mat_definitions["emission.efficency"] = 0.0
+            mat_definitions["emission.gain"] = [light.luxcore.candela * 2.0908]*3
+            mat_definitions["emission.gain.normalizebycolor"] = light.luxcore.normalizebycolor
+        else:
+            # Multiply with pi to match brightness with other light types
+            mat_definitions["emission.power"] = light.luxcore.candela * 2.0908 * math.pi
+            mat_definitions["emission.efficency"] = 1.0
+            mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
+            if light.luxcore.candela == 0:
+                mat_definitions["emission.gain"] = [0, 0, 0]
+            else:
+                mat_definitions["emission.gain"] = [1, 1, 1]
 
     node_tree = light.luxcore.node_tree
     if node_tree:
@@ -769,17 +796,40 @@ def apply_exposure(gain, exposure):
 
 def _define_brightness(light, definitions):
     definitions["color"] = list(light.luxcore.rgb_gain)
-
+        
     if light.luxcore.light_unit == "power":
         definitions["efficency"] = light.luxcore.efficacy
         definitions["power"] = light.luxcore.power
         definitions["normalizebycolor"] = light.luxcore.normalizebycolor
-
         if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
             definitions["gain"] = [0, 0, 0]
         else:
             definitions["gain"] = [1, 1, 1]
 
+    elif light.luxcore.light_unit == "lumen":
+        definitions["efficency"] = 1.0
+        if light.type == "SPOT":
+            definitions["power"] = light.luxcore.lumen
+        else:
+            definitions["power"] = light.luxcore.lumen
+        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+        if light.luxcore.lumen == 0:
+            definitions["gain"] = [0, 0, 0]
+        else:
+            definitions["gain"] = [1, 1, 1]
+    
+    elif light.luxcore.light_unit == "candela":
+        definitions["efficency"] = 1.0
+        if light.type == "SPOT":
+            definitions["power"] = light.luxcore.candela * ( 2 * math.pi * (1 - math.cos(light.spot_size/2)) )
+        else:
+            definitions["power"] = light.luxcore.candela * ( 2 * math.pi * (1 - math.cos(360/2)) )
+        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+        if light.luxcore.candela == 0:
+            definitions["gain"] = [0, 0, 0]
+        else:
+            definitions["gain"] = [1, 1, 1]
+        
     else:
         definitions["efficency"] = 0.0
         definitions["power"] = 0.0
