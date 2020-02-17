@@ -48,7 +48,9 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         if world.luxcore.light != "none":
             is_sky = world.luxcore.light == "sky2"
             col = layout.column(align=True)
-            if not is_sky:
+            if is_sky:
+                col.label(icon="INFO", text="Sky color and brightness are driven by the Physical Sky.")
+            else:
                 col.prop(world.luxcore, "rgb_gain", text="Color")
 
             has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
@@ -57,6 +59,9 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
             if is_sky and has_sun and world.luxcore.use_sun_gain_for_sky:
                 col.prop(world.luxcore.sun.data.luxcore, "gain")
                 col.prop(world.luxcore.sun.data.luxcore, "exposure", slider=True)
+            elif world.luxcore.light == "constantinfinite":
+                col.prop(world.luxcore, "gain", text="Gain (Lux)")
+                col.prop(world.luxcore, "exposure", slider=True)
             else:
                 col.prop(world.luxcore, "gain")
                 col.prop(world.luxcore, "exposure", slider=True)

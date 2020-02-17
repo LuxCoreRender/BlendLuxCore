@@ -26,8 +26,9 @@ POWER_DESCRIPTION = (
 )
 
 NORMALIZEBYCOLOR_DESCRIPTION = (
-    "Normalize intensity by the Color Luminance; Radiometric units like Power should not be "
-    "normalized, while Photometric units like Lumen, Candela, Lux should"
+    "Normalize intensity by the Color Luminance.\n"
+    "Recommended for Photometric units (Lumen, Candela, Lux) to simulate \n"
+    "the luminous efficiency function."
 )
 
 EXPOSURE_DESCRIPTION = (
@@ -51,10 +52,9 @@ CANDELA_DESCRIPTION = (
     "Best for Spot lights to maintain brighness when changing Angle" 
 )
 
-NIT_DESCRIPTION = (
-    "Luminance in candela per square meter (also called Nit).\n"
-    "Photometric unit, it should be normalized by Color Luminance.\n"
-    "Best for Area Lights to maintain brighness when changing Size" 
+PER_SQUARE_METER_DESCRIPTION = (
+    "Divides intensity by the object surface to maintain brightness when changing Size.\n"
+    "Candela per square meter is also called Nit" 
 )
 
 LUX_DESCRIPTION = (
@@ -165,15 +165,16 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
 
     # point, mappoint, spot, laser
     light_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
-        ("power", "Power", "Radiant flux in Watts"),
-        ("lumen", "Lumen", "Luminous flux in Lumens"),
-        ("candela", "Candela", "Luminous intensity in Candelas")
+        ("power", "Power", "Radiant flux in Watt"),
+        ("lumen", "Lumen", "Luminous flux in Lumen"),
+        ("candela", "Candela", "Luminous intensity in Candela"),
     ]
+        
     light_unit: EnumProperty(name="Unit", items=light_units, default="artistic")
     power: FloatProperty(name="Power", default=100, min=0, description=POWER_DESCRIPTION, unit='POWER')
     efficacy: FloatProperty(name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
-    lumen: FloatProperty(name="Lumen", default=650, min=0, description=LUMEN_DESCRIPTION)
-    candela: FloatProperty(name="Candela", default=52, min=0, description=CANDELA_DESCRIPTION)
+    lumen: FloatProperty(name="Lumen", default=1000, min=0, description=LUMEN_DESCRIPTION)
+    candela: FloatProperty(name="Candela", default=80, min=0, description=CANDELA_DESCRIPTION)
     normalizebycolor: BoolProperty(name="Normalize by Color Luminance", default=False, description=NORMALIZEBYCOLOR_DESCRIPTION)
 
     # mappoint
@@ -195,6 +196,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # Note: radius is set with default Blender properties (area light size)
 
     # area light emission nodes
+    
+    per_square_meter: BoolProperty(name="Per square meter", default=False, description=PER_SQUARE_METER_DESCRIPTION)
     node_tree: PointerProperty(name="Node Tree", type=bpy.types.NodeTree)
 
     # sky2, sun, infinite, constantinfinite, area

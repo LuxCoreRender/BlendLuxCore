@@ -95,44 +95,49 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        if light.type in {"POINT", "SPOT", "AREA"}:
-            layout.prop(light.luxcore, "light_unit")
-
+        col = layout.column(align=True)
         if light.type == "AREA" and light.luxcore.node_tree:
-            layout.label(text="Light color is defined by emission node", icon=icons.INFO)
+            col.label(text="Light color is defined by emission node", icon=icons.INFO)
         else:
-            if not (light.type == "SUN" and light.luxcore.light_type == "sun"):
-                layout.prop(light.luxcore, "rgb_gain", text="Color")
+            if light.type == "SUN" and light.luxcore.light_type == "sun":
+                col.label(icon="INFO", text="Sun color and brightness are driven by the Physical Sky.")
+            else:
+                col.prop(light.luxcore, "rgb_gain", text="Color")
+        
+        layout.separator()
+        
+        col = layout.column(align=True)
+        if light.type in {"POINT", "SPOT", "AREA"}:
+            col.prop(light.luxcore, "light_unit")
 
         if light.luxcore.light_unit == "power" and light.type in {"POINT", "SPOT", "AREA"}:
-            col = layout.column(align=True)
             col.prop(light.luxcore, "power")
             col.prop(light.luxcore, "efficacy")
-            layout.prop(light.luxcore, "normalizebycolor")
+            col.prop(light.luxcore, "normalizebycolor")
             
-        if light.luxcore.light_unit == "lumen" and light.type in {"POINT", "SPOT", "AREA"}:
-            col = layout.column(align=True)
+        elif light.luxcore.light_unit == "lumen" and light.type in {"POINT", "SPOT", "AREA"}:
             col.prop(light.luxcore, "lumen")
-            layout.prop(light.luxcore, "normalizebycolor")
+            col.prop(light.luxcore, "normalizebycolor")
             
-        if light.luxcore.light_unit == "candela" and light.type in {"POINT", "SPOT", "AREA"}:
-            col = layout.column(align=True)
+        elif light.luxcore.light_unit == "candela" and light.type in {"POINT", "SPOT", "AREA"}:
             col.prop(light.luxcore, "candela")
-            layout.prop(light.luxcore, "normalizebycolor")
+            if light.type == "AREA":
+                col.prop(light.luxcore, "per_square_meter")
+            col.prop(light.luxcore, "normalizebycolor")
             
-        if light.luxcore.light_unit == "artistic":
-            col = layout.column(align=True)
+        elif light.type == "SUN":
+            if light.luxcore.light_type == "distant":
+                col.prop(light.luxcore, "gain", text='Gain (Lux)')
+                col.prop(light.luxcore, "exposure", slider=True)
+                
+        else:
             col.prop(light.luxcore, "gain")
             col.prop(light.luxcore, "exposure", slider=True)
-            
-
-        col = layout.column(align=True)
-        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
-        op.target = "SCENE"
-        lightgroups = context.scene.luxcore.lightgroups
-        col.prop_search(light.luxcore, "lightgroup",
-                        lightgroups, "custom",
-                        icon=icons.LIGHTGROUP, text="")
+                
+            col = col.column(align=True)
+            col.prop(light.luxcore, "normalizebycolor")
+            if light.luxcore.light_type == "sun":
+                col.enabled = False
 
         layout.separator()
 
@@ -186,6 +191,15 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
             layout.prop(light.luxcore, "is_laser")
 
+        layout.separator()
+        
+        col = layout.column(align=True)
+        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
+        op.target = "SCENE"
+        lightgroups = context.scene.luxcore.lightgroups
+        col.prop_search(light.luxcore, "lightgroup",
+                        lightgroups, "custom",
+                        icon=icons.LIGHTGROUP, text="")
 
 def draw_vismap_ui(layout, scene, light_or_world):
     envlight_cache = scene.luxcore.config.envlight_cache
