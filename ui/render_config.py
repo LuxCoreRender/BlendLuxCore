@@ -170,11 +170,8 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
         layout.use_property_decorate = False
         layout.enabled = config.path.hybridbackforward_enable
 
-        if config.device == "CPU":
-            layout.prop(config.path, "hybridbackforward_lightpartition")
-            layout.prop(config.path, "hybridbackforward_glossinessthresh")
-        elif config.device == "OCL":
-            layout.prop(config.path, "hybridbackforward_glossinessthresh")
+        layout.prop(config.path, "hybridbackforward_lightpartition")
+        layout.prop(config.path, "hybridbackforward_glossinessthresh")
 
         if self.error(context):
             layout.label(text='Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
