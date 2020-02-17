@@ -223,7 +223,8 @@ class LuxCoreRenderStats:
 
 
 class LuxCoreRenderStatsCollection(PropertyGroup):
-    slots = [LuxCoreRenderStats() for i in range(8)]
+    # Important: All access to _slots needs to be through the __getitem__ method so we can add slots if necessary!
+    _slots = [LuxCoreRenderStats() for i in range(8)]
 
     compare: BoolProperty(name="Compare", default=False,
                            description="Compare the statistics of two slots")
@@ -262,10 +263,15 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
                                items=second_slot_items_callback)
 
     def __getitem__(self, slot_index):
-        return self.slots[slot_index]
+        """
+        Important: All access to self._slots needs to be through this method so we can add slots if necessary!
+        """
+        while len(self._slots) < slot_index + 1:
+            self._slots.append(LuxCoreRenderStats())
+        return self._slots[slot_index]
 
     def reset(self, slot_index):
-        self.slots[slot_index].reset()
+        self[slot_index].reset()
 
     def get_active(self):
         """
@@ -275,10 +281,10 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
         """
         render_result = self._get_render_result()
         if not render_result:
-            return self.slots[0]
+            return self[0]
 
         slot_index = render_result.render_slots.active_index
-        return self.slots[slot_index]
+        return self[slot_index]
 
     def _get_render_result(self):
         for image in bpy.data.images:
