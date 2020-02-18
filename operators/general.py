@@ -26,11 +26,12 @@ class LUXCORE_OT_use_cycles_settings(bpy.types.Operator):
 
         for light in bpy.data.lights:
             light.luxcore.use_cycles_settings = True
+            light.update_tag()
 
         for world in bpy.data.worlds:
             world.luxcore.use_cycles_settings = True
+            world.update_tag()
 
-        context.scene.update_tag()
         return {"FINISHED"}
 
 
