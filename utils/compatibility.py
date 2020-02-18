@@ -30,6 +30,13 @@ def run():
             config.light_strategy = "LOG_POWER"
             config.dls_cache.enabled = True
 
+    # Since commit 28a45283c249085ec1ae8ff38665f6d3655bb998 we use the Cycles DOF properties instead
+    # of our own. Apply the old properties if an old scene uses them.
+    for camera in bpy.data.cameras:
+        if camera.luxcore.use_dof:
+            camera.dof.use_dof = True
+            camera.dof.aperture_fstop = camera.luxcore.fstop
+
 
 def update_output_nodes_volume_change(node_tree):
     # commit 3078719a9a33a7e2a798965294463dce6c8b7749
