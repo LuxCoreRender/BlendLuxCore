@@ -3,6 +3,7 @@ import bpy
 from . import icons
 from bpy.types import Panel
 from ..utils import ui as utils_ui
+from cycles.ui import panel_node_draw
 
 
 class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
@@ -355,6 +356,25 @@ class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
                                     "luxcore.tex_show_nodetree",
                                     "luxcore.tex_nodetree_new",
                                     "luxcore.texture_unlink")
+
+
+class LUXCORE_LIGHT_PT_cycles_nodes(DataButtonsPanel, Panel):
+    bl_label = "Nodes"
+    bl_context = "data"
+    bl_order = 2
+
+    @classmethod
+    def poll(cls, context):
+        if context.engine != "LUXCORE":
+            return False
+        is_portal = context.light.type == "AREA" and context.light.cycles.is_portal
+        return context.light and context.light.luxcore.use_cycles_settings and not is_portal
+
+    def draw(self, context):
+        layout = self.layout
+
+        light = context.light
+        panel_node_draw(layout, light, "OUTPUT_LIGHT", "Surface")
 
 
 def compatible_panels():
