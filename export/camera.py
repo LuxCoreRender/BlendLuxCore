@@ -143,10 +143,10 @@ def _final(scene, definitions):
 def _depth_of_field(scene, definitions):
     camera = scene.camera
 
-    if not camera.data.luxcore.use_dof:
+    if not camera.data.dof.use_dof:
         return
 
-    definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.luxcore.fstop)
+    definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.dof.aperture_fstop)
 
     if camera.data.luxcore.use_autofocus:
         definitions["autofocus.enable"] = True

@@ -93,7 +93,7 @@ class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
 
     def draw_header(self, context):
-        self.layout.prop(context.camera.luxcore, "use_dof", text="")
+        self.layout.prop(context.camera.dof, "use_dof", text="")
 
     def draw(self, context):
         layout = self.layout
@@ -102,9 +102,9 @@ class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False      
 
-        layout.enabled = cam.luxcore.use_dof
+        layout.enabled = dof_options.use_dof
 
-        layout.prop(cam.luxcore, "fstop")
+        layout.prop(dof_options, "aperture_fstop")
         layout.prop(cam.luxcore, "use_autofocus")
 
         col = layout.column(align=True)
