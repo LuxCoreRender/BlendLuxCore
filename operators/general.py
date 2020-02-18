@@ -29,6 +29,8 @@ class LUXCORE_OT_use_cycles_settings(bpy.types.Operator):
 
         for world in bpy.data.worlds:
             world.luxcore.use_cycles_settings = True
+
+        context.scene.update_tag()
         return {"FINISHED"}
 
 
