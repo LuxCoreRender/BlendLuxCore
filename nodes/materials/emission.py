@@ -140,8 +140,7 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         """
         definitions["emission"] = self.inputs["Color"].export(exporter, depsgraph, props)
         if self.emission_unit == "power":
-            # Multiply intensity by 2pi*(1-cos(45/2))=2.0908 to match power that was per unit angle in previous versions
-            definitions["emission.power"] = self.power / ( 2 * math.pi * (1 - math.cos(self.spread_angle/2)) ) * 2.0908
+            definitions["emission.power"] = self.power / ( 2 * math.pi * (1 - math.cos(self.spread_angle/2)) )
             definitions["emission.efficency"] = self.efficacy
             definitions["emission.normalizebycolor"] = self.normalizebycolor
             if self.power == 0 or self.efficacy == 0:
@@ -149,7 +148,7 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
             else:
                 definitions["emission.gain"] = [1, 1, 1]
         elif self.emission_unit == "lumen":
-            definitions["emission.power"] = self.lumen / ( 2 * math.pi * (1 - math.cos(self.spread_angle/2)) ) * 2.0908
+            definitions["emission.power"] = self.lumen / ( 2 * math.pi * (1 - math.cos(self.spread_angle/2)) )
             definitions["emission.efficency"] = 1.0
             definitions["emission.normalizebycolor"] = self.normalizebycolor
             if self.lumen == 0 :

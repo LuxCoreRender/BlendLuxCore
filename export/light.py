@@ -696,8 +696,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     }
 
     if light.luxcore.light_unit == "power":
-        # Multiply intensity by 2pi*(1-cos(45/2))=2.0908 to match power brightness that was per unit angle in previous versions
-        mat_definitions["emission.power"] = light.luxcore.power / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) )) * 2.0908
+        mat_definitions["emission.power"] = light.luxcore.power / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) ))
         mat_definitions["emission.efficency"] = light.luxcore.efficacy
         mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
 
@@ -707,7 +706,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
             mat_definitions["emission.gain"] = [1, 1, 1]
 
     if light.luxcore.light_unit == "lumen":
-        mat_definitions["emission.power"] = light.luxcore.lumen / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) )) * 2.0908
+        mat_definitions["emission.power"] = light.luxcore.lumen / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) ))
         mat_definitions["emission.efficency"] = 1.0
         mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
         if light.luxcore.lumen == 0:
