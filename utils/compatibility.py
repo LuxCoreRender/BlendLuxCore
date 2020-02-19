@@ -36,6 +36,7 @@ def run():
         if camera.luxcore.use_dof:
             camera.dof.use_dof = True
             camera.dof.aperture_fstop = camera.luxcore.fstop
+            camera.luxcore.use_dof = False
 
 
 def update_output_nodes_volume_change(node_tree):
