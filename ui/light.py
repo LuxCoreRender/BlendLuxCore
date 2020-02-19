@@ -112,7 +112,10 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
             layout.prop(light.luxcore, "normalizebycolor")
         else:
             col = layout.column(align=True)
-            col.prop(light.luxcore, "gain")
+            if light.type == "SUN" and light.luxcore.light_type == "sun":
+                col.prop(light.luxcore, "sun_sky_gain")
+            else:
+                col.prop(light.luxcore, "gain")
             col.prop(light.luxcore, "exposure", slider=True)
 
         col = layout.column(align=True)

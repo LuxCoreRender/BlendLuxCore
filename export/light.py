@@ -489,20 +489,17 @@ def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
         definitions["ground.color"] = list(world.luxcore.ground_color)
         definitions["groundalbedo"] = list(world.luxcore.groundalbedo)
 
-        gain = apply_exposure(gain, world.luxcore.exposure)
         if world.luxcore.sun and world.luxcore.sun.data:
             # Use sun turbidity and direction so the user does not have to keep two values in sync
             definitions["turbidity"] = world.luxcore.sun.data.luxcore.turbidity
             definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
             if world.luxcore.use_sun_gain_for_sky:
                 sun = world.luxcore.sun.data
-                gain, importance, lightgroup_id = _convert_common_props(exporter, scene, sun)
-                gain = apply_exposure(gain, sun.luxcore.exposure)
+                gain, _, _ = _convert_common_props(exporter, scene, sun)
+                definitions["gain"] = apply_exposure(gain, sun.luxcore.exposure)
         else:
             # Use world turbidity
             definitions["turbidity"] = world.luxcore.turbidity
-
-        definitions["gain"] = gain
 
     elif light_type == "infinite":
         if world.luxcore.image:
@@ -536,7 +533,19 @@ def _calc_sun_dir(transform):
 
 
 def _convert_common_props(exporter, scene, light_or_world):
-    gain = [light_or_world.luxcore.gain] * 3
+    if isinstance(light_or_world, bpy.types.Light):
+        if light_or_world.type == "SUN" and light_or_world.luxcore.light_type == "sun":
+            raw_gain = light_or_world.luxcore.sun_sky_gain
+        else:
+            raw_gain = light_or_world.luxcore.gain
+    else:
+        # It's a bpy.types.World
+        if light_or_world.luxcore.light == "sky2":
+            raw_gain = light_or_world.luxcore.sun_sky_gain
+        else:
+            raw_gain = light_or_world.luxcore.gain
+
+    gain = [raw_gain] * 3
     importance = light_or_world.luxcore.importance
     lightgroup_id = scene.luxcore.lightgroups.get_id_by_name(light_or_world.luxcore.lightgroup)
     exporter.lightgroup_cache.add(lightgroup_id)

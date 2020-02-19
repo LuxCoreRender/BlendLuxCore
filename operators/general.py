@@ -195,7 +195,9 @@ class LUXCORE_OT_attach_sun_to_sky(bpy.types.Operator):
         return context.scene.world and context.object
 
     def execute(self, context):
-        context.scene.world.luxcore.sun = context.object
+        world = context.scene.world
+        world.luxcore.sun = context.object
+        world.update_tag()
         return {"FINISHED"}
 
 

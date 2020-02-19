@@ -55,10 +55,17 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
 
             col = layout.column(align=True)
             if is_sky and has_sun and world.luxcore.use_sun_gain_for_sky:
-                col.prop(world.luxcore.sun.data.luxcore, "gain")
+                sun = world.luxcore.sun.data
+                if sun.type == "SUN" and sun.luxcore.light_type == "sun":
+                    col.prop(sun.luxcore, "sun_sky_gain")
+                else:
+                    col.prop(sun.luxcore, "gain")
                 col.prop(world.luxcore.sun.data.luxcore, "exposure", slider=True)
             else:
-                col.prop(world.luxcore, "gain")
+                if is_sky:
+                    col.prop(world.luxcore, "sun_sky_gain")
+                else:
+                    col.prop(world.luxcore, "gain")
                 col.prop(world.luxcore, "exposure", slider=True)
 
             if is_sky and has_sun:

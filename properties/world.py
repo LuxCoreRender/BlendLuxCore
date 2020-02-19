@@ -1,5 +1,4 @@
 import bpy
-import math
 from bpy.props import (
     PointerProperty, EnumProperty, FloatProperty,
     FloatVectorProperty, IntProperty, BoolProperty,
@@ -10,6 +9,7 @@ from .light import (
     GAMMA_DESCRIPTION, SAMPLEUPPERHEMISPHEREONLY_DESCRIPTION,
     LIGHTGROUP_DESC, TURBIDITY_DESC, VIS_INDIRECT_DIFFUSE_DESC,
     VIS_INDIRECT_GLOSSY_DESC, VIS_INDIRECT_SPECULAR_DESC,
+    SUN_SKY_GAIN_DESC,
 )
 from .image_user import LuxCoreImageUser
 from .config import ENVLIGHT_CACHE_DESC
@@ -67,6 +67,7 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     sun: PointerProperty(name="Sun", type=bpy.types.Object,
                           poll=poll_sun,  # The poll method filters the objects in the scene
                           description=SUN_DESC)
+    sun_sky_gain: FloatProperty(name="Gain", default=0.00002, min=0, precision=6, description=SUN_SKY_GAIN_DESC)
     # Only shown in UI when light is sky2 and a sun is attached
     use_sun_gain_for_sky: BoolProperty(name="Use Sun Gain", default=True,
                                         description=USE_SUN_GAIN_FOR_SKY_DESC)

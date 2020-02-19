@@ -73,6 +73,16 @@ VIS_INDIRECT_SPECULAR_DESC = VIS_INDIRECT_BASE.format(type="specular") + " (e.g.
 RELSIZE_DESC = "1.0 is the apparent size of the sun when observed from earth (at mean distance of 149,600,000 km)"
 THETA_DESC = "Half angle in degrees. Larger values make the light source appear larger and the shadows softer"
 NORMALIZE_DISTANT_DESC = "Make the brightness received at surfaces independent from the size of this light"
+SUN_SKY_GAIN_DESC = (
+    "Brightness multiplier. Set to 1 for physically correct sun/sky brightness, "
+    "if you also use physically based tonemapper and light settings"
+)
+
+PHYSICALLY_BASED_INTENSITY_DESC = (
+    "If enabled, the true sun/sky brigthness is used, which is useful if you also work with physical light units "
+    "and tonemapper settings in the rest of the scene. If disabled, the sun/sky gain is multiplied with 0.00002 "
+    "to prevent overexposed outdoor renders when using the default tonemapper settings"
+)
 
 
 class LuxCoreLightProps(bpy.types.PropertyGroup):
@@ -118,8 +128,11 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # TODO: check min/max, add descriptions
 
     # sun, sky2
+    sun_sky_gain: FloatProperty(name="Gain", default=0.00002, min=0, precision=6, description=SUN_SKY_GAIN_DESC)
     turbidity: FloatProperty(name="Turbidity", default=2.2, min=0, max=30,
                               description=TURBIDITY_DESC)
+    use_physically_based_intensity: BoolProperty(name="Use Physically Based Intensity", default=False,
+                                                 description=PHYSICALLY_BASED_INTENSITY_DESC)
 
     # sun
     relsize: FloatProperty(name="Relative Size", default=1, min=1,
