@@ -1,5 +1,6 @@
 import bpy
 from .node import find_nodes
+from ..nodes import TREE_TYPES
 
 
 """
@@ -10,6 +11,9 @@ e.g. replace old nodes with updated ones when socket names change.
 
 def run():
     for node_tree in bpy.data.node_groups:
+        if node_tree.bl_idname not in TREE_TYPES:
+            continue
+
         update_output_nodes_volume_change(node_tree)
         update_glossy_nodes_ior_change(node_tree)
         update_volume_nodes_asymmetry_change(node_tree)

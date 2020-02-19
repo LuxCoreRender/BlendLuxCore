@@ -427,7 +427,7 @@ class LuxCoreConfig(PropertyGroup):
         ("BIN", "Binary", "Save as .bcf binary file", 1),
     ]
     filesaver_format: EnumProperty(name="", items=filesaver_format_items, default="TXT")
-    filesaver_path: StringProperty(name="", subtype="DIR_PATH")
+    filesaver_path: StringProperty(name="", subtype="DIR_PATH", description="Output path where the scene is saved")
 
     # Seed
     seed: IntProperty(name="Seed", default=1, min=1, description=SEED_DESC)
