@@ -49,7 +49,7 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
             is_sky = world.luxcore.light == "sky2"
             col = layout.column(align=True)
             if is_sky:
-                col.label(icon="INFO", text="Sky color and brightness are driven by the Physical Sky.")
+                col.label(icon="INFO", text="Sky color and brightness are driven by the sun position")
             else:
                 col.prop(world.luxcore, "rgb_gain", text="Color")
 

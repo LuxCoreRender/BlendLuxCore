@@ -99,11 +99,10 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         col = layout.column(align=True)
         if light.type == "AREA" and light.luxcore.node_tree:
             col.label(text="Light color is defined by emission node", icon=icons.INFO)
+        elif light.type == "SUN" and light.luxcore.light_type == "sun":
+            col.label(icon="INFO", text="Sun color and brightness are driven by the sun position")
         else:
-            if light.type == "SUN" and light.luxcore.light_type == "sun":
-                col.label(icon="INFO", text="Sun color and brightness are driven by the Physical Sky.")
-            else:
-                col.prop(light.luxcore, "rgb_gain", text="Color")
+            col.prop(light.luxcore, "rgb_gain", text="Color")
         
         layout.separator()
         
@@ -126,10 +125,9 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                 col.prop(light.luxcore, "per_square_meter")
             col.prop(light.luxcore, "normalizebycolor")
             
-        elif light.type == "SUN":
-            if light.luxcore.light_type == "distant":
-                col.prop(light.luxcore, "gain", text='Gain (Lux)')
-                col.prop(light.luxcore, "exposure", slider=True)
+        elif light.type == "SUN" and light.luxcore.light_type == "distant":
+            col.prop(light.luxcore, "gain", text='Gain (Lux)')
+            col.prop(light.luxcore, "exposure", slider=True)
                 
         else:
             col = layout.column(align=True)
@@ -141,8 +139,6 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                 
             col = col.column(align=True)
             col.prop(light.luxcore, "normalizebycolor")
-            if light.luxcore.light_type == "sun":
-                col.enabled = False
 
         layout.separator()
 
