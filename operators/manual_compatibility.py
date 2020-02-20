@@ -7,8 +7,6 @@ from ..utils.node import find_nodes
 #  * The ImagePipeline tonemapper default settings were changed: auto brightness is now disabled by default (was enabled),
 #    gain is now 1.0 by default (was 0.5)
 
-# TODO prevent user from pressing the button twice
-
 def calc_power_correction_factor(spread_angle):
     return (2 * math.pi * (1 - math.cos(spread_angle / 2)))
 
@@ -16,12 +14,15 @@ def calc_power_correction_factor(spread_angle):
 class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
     bl_idname = "luxcore.convert_to_v23"
     bl_label = "Convert Scene From v2.2 or Earlier to v2.3"
-    bl_description = ""
+    bl_description = ("Convert various settings (e.g. light brightness, world settings) so scenes "
+                      "created with LuxCore v2.2 or earlier appear the same when rendered in v2.3")
     bl_options = {"UNDO"}
+
+    was_executed = False
 
     @classmethod
     def poll(cls, context):
-        return True
+        return not cls.was_executed
 
     def execute(self, context):
         """
@@ -71,4 +72,5 @@ class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
                     emission_node.emission_unit = "power"
                     emission_node.power *= emission_node.gain * calc_power_correction_factor(emission_node.spread_angle)
 
+        LUXCORE_OT_convert_to_v23.was_executed = True
         return {"FINISHED"}
