@@ -1,4 +1,5 @@
 import bpy
+import math
 from ..nodes import TREE_TYPES
 from ..utils.node import find_nodes
 
@@ -36,6 +37,10 @@ class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
                     # disable the normalize option to get the same result
                     light.luxcore.normalize_distant = False
                     light.update_tag()
+            
+            # Converting Area lights so new Power matches 2.2 power per unit angle
+            if light.type == "AREA" and light.luxcore.light_unit == "power":
+                light.luxcore.power *= math.pi * ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) )) 
 
         for world in bpy.data.worlds:
             if world.luxcore.light == "sky2":
@@ -52,5 +57,11 @@ class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
             # the normalize option to get the same result
             for blackbody_node in find_nodes(node_tree, "LuxCoreNodeTexBlackbody", False):
                 blackbody_node.normalize = False
+            
+            # Converting Emissive materials so new Power matches 2.2 power per unit angle
+            for emission_node in find_nodes(node_tree, "LuxCoreNodeMatEmission", False):
+                if emission_node.emission_unit == "power":
+                    emission_node.power *= math.pi * ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) ))
+            
 
         return {"FINISHED"}
