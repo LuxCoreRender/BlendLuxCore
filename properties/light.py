@@ -144,7 +144,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     # TODO: check min/max, add descriptions
 
     # sun, sky2
-    sun_sky_gain: FloatProperty(name="Gain", default=0.00002, min=0, precision=6, description=SUN_SKY_GAIN_DESC)
+    sun_sky_gain: FloatProperty(name="Gain", default=0.00002, min=0, precision=6, step=0.00001,
+                                description=SUN_SKY_GAIN_DESC)
     turbidity: FloatProperty(name="Turbidity", default=2.2, min=0, max=30,
                               description=TURBIDITY_DESC)
 
