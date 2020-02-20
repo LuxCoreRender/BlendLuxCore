@@ -10,7 +10,7 @@ from ..utils.node import find_nodes
 # TODO prevent user from pressing the button twice
 
 def calc_power_correction_factor(spread_angle):
-    return math.pi * (2 * math.pi * (1 - math.cos(spread_angle / 2)))
+    return (2 * math.pi * (1 - math.cos(spread_angle / 2)))
 
 
 class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
