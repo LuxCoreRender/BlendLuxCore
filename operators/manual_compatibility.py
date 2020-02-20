@@ -35,18 +35,21 @@ class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
                     # Sun and sky now have a separate gain property with default 0.00002 to prevent overexposion
                     # with default tonemapper settings. In old scenes, copy the old gain value.
                     light.luxcore.sun_sky_gain = light.luxcore.gain
-                    light.update_tag()
                 elif light.luxcore.light_type == "distant":
                     # The distant light is now normalized by default. For scenes created in older versions,
                     # disable the normalize option to get the same result
                     light.luxcore.normalize_distant = False
-                    light.update_tag()
-            
-            # Converting Area lights so new Power matches 2.2 power per unit angle
-            if light.type == "AREA":
-                light.luxcore.light_unit = "power"
-                light.luxcore.power *= calc_power_correction_factor(light.luxcore.spread_angle)
-                light.update_tag()
+            else:
+                # LuxCore behaviour is to use only the gain if power or efficacy are 0, so in this case
+                # it is ok to leave the new default "artistic" which uses only gain
+                if light.luxcore.power != 0 and light.luxcore.efficacy != 0:
+                    light.luxcore.light_unit = "power"
+                    light.luxcore.power *= light.luxcore.gain
+
+                    if light.type == "AREA" and not light.luxcore.is_laser:
+                        light.luxcore.power *= calc_power_correction_factor(light.luxcore.spread_angle)
+
+            light.update_tag()
 
         for world in bpy.data.worlds:
             if world.luxcore.light == "sky2":
@@ -59,15 +62,13 @@ class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
             if node_tree.bl_idname not in TREE_TYPES:
                 continue
 
-            # The blackbody texture is now normalized by default. For scenes created in older versions, disable
-            # the normalize option to get the same result
-            for blackbody_node in find_nodes(node_tree, "LuxCoreNodeTexBlackbody", False):
-                blackbody_node.normalize = False
-            
-            # Converting Emissive materials so new Power matches 2.2 power per unit angle
+            # Note: for some reason we don't have to disable the new normalize option.
+
             for emission_node in find_nodes(node_tree, "LuxCoreNodeMatEmission", False):
-                emission_node.emission_unit = "power"
-                emission_node.power *= calc_power_correction_factor(emission_node.spread_angle)
-            
+                # LuxCore behaviour is to use only the gain if power or efficacy are 0, so in this case
+                # it is ok to leave the new default "artistic" which uses only gain
+                if emission_node.power != 0 and emission_node.efficacy != 0:
+                    emission_node.emission_unit = "power"
+                    emission_node.power *= emission_node.gain * calc_power_correction_factor(emission_node.spread_angle)
 
         return {"FINISHED"}
