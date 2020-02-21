@@ -7,6 +7,7 @@ from .. import utils
 from ..utils import compatibility
 from . import frame_change_pre
 from ..utils.errorlog import LuxCoreErrorLog
+from ..operators.manual_compatibility import LUXCORE_OT_convert_to_v23
 
 
 def _init_persistent_cache_file_path(settings, suffix):
@@ -60,3 +61,6 @@ def handler(_):
 
     frame_change_pre.have_to_check_node_trees = False
     LuxCoreErrorLog.clear()
+
+    # After loading a .blend file, make it possible to execute the conversion operator again
+    LUXCORE_OT_convert_to_v23.was_executed = False
