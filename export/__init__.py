@@ -92,10 +92,6 @@ class Exporter(object):
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
 
-        # TODO 2.8 remove when done
-        scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.type", "matte"))
-        scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.kd", [0.5] * 3))
-
         # Camera (needs to be parsed first because it is needed for hair tesselation)
         self.camera_cache.diff(self, scene, depsgraph, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
