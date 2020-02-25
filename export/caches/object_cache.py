@@ -225,13 +225,14 @@ class ObjectCache2:
         for psys in obj.particle_systems:
             settings = psys.settings
 
-            if settings.type == "HAIR" and settings.render_type == "PATH":
+            if psys.particles and settings.type == "HAIR" and settings.render_type == "PATH":
                 lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
                                                 is_viewport_render, dg_obj_instance.is_instance,
                                                 dg_obj_instance.matrix_world, engine)
 
                 # TODO handle case when exported_stuff is None
-                if exported_stuff:
+                #  (we'll have to create a new ExportedObject just for the hair mesh)
+                if exported_stuff and lux_obj and lux_mat:
                     # Should always be the case because lights can't have particle systems
                     assert isinstance(exported_stuff, ExportedObject)
                     # Hair export uses same name for object and shape
