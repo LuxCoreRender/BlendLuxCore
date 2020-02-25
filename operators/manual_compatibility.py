@@ -3,9 +3,6 @@ import math
 from ..nodes import TREE_TYPES
 from ..utils.node import find_nodes
 
-# TODO:
-#  * The ImagePipeline tonemapper default settings were changed: auto brightness is now disabled by default (was enabled),
-#    gain is now 1.0 by default (was 0.5)
 
 def calc_power_correction_factor(spread_angle):
     return (2 * math.pi * (1 - math.cos(spread_angle / 2)))
@@ -71,6 +68,22 @@ class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
                 if emission_node.power != 0 and emission_node.efficacy != 0:
                     emission_node.emission_unit = "power"
                     emission_node.power *= emission_node.gain * calc_power_correction_factor(emission_node.spread_angle)
+
+        if context.scene.camera:
+            tonemapper = context.scene.camera.data.luxcore.imagepipeline.tonemapper
+            # When the tonemapper settings are set to our new defaults, this could mean two things:
+            # a) The user has chosen these settings in v2.2 on his own. In this case they shouldn't be changed.
+            # b) The user has never touched these settings and they were automatically changed to the new defaults
+            #    by Blender. In this case, we should change them back to the old defaults.
+            #
+            # Unfortunately, there is no way to find out which of these options is the case.
+            # So we just print a warning and leave the settings as they are.
+            using_new_defaults = tonemapper.linear_scale == 1 and not tonemapper.use_autolinear
+            if tonemapper.type == "TONEMAP_LINEAR" and using_new_defaults:
+                # Not really an error, but if I use INFO or WARNING, Blender doesn't show a popup
+                self.report({"ERROR"}, "Could not auto-convert the tonemapper settings. If this scene "
+                                       "was using the old default settings (Auto enabled, gain 0.5), you "
+                                       "will have to restore them manually")
 
         LUXCORE_OT_convert_to_v23.was_executed = True
         return {"FINISHED"}
