@@ -14,8 +14,9 @@ Blender 2.80, 2.81 and 2.82 are supported by BlendLuxCore v2.2 and greater versi
 See the [release section](https://github.com/LuxCoreRender/BlendLuxCore/releases) for stable and experimental versions.  
 Information about installation and usage are available [in the manual](https://wiki.luxcorerender.org/Category:BlendLuxCore).
 
-### Example Scenes
+### Examples
 
-Can be found here: https://luxcorerender.org/download/#ExampleScenes
+To see what can be achieved with LuxCore, check our [gallery](https://luxcorerender.org/gallery/).  
+You can also download complete [example scenes](https://luxcorerender.org/example-scenes/).
 
 ![Example Render](https://luxcorerender.org/wp-content/uploads/2019/10/dark_mode.jpg)
