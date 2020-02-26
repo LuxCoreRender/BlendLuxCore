@@ -48,7 +48,8 @@ def register():
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
-    print("BlendLuxCore registered (%s)" % pyluxcore.Version())
+    version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
+    print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
 
 
 def unregister():
