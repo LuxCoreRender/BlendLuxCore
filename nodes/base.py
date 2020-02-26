@@ -200,8 +200,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
         definitions["priority"] = self.priority
 
         abs_col = self.inputs["Absorption"].export(exporter, depsgraph, props)
-        worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
-        abs_depth = self.color_depth * worldscale
+        abs_depth = self.color_depth
 
         if self.inputs["Absorption"].is_linked:
             # Implicitly create a colordepth texture with unique name

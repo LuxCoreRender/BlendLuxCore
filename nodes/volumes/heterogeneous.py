@@ -28,7 +28,7 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
 
     # TODO: get name, default, description etc. from super class or something
     priority: IntProperty(update=utils_node.force_viewport_update, name="Priority", default=0, min=0)
-    color_depth: FloatProperty(update=utils_node.force_viewport_update, name="Absorption Depth", default=1.0, min=0,
+    color_depth: FloatProperty(update=utils_node.force_viewport_update, name="Absorption Depth", default=1.0, min=0.000001,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
     lightgroup: StringProperty(update=utils_node.force_viewport_update, name="Light Group", description=LIGHTGROUP_DESC)

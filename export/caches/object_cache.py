@@ -200,8 +200,6 @@ class ObjectCache2:
         if obj.type == "EMPTY" or obj.data is None:
             return
 
-        print("Converting:", obj.name)
-
         obj_key = utils.make_key_from_instance(dg_obj_instance)
         exported_stuff = None
         props = pyluxcore.Properties()
