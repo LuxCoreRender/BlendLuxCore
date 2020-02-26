@@ -67,7 +67,8 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     sun: PointerProperty(name="Sun", type=bpy.types.Object,
                           poll=poll_sun,  # The poll method filters the objects in the scene
                           description=SUN_DESC)
-    sun_sky_gain: FloatProperty(name="Gain", default=0.00002, min=0, precision=6, description=SUN_SKY_GAIN_DESC)
+    sun_sky_gain: FloatProperty(name="Gain", default=0.00002, min=0, precision=6, step=0.00001,
+                                description=SUN_SKY_GAIN_DESC)
     # Only shown in UI when light is sky2 and a sun is attached
     use_sun_gain_for_sky: BoolProperty(name="Use Sun Gain", default=True,
                                         description=USE_SUN_GAIN_FOR_SKY_DESC)

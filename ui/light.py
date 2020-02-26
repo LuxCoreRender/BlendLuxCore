@@ -391,10 +391,10 @@ class LUXCORE_LIGHT_PT_cycles_nodes(DataButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        if context.engine != "LUXCORE":
+        if context.engine != "LUXCORE" or not context.light:
             return False
         is_portal = context.light.type == "AREA" and context.light.cycles.is_portal
-        return context.light and context.light.luxcore.use_cycles_settings and not is_portal
+        return context.light.luxcore.use_cycles_settings and not is_portal
 
     def draw(self, context):
         layout = self.layout

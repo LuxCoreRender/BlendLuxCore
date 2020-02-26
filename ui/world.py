@@ -6,6 +6,7 @@ from cycles.ui import panel_node_draw
 from . import icons
 from ..utils import ui as utils_ui
 from .light import draw_vismap_ui
+from ..nodes.output import get_active_output
 
 
 class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
@@ -187,6 +188,14 @@ class LUXCORE_WORLD_PT_volume(WorldButtonsPanel, Panel):
                                     "luxcore.world_show_volume_node_tree",
                                     "luxcore.world_new_volume_node_tree",
                                     "luxcore.world_unlink_volume_node_tree")
+
+        config = context.scene.luxcore.config
+        if config.photongi.enabled and config.engine == "PATH":
+            output_node = get_active_output(world.luxcore.volume)
+            if output_node and output_node.use_photongi:
+                col = layout.column(align=True)
+                col.label(text="PhotonGI cache enabled on world volume!", icon=icons.WARNING)
+                col.label(text="Can lead to VERY long cache computation time!")
 
 
 class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):

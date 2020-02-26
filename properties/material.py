@@ -2,10 +2,7 @@ import bpy
 from bpy.types import PropertyGroup
 from bpy.props import PointerProperty, FloatProperty, BoolProperty
 from ..utils import node as utils_node
-
-
-#def init():
-#    bpy.types.Material.luxcore = PointerProperty(type=LuxCoreMaterialProps)
+from ..operators.material import show_nodetree
 
 
 class LuxCoreMaterialPreviewProps(PropertyGroup):
@@ -37,8 +34,10 @@ class LuxCoreMaterialProps(PropertyGroup):
     preview: PointerProperty(type=LuxCoreMaterialPreviewProps)
 
     def update_use_cycles_nodes(self, context):
-        if bpy.ops.luxcore.material_show_nodetree.poll():
-            bpy.ops.luxcore.material_show_nodetree()
+        mat = self.id_data
+        node_tree = mat.node_tree if mat.luxcore.use_cycles_nodes else mat.luxcore.node_tree
+        if node_tree:
+            show_nodetree(context, node_tree)
 
     use_cycles_nodes: BoolProperty(name="Use Cycles Nodes", default=False, update=update_use_cycles_nodes,
                                    description="Use the Cycles nodes of this material instead of the LuxCore node tree "

@@ -92,10 +92,6 @@ class Exporter(object):
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
 
-        # TODO 2.8 remove when done
-        scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.type", "matte"))
-        scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.kd", [0.5] * 3))
-
         # Camera (needs to be parsed first because it is needed for hair tesselation)
         self.camera_cache.diff(self, scene, depsgraph, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
@@ -109,13 +105,16 @@ class Exporter(object):
 
         # Objects and lights
         is_viewport_render = context is not None
-        if not self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
+        instances = self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene,
+                                                 scene_props, is_viewport_render)
+        if instances is None:
+            # Export was cancelled by user
             return None
+
         if is_viewport_render:
             # Init
             self.visibility_cache.diff(depsgraph)
 
-        # TODO 2.8
         # Motion blur
         # Motion blur seems not to work in viewport render, i.e. matrix_world is the same on every frame
         if not context and utils.is_valid_camera(scene.camera):
@@ -138,9 +137,15 @@ class Exporter(object):
         if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
             print("-" * 50)
             print("DEBUG: Scene Properties:\n")
+            print("(Note: does not contain dupli props, only the props of the base object)\n")
             print(scene_props)
             print("-" * 50)
         luxcore_scene.Parse(scene_props)
+        # We can only duplicate the instances *after* the scene_props were parsed so the base
+        # objects are available for luxcore_scene
+        self.object_cache2.duplicate_instances(instances, luxcore_scene)
+        # The instances dict can be quite large, delete explicitely (TODO maybe even call gc.collect()?)
+        del instances
 
         # Regularly check if we should abort the export (important in heavy scenes)
         if engine and engine.test_break():

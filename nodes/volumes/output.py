@@ -4,6 +4,7 @@ from ..output import LuxCoreNodeOutput, update_active
 from ... import utils
 from ...bin import pyluxcore
 from ...utils.errorlog import LuxCoreErrorLog
+from ...ui import icons
 
 
 class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
@@ -15,7 +16,7 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
     bl_width_default = 160
 
     active: BoolProperty(name="Active", default=True, update=update_active)
-    use_photongi: BoolProperty(name="Use PhotonGI Cache", default=True,
+    use_photongi: BoolProperty(name="Use PhotonGI Cache", default=False,
                                 description="Store PhotonGI entries in this volume. This only affects "
                                             "homogeneous and heterogeneous volumes, entries are never "
                                             "stored on clear volumes. You might want to disable this "
@@ -33,11 +34,17 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
         if (context.scene.luxcore.config.photongi.enabled
                 and context.scene.luxcore.config.engine == "PATH"):
             # PhotonGI only affects homogeneous and heterogeneous volumes, make the setting inactive for others
-            linked_node = self.inputs["Volume"].links[0].from_node if self.inputs["Volume"].is_linked else False
+            linked_node = self.inputs["Volume"].links[0].from_node if self.inputs["Volume"].is_linked else None
             row = layout.row()
             row.active = linked_node and linked_node.bl_idname in {"LuxCoreNodeVolHomogeneous",
                                                                    "LuxCoreNodeVolHeterogeneous"}
             row.prop(self, "use_photongi")
+
+            world = context.scene.world
+            if self.use_photongi and world and world.luxcore.volume == self.id_data:
+                col = layout.column(align=True)
+                col.label(text="PhotonGI on the world volume can", icon=icons.WARNING)
+                col.label(text="lead to VERY long cache computation time!")
 
     def export(self, exporter, depsgraph, props, luxcore_name):
         # Invalidate node cache

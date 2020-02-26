@@ -94,7 +94,7 @@ class ObjectCache2:
             if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
                 if engine and index % 5000 == 0:
                     if engine.test_break():
-                        return False
+                        return None
                     _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
 
                 try:
@@ -113,7 +113,7 @@ class ObjectCache2:
                 except KeyError:
                     if engine:
                         if engine.test_break():
-                            return False
+                            return None
                         _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                      luxcore_scene, scene_props, is_viewport_render,
@@ -135,15 +135,20 @@ class ObjectCache2:
 
                 if engine:
                     if engine.test_break():
-                        return False
+                        return None
                     _update_stats(engine, obj.name, "", index, obj_count_estimate)
 
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
                                   scene_props, is_viewport_render, engine=engine)
 
-        # Need to parse so we have the dupli objects available for DuplicateObject
-        luxcore_scene.Parse(scene_props)
+        #self._debug_info()
+        return instances
 
+    def duplicate_instances(self, instances, luxcore_scene):
+        """
+        We can only duplicate the instances *after* the scene_props were parsed so the base
+        objects are available for luxcore_scene. Needs to happen before this method is called.
+        """
         for obj, duplis in instances.items():
             if duplis is None:
                 # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
@@ -168,9 +173,6 @@ class ObjectCache2:
                 # steps = 0 # TODO
                 # times = array("f", [])
                 # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
-
-        #self._debug_info()
-        return True
 
     def _debug_info(self):
         print("Objects in cache:", len(self.exported_objects))
@@ -223,13 +225,14 @@ class ObjectCache2:
         for psys in obj.particle_systems:
             settings = psys.settings
 
-            if settings.type == "HAIR" and settings.render_type == "PATH":
+            if psys.particles and settings.type == "HAIR" and settings.render_type == "PATH":
                 lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
                                                 is_viewport_render, dg_obj_instance.is_instance,
                                                 dg_obj_instance.matrix_world, engine)
 
                 # TODO handle case when exported_stuff is None
-                if exported_stuff:
+                #  (we'll have to create a new ExportedObject just for the hair mesh)
+                if exported_stuff and lux_obj and lux_mat:
                     # Should always be the case because lights can't have particle systems
                     assert isinstance(exported_stuff, ExportedObject)
                     # Hair export uses same name for object and shape
