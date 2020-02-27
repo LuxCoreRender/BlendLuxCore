@@ -10,12 +10,12 @@ class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
     bl_width_default = 200   
 
     bond_type_items = [
-        ("running", "Running", ""),
-        ("flemish", "Flemish", ""),
-        ("english", "English", ""),
-        ("herringbone", "Herringbone", ""),
-        ("basket", "Basket", ""),
-        ("chain link", "Chain link", ""),
+        ("running", "Running", "", 0),
+        ("flemish", "Flemish", "", 1),
+        ("english", "English", "", 2),
+        ("herringbone", "Herringbone", "", 3),
+        ("basket", "Basket", "", 4),
+        ("chain_link", "Chain link", "", 5),
     ]
     
     brickbond: EnumProperty(update=utils_node.force_viewport_update, name="Bond type", description="Type of brick bond used", items=bond_type_items, default="running")

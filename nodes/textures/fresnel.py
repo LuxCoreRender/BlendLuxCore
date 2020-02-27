@@ -29,11 +29,11 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
     file_type: EnumProperty(update=utils_node.force_viewport_update, name="FileType", description="File Type", items=file_type_items, default="luxpop")
 
     preset_items = [
-                ("amorphous carbon", "Amorphous carbon", "amorphous carbon", 0),
-                ("copper", "Copper", "copper", 1),
-                ("gold", "Gold", "gold", 2),
-                ("silver", "Silver", "silver", 3),
-                ("aluminium", "Aluminium", "aluminium", 4)
+                ("amorphous_carbon", "Amorphous carbon", "", 0),
+                ("copper", "Copper", "", 1),
+                ("gold", "Gold", "", 2),
+                ("silver", "Silver", "", 3),
+                ("aluminium", "Aluminium", "", 4),
     ]
     preset: EnumProperty(update=utils_node.force_viewport_update, name="Preset", description="NK data presets", items=preset_items,
                          default="aluminium")
