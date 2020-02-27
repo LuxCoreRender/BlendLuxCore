@@ -185,7 +185,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
     has_high_resolution: BoolProperty(name="Has High Resolution", default=False)
     use_bbox_offset: BoolProperty(name="Use Bounding Box Offset", default=True)
     creator: EnumProperty(name="Creator", items=creator_items, default="blender",
-                            description="The 3D programm which generated the OpenVDB files.")
+                            description="The 3D programm which generated the OpenVDB files")
 
     nx: IntProperty(name="nx", description="Number of cells in x direction", default=32)
     ny: IntProperty(name="ny", description="Number of cells in y direction", default=32)

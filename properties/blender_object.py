@@ -13,8 +13,9 @@ DESC_OBJECT_ID = (
     "Note that the random IDs of LuxCore can be greater than 32767 "
     "(the ID Mask node in the compositor can't handle those numbers)"
 )
-DESC_EXCLUDE_FROM_RENDER = ("The object will be excluded from render. "
-    "Useful if you need objects to render for other engines, but not for LuxCore."
+DESC_EXCLUDE_FROM_RENDER = (
+    "The object will be excluded from render. "
+    "Useful if you need objects to render for other engines, but not for LuxCore"
 )
 
 class LuxCoreObjectProps(PropertyGroup):
