@@ -3,7 +3,7 @@ the readability of the source code.
 The following is really important though. If these guidelines are not followed, it can cause 
 massive problems - and not just now, but also years in the future.
 
-### Enums
+### EnumProperty
 
 **Always** add an index for each element. 
 If the index is missing, we can not reorder elements later and we can not rename identifiers 
