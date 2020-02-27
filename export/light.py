@@ -829,9 +829,9 @@ def _define_brightness(light, definitions):
     elif light.luxcore.light_unit == "candela":
         definitions["efficency"] = 1.0
         if light.type == "SPOT":
-            definitions["power"] = light.luxcore.candela * ( 2 * math.pi * (1 - math.cos(light.spot_size/2)) )
+            definitions["power"] = light.luxcore.candela * 2 * math.pi * (1 - math.cos(light.spot_size/2))
         else:
-            definitions["power"] = light.luxcore.candela * ( 2 * math.pi * (1 - math.cos(360/2)) )
+            definitions["power"] = light.luxcore.candela * 4 * math.pi
         definitions["normalizebycolor"] = light.luxcore.normalizebycolor
         if light.luxcore.candela == 0:
             definitions["gain"] = [0, 0, 0]
