@@ -110,7 +110,7 @@ class LuxCoreImagepipelineWhiteBalance(PropertyGroup, LuxCoreImagepipelinePlugin
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
     compatible_with_viewport_denoising = True
 
-    temperature: FloatProperty(name="temperature", default=6500, min=1000, max=10000, precision=50,
+    temperature: FloatProperty(name="Temperature", default=6500, min=1000, max=10000,
                           description="White point temperature")
 
 class LuxCoreImagepipelineColorAberration(PropertyGroup, LuxCoreImagepipelinePlugin):
