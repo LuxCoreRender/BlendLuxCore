@@ -42,7 +42,6 @@ def compatible_panels():
          "PARTICLE_PT_children_clumping_noise",
          "PARTICLE_PT_children_roughness",
          "PARTICLE_PT_children_kink",
-         "PARTICLE_MT_hair_dynamics_presets",
          "PARTICLE_PT_render",
          "PARTICLE_PT_render_extra",
          "PARTICLE_PT_render_path",

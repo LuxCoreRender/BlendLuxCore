@@ -24,12 +24,8 @@ def compatible_panels():
         "TEXTURE_PT_magic",
         "TEXTURE_PT_marble",
         "TEXTURE_PT_musgrave",
-        "TEXTURE_PT_ocean",
-        "TEXTURE_PT_pointdensity",
-        "TEXTURE_PT_pointdensity_turbulence",
         "TEXTURE_PT_stucci",
         "TEXTURE_PT_voronoi",
-        "TEXTURE_PT_voxeldata",
         "TEXTURE_PT_wood",
         "TEXTURE_PT_custom_props",
      ]
