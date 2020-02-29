@@ -64,9 +64,6 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
                 else:
                     col.prop(sun.luxcore, "gain")
                 col.prop(world.luxcore.sun.data.luxcore, "exposure", slider=True)
-            elif world.luxcore.light == "constantinfinite":
-                col.prop(world.luxcore, "gain", text="Gain (Lux)")
-                col.prop(world.luxcore, "exposure", slider=True)
             else:
                 if is_sky:
                     col.prop(world.luxcore, "sun_sky_gain")
