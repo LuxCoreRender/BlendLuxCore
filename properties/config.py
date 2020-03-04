@@ -110,6 +110,10 @@ HYBRID_BACKFORWARD_LIGHTPART_DESC = (
     "Controls the amount of computed light rays. Higher values assign more computational power "
     "to caustic rendering. Using 0% disables light tracing, using 100% disables camera rays completely"
 )
+HYBRID_BACKFORWARD_LIGHTPART_OPENCL_DESC = (
+    "Controls the amount of light rays computed on the CPU (the GPU can only compute camera rays). "
+    "Using 0% disables light tracing, using 100% means that the CPU only performs light tracing"
+)
 HYBRID_BACKFORWARD_GLOSSINESS_DESC = (
     "If a material's roughness is lower than this threshold, it is sampled from lights, "
     "otherwise it is sampled from the camera (normal path tracing)"
@@ -144,6 +148,10 @@ class LuxCoreConfigPath(PropertyGroup):
     hybridbackforward_lightpartition: FloatProperty(name="Light Rays", default=20, min=0, max=100,
                                                     subtype="PERCENTAGE",
                                                     description=HYBRID_BACKFORWARD_LIGHTPART_DESC)
+    # Separate property so we can use a different default that makes more sense for OpenCL
+    hybridbackforward_lightpartition_opencl: FloatProperty(name="Light Rays", default=100, min=0, max=100,
+                                                    subtype="PERCENTAGE",
+                                                    description=HYBRID_BACKFORWARD_LIGHTPART_OPENCL_DESC)
     hybridbackforward_glossinessthresh: FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
                                                       description=HYBRID_BACKFORWARD_GLOSSINESS_DESC)
 

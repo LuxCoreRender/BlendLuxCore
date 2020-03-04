@@ -162,7 +162,10 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
         layout.use_property_decorate = False
         layout.enabled = config.path.hybridbackforward_enable
 
-        layout.prop(config.path, "hybridbackforward_lightpartition")
+        if config.device == "CPU":
+            layout.prop(config.path, "hybridbackforward_lightpartition")
+        else:
+            layout.prop(config.path, "hybridbackforward_lightpartition_opencl")
         layout.prop(config.path, "hybridbackforward_glossinessthresh")
 
         if self.error(context):
