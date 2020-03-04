@@ -95,7 +95,6 @@ def compatible_panels():
          "PHYSICS_PT_cloth_property_weights",
          "PHYSICS_PT_cloth_field_weights",
          # Old fluid panels (up to Blender 2.81)
-         "PHYSICS_PT_fluid",
          "PHYSICS_PT_fluid_flow",
          "PHYSICS_PT_fluid_settings",
          "PHYSICS_PT_fluid_particle_cache",
