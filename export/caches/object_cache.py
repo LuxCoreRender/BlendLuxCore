@@ -199,20 +199,16 @@ class ObjectCache2:
         exported_stuff = None
         props = pyluxcore.Properties()
 
-        if obj.type in MESH_OBJECTS:
-            # assert obj_key not in self.exported_objects
-            exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                                                    luxcore_scene, scene_props, is_viewport_render)
-            if exported_stuff:
-                props = exported_stuff.get_props()
-        elif obj.type == "LIGHT":
-            props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
-                                                        dg_obj_instance.matrix_world.copy(), is_viewport_render)
-
-        if exported_stuff:
-            scene_props.Set(props)
-            if keep_track_of:
-                self.exported_objects[obj_key] = exported_stuff
+        if dg_obj_instance.show_self:
+            if obj.type in MESH_OBJECTS:
+                # assert obj_key not in self.exported_objects
+                exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
+                                                        luxcore_scene, scene_props, is_viewport_render)
+                if exported_stuff:
+                    props = exported_stuff.get_props()
+            elif obj.type == "LIGHT":
+                props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
+                                                            dg_obj_instance.matrix_world.copy(), is_viewport_render)
 
         # Convert hair
         for psys in obj.particle_systems:
@@ -230,6 +226,11 @@ class ObjectCache2:
                     assert isinstance(exported_stuff, ExportedObject)
                     # Hair export uses same name for object and shape
                     exported_stuff.parts.append(ExportedPart(lux_obj, lux_obj, lux_mat))
+
+        if exported_stuff:
+            scene_props.Set(props)
+            if keep_track_of:
+                self.exported_objects[obj_key] = exported_stuff
 
         return exported_stuff
 

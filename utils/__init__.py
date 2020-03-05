@@ -377,7 +377,7 @@ def find_active_vertex_color_layer(vertex_colors):
 
 
 def is_instance_visible(dg_obj_instance, obj):
-    return dg_obj_instance.show_self and is_obj_visible(obj)
+    return (dg_obj_instance.show_self or dg_obj_instance.show_particles) and is_obj_visible(obj)
 
 
 def is_obj_visible(obj):
