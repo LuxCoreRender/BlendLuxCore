@@ -118,7 +118,6 @@ class ObjectCache2:
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                      luxcore_scene, scene_props, is_viewport_render,
                                                      keep_track_of=False, engine=engine)
-
                     if exported_obj:
                         # Note, the transformation matrix and object ID of this first instance is not added
                         # to the duplication list, since it already exists in the scene
@@ -154,12 +153,8 @@ class ObjectCache2:
                 # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
                 continue
 
-            if duplis.get_count() == 1:
-                # Nothing to do regarding duplication, just track the object
-                # TODO check if we can modify key generation so that we only create
-                #  keys from objects, not dg_obj_instance
-                # obj_key = utils.make_key_from_instance(dg_obj_instance)
-                # self.exported_objects[obj_key] = duplis.exported_obj
+            if duplis.get_count() == 0:
+                # Only one instance was created (and is already present in the luxcore_scene), nothing to duplicate
                 continue
 
             print("obj", obj.name, "has", duplis.get_count(), "instances")
