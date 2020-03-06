@@ -94,6 +94,8 @@ def compatible_panels():
          "PHYSICS_PT_cloth_self_collision",
          "PHYSICS_PT_cloth_property_weights",
          "PHYSICS_PT_cloth_field_weights",
+         "PHYSICS_PT_cloth_internal_springs",
+         "PHYSICS_PT_cloth_pressure",
          # Old fluid panels (up to Blender 2.81)
          "PHYSICS_PT_fluid_flow",
          "PHYSICS_PT_fluid_settings",
