@@ -1,5 +1,6 @@
 import bpy
 from array import array
+from functools import lru_cache
 
 from ... import utils
 from ...bin import pyluxcore
@@ -11,6 +12,9 @@ from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
 from ...utils import MESH_OBJECTS
 from ...nodes.output import get_active_output
+
+
+MAX_PARTICLES_FOR_LIVE_TRANSFORM = 2000
 
 
 def uses_pointiness(node_tree):
@@ -45,6 +49,22 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         return lux_mat_name, mat_props, None
 
 
+def get_total_particle_count(particle_system, is_viewport_render):
+    settings = particle_system.settings
+    particle_count = settings.count
+    if settings.child_type != "NONE":
+        particle_count *= settings.child_nbr if is_viewport_render else settings.rendered_child_count
+    return particle_count
+
+
+@lru_cache(maxsize=32)
+def supports_live_transform(particle_system):
+    if not particle_system:
+        return True
+    total_particles = get_total_particle_count(particle_system, True)
+    return total_particles <= MAX_PARTICLES_FOR_LIVE_TRANSFORM
+
+
 def _update_stats(engine, current_obj_name, extra_obj_info, current_index, total_object_count):
     engine.update_stats("Export", f"Object: {current_obj_name}{extra_obj_info} ({current_index}/{total_object_count})")
     engine.update_progress(current_index / total_object_count)
@@ -57,11 +77,7 @@ def get_obj_count_estimate(depsgraph):
     for id in depsgraph.ids:
         try:
             for psys in id.particle_systems:
-                settings = psys.settings
-                particle_count = settings.count
-                if settings.child_type != "NONE":
-                    particle_count *= settings.rendered_child_count
-                obj_count += particle_count
+                obj_count += get_total_particle_count(psys, False)
         except AttributeError:
             pass
     return obj_count
@@ -88,10 +104,18 @@ class ObjectCache2:
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
 
+        # Particle system counts might have changed
+        supports_live_transform.cache_clear()
+
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.object
 
-            if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
+            if (dg_obj_instance.is_instance
+                    and not (is_viewport_render and supports_live_transform(dg_obj_instance.particle_system))
+                    and obj.type in MESH_OBJECTS):
+                # This code is optimized for large amounts of duplis. Drawback is that objects generated from this
+                # code can't be transformed later in a viewport render session (due to BlendLuxCore implementation
+                # reasons, not because of LuxCore)
                 if engine and index % 5000 == 0:
                     if engine.test_break():
                         return None
@@ -115,9 +139,8 @@ class ObjectCache2:
                         if engine.test_break():
                             return None
                         _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
-                    exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                                     luxcore_scene, scene_props, is_viewport_render,
-                                                     keep_track_of=False, engine=engine)
+                    exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
+                                                     scene_props, is_viewport_render, engine)
                     if exported_obj:
                         # Note, the transformation matrix and object ID of this first instance is not added
                         # to the duplication list, since it already exists in the scene
@@ -126,7 +149,7 @@ class ObjectCache2:
                         # Could not export the object, happens e.g. with curve objects with zero faces
                         instances[obj] = None
             else:
-                # It's a regular object, not a dupli
+                # This code is for singular objects and for duplis that should be movable later in a viewport render
                 if not utils.is_instance_visible(dg_obj_instance, obj):
                     continue
                 if view_layer and obj.name not in view_layer.objects:
@@ -138,7 +161,7 @@ class ObjectCache2:
                     _update_stats(engine, obj.name, "", index, obj_count_estimate)
 
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                                  scene_props, is_viewport_render, engine=engine)
+                                  scene_props, is_viewport_render, engine)
 
         #self._debug_info()
         return instances
@@ -190,7 +213,7 @@ class ObjectCache2:
         return key
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                     scene_props, is_viewport_render, keep_track_of=True, engine=None):
+                     scene_props, is_viewport_render, engine=None):
         """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
         if obj.type == "EMPTY" or obj.data is None:
             return
@@ -229,8 +252,7 @@ class ObjectCache2:
 
         if exported_stuff:
             scene_props.Set(props)
-            if keep_track_of:
-                self.exported_objects[obj_key] = exported_stuff
+            self.exported_objects[obj_key] = exported_stuff
 
         return exported_stuff
 
@@ -268,7 +290,6 @@ class ObjectCache2:
                     if output_node:
                         try:
                             # Convert the whole shape stack
-                            # TODO support for instances
                             shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
                         except KeyError:
                             # TODO remove this try/except, instead add the socket in utils/compatibility.py
@@ -308,8 +329,6 @@ class ObjectCache2:
                     if not utils.is_obj_visible(obj):
                         continue
 
-                    obj_key = utils.make_key(obj)
-
                     if obj.type in MESH_OBJECTS:
                         mesh_key = self._get_mesh_key(obj, use_instancing)
 
@@ -327,7 +346,7 @@ class ObjectCache2:
                         # objects using this mesh (just the properties, the mesh is not re-exported).
                         redefine_objs_with_these_mesh_keys.append(mesh_key)
                     elif obj.type == "LIGHT":
-                        print(f"Light obj {obj.name} was updated")
+                        obj_key = utils.make_key(obj)
                         props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
                                                                     obj.matrix_world.copy(), is_viewport_render)
                         if exported_stuff:
@@ -339,9 +358,15 @@ class ObjectCache2:
         #  Would be better for performance with many particles, however I'm not sure
         #  we can find all instances corresponding to one particle system?
 
+        # Particle system counts might have changed
+        supports_live_transform.cache_clear()
+
         # Currently, every update that doesn't require a mesh re-export happens here
         for dg_obj_instance in depsgraph.object_instances:
-            obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+            if not supports_live_transform(dg_obj_instance.particle_system):
+                continue
+
+            obj = dg_obj_instance.object
             if not utils.is_instance_visible(dg_obj_instance, obj):
                 continue
 

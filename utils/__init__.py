@@ -36,8 +36,8 @@ def make_key_from_bpy_struct(bpy_struct):
 
 def make_key_from_instance(dg_obj_instance):
     if dg_obj_instance.is_instance:
-        key = make_key(dg_obj_instance.object.original)
-        key += "_" + make_key(dg_obj_instance.parent.original)
+        key = make_key(dg_obj_instance.object)
+        key += "_" + make_key(dg_obj_instance.parent)
         key += persistent_id_to_str(dg_obj_instance.persistent_id)
     else:
         key = make_key(dg_obj_instance.object.original)
