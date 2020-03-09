@@ -288,12 +288,8 @@ class ObjectCache2:
 
                     output_node = get_active_output(node_tree)
                     if output_node:
-                        try:
-                            # Convert the whole shape stack
-                            shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
-                        except KeyError:
-                            # TODO remove this try/except, instead add the socket in utils/compatibility.py
-                            pass
+                        # Convert the whole shape stack
+                        shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
 
                     if uses_pointiness(node_tree):
                         # Replace shape definition with pointiness shape

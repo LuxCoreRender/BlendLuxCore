@@ -22,6 +22,7 @@ def run():
         update_cloth_remove_repeat_sockets(node_tree)
         update_imagemap_add_alpha_output(node_tree)
         update_smoke_multiple_output_channels(node_tree)
+        update_mat_output_add_shape_input(node_tree)
 
     for scene in bpy.data.scenes:
         config = scene.luxcore.config
@@ -200,3 +201,12 @@ def update_smoke_multiple_output_channels(node_tree):
         node.outputs.remove(node.outputs["Value"])
 
         print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_mat_output_add_shape_input(node_tree):
+    # commit e20355a7567b22df4d05e8b303c98dbc697b9c08
+
+    for node in find_nodes(node_tree, "LuxCoreNodeMatOutput", False):
+        if "Shape" not in node.inputs:
+            node.inputs.new("LuxCoreSocketShape", "Shape")
+        print('Updated output node "%s" in tree %s to new version' % (node.name, node_tree.name))
