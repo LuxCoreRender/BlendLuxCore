@@ -14,9 +14,9 @@ def run():
         if node_tree.bl_idname not in TREE_TYPES:
             continue
 
-        update_output_nodes_volume_change(node_tree)
-        update_glossy_nodes_ior_change(node_tree)
-        update_volume_nodes_asymmetry_change(node_tree)
+        update_mat_output_volume_change(node_tree)
+        update_glossy_ior_change(node_tree)
+        update_volume_asymmetry_change(node_tree)
         update_colormix_remove_min_max_sockets(node_tree)
         update_imagemap_remove_gamma_brightness_sockets(node_tree)
         update_cloth_remove_repeat_sockets(node_tree)
@@ -43,7 +43,7 @@ def run():
             camera.luxcore.use_dof = False
 
 
-def update_output_nodes_volume_change(node_tree):
+def update_mat_output_volume_change(node_tree):
     # commit 3078719a9a33a7e2a798965294463dce6c8b7749
 
     for old_output in find_nodes(node_tree, "LuxCoreNodeMatOutput", False):
@@ -81,7 +81,7 @@ def update_output_nodes_volume_change(node_tree):
         node_tree.nodes.remove(old_output)
 
 
-def update_glossy_nodes_ior_change(node_tree):
+def update_glossy_ior_change(node_tree):
     # commit c3152dec8e0e07e676a60be56ba4578dbe297df6
 
     affected_nodes = find_nodes(node_tree, "LuxCoreNodeMatGlossy2", False)
@@ -95,7 +95,7 @@ def update_glossy_nodes_ior_change(node_tree):
             print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
 
-def update_volume_nodes_asymmetry_change(node_tree):
+def update_volume_asymmetry_change(node_tree):
     # commit 2387d1c300b5a1f6931592efcdd0574d243356e7
 
     if node_tree.bl_idname != "luxcore_volume_nodes":
