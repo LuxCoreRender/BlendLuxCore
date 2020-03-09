@@ -5,7 +5,7 @@ from functools import lru_cache
 from ... import utils
 from ...bin import pyluxcore
 from .. import mesh_converter
-from ..hair import convert_hair, warn_about_missing_uvs
+from ..hair import convert_hair, warn_about_missing_uvs, set_hair_props, make_hair_shape_name
 from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
@@ -47,6 +47,10 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
     else:
         lux_mat_name, mat_props = material.fallback()
         return lux_mat_name, mat_props, None
+
+
+def make_psys_key(obj, psys, is_instance):
+    return obj.name + psys.name + str(is_instance)
 
 
 def get_total_particle_count(particle_system, is_viewport_render):
@@ -97,6 +101,7 @@ class ObjectCache2:
     def __init__(self):
         self.exported_objects = {}
         self.exported_meshes = {}
+        self.exported_hair = {}
 
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
         instances = {}
@@ -238,17 +243,31 @@ class ObjectCache2:
             settings = psys.settings
 
             if psys.particles and settings.type == "HAIR" and settings.render_type == "PATH":
-                lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
-                                                is_viewport_render, dg_obj_instance.is_instance,
-                                                dg_obj_instance.matrix_world, engine)
+                # Can't use the memory address of the psys as key because it changes
+                # when the psys is updated (e.g. because some hair moves)
+                is_for_duplication = is_viewport_render or dg_obj_instance.is_instance
+                psys_key = make_psys_key(obj, psys, is_for_duplication)
+                lux_obj = make_hair_shape_name(obj_key, psys)
+
+                try:
+                    lux_shape, lux_mat = self.exported_hair[psys_key]
+                    set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, obj.luxcore.visible_to_camera,
+                                   is_for_duplication, dg_obj_instance.matrix_world,
+                                   settings.luxcore.hair.instancing == "enabled")
+                except KeyError:
+                    lux_shape, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
+                                                    scene_props, is_viewport_render, is_for_duplication,
+                                                    dg_obj_instance.matrix_world, engine)
+                    if lux_shape and lux_mat:
+                        self.exported_hair[psys_key] = (lux_shape, lux_mat)
 
                 # TODO handle case when exported_stuff is None
                 #  (we'll have to create a new ExportedObject just for the hair mesh)
-                if exported_stuff and lux_obj and lux_mat:
+                if exported_stuff and lux_shape and lux_mat:
                     # Should always be the case because lights can't have particle systems
                     assert isinstance(exported_stuff, ExportedObject)
-                    # Hair export uses same name for object and shape
-                    exported_stuff.parts.append(ExportedPart(lux_obj, lux_obj, lux_mat))
+                    exported_stuff.parts.append(ExportedPart(lux_obj, lux_shape, lux_mat))
+
 
         if exported_stuff:
             scene_props.Set(props)
@@ -341,6 +360,16 @@ class ObjectCache2:
                         # of the object is changed in Blender. In this case we have to re-define all
                         # objects using this mesh (just the properties, the mesh is not re-exported).
                         redefine_objs_with_these_mesh_keys.append(mesh_key)
+
+                        # Re-export hair systems of objects with updated geometry
+                        for psys in obj.particle_systems:
+                            settings = psys.settings
+
+                            if psys.particles and settings.type == "HAIR" and settings.render_type == "PATH":
+                                # Can't use the memory address of the psys as key because it changes
+                                # when the psys is updated (e.g. because some hair moves)
+                                psys_key = make_psys_key(obj, psys, True)
+                                del self.exported_hair[psys_key]
                     elif obj.type == "LIGHT":
                         obj_key = utils.make_key(obj)
                         props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
@@ -390,7 +419,6 @@ class ObjectCache2:
                     scene_props.Set(exported_obj.get_props())
             else:
                 # Object is new and not in LuxCore yet, or it is a light, do a full export
-                # TODO use luxcore_scene.DuplicateObjects for instances
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                   luxcore_scene, scene_props, is_viewport_render)
 
