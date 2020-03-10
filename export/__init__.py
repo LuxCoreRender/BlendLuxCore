@@ -204,6 +204,7 @@ class Exporter(object):
                 "PhotonGI": config_props.Get("path.photongi.indirect.enabled", [False]).GetBool(),
                 "Caustics": config_props.Get("path.photongi.caustic.enabled", [False]).GetBool(),
                 "DLSC": config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE",
+                "Env. Light": scene.luxcore.config.envlight_cache.enabled,
             }
             enabled_caches = [key for key, value in caches.items() if value]
 
