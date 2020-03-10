@@ -56,6 +56,8 @@ def make_psys_key(obj, psys, is_instance):
 def get_total_particle_count(particle_system, is_viewport_render):
     settings = particle_system.settings
     particle_count = settings.count
+    if is_viewport_render:
+        particle_count *= settings.display_percentage / 100
     if settings.child_type != "NONE":
         particle_count *= settings.child_nbr if is_viewport_render else settings.rendered_child_count
     return particle_count
