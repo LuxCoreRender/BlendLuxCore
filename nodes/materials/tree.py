@@ -33,6 +33,12 @@ class LuxCoreMaterialNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
     def update(self):
         super().update()
 
+        # Force viewport update of the corresponding material
+        for mat in bpy.data.materials:
+            if mat.luxcore.node_tree == self:
+                mat.diffuse_color = mat.diffuse_color
+                break
+
         # Update opengl materials in case the node linked to the
         # output has changed
         utils_node.update_opengl_materials(None, bpy.context)

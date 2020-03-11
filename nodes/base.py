@@ -24,6 +24,7 @@ class LuxCoreNodeTree:
 
         # We have to force an update through a Blender property, otherwise the
         # material preview, the viewport render etc. do not update
+        # TODO it looks like in Blender's new depsgraph, this workaround doesn't work anymore
         self.refresh = True
 
     def acknowledge_connection(self, context):
