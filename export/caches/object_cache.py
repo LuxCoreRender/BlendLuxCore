@@ -90,10 +90,10 @@ def _update_stats(engine, current_obj_name, extra_obj_info, current_index, total
 def get_obj_count_estimate(depsgraph):
     # This is faster than len(depsgraph.object_instances)
     # TODO: count dupliverts and dupliframes
-    obj_count = len(depsgraph.ids)
-    for id in depsgraph.ids:
+    obj_count = len(depsgraph.objects)
+    for obj in depsgraph.objects:
         try:
-            for psys in id.particle_systems:
+            for psys in obj.particle_systems:
                 obj_count += get_total_particle_count(psys, False)
         except AttributeError:
             pass
