@@ -50,7 +50,8 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
 
 
 def make_psys_key(obj, psys, is_instance):
-    return obj.name + psys.name + str(is_instance)
+    psys_lib_name = psys.settings.library.name if psys.settings.library else ""
+    return obj.name_full + psys.name + psys_lib_name + str(is_instance)
 
 
 def get_total_particle_count(particle_system, is_viewport_render):
