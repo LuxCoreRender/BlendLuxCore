@@ -55,7 +55,17 @@ def make_psys_key(obj, psys, is_instance):
 
 
 def get_total_particle_count(particle_system, is_viewport_render):
+    """
+    Note: this function does not return the amount of particles that are actually visible in a given
+    frame (because it's hard to find that number), but the maximum number the particle system will ever create.
+    """
     settings = particle_system.settings
+
+    if (settings.render_type in {"NONE", "HALO", "LINE"}
+            or (settings.type == "HAIR" and settings.render_type == "PATH")
+            or (is_viewport_render and settings.display_method != "RENDER")):
+        return 0
+
     particle_count = settings.count
     if is_viewport_render:
         particle_count *= settings.display_percentage / 100
