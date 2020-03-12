@@ -209,4 +209,4 @@ def update_mat_output_add_shape_input(node_tree):
     for node in find_nodes(node_tree, "LuxCoreNodeMatOutput", False):
         if "Shape" not in node.inputs:
             node.inputs.new("LuxCoreSocketShape", "Shape")
-        print('Updated output node "%s" in tree %s to new version' % (node.name, node_tree.name))
+            print('Updated output node "%s" in tree %s to new version' % (node.name, node_tree.name))
