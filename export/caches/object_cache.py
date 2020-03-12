@@ -198,8 +198,6 @@ class ObjectCache2:
                 # Only one instance was created (and is already present in the luxcore_scene), nothing to duplicate
                 continue
 
-            print("obj", obj.name, "has", duplis.get_count(), "instances")
-
             for part in duplis.exported_obj.parts:
                 src_name = part.lux_obj
                 dst_name = src_name + "dupli"
