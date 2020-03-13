@@ -142,7 +142,7 @@ class ObjectCache2:
                 try:
                     # The code in this try block is performance-critical, as it is
                     # executed most often when exporting millions of instances.
-                    duplis = instances[obj]
+                    duplis = instances[obj.original.as_pointer()]
                     # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
                     if duplis:
                         obj_id = dg_obj_instance.object.original.luxcore.id
@@ -162,10 +162,10 @@ class ObjectCache2:
                     if exported_obj:
                         # Note, the transformation matrix and object ID of this first instance is not added
                         # to the duplication list, since it already exists in the scene
-                        instances[obj] = Duplis(exported_obj)
+                        instances[obj.original.as_pointer()] = Duplis(exported_obj)
                     else:
                         # Could not export the object, happens e.g. with curve objects with zero faces
-                        instances[obj] = None
+                        instances[obj.original.as_pointer()] = None
             else:
                 # This code is for singular objects and for duplis that should be movable later in a viewport render
                 if not utils.is_instance_visible(dg_obj_instance, obj):
@@ -189,7 +189,7 @@ class ObjectCache2:
         We can only duplicate the instances *after* the scene_props were parsed so the base
         objects are available for luxcore_scene. Needs to happen before this method is called.
         """
-        for obj, duplis in instances.items():
+        for duplis in instances.values():
             if duplis is None:
                 # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
                 continue
