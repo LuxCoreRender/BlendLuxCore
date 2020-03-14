@@ -187,7 +187,7 @@ class LUXCORE_WORLD_PT_volume(WorldButtonsPanel, Panel):
                                     "luxcore.world_unlink_volume_node_tree")
 
         config = context.scene.luxcore.config
-        if config.photongi.enabled and config.engine == "PATH":
+        if config.photongi.enabled and config.engine == "PATH" and world.luxcore.volume:
             output_node = get_active_output(world.luxcore.volume)
             if output_node and output_node.use_photongi:
                 col = layout.column(align=True)
