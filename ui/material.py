@@ -102,7 +102,9 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return engine == "LUXCORE" and (context.material and not context.material.luxcore.use_cycles_nodes)
+        if context.material and context.material.luxcore.use_cycles_nodes:
+            return False
+        return engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
