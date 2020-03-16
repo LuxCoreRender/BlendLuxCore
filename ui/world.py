@@ -5,7 +5,7 @@ from cycles.ui import panel_node_draw
 
 from . import icons
 from ..utils import ui as utils_ui
-from .light import draw_vismap_ui
+from .light import draw_envlight_cache_ui
 from ..nodes.output import get_active_output
 
 
@@ -217,7 +217,7 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
         layout.use_property_decorate = False
         
         layout.prop(world.luxcore, "importance")
-        draw_vismap_ui(layout, context.scene, world)
+        draw_envlight_cache_ui(layout, context.scene, world)
 
 
 class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):

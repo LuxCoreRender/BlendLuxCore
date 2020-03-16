@@ -202,7 +202,8 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                         lightgroups, "custom",
                         icon=icons.LIGHTGROUP, text="")
 
-def draw_vismap_ui(layout, scene, light_or_world):
+
+def draw_envlight_cache_ui(layout, scene, light_or_world):
     envlight_cache = scene.luxcore.config.envlight_cache
     col = layout.column()
     col.active = envlight_cache.enabled
@@ -240,7 +241,7 @@ class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
 
         if not light.luxcore.use_cycles_settings and light.type == "SUN" and light.luxcore.light_type == "hemi":
             # infinite (with image) and constantinfinte lights
-            draw_vismap_ui(layout, context.scene, light)
+            draw_envlight_cache_ui(layout, context.scene, light)
 
 
 class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
@@ -314,6 +315,7 @@ class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):
         if light.luxcore.image is None:
             col.prop(light, "spot_blend", text="Blend", slider=True)
         col.prop(light, "show_cone")
+
 
 class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
     bl_label = "IES Light"
@@ -404,11 +406,11 @@ class LUXCORE_LIGHT_PT_cycles_nodes(DataButtonsPanel, Panel):
 
 
 def compatible_panels():
-     panels = [
+    panels = [
         "DATA_PT_context_light",
-     ]
-     types = bpy.types
-     return [getattr(types, p) for p in panels if hasattr(types, p)]
+    ]
+    types = bpy.types
+    return [getattr(types, p) for p in panels if hasattr(types, p)]
 
 
 def register():

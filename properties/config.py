@@ -315,9 +315,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
 
 class LuxCoreConfigEnvLightCache(PropertyGroup):
     enabled: BoolProperty(name="Enabled", default=False, description=ENVLIGHT_CACHE_DESC)
-    # TODO descriptions
-    map_width: IntProperty(name="Map Width", default=256, min=16, soft_max=256)
-    samples: IntProperty(name="Samples", default=1, min=1, soft_max=32)
+    # TODO description
+    quality: FloatProperty(name="Quality", default=0.5, min=0, max=1)
 
     file_path: StringProperty(name="File Path", subtype="FILE_PATH",
                               description="File path to the Env. light cache file")

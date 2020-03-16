@@ -222,8 +222,7 @@ class LUXCORE_RENDER_PT_caches_envlight(RenderButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.prop(envlight_cache, "map_width")
-        layout.prop(envlight_cache, "samples")
+        layout.prop(envlight_cache, "quality")
 
 
 class LUXCORE_RENDER_PT_caches_envlight_persistence(RenderButtonsPanel, Panel):

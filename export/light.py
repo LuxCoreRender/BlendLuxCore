@@ -788,13 +788,16 @@ def _envlightcache(definitions, light_or_world, scene, is_viewport_render):
     definitions["visibilitymapcache.enable"] = enabled
     if enabled:
         # All env. light caches share the same properties (it is very rare to have more than one anyway)
+        definitions["visibilitymapcache.map.quality"] = envlight_cache.quality
+        # Automatically chosen by LuxCore according to the quality and HDRI map size
+        definitions["visibilitymapcache.map.tilewidth"] = 0
+        definitions["visibilitymapcache.map.tileheight"] = 0
+        definitions["visibilitymapcache.map.tilesamplecount"] = 0
+
+        definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
+
         file_path = utils.get_persistent_cache_file_path(envlight_cache.file_path, envlight_cache.save_or_overwrite,
                                                          is_viewport_render, scene)
-        map_width = envlight_cache.map_width
-        definitions["visibilitymapcache.map.width"] = map_width
-        definitions["visibilitymapcache.map.height"] = map_width / 2
-        definitions["visibilitymapcache.map.samplecount"] = envlight_cache.samples
-        definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
         definitions["visibilitymapcache.persistent.file"] = file_path
 
 
