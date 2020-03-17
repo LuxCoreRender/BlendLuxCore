@@ -100,8 +100,7 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
             if settings.use_high_resolution:
                 resolutions = [res * (settings.amplify + 1) for res in resolutions]
 
-            worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
-            dimensions = [dim * worldscale for dim in domain_eval.dimensions]
+            dimensions = [dim for dim in domain_eval.dimensions]
 
             # The optimal step size on each axis
             step_sizes = [dim / res for dim, res in zip(dimensions, resolutions)]
@@ -110,7 +109,7 @@ class LuxCoreNodeVolHeterogeneous(bpy.types.Node, LuxCoreNodeVolume):
             definitions["steps.size"] = step_size
 
             # Find the max. count required in the worst case
-            diagonal = domain_eval.dimensions.length * worldscale
+            diagonal = domain_eval.dimensions.length
             worst_case_maxcount = math.ceil(diagonal / step_size)
             definitions["steps.maxcount"] = worst_case_maxcount
 

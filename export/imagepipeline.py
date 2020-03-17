@@ -142,13 +142,11 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
 
 
 def _mist(definitions, index, mist, scene):
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-
     definitions[str(index) + ".type"] = "MIST"
     definitions[str(index) + ".color"] = list(mist.color)
     definitions[str(index) + ".amount"] = mist.amount / 100
-    definitions[str(index) + ".startdistance"] = mist.start_distance * worldscale
-    definitions[str(index) + ".enddistance"] = mist.end_distance * worldscale
+    definitions[str(index) + ".startdistance"] = mist.start_distance
+    definitions[str(index) + ".enddistance"] = mist.end_distance
     definitions[str(index) + ".excludebackground"] = mist.exclude_background
     return index + 1
 

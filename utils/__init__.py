@@ -125,50 +125,11 @@ def create_props(prefix, definitions):
     return props
 
 
-def get_worldscale(scene, as_scalematrix=True):
-    # TODO 2.8 I want to change the way we handle unit scaling, see
-    #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
-    #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
-    ws = 1
-
-    # unit_settings = scene.unit_settings
-    #
-    # if unit_settings.system in {"METRIC", "IMPERIAL"}:
-    #     # The units used in modelling are for display only. behind
-    #     # the scenes everything is in meters
-    #     ws = unit_settings.scale_length
-    # else:
-    #     ws = 1
-
-    if as_scalematrix:
-        return mathutils.Matrix.Scale(ws, 4)
-    else:
-        return ws
-
-
-def get_scaled_to_world(matrix, scene):
-    # TODO 2.8 I want to change the way we handle unit scaling, see
-    #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
-    #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
-    return matrix.copy()  # Someone might rely on this being a copy
-
-    # matrix = matrix.copy()
-    # sm = get_worldscale(scene)
-    # matrix = matrix @ sm
-    # ws = get_worldscale(scene, as_scalematrix=False)
-    # matrix[0][3] *= ws
-    # matrix[1][3] *= ws
-    # matrix[2][3] *= ws
-    # return matrix
-
-
-def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
+def matrix_to_list(matrix, invert=False):
     """
     Flatten a 4x4 matrix into a list
     Returns list[16]
     """
-    # TODO remove parameters scene and apply_worldscale everywhere in the code base
-
     # Copy required for BlenderMatrix4x4ToList(), not sure why, but if we don't
     # make a copy, we only get an identity matrix in C++
     matrix = matrix.copy()
@@ -279,7 +240,6 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
-    #world_scale = get_worldscale(scene, False)
 
     # Following: Black Magic
     scale = 1

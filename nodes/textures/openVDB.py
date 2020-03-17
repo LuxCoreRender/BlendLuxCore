@@ -442,8 +442,6 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
 
         # combine transformations
         matrix_transformation = utils.matrix_to_list(transformation @ obmat @ fluidmat @ houdini_transform,
-                                                     scene=exporter.scene,
-                                                     apply_worldscale=True,
                                                      invert=True)
         definitions = {
             "type": "densitygrid",

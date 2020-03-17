@@ -11,11 +11,6 @@ class LuxCoreMaterialPreviewProps(PropertyGroup):
         # A trick to force a material preview refresh (update_tag() does not work)
         material.preview_render_type = material.preview_render_type
 
-    size: FloatProperty(name="Sphere Size (m)", default=0.1, min=0.01, soft_max=1,
-                         description="Diameter of the preview sphere in meters\n"
-                                     "(one checker tile has a size of 10cm)",
-                         update=update_preview)
-
     zoom: FloatProperty(name="Zoom", default=1, min=1, soft_max=3, max=10,
                          description="Zoom of the preview camera",
                          update=update_preview)

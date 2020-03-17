@@ -90,12 +90,6 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     exporter = engine.exporter
     scene = depsgraph.scene_eval
 
-    # The diameter that the preview objects should have, in meters
-    size = active_mat.luxcore.preview.size
-    worldscale = size / DEFAULT_SPHERE_SIZE
-    scene.unit_settings.system = "METRIC"
-    scene.unit_settings.scale_length = worldscale
-
     scene_props = pyluxcore.Properties()
     luxcore_scene = pyluxcore.Scene()
 
@@ -240,7 +234,7 @@ def _create_area_light(scene, luxcore_scene, props, name, color, position, rotat
     transform_matrix[2][3] = position[2]
 
     mat = transform_matrix @ rotation_matrix @ scale_matrix
-    transform = utils.matrix_to_list(mat, scene, apply_worldscale=True)
+    transform = utils.matrix_to_list(mat)
 
     # add mesh
     vertices = [
@@ -260,10 +254,8 @@ def _create_area_light(scene, luxcore_scene, props, name, color, position, rotat
 
 
 def _create_backplates(scene, luxcore_scene, props):
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-
     # Ground plane
-    size = 20*worldscale
+    size = 20
     zpos = 0.0
     vertices = [
         (size, size, zpos),
@@ -287,13 +279,11 @@ def _create_backplates(scene, luxcore_scene, props):
         (4, 0, 1),
         (1, 5, 4)
     ]
-    _create_walls(luxcore_scene, props, "walls", vertices, faces, worldscale)
+    _create_walls(luxcore_scene, props, "walls", vertices, faces)
 
 def _create_ground(scene, luxcore_scene, props):
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-
     # Ground plane
-    size = 20*worldscale
+    size = 20
     zpos = 0.0
     vertices = [
         (size, size, zpos),
@@ -305,10 +295,10 @@ def _create_ground(scene, luxcore_scene, props):
         (0, 1, 2),
         (2, 3, 0),
     ]
-    _create_checker_plane(luxcore_scene, props, "ground_plane", vertices, faces, worldscale)
+    _create_checker_plane(luxcore_scene, props, "ground_plane", vertices, faces)
 
 
-def _create_checker_plane(luxcore_scene, props, name, vertices, faces, worldscale):
+def _create_checker_plane(luxcore_scene, props, name, vertices, faces):
     mesh_name = name + "_mesh"
     mat_name = name + "_mat"
     tex_name = name + "_tex"
@@ -337,20 +327,17 @@ def _create_checker_plane(luxcore_scene, props, name, vertices, faces, worldscal
     props.Set(pyluxcore.Property("scene.objects." + name + ".shape", mesh_name))
     props.Set(pyluxcore.Property("scene.objects." + name + ".material", mat_name))
 
-def _create_walls(luxcore_scene, props, name, vertices, faces, worldscale):
+def _create_walls(luxcore_scene, props, name, vertices, faces):
     mesh_name = name + "_mesh"
     mat_name = name + "_mat"
-    tex_name = name + "_tex"
 
     # Mesh
     luxcore_scene.DefineMesh(mesh_name, vertices, faces, None, None, None, None)
-    # Texture
     # Material
     props.Set(pyluxcore.Property("scene.materials." + mat_name + ".type", "matte"))
     props.Set(pyluxcore.Property("scene.materials." + mat_name + ".kd", 0.7))
     # Invisible for indirect diffuse rays to eliminate fireflies
     props.Set(pyluxcore.Property("scene.materials." + mat_name + ".visibility.indirect.diffuse.enable", False))
-
     # Object
     props.Set(pyluxcore.Property("scene.objects." + name + ".shape", mesh_name))
     props.Set(pyluxcore.Property("scene.objects." + name + ".material", mat_name))

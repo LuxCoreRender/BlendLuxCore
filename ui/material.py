@@ -137,7 +137,6 @@ class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
         row = layout.row(align=True)
         preview = context.material.luxcore.preview
         row.prop(preview, "zoom")
-        row.prop(preview, "size")
 
 
 # Since we can't disable the original MATERIAL_PT_viewport panel, it makes no sense to add our own

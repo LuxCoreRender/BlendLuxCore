@@ -32,7 +32,7 @@ def convert(context, engine, scene, depsgraph, object_cache2):
         for step in range(steps):
             time = frame_offsets[step]
             matrix = matrix_steps[step]
-            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
+            transformation = utils.matrix_to_list(matrix)
             definitions = {
                 "motion.%d.time" % step: time,
                 "motion.%d.transformation" % step: transformation,
