@@ -71,13 +71,11 @@ class VisibilityCache:
         self.last_visible_objects = None
         self.objects_to_remove = None
 
+    def init(self, depsgraph):
+        self.last_visible_objects = self._get_visible_objects(depsgraph)
+
     def diff(self, depsgraph):
         visible_objs = self._get_visible_objects(depsgraph)
-        if self.last_visible_objects is None:
-            # Not initialized yet
-            self.last_visible_objects = visible_objs
-            return False
-
         self.objects_to_remove = self.last_visible_objects - visible_objs
         self.last_visible_objects = visible_objs
         return bool(self.objects_to_remove)

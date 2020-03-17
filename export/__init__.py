@@ -113,8 +113,7 @@ class Exporter(object):
             return None
 
         if is_viewport_render:
-            # Init
-            self.visibility_cache.diff(depsgraph)
+            self.visibility_cache.init(depsgraph)
 
         # Motion blur
         # Motion blur seems not to work in viewport render, i.e. matrix_world is the same on every frame
