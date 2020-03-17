@@ -162,10 +162,9 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     # Lights (either two area lights or a sun+sky setup)
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
 
-##  #TODO: Decide if the ground plane should be visible with world sphere enabled
     if not is_world_sphere:
-        _create_backplates(scene, luxcore_scene, scene_props)
-    _create_ground(scene, luxcore_scene, scene_props)
+        _create_backplates(luxcore_scene, scene_props)
+    _create_ground(luxcore_scene, scene_props)
 
 
     luxcore_scene.Parse(scene_props)
@@ -253,7 +252,7 @@ def _create_area_light(scene, luxcore_scene, props, name, color, position, rotat
     return props
 
 
-def _create_backplates(scene, luxcore_scene, props):
+def _create_backplates(luxcore_scene, props):
     # Ground plane
     size = 20
     zpos = 0.0
@@ -281,7 +280,7 @@ def _create_backplates(scene, luxcore_scene, props):
     ]
     _create_walls(luxcore_scene, props, "walls", vertices, faces)
 
-def _create_ground(scene, luxcore_scene, props):
+def _create_ground(luxcore_scene, props):
     # Ground plane
     size = 20
     zpos = 0.0
