@@ -231,8 +231,8 @@ class ObjectCache2:
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
                      scene_props, is_viewport_render, engine=None):
         """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
-        if obj.type == "EMPTY" or obj.data is None:
-            return
+        if obj.data is None:
+            return None
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
         exported_stuff = None
@@ -279,10 +279,11 @@ class ObjectCache2:
                     assert isinstance(exported_stuff, ExportedObject)
                     exported_stuff.parts.append(ExportedPart(lux_obj, lux_shape, lux_mat))
 
-
         if exported_stuff:
             scene_props.Set(props)
-            self.exported_objects[obj_key] = exported_stuff
+
+            if is_viewport_render:
+                self.exported_objects[obj_key] = exported_stuff
 
         return exported_stuff
 
@@ -393,9 +394,6 @@ class ObjectCache2:
         #  objects and check if they have a particle system that needs to be updated?
         #  Would be better for performance with many particles, however I'm not sure
         #  we can find all instances corresponding to one particle system?
-
-        # Particle system counts might have changed
-        supports_live_transform.cache_clear()
 
         # Currently, every update that doesn't require a mesh re-export happens here
         for dg_obj_instance in depsgraph.object_instances:

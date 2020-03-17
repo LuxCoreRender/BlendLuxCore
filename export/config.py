@@ -194,6 +194,10 @@ def _convert_viewport_engine(scene, definitions, config):
             # in order to reduce the per frame rendering time.
             definitions["rtpath.resolutionreduction"] = 1
 
+            # definitions["rtpath.resolutionreduction.preview"] = 4
+            # definitions["rtpath.resolutionreduction.preview.step"] = 8
+            # definitions["rtpath.resolutionreduction"] = 4
+
         # Enable a bunch of often-used features to minimize the need for kernel recompilations
         enabled_opencl_features = " ".join([
             # Materials

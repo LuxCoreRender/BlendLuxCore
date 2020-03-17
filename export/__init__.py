@@ -11,6 +11,7 @@ from . import (
     motion_blur, hair, halt, world,
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
+from .caches.object_cache import supports_live_transform
 
 
 class Change:
@@ -227,31 +228,48 @@ class Exporter(object):
         changes = Change.NONE
         final = context is None
 
+        # Particle system counts might have changed
+        supports_live_transform.cache_clear()
+
         if not final:
             # Changes that only need to be checked in viewport render, not in final render
+            s = time()
             config_props = config.convert(self, scene, context)
             if self.config_cache.diff(config_props):
                 changes |= Change.CONFIG
+            print("get_changes(): checking for config changes took %.1f ms" % ((time() - s) * 1000))
 
+            s = time()
             if self.camera_cache.diff(self, scene, depsgraph, context):
                 changes |= Change.CAMERA
+            print("get_changes(): checking for camera changes took %.1f ms" % ((time() - s) * 1000))
 
+            s = time()
             if self.object_cache2.diff(depsgraph):
                 changes |= Change.OBJECT
+            print("get_changes(): checking for object_cache changes took %.1f ms" % ((time() - s) * 1000))
 
+            s = time()
             if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
+            print("get_changes(): checking for material changes took %.1f ms" % ((time() - s) * 1000))
 
+            s = time()
             if self.visibility_cache.diff(depsgraph):
                 changes |= Change.VISIBILITY
+            print("get_changes(): checking for visibility changes took %.1f ms" % ((time() - s) * 1000))
 
+            s = time()
             if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
+            print("get_changes(): checking for world changes took %.1f ms" % ((time() - s) * 1000))
 
         # Relevant during final render
+        s = time()
         imagepipeline_props = imagepipeline.convert(depsgraph.scene, context)
         if self.imagepipeline_cache.diff(imagepipeline_props):
             changes |= Change.IMAGEPIPELINE
+        print("get_changes(): checking for imagepipeline changes took %.1f ms" % ((time() - s) * 1000))
 
         if final:
             # Halt conditions are only used during final render
@@ -350,11 +368,11 @@ class Exporter(object):
                 print("Removing object with key", key)
 
                 try:
-                    self.object_cache2.exported_objects[key].delete(luxcore_scene)
-                    del self.object_cache2.exported_objects[key]
+                    exported_obj = self.object_cache2.exported_objects.pop(key)
+                    exported_obj.delete(luxcore_scene)
                 except KeyError:
-                    # This should be ok, not every exportable object is added to exported_objects
-                    print("Could not find object to remove for key", key)
+                    # This is ok, not every exportable object is added to exported_objects
+                    pass
 
             if self.visibility_cache.objects_to_remove:
                 # luxcore_scene.RemoveUnusedMeshes()  # TODO for some reason this deletes even some meshes that are still in use

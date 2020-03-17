@@ -3,7 +3,7 @@ from ... import utils
 from ...utils import EXPORTABLE_OBJECTS
 from .. import camera, material
 
-from .object_cache import ObjectCache2
+from .object_cache import ObjectCache2, supports_live_transform
 
 
 class StringCache:
@@ -80,15 +80,17 @@ class VisibilityCache:
 
         self.objects_to_remove = self.last_visible_objects - visible_objs
         self.last_visible_objects = visible_objs
-        return self.objects_to_remove
+        return bool(self.objects_to_remove)
 
     def _get_visible_objects(self, depsgraph):
         keys = set()
+
         for dg_obj_instance in depsgraph.object_instances:
-            if dg_obj_instance.show_self:
-                obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-                if not obj.luxcore.exclude_from_render and obj.type in EXPORTABLE_OBJECTS:
-                    keys.add(utils.make_key_from_instance(dg_obj_instance))
+            if not supports_live_transform(dg_obj_instance.particle_system):
+                continue
+
+            if dg_obj_instance.show_self and not dg_obj_instance.object.luxcore.exclude_from_render:
+                keys.add(utils.make_key_from_instance(dg_obj_instance))
         return keys
 
 

@@ -29,6 +29,7 @@ def start_session(engine):
 
 
 def view_update(engine, context, depsgraph, changes=None):
+    start = time()
     if engine.starting_session:
         # Prevent deadlock
         return
@@ -60,18 +61,24 @@ def view_update(engine, context, depsgraph, changes=None):
         return
 
     if changes is None:
+        s = time()
         changes = engine.exporter.get_changes(depsgraph, context)
+        print("view_update(): checking for changes took %.1f ms" % ((time() - s) * 1000))
 
     if changes:
+        s = time()
         # We have to re-assign the session because it might have been replaced due to filmsize change
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
         if engine.framebuffer:
             engine.framebuffer.reset_denoiser()
+        print("view_update(): applying changes took %.1f ms" % ((time() - s) * 1000))
+    print("view_update() took %.1f ms" % ((time() - start) * 1000))
 
 
 def view_draw(engine, context, depsgraph):
+    start = time()
     scene = depsgraph.scene_eval
 
     if not engine.framebuffer or engine.framebuffer.needs_replacement(context, scene):
@@ -86,7 +93,9 @@ def view_draw(engine, context, depsgraph):
 
     # Check for changes because some actions in Blender (e.g. moving the viewport
     # camera) do not trigger a view_update() call, but only a view_draw() call.
+    s = time()
     changes = engine.exporter.get_changes(depsgraph, context)
+    print("view_draw(): checking for changes took %.1f ms" % ((time() - s) * 1000))
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
         engine.tag_redraw()
@@ -130,19 +139,31 @@ def view_draw(engine, context, depsgraph):
                     status_message = "Could not start denoiser: %s" % error
     else:
         # Not in pause yet, keep drawing
+        s = time()
         engine.session.WaitNewFrame()
+        print("view_draw(): session.WaitNewFrame() took %.1f ms" % ((time() - s) * 1000))
         try:
+            s = time()
             engine.session.UpdateStats()
+            print("view_draw(): session.UpdateStats() took %.1f ms" % ((time() - s) * 1000))
         except RuntimeError as error:
             print("[Engine/Viewport] Error during UpdateStats():", error)
+        s = time()
         framebuffer.update(engine.session, scene)
         framebuffer.reset_denoiser()
         engine.tag_redraw()
+        print("view_draw(): framebuffer update took %.1f ms" % ((time() - s) * 1000))
 
+    s = time()
     framebuffer.draw(engine, context, scene)
+    print("view_draw(): framebuffer drawing took %.1f ms" % ((time() - s) * 1000))
 
     # Show formatted statistics in Blender UI
+    s = time()
     config = engine.session.GetRenderConfig()
     stats = engine.session.GetStats()
     pretty_stats = utils_render.get_pretty_stats(config, stats, scene, context)
     engine.update_stats(pretty_stats, status_message)
+    print("view_draw(): showing stats in UI took %.1f ms" % ((time() - s) * 1000))
+
+    print("view_draw() took %.1f ms" % ((time() - start) * 1000))
