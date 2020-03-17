@@ -59,7 +59,7 @@ class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
             "brickbevel": self.brickbevel,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
+            "mapping.transformation": utils.matrix_to_list(transformation),
         }       
 
         if mapping_type == "uvmapping3d":

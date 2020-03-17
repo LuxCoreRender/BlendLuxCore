@@ -23,7 +23,7 @@ class LuxCoreNodeTexCheckerboard3D(bpy.types.Node, LuxCoreNodeTexture):
             "texture2": self.inputs["Color 2"].export(exporter, depsgraph, props),
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
+            "mapping.transformation": utils.matrix_to_list(transformation),
         }
 
         if mapping_type == "uvmapping3d":
