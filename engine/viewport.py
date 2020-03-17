@@ -60,10 +60,9 @@ def view_update(engine, context, depsgraph, changes=None):
             traceback.print_exc()
         return
 
-    if changes is None:
-        s = time()
-        changes = engine.exporter.get_changes(depsgraph, context)
-        print("view_update(): checking for changes took %.1f ms" % ((time() - s) * 1000))
+    s = time()
+    changes = engine.exporter.get_changes(depsgraph, context, changes)
+    print("view_update(): checking for changes took %.1f ms" % ((time() - s) * 1000))
 
     if changes:
         s = time()
@@ -94,7 +93,7 @@ def view_draw(engine, context, depsgraph):
     # Check for changes because some actions in Blender (e.g. moving the viewport
     # camera) do not trigger a view_update() call, but only a view_draw() call.
     s = time()
-    changes = engine.exporter.get_changes(depsgraph, context)
+    changes = engine.exporter.get_viewport_changes(depsgraph, context)
     print("view_draw(): checking for changes took %.1f ms" % ((time() - s) * 1000))
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:

@@ -199,14 +199,14 @@ class Exporter(object):
         if engine:
             message = "Creating RenderSession"
             # Inform about pre-computations that can take a long time to complete, like caches
-            caches = {
+            cache_state = {
                 # The value in the list is used as fallback if the property is not set
                 "PhotonGI": config_props.Get("path.photongi.indirect.enabled", [False]).GetBool(),
                 "Caustics": config_props.Get("path.photongi.caustic.enabled", [False]).GetBool(),
                 "DLSC": config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE",
                 "Env. Light": scene.luxcore.config.envlight_cache.enabled,
             }
-            enabled_caches = [key for key, value in caches.items() if value]
+            enabled_caches = [key for key, value in cache_state.items() if value]
 
             if any(enabled_caches):
                 message += ", computing caches (" + ", ".join(enabled_caches) + ")"
@@ -221,27 +221,35 @@ class Exporter(object):
         self.scene = None
         return pyluxcore.RenderSession(renderconfig)
 
-    def get_changes(self, depsgraph, context=None):
+    def get_viewport_changes(self, depsgraph, context=None):
         self.scene = depsgraph.scene_eval
-        scene = self.scene
         changes = Change.NONE
+
+        s = time()
+        config_props = config.convert(self, self.scene, context)
+        if self.config_cache.diff(config_props):
+            changes |= Change.CONFIG
+        print("get_changes(): checking for config changes took %.1f ms" % ((time() - s) * 1000))
+
+        s = time()
+        if self.camera_cache.diff(self, self.scene, depsgraph, context):
+            changes |= Change.CAMERA
+        print("get_changes(): checking for camera changes took %.1f ms" % ((time() - s) * 1000))
+
+        # Do not hold reference to temporary data
+        self.scene = None
+        return changes
+
+    def get_changes(self, depsgraph, context=None, changes=None):
+        self.scene = depsgraph.scene_eval
         final = context is None
 
         # Particle system counts might have changed
         supports_live_transform.cache_clear()
 
         if not final:
-            # Changes that only need to be checked in viewport render, not in final render
-            s = time()
-            config_props = config.convert(self, scene, context)
-            if self.config_cache.diff(config_props):
-                changes |= Change.CONFIG
-            print("get_changes(): checking for config changes took %.1f ms" % ((time() - s) * 1000))
-
-            s = time()
-            if self.camera_cache.diff(self, scene, depsgraph, context):
-                changes |= Change.CAMERA
-            print("get_changes(): checking for camera changes took %.1f ms" % ((time() - s) * 1000))
+            if changes is None:
+                changes = self.get_viewport_changes(depsgraph, context)
 
             s = time()
             if self.object_cache2.diff(depsgraph):
