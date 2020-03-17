@@ -271,6 +271,9 @@ class Exporter(object):
                 changes |= Change.WORLD
             print("get_changes(): checking for world changes took %.1f ms" % ((time() - s) * 1000))
 
+        if changes is None:
+            changes = Change.NONE
+
         # Relevant during final render
         s = time()
         imagepipeline_props = imagepipeline.convert(depsgraph.scene, context)
