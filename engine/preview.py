@@ -38,7 +38,7 @@ def render(engine, depsgraph):
     pyluxcore.SetLogHandler(no_log_output)
     engine.exporter = export.Exporter()
     engine.exporter.scene = scene
-    preview_type, active_mat = _get_preview_settings(engine.exporter, depsgraph)
+    preview_type, active_mat = _get_preview_settings(depsgraph)
 
     if preview_type == PreviewType.MATERIAL and not active_mat is None:
         engine.session = _export_mat_scene(engine, depsgraph, active_mat)
@@ -394,9 +394,10 @@ def _create_config(scene, is_world_sphere):
     return utils.create_props(prefix, definitions)
 
 
-def _get_preview_settings(exporter, depsgraph):    
+def _get_preview_settings(depsgraph):
     # Iterate through the preview scene, finding objects with materials attached
     objects = []
+    active_mat = None
     for dg_obj_instance in depsgraph.object_instances:        
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object                
         
