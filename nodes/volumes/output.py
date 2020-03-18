@@ -36,8 +36,8 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
             # PhotonGI only affects homogeneous and heterogeneous volumes, make the setting inactive for others
             linked_node = self.inputs["Volume"].links[0].from_node if self.inputs["Volume"].is_linked else None
             row = layout.row()
-            row.active = linked_node and linked_node.bl_idname in {"LuxCoreNodeVolHomogeneous",
-                                                                   "LuxCoreNodeVolHeterogeneous"}
+            row.active = bool(linked_node and linked_node.bl_idname in {"LuxCoreNodeVolHomogeneous",
+                                                                        "LuxCoreNodeVolHeterogeneous"})
             row.prop(self, "use_photongi")
 
             world = context.scene.world
