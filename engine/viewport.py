@@ -105,8 +105,10 @@ def view_draw(engine, context, depsgraph):
         # for everything else we call view_update().
         # We have to re-assign the session because it might have been
         # replaced due to filmsize change.
+        s = time()
         engine.session = engine.exporter.update(depsgraph, context, engine.session, export.Change.CAMERA)
         engine.viewport_start_time = time()
+        print("view_draw(): camera update took %.1f ms" % ((time() - s) * 1000))
 
     # Check if we need to pause the viewport render
     # (note: the LuxCore stat "stats.renderengine.time" is not reliable here)

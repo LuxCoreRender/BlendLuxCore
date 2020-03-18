@@ -185,6 +185,7 @@ def _convert_viewport_engine(scene, definitions, config):
         else:
             luxcore_engine = "RTPATHOCL"
             sampler = "TILEPATHSAMPLER"
+            """
             # Render a sample every n x n pixels in the first passes.
             # For instance 4x4 then 2x2 and then always 1x1.
             definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
@@ -193,32 +194,13 @@ def _convert_viewport_engine(scene, definitions, config):
             # Render a sample every n x n pixels, outside the preview phase,
             # in order to reduce the per frame rendering time.
             definitions["rtpath.resolutionreduction"] = 1
+            """
 
-            # definitions["rtpath.resolutionreduction.preview"] = 4
-            # definitions["rtpath.resolutionreduction.preview.step"] = 8
-            # definitions["rtpath.resolutionreduction"] = 4
+            # TODO figure out good settings
+            definitions["rtpath.resolutionreduction.preview"] = 4
+            definitions["rtpath.resolutionreduction.preview.step"] = 8
+            definitions["rtpath.resolutionreduction"] = 4
 
-        # Enable a bunch of often-used features to minimize the need for kernel recompilations
-        enabled_opencl_features = " ".join([
-            # Materials
-            "MATTE", "ROUGHMATTE", "MATTETRANSLUCENT", "ROUGHMATTETRANSLUCENT",
-            "GLOSSY2", "GLOSSYTRANSLUCENT",
-            "GLASS", "ARCHGLASS", "ROUGHGLASS",
-            "MIRROR", "METAL2",
-            "NULLMAT",
-            # Material features
-            "HAS_BUMPMAPS", "GLOSSY2_ABSORPTION", "GLOSSY2_MULTIBOUNCE",
-            # Volumes
-            "HOMOGENEOUS_VOL", "CLEAR_VOL",
-            # Textures
-            "IMAGEMAPS_BYTE_FORMAT", "IMAGEMAPS_HALF_FORMAT",
-            "IMAGEMAPS_1xCHANNELS", "IMAGEMAPS_3xCHANNELS",
-            # Lights
-            "INFINITE", "TRIANGLELIGHT", "SKY2", "SUN", "POINT", "MAPPOINT",
-            "SPOTLIGHT", "CONSTANTINFINITE", "PROJECTION", "SHARPDISTANT",
-            "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
-        ])
-        definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
         _convert_opencl_settings(scene, definitions, using_hybridbackforward)
 
     return luxcore_engine, sampler
