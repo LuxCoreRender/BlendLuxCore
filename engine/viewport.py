@@ -121,7 +121,7 @@ def view_draw(engine, context, depsgraph):
             stats = engine.session.GetStats()
             samples = stats.Get("stats.renderengine.pass").GetInt()
 
-            if samples >= 2:
+            if samples >= 5:
                 print("[Engine/Viewport] Pausing session")
                 engine.session.Pause()
             else:
