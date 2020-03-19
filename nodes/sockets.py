@@ -186,7 +186,7 @@ class LuxCoreSocketFloatPositive(bpy.types.NodeSocket, LuxCoreSocketFloat):
 
 class LuxCoreSocketFloat0to1(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value: FloatProperty(min=0, max=1, description="Float value between 0 and 1",
-                                 update=utils_node.update_opengl_materials,
+                                 update=utils_node.force_viewport_update,
                                  precision=FLOAT_UI_PRECISION)
     slider = True
 
