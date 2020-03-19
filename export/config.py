@@ -197,9 +197,10 @@ def _convert_viewport_engine(scene, definitions, config):
             """
 
             # TODO figure out good settings
+            # 4, 2, 2 seems to be quite ok for now. Maybe make resolutionreduction dependent on film size later.
             definitions["rtpath.resolutionreduction.preview"] = 4
-            definitions["rtpath.resolutionreduction.preview.step"] = 8
-            definitions["rtpath.resolutionreduction"] = 4
+            definitions["rtpath.resolutionreduction.preview.step"] = 2
+            definitions["rtpath.resolutionreduction"] = 2
 
         _convert_opencl_settings(scene, definitions, using_hybridbackforward)
 
