@@ -1,6 +1,7 @@
 from time import time
 from .. import export
 from ..draw.viewport import FrameBuffer
+from .. import utils
 from ..utils import render as utils_render
 from ..utils.errorlog import LuxCoreErrorLog
 
@@ -109,6 +110,24 @@ def view_draw(engine, context, depsgraph):
         engine.session = engine.exporter.update(depsgraph, context, engine.session, export.Change.CAMERA)
         engine.viewport_start_time = time()
         print("view_draw(): camera update took %.1f ms" % ((time() - s) * 1000))
+
+    if utils.in_material_shading_mode(context):
+        if not engine.session.IsInPause():
+            engine.session.WaitNewFrame()
+            engine.session.UpdateStats()
+            framebuffer.update(engine.session, scene)
+            engine.update_stats("", "")
+
+            stats = engine.session.GetStats()
+            samples = stats.Get("stats.renderengine.pass").GetInt()
+
+            if samples >= 2:
+                print("[Engine/Viewport] Pausing session")
+                engine.session.Pause()
+            else:
+                engine.tag_redraw()
+        framebuffer.draw(engine, context, scene)
+        return
 
     # Check if we need to pause the viewport render
     # (note: the LuxCore stat "stats.renderengine.time" is not reliable here)

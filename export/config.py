@@ -23,17 +23,19 @@ def convert(exporter, scene, context=None, engine=None):
         config = scene.luxcore.config
         width, height = utils.calc_filmsize(scene, context)
         is_viewport_render = context is not None
+        in_material_shading_mode = utils.in_material_shading_mode(context)
         denoiser_enabled = ((not is_viewport_render and scene.luxcore.denoiser.enabled)
-                            or (is_viewport_render and scene.luxcore.viewport.denoise))
+                            or (is_viewport_render and scene.luxcore.viewport.denoise
+                                and not in_material_shading_mode))
 
         if is_viewport_render:
             # Viewport render
-            luxcore_engine, sampler = _convert_viewport_engine(scene, definitions, config)
+            luxcore_engine, sampler = _convert_viewport_engine(context, scene, definitions, config)
         else:
             # Final render
             luxcore_engine, sampler = _convert_final_engine(scene, definitions, config)
 
-        if luxcore_engine == "BIDIRCPU" and denoiser_enabled:
+        if (luxcore_engine == "BIDIRCPU" and denoiser_enabled) or in_material_shading_mode:
             filter_type = "NONE"
         else:
             filter_type = config.filter
@@ -72,7 +74,7 @@ def convert(exporter, scene, context=None, engine=None):
         if luxcore_engine != "BIDIRCPU" and config.photongi.enabled and not is_viewport_render:
             _convert_photongi_settings(context, scene, definitions, config)
 
-        if config.path.use_clamping:
+        if config.path.use_clamping and not in_material_shading_mode:
             definitions["path.clamping.variance.maxvalue"] = config.path.clamping
 
         # Filter
@@ -142,7 +144,17 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
             definitions["opencl.native.threads.count"] = 0
 
 
-def _convert_viewport_engine(scene, definitions, config):
+def _convert_viewport_engine(context, scene, definitions, config):
+    if utils.in_material_shading_mode(context):
+        definitions["path.pathdepth.total"] = 1
+        definitions["path.pathdepth.diffuse"] = 1
+        definitions["path.pathdepth.glossy"] = 1
+        definitions["path.pathdepth.specular"] = 1
+
+        definitions["rtpathcpu.zoomphase.size"] = 4
+        definitions["rtpathcpu.zoomphase.weight"] = 0
+        return "RTPATHCPU", "RTPATHCPUSAMPLER"
+
     viewport = scene.luxcore.viewport
     using_hybridbackforward = utils.using_hybridbackforward_in_viewport(scene)
 

@@ -606,3 +606,7 @@ def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_ren
                 # LuxCore loads the cache from this file
                 os.remove(file_path)
             return file_path_abs
+
+
+def in_material_shading_mode(context):
+    return context and context.space_data.shading.type == "MATERIAL"

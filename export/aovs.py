@@ -30,6 +30,10 @@ def convert(exporter, scene, context=None, engine=None):
         # Reset the output index
         _add_output.index = 0
 
+        if utils.in_material_shading_mode(context):
+            _add_output(definitions, "ALBEDO")
+            return utils.create_props(prefix, definitions)
+
         # If we have a context, we are in viewport render.
         # If engine.is_preview, we are in material preview. Both don't need AOVs.
         final = not context and not (engine and engine.is_preview)
