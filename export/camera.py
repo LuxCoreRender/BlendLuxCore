@@ -96,7 +96,7 @@ def _view_camera(scene, context, definitions):
     elif camera.data.type == "PERSP":
         definitions["type"] = "perspective"
         definitions["fieldofview"] = math.degrees(camera.data.angle)
-        _depth_of_field(scene, definitions)
+        _depth_of_field(scene, definitions, context)
     else:
         raise NotImplementedError("Unknown camera.data.type")
 
@@ -136,10 +136,10 @@ def _final(scene, definitions):
     definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, scene)
 
 
-def _depth_of_field(scene, definitions):
+def _depth_of_field(scene, definitions, context=None):
     camera = scene.camera
 
-    if not camera.data.dof.use_dof:
+    if not camera.data.dof.use_dof or utils.in_material_shading_mode(context):
         return
 
     definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.dof.aperture_fstop)
