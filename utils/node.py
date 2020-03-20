@@ -17,10 +17,8 @@ def draw_uv_info(context, layout):
 
     if obj and obj.data:
         if obj.type in {"CURVE", "SURFACE", "FONT"}:
-            if not obj.data.use_uv_as_generated:
-                row = layout.row()
-                warning_no_uvmap(row)
-                row.prop(obj.data, "use_uv_as_generated", toggle=True, text="Enable UV")
+            # These data types always have UVs
+            pass
         elif obj.type == "MESH":
             if len(obj.data.uv_layers) == 0:
                 row = layout.row()
