@@ -158,7 +158,7 @@ def _convert_viewport_engine(context, scene, definitions, config):
     viewport = scene.luxcore.viewport
     using_hybridbackforward = utils.using_hybridbackforward_in_viewport(scene)
 
-    device = viewport.device
+    device = config.device
     if device == "OCL" and not utils.is_opencl_build():
         msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
         LuxCoreErrorLog.add_warning(msg)
@@ -210,7 +210,7 @@ def _convert_viewport_engine(context, scene, definitions, config):
 
             # TODO figure out good settings
             # 4, 2, 2 seems to be quite ok for now. Maybe make resolutionreduction dependent on film size later.
-            definitions["rtpath.resolutionreduction.preview"] = 4
+            definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
             definitions["rtpath.resolutionreduction.preview.step"] = 2
             definitions["rtpath.resolutionreduction"] = 2
 

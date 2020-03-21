@@ -50,8 +50,6 @@ class LUXCORE_RENDER_PT_viewport_settings_advanced(RenderButtonsPanel, Panel):
         layout.use_property_decorate = False
 
         viewport = context.scene.luxcore.viewport
-        config = context.scene.luxcore.config
-        luxcore_engine = config.engine
 
         resolution_reduction_supported = not (utils.using_bidir_in_viewport(context.scene)
                                               or utils.using_hybridbackforward_in_viewport(context.scene))
@@ -69,11 +67,3 @@ class LUXCORE_RENDER_PT_viewport_settings_advanced(RenderButtonsPanel, Panel):
         col = layout.column(align=True)
         col.enabled = viewport.pixel_size != "1"
         col.prop(viewport, "mag_filter")
-
-        if not (luxcore_engine == "BIDIR" and viewport.use_bidir):
-            col = layout.column(align=True)
-            col.prop(viewport, "device", text="Device",expand=False)
-
-            if viewport.device == "OCL" and not utils.is_opencl_build():
-                layout.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
-                layout.label(text="(Falling back to CPU realtime engine)")
