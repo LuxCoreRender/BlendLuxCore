@@ -32,19 +32,19 @@ class LuxCoreNodeSocket:
         """
         layout.prop(self, "default_value", text=text, slider=self.slider)
 
+    @classmethod
+    def is_allowed_input(cls, socket):
+        for allowed_class in cls.allowed_inputs:
+            if isinstance(socket, allowed_class):
+                return True
+        return False
+
     def draw(self, context, layout, node, text):
         # Check if the socket linked to this socket is in the set of allowed input socket classes.
         link = utils_node.get_link(self)
 
         if link and hasattr(self, "allowed_inputs"):
-            is_allowed = False
-
-            for allowed_class in self.allowed_inputs:
-                if isinstance(link.from_socket, allowed_class):
-                    is_allowed = True
-                    break
-
-            if not is_allowed:
+            if not self.is_allowed_input(link.from_socket):
                 layout.label(text="Wrong Input!", icon=icons.ERROR)
                 return
 
