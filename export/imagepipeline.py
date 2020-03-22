@@ -11,7 +11,12 @@ def convert(scene, context=None, index=0):
         definitions = OrderedDict()
 
         if utils.in_material_shading_mode(context):
-            _output_switcher(definitions, 0, "ALBEDO")
+            index = _output_switcher(definitions, 0, "ALBEDO")
+            _exposure_compensated_tonemapper(definitions, index, scene)
+            return utils.create_props(prefix, definitions)
+
+        if utils.using_photongi_debug_mode(context, scene):
+            _exposure_compensated_tonemapper(definitions, 0, scene)
             return utils.create_props(prefix, definitions)
 
         if not utils.is_valid_camera(scene.camera):
@@ -93,6 +98,12 @@ def _fallback(definitions):
     index = 0
     definitions[str(index) + ".type"] = "TONEMAP_LINEAR"
     definitions[str(index) + ".scale"] = 1
+
+
+def _exposure_compensated_tonemapper(definitions, index, scene):
+    definitions[str(index) + ".type"] = "TONEMAP_LINEAR"
+    definitions[str(index) + ".scale"] = 1 / pow(2, (scene.view_settings.exposure))
+    return index + 1
 
 
 def convert_tonemapper(definitions, index, tonemapper):

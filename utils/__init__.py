@@ -473,9 +473,13 @@ def using_hybridbackforward_in_viewport(scene):
             and config.path.hybridbackforward_enable and scene.luxcore.viewport.add_light_tracing)
 
 
-# TODO 2.8 remove
-def get_current_render_layer(scene):
-    raise NotImplementedError("use the new method in view_layer.py")
+def using_photongi_debug_mode(is_viewport_render, scene):
+    if is_viewport_render:
+        return False
+    config = scene.luxcore.config
+    if config.engine != "PATH":
+        return False
+    return config.photongi.enabled and config.photongi.debug != "off"
 
 
 def get_halt_conditions(scene):

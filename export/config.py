@@ -74,7 +74,8 @@ def convert(exporter, scene, context=None, engine=None):
         if luxcore_engine != "BIDIRCPU" and config.photongi.enabled and not is_viewport_render:
             _convert_photongi_settings(context, scene, definitions, config)
 
-        if config.path.use_clamping and not in_material_shading_mode:
+        if (config.path.use_clamping and not in_material_shading_mode
+                and not utils.using_photongi_debug_mode(is_viewport_render, scene)):
             definitions["path.clamping.variance.maxvalue"] = config.path.clamping
 
         # Filter
@@ -164,7 +165,7 @@ def _convert_viewport_engine(context, scene, definitions, config):
         LuxCoreErrorLog.add_warning(msg)
         device = "CPU"
 
-    _convert_path(config, definitions, using_hybridbackforward, device)
+    _convert_path(config, definitions, using_hybridbackforward, device, True, scene)
     resolutionreduction = viewport.resolution_reduction if viewport.reduce_resolution_on_edit else 1
 
     if utils.using_bidir_in_viewport(scene):
@@ -222,7 +223,7 @@ def _convert_viewport_engine(context, scene, definitions, config):
 def _convert_final_engine(scene, definitions, config):
     if config.engine == "PATH":
         # Specific settings for PATH and TILEPATH
-        _convert_path(config, definitions, config.path.hybridbackforward_enable, config.device)
+        _convert_path(config, definitions, config.path.hybridbackforward_enable, config.device, False, scene)
 
         if config.use_tiles:
             luxcore_engine = "TILEPATH"
@@ -270,7 +271,7 @@ def _convert_final_engine(scene, definitions, config):
     return luxcore_engine, sampler
 
 
-def _convert_path(config, definitions, use_hybridbackforward, device):
+def _convert_path(config, definitions, use_hybridbackforward, device, is_viewport_render, scene):
     path = config.path
     # Note that for non-specular paths +1 is added to the path depth in order to have behaviour
     # that feels intuitive for the user. LuxCore does only MIS on the last path bounce, but no
@@ -281,16 +282,17 @@ def _convert_path(config, definitions, use_hybridbackforward, device):
     definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
     definitions["path.pathdepth.specular"] = path.depth_specular
 
-    if device == "OCL":
-        partition_raw = path.hybridbackforward_lightpartition_opencl
-    else:
-        partition_raw = path.hybridbackforward_lightpartition
-    # Note that our partition property is inverted compared to LuxCore's (it is the probability to
-    # sample a light path, not the probability to sample a camera path)
-    partition = 1 - partition_raw / 100
-    definitions["path.hybridbackforward.enable"] = use_hybridbackforward
-    definitions["path.hybridbackforward.partition"] = partition
-    definitions["path.hybridbackforward.glossinessthreshold"] = path.hybridbackforward_glossinessthresh
+    if not utils.using_photongi_debug_mode(is_viewport_render, scene):
+        if device == "OCL":
+            partition_raw = path.hybridbackforward_lightpartition_opencl
+        else:
+            partition_raw = path.hybridbackforward_lightpartition
+        # Note that our partition property is inverted compared to LuxCore's (it is the probability to
+        # sample a light path, not the probability to sample a camera path)
+        partition = 1 - partition_raw / 100
+        definitions["path.hybridbackforward.enable"] = use_hybridbackforward
+        definitions["path.hybridbackforward.partition"] = partition
+        definitions["path.hybridbackforward.glossinessthreshold"] = path.hybridbackforward_glossinessthresh
 
 
 def _convert_filesaver(scene, definitions, luxcore_engine):
