@@ -49,7 +49,7 @@ class FrameBuffer(object):
         self._offset_x, self._offset_y = self._calc_offset(context, scene, self._border)
         self._pixel_size = int(scene.luxcore.viewport.pixel_size)
 
-        if utils.is_valid_camera(scene.camera):
+        if utils.is_valid_camera(scene.camera) and not utils.in_material_shading_mode(context):
             pipeline = scene.camera.data.luxcore.imagepipeline
             self._transparent = pipeline.transparent_film
         else:
