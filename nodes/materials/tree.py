@@ -139,6 +139,7 @@ LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
         NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
         NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
+        NodeItem("LuxCoreNodeTexRandom", label="Random"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[
