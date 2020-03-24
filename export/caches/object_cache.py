@@ -222,7 +222,7 @@ class ObjectCache2:
         # The instancing state has to be part of the key because a non-instanced mesh
         # has its transformation baked-in and can't be used by other instances.
         modified = utils.has_deforming_modifiers(obj.original)
-        source = obj.original.data if (use_instancing and not modified) else obj.original
+        source = obj.original.data if (use_instancing and not (modified or obj.type == "META")) else obj.original
         key = utils.get_luxcore_name(source, is_viewport_render)
         if use_instancing:
             key += "_instance"
