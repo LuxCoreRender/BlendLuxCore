@@ -1,6 +1,5 @@
 import mathutils
 from ..bin import pyluxcore
-from . import find_active_uv
 from .errorlog import LuxCoreErrorLog
 from ..ui import icons
 
