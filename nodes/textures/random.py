@@ -1,13 +1,15 @@
 import bpy
 from bpy.props import IntProperty
 from ..base import LuxCoreNodeTexture
+from ...utils import node as utils_node
 
 
 class LuxCoreNodeTexRandom(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Random"
     bl_width_default = 200
 
-    seed: IntProperty(name="Seed", default=0, min=0)
+    seed: IntProperty(name="Seed", default=0, min=0,
+                      update=utils_node.force_viewport_update)
     
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value", 0)
