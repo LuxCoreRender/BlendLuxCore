@@ -2,8 +2,8 @@ import bpy
 import mathutils
 from .. import utils
 from ..utils import node as utils_node
-from ..nodes import TREE_TYPES
-from ..nodes.output import get_active_output
+from ..nodes.output import get_active_output, OUTPUT_MAP
+from .utils import poll_node_tree
 
 luxcore_viewer_reroute_mark = "luxcore_viewer_reroute"
 luxcore_viewer_mark = "luxcore_viewer"
@@ -40,10 +40,7 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        space = context.space_data
-        if space.type != 'NODE_EDITOR':
-            return False
-        return space.node_tree and space.node_tree.bl_idname in TREE_TYPES
+        return poll_node_tree(context)
 
     def invoke(self, context, event):
         space = context.space_data
@@ -141,4 +138,25 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
         sockets_to_link.append((active_output_socket, target_socket))
         for output_socket, input_socket in sockets_to_link:
             node_tree.links.new(output_socket, input_socket)
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_mute_node(bpy.types.Operator):
+    bl_idname = "luxcore.mute_node"
+    bl_label = "Mute Node"
+    bl_description = ""
+
+    @classmethod
+    def poll(cls, context):
+        return poll_node_tree(context)
+
+    def invoke(self, context, event):
+        space = context.space_data
+        node_tree = space.node_tree
+
+        for node in node_tree.nodes:
+            if node.select and node.bl_idname not in OUTPUT_MAP.values():
+                node.mute = not node.mute
+
+        node_tree.update()
         return {"FINISHED"}

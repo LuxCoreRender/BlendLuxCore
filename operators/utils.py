@@ -16,6 +16,14 @@ def poll_node(context):
     return context.node and not context.node.id_data.library
 
 
+def poll_node_tree(context):
+    space = context.space_data
+    if space.type != 'NODE_EDITOR':
+        return False
+    node_tree = space.node_tree
+    return node_tree and not node_tree.library and node_tree.bl_idname in TREE_TYPES
+
+
 def poll_object(context):
     return context.object and not context.object.library
 

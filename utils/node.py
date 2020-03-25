@@ -90,13 +90,27 @@ def get_link(socket):
 
         if node.mute:
             if node.internal_links:
+                # Only nodes defined in C can have internal_links in Blender
                 links = node.internal_links[0].from_socket.links
                 if links:
-                    return links[0]
+                    link = links[0]
                 else:
                     return None
             else:
-                return None
+                if not link.from_socket.bl_idname.startswith("LuxCoreSocket") or not node.inputs:
+                    return None
+
+                # We can't define internal_links, so try to make up a link that makes sense.
+                found_internal_link = False
+
+                for input_socket in node.inputs:
+                    if input_socket.links and link.from_socket.is_allowed_input(input_socket):
+                        link = input_socket.links[0]
+                        found_internal_link = True
+                        break
+
+                if not found_internal_link:
+                    return None
         else:
             # Reroute node
             if node.inputs[0].is_linked:
