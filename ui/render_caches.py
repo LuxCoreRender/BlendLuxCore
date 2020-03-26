@@ -38,9 +38,9 @@ def draw_persistent_file_ui(context, layout, settings):
 
 class LUXCORE_RENDER_PT_caches(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "LuxCore Caches"
+    bl_label = "Caches"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 11
+    bl_order = 4
 
     @classmethod
     def poll(cls, context):

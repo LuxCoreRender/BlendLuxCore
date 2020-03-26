@@ -59,10 +59,10 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
     These are the global halt conditions shown in the render settings
     """
 
-    bl_label = "LuxCore Halt Conditions"
+    bl_label = "Halt Conditions"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 10
+    bl_order = 5
 
     @classmethod
     def poll(cls, context):
