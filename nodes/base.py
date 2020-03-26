@@ -1,5 +1,6 @@
 import bpy
 from bpy.props import PointerProperty, EnumProperty
+from mathutils import Color
 from .. import utils
 from ..utils import node as utils_node
 from ..utils import ui as utils_ui
@@ -173,10 +174,14 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
     def draw_common_buttons(self, context, layout):
         layout.prop(self, "priority")
-        lightgroups = context.scene.luxcore.lightgroups
-        layout.prop_search(self, "lightgroup",
-                           lightgroups, "custom",
-                           icon=icons.LIGHTGROUP, text="")
+
+        emission_socket = self.inputs["Emission"]
+        if emission_socket.is_linked or emission_socket.default_value != Color((0.0, 0.0, 0.0)):
+            lightgroups = context.scene.luxcore.lightgroups
+            layout.prop_search(self, "lightgroup",
+                               lightgroups, "custom",
+                               icon=icons.LIGHTGROUP, text="")
+
         layout.prop(self, "color_depth")
 
         # Warn the user if he tries to use a 2D texture in a volume because it doesn't work
