@@ -415,7 +415,7 @@ def has_deforming_modifiers(obj):
 
 
 def can_share_mesh(obj):
-    if not obj.data or obj.data.users < 2 or obj.type == "META":
+    if not obj.data or obj.data.users < 2:
         return False
     return not has_deforming_modifiers(obj)
 

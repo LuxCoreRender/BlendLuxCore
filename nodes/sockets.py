@@ -137,6 +137,9 @@ class LuxCoreSocketMatEmission(bpy.types.NodeSocket, LuxCoreNodeSocket):
         if self.is_linked:
             linked_node = utils_node.get_linked_node(self)
 
+            if not linked_node:
+                return
+
             if linked_node.bl_idname == "LuxCoreNodeMatEmission":
                 linked_node.export_emission(exporter, depsgraph, props, definitions)
             else:

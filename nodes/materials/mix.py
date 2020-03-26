@@ -16,10 +16,6 @@ class LuxCoreNodeMatMix(bpy.types.Node, LuxCoreNodeMaterial):
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        # luxcore_name, cached = self.is_cached(exporter, luxcore_name)
-        # if cached:
-        #     return luxcore_name
-        
         # Material inputs need special export because their sockets can't
         # construct a black fallback material in their export method
         material1 = utils_node.export_material_input(self.inputs["Material 1"], exporter, depsgraph, props)
