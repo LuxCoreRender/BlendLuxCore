@@ -12,6 +12,6 @@ wget http://neurodebian.ovgu.de/debian/pool/main/n/neurodebian/neurodebian-popul
 wget http://archive.ubuntu.com/ubuntu/pool/main/p/popularity-contest/popularity-contest_1.57ubuntu1_all.deb
 
 sudo dpkg -i popularity-contest_1.57ubuntu1_all.deb 
-sudo dpkg -i neurodebian-popularity-contest_0.39.0~nd14.04+1_all.deb 
+sudo dpkg -i neurodebian-popularity-contest_0.40.0~nd14.04+1_all.deb 
 sudo dpkg -i p7zip_16.02+dfsg-1~nd14.04+1_amd64.deb 
 sudo dpkg -i p7zip-full_16.02+dfsg-1~nd14.04+1_amd64.deb
