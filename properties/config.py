@@ -6,7 +6,7 @@ from bpy.props import (
 )
 from math import radians
 from .halt import NOISE_THRESH_WARMUP_DESC, NOISE_THRESH_STEP_DESC
-
+from .. properties import VERSION
 
 TILED_DESCRIPTION = (
     "Render the image in quadratic chunks instead of sampling the whole film at once;\n"
@@ -337,7 +337,9 @@ class LuxCoreConfig(PropertyGroup):
     Main config storage class.
     Access (in ui or export) with scene.luxcore.config
     """
-
+    
+    preset_version: IntProperty(default=VERSION, options={'SKIP_SAVE'})
+        
     # These settings are mostly not directly transferrable to LuxCore properties
     # They need some if/else decisions and aggregation, e.g. to build the engine name from parts
     engines = [

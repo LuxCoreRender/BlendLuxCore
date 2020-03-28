@@ -1,7 +1,6 @@
 from bl_operators.presets import AddPresetBase
 from bpy.types import Operator
 
-
 class AddPresetLuxcore(AddPresetBase, Operator):
     '''Add an LuxCore Preset'''
     bl_idname = "render.luxcore_preset_add"
@@ -13,26 +12,16 @@ class AddPresetLuxcore(AddPresetBase, Operator):
     ]
 
     preset_values = [
+        "luxcore.preset_version",
         "luxcore.device",
         "luxcore.engine",
-        "luxcore.path.depth_total",
-        "luxcore.path.depth_diffuse",
-        "luxcore.path.depth_glossy",
-        "luxcore.path.depth_specular",
-        "luxcore.path.use_clamping",
-        "luxcore.path.clamping",
-        "luxcore.light_strategy",
-        "luxcore.seed",
         "luxcore.sampler",
-        "luxcore.sobol_adaptive_strength",
-        "luxcore.noise_estimation.warmup",
-        "luxcore.noise_estimation.step",
-        "luxcore.filter",
-        "luxcore.filter_width"
-        "luxcore.gaussian_alpha",
-        "luxcore.metropolis_largesteprate",
-        "luxcore.metropolis_maxconsecutivereject",
-        "luxcore.metropolis_imagemutationrate"
+        "luxcore.path.hybridbackforward_enable",
+        "luxcore.photongi.enabled",
+        "luxcore.photongi.caustic_enabled",
+        "luxcore.photongi.indirect_enabled",
+        "luxcore.envlight_cache.enabled",
+        "luxcore.dls_cache.enabled",
     ]
 
     preset_subdir = "BlendLuxCore"
