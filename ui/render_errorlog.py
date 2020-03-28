@@ -27,9 +27,6 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
         self._draw(LuxCoreErrorLog.errors, "Errors:", icons.ERROR)
         self._draw(LuxCoreErrorLog.warnings, "Warnings:", icons.WARNING)
         
-        if not LuxCoreErrorLog.errors and not LuxCoreErrorLog.warnings:
-            self.layout.label(text="No Errors or Warnings")
-
     def _draw(self, errors_or_warnings, label, icon=icons.NONE):
         if len(errors_or_warnings) == 0:
             return
