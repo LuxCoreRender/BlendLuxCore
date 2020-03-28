@@ -13,7 +13,6 @@ class AddPresetLuxcore(AddPresetBase, Operator):
 
     preset_values = [
         "luxcore.preset_version",
-        "luxcore.device",
         "luxcore.engine",
         "luxcore.sampler",
         "luxcore.path.hybridbackforward_enable",
