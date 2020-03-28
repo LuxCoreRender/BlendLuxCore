@@ -13,6 +13,8 @@ class AddPresetLuxcore(AddPresetBase, Operator):
     ]
 
     preset_values = [
+        "luxcore.device",
+        "luxcore.engine",
         "luxcore.path.depth_total",
         "luxcore.path.depth_diffuse",
         "luxcore.path.depth_glossy",
@@ -27,6 +29,10 @@ class AddPresetLuxcore(AddPresetBase, Operator):
         "luxcore.noise_estimation.step",
         "luxcore.filter",
         "luxcore.filter_width"
+        "luxcore.gaussian_alpha",
+        "luxcore.metropolis_largesteprate",
+        "luxcore.metropolis_maxconsecutivereject",
+        "luxcore.metropolis_imagemutationrate"
     ]
 
     preset_subdir = "BlendLuxCore"
