@@ -29,6 +29,15 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         else:
             loopColsPtrList.append(0)
 
+        loopTriNormals = None
+        if mesh.has_custom_normals:
+            loopTriNormals = []
+            # slow
+            for loopTri in mesh.loop_triangles:
+                for triIndex in range(3):
+                    for i in range(3):
+                        loopTriNormals.append(loopTri.split_normals[triIndex][i])
+
         material_count = max(1, len(mesh.materials))
 
         if is_viewport_render or use_instancing:
@@ -77,6 +86,8 @@ def _prepare_mesh(obj, depsgraph):
                     mesh.calc_normals()
                     mesh.split_faces()
                 mesh.calc_loop_triangles()
+                if mesh.has_custom_normals:
+                    mesh.calc_normals_split()
 
         yield mesh
     finally:
