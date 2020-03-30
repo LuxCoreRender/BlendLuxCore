@@ -41,8 +41,8 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             mesh_transform = utils.matrix_to_list(transform)
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                              vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
-                                                              meshPtr, material_count, mesh_transform)
+                                                           vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
+                                                           meshPtr, material_count, mesh_transform)
         
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time

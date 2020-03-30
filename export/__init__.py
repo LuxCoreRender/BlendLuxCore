@@ -223,9 +223,6 @@ class Exporter(object):
             if any(enabled_caches):
                 message += ", computing caches (" + ", ".join(enabled_caches) + ")"
 
-            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
-                message += ", compiling OpenCL kernels"
-
             message += " ..."
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 

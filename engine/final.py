@@ -68,7 +68,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
 
     engine.framebuffer = FrameBufferFinal(scene)
 
-    # Create session (in case of OpenCL engines, render kernels are compiled here)
+    # Create session
     start = time()
     engine.session.Start()
     session_init_time = time() - start
