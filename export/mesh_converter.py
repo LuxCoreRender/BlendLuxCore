@@ -2,12 +2,15 @@ from contextlib import contextmanager
 import numpy as np
 from .. import utils
 from .caches.exported_data import ExportedMesh
+from time import time
 
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
+        
+        start_time = time()
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
         loopTriCount = len(mesh.loop_triangles)
@@ -29,22 +32,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         else:
             loopColsPtrList.append(0)
 
-        loopTriCustomNormals = None
-        if mesh.has_custom_normals:
-            loopTriCustomNormals = [0] * (len(mesh.vertices) * 3)
-            # slow
-            for loopTri in mesh.loop_triangles:
-                for i in range(3):
-                    vertIndex = loopTri.vertices[i]
-
-                    normal = []
-                    for elem in range(3):
-                        normal.append(loopTri.split_normals[i][elem])
-
-                    start = vertIndex * 3
-                    if normal != loopTriCustomNormals[start:start + 3]:
-                        loopTriCustomNormals[start:start + 3] = normal[:]
-
+        meshPtr = mesh.as_pointer()
         material_count = max(1, len(mesh.materials))
 
         if is_viewport_render or use_instancing:
@@ -54,8 +42,9 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
                                                               vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
-                                                              loopTriCustomNormals, material_count, mesh_transform)
-
+                                                              meshPtr, material_count, mesh_transform)
+        
+        print("Mesh conversion took %.3f s" % (time() - start_time))
         return ExportedMesh(mesh_definitions)
 
 
