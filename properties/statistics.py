@@ -193,7 +193,7 @@ class LuxCoreRenderStats:
                                 0, smaller_is_better, time_to_string, get_rounded)
         self.export_time_meshes = Stat("    Mesh Export Time", categories[-1],
                                        0, smaller_is_better, time_to_string, get_rounded)
-        self.export_time_hair = Stat("    Hair Time", categories[-1],
+        self.export_time_hair = Stat("    Hair Export Time", categories[-1],
                                      0, smaller_is_better, time_to_string, get_rounded)
         self.export_time_instancing = Stat("    Instancing Time", categories[-1],
                                            0, smaller_is_better, time_to_string, get_rounded)
