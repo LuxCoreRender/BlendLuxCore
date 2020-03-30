@@ -5,12 +5,12 @@ from .caches.exported_data import ExportedMesh
 from time import time
 
 
-def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
+def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
+    start_time = time()
+    
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
-        
-        start_time = time()
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
         loopTriCount = len(mesh.loop_triangles)
@@ -44,7 +44,9 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
                                                               vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
                                                               meshPtr, material_count, mesh_transform)
         
-        print("Mesh conversion took %.3f s" % (time() - start_time))
+        if exporter and exporter.stats:
+            exporter.stats.export_time_meshes.value += time() - start_time
+        
         return ExportedMesh(mesh_definitions)
 
 

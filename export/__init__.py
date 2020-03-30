@@ -143,7 +143,7 @@ class Exporter(object):
         luxcore_scene.Parse(scene_props)
         # We can only duplicate the instances *after* the scene_props were parsed so the base
         # objects are available for luxcore_scene
-        self.object_cache2.duplicate_instances(instances, luxcore_scene)
+        self.object_cache2.duplicate_instances(instances, luxcore_scene, stats)
         # The instances dict can be quite large, delete explicitely (TODO maybe even call gc.collect()?)
         del instances
 
@@ -199,12 +199,24 @@ class Exporter(object):
         if engine:
             message = "Creating RenderSession"
             # Inform about pre-computations that can take a long time to complete, like caches
+            
+            # The second argument of Get() is used as fallback if the property is not set
+            cache_indirect = config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
+            cache_caustics = config_props.Get("path.photongi.caustic.enabled", [False]).GetBool()
+            cache_envlight = scene.luxcore.config.envlight_cache.enabled
+            cache_dls = config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE"
+            
+            if stats:
+                stats.cache_indirect.value = cache_indirect
+                stats.cache_caustics.value = cache_caustics
+                stats.cache_envlight.value = cache_envlight
+                stats.cache_dls.value = cache_dls
+            
             cache_state = {
-                # The value in the list is used as fallback if the property is not set
-                "PhotonGI": config_props.Get("path.photongi.indirect.enabled", [False]).GetBool(),
-                "Caustics": config_props.Get("path.photongi.caustic.enabled", [False]).GetBool(),
-                "DLSC": config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE",
-                "Env. Light": scene.luxcore.config.envlight_cache.enabled,
+                "Indirect Light": cache_indirect,
+                "Caustics": cache_caustics,
+                "Env. Light": cache_envlight,
+                "DLSC": cache_dls,
             }
             enabled_caches = [key for key, value in cache_state.items() if value]
 
@@ -407,8 +419,6 @@ class Exporter(object):
 
         config_settings = scene.luxcore.config
         path_settings = config_settings.path
-
-        stats.light_strategy.value = utils_render.light_strategy_to_str(config_settings.light_strategy)
 
         if render_engine == "BIDIRCPU":
             path_depths = (

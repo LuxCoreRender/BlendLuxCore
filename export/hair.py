@@ -215,6 +215,8 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
                        is_for_duplication, instance_matrix_world, settings.instancing == "enabled")
 
         time_elapsed = time() - start_time
+        if exporter.stats:
+            exporter.stats.export_time_hair.value += time_elapsed
         print("[%s: %s] Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
         return lux_shape_name, lux_mat_name
     except Exception as error:
