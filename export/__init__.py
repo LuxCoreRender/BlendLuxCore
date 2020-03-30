@@ -237,16 +237,12 @@ class Exporter(object):
         self.scene = depsgraph.scene_eval
         changes = Change.NONE
 
-        s = time()
         config_props = config.convert(self, self.scene, context)
         if self.config_cache.diff(config_props):
             changes |= Change.CONFIG
-        print("get_changes(): checking for config changes took %.1f ms" % ((time() - s) * 1000))
 
-        s = time()
         if self.camera_cache.diff(self, self.scene, depsgraph, context):
             changes |= Change.CAMERA
-        print("get_changes(): checking for camera changes took %.1f ms" % ((time() - s) * 1000))
 
         # Do not hold reference to temporary data
         self.scene = None
@@ -263,35 +259,25 @@ class Exporter(object):
             if changes is None:
                 changes = self.get_viewport_changes(depsgraph, context)
 
-            s = time()
             if self.object_cache2.diff(depsgraph):
                 changes |= Change.OBJECT
-            print("get_changes(): checking for object_cache changes took %.1f ms" % ((time() - s) * 1000))
 
-            s = time()
             if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
-            print("get_changes(): checking for material changes took %.1f ms" % ((time() - s) * 1000))
 
-            s = time()
             if self.visibility_cache.diff(depsgraph):
                 changes |= Change.VISIBILITY
-            print("get_changes(): checking for visibility changes took %.1f ms" % ((time() - s) * 1000))
 
-            s = time()
             if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
-            print("get_changes(): checking for world changes took %.1f ms" % ((time() - s) * 1000))
 
         if changes is None:
             changes = Change.NONE
 
         # Relevant during final render
-        s = time()
         imagepipeline_props = imagepipeline.convert(depsgraph.scene, context)
         if self.imagepipeline_cache.diff(imagepipeline_props):
             changes |= Change.IMAGEPIPELINE
-        print("get_changes(): checking for imagepipeline changes took %.1f ms" % ((time() - s) * 1000))
 
         if final:
             # Halt conditions are only used during final render
