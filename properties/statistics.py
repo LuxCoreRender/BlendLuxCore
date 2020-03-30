@@ -205,6 +205,7 @@ class LuxCoreRenderStats:
         self.vram = Stat("VRAM", categories[-1], (0, 0), vram_better, vram_usage_to_string)
         categories.append("Settings")
         self.render_engine = Stat("Engine", categories[-1], "?")
+        self.use_hybridbackforward = Stat("Add Light Tracing", categories[-1], False, string_func=bool_to_string)
         self.sampler = Stat("Sampler", categories[-1], "?")
         self.clamping = Stat("Clamping", categories[-1], 0, string_func=clamping_to_string)
         self.path_depths = Stat("Path Depths", categories[-1], tuple(), string_func=path_depths_to_string)

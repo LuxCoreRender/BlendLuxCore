@@ -66,8 +66,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.update_stats("", msg)
             # We have to sleep for a bit, otherwise Blender does not update the UI
             sleep(0.01)
-        # elif "BCD progress" in msg:  # TODO For some weird reason this does not work
-        #     self.update_stats("", msg)
 
     def render(self, depsgraph):
         if self.is_preview:            
