@@ -57,12 +57,14 @@ def register():
 
     # Keymaps
     wm = bpy.context.window_manager
-    keymap = wm.keyconfigs.addon.keymaps.new(name='Node Editor', space_type="NODE_EDITOR")
-
-    from .operators.node_editor import LUXCORE_OT_node_editor_viewer, LUXCORE_OT_mute_node
-    keymap_item = keymap.keymap_items.new(LUXCORE_OT_node_editor_viewer.bl_idname, 'LEFTMOUSE', 'PRESS', ctrl=True, shift=True)
+    keymap = wm.keyconfigs.addon.keymaps.new(name="Node Editor", space_type="NODE_EDITOR")
+    
+    from .operators.node_editor import LUXCORE_OT_node_editor_viewer, LUXCORE_OT_mute_node, LUXCORE_OT_node_editor_add_image
+    keymap_item = keymap.keymap_items.new(LUXCORE_OT_node_editor_viewer.bl_idname, "LEFTMOUSE", "PRESS", ctrl=True, shift=True)
     addon_keymaps.append((keymap, keymap_item))
-    keymap_item = keymap.keymap_items.new(LUXCORE_OT_mute_node.bl_idname, 'M', 'PRESS')
+    keymap_item = keymap.keymap_items.new(LUXCORE_OT_mute_node.bl_idname, "M", "PRESS")
+    addon_keymaps.append((keymap, keymap_item))
+    keymap_item = keymap.keymap_items.new(LUXCORE_OT_node_editor_add_image.bl_idname, "T", "PRESS", ctrl=True)
     addon_keymaps.append((keymap, keymap_item))
 
 
