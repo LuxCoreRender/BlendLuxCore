@@ -107,13 +107,13 @@ class Exporter(object):
         # Objects and lights
         is_viewport_render = context is not None
         instances = self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene,
-                                                 scene_props, is_viewport_render)
+                                                 scene_props, context)
         if instances is None:
             # Export was cancelled by user
             return None
 
         if is_viewport_render:
-            self.visibility_cache.init(depsgraph)
+            self.visibility_cache.init(depsgraph, context)
 
         # Motion blur
         # Motion blur seems not to work in viewport render, i.e. matrix_world is the same on every frame
@@ -262,8 +262,11 @@ class Exporter(object):
             if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
 
-            if self.visibility_cache.diff(depsgraph):
+            if self.visibility_cache.diff(depsgraph, context):
                 changes |= Change.VISIBILITY
+                
+                if self.visibility_cache.has_new_objects:
+                    changes |= Change.OBJECT
 
             if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
@@ -360,7 +363,7 @@ class Exporter(object):
             props.Set(self.camera_cache.props)
 
         if changes & Change.OBJECT:
-            self.object_cache2.update(self, depsgraph, luxcore_scene, props)
+            self.object_cache2.update(self, depsgraph, luxcore_scene, props, context)
 
         if changes & Change.MATERIAL:
             # for mat in self.material_cache.changed_materials:
