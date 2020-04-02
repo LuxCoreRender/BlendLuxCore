@@ -143,7 +143,7 @@ class Exporter(object):
         luxcore_scene.Parse(scene_props)
         # We can only duplicate the instances *after* the scene_props were parsed so the base
         # objects are available for luxcore_scene
-        self.object_cache2.duplicate_instances(instances, luxcore_scene)
+        self.object_cache2.duplicate_instances(instances, luxcore_scene, stats)
         # The instances dict can be quite large, delete explicitely (TODO maybe even call gc.collect()?)
         del instances
 
@@ -199,20 +199,29 @@ class Exporter(object):
         if engine:
             message = "Creating RenderSession"
             # Inform about pre-computations that can take a long time to complete, like caches
+            
+            # The second argument of Get() is used as fallback if the property is not set
+            cache_indirect = config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
+            cache_caustics = config_props.Get("path.photongi.caustic.enabled", [False]).GetBool()
+            cache_envlight = scene.luxcore.config.envlight_cache.enabled
+            cache_dls = config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE"
+            
+            if stats:
+                stats.cache_indirect.value = cache_indirect
+                stats.cache_caustics.value = cache_caustics
+                stats.cache_envlight.value = cache_envlight
+                stats.cache_dls.value = cache_dls
+            
             cache_state = {
-                # The value in the list is used as fallback if the property is not set
-                "PhotonGI": config_props.Get("path.photongi.indirect.enabled", [False]).GetBool(),
-                "Caustics": config_props.Get("path.photongi.caustic.enabled", [False]).GetBool(),
-                "DLSC": config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE",
-                "Env. Light": scene.luxcore.config.envlight_cache.enabled,
+                "Indirect Light": cache_indirect,
+                "Caustics": cache_caustics,
+                "Env. Light": cache_envlight,
+                "DLSC": cache_dls,
             }
             enabled_caches = [key for key, value in cache_state.items() if value]
 
             if any(enabled_caches):
                 message += ", computing caches (" + ", ".join(enabled_caches) + ")"
-
-            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
-                message += ", compiling OpenCL kernels"
 
             message += " ..."
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
@@ -225,16 +234,12 @@ class Exporter(object):
         self.scene = depsgraph.scene_eval
         changes = Change.NONE
 
-        s = time()
         config_props = config.convert(self, self.scene, context)
         if self.config_cache.diff(config_props):
             changes |= Change.CONFIG
-        print("get_changes(): checking for config changes took %.1f ms" % ((time() - s) * 1000))
 
-        s = time()
         if self.camera_cache.diff(self, self.scene, depsgraph, context):
             changes |= Change.CAMERA
-        print("get_changes(): checking for camera changes took %.1f ms" % ((time() - s) * 1000))
 
         # Do not hold reference to temporary data
         self.scene = None
@@ -251,35 +256,25 @@ class Exporter(object):
             if changes is None:
                 changes = self.get_viewport_changes(depsgraph, context)
 
-            s = time()
             if self.object_cache2.diff(depsgraph):
                 changes |= Change.OBJECT
-            print("get_changes(): checking for object_cache changes took %.1f ms" % ((time() - s) * 1000))
 
-            s = time()
             if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
-            print("get_changes(): checking for material changes took %.1f ms" % ((time() - s) * 1000))
 
-            s = time()
             if self.visibility_cache.diff(depsgraph):
                 changes |= Change.VISIBILITY
-            print("get_changes(): checking for visibility changes took %.1f ms" % ((time() - s) * 1000))
 
-            s = time()
             if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
-            print("get_changes(): checking for world changes took %.1f ms" % ((time() - s) * 1000))
 
         if changes is None:
             changes = Change.NONE
 
         # Relevant during final render
-        s = time()
         imagepipeline_props = imagepipeline.convert(depsgraph.scene, context)
         if self.imagepipeline_cache.diff(imagepipeline_props):
             changes |= Change.IMAGEPIPELINE
-        print("get_changes(): checking for imagepipeline changes took %.1f ms" % ((time() - s) * 1000))
 
         if final:
             # Halt conditions are only used during final render
@@ -408,8 +403,6 @@ class Exporter(object):
         config_settings = scene.luxcore.config
         path_settings = config_settings.path
 
-        stats.light_strategy.value = utils_render.light_strategy_to_str(config_settings.light_strategy)
-
         if render_engine == "BIDIRCPU":
             path_depths = (
                 config_settings.bidir_path_maxdepth,
@@ -428,3 +421,6 @@ class Exporter(object):
             stats.clamping.value = path_settings.clamping
         else:
             stats.clamping.value = 0
+        
+        stats.use_hybridbackforward.value = (config_props.Get("path.hybridbackforward.enable", [False]).GetBool()
+                                             and render_engine != "BIDIRCPU")

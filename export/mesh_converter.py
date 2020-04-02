@@ -2,9 +2,12 @@ from contextlib import contextmanager
 import numpy as np
 from .. import utils
 from .caches.exported_data import ExportedMesh
+from time import time
 
 
-def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform):
+def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
+    start_time = time()
+    
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
@@ -29,6 +32,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         else:
             loopColsPtrList.append(0)
 
+        meshPtr = mesh.as_pointer()
         material_count = max(1, len(mesh.materials))
 
         if is_viewport_render or use_instancing:
@@ -37,9 +41,12 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             mesh_transform = utils.matrix_to_list(transform)
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                              vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
-                                                              material_count, mesh_transform)
-
+                                                           vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
+                                                           meshPtr, material_count, mesh_transform)
+        
+        if exporter and exporter.stats:
+            exporter.stats.export_time_meshes.value += time() - start_time
+        
         return ExportedMesh(mesh_definitions)
 
 
@@ -67,16 +74,27 @@ def _prepare_mesh(obj, depsgraph):
             mesh = object_eval.to_mesh()
 
             if mesh:
+                # TODO test if this makes sense
+                # If negative scaling, we have to invert the normals
+                # if not mesh.has_custom_normals and object_eval.matrix_world.determinant() < 0.0:
+                #     # Does not handle custom normals
+                #     mesh.flip_normals()
+                
                 mesh.calc_loop_triangles()
                 if not mesh.loop_triangles:
                     object_eval.to_mesh_clear()
                     mesh = None
 
             if mesh:
-                if mesh.use_auto_smooth and not mesh.has_custom_normals:
-                    mesh.calc_normals()
+                if mesh.use_auto_smooth:
+                    if not mesh.has_custom_normals:
+                        mesh.calc_normals()
                     mesh.split_faces()
+                
                 mesh.calc_loop_triangles()
+                
+                if mesh.has_custom_normals:
+                    mesh.calc_normals_split()
 
         yield mesh
     finally:

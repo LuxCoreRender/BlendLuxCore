@@ -119,6 +119,13 @@ def vram_better(first_usage_tuple, second_usage_tuple):
     first_used_memory, _ = first_usage_tuple
     second_used_memory, _ = second_usage_tuple
     return first_used_memory < second_used_memory
+    
+    
+def bool_to_string(value):
+    if value:
+        return "Enabled"
+    else:
+        return "Disabled"
 
 
 class Stat:
@@ -184,6 +191,12 @@ class LuxCoreRenderStats:
         categories.append("Startup")
         self.export_time = Stat("Export Time", categories[-1],
                                 0, smaller_is_better, time_to_string, get_rounded)
+        self.export_time_meshes = Stat("    Mesh Export Time", categories[-1],
+                                       0, smaller_is_better, time_to_string, get_rounded)
+        self.export_time_hair = Stat("    Hair Export Time", categories[-1],
+                                     0, smaller_is_better, time_to_string, get_rounded)
+        self.export_time_instancing = Stat("    Instancing Time", categories[-1],
+                                           0, smaller_is_better, time_to_string, get_rounded)
         self.session_init_time = Stat("Session Init Time", categories[-1],
                                       0, smaller_is_better, time_to_string, get_rounded)
         categories.append("Scene")
@@ -192,12 +205,15 @@ class LuxCoreRenderStats:
         self.vram = Stat("VRAM", categories[-1], (0, 0), vram_better, vram_usage_to_string)
         categories.append("Settings")
         self.render_engine = Stat("Engine", categories[-1], "?")
+        self.use_hybridbackforward = Stat("Add Light Tracing", categories[-1], False, string_func=bool_to_string)
         self.sampler = Stat("Sampler", categories[-1], "?")
         self.clamping = Stat("Clamping", categories[-1], 0, string_func=clamping_to_string)
-        self.light_strategy = Stat("Light Strategy", categories[-1], "?")
         self.path_depths = Stat("Path Depths", categories[-1], tuple(), string_func=path_depths_to_string)
-
-        # TODO: put denoiser settings/stats also here?
+        categories.append("Caches")
+        self.cache_indirect = Stat("Indirect Light Cache", categories[-1], False, string_func=bool_to_string)
+        self.cache_caustics = Stat("Caustics Cache", categories[-1], False, string_func=bool_to_string)
+        self.cache_envlight = Stat("Env. Light Cache", categories[-1], False, string_func=bool_to_string)
+        self.cache_dls = Stat("DLS Cache", categories[-1], False, string_func=bool_to_string)
 
         self.members = [getattr(self, attr) for attr in dir(self)
                         if not callable(getattr(self, attr)) and not attr.startswith("__")]

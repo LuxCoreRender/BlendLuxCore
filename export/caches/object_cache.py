@@ -1,6 +1,7 @@
 import bpy
 from array import array
 from functools import lru_cache
+from time import time
 
 from ... import utils
 from ...bin import pyluxcore
@@ -190,11 +191,13 @@ class ObjectCache2:
         #self._debug_info()
         return instances
 
-    def duplicate_instances(self, instances, luxcore_scene):
+    def duplicate_instances(self, instances, luxcore_scene, stats):
         """
         We can only duplicate the instances *after* the scene_props were parsed so the base
         objects are available for luxcore_scene. Needs to happen before this method is called.
         """
+        start_time = time()
+        
         for duplis in instances.values():
             if duplis is None:
                 # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
@@ -213,6 +216,9 @@ class ObjectCache2:
                 # steps = 0 # TODO
                 # times = array("f", [])
                 # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
+        
+        if stats:
+            stats.export_time_instancing.value = time() - start_time
 
     def _debug_info(self):
         print("Objects in cache:", len(self.exported_objects))
@@ -309,7 +315,7 @@ class ObjectCache2:
         else:
             # print("fresh export")
             exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
-                                                   is_viewport_render, use_instancing, transform)
+                                                   is_viewport_render, use_instancing, transform, exporter)
             self.exported_meshes[mesh_key] = exported_mesh
 
         if exported_mesh:

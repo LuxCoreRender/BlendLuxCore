@@ -15,11 +15,15 @@ def convert(exporter, depsgraph, material, is_viewport_render, obj_name=""):
 
         props = pyluxcore.Properties()
         luxcore_name = utils.get_luxcore_name(material, is_viewport_render)
+        node_tree = material.luxcore.node_tree
 
-        if material.use_nodes and material.luxcore.use_cycles_nodes:
+        # Try to use Cycles nodes on assets without LuxCore nodes, so the user doesn't have to 
+        # open all asset files individually and enable use_cycles_nodes everywhere by hand or script
+        is_asset_without_lux_mat = node_tree is None and material.library
+        
+        if material.use_nodes and (material.luxcore.use_cycles_nodes or is_asset_without_lux_mat):
             return cycles_node_reader.convert(material, props, luxcore_name, obj_name)
 
-        node_tree = material.luxcore.node_tree
         if node_tree is None:
             msg = 'Material "%s": Missing node tree' % material.name
             LuxCoreErrorLog.add_warning(msg, obj_name=obj_name)

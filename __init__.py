@@ -39,8 +39,7 @@ bl_info = {
 from . import auto_load, nodes, properties, handlers
 auto_load.init()
 
-
-addon_keymaps = []
+from .operators import keymaps
 
 
 def register():
@@ -49,31 +48,18 @@ def register():
     nodes.textures.register()
     nodes.volumes.register()
     handlers.register()
+    keymaps.register()
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
     version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
     print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
 
-    # Keymaps
-    wm = bpy.context.window_manager
-    keymap = wm.keyconfigs.addon.keymaps.new(name='Node Editor', space_type="NODE_EDITOR")
-
-    from .operators.node_editor import LUXCORE_OT_node_editor_viewer, LUXCORE_OT_mute_node
-    keymap_item = keymap.keymap_items.new(LUXCORE_OT_node_editor_viewer.bl_idname, 'LEFTMOUSE', 'PRESS', ctrl=True, shift=True)
-    addon_keymaps.append((keymap, keymap_item))
-    keymap_item = keymap.keymap_items.new(LUXCORE_OT_mute_node.bl_idname, 'M', 'PRESS')
-    addon_keymaps.append((keymap, keymap_item))
-
 
 def unregister():
+    keymaps.unregister()
     handlers.unregister()
     nodes.materials.unregister()
     nodes.textures.unregister()
     nodes.volumes.unregister()
     auto_load.unregister()
-
-    # Keymaps
-    for keymap, keymap_item in addon_keymaps:
-        keymap.keymap_items.remove(keymap_item)
-    addon_keymaps.clear()

@@ -1,8 +1,9 @@
 import bpy
-import mathutils
+from mathutils import Vector
 from .. import utils
 from ..utils import node as utils_node
 from ..nodes.output import get_active_output, OUTPUT_MAP
+from ..nodes.sockets import LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketVector
 from .utils import poll_node_tree
 
 luxcore_viewer_reroute_mark = "luxcore_viewer_reroute"
@@ -37,6 +38,7 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
     bl_idname = "luxcore.node_editor_viewer"
     bl_label = "Insert Viewer"
     bl_description = ""
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
@@ -85,13 +87,13 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
                             break
                 else:
                     viewer_matte = node_tree.nodes.new("LuxCoreNodeMatMatte")
-                    viewer_matte.location = active_output.location + mathutils.Vector((0, 50))
+                    viewer_matte.location = active_output.location + Vector((0, 50))
                     viewer_matte.hide = True
                     viewer_matte[luxcore_viewer_mark] = True
                     sockets_to_link.append((viewer_matte.outputs[0], active_output.inputs["Material"]))
 
                     viewer_emission = node_tree.nodes.new("LuxCoreNodeMatEmission")
-                    viewer_emission.location = active_output.location + mathutils.Vector((0, 80))
+                    viewer_emission.location = active_output.location + Vector((0, 80))
                     viewer_emission.hide = True
                     viewer_emission[luxcore_viewer_mark] = True
                     viewer_emission.dls_type = "DISABLED"
@@ -99,7 +101,7 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
                     viewer_emission.gain = _calc_emission_viewer_gain(context)
 
                     viewer_node = node_tree.nodes.new("NodeReroute")
-                    viewer_node.location = active_output.location + mathutils.Vector((-10, 55))
+                    viewer_node.location = active_output.location + Vector((-10, 55))
                     viewer_node[luxcore_viewer_mark] = True
                     viewer_node[luxcore_viewer_reroute_mark] = True
                     # Diffuse color for albedo preview (material shading mode), emission for regular viewport render
@@ -107,7 +109,6 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
                     sockets_to_link.append((viewer_node.outputs[0], viewer_emission.inputs["Color"]))
 
                 target_socket = viewer_node.inputs[0]
-                from ..nodes.sockets import LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketVector
                 allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketVector}
         elif node_tree.bl_idname == "luxcore_texture_nodes":
             target_socket = active_output.inputs["Color"]
@@ -144,7 +145,8 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
 class LUXCORE_OT_mute_node(bpy.types.Operator):
     bl_idname = "luxcore.mute_node"
     bl_label = "Mute Node"
-    bl_description = ""
+    bl_description = "Toggle mute state of all selected nodes"
+    bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
@@ -159,4 +161,43 @@ class LUXCORE_OT_mute_node(bpy.types.Operator):
                 node.mute = not node.mute
 
         node_tree.update()
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_node_editor_add_image(bpy.types.Operator):
+    bl_idname = "luxcore.node_editor_add_image"
+    bl_label = "Add Image"
+    bl_description = "Add image and mapping node to selected nodes"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return poll_node_tree(context)
+
+    def invoke(self, context, event):
+        space = context.space_data
+        node_tree = space.node_tree
+        
+        allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}
+
+        for node in [node for node in node_tree.nodes if node.select]:
+            unlinked_input = None
+            for socket in node.inputs:
+                if not socket.is_linked and _is_allowed_input(allowed_inputs, socket):
+                    unlinked_input = socket
+                    break
+            if not unlinked_input:
+                continue
+            
+            img_node = node_tree.nodes.new("LuxCoreNodeTexImagemap")
+            img_node.location = node.location + Vector((-240, 0))
+            node_tree.links.new(img_node.outputs["Color"], unlinked_input)
+            
+            mapping_node = node_tree.nodes.new("LuxCoreNodeTexMapping2D")
+            mapping_node.location = img_node.location + Vector((-200, 0))
+            node_tree.links.new(mapping_node.outputs[0], img_node.inputs[0])
+            
+            node.select = False
+
+        # node_tree.update()
         return {"FINISHED"}
