@@ -67,6 +67,13 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
     if node.bl_idname == "ShaderNodeBsdfPrincipled":
         prefix = "scene.materials."
         definitions = {
+            # TODO:
+            #  - subsurface
+            #  - clearcoat roughness (we have clearcoat gloss, probably need to invert or something)
+            #  - transmission (mix with glass)
+            #  - transmission roughness (glass roughness, convert to non-squared!)
+            #  - clearcoat normal (no idea)
+            #  - tangent (no idea)
             "type": "disney",
             "basecolor": _socket(node.inputs["Base Color"], props, obj_name, group_node),
             "subsurface": 0,  # TODO
@@ -79,9 +86,8 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             "sheen": _socket(node.inputs["Sheen"], props, obj_name, group_node),
             "sheentint": _socket(node.inputs["Sheen Tint"], props, obj_name, group_node),
             "clearcoat": _socket(node.inputs["Clearcoat"], props, obj_name, group_node),
-            #"clearcoatgloss": convert_cycles_socket(node.inputs["Clearcoat Roughness"], props, obj_name, group_node),  # TODO
-            # TODO: emission, alpha, transmission, transmission roughness
-
+            "emission": _socket(node.inputs["Emission"], props, obj_name, group_node),
+            "transparency": _socket(node.inputs["Alpha"], props, obj_name, group_node),
             "bumptex": _socket(node.inputs["Normal"], props, obj_name, group_node),
         }
     elif node.bl_idname == "ShaderNodeMixShader":
