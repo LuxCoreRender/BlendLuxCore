@@ -427,6 +427,3 @@ def _convert_photongi_settings(context, scene, definitions, config):
 
     if photongi.debug != "off":
         definitions["path.photongi.debug.type"] = photongi.debug
-
-    if len(scene.luxcore.lightgroups.custom) > 0:
-        LuxCoreErrorLog.add_warning("PhotonGI does not support lightgroups!")
