@@ -239,6 +239,43 @@ class ObjectCache2:
         if use_instancing:
             key += "_instance"
         return key
+        
+    def _define_shapes(self, input_shape, node_tree, exporter, depsgraph, scene_props):
+        shape = input_shape
+        
+        output_node = get_active_output(node_tree)
+        if output_node:
+            # Convert the whole shape stack
+            shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
+
+        # Add some shapes at the end that are required by some nodes in the node tree
+
+        if uses_pointiness(node_tree):
+            # Note: Since Blender still does not make use of the vertex alpha channel 
+            # as of 2.82, we use it to store the pointiness information.
+            pointiness_shape = input_shape + "_pointiness"
+            prefix = "scene.shapes." + pointiness_shape + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
+            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+            shape = pointiness_shape
+
+        if uses_random_per_island(node_tree):
+            island_aov_shape = input_shape + "_island_aov"
+            prefix = "scene.shapes." + island_aov_shape + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "islandaov"))
+            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+            scene_props.Set(pyluxcore.Property(prefix + "dataindex", DATAINDEX_RANDOM_PER_ISLAND))
+            shape = island_aov_shape
+
+            random_tri_aov_shape = input_shape + "_random_tri_aov_shape"
+            prefix = "scene.shapes." + random_tri_aov_shape + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "randomtriangleaov"))
+            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+            scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", DATAINDEX_RANDOM_PER_ISLAND))
+            scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", DATAINDEX_RANDOM_PER_ISLAND))
+            shape = random_tri_aov_shape
+        
+        return shape
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
                      scene_props, is_viewport_render, engine=None):
@@ -307,16 +344,15 @@ class ObjectCache2:
                          or (exporter.motion_blur_enabled and obj.luxcore.enable_motion_blur)
 
         mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
-        # print(obj.name, "mesh key:", mesh_key)
 
         if use_instancing and mesh_key in self.exported_meshes:
-            # print("retrieving mesh from cache")
             exported_mesh = self.exported_meshes[mesh_key]
+            loaded_from_cache = True
         else:
-            # print("fresh export")
             exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
                                                    is_viewport_render, use_instancing, transform, exporter)
             self.exported_meshes[mesh_key] = exported_mesh
+            loaded_from_cache = False
 
         if exported_mesh:
             mat_names = []
@@ -326,40 +362,11 @@ class ObjectCache2:
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 
-                if node_tree:
+                # Meshes in the cache already have the shapes added.
+                # (This assumes that the instances use the same materials as the original mesh)
+                if node_tree and not loaded_from_cache:
                     warn_about_missing_uvs(obj, node_tree)
-
-                    output_node = get_active_output(node_tree)
-                    if output_node:
-                        # Convert the whole shape stack
-                        shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
-
-                    # Add some shapes at the end that are required by some nodes in the node tree
-
-                    if uses_pointiness(node_tree):
-                        # Note: Since Blender still does not make use of the vertex alpha channel 
-                        # as of 2.82, we use it to store the pointiness information.
-                        pointiness_shape = shape_name + "_pointiness"
-                        prefix = "scene.shapes." + pointiness_shape + "."
-                        scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
-                        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-                        shape = pointiness_shape
-
-                    if uses_random_per_island(node_tree):
-                        island_aov_shape = shape_name + "_island_aov"
-                        prefix = "scene.shapes." + island_aov_shape + "."
-                        scene_props.Set(pyluxcore.Property(prefix + "type", "islandaov"))
-                        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-                        scene_props.Set(pyluxcore.Property(prefix + "dataindex", DATAINDEX_RANDOM_PER_ISLAND))
-                        shape = island_aov_shape
-
-                        random_tri_aov_shape = shape_name + "_random_tri_aov_shape"
-                        prefix = "scene.shapes." + random_tri_aov_shape + "."
-                        scene_props.Set(pyluxcore.Property(prefix + "type", "randomtriangleaov"))
-                        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-                        scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", DATAINDEX_RANDOM_PER_ISLAND))
-                        scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", DATAINDEX_RANDOM_PER_ISLAND))
-                        shape = random_tri_aov_shape
+                    shape = self._define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
 
                 exported_mesh.mesh_definitions[idx] = [shape, mat_index]
 
