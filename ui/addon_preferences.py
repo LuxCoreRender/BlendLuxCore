@@ -14,7 +14,6 @@ class LuxCoreAddonPreferences(AddonPreferences):
     # We use dirname() two times to go up one level in the file system
     bl_idname = basename(dirname(dirname(__file__)))
 
-    # We could add properties here
     default_global_dict = utils.default_global_dict()
 
     global_dir: StringProperty(
@@ -24,11 +23,11 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     project_subdir: StringProperty(
         name="Project Assets Subdirectory", description="where data will be stored for individual projects",
-        subtype='DIR_PATH', default="//assets",
+        subtype='DIR_PATH', default="model",
     )
     max_assetbar_rows: IntProperty(name="Max Assetbar Rows", description="max rows of assetbar in the 3d view",
                                    default=1, min=0, max=20)
-    thumb_size: IntProperty(name="Assetbar thumbnail Size", default=96, min=-1, max=256)
+    thumb_size: IntProperty(name="Assetbar Thumbnail Size", default=96, min=-1, max=256)
 
     def draw(self, context):
         layout = self.layout

@@ -20,6 +20,26 @@ def _init_persistent_cache_file_path(settings, suffix):
         settings.file_path = pgi_path
 
 
+def _init_LuxCoreOnlineLibrary():
+    # TODO: implement LOL initialization
+    from os.path import basename, dirname
+
+    name = basename(dirname(dirname(__file__)))
+    user_preferences = bpy.context.preferences.addons[name].preferences
+    ui_props = bpy.context.scene.luxcoreOL.ui
+    # search.load_previews()
+
+    ui_props.assetbar_on = False
+    ui_props.turn_off = False
+    if not os.path.exists(user_preferences.global_dir):
+        os.makedirs(user_preferences.global_dir)
+    if not os.path.exists(os.path.join(user_preferences.global_dir, "model")):
+        os.makedirs(os.path.join(user_preferences.global_dir, "model"))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, "model", "preview")):
+        os.makedirs(os.path.join(user_preferences.global_dir, "model", "preview"))
+
+    # user_preferences.login_attempt = False
+
 @persistent
 def handler(_):
     """ Note: the only argument Blender passes is always None """
@@ -54,6 +74,8 @@ def handler(_):
         _init_persistent_cache_file_path(scene.luxcore.config.photongi, "pgi")
         _init_persistent_cache_file_path(scene.luxcore.config.envlight_cache, "env")
         _init_persistent_cache_file_path(scene.luxcore.config.dls_cache, "dlsc")
+
+        _init_LuxCoreOnlineLibrary()
 
     # Run converters for backwards compatibility
     compatibility.run()

@@ -38,7 +38,6 @@ bl_info = {
 from . import auto_load, nodes, properties, handlers
 auto_load.init()
 
-
 def register():
     auto_load.register()
     nodes.materials.register()
