@@ -69,42 +69,14 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
         base_color = _socket(node.inputs["Base Color"], props, obj_name, group_node)
         metallic_socket = node.inputs["Metallic"]
         metallic = _socket(metallic_socket, props, obj_name, group_node)
-        
-        definitions = {
-            # TODO:
-            #  - subsurface
-            #  - clearcoat roughness (we have clearcoat gloss, probably need to invert or something)
-            #  - clearcoat normal (no idea)
-            #  - tangent (no idea)
-            #  - transmission roughness (weird thing, might require rough glass + glossy coating?)
-            "type": "disney",
-            "basecolor": base_color,
-            "subsurface": 0,  # TODO
-            "metallic": metallic,
-            "specular": _socket(node.inputs["Specular"], props, obj_name, group_node),
-            "speculartint": _socket(node.inputs["Specular Tint"], props, obj_name, group_node),
-            # Both LuxCore and Cycles use squared roughness here, no need to convert
-            "roughness": _socket(node.inputs["Roughness"], props, obj_name, group_node),
-            "anisotropic": _socket(node.inputs["Anisotropic"], props, obj_name, group_node),
-            "sheen": _socket(node.inputs["Sheen"], props, obj_name, group_node),
-            "sheentint": _socket(node.inputs["Sheen Tint"], props, obj_name, group_node),
-            "clearcoat": _socket(node.inputs["Clearcoat"], props, obj_name, group_node),
-            "emission": _socket(node.inputs["Emission"], props, obj_name, group_node),
-            "transparency": _socket(node.inputs["Alpha"], props, obj_name, group_node),
-            "bumptex": _socket(node.inputs["Normal"], props, obj_name, group_node),
-        }
-        
         transmission_socket = node.inputs["Transmission"]
+        transmission = _socket(transmission_socket, props, obj_name, group_node)
         
-        # Metallic values > 0 reduce transmission. At metallic = 1, no transmission happens at all
-        if metallic != 1 and (transmission_socket.is_linked or transmission_socket.default_value > 0):
-            luxcore_name_disney = luxcore_name + "_disney"
-            props.Set(utils.create_props(prefix + luxcore_name_disney + ".", definitions))
-            
-            # Glass/Roughglass
-            luxcore_name_glass = luxcore_name + "_glass"
+        if transmission == 1 and metallic == 0:
+            # It's effectively glass instead of a disney material.
+            # Don't use mix for performance reasons.
             roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
-                                                     luxcore_name_glass, obj_name, group_node)
+                                                     luxcore_name, obj_name, group_node)
 
             definitions = {
                 "type": "glass" if roughness == 0 else "roughglass",
@@ -116,45 +88,93 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             if roughness != 0:
                 definitions["uroughness"] = roughness
                 definitions["vroughness"] = roughness
+        else:
+            definitions = {
+                # TODO:
+                #  - subsurface
+                #  - clearcoat roughness (we have clearcoat gloss, probably need to invert or something)
+                #  - clearcoat normal (no idea)
+                #  - tangent (no idea)
+                #  - transmission roughness (weird thing, might require rough glass + glossy coating?)
+                "type": "disney",
+                "basecolor": base_color,
+                "subsurface": 0,  # TODO
+                "metallic": metallic,
+                "specular": _socket(node.inputs["Specular"], props, obj_name, group_node),
+                "speculartint": _socket(node.inputs["Specular Tint"], props, obj_name, group_node),
+                # Both LuxCore and Cycles use squared roughness here, no need to convert
+                "roughness": _socket(node.inputs["Roughness"], props, obj_name, group_node),
+                "anisotropic": _socket(node.inputs["Anisotropic"], props, obj_name, group_node),
+                "sheen": _socket(node.inputs["Sheen"], props, obj_name, group_node),
+                "sheentint": _socket(node.inputs["Sheen Tint"], props, obj_name, group_node),
+                "clearcoat": _socket(node.inputs["Clearcoat"], props, obj_name, group_node),
+            }
             
-            props.Set(utils.create_props(prefix + luxcore_name_glass + ".", definitions))
-            
-            # Calculate mix amount
-            # metallic 1, transmission whatever -> mix_amount = 0
-            # metallic 0, transmission whatever -> mix_amount = transmission
-            # so: result = transmission * (1 - metallic)
-            transmission = _socket(transmission_socket, props, obj_name, group_node)
-            if _is_textured(metallic) or _is_textured(transmission):
-                if _is_textured(metallic):
-                    inverted_metallic = luxcore_name + "inverted_metallic"
-                    tex_prefix = "scene.textures." + inverted_metallic + "."
+            # Metallic values > 0 reduce transmission. At metallic = 1, no transmission happens at all
+            if metallic != 1 and (transmission_socket.is_linked or transmission_socket.default_value > 0):
+                luxcore_name_disney = luxcore_name + "_disney"
+                props.Set(utils.create_props(prefix + luxcore_name_disney + ".", definitions))
+                
+                # Glass/Roughglass
+                luxcore_name_glass = luxcore_name + "_glass"
+                roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+                                                        luxcore_name_glass, obj_name, group_node)
+
+                definitions = {
+                    "type": "glass" if roughness == 0 else "roughglass",
+                    "kt": base_color,
+                    "kr": [1, 1, 1],
+                    "interiorior": _socket(node.inputs["IOR"], props, obj_name, group_node),
+                }
+
+                if roughness != 0:
+                    definitions["uroughness"] = roughness
+                    definitions["vroughness"] = roughness
+                
+                props.Set(utils.create_props(prefix + luxcore_name_glass + ".", definitions))
+                
+                # Calculate mix amount
+                # metallic 1, transmission whatever -> mix_amount = 0
+                # metallic 0, transmission whatever -> mix_amount = transmission
+                # so: result = transmission * (1 - metallic)
+                if _is_textured(metallic) or _is_textured(transmission):
+                    if _is_textured(metallic):
+                        inverted_metallic = luxcore_name + "inverted_metallic"
+                        tex_prefix = "scene.textures." + inverted_metallic + "."
+                        tex_definitions = {
+                            "type": "subtract",
+                            "texture1": 1,
+                            "texture2": metallic,
+                        }
+                        props.Set(utils.create_props(tex_prefix, tex_definitions))
+                    else:
+                        inverted_metallic = 1 - metallic
+                        
+                    mix_amount = luxcore_name + "mix_amount"
+                    tex_prefix = "scene.textures." + mix_amount + "."
                     tex_definitions = {
-                        "type": "subtract",
-                        "texture1": 1,
-                        "texture2": metallic,
+                        "type": "scale",
+                        "texture1": inverted_metallic,
+                        "texture2": transmission,
                     }
                     props.Set(utils.create_props(tex_prefix, tex_definitions))
                 else:
-                    inverted_metallic = 1 - metallic
-                    
-                mix_amount = luxcore_name + "mix_amount"
-                tex_prefix = "scene.textures." + mix_amount + "."
-                tex_definitions = {
-                    "type": "scale",
-                    "texture1": inverted_metallic,
-                    "texture2": transmission,
+                    mix_amount = transmission * (1 - metallic)
+                
+                # Mix
+                definitions = {
+                    "type": "mix",
+                    "material1": luxcore_name_disney,
+                    "material2": luxcore_name_glass,
+                    "amount": mix_amount,
                 }
-                props.Set(utils.create_props(tex_prefix, tex_definitions))
-            else:
-                mix_amount = transmission * (1 - metallic)
-            
-            # Mix
-            definitions = {
-                "type": "mix",
-                "material1": luxcore_name_disney,
-                "material2": luxcore_name_glass,
-                "amount": mix_amount,
-            }
+        
+        # Attach these props to the right-most material node (regardless if it's glass, disney or a mix mat)
+        definitions.update({
+            "emission": _socket(node.inputs["Emission"], props, obj_name, group_node),
+            "transparency": _socket(node.inputs["Alpha"], props, obj_name, group_node),
+            "bumptex": _socket(node.inputs["Normal"], props, obj_name, group_node),
+        })
     elif node.bl_idname == "ShaderNodeMixShader":
         prefix = "scene.materials."
 
