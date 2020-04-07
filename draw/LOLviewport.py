@@ -81,6 +81,48 @@ def draw_rect_3d(coords, color):
     batch.draw(shader)
 
 
+def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1, 0, 1)):
+    rotation = mathutils.Euler(rotation)
+
+    smin = Vector(bbox_min)
+    smax = Vector(bbox_max)
+    v0 = Vector(smin)
+    v1 = Vector((smax.x, smin.y, smin.z))
+    v2 = Vector((smax.x, smax.y, smin.z))
+    v3 = Vector((smin.x, smax.y, smin.z))
+    v4 = Vector((smin.x, smin.y, smax.z))
+    v5 = Vector((smax.x, smin.y, smax.z))
+    v6 = Vector((smax.x, smax.y, smax.z))
+    v7 = Vector((smin.x, smax.y, smax.z))
+
+    arrowx = smin.x + (smax.x - smin.x) / 2
+    arrowy = smin.y - (smax.x - smin.x) / 2
+    v8 = Vector((arrowx, arrowy, smin.z))
+
+    vertices = [v0, v1, v2, v3, v4, v5, v6, v7, v8]
+    for v in vertices:
+        v.rotate(rotation)
+        v += Vector(location)
+
+    lines = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5],
+             [2, 6], [3, 7], [0, 8], [1, 8]]
+    draw_lines(vertices, lines, color)
+    if progress != None:
+        color = (color[0], color[1], color[2], .2)
+        progress = progress * .01
+        vz0 = (v4 - v0) * progress + v0
+        vz1 = (v5 - v1) * progress + v1
+        vz2 = (v6 - v2) * progress + v2
+        vz3 = (v7 - v3) * progress + v3
+        rects = (
+            (v0, v1, vz1, vz0),
+            (v1, v2, vz2, vz1),
+            (v2, v3, vz3, vz2),
+            (v3, v0, vz0, vz3))
+        for r in rects:
+            draw_rect_3d(r, color)
+
+
 def draw_image(x, y, width, height, image, transparency, crop=(0, 0, 1, 1)):
     # draw_rect(x,y, width, height, (.5,0,0,.5))
 

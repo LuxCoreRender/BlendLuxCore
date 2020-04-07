@@ -57,8 +57,26 @@ def draw_callback_2d(self, context):
         draw_callback_2d_search(self, context)
 
 
+def draw_callback_3d_progress(self, context):
+    # 'star trek' mode gets here, blocked by now ;)
+    if not utils.guard_from_crash():
+        return
+
+    for threaddata in utils.download_threads:
+        asset_data = threaddata[1]
+        tcom = threaddata[2]
+        bbox_min = Vector(asset_data["bbox_min"])
+        bbox_max = Vector(asset_data["bbox_max"])
+        bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
+
+        if tcom.passargs.get('downloaders'):
+            for d in tcom.passargs['downloaders']:
+                ui_bgl.draw_bbox(d['location'], d['rotation'], bbox_min-bbox_center, bbox_max-bbox_center,
+                               progress=tcom.progress)
+
+
 def draw_callback_3d(self, context):
-    ''' Draw snapped bbox while dragging and in the future other blenderkit related stuff. '''
+    ''' Draw snapped bbox while dragging'''
     if not utils.guard_from_crash():
         return
 
@@ -69,49 +87,8 @@ def draw_callback_3d(self, context):
             bbox_min = Vector(ui_props.snapped_bbox_min)
             bbox_max = Vector(ui_props.snapped_bbox_max)
             bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
-            draw_bbox(ui_props.snapped_location, ui_props.snapped_rotation, bbox_min-bbox_center, bbox_max-bbox_center)
 
-
-def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1, 0, 1)):
-    rotation = mathutils.Euler(rotation)
-
-    smin = Vector(bbox_min)
-    smax = Vector(bbox_max)
-    v0 = Vector(smin)
-    v1 = Vector((smax.x, smin.y, smin.z))
-    v2 = Vector((smax.x, smax.y, smin.z))
-    v3 = Vector((smin.x, smax.y, smin.z))
-    v4 = Vector((smin.x, smin.y, smax.z))
-    v5 = Vector((smax.x, smin.y, smax.z))
-    v6 = Vector((smax.x, smax.y, smax.z))
-    v7 = Vector((smin.x, smax.y, smax.z))
-
-    arrowx = smin.x + (smax.x - smin.x) / 2
-    arrowy = smin.y - (smax.x - smin.x) / 2
-    v8 = Vector((arrowx, arrowy, smin.z))
-
-    vertices = [v0, v1, v2, v3, v4, v5, v6, v7, v8]
-    for v in vertices:
-        v.rotate(rotation)
-        v += Vector(location)
-
-    lines = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5],
-             [2, 6], [3, 7], [0, 8], [1, 8]]
-    ui_bgl.draw_lines(vertices, lines, color)
-    if progress != None:
-        color = (color[0], color[1], color[2], .2)
-        progress = progress * .01
-        vz0 = (v4 - v0) * progress + v0
-        vz1 = (v5 - v1) * progress + v1
-        vz2 = (v6 - v2) * progress + v2
-        vz3 = (v7 - v3) * progress + v3
-        rects = (
-            (v0, v1, vz1, vz0),
-            (v1, v2, vz2, vz1),
-            (v2, v3, vz3, vz2),
-            (v3, v0, vz0, vz3))
-        for r in rects:
-            ui_bgl.draw_rect_3d(r, color)
+            ui_bgl.draw_bbox(ui_props.snapped_location, ui_props.snapped_rotation, bbox_min-bbox_center, bbox_max-bbox_center)
 
 
 def draw_callback_2d_search(self, context):
@@ -587,6 +564,7 @@ class LOLAssetBarOperator(Operator):
 
         self._handle_2d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_2d, args, 'WINDOW', 'POST_PIXEL')
         self._handle_3d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d, args, 'WINDOW', 'POST_VIEW')
+        self._handle_3d_progress = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d_progress, args, 'WINDOW', 'POST_VIEW')
 
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
@@ -595,6 +573,8 @@ class LOLAssetBarOperator(Operator):
         try:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_2d, 'WINDOW')
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d, 'WINDOW')
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d_progress, 'WINDOW')
+
         except:
             pass
 
@@ -684,7 +664,7 @@ class LOLAssetBarOperator(Operator):
                 else:
                     ui_props.scrolloffset += 1
                 if len(assets) - ui_props.scrolloffset < (ui_props.wcount * ui_props.hcount):
-                    ui_props.scrolloffset = len(sr) - (ui_props.wcount * ui_props.hcount)
+                    ui_props.scrolloffset = len(assets) - (ui_props.wcount * ui_props.hcount)
 
             if event.type == 'WHEELUPMOUSE' and ui_props.scrolloffset > 0:
                 if ui_props.hcount > 1:
@@ -842,10 +822,9 @@ class LOLAssetBarOperator(Operator):
                             context, mx, my)
 
                         # MODELS can be dragged on scene floor
-                        if not ui_props.has_hit and ui_props.asset_type == 'MODEL':
+                        if not ui_props.has_hit:
                             ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = ui_bgl.floor_raycast(
-                                context,
-                                mx, my)
+                                context, mx, my)
 
                         if not ui_props.has_hit:
                             return {'RUNNING_MODAL'}
@@ -855,6 +834,7 @@ class LOLAssetBarOperator(Operator):
                             target_object = object.name
                         target_slot = ''
 
+                    #TODO:_Implement Material drop
                     # if ui_props.asset_type == 'MATERIAL':
                     #     ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = mouse_raycast(
                     #         context, mx, my)
@@ -914,7 +894,7 @@ class LOLAssetBarOperator(Operator):
                         loc = scene.cursor.location
                         rotation = scene.cursor.rotation_euler
 
-                    utils.link_asset(self, context, assets[asset_search_index], loc, rotation)
+                    utils.load_asset(context, assets[asset_search_index], loc, rotation)
 
                     ui_props.dragging = False
                     return {'RUNNING_MODAL'}

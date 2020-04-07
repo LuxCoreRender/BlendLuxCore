@@ -28,23 +28,24 @@ import urllib.error
 import zipfile
 from mathutils import Vector, Matrix
 import threading
+from ..handlers.LOLtimer import timer_update
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
 download_threads = []
 
 def download_table_of_contents(self, context):
-    print("=======================================")
-    print("Download table of contents")
-    print()
+    # print("=======================================")
+    # print("Download table of contents")
+    # print()
     try:
         request = urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60)
 
         assets = json.loads(request.read())
 
-        print("Found %i assets in library." % len(assets))
+        # print("Found %i assets in library." % len(assets))
         context.scene.luxcoreOL['assets'] = assets
-
+        request.close()
     except ConnectionError as error:
         self.report({"ERROR"}, "Connection error: Could not download table of contents")
         return {"CANCELLED"}
@@ -55,9 +56,9 @@ def download_thumbnail(self, context, asset, index):
     user_preferences = context.preferences.addons[name].preferences
 
     imagename = asset['url'][:-4] + '.jpg'
-    print("=======================================")
-    print("Download thumbnail: ", imagename)
-    print()
+    # print("=======================================")
+    # print("Download thumbnail: ", imagename)
+    # print()
 
     try:
         thumbnailpath = os.path.join(user_preferences.global_dir, "model", "preview", imagename)
@@ -95,158 +96,111 @@ def calc_hash(filename):
     return file_hash.hexdigest()
 
 
-def download_file(context, asset):
-    name = basename(dirname(dirname(__file__)))
-    user_preferences = context.preferences.addons[name].preferences
+def is_downloading(asset):
+    global download_threads
+    for thread_data in download_threads:
+        if asset['hash'] == thread_data[1]['hash']:
+            # print(asset["name"], "is downloading")
+            return thread_data[2]
 
-    #print(asset["name"])
-    filename = asset["name"].replace(" ", "_")
-    filepath = os.path.join(user_preferences.global_dir, "model", filename + '.blend')
+    return None
 
-    download = False
-    if not os.path.exists(filepath):
-        download = True
+
+def download_file(asset, location, rotation):
+    downloader = {'location': (location[0],location[1],location[2]), 'rotation': (rotation[0],rotation[1],rotation[2])}
+    tcom  = is_downloading(asset)
+    if tcom is None:
+        tcom = ThreadCom()
+        tcom.passargs['downloaders'] = [downloader]
+
+        downloadthread = Downloader(asset, tcom)
+        downloadthread.start()
+
+        download_threads.append([downloadthread, asset, tcom])
+        bpy.app.timers.register(timer_update)
     else:
-        hash = calc_hash(filepath)
-        if hash != asset["hash"]:
-            download = True
-
-    if download:
-        with tempfile.TemporaryDirectory() as temp_dir_path:
-            temp_zip_path = os.path.join(temp_dir_path, filename)
-
-            url = LOL_HOST_URL + "/assets/" + asset["url"]
-            try:
-                print("Downloading:", url)
-                with urllib.request.urlopen(url, timeout=60) as url_handle, \
-                        open(temp_zip_path, "wb") as file_handle:
-                    file_handle.write(url_handle.read())
-
-                    with zipfile.ZipFile(temp_zip_path) as zf:
-                        print("Extracting zip to", os.path.join(user_preferences.global_dir, "model"))
-                        zf.extractall(os.path.join(user_preferences.global_dir, "model"))
-
-            except urllib.error.URLError as err:
-                print("Could not download: %s" % err)
-                return False
-
-            print("Download finished")
-
-    hash = calc_hash(filepath)
-    if hash != asset["hash"]:
-        print("File has wrong hash number: %s" % hash)
-        return False
+        tcom.passargs['downloaders'].append(downloader)
 
     return True
 
 
 #TODO: Implement threaded downloader
 class Downloader(threading.Thread):
-    def __init__(self, asset_data, tcom, scene_id, api_key):
+    def __init__(self, asset, tcom):
         super(Downloader, self).__init__()
-        self.asset_data = asset_data
+        self.asset = asset
         self.tcom = tcom
-        self.scene_id = scene_id
         self._stop_event = threading.Event()
 
     def stop(self):
+        print("Download Thread stopped")
         self._stop_event.set()
 
     def stopped(self):
-        print("Download Thread running")
         return self._stop_event.is_set()
 
     # def main_download_thread(asset_data, tcom, scene_id, api_key):
     def run(self):
+        name = basename(dirname(dirname(__file__)))
+        user_preferences = bpy.context.preferences.addons[name].preferences
+
         print("Download Thread running")
-        # '''try to download file from blenderkit'''
-        # asset_data = self.asset_data
-        # tcom = self.tcom
-        # scene_id = self.scene_id
-        #
-        # # TODO get real link here...
-        # has_url = get_download_url(asset_data, scene_id, api_key, tcom=tcom)
-        #
-        # if not has_url:
-        #     tasks_queue.add_task(
-        #         (ui.add_report, ('Failed to obtain download URL for %s.' % asset_data['name'], 5, colors.RED)))
-        #     return
-        # if tcom.error:
-        #     return
-        # # only now we can check if the file already exists. This should have 2 levels, for materials and for brushes
-        # # different than for the non free content. delete is here when called after failed append tries.
-        # if check_existing(asset_data) and not tcom.passargs.get('delete'):
-        #     # this sends the thread for processing, where another check should occur, since the file might be corrupted.
-        #     tcom.downloaded = 100
-        #     utils.p('not downloading, trying to append again')
-        #     return
-        #
-        # file_name = paths.get_download_filenames(asset_data)[0]  # prefer global dir if possible.
-        # # for k in asset_data:
-        # #    print(asset_data[k])
-        # if self.stopped():
-        #     utils.p('stopping download: ' + asset_data['name'])
-        #     return
-        #
-        # with open(file_name, "wb") as f:
-        #     print("Downloading %s" % file_name)
-        #     headers = utils.get_headers(api_key)
-        #
-        #     response = requests.get(asset_data['url'], stream=True)
-        #     total_length = response.headers.get('Content-Length')
-        #
-        #     if total_length is None:  # no content length header
-        #         f.write(response.content)
-        #     else:
-        #         tcom.file_size = int(total_length)
-        #         dl = 0
-        #         for data in response.iter_content(chunk_size=4096):
-        #             dl += len(data)
-        #             tcom.downloaded = dl
-        #             tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
-        #             f.write(data)
-        #             if self.stopped():
-        #                 utils.p('stopping download: ' + asset_data['name'])
-        #                 f.close()
-        #                 os.remove(file_name)
-        #                 return
+        filename = self.asset["url"]
+        tcom = self.tcom
+
+        with tempfile.TemporaryDirectory() as temp_dir_path:
+            temp_zip_path = os.path.join(temp_dir_path, filename)
+            # print(temp_zip_path)
+            url = LOL_HOST_URL + "/assets/" + filename
+            try:
+                print("Downloading:", url)
+
+                with urllib.request.urlopen(url, timeout=60) as url_handle, \
+                        open(temp_zip_path, "wb") as file_handle:
+                    total_length = url_handle.headers.get('Content-Length')
+                    tcom.file_size = int(total_length)
+
+                    dl = 0
+                    data = url_handle.read(8192)
+                    file_handle.write(data)
+                    while len(data) == 8192:
+                        data = url_handle.read(8192)
+                        dl += len(data)
+                        tcom.downloaded = dl
+                        tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
+
+                        file_handle.write(data)
+                        if self.stopped():
+                            url_handle.close()
+                            return
+                print("Download finished")
+                with zipfile.ZipFile(temp_zip_path) as zf:
+                    print("Extracting zip to", os.path.join(user_preferences.global_dir, "model"))
+                    zf.extractall(os.path.join(user_preferences.global_dir, "model"))
+                tcom.finished = True
+
+            except urllib.error.URLError as err:
+                print("Could not download: %s" % err)
 
 
 class ThreadCom:  # object passed to threads to read background process stdout info
     def __init__(self):
         self.file_size = 1000000000000000  # property that gets written to.
         self.downloaded = 0
-        self.lasttext = ''
-        self.error = False
-        self.report = ''
         self.progress = 0.0
+        self.finished = False
         self.passargs = {}
 
 
-def link_asset(self, context, asset, location, rotation):
-    print("Link asset")
+def link_asset(context, asset, location, rotation):
     name = basename(dirname(dirname(__file__)))
     user_preferences = context.preferences.addons[name].preferences
 
     filename = asset["url"]
-    filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3]+'blend')
-
-    download = False
-    if not os.path.exists(filepath):
-        download = True
-    else:
-        hash = calc_hash(filepath)
-        if hash != asset["hash"]:
-            print("hash number doesn't match: %s" % hash)
-            download = True
-
-    if download:
-        if not download_file(context, asset):
-            return False
+    filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
 
     with bpy.data.libraries.load(filepath, link=True) as (data_from, data_to):
         data_to.objects = [name for name in data_from.objects if name not in ["Plane", "Camera"]]
-
 
     bpy.ops.object.empty_add(type='PLAIN_AXES', location=Vector(location), rotation=rotation)
     main_object = bpy.context.view_layer.objects.active
@@ -259,7 +213,6 @@ def link_asset(self, context, asset, location, rotation):
     main_object.matrix_world.translation = location
 
     bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
-
     col = bpy.data.collections.new(asset["name"])
     col.instance_offset = bbox_center
     main_object.instance_collection = col
@@ -268,7 +221,29 @@ def link_asset(self, context, asset, location, rotation):
     for obj in data_to.objects:
         col.objects.link(obj)
 
-    return True
+
+def load_asset(context, asset, location, rotation):
+    name = basename(dirname(dirname(__file__)))
+    user_preferences = context.preferences.addons[name].preferences
+
+    filename = asset["url"]
+    filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3]+'blend')
+
+    ''' Check if model is cached '''
+    download = False
+    if not os.path.exists(filepath):
+        download = True
+    else:
+        hash = calc_hash(filepath)
+        if hash != asset["hash"]:
+            print("hash number doesn't match: %s" % hash)
+            download = True
+
+    if download:
+        print("Download asset")
+        download_file(asset, location, rotation)
+    else:
+        link_asset(context, asset, location, rotation)
 
 
 def get_search_props():
