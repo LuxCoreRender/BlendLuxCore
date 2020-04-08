@@ -52,7 +52,7 @@ WINDOWS_FILES = [
     "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
-    "OpenImageDenoise.dll",
+    "OpenImageDenoise.dll", "denoise.exe",
 ]
 
 MAC_FILES = [
@@ -62,12 +62,12 @@ MAC_FILES = [
     "pyluxcore.so", "pyluxcoretools.zip", "denoise"
 ]
 
-OIDN_WIN = "oidn-windows.zip"
+#OIDN_WIN = "oidn-windows.zip"
 OIDN_LINUX = "oidn-linux.tar.gz"
 #OIDN_MAC = "oidn-macos.tar.gz"
 
 OIDN_urls = {
-    OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
+    #OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
     OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
     #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
 }
@@ -339,9 +339,9 @@ def main():
         name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, name, "BlendLuxCore", "bin")
 
-        if "win64" in suffix:
-            extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
-        elif "linux64" in suffix:
+        #if "win64" in suffix:
+        #    extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
+        if "linux64" in suffix:
             extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
         #elif "mac64" in suffix:
         #    extract_files_from_archive(OIDN_MAC, ["denoise"], destination)

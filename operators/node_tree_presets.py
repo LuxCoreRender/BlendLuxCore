@@ -3,7 +3,7 @@ import bpy
 from bpy.props import StringProperty, IntProperty
 from mathutils import Color
 from .. import utils
-from .utils import poll_object, make_nodetree_name
+from .utils import poll_object, make_nodetree_name, show_nodetree
 
 
 def new_node(bl_idname, node_tree, previous_node, output=0, input=0):
@@ -135,6 +135,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         elif self.preset == "Colored Glass":
             self._preset_colored_glass(obj, node_tree, output)
 
+        show_nodetree(context, node_tree)
         return {"FINISHED"}
 
     def _preset_smoke(self, obj, node_tree, output):
