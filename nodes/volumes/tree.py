@@ -75,6 +75,7 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
         Separator(),
         NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
+        NodeItem("LuxCoreNodeTexRandom", label="Random"),
     ]),
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MAPPING", "Mapping", items=[

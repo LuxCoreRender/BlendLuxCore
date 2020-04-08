@@ -43,13 +43,13 @@ class LuxCoreNodeMatCarpaint(bpy.types.Node, LuxCoreNodeMaterial):
 
     preset_items = [
         ("manual", "Manual settings", "", 0),
-        ("2k acrylack", "2k Acrylack", "", 1),
+        ("2k_acrylack", "2k Acrylack", "", 1),
         ("blue", "Blue", "", 2),
-        ("blue matte", "Blue Matte", "", 3),
+        ("blue_matte", "Blue Matte", "", 3),
         ("bmw339", "BMW 339", "", 4),
-        ("ford f8", "Ford F8", "", 5),
-        ("opel titan", "Opel Titan", "", 6),
-        ("polaris silber", "Polaris Silber", "", 7),
+        ("ford_f8", "Ford F8", "", 5),
+        ("opel_titan", "Opel Titan", "", 6),
+        ("polaris_silber", "Polaris Silber", "", 7),
         ("white", "White", "", 8),
     ]
     preset: EnumProperty(name="Preset", items=preset_items, default="manual", update=update_preset)

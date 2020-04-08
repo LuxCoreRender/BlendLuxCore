@@ -3,6 +3,7 @@ import bpy
 from . import icons
 from bpy.types import Panel
 from ..utils import ui as utils_ui
+from cycles.ui import panel_node_draw
 
 
 class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
@@ -95,32 +96,49 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        if light.type in {"POINT", "SPOT", "AREA"}:
-            layout.prop(light.luxcore, "light_unit")
-
+        col = layout.column(align=True)
         if light.type == "AREA" and light.luxcore.node_tree:
-            layout.label(text="Light color is defined by emission node", icon=icons.INFO)
+            col.label(text="Light color is defined by emission node", icon=icons.INFO)
+        elif light.type == "SUN" and light.luxcore.light_type == "sun":
+            col.label(icon="INFO", text="Sun color and brightness are driven by the sun position")
         else:
-            if not (light.type == "SUN" and light.luxcore.light_type == "sun"):
-                layout.prop(light.luxcore, "rgb_gain", text="Color")
+            col.prop(light.luxcore, "rgb_gain", text="Color")
+        
+        layout.separator()
+        
+        col = layout.column(align=True)
+        if light.type in {"POINT", "SPOT", "AREA"}:
+            col.prop(light.luxcore, "light_unit")
 
         if light.luxcore.light_unit == "power" and light.type in {"POINT", "SPOT", "AREA"}:
-            col = layout.column(align=True)
             col.prop(light.luxcore, "power")
             col.prop(light.luxcore, "efficacy")
-            layout.prop(light.luxcore, "normalizebycolor")
+            col.prop(light.luxcore, "normalizebycolor")
+            
+        elif light.luxcore.light_unit == "lumen" and light.type in {"POINT", "SPOT", "AREA"}:
+            col.prop(light.luxcore, "lumen")
+            col.prop(light.luxcore, "normalizebycolor")
+            
+        elif light.luxcore.light_unit == "candela" and light.type in {"POINT", "SPOT", "AREA"}:
+            col.prop(light.luxcore, "candela")
+            if light.type == "AREA":
+                col.prop(light.luxcore, "per_square_meter")
+            col.prop(light.luxcore, "normalizebycolor")
+            
+        elif light.type == "SUN" and light.luxcore.light_type == "distant":
+            col.prop(light.luxcore, "gain", text='Gain (Lux)')
+            col.prop(light.luxcore, "exposure", slider=True)
+                
         else:
             col = layout.column(align=True)
-            col.prop(light.luxcore, "gain")
+            if light.type == "SUN" and light.luxcore.light_type == "sun":
+                col.prop(light.luxcore, "sun_sky_gain")
+            else:
+                col.prop(light.luxcore, "gain")
             col.prop(light.luxcore, "exposure", slider=True)
-
-        col = layout.column(align=True)
-        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
-        op.target = "SCENE"
-        lightgroups = context.scene.luxcore.lightgroups
-        col.prop_search(light.luxcore, "lightgroup",
-                        lightgroups, "custom",
-                        icon=icons.LIGHTGROUP, text="")
+                
+            col = col.column(align=True)
+            col.prop(light.luxcore, "normalizebycolor")
 
         layout.separator()
 
@@ -174,8 +192,18 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
             layout.prop(light.luxcore, "is_laser")
 
+        layout.separator()
+        
+        col = layout.column(align=True)
+        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
+        op.target = "SCENE"
+        lightgroups = context.scene.luxcore.lightgroups
+        col.prop_search(light.luxcore, "lightgroup",
+                        lightgroups, "custom",
+                        icon=icons.LIGHTGROUP, text="")
 
-def draw_vismap_ui(layout, scene, light_or_world):
+
+def draw_envlight_cache_ui(layout, scene, light_or_world):
     envlight_cache = scene.luxcore.config.envlight_cache
     col = layout.column()
     col.active = envlight_cache.enabled
@@ -213,7 +241,7 @@ class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
 
         if not light.luxcore.use_cycles_settings and light.type == "SUN" and light.luxcore.light_type == "hemi":
             # infinite (with image) and constantinfinte lights
-            draw_vismap_ui(layout, context.scene, light)
+            draw_envlight_cache_ui(layout, context.scene, light)
 
 
 class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
@@ -288,6 +316,7 @@ class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):
             col.prop(light, "spot_blend", text="Blend", slider=True)
         col.prop(light, "show_cone")
 
+
 class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
     bl_label = "IES Light"
     bl_context = "data"
@@ -357,12 +386,31 @@ class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
                                     "luxcore.texture_unlink")
 
 
+class LUXCORE_LIGHT_PT_cycles_nodes(DataButtonsPanel, Panel):
+    bl_label = "Nodes"
+    bl_context = "data"
+    bl_order = 2
+
+    @classmethod
+    def poll(cls, context):
+        if context.engine != "LUXCORE" or not context.light:
+            return False
+        is_portal = context.light.type == "AREA" and context.light.cycles.is_portal
+        return context.light.luxcore.use_cycles_settings and not is_portal
+
+    def draw(self, context):
+        layout = self.layout
+
+        light = context.light
+        panel_node_draw(layout, light, "OUTPUT_LIGHT", "Surface")
+
+
 def compatible_panels():
-     panels = [
+    panels = [
         "DATA_PT_context_light",
-     ]
-     types = bpy.types
-     return [getattr(types, p) for p in panels if hasattr(types, p)]
+    ]
+    types = bpy.types
+    return [getattr(types, p) for p in panels if hasattr(types, p)]
 
 
 def register():

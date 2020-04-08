@@ -2,10 +2,7 @@ import bpy
 from bpy.types import PropertyGroup
 from bpy.props import PointerProperty, FloatProperty, BoolProperty
 from ..utils import node as utils_node
-
-
-#def init():
-#    bpy.types.Material.luxcore = PointerProperty(type=LuxCoreMaterialProps)
+from ..operators.material import show_nodetree
 
 
 class LuxCoreMaterialPreviewProps(PropertyGroup):
@@ -13,11 +10,6 @@ class LuxCoreMaterialPreviewProps(PropertyGroup):
         material = self.id_data
         # A trick to force a material preview refresh (update_tag() does not work)
         material.preview_render_type = material.preview_render_type
-
-    size: FloatProperty(name="Sphere Size (m)", default=0.1, min=0.01, soft_max=1,
-                         description="Diameter of the preview sphere in meters\n"
-                                     "(one checker tile has a size of 10cm)",
-                         update=update_preview)
 
     zoom: FloatProperty(name="Zoom", default=1, min=1, soft_max=3, max=10,
                          description="Zoom of the preview camera",
@@ -37,8 +29,10 @@ class LuxCoreMaterialProps(PropertyGroup):
     preview: PointerProperty(type=LuxCoreMaterialPreviewProps)
 
     def update_use_cycles_nodes(self, context):
-        if bpy.ops.luxcore.material_show_nodetree.poll():
-            bpy.ops.luxcore.material_show_nodetree()
+        mat = self.id_data
+        node_tree = mat.node_tree if mat.luxcore.use_cycles_nodes else mat.luxcore.node_tree
+        if node_tree:
+            show_nodetree(context, node_tree)
 
     use_cycles_nodes: BoolProperty(name="Use Cycles Nodes", default=False, update=update_use_cycles_nodes,
                                    description="Use the Cycles nodes of this material instead of the LuxCore node tree "

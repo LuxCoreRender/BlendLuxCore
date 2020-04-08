@@ -10,10 +10,12 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
     bl_width_default = 260
 
     def update_uvmap(self, context):
-        for i, e in enumerate(context.object.data.uv_layers.keys()):
-            if e == self.uvmap:
-                self.uvindex = i
-        utils_node.force_viewport_update(self, context)
+        obj = context.object
+        if obj and obj.data and obj.type == "MESH":
+            for i, e in enumerate(obj.data.uv_layers.keys()):
+                if e == self.uvmap:
+                    self.uvindex = i
+            utils_node.force_viewport_update(self, context)
 
     mapping_types = [
         ("globalmapping3d", "Global", "World coordinate system", 0),
@@ -48,8 +50,9 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
 
             if self.mapping_type == "uvmapping3d":
                 utils_node.draw_uv_info(context, layout)
-                if not self.inputs["3D Mapping (optional)"].is_linked:
-                    layout.prop_search(self, "uvmap", context.object.data, "uv_layers", text="UV Map", icon='GROUP_UVS')
+                obj = context.object
+                if obj and obj.data and obj.type == "MESH":
+                    layout.prop_search(self, "uvmap", obj.data, "uv_layers", text="UV Map", icon='GROUP_UVS')
 
         row = layout.row()
 

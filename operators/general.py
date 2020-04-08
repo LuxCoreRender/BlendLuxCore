@@ -26,9 +26,12 @@ class LUXCORE_OT_use_cycles_settings(bpy.types.Operator):
 
         for light in bpy.data.lights:
             light.luxcore.use_cycles_settings = True
+            light.update_tag()
 
         for world in bpy.data.worlds:
             world.luxcore.use_cycles_settings = True
+            world.update_tag()
+
         return {"FINISHED"}
 
 
@@ -192,7 +195,9 @@ class LUXCORE_OT_attach_sun_to_sky(bpy.types.Operator):
         return context.scene.world and context.object
 
     def execute(self, context):
-        context.scene.world.luxcore.sun = context.object
+        world = context.scene.world
+        world.luxcore.sun = context.object
+        world.update_tag()
         return {"FINISHED"}
 
 

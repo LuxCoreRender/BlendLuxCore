@@ -1,3 +1,4 @@
+from mathutils import Matrix
 import math
 import numpy as np
 from .. import utils
@@ -85,7 +86,7 @@ def warn_about_missing_uvs(obj, node_tree):
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
 
 
-def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_viewport_render,
+def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_props, is_viewport_render,
                  is_for_duplication, instance_matrix_world, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
@@ -181,7 +182,8 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_view
             if engine.test_break():
                 return None, None
 
-        luxcore_shape_name = obj_key + "_" + utils.make_key_from_bpy_struct(psys)
+        lux_shape_name = make_hair_shape_name(obj_key, psys)
+        lux_obj_name = lux_shape_name
 
         if is_for_duplication:
             # We have to unapply the transformation which is baked into the Blender hair coordinates
@@ -189,7 +191,7 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_view
         else:
             transformation = None
 
-        success = luxcore_scene.DefineBlenderStrands(luxcore_shape_name, points_per_strand,
+        success = luxcore_scene.DefineBlenderStrands(lux_shape_name, points_per_strand,
                                                      points, colors, uvs, image_filename, settings.gamma,
                                                      copy_uvs, transformation, strand_diameter,
                                                      root_width, tip_width, width_offset,
@@ -208,30 +210,40 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, is_view
         lux_mat_name, mat_props, node_tree = get_material(obj, psys.settings.material - 1, exporter, depsgraph,
                                                           is_viewport_render)
 
-        strandsProps = pyluxcore.Properties()
-        strandsProps.Set(mat_props)
-        prefix = "scene.objects." + luxcore_shape_name + "."
-
-        strandsProps.Set(pyluxcore.Property(prefix + "material", lux_mat_name))
-        strandsProps.Set(pyluxcore.Property(prefix + "shape", luxcore_shape_name))
-        strandsProps.Set(pyluxcore.Property(prefix + "camerainvisible", not obj.luxcore.visible_to_camera))
-
-        if is_for_duplication:
-            strandsProps.Set(pyluxcore.Property(prefix + "transformation", utils.matrix_to_list(instance_matrix_world)))
-        elif settings.instancing == "enabled":
-            # We don't actually need to transform anything, just set an identity matrix so the mesh is instanced
-            from mathutils import Matrix
-            identity_matrix = utils.matrix_to_list(Matrix.Identity(4))
-            strandsProps.Set(pyluxcore.Property(prefix + "transformation", identity_matrix))
-
-        luxcore_scene.Parse(strandsProps)
+        scene_props.Set(mat_props)
+        set_hair_props(scene_props, lux_obj_name, lux_shape_name, lux_mat_name, obj.luxcore.visible_to_camera,
+                       is_for_duplication, instance_matrix_world, settings.instancing == "enabled")
 
         time_elapsed = time() - start_time
+        if exporter.stats:
+            exporter.stats.export_time_hair.value += time_elapsed
         print("[%s: %s] Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
-        return luxcore_shape_name, lux_mat_name
+        return lux_shape_name, lux_mat_name
     except Exception as error:
         msg = "[%s: %s] %s" % (obj.name, psys.name, error)
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
         import traceback
         traceback.print_exc()
         return None, None
+
+
+def set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, visible_to_camera,
+                   is_for_duplication, instance_matrix_world, use_instancing):
+    prefix = "scene.objects." + lux_obj + "."
+
+    scene_props.Set(pyluxcore.Property(prefix + "material", lux_mat))
+    scene_props.Set(pyluxcore.Property(prefix + "shape", lux_shape))
+    scene_props.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_camera))
+
+    if is_for_duplication:
+        scene_props.Set(pyluxcore.Property(prefix + "transformation", utils.matrix_to_list(instance_matrix_world)))
+    elif use_instancing:
+        # We don't actually need to transform anything, just set an identity matrix so the mesh is instanced
+        identity_matrix = utils.matrix_to_list(Matrix.Identity(4))
+        scene_props.Set(pyluxcore.Property(prefix + "transformation", identity_matrix))
+
+
+def make_hair_shape_name(obj_key, psys):
+    # Can't use the memory address of the psys as key because it changes
+    # when the psys is updated (e.g. because some hair moves)
+    return obj_key + "_" + utils.sanitize_luxcore_name(psys.name)

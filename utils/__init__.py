@@ -36,8 +36,8 @@ def make_key_from_bpy_struct(bpy_struct):
 
 def make_key_from_instance(dg_obj_instance):
     if dg_obj_instance.is_instance:
-        key = make_key(dg_obj_instance.object.original)
-        key += "_" + make_key(dg_obj_instance.parent.original)
+        key = make_key(dg_obj_instance.object)
+        key += "_" + make_key(dg_obj_instance.parent)
         key += persistent_id_to_str(dg_obj_instance.persistent_id)
     else:
         key = make_key(dg_obj_instance.object.original)
@@ -125,50 +125,11 @@ def create_props(prefix, definitions):
     return props
 
 
-def get_worldscale(scene, as_scalematrix=True):
-    # TODO 2.8 I want to change the way we handle unit scaling, see
-    #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
-    #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
-    ws = 1
-
-    # unit_settings = scene.unit_settings
-    #
-    # if unit_settings.system in {"METRIC", "IMPERIAL"}:
-    #     # The units used in modelling are for display only. behind
-    #     # the scenes everything is in meters
-    #     ws = unit_settings.scale_length
-    # else:
-    #     ws = 1
-
-    if as_scalematrix:
-        return mathutils.Matrix.Scale(ws, 4)
-    else:
-        return ws
-
-
-def get_scaled_to_world(matrix, scene):
-    # TODO 2.8 I want to change the way we handle unit scaling, see
-    #  https://github.com/LuxCoreRender/BlendLuxCore/issues/97
-    #  Eventually we should clean up all places in the code where we use it, but for now we just ignore it.
-    return matrix.copy()  # Someone might rely on this being a copy
-
-    # matrix = matrix.copy()
-    # sm = get_worldscale(scene)
-    # matrix = matrix @ sm
-    # ws = get_worldscale(scene, as_scalematrix=False)
-    # matrix[0][3] *= ws
-    # matrix[1][3] *= ws
-    # matrix[2][3] *= ws
-    # return matrix
-
-
-def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
+def matrix_to_list(matrix, invert=False):
     """
     Flatten a 4x4 matrix into a list
     Returns list[16]
     """
-    # TODO remove parameters scene and apply_worldscale everywhere in the code base
-
     # Copy required for BlenderMatrix4x4ToList(), not sure why, but if we don't
     # make a copy, we only get an identity matrix in C++
     matrix = matrix.copy()
@@ -279,7 +240,6 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
-    #world_scale = get_worldscale(scene, False)
 
     # Following: Black Magic
     scale = 1
@@ -377,7 +337,7 @@ def find_active_vertex_color_layer(vertex_colors):
 
 
 def is_instance_visible(dg_obj_instance, obj):
-    return dg_obj_instance.show_self and is_obj_visible(obj)
+    return (dg_obj_instance.show_self or dg_obj_instance.show_particles) and is_obj_visible(obj)
 
 
 def is_obj_visible(obj):
@@ -418,6 +378,7 @@ def get_abspath(path, library=None, must_exist=False, must_be_existing_file=Fals
 
 
 def absorption_at_depth_scaled(abs_col, depth, scale=1):
+    assert depth > 0
     abs_col = list(abs_col)
     assert len(abs_col) == 3
 
@@ -454,7 +415,7 @@ def has_deforming_modifiers(obj):
 
 
 def can_share_mesh(obj):
-    if not obj.data or obj.data.users < 2 or obj.type == "META":
+    if not obj.data or obj.data.users < 2:
         return False
     return not has_deforming_modifiers(obj)
 
@@ -512,9 +473,13 @@ def using_hybridbackforward_in_viewport(scene):
             and config.path.hybridbackforward_enable and scene.luxcore.viewport.add_light_tracing)
 
 
-# TODO 2.8 remove
-def get_current_render_layer(scene):
-    raise NotImplementedError("use the new method in view_layer.py")
+def using_photongi_debug_mode(is_viewport_render, scene):
+    if is_viewport_render:
+        return False
+    config = scene.luxcore.config
+    if config.engine != "PATH":
+        return False
+    return config.photongi.enabled and config.photongi.debug != "off"
 
 
 def get_halt_conditions(scene):
@@ -645,3 +610,7 @@ def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_ren
                 # LuxCore loads the cache from this file
                 os.remove(file_path)
             return file_path_abs
+
+
+def in_material_shading_mode(context):
+    return context and context.space_data.shading.type == "MATERIAL"

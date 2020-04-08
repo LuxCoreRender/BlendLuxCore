@@ -1,5 +1,6 @@
 import bpy
 from bpy.props import PointerProperty, EnumProperty
+from mathutils import Color
 from .. import utils
 from ..utils import node as utils_node
 from ..utils import ui as utils_ui
@@ -24,6 +25,7 @@ class LuxCoreNodeTree:
 
         # We have to force an update through a Blender property, otherwise the
         # material preview, the viewport render etc. do not update
+        # TODO it looks like in Blender's new depsgraph, this workaround doesn't work anymore
         self.refresh = True
 
     def acknowledge_connection(self, context):
@@ -172,10 +174,14 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
     def draw_common_buttons(self, context, layout):
         layout.prop(self, "priority")
-        lightgroups = context.scene.luxcore.lightgroups
-        layout.prop_search(self, "lightgroup",
-                           lightgroups, "custom",
-                           icon=icons.LIGHTGROUP, text="")
+
+        emission_socket = self.inputs["Emission"]
+        if emission_socket.is_linked or emission_socket.default_value != Color((0.0, 0.0, 0.0)):
+            lightgroups = context.scene.luxcore.lightgroups
+            layout.prop_search(self, "lightgroup",
+                               lightgroups, "custom",
+                               icon=icons.LIGHTGROUP, text="")
+
         layout.prop(self, "color_depth")
 
         # Warn the user if he tries to use a 2D texture in a volume because it doesn't work
@@ -200,8 +206,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
         definitions["priority"] = self.priority
 
         abs_col = self.inputs["Absorption"].export(exporter, depsgraph, props)
-        worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
-        abs_depth = self.color_depth * worldscale
+        abs_depth = self.color_depth
 
         if self.inputs["Absorption"].is_linked:
             # Implicitly create a colordepth texture with unique name

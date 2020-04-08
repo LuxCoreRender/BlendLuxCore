@@ -5,7 +5,8 @@ from cycles.ui import panel_node_draw
 
 from . import icons
 from ..utils import ui as utils_ui
-from .light import draw_vismap_ui
+from .light import draw_envlight_cache_ui
+from ..nodes.output import get_active_output
 
 
 class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
@@ -48,17 +49,26 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         if world.luxcore.light != "none":
             is_sky = world.luxcore.light == "sky2"
             col = layout.column(align=True)
-            if not is_sky:
+            if is_sky:
+                col.label(icon="INFO", text="Sky color and brightness are driven by the sun position")
+            else:
                 col.prop(world.luxcore, "rgb_gain", text="Color")
 
             has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
 
             col = layout.column(align=True)
             if is_sky and has_sun and world.luxcore.use_sun_gain_for_sky:
-                col.prop(world.luxcore.sun.data.luxcore, "gain")
+                sun = world.luxcore.sun.data
+                if sun.type == "SUN" and sun.luxcore.light_type == "sun":
+                    col.prop(sun.luxcore, "sun_sky_gain")
+                else:
+                    col.prop(sun.luxcore, "gain")
                 col.prop(world.luxcore.sun.data.luxcore, "exposure", slider=True)
             else:
-                col.prop(world.luxcore, "gain")
+                if is_sky:
+                    col.prop(world.luxcore, "sun_sky_gain")
+                else:
+                    col.prop(world.luxcore, "gain")
                 col.prop(world.luxcore, "exposure", slider=True)
 
             if is_sky and has_sun:
@@ -144,8 +154,9 @@ class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
         sub.prop(world.luxcore, "gamma")
         world.luxcore.image_user.draw(sub, context.scene)
         sub.prop(world.luxcore, "rotation")
-        sub.label(text="For free transformation use a hemi lamp", icon=icons.INFO)
         sub.prop(world.luxcore, "sampleupperhemisphereonly")
+        sub.label(text="For free transformation use a sun light", icon=icons.INFO)
+        sub.operator("luxcore.create_sun_hemi")
 
 
 class LUXCORE_WORLD_PT_volume(WorldButtonsPanel, Panel):
@@ -175,6 +186,14 @@ class LUXCORE_WORLD_PT_volume(WorldButtonsPanel, Panel):
                                     "luxcore.world_new_volume_node_tree",
                                     "luxcore.world_unlink_volume_node_tree")
 
+        config = context.scene.luxcore.config
+        if config.photongi.enabled and config.engine == "PATH" and world.luxcore.volume:
+            output_node = get_active_output(world.luxcore.volume)
+            if output_node and output_node.use_photongi:
+                col = layout.column(align=True)
+                col.label(text="PhotonGI cache enabled on world volume!", icon=icons.WARNING)
+                col.label(text="Can lead to VERY long cache computation time!")
+
 
 class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
     """
@@ -198,7 +217,7 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
         layout.use_property_decorate = False
         
         layout.prop(world.luxcore, "importance")
-        draw_vismap_ui(layout, context.scene, world)
+        draw_envlight_cache_ui(layout, context.scene, world)
 
 
 class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):

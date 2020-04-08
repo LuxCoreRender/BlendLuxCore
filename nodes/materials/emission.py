@@ -8,6 +8,7 @@ from ..base import LuxCoreNode
 from ...properties.light import (
     POWER_DESCRIPTION, EFFICACY_DESCRIPTION, NORMALIZEBYCOLOR_DESCRIPTION,
     SPREAD_ANGLE_DESCRIPTION, LIGHTGROUP_DESC, IMPORTANCE_DESCRIPTION,
+    LUMEN_DESCRIPTION, CANDELA_DESCRIPTION, PER_SQUARE_METER_DESCRIPTION,
 )
 from ...properties.ies import LuxCoreIESProps
 from ...export import light
@@ -39,8 +40,11 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
     bl_label = "Emission"
     bl_width_default = 160
 
-    emission_units = [ ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure"),  
-        ("power", "Power", "Radiant flux in Watts")
+    emission_units = [
+        ("artistic", "Artistic", "Artist friendly unit using Gain and Exposure", 0),  
+        ("power", "Power", "Radiant flux in Watt", 1),
+        ("lumen", "Lumen", "Luminous flux in Lumen", 2),
+        ("candela", "Candela", "Luminous intensity in Candela", 3)
     ]
     emission_unit: EnumProperty(update=utils_node.force_viewport_update, name="Unit", items=emission_units, default="artistic")
     gain: FloatProperty(update=utils_node.force_viewport_update, name="Gain", default=1, min=0, description="Brightness multiplier")
@@ -48,6 +52,9 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
                             description="Power-of-2 step multiplier. An EV step of 1 will double the brightness of the light")
     power: FloatProperty(update=utils_node.force_viewport_update, name="Power (W)", default=100, min=0, description=POWER_DESCRIPTION)
     efficacy: FloatProperty(update=utils_node.force_viewport_update, name="Efficacy (lm/W)", default=17, min=0, description=EFFICACY_DESCRIPTION)
+    lumen: FloatProperty(update=utils_node.force_viewport_update, name="Lumen", default=1000, min=0, description=LUMEN_DESCRIPTION)
+    candela: FloatProperty(update=utils_node.force_viewport_update, name="Candela", default=80, min=0, description=CANDELA_DESCRIPTION)
+    per_square_meter: BoolProperty(update=utils_node.force_viewport_update, name="Per square meter", default=False, description=PER_SQUARE_METER_DESCRIPTION)
     normalizebycolor: BoolProperty(update=utils_node.force_viewport_update, name="Normalize by Color Luminance", default=False,
                                     description=NORMALIZEBYCOLOR_DESCRIPTION)
     ies: PointerProperty(update=utils_node.force_viewport_update, type=LuxCoreIESProps)
@@ -78,6 +85,13 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         if self.emission_unit == "power":
             col.prop(self, "power")
             col.prop(self, "efficacy")
+            layout.prop(self, "normalizebycolor")
+        elif self.emission_unit == "lumen":
+            col.prop(self, "lumen")
+            layout.prop(self, "normalizebycolor")
+        elif self.emission_unit == "candela":
+            col.prop(self, "candela")
+            col.prop(self, "per_square_meter")
             layout.prop(self, "normalizebycolor")
         else:
             col.prop(self, "gain")
@@ -126,16 +140,41 @@ class LuxCoreNodeMatEmission(bpy.types.Node, LuxCoreNode):
         """
         definitions["emission"] = self.inputs["Color"].export(exporter, depsgraph, props)
         if self.emission_unit == "power":
-            definitions["emission.power"] = self.power
+            definitions["emission.power"] = self.power / ( 2 * math.pi * (1 - math.cos(self.spread_angle/2)) )
             definitions["emission.efficency"] = self.efficacy
             definitions["emission.normalizebycolor"] = self.normalizebycolor
             if self.power == 0 or self.efficacy == 0:
                 definitions["emission.gain"] = [0, 0, 0]
+            else:
+                definitions["emission.gain"] = [1, 1, 1]
+        elif self.emission_unit == "lumen":
+            definitions["emission.power"] = self.lumen / ( 2 * math.pi * (1 - math.cos(self.spread_angle/2)) )
+            definitions["emission.efficency"] = 1.0
+            definitions["emission.normalizebycolor"] = self.normalizebycolor
+            if self.lumen == 0 :
+                definitions["emission.gain"] = [0, 0, 0]
+            else:
+                definitions["emission.gain"] = [1, 1, 1]    
+        elif self.emission_unit == "candela":
+            if self.per_square_meter:
+                definitions["emission.power"] = 0.0
+                definitions["emission.efficency"] = 0
+                definitions["emission.gain"] = [self.candela] * 3
+                definitions["emission.gain.normalizebycolor"] = self.normalizebycolor
+            else:
+                definitions["emission.power"] = self.candela * math.pi
+                definitions["emission.efficency"] = 1.0
+                definitions["emission.normalizebycolor"] = self.normalizebycolor
+                if self.candela == 0:
+                    definitions["emission.gain"] = [0, 0, 0]
+                else:
+                    definitions["emission.gain"] = [1, 1, 1]
         else:
             definitions["emission.power"] = 0
             definitions["emission.efficency"] = 0
             definitions["emission.gain"] = [self.gain * pow(2, self.exposure)] * 3
             definitions["emission.normalizebycolor"] = False
+            definitions["emission.gain.normalizebycolor"] = False
         definitions["emission.importance"] = self.importance
         definitions["emission.theta"] = math.degrees(self.spread_angle)
         lightgroups = exporter.scene.luxcore.lightgroups

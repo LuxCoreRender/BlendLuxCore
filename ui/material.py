@@ -1,4 +1,4 @@
-from bl_ui.properties_material import MaterialButtonsPanel
+from bl_ui.properties_material import MaterialButtonsPanel, MATERIAL_PT_viewport
 from bpy.types import Panel, Menu
 from ..operators.node_tree_presets import LUXCORE_OT_preset_material
 from ..ui import icons
@@ -87,12 +87,11 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             if mat.luxcore.node_tree or (mat.use_nodes and mat.node_tree and mat.luxcore.use_cycles_nodes):
                 layout.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
 
-            if mat.use_nodes and mat.node_tree:
-                layout.prop(mat.luxcore, "use_cycles_nodes")
-                layout.operator("luxcore.use_cycles_nodes_everywhere")
-
             if not mat.luxcore.node_tree and not mat.luxcore.use_cycles_nodes:
                 layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use LuxCore Material Nodes")
+
+            if mat.use_nodes and mat.node_tree:
+                layout.prop(mat.luxcore, "use_cycles_nodes")
 
 
 class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
@@ -103,7 +102,9 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return engine == "LUXCORE" and (context.material and not context.material.luxcore.use_cycles_nodes)
+        if context.material and context.material.luxcore.use_cycles_nodes:
+            return False
+        return engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
@@ -117,31 +118,6 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
             for preset in presets:
                 op = col.operator("luxcore.preset_material", text=preset)
                 op.preset = preset
-
-
-##class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
-##    bl_label = "Settings"
-##    bl_context = "material"
-##    bl_options = {'DEFAULT_CLOSED'}
-##
-##    @classmethod
-##    def poll(cls, context):
-##        engine = context.scene.render.engine
-##        return context.material and engine == "LUXCORE"
-##
-##    def draw(self, context):
-##        layout = self.layout
-##        mat = context.material
-##
-##        if mat.luxcore.auto_vp_color:
-##            split = layout.split(factor=0.8)
-##            split.prop(mat.luxcore, "auto_vp_color")
-##            row = split.row()
-##            row.enabled = not mat.luxcore.auto_vp_color
-##            row.prop(mat, "diffuse_color", text="")
-##        else:
-##            layout.prop(mat.luxcore, "auto_vp_color")
-##            layout.prop(mat, "diffuse_color", text="Viewport Color")
 
 
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
@@ -161,4 +137,59 @@ class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
         row = layout.row(align=True)
         preview = context.material.luxcore.preview
         row.prop(preview, "zoom")
-        row.prop(preview, "size")
+
+
+# Since we can't disable the original MATERIAL_PT_viewport panel, it makes no sense to add our own
+# (see register function below)
+
+#class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
+#    bl_label = "Settings"
+#    bl_context = "material"
+#    bl_options = {'DEFAULT_CLOSED'}
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#        return context.material and engine == "LUXCORE"
+#
+#    def draw(self, context):
+#        layout = self.layout
+#        mat = context.material
+#
+#        if mat.luxcore.auto_vp_color:
+#            split = layout.split(factor=0.8)
+#            split.prop(mat.luxcore, "auto_vp_color")
+#            row = split.row()
+#            row.enabled = not mat.luxcore.auto_vp_color
+#            row.prop(mat, "diffuse_color", text="")
+#        else:
+#            layout.prop(mat.luxcore, "auto_vp_color")
+#            layout.prop(mat, "diffuse_color", text="Viewport Color")
+
+
+def register():
+    # The poll method of MATERIAL_PT_viewport does not check the renderengine, so we have to patch
+    # the draw method if we want to display stuff differently than other engines
+    def draw(self, context):
+        layout = self.layout
+
+        mat = context.material
+
+        if context.scene.render.engine == "LUXCORE":
+            if mat.luxcore.auto_vp_color:
+                split = layout.split(factor=0.8)
+                split.prop(mat.luxcore, "auto_vp_color")
+                row = split.row()
+                row.enabled = not mat.luxcore.auto_vp_color
+                row.prop(mat, "diffuse_color", text="")
+            else:
+                layout.prop(mat.luxcore, "auto_vp_color")
+                layout.prop(mat, "diffuse_color", text="Viewport Color")
+        else:
+            layout.use_property_split = True
+            col = layout.column()
+            col.prop(mat, "diffuse_color", text="Color")
+            col.prop(mat, "metallic")
+            col.prop(mat, "roughness")
+
+    MATERIAL_PT_viewport.draw = draw

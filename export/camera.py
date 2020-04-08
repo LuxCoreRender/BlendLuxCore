@@ -39,7 +39,6 @@ def convert(exporter, scene, depsgraph, context=None, is_camera_moving=False):
 def _view_ortho(scene, context, definitions):
     cam_matrix = Matrix(context.region_data.view_matrix).inverted()
     lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix, scene)
-    world_scale = utils.get_worldscale(scene, False)
 
     definitions["type"] = "orthographic"
     #zoom = 1.0275 * world_scale * context.region_data.view_distance * 35 / context.space_data.lens
@@ -58,7 +57,6 @@ def _view_ortho(scene, context, definitions):
 
 def _view_persp(scene, context, definitions):
     cam_matrix = Matrix(context.region_data.view_matrix).inverted()
-    world_scale = utils.get_worldscale(scene, False)
     lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix, scene)
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
@@ -78,7 +76,6 @@ def _view_camera(scene, context, definitions):
         raise Exception("%s Objects as cameras are not supported, use a CAMERA object" % camera.type)
 
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
-    world_scale = utils.get_worldscale(scene, False)
     
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
@@ -99,7 +96,7 @@ def _view_camera(scene, context, definitions):
     elif camera.data.type == "PERSP":
         definitions["type"] = "perspective"
         definitions["fieldofview"] = math.degrees(camera.data.angle)
-        _depth_of_field(scene, definitions)
+        _depth_of_field(scene, definitions, context)
     else:
         raise NotImplementedError("Unknown camera.data.type")
 
@@ -114,7 +111,6 @@ def _final(scene, definitions):
         raise Exception("%s Objects as cameras are not supported, use a CAMERA object" % camera.type)
 
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
-    world_scale = utils.get_worldscale(scene, False)
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
@@ -140,18 +136,17 @@ def _final(scene, definitions):
     definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, scene)
 
 
-def _depth_of_field(scene, definitions):
+def _depth_of_field(scene, definitions, context=None):
     camera = scene.camera
 
-    if not camera.data.luxcore.use_dof:
+    if not camera.data.dof.use_dof or utils.in_material_shading_mode(context):
         return
 
-    definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.luxcore.fstop)
+    definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.dof.aperture_fstop)
 
     if camera.data.luxcore.use_autofocus:
         definitions["autofocus.enable"] = True
     else:
-        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
         dof_obj = camera.data.dof.focus_object
 
         if dof_obj:
@@ -163,9 +158,9 @@ def _depth_of_field(scene, definitions):
             lookat_dir = (lookat_target - lookat_orig).normalized()
             dof_dir = dof_obj.matrix_world.to_translation() - lookat_orig
 
-            definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir)) * worldscale
+            definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir))
         else:
-            definitions["focaldistance"] = camera.data.dof.focus_distance * worldscale
+            definitions["focaldistance"] = camera.data.dof.focus_distance
 
 
 def _clipping(scene, definitions):
@@ -175,9 +170,8 @@ def _clipping(scene, definitions):
         return
 
     if camera.data.luxcore.use_clipping:
-        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-        clip_start = camera.data.clip_start * worldscale
-        clip_end = camera.data.clip_end * worldscale
+        clip_start = camera.data.clip_start
+        clip_end = camera.data.clip_end
 
         definitions["cliphither"] = clip_start
         definitions["clipyon"] = clip_end
@@ -203,11 +197,10 @@ def _clipping_plane(scene, definitions):
     if cam_settings.use_clipping_plane and cam_settings.clipping_plane:
         plane = cam_settings.clipping_plane
         normal = plane.rotation_euler.to_matrix() @ Vector((0, 0, 1))
-        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
 
         definitions.update({
             "clippingplane.enable": cam_settings.use_clipping_plane,
-            "clippingplane.center": list(plane.location * worldscale),
+            "clippingplane.center": list(plane.location),
             "clippingplane.normal": list(normal),
         })
     else:
@@ -240,7 +233,6 @@ def _motion_blur(scene, definitions, context, is_camera_moving):
 
 
 def _calc_lookat(cam_matrix, scene):
-    cam_matrix = utils.get_scaled_to_world(cam_matrix, scene)
     lookat_orig = list(cam_matrix.to_translation())
     lookat_target = list(cam_matrix @ Vector((0, 0, -1)))
     up_vector = list(cam_matrix.to_3x3() @ Vector((0, 1, 0)))

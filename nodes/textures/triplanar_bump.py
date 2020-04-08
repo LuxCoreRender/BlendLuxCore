@@ -79,7 +79,7 @@ class LuxCoreNodeTexTriplanarBump(bpy.types.Node, LuxCoreNodeTexture):
             "texture3": tex3,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
+            "mapping.transformation": utils.matrix_to_list(transformation),
         }
 
         if not utils_node.get_link(self.inputs["3D Mapping"]):

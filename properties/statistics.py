@@ -119,6 +119,13 @@ def vram_better(first_usage_tuple, second_usage_tuple):
     first_used_memory, _ = first_usage_tuple
     second_used_memory, _ = second_usage_tuple
     return first_used_memory < second_used_memory
+    
+    
+def bool_to_string(value):
+    if value:
+        return "Enabled"
+    else:
+        return "Disabled"
 
 
 class Stat:
@@ -184,6 +191,12 @@ class LuxCoreRenderStats:
         categories.append("Startup")
         self.export_time = Stat("Export Time", categories[-1],
                                 0, smaller_is_better, time_to_string, get_rounded)
+        self.export_time_meshes = Stat("    Mesh Export Time", categories[-1],
+                                       0, smaller_is_better, time_to_string, get_rounded)
+        self.export_time_hair = Stat("    Hair Export Time", categories[-1],
+                                     0, smaller_is_better, time_to_string, get_rounded)
+        self.export_time_instancing = Stat("    Instancing Time", categories[-1],
+                                           0, smaller_is_better, time_to_string, get_rounded)
         self.session_init_time = Stat("Session Init Time", categories[-1],
                                       0, smaller_is_better, time_to_string, get_rounded)
         categories.append("Scene")
@@ -192,12 +205,15 @@ class LuxCoreRenderStats:
         self.vram = Stat("VRAM", categories[-1], (0, 0), vram_better, vram_usage_to_string)
         categories.append("Settings")
         self.render_engine = Stat("Engine", categories[-1], "?")
+        self.use_hybridbackforward = Stat("Add Light Tracing", categories[-1], False, string_func=bool_to_string)
         self.sampler = Stat("Sampler", categories[-1], "?")
         self.clamping = Stat("Clamping", categories[-1], 0, string_func=clamping_to_string)
-        self.light_strategy = Stat("Light Strategy", categories[-1], "?")
         self.path_depths = Stat("Path Depths", categories[-1], tuple(), string_func=path_depths_to_string)
-
-        # TODO: put denoiser settings/stats also here?
+        categories.append("Caches")
+        self.cache_indirect = Stat("Indirect Light Cache", categories[-1], False, string_func=bool_to_string)
+        self.cache_caustics = Stat("Caustics Cache", categories[-1], False, string_func=bool_to_string)
+        self.cache_envlight = Stat("Env. Light Cache", categories[-1], False, string_func=bool_to_string)
+        self.cache_dls = Stat("DLS Cache", categories[-1], False, string_func=bool_to_string)
 
         self.members = [getattr(self, attr) for attr in dir(self)
                         if not callable(getattr(self, attr)) and not attr.startswith("__")]
@@ -223,7 +239,8 @@ class LuxCoreRenderStats:
 
 
 class LuxCoreRenderStatsCollection(PropertyGroup):
-    slots = [LuxCoreRenderStats() for i in range(8)]
+    # Important: All access to _slots needs to be through the __getitem__ method so we can add slots if necessary!
+    _slots = [LuxCoreRenderStats() for i in range(8)]
 
     compare: BoolProperty(name="Compare", default=False,
                            description="Compare the statistics of two slots")
@@ -262,10 +279,15 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
                                items=second_slot_items_callback)
 
     def __getitem__(self, slot_index):
-        return self.slots[slot_index]
+        """
+        Important: All access to self._slots needs to be through this method so we can add slots if necessary!
+        """
+        while len(self._slots) < slot_index + 1:
+            self._slots.append(LuxCoreRenderStats())
+        return self._slots[slot_index]
 
     def reset(self, slot_index):
-        self.slots[slot_index].reset()
+        self[slot_index].reset()
 
     def get_active(self):
         """
@@ -275,10 +297,10 @@ class LuxCoreRenderStatsCollection(PropertyGroup):
         """
         render_result = self._get_render_result()
         if not render_result:
-            return self.slots[0]
+            return self[0]
 
         slot_index = render_result.render_slots.active_index
-        return self.slots[slot_index]
+        return self[slot_index]
 
     def _get_render_result(self):
         for image in bpy.data.images:

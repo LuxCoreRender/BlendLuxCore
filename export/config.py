@@ -23,17 +23,19 @@ def convert(exporter, scene, context=None, engine=None):
         config = scene.luxcore.config
         width, height = utils.calc_filmsize(scene, context)
         is_viewport_render = context is not None
+        in_material_shading_mode = utils.in_material_shading_mode(context)
         denoiser_enabled = ((not is_viewport_render and scene.luxcore.denoiser.enabled)
-                            or (is_viewport_render and scene.luxcore.viewport.denoise))
+                            or (is_viewport_render and scene.luxcore.viewport.denoise
+                                and not in_material_shading_mode))
 
         if is_viewport_render:
             # Viewport render
-            luxcore_engine, sampler = _convert_viewport_engine(scene, definitions, config)
+            luxcore_engine, sampler = _convert_viewport_engine(context, scene, definitions, config)
         else:
             # Final render
             luxcore_engine, sampler = _convert_final_engine(scene, definitions, config)
 
-        if luxcore_engine == "BIDIRCPU" and denoiser_enabled:
+        if (luxcore_engine == "BIDIRCPU" and denoiser_enabled) or in_material_shading_mode:
             filter_type = "NONE"
         else:
             filter_type = config.filter
@@ -72,7 +74,8 @@ def convert(exporter, scene, context=None, engine=None):
         if luxcore_engine != "BIDIRCPU" and config.photongi.enabled and not is_viewport_render:
             _convert_photongi_settings(context, scene, definitions, config)
 
-        if config.path.use_clamping:
+        if (config.path.use_clamping and not in_material_shading_mode
+                and not utils.using_photongi_debug_mode(is_viewport_render, scene)):
             definitions["path.clamping.variance.maxvalue"] = config.path.clamping
 
         # Filter
@@ -142,17 +145,27 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
             definitions["opencl.native.threads.count"] = 0
 
 
-def _convert_viewport_engine(scene, definitions, config):
+def _convert_viewport_engine(context, scene, definitions, config):
+    if utils.in_material_shading_mode(context):
+        definitions["path.pathdepth.total"] = 1
+        definitions["path.pathdepth.diffuse"] = 1
+        definitions["path.pathdepth.glossy"] = 1
+        definitions["path.pathdepth.specular"] = 1
+
+        definitions["rtpathcpu.zoomphase.size"] = 4
+        definitions["rtpathcpu.zoomphase.weight"] = 0
+        return "RTPATHCPU", "RTPATHCPUSAMPLER"
+
     viewport = scene.luxcore.viewport
     using_hybridbackforward = utils.using_hybridbackforward_in_viewport(scene)
 
-    device = viewport.device
+    device = config.device
     if device == "OCL" and not utils.is_opencl_build():
         msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
         LuxCoreErrorLog.add_warning(msg)
         device = "CPU"
 
-    _convert_path(config, definitions, using_hybridbackforward, device)
+    _convert_path(config, definitions, using_hybridbackforward, device, True, scene)
     resolutionreduction = viewport.resolution_reduction if viewport.reduce_resolution_on_edit else 1
 
     if utils.using_bidir_in_viewport(scene):
@@ -185,6 +198,7 @@ def _convert_viewport_engine(scene, definitions, config):
         else:
             luxcore_engine = "RTPATHOCL"
             sampler = "TILEPATHSAMPLER"
+            """
             # Render a sample every n x n pixels in the first passes.
             # For instance 4x4 then 2x2 and then always 1x1.
             definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
@@ -193,28 +207,14 @@ def _convert_viewport_engine(scene, definitions, config):
             # Render a sample every n x n pixels, outside the preview phase,
             # in order to reduce the per frame rendering time.
             definitions["rtpath.resolutionreduction"] = 1
+            """
 
-        # Enable a bunch of often-used features to minimize the need for kernel recompilations
-        enabled_opencl_features = " ".join([
-            # Materials
-            "MATTE", "ROUGHMATTE", "MATTETRANSLUCENT", "ROUGHMATTETRANSLUCENT",
-            "GLOSSY2", "GLOSSYTRANSLUCENT",
-            "GLASS", "ARCHGLASS", "ROUGHGLASS",
-            "MIRROR", "METAL2",
-            "NULLMAT",
-            # Material features
-            "HAS_BUMPMAPS", "GLOSSY2_ABSORPTION", "GLOSSY2_MULTIBOUNCE",
-            # Volumes
-            "HOMOGENEOUS_VOL", "CLEAR_VOL",
-            # Textures
-            "IMAGEMAPS_BYTE_FORMAT", "IMAGEMAPS_HALF_FORMAT",
-            "IMAGEMAPS_1xCHANNELS", "IMAGEMAPS_3xCHANNELS",
-            # Lights
-            "INFINITE", "TRIANGLELIGHT", "SKY2", "SUN", "POINT", "MAPPOINT",
-            "SPOTLIGHT", "CONSTANTINFINITE", "PROJECTION", "SHARPDISTANT",
-            "DISTANT", "LASER", "SPHERE", "MAPSPHERE",
-        ])
-        definitions["opencl.code.alwaysenabled"] = enabled_opencl_features
+            # TODO figure out good settings
+            # 4, 2, 2 seems to be quite ok for now. Maybe make resolutionreduction dependent on film size later.
+            definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
+            definitions["rtpath.resolutionreduction.preview.step"] = 2
+            definitions["rtpath.resolutionreduction"] = 2
+
         _convert_opencl_settings(scene, definitions, using_hybridbackforward)
 
     return luxcore_engine, sampler
@@ -223,7 +223,7 @@ def _convert_viewport_engine(scene, definitions, config):
 def _convert_final_engine(scene, definitions, config):
     if config.engine == "PATH":
         # Specific settings for PATH and TILEPATH
-        _convert_path(config, definitions, config.path.hybridbackforward_enable, config.device)
+        _convert_path(config, definitions, config.path.hybridbackforward_enable, config.device, False, scene)
 
         if config.use_tiles:
             luxcore_engine = "TILEPATH"
@@ -271,7 +271,7 @@ def _convert_final_engine(scene, definitions, config):
     return luxcore_engine, sampler
 
 
-def _convert_path(config, definitions, use_hybridbackforward, device):
+def _convert_path(config, definitions, use_hybridbackforward, device, is_viewport_render, scene):
     path = config.path
     # Note that for non-specular paths +1 is added to the path depth in order to have behaviour
     # that feels intuitive for the user. LuxCore does only MIS on the last path bounce, but no
@@ -282,12 +282,17 @@ def _convert_path(config, definitions, use_hybridbackforward, device):
     definitions["path.pathdepth.glossy"] = path.depth_glossy + 1
     definitions["path.pathdepth.specular"] = path.depth_specular
 
-    # Note that our partition property is inverted compared to LuxCore's (it is the probability to
-    # sample a light path, not the probability to sample a camera path)
-    partition = 1 - path.hybridbackforward_lightpartition / 100
-    definitions["path.hybridbackforward.enable"] = use_hybridbackforward
-    definitions["path.hybridbackforward.partition"] = partition
-    definitions["path.hybridbackforward.glossinessthreshold"] = path.hybridbackforward_glossinessthresh
+    if not utils.using_photongi_debug_mode(is_viewport_render, scene):
+        if device == "OCL":
+            partition_raw = path.hybridbackforward_lightpartition_opencl
+        else:
+            partition_raw = path.hybridbackforward_lightpartition
+        # Note that our partition property is inverted compared to LuxCore's (it is the probability to
+        # sample a light path, not the probability to sample a camera path)
+        partition = 1 - partition_raw / 100
+        definitions["path.hybridbackforward.enable"] = use_hybridbackforward
+        definitions["path.hybridbackforward.partition"] = partition
+        definitions["path.hybridbackforward.glossinessthreshold"] = path.hybridbackforward_glossinessthresh
 
 
 def _convert_filesaver(scene, definitions, luxcore_engine):
@@ -422,6 +427,3 @@ def _convert_photongi_settings(context, scene, definitions, config):
 
     if photongi.debug != "off":
         definitions["path.photongi.debug.type"] = photongi.debug
-
-    if len(scene.luxcore.lightgroups.custom) > 0:
-        LuxCoreErrorLog.add_warning("PhotonGI does not support lightgroups!")

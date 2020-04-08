@@ -93,7 +93,7 @@ class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
 
     def draw_header(self, context):
-        self.layout.prop(context.camera.luxcore, "use_dof", text="")
+        self.layout.prop(context.camera.dof, "use_dof", text="")
 
     def draw(self, context):
         layout = self.layout
@@ -102,9 +102,9 @@ class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False      
 
-        layout.enabled = cam.luxcore.use_dof
+        layout.enabled = dof_options.use_dof
 
-        layout.prop(cam.luxcore, "fstop")
+        layout.prop(dof_options, "aperture_fstop")
         layout.prop(cam.luxcore, "use_autofocus")
 
         col = layout.column(align=True)
@@ -113,169 +113,6 @@ class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
         col = layout.column(align=True)
         col.enabled = (dof_options.focus_object is None and not cam.luxcore.use_autofocus)
         col.prop(dof_options, "focus_distance", text="Distance")
-
-
-class LUXCORE_CAMERA_PT_dof_aperture(CameraButtonsPanel, Panel):
-    bl_label = "Aperture"    
-    bl_parent_id = "LUXCORE_CAMERA_PT_depth_of_field"
-    COMPAT_ENGINES = {"LUXCORE"}
-
-    @classmethod
-    def poll(cls, context):
-        return context.camera
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False      
-
-        cam = context.camera
-        dof = cam.dof
-        layout.enabled = cam.luxcore.use_dof
-        flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
-
-        col = flow.column(align=True)
-        col.prop(dof, "aperture_fstop")
-        col.prop(dof, "aperture_blades")
-        col.prop(dof, "aperture_rotation")
-        col.prop(dof, "aperture_ratio")
-
-
-class LUXCORE_CAMERA_PT_camera_display(CameraButtonsPanel, Panel):
-    bl_label = "Viewport Display"
-    bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 5
-    COMPAT_ENGINES = {"LUXCORE"}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-
-        cam = context.camera
-
-        col = layout.column(align=True)
-        col.separator()
-        col.prop(cam, "display_size", text="Size")
-        col.separator()
-
-        flow = layout.grid_flow(row_major=False, columns=0, even_columns=False, even_rows=False, align=False)
-        col = flow.column()
-        col.prop(cam, "show_limits", text="Limits")
-        col = flow.column()
-        col.prop(cam, "show_mist", text="Mist")
-        col = flow.column()
-        col.prop(cam, "show_sensor", text="Sensor")
-        col = flow.column()
-        col.prop(cam, "show_name", text="Name")
-
-
-class LUXCORE_CAMERA_PT_camera_display_composition_guides(CameraButtonsPanel, Panel):
-    bl_label = "Composition Guides"
-    bl_parent_id = "LUXCORE_CAMERA_PT_camera_display"
-    bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {"LUXCORE"}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-
-        cam = context.camera
-
-        flow = layout.grid_flow(row_major=False, columns=0, even_columns=False, even_rows=False, align=False)
-
-        col = flow.column()
-        col.prop(cam, "show_composition_center")
-        col = flow.column()
-        col.prop(cam, "show_composition_center_diagonal")
-        col = flow.column()
-        col.prop(cam, "show_composition_thirds")
-        col = flow.column()
-        col.prop(cam, "show_composition_golden")
-        col = flow.column()
-        col.prop(cam, "show_composition_golden_tria_a")
-        col = flow.column()
-        col.prop(cam, "show_composition_golden_tria_b")
-        col = flow.column()
-        col.prop(cam, "show_composition_harmony_tri_a")
-        col = flow.column()
-        col.prop(cam, "show_composition_harmony_tri_b")
-
-
-class LUXCORE_CAMERA_PT_camera_display_passepartout(CameraButtonsPanel, Panel):
-    bl_label = "Passepartout"
-    bl_parent_id = "LUXCORE_CAMERA_PT_camera_display"
-    bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {"LUXCORE"}
-
-    def draw_header(self, context):
-        cam = context.camera
-
-        self.layout.prop(cam, "show_passepartout", text="")
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-
-        cam = context.camera
-
-        layout.active = cam.show_passepartout
-        layout.prop(cam, "passepartout_alpha", text="Opacity", slider=True)
-
-
-class LUXCORE_CAMERA_PT_camera_safe_areas(CameraButtonsPanel, Panel):
-    bl_label = "Safe Areas"
-    bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 6
-    COMPAT_ENGINES = {"LUXCORE"}
-
-    def draw_header(self, context):
-        cam = context.camera
-
-        self.layout.prop(cam, "show_safe_areas", text="")
-
-    def draw_header_preset(self, _context):
-        LUXCORE_SAFE_AREAS_PT_presets.draw_panel_header(self.layout)
-
-    def draw(self, context):
-        layout = self.layout
-        safe_data = context.scene.safe_areas
-        camera = context.camera
-
-        layout.use_property_split = True
-
-        layout.active = camera.show_safe_areas
-
-        col = layout.column()
-
-        sub = col.column()
-        sub.prop(safe_data, "title", slider=True)
-        sub.prop(safe_data, "action", slider=True)
-
-
-class LUXCORE_CAMERA_PT_camera_safe_areas_center_cut(CameraButtonsPanel, Panel):
-    bl_label = "Center-Cut Safe Areas"
-    bl_parent_id = "LUXCORE_CAMERA_PT_camera_safe_areas"
-    bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {"LUXCORE"}
-
-    def draw_header(self, context):
-        cam = context.camera
-
-        layout = self.layout
-        layout.active = cam.show_safe_areas
-        layout.prop(cam, "show_safe_center", text="")
-
-    def draw(self, context):
-        layout = self.layout
-        safe_data = context.scene.safe_areas
-        camera = context.camera
-
-        layout.use_property_split = True
-
-        layout.active = camera.show_safe_areas and camera.show_safe_center
-
-        col = layout.column()
-        col.prop(safe_data, "title_center", slider=True)
 
 
 class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
@@ -535,6 +372,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_camera_response_function(CameraButtonsPan
         else:
             layout.prop(camera_response_func, "file")
 
+
 class LUXCORE_CAMERA_PT_image_pipeline_white_balance(CameraButtonsPanel, Panel):
     bl_label = "White Balance"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
@@ -556,6 +394,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_white_balance(CameraButtonsPanel, Panel):
         layout.enabled = white_balance.enabled
 
         layout.prop(white_balance, "temperature", slider=True)
+
 
 class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
     bl_label = "Irradiance Contour Lines"
@@ -598,10 +437,10 @@ class LUXCORE_CAMERA_PT_volume(CameraButtonsPanel, Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-        layout.use_property_decorate = False      
+        layout.use_property_decorate = False
 
         cam = context.camera
-        
+
         layout.prop(cam.luxcore, "auto_volume")
 
         if not cam.luxcore.auto_volume:
@@ -613,20 +452,25 @@ class LUXCORE_CAMERA_PT_volume(CameraButtonsPanel, Panel):
 
 
 def compatible_panels():
-     panels = [
+    panels = [
         "DATA_PT_context_camera",
         "DATA_PT_camera_stereoscopy",
         "DATA_PT_camera",
         "DATA_PT_camera_background_image",
         "DATA_PT_custom_props_camera",
-     ]
-     types = bpy.types
-     return [getattr(types, p) for p in panels if hasattr(types, p)]
+        "DATA_PT_camera_display",
+        "DATA_PT_camera_display_composition_guides",
+        "DATA_PT_camera_display_passepartout",
+        "DATA_PT_camera_safe_areas",
+        "DATA_PT_camera_safe_areas_center_cut",
+    ]
+    types = bpy.types
+    return [getattr(types, p) for p in panels if hasattr(types, p)]
 
 
 def register():
-    for panel in compatible_panels():        
-        panel.COMPAT_ENGINES.add("LUXCORE")            
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.add("LUXCORE")
 
 
 def unregister():

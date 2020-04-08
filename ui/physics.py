@@ -1,10 +1,8 @@
 import bpy
-from . import icons
-#
-# # Note: The main LuxCore config UI is defined in ui/config.py
-# # Each of the other render panels is also defined in their
-# # own specific files in the ui/ folder.
-#
+
+# Note: The main LuxCore config UI is defined in ui/config.py
+# Each of the other render panels is also defined in their
+# own specific files in the ui/ folder.
 
 def compatible_panels():
      panels = [
@@ -45,16 +43,6 @@ def compatible_panels():
          "PHYSICS_PT_collision",
          "PHYSICS_PT_collision_particle",
          "PHYSICS_PT_collision_softbody",
-         # Fluid
-         "PHYSICS_PT_fluid",
-         "PHYSICS_PT_fluid_flow",
-         "PHYSICS_PT_fluid_settings",
-         "PHYSICS_PT_fluid_particle_cache",
-         "PHYSICS_PT_domain_bake"
-         "PHYSICS_PT_domain_gravity",
-         "PHYSICS_PT_domain_viscosity",
-         "PHYSICS_PT_domain_boundary",
-         "PHYSICS_PT_domain_particles",
          # Rigidbody
          "PHYSICS_PT_rigid_body",
          "PHYSICS_PT_rigid_body_settings",
@@ -106,20 +94,38 @@ def compatible_panels():
          "PHYSICS_PT_cloth_self_collision",
          "PHYSICS_PT_cloth_property_weights",
          "PHYSICS_PT_cloth_field_weights",
-         # Smoke
+         "PHYSICS_PT_cloth_internal_springs",
+         "PHYSICS_PT_cloth_pressure",
+         # Old fluid panels (up to Blender 2.81)
+         "PHYSICS_PT_fluid_flow",
+         "PHYSICS_PT_fluid_settings",
+         "PHYSICS_PT_fluid_particle_cache",
+         "PHYSICS_PT_domain_bake"
+         "PHYSICS_PT_domain_gravity",
+         "PHYSICS_PT_domain_viscosity",
+         "PHYSICS_PT_domain_boundary",
+         "PHYSICS_PT_domain_particles",
+         # New smoke/fluid panels since Blender 2.82
+         "PHYSICS_PT_fluid",
+         "PHYSICS_PT_settings",
+         "PHYSICS_PT_borders",
          "PHYSICS_PT_smoke",
-         "PHYSICS_PT_smoke_settings",
-         "PHYSICS_PT_smoke_settings_initial_velocity",
-         "PHYSICS_PT_smoke_settings_particle_size",
-         "PHYSICS_PT_smoke_behavior",
-         "PHYSICS_PT_smoke_behavior_dissolve",
-         "PHYSICS_PT_smoke_flow_texture",
-         "PHYSICS_PT_smoke_fire",
-         "PHYSICS_PT_smoke_adaptive_domain",
-         "PHYSICS_PT_smoke_collections",
-         "PHYSICS_PT_smoke_cache",
-         "PHYSICS_PT_smoke_highres",
-         "PHYSICS_PT_smoke_field_weights",
+         "PHYSICS_PT_smoke_dissolve",
+         "PHYSICS_PT_fire",
+         "PHYSICS_PT_liquid",
+         "PHYSICS_PT_flow_source",
+         "PHYSICS_PT_flow_initial_velocity",
+         "PHYSICS_PT_flow_texture",
+         "PHYSICS_PT_adaptive_domain",
+         "PHYSICS_PT_noise",
+         "PHYSICS_PT_mesh",
+         "PHYSICS_PT_particles",
+         "PHYSICS_PT_diffusion",
+         "PHYSICS_PT_guide",
+         "PHYSICS_PT_collections",
+         "PHYSICS_PT_cache",
+         "PHYSICS_PT_export",
+         "PHYSICS_PT_field_weights",
      ]
      types = bpy.types
      return [getattr(types, p) for p in panels if hasattr(types, p)]

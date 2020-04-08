@@ -1,21 +1,32 @@
 import bpy
 from array import array
+from functools import lru_cache
+from time import time
 
 from ... import utils
 from ...bin import pyluxcore
 from .. import mesh_converter
-from ..hair import convert_hair, warn_about_missing_uvs
+from ..hair import convert_hair, warn_about_missing_uvs, set_hair_props, make_hair_shape_name
 from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
 from ...utils import MESH_OBJECTS
 from ...nodes.output import get_active_output
+from ...nodes.textures.random_per_island import DATAINDEX_RANDOM_PER_ISLAND
+
+
+MAX_PARTICLES_FOR_LIVE_TRANSFORM = 2000
 
 
 def uses_pointiness(node_tree):
-    # Check if a pointiness node exists, better check would be if the node is linked
+    # Check if a pointiness node exists, better check would be if the node is linked to the output
     return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness", True)
+
+
+def uses_random_per_island(node_tree):
+    # Check if a random_per_island node exists, better check would be if the node is linked to the output
+    return utils_node.has_nodes(node_tree, "LuxCoreNodeTexRandomPerIsland", True)
 
 
 def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
@@ -45,6 +56,39 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         return lux_mat_name, mat_props, None
 
 
+def make_psys_key(obj, psys, is_instance):
+    psys_lib_name = psys.settings.library.name if psys.settings.library else ""
+    return obj.name_full + psys.name + psys_lib_name + str(is_instance)
+
+
+def get_total_particle_count(particle_system, is_viewport_render):
+    """
+    Note: this function does not return the amount of particles that are actually visible in a given
+    frame (because it's hard to find that number), but the maximum number the particle system will ever create.
+    """
+    settings = particle_system.settings
+
+    if (settings.render_type in {"NONE", "HALO", "LINE"}
+            or (settings.type == "HAIR" and settings.render_type == "PATH")
+            or (is_viewport_render and settings.display_method != "RENDER")):
+        return 0
+
+    particle_count = settings.count
+    if is_viewport_render:
+        particle_count *= settings.display_percentage / 100
+    if settings.child_type != "NONE":
+        particle_count *= settings.child_nbr if is_viewport_render else settings.rendered_child_count
+    return particle_count
+
+
+@lru_cache(maxsize=32)
+def supports_live_transform(particle_system):
+    if not particle_system:
+        return True
+    total_particles = get_total_particle_count(particle_system, True)
+    return total_particles <= MAX_PARTICLES_FOR_LIVE_TRANSFORM
+
+
 def _update_stats(engine, current_obj_name, extra_obj_info, current_index, total_object_count):
     engine.update_stats("Export", f"Object: {current_obj_name}{extra_obj_info} ({current_index}/{total_object_count})")
     engine.update_progress(current_index / total_object_count)
@@ -53,15 +97,11 @@ def _update_stats(engine, current_obj_name, extra_obj_info, current_index, total
 def get_obj_count_estimate(depsgraph):
     # This is faster than len(depsgraph.object_instances)
     # TODO: count dupliverts and dupliframes
-    obj_count = len(depsgraph.ids)
-    for id in depsgraph.ids:
+    obj_count = len(depsgraph.objects)
+    for obj in depsgraph.objects:
         try:
-            for psys in id.particle_systems:
-                settings = psys.settings
-                particle_count = settings.count
-                if settings.child_type != "NONE":
-                    particle_count *= settings.rendered_child_count
-                obj_count += particle_count
+            for psys in obj.particle_systems:
+                obj_count += get_total_particle_count(psys, False)
         except AttributeError:
             pass
     return obj_count
@@ -81,6 +121,7 @@ class ObjectCache2:
     def __init__(self):
         self.exported_objects = {}
         self.exported_meshes = {}
+        self.exported_hair = {}
 
     def first_run(self, exporter, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
         instances = {}
@@ -88,19 +129,27 @@ class ObjectCache2:
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
 
+        # Particle system counts might have changed
+        supports_live_transform.cache_clear()
+
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.object
 
-            if dg_obj_instance.is_instance and obj.type in MESH_OBJECTS:
+            if (dg_obj_instance.is_instance
+                    and not (is_viewport_render and supports_live_transform(dg_obj_instance.particle_system))
+                    and obj.type in MESH_OBJECTS):
+                # This code is optimized for large amounts of duplis. Drawback is that objects generated from this
+                # code can't be transformed later in a viewport render session (due to BlendLuxCore implementation
+                # reasons, not because of LuxCore)
                 if engine and index % 5000 == 0:
                     if engine.test_break():
-                        return False
+                        return None
                     _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
 
                 try:
                     # The code in this try block is performance-critical, as it is
                     # executed most often when exporting millions of instances.
-                    duplis = instances[obj]
+                    duplis = instances[obj.original.as_pointer()]
                     # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
                     if duplis:
                         obj_id = dg_obj_instance.object.original.luxcore.id
@@ -113,51 +162,50 @@ class ObjectCache2:
                 except KeyError:
                     if engine:
                         if engine.test_break():
-                            return False
+                            return None
                         _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
-                    exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
-                                                     luxcore_scene, scene_props, is_viewport_render,
-                                                     keep_track_of=False, engine=engine)
-
+                    exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
+                                                     scene_props, is_viewport_render, engine)
                     if exported_obj:
                         # Note, the transformation matrix and object ID of this first instance is not added
                         # to the duplication list, since it already exists in the scene
-                        instances[obj] = Duplis(exported_obj)
+                        instances[obj.original.as_pointer()] = Duplis(exported_obj)
                     else:
                         # Could not export the object, happens e.g. with curve objects with zero faces
-                        instances[obj] = None
+                        instances[obj.original.as_pointer()] = None
             else:
-                # It's a regular object, not a dupli
+                # This code is for singular objects and for duplis that should be movable later in a viewport render
                 if not utils.is_instance_visible(dg_obj_instance, obj):
                     continue
-                if view_layer and not obj.visible_get(view_layer=view_layer):
+                if view_layer and obj.name not in view_layer.objects:
                     continue
 
                 if engine:
                     if engine.test_break():
-                        return False
+                        return None
                     _update_stats(engine, obj.name, "", index, obj_count_estimate)
 
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                                  scene_props, is_viewport_render, engine=engine)
+                                  scene_props, is_viewport_render, engine)
 
-        # Need to parse so we have the dupli objects available for DuplicateObject
-        luxcore_scene.Parse(scene_props)
+        #self._debug_info()
+        return instances
 
-        for obj, duplis in instances.items():
+    def duplicate_instances(self, instances, luxcore_scene, stats):
+        """
+        We can only duplicate the instances *after* the scene_props were parsed so the base
+        objects are available for luxcore_scene. Needs to happen before this method is called.
+        """
+        start_time = time()
+        
+        for duplis in instances.values():
             if duplis is None:
                 # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
                 continue
 
-            if duplis.get_count() == 1:
-                # Nothing to do regarding duplication, just track the object
-                # TODO check if we can modify key generation so that we only create
-                #  keys from objects, not dg_obj_instance
-                # obj_key = utils.make_key_from_instance(dg_obj_instance)
-                # self.exported_objects[obj_key] = duplis.exported_obj
+            if duplis.get_count() == 0:
+                # Only one instance was created (and is already present in the luxcore_scene), nothing to duplicate
                 continue
-
-            print("obj", obj.name, "has", duplis.get_count(), "instances")
 
             for part in duplis.exported_obj.parts:
                 src_name = part.lux_obj
@@ -168,9 +216,9 @@ class ObjectCache2:
                 # steps = 0 # TODO
                 # times = array("f", [])
                 # luxcore_scene.DuplicateObject(src_name, dst_name, count, steps, times, transformations)
-
-        #self._debug_info()
-        return True
+        
+        if stats:
+            stats.export_time_instancing.value = time() - start_time
 
     def _debug_info(self):
         print("Objects in cache:", len(self.exported_objects))
@@ -186,54 +234,105 @@ class ObjectCache2:
         # The instancing state has to be part of the key because a non-instanced mesh
         # has its transformation baked-in and can't be used by other instances.
         modified = utils.has_deforming_modifiers(obj.original)
-        source = obj.original.data if (use_instancing and not modified) else obj.original
+        source = obj.original.data if (use_instancing and not (modified or obj.type == "META")) else obj.original
         key = utils.get_luxcore_name(source, is_viewport_render)
         if use_instancing:
             key += "_instance"
         return key
+        
+    def _define_shapes(self, input_shape, node_tree, exporter, depsgraph, scene_props):
+        shape = input_shape
+        
+        output_node = get_active_output(node_tree)
+        if output_node:
+            # Convert the whole shape stack
+            shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
+
+        # Add some shapes at the end that are required by some nodes in the node tree
+
+        if uses_pointiness(node_tree):
+            # Note: Since Blender still does not make use of the vertex alpha channel 
+            # as of 2.82, we use it to store the pointiness information.
+            pointiness_shape = input_shape + "_pointiness"
+            prefix = "scene.shapes." + pointiness_shape + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
+            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+            shape = pointiness_shape
+
+        if uses_random_per_island(node_tree):
+            island_aov_shape = input_shape + "_island_aov"
+            prefix = "scene.shapes." + island_aov_shape + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "islandaov"))
+            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+            scene_props.Set(pyluxcore.Property(prefix + "dataindex", DATAINDEX_RANDOM_PER_ISLAND))
+            shape = island_aov_shape
+
+            random_tri_aov_shape = input_shape + "_random_tri_aov_shape"
+            prefix = "scene.shapes." + random_tri_aov_shape + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "randomtriangleaov"))
+            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+            scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", DATAINDEX_RANDOM_PER_ISLAND))
+            scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", DATAINDEX_RANDOM_PER_ISLAND))
+            shape = random_tri_aov_shape
+        
+        return shape
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                     scene_props, is_viewport_render, keep_track_of=True, engine=None):
+                     scene_props, is_viewport_render, engine=None):
         """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
-        if obj.type == "EMPTY" or obj.data is None:
-            return
-
-        print("Converting:", obj.name)
+        if obj.data is None:
+            return None
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
         exported_stuff = None
         props = pyluxcore.Properties()
 
-        if obj.type in MESH_OBJECTS:
-            # assert obj_key not in self.exported_objects
-            exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                                                    luxcore_scene, scene_props, is_viewport_render)
-            if exported_stuff:
-                props = exported_stuff.get_props()
-        elif obj.type == "LIGHT":
-            props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
-                                                        dg_obj_instance.matrix_world.copy(), is_viewport_render)
-
-        if exported_stuff:
-            scene_props.Set(props)
-            if keep_track_of:
-                self.exported_objects[obj_key] = exported_stuff
+        if dg_obj_instance.show_self:
+            if obj.type in MESH_OBJECTS:
+                # assert obj_key not in self.exported_objects
+                exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
+                                                        luxcore_scene, scene_props, is_viewport_render)
+                if exported_stuff:
+                    props = exported_stuff.get_props()
+            elif obj.type == "LIGHT":
+                props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
+                                                            dg_obj_instance.matrix_world.copy(), is_viewport_render)
 
         # Convert hair
         for psys in obj.particle_systems:
             settings = psys.settings
 
-            if settings.type == "HAIR" and settings.render_type == "PATH":
-                lux_obj, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
-                                                is_viewport_render, dg_obj_instance.is_instance,
-                                                dg_obj_instance.matrix_world, engine)
+            if psys.particles and settings.type == "HAIR" and settings.render_type == "PATH":
+                # Can't use the memory address of the psys as key because it changes
+                # when the psys is updated (e.g. because some hair moves)
+                is_for_duplication = is_viewport_render or dg_obj_instance.is_instance
+                psys_key = make_psys_key(obj, psys, is_for_duplication)
+                lux_obj = make_hair_shape_name(obj_key, psys)
+
+                try:
+                    lux_shape, lux_mat = self.exported_hair[psys_key]
+                    set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, obj.luxcore.visible_to_camera,
+                                   is_for_duplication, dg_obj_instance.matrix_world,
+                                   settings.luxcore.hair.instancing == "enabled")
+                except KeyError:
+                    lux_shape, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
+                                                    scene_props, is_viewport_render, is_for_duplication,
+                                                    dg_obj_instance.matrix_world, engine)
+                    if lux_shape and lux_mat:
+                        self.exported_hair[psys_key] = (lux_shape, lux_mat)
 
                 # TODO handle case when exported_stuff is None
-                if exported_stuff:
+                #  (we'll have to create a new ExportedObject just for the hair mesh)
+                if exported_stuff and lux_shape and lux_mat:
                     # Should always be the case because lights can't have particle systems
                     assert isinstance(exported_stuff, ExportedObject)
-                    # Hair export uses same name for object and shape
-                    exported_stuff.parts.append(ExportedPart(lux_obj, lux_obj, lux_mat))
+                    exported_stuff.parts.append(ExportedPart(lux_obj, lux_shape, lux_mat))
+
+        if exported_stuff:
+            scene_props.Set(props)
+
+            if is_viewport_render:
+                self.exported_objects[obj_key] = exported_stuff
 
         return exported_stuff
 
@@ -245,16 +344,15 @@ class ObjectCache2:
                          or (exporter.motion_blur_enabled and obj.luxcore.enable_motion_blur)
 
         mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
-        # print(obj.name, "mesh key:", mesh_key)
 
         if use_instancing and mesh_key in self.exported_meshes:
-            # print("retrieving mesh from cache")
             exported_mesh = self.exported_meshes[mesh_key]
+            loaded_from_cache = True
         else:
-            # print("fresh export")
             exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
-                                                   is_viewport_render, use_instancing, transform)
+                                                   is_viewport_render, use_instancing, transform, exporter)
             self.exported_meshes[mesh_key] = exported_mesh
+            loaded_from_cache = False
 
         if exported_mesh:
             mat_names = []
@@ -264,26 +362,11 @@ class ObjectCache2:
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 
-                if node_tree:
+                # Meshes in the cache already have the shapes added.
+                # (This assumes that the instances use the same materials as the original mesh)
+                if node_tree and not loaded_from_cache:
                     warn_about_missing_uvs(obj, node_tree)
-
-                    output_node = get_active_output(node_tree)
-                    if output_node:
-                        try:
-                            # Convert the whole shape stack
-                            # TODO support for instances
-                            shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
-                        except KeyError:
-                            # TODO remove this try/except, instead add the socket in utils/compatibility.py
-                            pass
-
-                    if uses_pointiness(node_tree):
-                        # Replace shape definition with pointiness shape
-                        pointiness_shape = shape + "_pointiness"
-                        prefix = "scene.shapes." + pointiness_shape + "."
-                        scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
-                        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-                        shape = pointiness_shape
+                    shape = self._define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
 
                 exported_mesh.mesh_definitions[idx] = [shape, mat_index]
 
@@ -311,8 +394,6 @@ class ObjectCache2:
                     if not utils.is_obj_visible(obj):
                         continue
 
-                    obj_key = utils.make_key(obj)
-
                     if obj.type in MESH_OBJECTS:
                         mesh_key = self._get_mesh_key(obj, use_instancing)
 
@@ -329,8 +410,18 @@ class ObjectCache2:
                         # of the object is changed in Blender. In this case we have to re-define all
                         # objects using this mesh (just the properties, the mesh is not re-exported).
                         redefine_objs_with_these_mesh_keys.append(mesh_key)
+
+                        # Re-export hair systems of objects with updated geometry
+                        for psys in obj.particle_systems:
+                            settings = psys.settings
+
+                            if psys.particles and settings.type == "HAIR" and settings.render_type == "PATH":
+                                # Can't use the memory address of the psys as key because it changes
+                                # when the psys is updated (e.g. because some hair moves)
+                                psys_key = make_psys_key(obj, psys, True)
+                                del self.exported_hair[psys_key]
                     elif obj.type == "LIGHT":
-                        print(f"Light obj {obj.name} was updated")
+                        obj_key = utils.make_key(obj)
                         props, exported_stuff = light.convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene,
                                                                     obj.matrix_world.copy(), is_viewport_render)
                         if exported_stuff:
@@ -344,7 +435,10 @@ class ObjectCache2:
 
         # Currently, every update that doesn't require a mesh re-export happens here
         for dg_obj_instance in depsgraph.object_instances:
-            obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+            if not supports_live_transform(dg_obj_instance.particle_system):
+                continue
+
+            obj = dg_obj_instance.object
             if not utils.is_instance_visible(dg_obj_instance, obj):
                 continue
 
@@ -372,7 +466,6 @@ class ObjectCache2:
                     scene_props.Set(exported_obj.get_props())
             else:
                 # Object is new and not in LuxCore yet, or it is a light, do a full export
-                # TODO use luxcore_scene.DuplicateObjects for instances
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                   luxcore_scene, scene_props, is_viewport_render)
 

@@ -1,7 +1,7 @@
 import math
 from ..bin import pyluxcore
 from .. import utils
-from .caches.exported_data import ExportedObject
+from .caches.exported_data import ExportedObject, ExportedLight
 
 
 # TODO fix motion blur of area lights, they get a wrong transformation
@@ -32,7 +32,7 @@ def convert(context, engine, scene, depsgraph, object_cache2):
         for step in range(steps):
             time = frame_offsets[step]
             matrix = matrix_steps[step]
-            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
+            transformation = utils.matrix_to_list(matrix)
             definitions = {
                 "motion.%d.time" % step: time,
                 "motion.%d.transformation" % step: transformation,
@@ -77,19 +77,24 @@ def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph=None, 
 
 
 def _append_object_matrices(depsgraph, object_cache2, matrices, step):
-    for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
+    for dg_obj_instance in depsgraph.object_instances:
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+        if not obj.luxcore.enable_motion_blur:
+            continue
+
         obj_key = utils.make_key_from_instance(dg_obj_instance)
+        matrix = obj.matrix_world
 
         try:
-            if obj_key in object_cache2.exported_objects:
-                if isinstance(object_cache2.exported_objects[obj_key], ExportedObject) and obj.luxcore.enable_motion_blur:
-                    for p in object_cache2.exported_objects[obj_key].parts:
-                        luxcore_name = p.lux_obj
-                        prefix = "scene.objects." + luxcore_name + "."
-                        matrix = obj.matrix_world
-                        _append_matrix(matrices, prefix, matrix, step)
-
+            exported_thing = object_cache2.exported_objects[obj_key]
+            if isinstance(exported_thing, ExportedObject):
+                for part in object_cache2.exported_objects[obj_key].parts:
+                    prefix = "scene.objects." + part.lux_obj + "."
+                    _append_matrix(matrices, prefix, matrix, step)
+            # else:
+            #     assert isinstance(exported_thing, ExportedLight)
+            #     prefix = "scene.lights." + exported_thing.lux_light_name + "."
+            #     _append_matrix(matrices, prefix, matrix, step)
         except KeyError:
             # This is not a problem, objects are skipped during export for various reasons
             # E.g. if the object is not visible, or if it's a camera

@@ -1,6 +1,5 @@
 import mathutils
 from ..bin import pyluxcore
-from . import find_active_uv
 from .errorlog import LuxCoreErrorLog
 from ..ui import icons
 
@@ -17,10 +16,8 @@ def draw_uv_info(context, layout):
 
     if obj and obj.data:
         if obj.type in {"CURVE", "SURFACE", "FONT"}:
-            if not obj.data.use_uv_as_generated:
-                row = layout.row()
-                warning_no_uvmap(row)
-                row.prop(obj.data, "use_uv_as_generated", toggle=True, text="Enable UV")
+            # These data types always have UVs
+            pass
         elif obj.type == "MESH":
             if len(obj.data.uv_layers) == 0:
                 row = layout.row()
@@ -34,10 +31,7 @@ def has_valid_uv_map(obj):
     if not obj.data:
         return False
 
-    if obj.type in {"CURVE", "SURFACE", "FONT"}:
-        if not obj.data.use_uv_as_generated:
-            return False
-    elif obj.type == "MESH" and len(obj.data.uv_layers) == 0:
+    if obj.type == "MESH" and len(obj.data.uv_layers) == 0:
         return False
 
     return True
@@ -93,13 +87,27 @@ def get_link(socket):
 
         if node.mute:
             if node.internal_links:
+                # Only nodes defined in C can have internal_links in Blender
                 links = node.internal_links[0].from_socket.links
                 if links:
-                    return links[0]
+                    link = links[0]
                 else:
                     return None
             else:
-                return None
+                if not link.from_socket.bl_idname.startswith("LuxCoreSocket") or not node.inputs:
+                    return None
+
+                # We can't define internal_links, so try to make up a link that makes sense.
+                found_internal_link = False
+
+                for input_socket in node.inputs:
+                    if input_socket.links and link.from_socket.is_allowed_input(input_socket):
+                        link = input_socket.links[0]
+                        found_internal_link = True
+                        break
+
+                if not found_internal_link:
+                    return None
         else:
             # Reroute node
             if node.inputs[0].is_linked:

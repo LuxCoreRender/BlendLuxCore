@@ -32,19 +32,19 @@ class LuxCoreNodeSocket:
         """
         layout.prop(self, "default_value", text=text, slider=self.slider)
 
+    @classmethod
+    def is_allowed_input(cls, socket):
+        for allowed_class in cls.allowed_inputs:
+            if isinstance(socket, allowed_class):
+                return True
+        return False
+
     def draw(self, context, layout, node, text):
         # Check if the socket linked to this socket is in the set of allowed input socket classes.
         link = utils_node.get_link(self)
 
         if link and hasattr(self, "allowed_inputs"):
-            is_allowed = False
-
-            for allowed_class in self.allowed_inputs:
-                if isinstance(link.from_socket, allowed_class):
-                    is_allowed = True
-                    break
-
-            if not is_allowed:
+            if not self.is_allowed_input(link.from_socket):
                 layout.label(text="Wrong Input!", icon=icons.ERROR)
                 return
 
@@ -137,6 +137,9 @@ class LuxCoreSocketMatEmission(bpy.types.NodeSocket, LuxCoreNodeSocket):
         if self.is_linked:
             linked_node = utils_node.get_linked_node(self)
 
+            if not linked_node:
+                return
+
             if linked_node.bl_idname == "LuxCoreNodeMatEmission":
                 linked_node.export_emission(exporter, depsgraph, props, definitions)
             else:
@@ -186,7 +189,7 @@ class LuxCoreSocketFloatPositive(bpy.types.NodeSocket, LuxCoreSocketFloat):
 
 class LuxCoreSocketFloat0to1(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value: FloatProperty(min=0, max=1, description="Float value between 0 and 1",
-                                 update=utils_node.update_opengl_materials,
+                                 update=utils_node.force_viewport_update,
                                  precision=FLOAT_UI_PRECISION)
     slider = True
 

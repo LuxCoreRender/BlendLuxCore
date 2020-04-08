@@ -16,6 +16,14 @@ def poll_node(context):
     return context.node and not context.node.id_data.library
 
 
+def poll_node_tree(context):
+    space = context.space_data
+    if space.type != 'NODE_EDITOR':
+        return False
+    node_tree = space.node_tree
+    return node_tree and not node_tree.library and node_tree.bl_idname in TREE_TYPES
+
+
 def poll_object(context):
     return context.object and not context.object.library
 
@@ -169,3 +177,14 @@ class LUXCORE_MT_node_tree:
 
             op = col.operator(set_operator, text=text, icon=icon)
             op.node_tree_index = index
+
+
+def show_nodetree(context, node_tree):
+    for area in context.screen.areas:
+        if area.type == "NODE_EDITOR":
+            for space in area.spaces:
+                if space.type == "NODE_EDITOR":
+                    space.tree_type = node_tree.bl_idname
+                    space.node_tree = node_tree
+                    return True
+    return False

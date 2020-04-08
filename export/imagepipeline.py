@@ -10,6 +10,15 @@ def convert(scene, context=None, index=0):
         prefix = "film.imagepipelines.%d." % index
         definitions = OrderedDict()
 
+        if utils.in_material_shading_mode(context):
+            index = _output_switcher(definitions, 0, "ALBEDO")
+            _exposure_compensated_tonemapper(definitions, index, scene)
+            return utils.create_props(prefix, definitions)
+
+        if utils.using_photongi_debug_mode(context, scene):
+            _exposure_compensated_tonemapper(definitions, 0, scene)
+            return utils.create_props(prefix, definitions)
+
         if not utils.is_valid_camera(scene.camera):
             # Can not work without a camera
             _fallback(definitions)
@@ -45,7 +54,7 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
         index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
 
     if pipeline.mist.is_enabled(context):
-        index = _mist(definitions, index, pipeline.mist, scene)
+        index = _mist(definitions, index, pipeline.mist)
 
     if pipeline.bloom.is_enabled(context):
         index = _bloom(definitions, index, pipeline.bloom)
@@ -64,7 +73,6 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
 
     if pipeline.contour_lines.is_enabled(context):
         index = _contour_lines(definitions, index, pipeline.contour_lines)
-
 
     if using_filesaver:
         # Needs gamma correction (Blender applies it for us,
@@ -90,6 +98,12 @@ def _fallback(definitions):
     index = 0
     definitions[str(index) + ".type"] = "TONEMAP_LINEAR"
     definitions[str(index) + ".scale"] = 1
+
+
+def _exposure_compensated_tonemapper(definitions, index, scene):
+    definitions[str(index) + ".type"] = "TONEMAP_LINEAR"
+    definitions[str(index) + ".scale"] = 1 / pow(2, (scene.view_settings.exposure))
+    return index + 1
 
 
 def convert_tonemapper(definitions, index, tonemapper):
@@ -141,14 +155,12 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
     return index + 1
 
 
-def _mist(definitions, index, mist, scene):
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-
+def _mist(definitions, index, mist):
     definitions[str(index) + ".type"] = "MIST"
     definitions[str(index) + ".color"] = list(mist.color)
     definitions[str(index) + ".amount"] = mist.amount / 100
-    definitions[str(index) + ".startdistance"] = mist.start_distance * worldscale
-    definitions[str(index) + ".enddistance"] = mist.end_distance * worldscale
+    definitions[str(index) + ".startdistance"] = mist.start_distance
+    definitions[str(index) + ".enddistance"] = mist.end_distance
     definitions[str(index) + ".excludebackground"] = mist.exclude_background
     return index + 1
 
@@ -171,10 +183,12 @@ def _vignetting(definitions, index, vignetting):
     definitions[str(index) + ".scale"] = vignetting.scale / 100
     return index + 1
 
+
 def _white_balance(definitions, index, white_balance):
     definitions[str(index) + ".type"] = "WHITE_BALANCE"
     definitions[str(index) + ".temperature"] = white_balance.temperature
     return index + 1
+
 
 def _camera_response_func(definitions, index, camera_response_func, scene):
     if camera_response_func.type == "PRESET":
@@ -213,6 +227,12 @@ def _contour_lines(definitions, index, contour_lines):
 def _gamma(definitions, index):
     definitions[str(index) + ".type"] = "GAMMA_CORRECTION"
     definitions[str(index) + ".value"] = 2.2
+    return index + 1
+
+
+def _output_switcher(definitions, index, channel):
+    definitions[str(index) + ".type"] = "OUTPUT_SWITCHER"
+    definitions[str(index) + ".channel"] = channel
     return index + 1
 
 

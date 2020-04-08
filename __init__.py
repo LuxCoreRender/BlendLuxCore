@@ -1,3 +1,4 @@
+import bpy
 import addon_utils
 
 _, luxblend_is_enabled = addon_utils.check("luxrender")
@@ -25,12 +26,12 @@ except ImportError as error:
 bl_info = {
     "name": "LuxCore",
     "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Philstix",
-    "version": (2, 3),
+    "version": (2, 4),
     "blender": (2, 80, 0),
     "category": "Render",
     "location": "Info header, render engine menu",
     "description": "LuxCore integration for Blender",
-    "warning": "beta1",
+    "warning": "alpha0",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
@@ -38,19 +39,25 @@ bl_info = {
 from . import auto_load, nodes, properties, handlers
 auto_load.init()
 
+from .operators import keymaps
+
+
 def register():
     auto_load.register()
     nodes.materials.register()
     nodes.textures.register()
     nodes.volumes.register()
     handlers.register()
+    keymaps.register()
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
-    print("BlendLuxCore registered (%s)" % pyluxcore.Version())
+    version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
+    print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
 
 
 def unregister():
+    keymaps.unregister()
     handlers.unregister()
     nodes.materials.unregister()
     nodes.textures.unregister()

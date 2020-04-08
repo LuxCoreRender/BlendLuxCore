@@ -12,7 +12,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_idname = "LUXCORE"
     bl_label = "LuxCore"
 
-    # No idea what this flag does exactly.
+    # Apply compositing on render results.
     bl_use_postprocess = True
 
     # Enables material preview (but not texture preview) for this render engine.
@@ -36,7 +36,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_use_texture_preview = False
 
     # Use Eevee nodes in look dev ("MATERIAL") shading mode in the viewport.
-    bl_use_eevee_viewport = True
+    bl_use_eevee_viewport = False
 
     final_running = False
 
@@ -66,8 +66,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.update_stats("", msg)
             # We have to sleep for a bit, otherwise Blender does not update the UI
             sleep(0.01)
-        # elif "BCD progress" in msg:  # TODO For some weird reason this does not work
-        #     self.update_stats("", msg)
 
     def render(self, depsgraph):
         if self.is_preview:            

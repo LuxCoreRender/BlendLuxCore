@@ -1,5 +1,6 @@
 import bpy
 from .node import find_nodes
+from ..nodes import TREE_TYPES
 
 
 """
@@ -10,14 +11,18 @@ e.g. replace old nodes with updated ones when socket names change.
 
 def run():
     for node_tree in bpy.data.node_groups:
-        update_output_nodes_volume_change(node_tree)
-        update_glossy_nodes_ior_change(node_tree)
-        update_volume_nodes_asymmetry_change(node_tree)
+        if node_tree.bl_idname not in TREE_TYPES:
+            continue
+
+        update_mat_output_volume_change(node_tree)
+        update_glossy_ior_change(node_tree)
+        update_volume_asymmetry_change(node_tree)
         update_colormix_remove_min_max_sockets(node_tree)
         update_imagemap_remove_gamma_brightness_sockets(node_tree)
         update_cloth_remove_repeat_sockets(node_tree)
         update_imagemap_add_alpha_output(node_tree)
         update_smoke_multiple_output_channels(node_tree)
+        update_mat_output_add_shape_input(node_tree)
 
     for scene in bpy.data.scenes:
         config = scene.luxcore.config
@@ -30,8 +35,16 @@ def run():
             config.light_strategy = "LOG_POWER"
             config.dls_cache.enabled = True
 
+    # Since commit 28a45283c249085ec1ae8ff38665f6d3655bb998 we use the Cycles DOF properties instead
+    # of our own. Apply the old properties if an old scene uses them.
+    for camera in bpy.data.cameras:
+        if camera.luxcore.use_dof:
+            camera.dof.use_dof = True
+            camera.dof.aperture_fstop = camera.luxcore.fstop
+            camera.luxcore.use_dof = False
 
-def update_output_nodes_volume_change(node_tree):
+
+def update_mat_output_volume_change(node_tree):
     # commit 3078719a9a33a7e2a798965294463dce6c8b7749
 
     for old_output in find_nodes(node_tree, "LuxCoreNodeMatOutput", False):
@@ -69,7 +82,7 @@ def update_output_nodes_volume_change(node_tree):
         node_tree.nodes.remove(old_output)
 
 
-def update_glossy_nodes_ior_change(node_tree):
+def update_glossy_ior_change(node_tree):
     # commit c3152dec8e0e07e676a60be56ba4578dbe297df6
 
     affected_nodes = find_nodes(node_tree, "LuxCoreNodeMatGlossy2", False)
@@ -83,7 +96,7 @@ def update_glossy_nodes_ior_change(node_tree):
             print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
 
-def update_volume_nodes_asymmetry_change(node_tree):
+def update_volume_asymmetry_change(node_tree):
     # commit 2387d1c300b5a1f6931592efcdd0574d243356e7
 
     if node_tree.bl_idname != "luxcore_volume_nodes":
@@ -188,3 +201,12 @@ def update_smoke_multiple_output_channels(node_tree):
         node.outputs.remove(node.outputs["Value"])
 
         print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_mat_output_add_shape_input(node_tree):
+    # commit e20355a7567b22df4d05e8b303c98dbc697b9c08
+
+    for node in find_nodes(node_tree, "LuxCoreNodeMatOutput", False):
+        if "Shape" not in node.inputs:
+            node.inputs.new("LuxCoreSocketShape", "Shape")
+            print('Updated output node "%s" in tree %s to new version' % (node.name, node_tree.name))

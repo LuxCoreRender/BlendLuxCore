@@ -110,6 +110,10 @@ HYBRID_BACKFORWARD_LIGHTPART_DESC = (
     "Controls the amount of computed light rays. Higher values assign more computational power "
     "to caustic rendering. Using 0% disables light tracing, using 100% disables camera rays completely"
 )
+HYBRID_BACKFORWARD_LIGHTPART_OPENCL_DESC = (
+    "Controls the amount of light rays computed on the CPU (the GPU can only compute camera rays). "
+    "Using 0% disables light tracing, using 100% means that the CPU only performs light tracing"
+)
 HYBRID_BACKFORWARD_GLOSSINESS_DESC = (
     "If a material's roughness is lower than this threshold, it is sampled from lights, "
     "otherwise it is sampled from the camera (normal path tracing)"
@@ -144,6 +148,10 @@ class LuxCoreConfigPath(PropertyGroup):
     hybridbackforward_lightpartition: FloatProperty(name="Light Rays", default=20, min=0, max=100,
                                                     subtype="PERCENTAGE",
                                                     description=HYBRID_BACKFORWARD_LIGHTPART_DESC)
+    # Separate property so we can use a different default that makes more sense for OpenCL
+    hybridbackforward_lightpartition_opencl: FloatProperty(name="Light Rays", default=100, min=0, max=100,
+                                                    subtype="PERCENTAGE",
+                                                    description=HYBRID_BACKFORWARD_LIGHTPART_OPENCL_DESC)
     hybridbackforward_glossinessthresh: FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
                                                       description=HYBRID_BACKFORWARD_GLOSSINESS_DESC)
 
@@ -307,9 +315,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
 
 class LuxCoreConfigEnvLightCache(PropertyGroup):
     enabled: BoolProperty(name="Enabled", default=False, description=ENVLIGHT_CACHE_DESC)
-    # TODO descriptions
-    map_width: IntProperty(name="Map Width", default=256, min=16, soft_max=256)
-    samples: IntProperty(name="Samples", default=1, min=1, soft_max=32)
+    # TODO description
+    quality: FloatProperty(name="Quality", default=0.5, min=0, max=1)
 
     file_path: StringProperty(name="File Path", subtype="FILE_PATH",
                               description="File path to the Env. light cache file")
@@ -348,7 +355,7 @@ class LuxCoreConfig(PropertyGroup):
     sampler: EnumProperty(name="Sampler", items=samplers, default="SOBOL")
 
     # SOBOL properties
-    sobol_adaptive_strength: FloatProperty(name="Adaptive Strength", default=0.5, min=0, max=0.95,
+    sobol_adaptive_strength: FloatProperty(name="Adaptive Strength", default=0.9, min=0, max=0.95,
                                             description=SOBOL_ADAPTIVE_STRENGTH_DESC)
 
     # Noise estimation (used by adaptive samplers like SOBOL and RANDOM)
@@ -427,7 +434,7 @@ class LuxCoreConfig(PropertyGroup):
         ("BIN", "Binary", "Save as .bcf binary file", 1),
     ]
     filesaver_format: EnumProperty(name="", items=filesaver_format_items, default="TXT")
-    filesaver_path: StringProperty(name="", subtype="DIR_PATH")
+    filesaver_path: StringProperty(name="", subtype="DIR_PATH", description="Output path where the scene is saved")
 
     # Seed
     seed: IntProperty(name="Seed", default=1, min=1, description=SEED_DESC)

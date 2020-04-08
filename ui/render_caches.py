@@ -74,9 +74,6 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
             layout.label(text="Not supported by Bidir", icon=icons.INFO)
             return
 
-        if len(context.scene.luxcore.lightgroups.custom) > 0:
-            layout.label(text="PhotonGI does not support lightgroups!", icon=icons.WARNING)
-
         layout.active = photongi.enabled
 
         if photongi.enabled and not photongi.indirect_enabled and not photongi.caustic_enabled:
@@ -222,8 +219,7 @@ class LUXCORE_RENDER_PT_caches_envlight(RenderButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.prop(envlight_cache, "map_width")
-        layout.prop(envlight_cache, "samples")
+        layout.prop(envlight_cache, "quality")
 
 
 class LUXCORE_RENDER_PT_caches_envlight_persistence(RenderButtonsPanel, Panel):

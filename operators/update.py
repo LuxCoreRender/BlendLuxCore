@@ -166,7 +166,7 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
                     continue
 
                 # parts is for example: ["v2.2beta4", "linux64", "opencl"]
-                system = parts[2]
+                system = parts[1]
 
                 if system == current_system and is_opencl == current_is_opencl:
                     # Found the right asset

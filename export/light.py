@@ -489,20 +489,17 @@ def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
         definitions["ground.color"] = list(world.luxcore.ground_color)
         definitions["groundalbedo"] = list(world.luxcore.groundalbedo)
 
-        gain = apply_exposure(gain, world.luxcore.exposure)
         if world.luxcore.sun and world.luxcore.sun.data:
             # Use sun turbidity and direction so the user does not have to keep two values in sync
             definitions["turbidity"] = world.luxcore.sun.data.luxcore.turbidity
             definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
             if world.luxcore.use_sun_gain_for_sky:
                 sun = world.luxcore.sun.data
-                gain, importance, lightgroup_id = _convert_common_props(exporter, scene, sun)
-                gain = apply_exposure(gain, sun.luxcore.exposure)
+                gain, _, _ = _convert_common_props(exporter, scene, sun)
+                definitions["gain"] = apply_exposure(gain, sun.luxcore.exposure)
         else:
             # Use world turbidity
             definitions["turbidity"] = world.luxcore.turbidity
-
-        definitions["gain"] = gain
 
     elif light_type == "infinite":
         if world.luxcore.image:
@@ -536,7 +533,19 @@ def _calc_sun_dir(transform):
 
 
 def _convert_common_props(exporter, scene, light_or_world):
-    gain = [light_or_world.luxcore.gain] * 3
+    if isinstance(light_or_world, bpy.types.Light):
+        if light_or_world.type == "SUN" and light_or_world.luxcore.light_type == "sun":
+            raw_gain = light_or_world.luxcore.sun_sky_gain
+        else:
+            raw_gain = light_or_world.luxcore.gain
+    else:
+        # It's a bpy.types.World
+        if light_or_world.luxcore.light == "sky2":
+            raw_gain = light_or_world.luxcore.sun_sky_gain
+        else:
+            raw_gain = light_or_world.luxcore.gain
+
+    gain = [raw_gain] * 3
     importance = light_or_world.luxcore.importance
     lightgroup_id = scene.luxcore.lightgroups.get_id_by_name(light_or_world.luxcore.lightgroup)
     exporter.lightgroup_cache.add(lightgroup_id)
@@ -680,6 +689,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         "kd": [0, 0, 0],
         "emission": list(light.luxcore.rgb_gain),
         "emission.gain": apply_exposure(gain, light.luxcore.exposure),
+        "emission.gain.normalizebycolor": False,
         "emission.power": 0.0,
         "emission.efficency": 0.0,
         "emission.normalizebycolor": False,
@@ -695,7 +705,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
     }
 
     if light.luxcore.light_unit == "power":
-        mat_definitions["emission.power"] = light.luxcore.power
+        mat_definitions["emission.power"] = light.luxcore.power / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) ))
         mat_definitions["emission.efficency"] = light.luxcore.efficacy
         mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
 
@@ -703,6 +713,31 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
             mat_definitions["emission.gain"] = [0, 0, 0]
         else:
             mat_definitions["emission.gain"] = [1, 1, 1]
+
+    if light.luxcore.light_unit == "lumen":
+        mat_definitions["emission.power"] = light.luxcore.lumen / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) ))
+        mat_definitions["emission.efficency"] = 1.0
+        mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
+        if light.luxcore.lumen == 0:
+            mat_definitions["emission.gain"] = [0, 0, 0]
+        else:
+            mat_definitions["emission.gain"] = [1, 1, 1]
+    
+    if light.luxcore.light_unit == "candela":
+        if light.luxcore.per_square_meter:
+            mat_definitions["emission.power"] = 0.0
+            mat_definitions["emission.efficency"] = 0.0
+            mat_definitions["emission.gain"] = [light.luxcore.candela]*3
+            mat_definitions["emission.gain.normalizebycolor"] = light.luxcore.normalizebycolor
+        else:
+            # Multiply with pi to match brightness with other light types
+            mat_definitions["emission.power"] = light.luxcore.candela * math.pi
+            mat_definitions["emission.efficency"] = 1.0
+            mat_definitions["emission.normalizebycolor"] = light.luxcore.normalizebycolor
+            if light.luxcore.candela == 0:
+                mat_definitions["emission.gain"] = [0, 0, 0]
+            else:
+                mat_definitions["emission.gain"] = [1, 1, 1]
 
     node_tree = light.luxcore.node_tree
     if node_tree:
@@ -753,13 +788,16 @@ def _envlightcache(definitions, light_or_world, scene, is_viewport_render):
     definitions["visibilitymapcache.enable"] = enabled
     if enabled:
         # All env. light caches share the same properties (it is very rare to have more than one anyway)
+        definitions["visibilitymapcache.map.quality"] = envlight_cache.quality
+        # Automatically chosen by LuxCore according to the quality and HDRI map size
+        definitions["visibilitymapcache.map.tilewidth"] = 0
+        definitions["visibilitymapcache.map.tileheight"] = 0
+        definitions["visibilitymapcache.map.tilesamplecount"] = 0
+
+        definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
+
         file_path = utils.get_persistent_cache_file_path(envlight_cache.file_path, envlight_cache.save_or_overwrite,
                                                          is_viewport_render, scene)
-        map_width = envlight_cache.map_width
-        definitions["visibilitymapcache.map.width"] = map_width
-        definitions["visibilitymapcache.map.height"] = map_width / 2
-        definitions["visibilitymapcache.map.samplecount"] = envlight_cache.samples
-        definitions["visibilitymapcache.map.sampleupperhemisphereonly"] = light_or_world.luxcore.sampleupperhemisphereonly
         definitions["visibilitymapcache.persistent.file"] = file_path
 
 
@@ -769,17 +807,40 @@ def apply_exposure(gain, exposure):
 
 def _define_brightness(light, definitions):
     definitions["color"] = list(light.luxcore.rgb_gain)
-
+        
     if light.luxcore.light_unit == "power":
         definitions["efficency"] = light.luxcore.efficacy
         definitions["power"] = light.luxcore.power
         definitions["normalizebycolor"] = light.luxcore.normalizebycolor
-
         if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
             definitions["gain"] = [0, 0, 0]
         else:
             definitions["gain"] = [1, 1, 1]
 
+    elif light.luxcore.light_unit == "lumen":
+        definitions["efficency"] = 1.0
+        if light.type == "SPOT":
+            definitions["power"] = light.luxcore.lumen
+        else:
+            definitions["power"] = light.luxcore.lumen
+        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+        if light.luxcore.lumen == 0:
+            definitions["gain"] = [0, 0, 0]
+        else:
+            definitions["gain"] = [1, 1, 1]
+    
+    elif light.luxcore.light_unit == "candela":
+        definitions["efficency"] = 1.0
+        if light.type == "SPOT":
+            definitions["power"] = light.luxcore.candela * 2 * math.pi * (1 - math.cos(light.spot_size/2))
+        else:
+            definitions["power"] = light.luxcore.candela * 4 * math.pi
+        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+        if light.luxcore.candela == 0:
+            definitions["gain"] = [0, 0, 0]
+        else:
+            definitions["gain"] = [1, 1, 1]
+        
     else:
         definitions["efficency"] = 0.0
         definitions["power"] = 0.0

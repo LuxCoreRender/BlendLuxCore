@@ -34,7 +34,7 @@ class LuxCoreNodeTexBlenderNoise(bpy.types.Node, LuxCoreNodeTexture):
             "contrast": self.contrast,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
+            "mapping.transformation": utils.matrix_to_list(transformation),
         }
 
         if mapping_type == "uvmapping3d":

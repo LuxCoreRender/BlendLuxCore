@@ -11,6 +11,7 @@ from . import (
     motion_blur, hair, halt, world,
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
+from .caches.object_cache import supports_live_transform
 
 
 class Change:
@@ -92,10 +93,6 @@ class Exporter(object):
         luxcore_scene = pyluxcore.Scene()
         scene_props = pyluxcore.Properties()
 
-        # TODO 2.8 remove when done
-        scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.type", "matte"))
-        scene_props.Set(pyluxcore.Property("scene.materials.__CLAY__.kd", [0.5] * 3))
-
         # Camera (needs to be parsed first because it is needed for hair tesselation)
         self.camera_cache.diff(self, scene, depsgraph, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
@@ -109,13 +106,15 @@ class Exporter(object):
 
         # Objects and lights
         is_viewport_render = context is not None
-        if not self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene, scene_props, is_viewport_render):
+        instances = self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene,
+                                                 scene_props, is_viewport_render)
+        if instances is None:
+            # Export was cancelled by user
             return None
-        if is_viewport_render:
-            # Init
-            self.visibility_cache.diff(depsgraph)
 
-        # TODO 2.8
+        if is_viewport_render:
+            self.visibility_cache.init(depsgraph)
+
         # Motion blur
         # Motion blur seems not to work in viewport render, i.e. matrix_world is the same on every frame
         if not context and utils.is_valid_camera(scene.camera):
@@ -138,9 +137,15 @@ class Exporter(object):
         if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
             print("-" * 50)
             print("DEBUG: Scene Properties:\n")
+            print("(Note: does not contain dupli props, only the props of the base object)\n")
             print(scene_props)
             print("-" * 50)
         luxcore_scene.Parse(scene_props)
+        # We can only duplicate the instances *after* the scene_props were parsed so the base
+        # objects are available for luxcore_scene
+        self.object_cache2.duplicate_instances(instances, luxcore_scene, stats)
+        # The instances dict can be quite large, delete explicitely (TODO maybe even call gc.collect()?)
+        del instances
 
         # Regularly check if we should abort the export (important in heavy scenes)
         if engine and engine.test_break():
@@ -194,19 +199,29 @@ class Exporter(object):
         if engine:
             message = "Creating RenderSession"
             # Inform about pre-computations that can take a long time to complete, like caches
-            caches = {
-                # The value in the list is used as fallback if the property is not set
-                "PhotonGI": config_props.Get("path.photongi.indirect.enabled", [False]).GetBool(),
-                "Caustics": config_props.Get("path.photongi.caustic.enabled", [False]).GetBool(),
-                "DLSC": config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE",
+            
+            # The second argument of Get() is used as fallback if the property is not set
+            cache_indirect = config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
+            cache_caustics = config_props.Get("path.photongi.caustic.enabled", [False]).GetBool()
+            cache_envlight = scene.luxcore.config.envlight_cache.enabled
+            cache_dls = config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE"
+            
+            if stats:
+                stats.cache_indirect.value = cache_indirect
+                stats.cache_caustics.value = cache_caustics
+                stats.cache_envlight.value = cache_envlight
+                stats.cache_dls.value = cache_dls
+            
+            cache_state = {
+                "Indirect Light": cache_indirect,
+                "Caustics": cache_caustics,
+                "Env. Light": cache_envlight,
+                "DLSC": cache_dls,
             }
-            enabled_caches = [key for key, value in caches.items() if value]
+            enabled_caches = [key for key, value in cache_state.items() if value]
 
             if any(enabled_caches):
                 message += ", computing caches (" + ", ".join(enabled_caches) + ")"
-
-            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
-                message += ", compiling OpenCL kernels"
 
             message += " ..."
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
@@ -215,20 +230,31 @@ class Exporter(object):
         self.scene = None
         return pyluxcore.RenderSession(renderconfig)
 
-    def get_changes(self, depsgraph, context=None):
+    def get_viewport_changes(self, depsgraph, context=None):
         self.scene = depsgraph.scene_eval
-        scene = self.scene
         changes = Change.NONE
+
+        config_props = config.convert(self, self.scene, context)
+        if self.config_cache.diff(config_props):
+            changes |= Change.CONFIG
+
+        if self.camera_cache.diff(self, self.scene, depsgraph, context):
+            changes |= Change.CAMERA
+
+        # Do not hold reference to temporary data
+        self.scene = None
+        return changes
+
+    def get_changes(self, depsgraph, context=None, changes=None):
+        self.scene = depsgraph.scene_eval
         final = context is None
 
-        if not final:
-            # Changes that only need to be checked in viewport render, not in final render
-            config_props = config.convert(self, scene, context)
-            if self.config_cache.diff(config_props):
-                changes |= Change.CONFIG
+        # Particle system counts might have changed
+        supports_live_transform.cache_clear()
 
-            if self.camera_cache.diff(self, scene, depsgraph, context):
-                changes |= Change.CAMERA
+        if not final:
+            if changes is None:
+                changes = self.get_viewport_changes(depsgraph, context)
 
             if self.object_cache2.diff(depsgraph):
                 changes |= Change.OBJECT
@@ -241,6 +267,9 @@ class Exporter(object):
 
             if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
+
+        if changes is None:
+            changes = Change.NONE
 
         # Relevant during final render
         imagepipeline_props = imagepipeline.convert(depsgraph.scene, context)
@@ -344,11 +373,11 @@ class Exporter(object):
                 print("Removing object with key", key)
 
                 try:
-                    self.object_cache2.exported_objects[key].delete(luxcore_scene)
-                    del self.object_cache2.exported_objects[key]
+                    exported_obj = self.object_cache2.exported_objects.pop(key)
+                    exported_obj.delete(luxcore_scene)
                 except KeyError:
-                    # This should be ok, not every exportable object is added to exported_objects
-                    print("Could not find object to remove for key", key)
+                    # This is ok, not every exportable object is added to exported_objects
+                    pass
 
             if self.visibility_cache.objects_to_remove:
                 # luxcore_scene.RemoveUnusedMeshes()  # TODO for some reason this deletes even some meshes that are still in use
@@ -374,8 +403,6 @@ class Exporter(object):
         config_settings = scene.luxcore.config
         path_settings = config_settings.path
 
-        stats.light_strategy.value = utils_render.light_strategy_to_str(config_settings.light_strategy)
-
         if render_engine == "BIDIRCPU":
             path_depths = (
                 config_settings.bidir_path_maxdepth,
@@ -394,3 +421,6 @@ class Exporter(object):
             stats.clamping.value = path_settings.clamping
         else:
             stats.clamping.value = 0
+        
+        stats.use_hybridbackforward.value = (config_props.Get("path.hybridbackforward.enable", [False]).GetBool()
+                                             and render_engine != "BIDIRCPU")

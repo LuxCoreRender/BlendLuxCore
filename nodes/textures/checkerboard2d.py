@@ -12,11 +12,6 @@ class LuxCoreNodeTexCheckerboard2D(bpy.types.Node, LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
-    def draw_buttons(self, context, layout):
-        col = layout.row()
-        if not self.inputs["2D Mapping"].is_linked:
-            layout.prop_search(self, "uvmap", context.object.data, "uv_layers", text="UV Map", icon='GROUP_UVS')
-
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
 

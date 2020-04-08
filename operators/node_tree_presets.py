@@ -3,7 +3,7 @@ import bpy
 from bpy.props import StringProperty, IntProperty
 from mathutils import Color
 from .. import utils
-from .utils import poll_object, make_nodetree_name
+from .utils import poll_object, make_nodetree_name, show_nodetree
 
 
 def new_node(bl_idname, node_tree, previous_node, output=0, input=0):
@@ -135,6 +135,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         elif self.preset == "Colored Glass":
             self._preset_colored_glass(obj, node_tree, output)
 
+        show_nodetree(context, node_tree)
         return {"FINISHED"}
 
     def _preset_smoke(self, obj, node_tree, output):
@@ -150,7 +151,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         # Attach to output node
         volume_pointer = new_node("LuxCoreNodeTreePointer", node_tree, output, "Volume", "Interior Volume")
         volume_pointer.node_tree = vol_node_tree
-        volume_pointer.location.y -= 100
+        volume_pointer.location.x -= 40
+        volume_pointer.location.y -= 120
 
         # Add volume nodes
         vol_output = vol_nodes.new("LuxCoreNodeVolOutput")
@@ -184,7 +186,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         # Attach to output node
         volume_pointer = new_node("LuxCoreNodeTreePointer", node_tree, output, "Volume", "Interior Volume")
         volume_pointer.node_tree = vol_node_tree
-        volume_pointer.location.y -= 100
+        volume_pointer.location.x -= 40
+        volume_pointer.location.y -= 120
 
         # Add volume nodes
         vol_output = vol_nodes.new("LuxCoreNodeVolOutput")
@@ -243,9 +246,10 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             self.report({"ERROR"}, 'Object "%s" is not a smoke domain!' % obj.name)
 
     def _preset_colored_glass(self, obj, node_tree, output):
-        new_node("LuxCoreNodeMatGlass", node_tree, output)
+        glass = new_node("LuxCoreNodeMatGlass", node_tree, output)
+        glass.location.y += 40
         clear_vol = new_node("LuxCoreNodeVolClear", node_tree, output, 0, "Interior Volume")
-        clear_vol.location.y -= 280
+        clear_vol.location.y -= 260
         clear_vol.inputs["Absorption"].default_value = (0.9, 0.1, 0.1)
 
 
