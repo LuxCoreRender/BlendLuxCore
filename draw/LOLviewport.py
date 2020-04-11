@@ -29,6 +29,18 @@ from gpu_extras.batch import batch_for_shader
 from os.path import basename, dirname
 
 
+def draw_downloader(x, y, percent=0, img=None):
+    if img is not None:
+        draw_image(x, y, 50, 50, img, .5)
+    draw_rect(x, y, 50, int(0.5 * percent), (.2, 1, .2, .3))
+    draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, .3))
+
+
+def draw_progress(x, y, text='', percent=None, color=(0, 1, 0, 1)):
+    draw_rect(x, y, percent, 5, color)
+    draw_text(text, x, y + 8, 16, color)
+
+
 def draw_rect(x, y, width, height, color):
     xmax = x + width
     ymax = y + height

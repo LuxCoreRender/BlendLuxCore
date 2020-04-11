@@ -26,6 +26,7 @@ from mathutils import Vector
 
 from ..utils import LOLutils as utils
 from ..draw import LOLviewport as ui_bgl
+from bpy_extras import view3d_utils
 
 
 handler_2d = None
@@ -55,6 +56,54 @@ def draw_callback_2d(self, context):
     if go and area == area1 and window == window1:
         #draw_infobox(self, context)
         draw_callback_2d_search(self, context)
+
+
+def draw_callback_2d_progress(self, context):
+    green = (.2, 1, .2, .3)
+    offset = 0
+    row_height = 35
+
+    scene = context.scene
+    ui_props = scene.luxcoreOL.ui
+    assets = scene.luxcoreOL['assets']
+
+    # x = ui_props.reports_x
+    # y = ui_props.reports_y
+    index = 0
+    for threaddata in utils.download_threads:
+        asset_data = threaddata[1]
+        tcom = threaddata[2]
+
+        index = 0
+        for i, a in enumerate(assets):
+            if asset_data['hash'] == a['hash']:
+                index = i
+                break
+
+        iname = utils.previmg_name(index)
+        img = bpy.data.images.get(iname)
+
+        if tcom.passargs.get('downloaders'):
+            for d in tcom.passargs['downloaders']:
+
+                loc = view3d_utils.location_3d_to_region_2d(bpy.context.region, bpy.context.space_data.region_3d,
+                                                            d['location'])
+                if loc is not None:
+                    ui_bgl.draw_image(loc[0], loc[1], 50, 50, img, 0.5)
+        # else:
+        #     ui_bgl.draw_progress(x, y - index * 30, text='downloading %s' % asset_data['name'],
+        #                   percent=tcom.progress)
+        #     index += 1
+    # for process in bg_blender.bg_processes:
+    #     tcom = process[1]
+    #     draw_progress(x, y - index * 30, '%s' % tcom.lasttext,
+    #                   tcom.progress)
+    #     index += 1
+    # global reports
+    # for report in reports:
+    #     report.draw(x, y - index * 30)
+    #     index += 1
+    #     report.fade()
 
 
 def draw_callback_3d_progress(self, context):
@@ -174,8 +223,7 @@ def draw_callback_2d_search(self, context):
                         offset = (1 - img.size[1] / img.size[0]) / 2
                         crop = (offset, 0, 1 - offset, 1)
                     if img is not None:
-                        ui_bgl.draw_image(x, y, w, w, img, 1,
-                                          crop=crop)
+                        ui_bgl.draw_image(x, y, w, w, img, 1, crop=crop)
                         if index == ui_props.active_index:
                             ui_bgl.draw_rect(x - ui_props.highlight_margin, y - ui_props.highlight_margin,
                                              w + 2 * ui_props.highlight_margin, w + 2 * ui_props.highlight_margin,
@@ -563,8 +611,10 @@ class LOLAssetBarOperator(Operator):
         active_region = self.region
 
         self._handle_2d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_2d, args, 'WINDOW', 'POST_PIXEL')
+        self._handle_2d_progress = bpy.types.SpaceView3D.draw_handler_add(draw_callback_2d_progress, args, 'WINDOW', 'POST_PIXEL')
         self._handle_3d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d, args, 'WINDOW', 'POST_VIEW')
         self._handle_3d_progress = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d_progress, args, 'WINDOW', 'POST_VIEW')
+
 
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
@@ -746,8 +796,7 @@ class LOLAssetBarOperator(Operator):
                     # MODELS can be dragged on scene floor
                     if not ui_props.has_hit and ui_props.asset_type == 'MODEL':
                         ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = ui_bgl.floor_raycast(
-                            context,
-                            mx, my)
+                            context, mx, my)
                 if ui_props.has_hit and ui_props.asset_type == 'MODEL':
                     # this condition is here to fix a bug for a scene submitted by a user, so this situation shouldn't
                     # happen anymore, but there might exists scenes which have this problem for some reason.
