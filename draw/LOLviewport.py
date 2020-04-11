@@ -67,6 +67,7 @@ def draw_line2d(x1, y1, x2, y2, width, color):
     indices = (
         (0, 1),)
     bgl.glEnable(bgl.GL_BLEND)
+    bgl.glEnable(bgl.GL_LINE_SMOOTH)
 
     shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'LINES', {"pos": coords}, indices=indices)
@@ -77,6 +78,8 @@ def draw_line2d(x1, y1, x2, y2, width, color):
 
 def draw_lines(vertices, indices, color):
     bgl.glEnable(bgl.GL_BLEND)
+    bgl.glEnable(bgl.GL_LINE_SMOOTH)
+    bgl.glLineWidth(2)
 
     shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'LINES', {"pos": vertices}, indices=indices)
