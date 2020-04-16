@@ -279,7 +279,7 @@ class ObjectCache2:
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
                      scene_props, is_viewport_render, engine=None):
-        """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
+        """ Convert one DepsgraphObjectInstance amd keep track of it with self.exported_objects """
         if obj.data is None:
             return None
 
@@ -289,7 +289,6 @@ class ObjectCache2:
 
         if dg_obj_instance.show_self:
             if obj.type in MESH_OBJECTS:
-                # assert obj_key not in self.exported_objects
                 exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
                                                         luxcore_scene, scene_props, is_viewport_render)
                 if exported_stuff:
@@ -330,9 +329,7 @@ class ObjectCache2:
 
         if exported_stuff:
             scene_props.Set(props)
-
-            if is_viewport_render:
-                self.exported_objects[obj_key] = exported_stuff
+            self.exported_objects[obj_key] = exported_stuff
 
         return exported_stuff
 

@@ -120,7 +120,7 @@ class Exporter(object):
         if not context and utils.is_valid_camera(scene.camera):
             if self.motion_blur_enabled:
                 motion_blur_props, cam_moving = motion_blur.convert(context, engine, scene, depsgraph,
-                                                                    self.object_cache2)
+                                                                    self.object_cache2.exported_objects)
 
                 if cam_moving:
                     # Re-export the camera with motion blur enabled
