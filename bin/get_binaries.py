@@ -15,7 +15,7 @@ WINDOWS_FILES = [
     "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
-    "OpenImageDenoise.dll",
+    "OpenImageDenoise.dll", "denoise.exe", 
 ]
 
 MAC_FILES = [

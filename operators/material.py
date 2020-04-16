@@ -3,7 +3,7 @@ from bpy.props import IntProperty, StringProperty, EnumProperty
 from .. import utils
 from .utils import (
     poll_object, poll_material, init_mat_node_tree, make_nodetree_name,
-    LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree
+    LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree, show_nodetree,
 )
 from ..ui import icons
 
@@ -179,17 +179,6 @@ class LuxCore_OT_material_select(bpy.types.Operator):
 
 
 # Node tree related operators
-
-
-def show_nodetree(context, node_tree):
-    for area in context.screen.areas:
-        if area.type == "NODE_EDITOR":
-            for space in area.spaces:
-                if space.type == "NODE_EDITOR":
-                    space.tree_type = node_tree.bl_idname
-                    space.node_tree = node_tree
-                    return True
-    return False
 
 
 class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
