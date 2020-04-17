@@ -207,8 +207,8 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
 
         from .caches.object_cache import get_material
         # For some reason this index is not starting at 0 but at 1 (Blender is strange)
-        lux_mat_name, mat_props, node_tree = get_material(obj, psys.settings.material - 1, exporter, depsgraph,
-                                                          is_viewport_render)
+        lux_mat_name, mat_props, node_tree = export_material(obj, psys.settings.material - 1, exporter, depsgraph,
+                                                             is_viewport_render)
 
         scene_props.Set(mat_props)
         set_hair_props(scene_props, lux_obj_name, lux_shape_name, lux_mat_name, visible_to_camera,

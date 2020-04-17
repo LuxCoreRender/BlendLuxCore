@@ -133,7 +133,7 @@ def view_draw(engine, context, depsgraph):
     # camera) do not trigger a view_update() call, but only a view_draw() call.
     s = time()
     changes = engine.exporter.get_viewport_changes(depsgraph, context)
-    print("view_draw(): checking for changes took %.1f ms" % ((time() - s) * 1000))
+    # print("view_draw(): checking for changes took %.1f ms" % ((time() - s) * 1000))
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
         engine.tag_redraw()
@@ -147,7 +147,7 @@ def view_draw(engine, context, depsgraph):
         s = time()
         engine.session = engine.exporter.update(depsgraph, context, engine.session, export.Change.CAMERA)
         engine.viewport_start_time = time()
-        print("view_draw(): camera update took %.1f ms" % ((time() - s) * 1000))
+        # print("view_draw(): camera update took %.1f ms" % ((time() - s) * 1000))
 
     if utils.in_material_shading_mode(context):
         if not engine.session.IsInPause():
@@ -199,22 +199,22 @@ def view_draw(engine, context, depsgraph):
         # Not in pause yet, keep drawing
         s = time()
         engine.session.WaitNewFrame()
-        print("view_draw(): session.WaitNewFrame() took %.1f ms" % ((time() - s) * 1000))
+        # print("view_draw(): session.WaitNewFrame() took %.1f ms" % ((time() - s) * 1000))
         try:
             s = time()
             engine.session.UpdateStats()
-            print("view_draw(): session.UpdateStats() took %.1f ms" % ((time() - s) * 1000))
+            # print("view_draw(): session.UpdateStats() took %.1f ms" % ((time() - s) * 1000))
         except RuntimeError as error:
             print("[Engine/Viewport] Error during UpdateStats():", error)
         s = time()
         framebuffer.update(engine.session, scene)
         framebuffer.reset_denoiser()
         engine.tag_redraw()
-        print("view_draw(): framebuffer update took %.1f ms" % ((time() - s) * 1000))
+        # print("view_draw(): framebuffer update took %.1f ms" % ((time() - s) * 1000))
 
     s = time()
     framebuffer.draw(engine, context, scene)
-    print("view_draw(): framebuffer drawing took %.1f ms" % ((time() - s) * 1000))
+    # print("view_draw(): framebuffer drawing took %.1f ms" % ((time() - s) * 1000))
 
     # Show formatted statistics in Blender UI
     s = time()
@@ -222,6 +222,6 @@ def view_draw(engine, context, depsgraph):
     stats = engine.session.GetStats()
     pretty_stats = utils_render.get_pretty_stats(config, stats, scene, context)
     engine.update_stats(pretty_stats, status_message)
-    print("view_draw(): showing stats in UI took %.1f ms" % ((time() - s) * 1000))
+    # print("view_draw(): showing stats in UI took %.1f ms" % ((time() - s) * 1000))
 
-    print("view_draw() took %.1f ms" % ((time() - start) * 1000))
+    # print("view_draw() took %.1f ms" % ((time() - start) * 1000))

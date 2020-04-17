@@ -29,7 +29,7 @@ def uses_random_per_island(node_tree):
     return utils_node.has_nodes(node_tree, "LuxCoreNodeTexRandomPerIsland", True)
 
 
-def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
+def get_material(obj, material_index, depsgraph):
     material_override = depsgraph.view_layer_eval.material_override
 
     if material_override:
@@ -46,6 +46,12 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         LuxCoreErrorLog.add_warning("No material defined", obj_name=obj.name)
         # Use fallback material
         mat = None
+
+    return mat
+        
+
+def export_material(obj, material_index, exporter, depsgraph, is_viewport_render):
+    mat = get_material(obj, material_index, depsgraph)
 
     if mat:
         lux_mat_name, mat_props = material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
@@ -356,7 +362,7 @@ class ObjectCache2:
             mat_names = []
             for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
                 shape = shape_name
-                lux_mat_name, mat_props, node_tree = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                lux_mat_name, mat_props, node_tree = export_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 
@@ -402,6 +408,17 @@ class ObjectCache2:
                         transform = None  # In viewport render, everything is instanced
                         exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
                                                                is_viewport_render, use_instancing, transform)
+                        
+                        if exported_mesh:
+                            for i in range(len(exported_mesh.mesh_definitions)):
+                                shape, mat_index = exported_mesh.mesh_definitions[i]
+                                node_tree = get_material(obj, mat_index, depsgraph).luxcore.node_tree
+                                
+                                if node_tree:
+                                    shape = self._define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
+                                
+                                exported_mesh.mesh_definitions[i] = shape, mat_index
+                        
                         self.exported_meshes[mesh_key] = exported_mesh
 
                         # We arrive here not only when the mesh is edited, but also when the material
