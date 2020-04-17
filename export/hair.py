@@ -87,7 +87,7 @@ def warn_about_missing_uvs(obj, node_tree):
 
 
 def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_props, is_viewport_render,
-                 is_for_duplication, instance_matrix_world, engine=None):
+                 is_for_duplication, instance_matrix_world, visible_to_camera, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
         scene = depsgraph.scene_eval
@@ -211,7 +211,7 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
                                                           is_viewport_render)
 
         scene_props.Set(mat_props)
-        set_hair_props(scene_props, lux_obj_name, lux_shape_name, lux_mat_name, obj.luxcore.visible_to_camera,
+        set_hair_props(scene_props, lux_obj_name, lux_shape_name, lux_mat_name, visible_to_camera,
                        is_for_duplication, instance_matrix_world, settings.instancing == "enabled")
 
         time_elapsed = time() - start_time

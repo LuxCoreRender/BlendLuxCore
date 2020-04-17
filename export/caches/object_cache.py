@@ -165,7 +165,7 @@ class ObjectCache2:
                             return None
                         _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                                                     scene_props, is_viewport_render, engine)
+                                                     scene_props, is_viewport_render, view_layer, engine)
                     if exported_obj:
                         # Note, the transformation matrix and object ID of this first instance is not added
                         # to the duplication list, since it already exists in the scene
@@ -186,7 +186,7 @@ class ObjectCache2:
                     _update_stats(engine, obj.name, "", index, obj_count_estimate)
 
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                                  scene_props, is_viewport_render, engine)
+                                  scene_props, is_viewport_render, view_layer, engine)
 
         #self._debug_info()
         return instances
@@ -278,7 +278,7 @@ class ObjectCache2:
         return shape
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                     scene_props, is_viewport_render, engine=None):
+                     scene_props, is_viewport_render, view_layer=None, engine=None):
         """ Convert one DepsgraphObjectInstance amd keep track of it with self.exported_objects """
         if obj.data is None:
             return None
@@ -290,7 +290,7 @@ class ObjectCache2:
         if dg_obj_instance.show_self:
             if obj.type in MESH_OBJECTS:
                 exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                                                        luxcore_scene, scene_props, is_viewport_render)
+                                                        luxcore_scene, scene_props, is_viewport_render, view_layer)
                 if exported_stuff:
                     props = exported_stuff.get_props()
             elif obj.type == "LIGHT":
@@ -307,16 +307,17 @@ class ObjectCache2:
                 is_for_duplication = is_viewport_render or dg_obj_instance.is_instance
                 psys_key = make_psys_key(obj, psys, is_for_duplication)
                 lux_obj = make_hair_shape_name(obj_key, psys)
+                visible_to_cam = utils.visible_to_camera(dg_obj_instance, is_viewport_render, view_layer)
 
                 try:
                     lux_shape, lux_mat = self.exported_hair[psys_key]
-                    set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, obj.luxcore.visible_to_camera,
+                    set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, visible_to_cam,
                                    is_for_duplication, dg_obj_instance.matrix_world,
                                    settings.luxcore.hair.instancing == "enabled")
                 except KeyError:
                     lux_shape, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
                                                     scene_props, is_viewport_render, is_for_duplication,
-                                                    dg_obj_instance.matrix_world, engine)
+                                                    dg_obj_instance.matrix_world, visible_to_cam, engine)
                     if lux_shape and lux_mat:
                         self.exported_hair[psys_key] = (lux_shape, lux_mat)
 
@@ -334,7 +335,7 @@ class ObjectCache2:
         return exported_stuff
 
     def _convert_mesh_obj(self, exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                          luxcore_scene, scene_props, is_viewport_render):
+                          luxcore_scene, scene_props, is_viewport_render, view_layer):
         transform = dg_obj_instance.matrix_world
 
         use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj.original) \
@@ -370,8 +371,8 @@ class ObjectCache2:
             obj_transform = transform.copy() if use_instancing else None
             obj_id = utils.make_object_id(dg_obj_instance)
 
-            return ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names,
-                                  obj_transform, obj.luxcore.visible_to_camera, obj_id)
+            return ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, obj_transform,
+                                  utils.visible_to_camera(dg_obj_instance, is_viewport_render, view_layer), obj_id)
 
 
     def diff(self, depsgraph):
@@ -455,8 +456,8 @@ class ObjectCache2:
                     exported_obj.obj_id = obj_id
                     updated = True
 
-                if exported_obj.visible_to_camera != obj.luxcore.visible_to_camera:
-                    exported_obj.visible_to_camera = obj.luxcore.visible_to_camera
+                if exported_obj.visible_to_camera != utils.visible_to_camera(dg_obj_instance, is_viewport_render):
+                    exported_obj.visible_to_camera = utils.visible_to_camera(dg_obj_instance, is_viewport_render)
                     updated = True
 
                 if updated:
