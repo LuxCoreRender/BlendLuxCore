@@ -1,9 +1,11 @@
 from time import time
+from ..bin import pyluxcore
 from .. import export
 from ..draw.viewport import FrameBuffer
 from .. import utils
 from ..utils import render as utils_render
 from ..utils.errorlog import LuxCoreErrorLog
+from ..export.config import convert_viewport_engine
 
 # Executed in separate thread
 # TODO handle the case that the user cancelled the viewport render (engine will be deleted)
@@ -35,13 +37,17 @@ def view_update(engine, context, depsgraph, changes=None):
         # Prevent deadlock
         return
 
-    LuxCoreErrorLog.clear()
+    LuxCoreErrorLog.clear(force_ui_update=False)
 
     if engine.session is None:
         print("=" * 50)
         print("[Engine/Viewport] New session")
+        
+        if not engine.viewport_starting_message_shown:
+            # Let one engine.view_draw() happen so it shows a message in the UI
+            return
+        
         try:
-            engine.update_stats("Creating Render Session...", "")
             engine.exporter = export.Exporter()
             engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
             # Start in separate thread to avoid blocking the UI
@@ -80,16 +86,48 @@ def view_update(engine, context, depsgraph, changes=None):
 def view_draw(engine, context, depsgraph):
     start = time()
     scene = depsgraph.scene_eval
+    
+    if engine.starting_session:
+        engine.tag_redraw()
+        return
+    
+    if engine.session is None:
+        config = scene.luxcore.config
+        definitions = {}
+        luxcore_engine, _ = convert_viewport_engine(context, scene, definitions, config)
+        message = ""
+        
+        if luxcore_engine.endswith("OCL"):
+            # Create dummy renderconfig to check if we have to compile OpenCL kernels
+            luxcore_scene = pyluxcore.Scene()
+            definitions = {
+                "scene.camera.type": "perspective",
+            }
+            luxcore_scene.Parse(utils.create_props("", definitions))
+            
+            definitions = {
+                "renderengine.type": "RTPATHOCL",
+                "sampler.type": "TILEPATHSAMPLER",
+                "scene.epsilon.min": config.min_epsilon,
+                "scene.epsilon.max": config.max_epsilon,
+            }
+            config_props = utils.create_props("", definitions)
+            renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
+            
+            if not renderconfig.HasCachedKernels():
+                message = "Compiling OpenCL kernels (just once, takes a few minutes)"
+        
+        engine.update_stats("Starting viewport render", message)
+        engine.viewport_starting_message_shown = True
+        engine.tag_update()
+        engine.tag_redraw()
+        return
 
     if not engine.framebuffer or engine.framebuffer.needs_replacement(context, scene):
         print("new framebuffer")
         engine.framebuffer = FrameBuffer(engine, context, scene)
 
     framebuffer = engine.framebuffer
-
-    if engine.session is None or engine.starting_session:
-        engine.tag_redraw()
-        return
 
     # Check for changes because some actions in Blender (e.g. moving the viewport
     # camera) do not trigger a view_update() call, but only a view_draw() call.
