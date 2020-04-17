@@ -317,15 +317,22 @@ class ObjectCache2:
 
                 try:
                     lux_shape, lux_mat = self.exported_hair[psys_key]
-                    set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, visible_to_cam,
-                                   is_for_duplication, dg_obj_instance.matrix_world,
-                                   settings.luxcore.hair.instancing == "enabled")
                 except KeyError:
-                    lux_shape, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
-                                                    scene_props, is_viewport_render, is_for_duplication,
-                                                    dg_obj_instance.matrix_world, visible_to_cam, engine)
+                    lux_shape, lux_mat, mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
+                                                           scene_props, is_viewport_render, is_for_duplication,
+                                                           dg_obj_instance.matrix_world, visible_to_cam, engine)
                     if lux_shape and lux_mat:
+                        if mat:
+                            node_tree = mat.luxcore.node_tree
+                            if node_tree:
+                                lux_shape = self._define_shapes(lux_shape, node_tree, exporter, depsgraph, scene_props)
+                        
                         self.exported_hair[psys_key] = (lux_shape, lux_mat)
+                        
+                if lux_shape and lux_mat:
+                    set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, visible_to_cam,
+                                is_for_duplication, dg_obj_instance.matrix_world,
+                                settings.luxcore.hair.instancing == "enabled")
 
                 # TODO handle case when exported_stuff is None
                 #  (we'll have to create a new ExportedObject just for the hair mesh)
@@ -412,10 +419,12 @@ class ObjectCache2:
                         if exported_mesh:
                             for i in range(len(exported_mesh.mesh_definitions)):
                                 shape, mat_index = exported_mesh.mesh_definitions[i]
-                                node_tree = get_material(obj, mat_index, depsgraph).luxcore.node_tree
+                                mat = get_material(obj, mat_index, depsgraph)
                                 
-                                if node_tree:
-                                    shape = self._define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
+                                if mat:
+                                    node_tree = mat.luxcore.node_tree
+                                    if node_tree:
+                                        shape = self._define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
                                 
                                 exported_mesh.mesh_definitions[i] = shape, mat_index
                         
