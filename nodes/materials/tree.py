@@ -69,6 +69,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeMatCarpaint", label="Carpaint"),
         NodeItem("LuxCoreNodeMatCloth", label="Cloth"),
         NodeItem("LuxCoreNodeMatVelvet", label="Velvet"),
+        NodeItem("LuxCoreNodeMatTwoSided", label="Two Sided"),
         NodeItem("LuxCoreNodeMatFrontBackOpacity", label="Front/Back Opacity"),
     ]),
 
