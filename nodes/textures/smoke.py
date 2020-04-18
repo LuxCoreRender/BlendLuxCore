@@ -100,7 +100,11 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         nx, ny, nz = resolution
 
         smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
-        use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
+        if bpy.app.version[:2] < (2, 82):
+            use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
+        else:
+            use_high_resolution = False
+
         grid_name = output_socket.name
 
         cell_size = mathutils.Vector((0, 0, 0))
