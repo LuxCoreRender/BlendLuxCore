@@ -17,10 +17,12 @@ def convert(smoke_obj, channel, depsgraph):
 
     if channel == "density":
         grid = settings.density_grid
-    elif channel == "fire":
+    elif channel == "flame":
         grid = settings.flame_grid
     elif channel == "heat":
         grid = settings.heat_grid
+    elif channel == "temperature":
+        grid = settings.temperature_grid
     elif channel == "color":
         grid = settings.color_grid
     elif channel == "velocity":
