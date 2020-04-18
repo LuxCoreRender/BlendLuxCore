@@ -6,7 +6,7 @@ from .caches.exported_data import ExportedObject, ExportedLight
 
 # TODO fix motion blur of area lights, they get a wrong transformation
 
-def convert(context, engine, scene, depsgraph, object_cache2):
+def convert(context, engine, scene, depsgraph, exported_objects):
     assert scene.camera
     motion_blur = scene.camera.data.luxcore.motion_blur
     assert motion_blur.enable and (motion_blur.object_blur or motion_blur.camera_blur)
@@ -15,7 +15,7 @@ def convert(context, engine, scene, depsgraph, object_cache2):
     assert steps >= 2 and isinstance(steps, int)
 
     frame_offsets = _calc_frame_offsets(motion_blur.shutter, steps)
-    matrices = _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph, object_cache2)
+    matrices = _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph, exported_objects)
 
     # Find and delete entries of non-moving objects (where all matrices are equal)
     for prefix, matrix_steps in list(matrices.items()):
@@ -50,7 +50,7 @@ def _calc_frame_offsets(shutter, steps):
     return [step_interval * step - shutter / 2 for step in range(steps)]
 
 
-def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph=None, object_cache2=None):
+def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph, exported_objects):
     motion_blur = scene.camera.data.luxcore.motion_blur
     matrices = {}  # {prefix: [matrix1, matrix2, ...]}
 
@@ -62,8 +62,8 @@ def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph=None, 
         frame_int = math.floor(frame)
         subframe = frame - frame_int
         engine.frame_set(frame_int, subframe)
-        if motion_blur.object_blur and depsgraph and object_cache2:
-            _append_object_matrices(depsgraph, object_cache2, matrices, step)
+        if motion_blur.object_blur:
+            _append_object_matrices(depsgraph, exported_objects, matrices, step)
 
         if motion_blur.camera_blur and not context:
             matrix = scene.camera.matrix_world
@@ -76,7 +76,7 @@ def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph=None, 
     return matrices
 
 
-def _append_object_matrices(depsgraph, object_cache2, matrices, step):
+def _append_object_matrices(depsgraph, exported_objects, matrices, step):
     for dg_obj_instance in depsgraph.object_instances:
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
         if not obj.luxcore.enable_motion_blur:
@@ -86,9 +86,9 @@ def _append_object_matrices(depsgraph, object_cache2, matrices, step):
         matrix = obj.matrix_world
 
         try:
-            exported_thing = object_cache2.exported_objects[obj_key]
+            exported_thing = exported_objects[obj_key]
             if isinstance(exported_thing, ExportedObject):
-                for part in object_cache2.exported_objects[obj_key].parts:
+                for part in exported_thing.parts:
                     prefix = "scene.objects." + part.lux_obj + "."
                     _append_matrix(matrices, prefix, matrix, step)
             # else:

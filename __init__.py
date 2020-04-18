@@ -1,5 +1,6 @@
 import bpy
 import addon_utils
+import platform
 
 _, luxblend_is_enabled = addon_utils.check("luxrender")
 if luxblend_is_enabled:
@@ -10,11 +11,17 @@ if luxblend_is_enabled:
                     "and restart Blender before you can enable the "
                     "new addon.")
 
+if platform.system() == "Darwin":
+    if bpy.app.version < (2, 82, 7):
+        raise Exception("\n\nUnsupported Blender version. 2.82a or higher is required.")
+    mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
+    if mac_version < (10, 9, 0):
+        raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
+
 try:
     from .bin import pyluxcore
 except ImportError as error:
     msg = "\n\nCould not import pyluxcore."
-    import platform
     if platform.system() == "Windows":
         msg += ("\nYou probably forgot to install one of the "
                 "redistributable packages.\n"
