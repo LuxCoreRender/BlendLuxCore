@@ -1,3 +1,4 @@
+import bpy
 import mathutils
 from ..bin import pyluxcore
 from .errorlog import LuxCoreErrorLog
@@ -214,7 +215,16 @@ def force_viewport_mesh_update(_, context):
             if slot.material == mat:
                 if obj.data:
                     obj.data.update_tag()
-                    continue
+                    break
+
+
+def force_viewport_mesh_update2(node_tree):
+    for obj in bpy.data.objects:
+        for slot in obj.material_slots:
+            if slot.material.luxcore.node_tree == node_tree:
+                if obj.data:
+                    obj.data.update_tag()
+                    break
 
 
 def update_opengl_materials(_, context):

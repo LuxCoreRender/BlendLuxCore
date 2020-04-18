@@ -30,7 +30,7 @@ def convert(exporter, scene, context=None, engine=None):
 
         if is_viewport_render:
             # Viewport render
-            luxcore_engine, sampler = _convert_viewport_engine(context, scene, definitions, config)
+            luxcore_engine, sampler = convert_viewport_engine(context, scene, definitions, config)
         else:
             # Final render
             luxcore_engine, sampler = _convert_final_engine(scene, definitions, config)
@@ -145,7 +145,7 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
             definitions["opencl.native.threads.count"] = 0
 
 
-def _convert_viewport_engine(context, scene, definitions, config):
+def convert_viewport_engine(context, scene, definitions, config):
     if utils.in_material_shading_mode(context):
         definitions["path.pathdepth.total"] = 1
         definitions["path.pathdepth.diffuse"] = 1

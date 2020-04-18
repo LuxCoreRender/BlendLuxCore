@@ -29,7 +29,7 @@ def uses_random_per_island(node_tree):
     return utils_node.has_nodes(node_tree, "LuxCoreNodeTexRandomPerIsland", True)
 
 
-def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
+def get_material(obj, material_index, depsgraph):
     material_override = depsgraph.view_layer_eval.material_override
 
     if material_override:
@@ -46,6 +46,12 @@ def get_material(obj, material_index, exporter, depsgraph, is_viewport_render):
         LuxCoreErrorLog.add_warning("No material defined", obj_name=obj.name)
         # Use fallback material
         mat = None
+
+    return mat
+        
+
+def export_material(obj, material_index, exporter, depsgraph, is_viewport_render):
+    mat = get_material(obj, material_index, depsgraph)
 
     if mat:
         lux_mat_name, mat_props = material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
@@ -165,7 +171,7 @@ class ObjectCache2:
                             return None
                         _update_stats(engine, obj.name, " (dupli)", index, obj_count_estimate)
                     exported_obj = self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                                                     scene_props, is_viewport_render, engine)
+                                                     scene_props, is_viewport_render, view_layer, engine)
                     if exported_obj:
                         # Note, the transformation matrix and object ID of this first instance is not added
                         # to the duplication list, since it already exists in the scene
@@ -186,7 +192,7 @@ class ObjectCache2:
                     _update_stats(engine, obj.name, "", index, obj_count_estimate)
 
                 self._convert_obj(exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                                  scene_props, is_viewport_render, engine)
+                                  scene_props, is_viewport_render, view_layer, engine)
 
         #self._debug_info()
         return instances
@@ -278,8 +284,8 @@ class ObjectCache2:
         return shape
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
-                     scene_props, is_viewport_render, engine=None):
-        """ Convert one DepsgraphObjectInstance amd optionally keep track of it with self.exported_objects """
+                     scene_props, is_viewport_render, view_layer=None, engine=None):
+        """ Convert one DepsgraphObjectInstance amd keep track of it with self.exported_objects """
         if obj.data is None:
             return None
 
@@ -289,9 +295,8 @@ class ObjectCache2:
 
         if dg_obj_instance.show_self:
             if obj.type in MESH_OBJECTS:
-                # assert obj_key not in self.exported_objects
                 exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                                                        luxcore_scene, scene_props, is_viewport_render)
+                                                        luxcore_scene, scene_props, is_viewport_render, view_layer)
                 if exported_stuff:
                     props = exported_stuff.get_props()
             elif obj.type == "LIGHT":
@@ -308,18 +313,26 @@ class ObjectCache2:
                 is_for_duplication = is_viewport_render or dg_obj_instance.is_instance
                 psys_key = make_psys_key(obj, psys, is_for_duplication)
                 lux_obj = make_hair_shape_name(obj_key, psys)
+                visible_to_cam = utils.visible_to_camera(dg_obj_instance, is_viewport_render, view_layer)
 
                 try:
                     lux_shape, lux_mat = self.exported_hair[psys_key]
-                    set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, obj.luxcore.visible_to_camera,
-                                   is_for_duplication, dg_obj_instance.matrix_world,
-                                   settings.luxcore.hair.instancing == "enabled")
                 except KeyError:
-                    lux_shape, lux_mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
-                                                    scene_props, is_viewport_render, is_for_duplication,
-                                                    dg_obj_instance.matrix_world, engine)
+                    lux_shape, lux_mat, mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
+                                                           scene_props, is_viewport_render, is_for_duplication,
+                                                           dg_obj_instance.matrix_world, visible_to_cam, engine)
                     if lux_shape and lux_mat:
+                        if mat:
+                            node_tree = mat.luxcore.node_tree
+                            if node_tree:
+                                lux_shape = self._define_shapes(lux_shape, node_tree, exporter, depsgraph, scene_props)
+                        
                         self.exported_hair[psys_key] = (lux_shape, lux_mat)
+                        
+                if lux_shape and lux_mat:
+                    set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, visible_to_cam,
+                                is_for_duplication, dg_obj_instance.matrix_world,
+                                settings.luxcore.hair.instancing == "enabled")
 
                 # TODO handle case when exported_stuff is None
                 #  (we'll have to create a new ExportedObject just for the hair mesh)
@@ -330,14 +343,12 @@ class ObjectCache2:
 
         if exported_stuff:
             scene_props.Set(props)
-
-            if is_viewport_render:
-                self.exported_objects[obj_key] = exported_stuff
+            self.exported_objects[obj_key] = exported_stuff
 
         return exported_stuff
 
     def _convert_mesh_obj(self, exporter, dg_obj_instance, obj, obj_key, depsgraph,
-                          luxcore_scene, scene_props, is_viewport_render):
+                          luxcore_scene, scene_props, is_viewport_render, view_layer):
         transform = dg_obj_instance.matrix_world
 
         use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj.original) \
@@ -358,7 +369,7 @@ class ObjectCache2:
             mat_names = []
             for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
                 shape = shape_name
-                lux_mat_name, mat_props, node_tree = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                lux_mat_name, mat_props, node_tree = export_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 
@@ -373,8 +384,8 @@ class ObjectCache2:
             obj_transform = transform.copy() if use_instancing else None
             obj_id = utils.make_object_id(dg_obj_instance)
 
-            return ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names,
-                                  obj_transform, obj.luxcore.visible_to_camera, obj_id)
+            return ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, obj_transform,
+                                  utils.visible_to_camera(dg_obj_instance, is_viewport_render, view_layer), obj_id)
 
 
     def diff(self, depsgraph):
@@ -404,6 +415,19 @@ class ObjectCache2:
                         transform = None  # In viewport render, everything is instanced
                         exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
                                                                is_viewport_render, use_instancing, transform)
+                        
+                        if exported_mesh:
+                            for i in range(len(exported_mesh.mesh_definitions)):
+                                shape, mat_index = exported_mesh.mesh_definitions[i]
+                                mat = get_material(obj, mat_index, depsgraph)
+                                
+                                if mat:
+                                    node_tree = mat.luxcore.node_tree
+                                    if node_tree:
+                                        shape = self._define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
+                                
+                                exported_mesh.mesh_definitions[i] = shape, mat_index
+                        
                         self.exported_meshes[mesh_key] = exported_mesh
 
                         # We arrive here not only when the mesh is edited, but also when the material
@@ -458,8 +482,8 @@ class ObjectCache2:
                     exported_obj.obj_id = obj_id
                     updated = True
 
-                if exported_obj.visible_to_camera != obj.luxcore.visible_to_camera:
-                    exported_obj.visible_to_camera = obj.luxcore.visible_to_camera
+                if exported_obj.visible_to_camera != utils.visible_to_camera(dg_obj_instance, is_viewport_render):
+                    exported_obj.visible_to_camera = utils.visible_to_camera(dg_obj_instance, is_viewport_render)
                     updated = True
 
                 if updated:

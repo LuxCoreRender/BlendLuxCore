@@ -40,7 +40,7 @@ class LuxCoreErrorLog:
         cls._add("WARNING:", cls.warnings, message, obj_name)
 
     @classmethod
-    def clear(cls):
+    def clear(cls, force_ui_update=True):
         cls.errors.clear()
         cls.warnings.clear()
         update_ui()

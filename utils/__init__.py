@@ -354,6 +354,15 @@ def is_obj_visible_in_cycles(obj):
     return any((c_vis.camera, c_vis.diffuse, c_vis.glossy, c_vis.transmission, c_vis.scatter, c_vis.shadow))
 
 
+def visible_to_camera(dg_obj_instance, is_viewport_render, view_layer=None):
+    obj = dg_obj_instance.parent if dg_obj_instance.is_instance else dg_obj_instance.object
+    if not obj.luxcore.visible_to_camera:
+        return False
+    if is_viewport_render:
+        obj = obj.original
+    return not obj.indirect_only_get(view_layer=view_layer)
+
+
 def get_theme(context):
     current_theme_name = context.preferences.themes.items()[0][0]
     return context.preferences.themes[current_theme_name]

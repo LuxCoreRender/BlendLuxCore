@@ -87,7 +87,7 @@ def warn_about_missing_uvs(obj, node_tree):
 
 
 def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_props, is_viewport_render,
-                 is_for_duplication, instance_matrix_world, engine=None):
+                 is_for_duplication, instance_matrix_world, visible_to_camera, engine=None):
     try:
         assert psys.settings.render_type == "PATH"
         scene = depsgraph.scene_eval
@@ -205,20 +205,19 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
         if not success:
             return None, None
 
-        from .caches.object_cache import get_material
+        from .caches.object_cache import export_material, get_material
         # For some reason this index is not starting at 0 but at 1 (Blender is strange)
-        lux_mat_name, mat_props, node_tree = get_material(obj, psys.settings.material - 1, exporter, depsgraph,
-                                                          is_viewport_render)
+        lux_mat_name, mat_props, node_tree = export_material(obj, psys.settings.material - 1, exporter, depsgraph,
+                                                             is_viewport_render)
 
         scene_props.Set(mat_props)
-        set_hair_props(scene_props, lux_obj_name, lux_shape_name, lux_mat_name, obj.luxcore.visible_to_camera,
-                       is_for_duplication, instance_matrix_world, settings.instancing == "enabled")
 
         time_elapsed = time() - start_time
         if exporter.stats:
             exporter.stats.export_time_hair.value += time_elapsed
         print("[%s: %s] Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
-        return lux_shape_name, lux_mat_name
+        mat = get_material(obj, psys.settings.material - 1, depsgraph)
+        return lux_shape_name, lux_mat_name, mat
     except Exception as error:
         msg = "[%s: %s] %s" % (obj.name, psys.name, error)
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)

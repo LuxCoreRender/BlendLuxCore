@@ -189,7 +189,7 @@ def _make_imagepipeline(props, context, scene, output_name, pipeline_index, outp
         LuxCoreErrorLog.add_warning("Use a non-automatic tonemapper to get tonemapped AOVs")
         return pipeline_index
 
-    prefix = "film.imagepipelines." + str(pipeline_index) + "."
+    prefix = "film.imagepipelines.%03d." % pipeline_index
     definitions = OrderedDict()
     index = 0
 
@@ -223,7 +223,7 @@ def _make_imagepipeline(props, context, scene, output_name, pipeline_index, outp
 
 
 def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
-    prefix = "film.imagepipelines." + str(pipeline_index) + "."
+    prefix = "film.imagepipelines.%03d." % pipeline_index
     definitions = OrderedDict()
     index = 0
 
@@ -270,7 +270,7 @@ def _make_denoiser_imagepipeline(context, scene, props, engine, pipeline_index, 
 
 
 def _make_noise_detection_imagepipeline(context, scene, props, pipeline_index, output_definitions):
-    prefix = f"film.imagepipelines.{pipeline_index}."
+    prefix = "film.imagepipelines.%03d." % pipeline_index
     definitions = OrderedDict()
 
     index = 0
