@@ -1,3 +1,4 @@
+import bpy
 from time import time
 from .. import utils
 import array
