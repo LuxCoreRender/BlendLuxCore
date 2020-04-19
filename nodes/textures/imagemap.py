@@ -85,44 +85,6 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
     ]
     normal_map_orientation: EnumProperty(update=utils_node.force_viewport_update, name="Orientation", items=normal_map_orientation_items, default="opengl")
 
-    # This function assigns self.image to all faces of all objects using this material
-    # and assigns self.image to all image editors that do not have their image pinned.
-    def update_set_as_active_uvmap(self, context):
-        # TODO 2.8 (Do we even still need this, or can we do something better with Eevee nodes?)
-        raise NotImplementedError()
-        # if not self.set_as_active_uvmap:
-        #     return
-        # # Reset button to "unclicked"
-        # self["set_as_active_uvmap"] = False
-        #
-        # if not context.object:
-        #     return
-        # material = context.object.active_material
-        #
-        # for obj in context.scene.objects:
-        #     for mat_index, slot in enumerate(obj.material_slots):
-        #         if slot.material == material:
-        #             mesh = obj.data
-        #             if hasattr(mesh, "uv_textures") and mesh.uv_textures:
-        #                 uv_faces = mesh.uv_textures.active.data
-        #                 polygons = mesh.polygons
-        #                 # Unfortunately the uv_face has no information about the material
-        #                 # that is assigned to the face, so we have to get this information
-        #                 # from the polygons of the mesh
-        #                 for uv_face, polygon in zip(uv_faces, polygons):
-        #                     if polygon.material_index == mat_index:
-        #                         uv_face.image = self.image
-        #
-        # for space in utils_ui.get_all_spaces(context, "IMAGE_EDITOR", "IMAGE_EDITOR"):
-        #     # Assign image in all image editors that do not have pinning enabled
-        #     if not space.use_image_pin:
-        #         space.image = self.image
-
-    # Note: the old "use a property as a button because it is so much simpler" trick
-    set_as_active_uvmap: BoolProperty(name="Show in Viewport", default=False,
-                                       update=update_set_as_active_uvmap,
-                                       description="Show this image map on all objects with this material")
-
     show_thumbnail: BoolProperty(name="", default=True, description="Show thumbnail")
 
     def init(self, context):
