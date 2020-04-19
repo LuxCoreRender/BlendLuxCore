@@ -40,14 +40,13 @@ def view_update(engine, context, depsgraph, changes=None):
     LuxCoreErrorLog.clear(force_ui_update=False)
 
     if engine.session is None:
-        print("=" * 50)
-        print("[Engine/Viewport] New session")
-        
         if not engine.viewport_starting_message_shown:
             # Let one engine.view_draw() happen so it shows a message in the UI
             return
         
         try:
+            print("=" * 50)
+            print("[Engine/Viewport] New session")
             engine.exporter = export.Exporter()
             engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
             # Start in separate thread to avoid blocking the UI

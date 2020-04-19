@@ -42,8 +42,9 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
 
     def init(self, context):
         self.outputs.new("LuxCoreSocketFloatPositive", "density")
-        self.outputs.new("LuxCoreSocketFloatPositive", "fire")
+        self.outputs.new("LuxCoreSocketFloatPositive", "flame")
         self.outputs.new("LuxCoreSocketFloatPositive", "heat")
+        self.outputs.new("LuxCoreSocketFloatPositive", "temperature")
         self.outputs.new("LuxCoreSocketColor", "color")
         self.outputs.new("LuxCoreSocketColor", "velocity")
 
@@ -100,19 +101,17 @@ class LuxCoreNodeTexSmoke(bpy.types.Node, LuxCoreNodeTexture):
         nx, ny, nz = resolution
 
         smoke_domain_mod = utils.find_smoke_domain_modifier(domain_eval)
-        if bpy.app.version[:2] < (2, 82):
-            use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
-        else:
-            use_high_resolution = False
-
         grid_name = output_socket.name
-
         cell_size = mathutils.Vector((0, 0, 0))
         amplify = 1
-        if use_high_resolution and grid_name not in {"density_low", "flame_low", "fuel_low",
-                                                     "react_low", "velocity", "heat"}:
-            # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
-            amplify = smoke_domain_mod.domain_settings.amplify + 1
+
+        use_high_resolution = False
+        if bpy.app.version[:2] < (2, 82):
+            use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
+            if use_high_resolution and grid_name not in {"density_low", "flame_low", "fuel_low",
+                                                         "react_low", "velocity", "heat"}:
+                # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
+                amplify = smoke_domain_mod.domain_settings.amplify + 1
 
         for i in range(3):
             cell_size[i] = smoke_domain_mod.domain_settings.cell_size[i] * 1/amplify

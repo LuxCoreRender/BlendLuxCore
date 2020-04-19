@@ -26,6 +26,10 @@ except ImportError as error:
         msg += ("\nYou probably forgot to install one of the "
                 "redistributable packages.\n"
                 "They are listed in the release announcement post.")
+    elif platform.system() == "Linux":
+        if str(error) == "ImportError: libOpenCL.so.1: cannot open shared object file: No such file or directory":
+            msg += ("\nYour OpenCL installation is probably missing or broken. "
+                    "Look up how to install OpenCL on your system.")
     # Raise from None to suppress the unhelpful
     # "during handling of the above exception, ..."
     raise Exception(msg + "\n\nImportError: %s" % error) from None

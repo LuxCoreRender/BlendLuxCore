@@ -195,39 +195,39 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
 
         heterogeneous = new_node("LuxCoreNodeVolHeterogeneous", vol_node_tree, vol_output)
 
-        fire_gain = new_node("LuxCoreNodeTexMath", vol_node_tree, heterogeneous, 0, "Emission")
-        fire_gain.location.y -= 200
-        fire_gain.mode = "scale"
+        flame_gain = new_node("LuxCoreNodeTexMath", vol_node_tree, heterogeneous, 0, "Emission")
+        flame_gain.location.y -= 200
+        flame_gain.mode = "scale"
         # Use a high gain value so the fire is visible with the default sky
-        fire_gain.inputs["Value 2"].default_value = 100000
+        flame_gain.inputs["Value 2"].default_value = 1
 
         # Colors for the flame
-        fire_band = new_node("LuxCoreNodeTexBand", vol_node_tree, fire_gain, 0, "Value 1")
-        fire_band.update_add(bpy.context)
-        fire_band.update_add(bpy.context)
-        fire_band.update_add(bpy.context)
+        flame_band = new_node("LuxCoreNodeTexBand", vol_node_tree, flame_gain, 0, "Value 1")
+        flame_band.update_add(bpy.context)
+        flame_band.update_add(bpy.context)
+        flame_band.update_add(bpy.context)
         # Black
-        fire_band.ramp_items[0].offset = 0
-        fire_band.ramp_items[0].value = (0, 0, 0)
+        flame_band.ramp_items[0].offset = 0
+        flame_band.ramp_items[0].value = (0, 0, 0)
         # Dark red
-        fire_band.ramp_items[1].offset = 0.25
-        fire_band.ramp_items[1].value = (0.35, 0.03, 0)
+        flame_band.ramp_items[1].offset = 0.25
+        flame_band.ramp_items[1].value = (0.35, 0.03, 0)
         # Orange/yellow
-        fire_band.ramp_items[2].offset = 0.8
-        fire_band.ramp_items[2].value = (0.9, 0.4, 0)
+        flame_band.ramp_items[2].offset = 0.8
+        flame_band.ramp_items[2].value = (0.9, 0.4, 0)
         # Blue
-        fire_band.ramp_items[3].offset = 0.95
-        fire_band.ramp_items[3].value = (0.03, 0.3, 0.8)
+        flame_band.ramp_items[3].offset = 0.95
+        flame_band.ramp_items[3].value = (0.03, 0.3, 0.8)
         # White
-        fire_band.ramp_items[4].offset = 1
-        fire_band.ramp_items[4].value = (1, 1, 1)
+        flame_band.ramp_items[4].offset = 1
+        flame_band.ramp_items[4].value = (1, 1, 1)
 
         # Scattering
         heterogeneous.inputs["Scattering Scale"].default_value = 10
         smoke_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, heterogeneous, 0, "Scattering")
 
-        # Emission (fire) - these nodes need to be below the others
-        vol_node_tree.links.new(smoke_node.outputs["fire"], fire_band.inputs["Amount"])
+        # Emission (flame) - these nodes need to be below the others
+        vol_node_tree.links.new(smoke_node.outputs["flame"], flame_band.inputs["Amount"])
 
         smoke_node.location.y += 200
 

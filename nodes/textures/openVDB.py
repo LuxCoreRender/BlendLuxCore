@@ -434,18 +434,20 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
                     obmat = offset @ obmat
                     
                 fluidmat = fluidmat @ mathutils.Matrix.Translation(0.5 * mathutils.Vector(cell_size))
-            elif self.creator == "houdini":
+            else:
                 fluidmat[0][0] = 1 / self.nx
                 fluidmat[1][1] = 1 / self.ny
                 fluidmat[2][2] = 1 / self.nz
 
-                # As y is Up in Houdini, switch y and z axis to fit coordonate frame of Blender
-                houdini_transform = mathutils.Matrix.Translation((0.5, 0.5, 0.5)) @ mathutils.Matrix.Rotation(radians(90.0), 4, 'X') \
-                                    @ mathutils.Matrix.Translation((-0.5, -0.5, -0.5))
+                houdini_transform = mathutils.Matrix()
+                if self.creator == "houdini":
+                    # As y is Up in Houdini, switch y and z axis to fit coordonate frame of Blender
+                    houdini_transform = mathutils.Matrix.Translation((0.5, 0.5, 0.5)) @ mathutils.Matrix.Rotation(
+                        radians(90.0), 4, 'X') \
+                                        @ mathutils.Matrix.Translation((-0.5, -0.5, -0.5))
 
                 houdini_transform = houdini_transform @ ovdb
                 obmat = mathutils.Matrix()
-
         # LuxCore normalize grid dimensions to [0..1] range, if the dimension of the bounding box of different grids
         # in one file is different the bounding box offset, e.g. lower corner of the box has to be considered,
         # e.g. in smoke / flame simulations
