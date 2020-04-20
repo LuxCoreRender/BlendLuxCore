@@ -20,7 +20,6 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     basic_mapping = OrderedDict([
-        ("Disney", "LuxCoreNodeMatDisney"),
         ("Mix", "LuxCoreNodeMatMix"),
         ("Matte", "LuxCoreNodeMatMatte"),
         ("Glossy", "LuxCoreNodeMatGlossy2"),
