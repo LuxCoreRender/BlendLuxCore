@@ -20,12 +20,17 @@ if platform.system() == "Darwin":
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
         
     addon_dir = bpy.utils.script_path_user()
-    denoiser = addon_dir + "/addons/BlendLuxCore/bin/denoise"
+    user_script_dir = bpy.utils.script_path_pref()
+    
+    try:
+        denoiser = user_script_dir + "/addons/BlendLuxCore/bin/denoise"
+    except: 
+        denoiser = addon_dir + "/addons/BlendLuxCore/bin/denoise"
+        
     if not os.access(denoiser, os.X_OK): # Check for execution access
         print("Patching LuxCore Denoiser")
         os.chmod(denoiser ,  0o755)
-    
-    
+
 
 try:
     from .bin import pyluxcore
