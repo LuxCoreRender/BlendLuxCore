@@ -15,7 +15,7 @@ from ...handlers import frame_change_pre
 
 NORMAL_MAP_DESC = (
     "Enable if this image is a normal map. Only tangent space maps (the most common "
-    "normal maps) are supported. Brightness and gamma will be set to 1"
+    "normal maps) are supported. Gamma and brightness will be set to 1"
 )
 NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of the normal map"
 
@@ -37,7 +37,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
     image_user: PointerProperty(update=utils_node.force_viewport_update, type=LuxCoreImageUser)
 
     channel_items = [
-        ("default", "Default", "Do not convert the image cannels", 0),
+        ("default", "Default Channels", "Use the image channels as they are in the file", 0),
         ("rgb", "RGB", "Use RGB color channels", 1),
         ("red", "Red", "Use only the red color channel", 2),
         ("green", "Green", "Use only the green color channel", 3),
@@ -46,21 +46,24 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         ("mean", "Mean (Average)", "Greyscale", 6),
         ("colored_mean", "Mean (Luminance)", "Greyscale", 7),
     ]
-    channel: EnumProperty(update=utils_node.force_viewport_update, name="Channel", items=channel_items, default="default")
+    channel: EnumProperty(update=utils_node.force_viewport_update, name="Channel", 
+                          items=channel_items, default="default", description="Channel")
 
     wrap_items = [
-        ("repeat", "Repeat", "", 0),
-        ("clamp", "Clamp", "Extend the pixels of the border", 3),
-        ("black", "Black", "", 1),
-        ("white", "White", "", 2),
+        ("repeat", "Repeat", "Repeat the image", 0),
+        ("clamp", "Clamp", "Extend by repeating edge pixels of the image", 3),
+        ("black", "Black", "Clip to image size and use black outside of the image", 1),
+        ("white", "White", "Clip to image size and use white outside of the image", 2),
     ]
-    wrap: EnumProperty(update=utils_node.force_viewport_update, name="Wrap", items=wrap_items, default="repeat")
+    wrap: EnumProperty(update=utils_node.force_viewport_update, name="Wrap", items=wrap_items, default="repeat",
+                       description="Wrap")
 
     gamma: FloatProperty(update=utils_node.force_viewport_update, name="Gamma", default=2.2, soft_min=0, soft_max=5,
-                          description="Most LDR images with sRgb colors use gamma 2.2, "
-                                      "while most HDR images with linear colors use gamma 1")
+                         description="Use gamma 2.2 for images with color information (e.g. diffuse maps).\n"
+                                     "Use gamma 1.0 for images with other information (e.g. bump maps, "
+                                     "roughness maps, metallic maps etc.)")
     brightness: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1,
-                               description="Brightness multiplier")
+                              description="Brightness multiplier")
 
     def update_is_normal_map(self, context):
         color_output = self.outputs["Color"]
@@ -76,54 +79,27 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         utils_node.force_viewport_update(self, context)
 
     is_normal_map: BoolProperty(name="Normalmap", default=False, update=update_is_normal_map,
-                                 description=NORMAL_MAP_DESC)
-    normal_map_scale: FloatProperty(update=utils_node.force_viewport_update, name="Height", default=1, min=0, soft_max=5,
-                                     description=NORMAL_SCALE_DESC)
+                                description=NORMAL_MAP_DESC)
+    normal_map_scale: FloatProperty(update=utils_node.force_viewport_update, 
+                                    name="Height", default=1, min=0, soft_max=5,
+                                    description=NORMAL_SCALE_DESC)
     normal_map_orientation_items = [
         ("opengl", "OpenGL", "Select if the image is a left-handed normal map", 0),
         ("directx", "DirectX", "Select if the image is a right-handed normal map (inverted green channel)", 1),
     ]
-    normal_map_orientation: EnumProperty(update=utils_node.force_viewport_update, name="Orientation", items=normal_map_orientation_items, default="opengl")
-
-    # This function assigns self.image to all faces of all objects using this material
-    # and assigns self.image to all image editors that do not have their image pinned.
-    def update_set_as_active_uvmap(self, context):
-        # TODO 2.8 (Do we even still need this, or can we do something better with Eevee nodes?)
-        raise NotImplementedError()
-        # if not self.set_as_active_uvmap:
-        #     return
-        # # Reset button to "unclicked"
-        # self["set_as_active_uvmap"] = False
-        #
-        # if not context.object:
-        #     return
-        # material = context.object.active_material
-        #
-        # for obj in context.scene.objects:
-        #     for mat_index, slot in enumerate(obj.material_slots):
-        #         if slot.material == material:
-        #             mesh = obj.data
-        #             if hasattr(mesh, "uv_textures") and mesh.uv_textures:
-        #                 uv_faces = mesh.uv_textures.active.data
-        #                 polygons = mesh.polygons
-        #                 # Unfortunately the uv_face has no information about the material
-        #                 # that is assigned to the face, so we have to get this information
-        #                 # from the polygons of the mesh
-        #                 for uv_face, polygon in zip(uv_faces, polygons):
-        #                     if polygon.material_index == mat_index:
-        #                         uv_face.image = self.image
-        #
-        # for space in utils_ui.get_all_spaces(context, "IMAGE_EDITOR", "IMAGE_EDITOR"):
-        #     # Assign image in all image editors that do not have pinning enabled
-        #     if not space.use_image_pin:
-        #         space.image = self.image
-
-    # Note: the old "use a property as a button because it is so much simpler" trick
-    set_as_active_uvmap: BoolProperty(name="Show in Viewport", default=False,
-                                       update=update_set_as_active_uvmap,
-                                       description="Show this image map on all objects with this material")
+    normal_map_orientation: EnumProperty(update=utils_node.force_viewport_update, name="Orientation", 
+                                         description="Normal Map Orientation",
+                                         items=normal_map_orientation_items, default="opengl")
 
     show_thumbnail: BoolProperty(name="", default=True, description="Show thumbnail")
+    
+    projection_items = [
+        ("flat", "Flat", "Project the image using the UV coordinates", 0),
+        ("box", "Box", "Project the image using triplanar box mapping in object space with soft blending between sides", 1),
+    ]
+    projection: EnumProperty(name="Projection", items=projection_items, default="flat",
+                             description="Projection", 
+                             update=utils_node.force_viewport_update)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
@@ -152,27 +128,25 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         row.prop(self, "is_normal_map")
         row.prop(self, "show_thumbnail", icon=icons.IMAGE)
 
-        if self.image:
-            col.prop(self.image, "source")
-
         if self.is_normal_map:
             col.prop(self, "normal_map_scale")
-            col.prop(self, "normal_map_orientation")
+            col.prop(self, "normal_map_orientation", text="")
         else:
-            col.prop(self, "channel")
-
-        col.prop(self, "wrap")
-
-        if not self.is_normal_map:
             col.prop(self, "gamma")
             col.prop(self, "brightness")
+            col.prop(self, "channel", text="")
 
-        if not self.inputs["2D Mapping"].is_linked:
-            # Info about UV mapping (only show if default is used,
-            # when no mapping node is linked)
-            utils_node.draw_uv_info(context, col)
+        col.prop(self, "projection", text="")
+        col.prop(self, "wrap", text="")
+            
+        if self.image:
+            col.prop(self.image, "source", text="")
 
         self.image_user.draw(col, context.scene)
+        
+        if (not self.inputs["2D Mapping"].is_linked and self.projection == "flat" 
+                and not utils_node.has_valid_uv_map(context.object)):
+            col.label(text="No UVs, use box projection!", icon=icons.WARNING)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         if self.image is None:
@@ -219,9 +193,21 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             })
 
         luxcore_name = self.create_props(props, definitions, luxcore_name)
+        
+        if self.projection == "box":
+            tex_name = luxcore_name + "_triplanar"
+            helper_prefix = "scene.textures." + tex_name + "."
+            helper_defs = {
+                "type": "triplanar",
+                "texture1": luxcore_name,
+                "texture2": luxcore_name,
+                "texture3": luxcore_name,
+                "mapping.type": "localmapping3d",
+            }
+            props.Set(utils.create_props(helper_prefix, helper_defs))
+            luxcore_name = tex_name
 
         if self.is_normal_map:
-            # Implicitly create a normalmap
             tex_name = luxcore_name + "_normalmap"
             helper_prefix = "scene.textures." + tex_name + "."
             helper_defs = {
@@ -230,8 +216,6 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
                 "scale": self.normal_map_scale,
             }
             props.Set(utils.create_props(helper_prefix, helper_defs))
-
-            # The helper texture gets linked in front of this node
-            return tex_name
-        else:
-            return luxcore_name
+            luxcore_name = tex_name
+        
+        return luxcore_name

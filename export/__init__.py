@@ -120,7 +120,7 @@ class Exporter(object):
         if not context and utils.is_valid_camera(scene.camera):
             if self.motion_blur_enabled:
                 motion_blur_props, cam_moving = motion_blur.convert(context, engine, scene, depsgraph,
-                                                                    self.object_cache2)
+                                                                    self.object_cache2.exported_objects)
 
                 if cam_moving:
                     # Re-export the camera with motion blur enabled
@@ -195,10 +195,30 @@ class Exporter(object):
         if stats:
             stats.export_time.value = export_time
             self._init_stats(stats, config_props, scene)
+            
+        # TODO
+        # if config_props.Get("renderengine.type").GetString().endswith("OCL") and not renderconfig.HasCachedKernels():
+        #     if engine:
+        #         message = "Compiling OpenCL kernels (just once, takes a few minutes)"
+        #         engine.report({"INFO"}, message)
+        #         engine.update_stats(message, "")
+            
+        #     # Pre-compile for viewport and final.
+        #     # Don't pre-compile tiled path engine, because it is rarely used (the kernel will be 
+        #     # compiled on-demand when tiled path is used the first time)
+        #     # Copy config props so we can pass scene.epsilon.min and scene.epsilon.max to the kernel
+        #     config_props_copy = pyluxcore.Properties(config_props)
+        #     config_props_copy.Set(pyluxcore.Property("kernelcachefill.renderengine.types", ["PATHOCL", "RTPATHOCL"]))
+        #     pyluxcore.KernelCacheFill(config_props_copy)
 
         if engine:
             message = "Creating RenderSession"
             # Inform about pre-computations that can take a long time to complete, like caches
+            
+            if config_props.Get("renderengine.type").GetString().endswith("OCL") and not renderconfig.HasCachedKernels():
+                kernel_compile_msg = "Compiling OpenCL kernels (just once, takes a few minutes)"
+                engine.report({"INFO"}, kernel_compile_msg)
+                message += ", " + kernel_compile_msg
             
             # The second argument of Get() is used as fallback if the property is not set
             cache_indirect = config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
