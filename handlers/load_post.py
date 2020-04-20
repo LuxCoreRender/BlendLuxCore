@@ -28,7 +28,12 @@ def _init_LuxCoreOnlineLibrary():
     name = basename(dirname(dirname(__file__)))
     user_preferences = bpy.context.preferences.addons[name].preferences
     ui_props = bpy.context.scene.luxcoreOL.ui
+    utils.LOLutils.download_table_of_contents(None, bpy.context)
+    utils.LOLutils.get_categories(bpy.context)
+
     # search.load_previews()
+    bpy.context.scene.luxcoreOL.on_search = False
+    bpy.context.scene.luxcoreOL.search_category = ""
 
     ui_props.assetbar_on = False
     ui_props.turn_off = False

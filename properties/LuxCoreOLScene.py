@@ -17,7 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import bpy
-from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, FloatVectorProperty
+from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, FloatVectorProperty, StringProperty
 
 
 def switch_search_results(self, context):
@@ -85,7 +85,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
 
     bar_height: IntProperty(name="Bar Height", default=thumb_size_def + 2 * margin_def, min=-1, max=2048)
     bar_x_offset: IntProperty(name="Bar X Offset", default=20, min=0, max=5000)
-    bar_y_offset: IntProperty(name="Bar Y Offset", default=80, min=0, max=5000)
+    bar_y_offset: IntProperty(name="Bar Y Offset", default=100, min=0, max=5000)
 
     bar_x: IntProperty(name="Bar X", default=100, min=0, max=5000)
     bar_y: IntProperty(name="Bar Y", default=100, min=50, max=5000)
@@ -114,6 +114,8 @@ class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
 class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
     ui: PointerProperty(type=LuxCoreOnlineLibraryUI)
     model: PointerProperty(type=LuxCoreOnlineLibraryModel)
+    on_search: BoolProperty(name="on_search", default=False)
+    search_category: StringProperty(name="search_category", default="")
 
     @classmethod
     def register(cls):

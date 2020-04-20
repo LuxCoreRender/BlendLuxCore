@@ -66,6 +66,8 @@ def draw_callback_2d_progress(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
     assets = scene.luxcoreOL['assets']
+    if scene.luxcoreOL.on_search:
+        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
 
     # x = ui_props.reports_x
     # y = ui_props.reports_y
@@ -144,6 +146,9 @@ def draw_callback_2d_search(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
     assets = scene.luxcoreOL['assets']
+
+    if scene.luxcoreOL.on_search:
+        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
 
     name = basename(dirname(dirname(__file__)))
     user_preferences = context.preferences.addons[name].preferences
@@ -560,9 +565,12 @@ class LOLAssetBarOperator(Operator):
     bl_label = "LuxCore Online Library Asset Bar UI"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
+    do_search: BoolProperty(name="Run Search", description='', default=True, options={'SKIP_SAVE'})
     keep_running: BoolProperty(name="Keep Running", description='', default=True, options={'SKIP_SAVE'})
     free_only: BoolProperty(name="Free Only", description='', default=False, options={'SKIP_SAVE'})
     tooltip: bpy.props.StringProperty(default='runs search and displays the asset bar at the same time')
+    category: StringProperty(name="Category", description="search only subtree of this category",
+        default="", options={'SKIP_SAVE'})
 
     @classmethod
     def description(cls, context, properties):
@@ -575,6 +583,20 @@ class LOLAssetBarOperator(Operator):
         scene = context.scene
         ui_props = scene.luxcoreOL.ui
 
+        utils.download_table_of_contents(self, context)
+        utils.get_categories(context)
+
+        scene.luxcoreOL.search_category = ""
+        scene.luxcoreOL.on_search = self.do_search
+
+        assets = scene.luxcoreOL.get('assets')
+
+        if scene.luxcoreOL.on_search:
+            assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
+            scene.luxcoreOL.search_category = self.category
+
+        utils.load_previews(context, assets)
+
         if ui_props.assetbar_on:
             if not self.keep_running:
                 ui_props.turn_off = True
@@ -584,10 +606,6 @@ class LOLAssetBarOperator(Operator):
             return {'FINISHED'}
 
         ui_props.assetbar_on = True
-        utils.download_table_of_contents(self, context)
-        assets = scene.luxcoreOL.get('assets')
-
-        utils.load_previews(context, assets)
 
         if context.area.type != 'VIEW_3D':
             self.report({'WARNING'}, "View3D not found, cannot run operator")
@@ -636,7 +654,11 @@ class LOLAssetBarOperator(Operator):
 
         name = basename(dirname(dirname(__file__)))
         user_preferences = bpy.context.preferences.addons[name].preferences
-        assets = scene.luxcoreOL.get("assets")
+        assets = scene.luxcoreOL.get('assets')
+
+        if scene.luxcoreOL.on_search:
+            assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+
         areas = []
 
         if bpy.context.scene != self.scene:
@@ -758,7 +780,6 @@ class LOLAssetBarOperator(Operator):
                 bpy.context.window.cursor_set("DEFAULT")
                 return {'PASS_THROUGH'}
 
-            assets = context.scene.luxcoreOL['assets']
 
             if not ui_props.dragging:
                 bpy.context.window.cursor_set("DEFAULT")

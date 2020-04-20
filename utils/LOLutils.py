@@ -51,6 +51,21 @@ def download_table_of_contents(self, context):
         return {"CANCELLED"}
 
 
+def get_categories(context):
+    uiprops = context.scene.luxcoreOL
+    assets = context.scene.luxcoreOL['assets']
+    categories = {}
+
+    for asset in assets:
+        cat = asset['category']
+        if not cat in categories:
+            categories[cat] = 1
+        else:
+            categories[cat] = categories[cat] + 1
+
+    context.scene.luxcoreOL['categories'] = categories
+
+
 def download_thumbnail(self, context, asset, index):
     name = basename(dirname(dirname(__file__)))
     user_preferences = context.preferences.addons[name].preferences

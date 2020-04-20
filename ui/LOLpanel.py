@@ -23,7 +23,9 @@ from os.path import basename, dirname
 
 def draw_panel_categories(self, context):
     scene = context.scene
-    ui_props = scene.luxcoreOL.ui
+    if not 'categories' in scene.luxcoreOL.keys():
+        return
+    categories = scene.luxcoreOL['categories']
 
     name = basename(dirname(dirname(__file__)))
     user_preferences = bpy.context.preferences.addons[name].preferences
@@ -33,6 +35,17 @@ def draw_panel_categories(self, context):
     layout.label(text='Categories')
 
     col = layout.column(align=True)
+    op = col.operator('view3d.luxcore_ol_asset_bar', text="All")
+    op.do_search = False
+    op.keep_running = True
+
+    for cat in categories:
+        col = layout.column(align=True)
+        ctext = '%s (%i)' % (cat, categories[cat])
+        op = col.operator('view3d.luxcore_ol_asset_bar', text=ctext)
+        op.do_search = True
+        op.keep_running = True
+        op.category = cat
 
 
 def draw_panel_model_search(self, context):
@@ -53,7 +66,7 @@ def draw_panel_model_search(self, context):
 
     assetbar_operator = layout.operator('view3d.luxcore_ol_asset_bar', text='Asset Bar', icon=icon)
     assetbar_operator.keep_running = False
-    #assetbar_operator.do_search = False
+    assetbar_operator.do_search = False
     assetbar_operator.tooltip = tooltip
 
     draw_panel_categories(self, context)

@@ -206,6 +206,8 @@ def update_ui_size(context, area, region):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
     assets = scene.luxcoreOL['assets']
+    if scene.luxcoreOL.on_search:
+        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
 
     name = basename(dirname(dirname(__file__)))
     user_preferences = bpy.context.preferences.addons[name].preferences
@@ -298,6 +300,9 @@ def get_asset_under_mouse(context, mousex, mousey):
     ui_props = scene.luxcoreOL.ui
 
     assets = scene.luxcoreOL.get('assets')
+    if scene.luxcoreOL.on_search:
+        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+
     if assets is not None:
         h_draw = min(ui_props.hcount, math.ceil(len(assets) / ui_props.wcount))
         for b in range(0, h_draw):
