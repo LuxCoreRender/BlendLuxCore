@@ -28,12 +28,7 @@ INPUT_SETTINGS = {
         0: ["Value 1", True],
         1: ["Value 2", True],
         2: ["Fac", True]
-    },
-    "rounding": {
-        0: ["Value", True],
-        1: ["Increment", True],
-        2: ["", False]
-    },
+    }
 }
 
 
@@ -49,11 +44,6 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
             self.inputs[i].name = current_settings[i][0]
             self.inputs[i].enabled = current_settings[i][1]
 
-        if self.mode == "rounding":
-            # Set a sensible default value for the increment.
-            # Usually, rounding results in an integer.
-            self.inputs[1].default_value = 1
-
     mode_items = [
         ("scale", "Multiply", "Value 1 * Value 2", 0),
         ("divide", "Divide", "Value 1 / Value 2", 6),
@@ -65,7 +55,6 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
         ("power", "Power", "(Value 1) ^ (Value 2)", 7),
         ("lessthan", "Less Than", "Value 1 < Value 2 (returns 0 if false, 1 if true)", 8),
         ("greaterthan", "Greater Than", "Value 1 > Value 2 (returns 0 if false, 1 if true)", 9),
-        ("rounding", "Round", "Round the input to the nearest increment", 10),
     ]
     mode = EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
@@ -78,7 +67,7 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value 1", 1)
         self.add_input("LuxCoreSocketFloatUnbounded", "Value 2", 1)
-        self.add_input("LuxCoreSocketFloat0to1", "Fac", 0.5)  # for mix mode
+        self.add_input("LuxCoreSocketFloat0to1", "Fac", 0.5) # for mix mode
         self.inputs["Fac"].enabled = False
 
         self.outputs.new("LuxCoreSocketFloatUnbounded", "Value")
@@ -120,9 +109,6 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
         elif self.mode == "power":
             definitions["base"] = self.inputs[0].export(exporter, props)
             definitions["exponent"] = self.inputs[1].export(exporter, props)
-        elif self.mode == "rounding":
-            definitions["texture"] = self.inputs[0].export(exporter, props)
-            definitions["increment"] = self.inputs[1].export(exporter, props)
         else:
             definitions["texture1"] = self.inputs[0].export(exporter, props)
             definitions["texture2"] = self.inputs[1].export(exporter, props)
