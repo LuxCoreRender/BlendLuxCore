@@ -1,10 +1,12 @@
+import bpy
 from bpy.props import BoolProperty, EnumProperty, FloatProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...ui import icons
 from .math import MIX_DESCRIPTION
+from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexVectorMath(LuxCoreNodeTexture):
+class LuxCoreNodeTexVectorMath(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Vector Math"
     bl_width_default = 200
 
@@ -30,10 +32,12 @@ class LuxCoreNodeTexVectorMath(LuxCoreNodeTexture):
         else:
             self.inputs["Fac"].enabled = False
 
-    mode = EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
+        utils_node.force_viewport_update(self, context)
 
-    mode_clamp_min = FloatProperty(name="Min", description="", default=0)
-    mode_clamp_max = FloatProperty(name="Max", description="", default=1)
+    mode: EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
+
+    mode_clamp_min: FloatProperty(update=utils_node.force_viewport_update, name="Min", description="", default=0)
+    mode_clamp_max: FloatProperty(update=utils_node.force_viewport_update, name="Max", description="", default=1)
 
     def draw_label(self):
         # Use the name of the selected operation as displayed node name
@@ -57,24 +61,24 @@ class LuxCoreNodeTexVectorMath(LuxCoreNodeTexture):
             layout.prop(self, "mode_clamp_max")
 
             if self.mode_clamp_min > self.mode_clamp_max:
-                layout.label("Min should be smaller than max!", icon=icons.WARNING)
+                layout.label(text="Min should be smaller than max!", icon=icons.WARNING)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": self.mode,
         }
         
         if self.mode == "abs":
-            definitions["texture"] = self.inputs["Vector"].export(exporter, props)
+            definitions["texture"] = self.inputs["Vector"].export(exporter, depsgraph, props)
         elif self.mode == "clamp":
-            definitions["texture"] = self.inputs["Vector"].export(exporter, props)
+            definitions["texture"] = self.inputs["Vector"].export(exporter, depsgraph, props)
             definitions["min"] = self.mode_clamp_min
             definitions["max"] = self.mode_clamp_max
         else:
-            definitions["texture1"] = self.inputs["Vector 1"].export(exporter, props)
-            definitions["texture2"] = self.inputs["Vector 2"].export(exporter, props)
+            definitions["texture1"] = self.inputs["Vector 1"].export(exporter, depsgraph, props)
+            definitions["texture2"] = self.inputs["Vector 2"].export(exporter, depsgraph, props)
 
             if self.mode == "mix":
-                definitions["amount"] = self.inputs["Fac"].export(exporter, props)
+                definitions["amount"] = self.inputs["Fac"].export(exporter, depsgraph, props)
 
         return self.create_props(props, definitions, luxcore_name)

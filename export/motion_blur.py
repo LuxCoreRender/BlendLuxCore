@@ -1,9 +1,12 @@
 import math
 from ..bin import pyluxcore
 from .. import utils
+from .caches.exported_data import ExportedObject, ExportedLight
 
 
-def convert(context, scene, objects, exported_objects):
+# TODO fix motion blur of area lights, they get a wrong transformation
+
+def convert(context, engine, scene, depsgraph, exported_objects):
     assert scene.camera
     motion_blur = scene.camera.data.luxcore.motion_blur
     assert motion_blur.enable and (motion_blur.object_blur or motion_blur.camera_blur)
@@ -12,7 +15,7 @@ def convert(context, scene, objects, exported_objects):
     assert steps >= 2 and isinstance(steps, int)
 
     frame_offsets = _calc_frame_offsets(motion_blur.shutter, steps)
-    matrices = _get_matrices(context, scene, steps, frame_offsets, objects, exported_objects)
+    matrices = _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph, exported_objects)
 
     # Find and delete entries of non-moving objects (where all matrices are equal)
     for prefix, matrix_steps in list(matrices.items()):
@@ -29,7 +32,7 @@ def convert(context, scene, objects, exported_objects):
         for step in range(steps):
             time = frame_offsets[step]
             matrix = matrix_steps[step]
-            transformation = utils.matrix_to_list(matrix, scene, apply_worldscale=True)
+            transformation = utils.matrix_to_list(matrix)
             definitions = {
                 "motion.%d.time" % step: time,
                 "motion.%d.transformation" % step: transformation,
@@ -47,22 +50,20 @@ def _calc_frame_offsets(shutter, steps):
     return [step_interval * step - shutter / 2 for step in range(steps)]
 
 
-def _get_matrices(context, scene, steps, frame_offsets, objects=None, exported_objects=None):
+def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph, exported_objects):
     motion_blur = scene.camera.data.luxcore.motion_blur
     matrices = {}  # {prefix: [matrix1, matrix2, ...]}
 
     frame_center = scene.frame_current
     subframe_center = scene.frame_subframe
-
     for step in range(steps):
         offset = frame_offsets[step]
         frame = frame_center + subframe_center + offset
         frame_int = math.floor(frame)
         subframe = frame - frame_int
-        scene.frame_set(frame_int, subframe)
-
-        if motion_blur.object_blur and objects and exported_objects:
-            _append_object_matrices(scene, objects, exported_objects, matrices, step)
+        engine.frame_set(frame_int, subframe)
+        if motion_blur.object_blur:
+            _append_object_matrices(depsgraph, exported_objects, matrices, step)
 
         if motion_blur.camera_blur and not context:
             matrix = scene.camera.matrix_world
@@ -71,32 +72,31 @@ def _get_matrices(context, scene, steps, frame_offsets, objects=None, exported_o
             _append_matrix(matrices, prefix, matrix, step)
 
     # Restore original frame
-    scene.frame_set(frame_center, subframe_center)
+    engine.frame_set(frame_center, subframe_center)
     return matrices
 
 
-def _append_object_matrices(scene, objects, exported_objects, matrices, step):
-    for obj in objects:
-        if not utils.use_obj_motion_blur(obj, scene):
-            # User disabled motion blur for this object, skip it
+def _append_object_matrices(depsgraph, exported_objects, matrices, step):
+    for dg_obj_instance in depsgraph.object_instances:
+        obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+        if not obj.luxcore.enable_motion_blur:
             continue
 
-        key = utils.make_key(obj)
+        obj_key = utils.make_key_from_instance(dg_obj_instance)
+        matrix = obj.matrix_world
 
         try:
-            exported_thing = exported_objects[key]
-
-            for luxcore_name in exported_thing.luxcore_names:
-                # exported_objects contains instances of ExportedObject and ExportedLight
-                if isinstance(exported_thing, utils.ExportedObject):
-                    prefix = "scene.objects." + luxcore_name + "."
-                else:
-                    prefix = "scene.lights." + luxcore_name + "."
-
-                matrix = obj.matrix_world
-                _append_matrix(matrices, prefix, matrix, step)
+            exported_thing = exported_objects[obj_key]
+            if isinstance(exported_thing, ExportedObject):
+                for part in exported_thing.parts:
+                    prefix = "scene.objects." + part.lux_obj + "."
+                    _append_matrix(matrices, prefix, matrix, step)
+            # else:
+            #     assert isinstance(exported_thing, ExportedLight)
+            #     prefix = "scene.lights." + exported_thing.lux_light_name + "."
+            #     _append_matrix(matrices, prefix, matrix, step)
         except KeyError:
-            # This is not a problem, objects are skipped during epxort for various reasons
+            # This is not a problem, objects are skipped during export for various reasons
             # E.g. if the object is not visible, or if it's a camera
             pass
 

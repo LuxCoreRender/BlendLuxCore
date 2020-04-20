@@ -1,20 +1,22 @@
+import bpy
 """A BlendLuxCore node to provide index of refraction preset values for
     LuxCoreRender in Blender"""
 # <pep8 compliant>
 import bpy
 from bpy.props import FloatProperty, StringProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...operators import ior_presets
+from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexIORPreset(LuxCoreNodeTexture):
+class LuxCoreNodeTexIORPreset(bpy.types.Node, LuxCoreNodeTexture):
     """ Index of Refraction Preset node """
     bl_label = "IOR Preset"
     bl_width_default = 180
 
-    ior_name_text = StringProperty(name="IOR Name", description="The name of"
+    ior_name_text: StringProperty(update=utils_node.force_viewport_update, name="IOR Name", description="The name of"
                                    " the selected Index of Refraction preset")
-    ior_value_text = StringProperty(name="IOR Value", description="The value "
+    ior_value_text: StringProperty(update=utils_node.force_viewport_update, name="IOR Value", description="The value "
                                     "of the selected Index of Refraction"
                                     " preset")
 
@@ -22,9 +24,10 @@ class LuxCoreNodeTexIORPreset(LuxCoreNodeTexture):
         # Change the node label to indicate the selected IOR preset
         self.label = "IOR: {} ({})".format(self.ior_name_text,
                                            self.ior_value_text)
+        utils_node.force_viewport_update(self, context)
         return None
 
-    ior_value_float = FloatProperty(name="IOR Float",
+    ior_value_float: FloatProperty(name="IOR Float",
                                     update=update_ior_value_float)
 
     def init(self, context):
@@ -64,7 +67,7 @@ class LuxCoreNodeTexIORPreset(LuxCoreNodeTexture):
             operator.node_name = self.name
             operator.node_tree_index = tree_index
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "constfloat1",
             "value": self.ior_value_float,

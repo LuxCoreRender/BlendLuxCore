@@ -1,36 +1,40 @@
+import bpy
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty, StringProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ...ui import icons
+from ...utils import node as utils_node
 
 
 class ColorRampItem(PropertyGroup):
-    offset = FloatProperty(name="Offset", default=0.0, min=0, max=1)
-    value = FloatVectorProperty(name="", min=0, soft_max=1, subtype="COLOR")
+    offset: FloatProperty(update=utils_node.force_viewport_update, name="Offset", default=0.0, min=0, max=1)
+    value: FloatVectorProperty(update=utils_node.force_viewport_update, name="", min=0, soft_max=1, subtype="COLOR")
     # For internal use
-    index = IntProperty()
-    node_name = StringProperty()
+    index: IntProperty(update=utils_node.force_viewport_update, )
+    node_name: StringProperty(update=utils_node.force_viewport_update, )
 
     def update_add_keyframe(self, context):
         data_path = 'nodes["%s"].ramp_items[%d]' % (self.node_name, self.index)
         self.id_data.keyframe_insert(data_path=data_path + ".offset")
         self.id_data.keyframe_insert(data_path=data_path + ".value")
         self["add_keyframe"] = False
+        utils_node.force_viewport_update(self, context)
 
     def update_remove_keyframe(self, context):
         data_path = 'nodes["%s"].ramp_items[%d]' % (self.node_name, self.index)
         self.id_data.keyframe_delete(data_path=data_path + ".offset")
         self.id_data.keyframe_delete(data_path=data_path + ".value")
         self["remove_keyframe"] = False
+        utils_node.force_viewport_update(self, context)
 
     # This is a bit of a hack, we use BoolProperties as buttons
-    add_keyframe = BoolProperty(name="", description="Add a keyframe on the current frame",
+    add_keyframe: BoolProperty(name="", description="Add a keyframe on the current frame",
                                 default=False, update=update_add_keyframe)
-    remove_keyframe = BoolProperty(name="", description="Remove the keyframe on the current frame",
+    remove_keyframe: BoolProperty(name="", description="Remove the keyframe on the current frame",
                                    default=False, update=update_remove_keyframe)
 
 
-class LuxCoreNodeTexBand(LuxCoreNodeTexture):
+class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Band"
     bl_width_default = 200
 
@@ -39,7 +43,7 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
         ("cubic", "Cubic", "Cubic interpolation between values, smooth transition", 1),
         ("none", "None", "No interpolation between values, sharp transition", 2),
     ]
-    interpolation = EnumProperty(name="Mode", description="Interpolation type of band values",
+    interpolation: EnumProperty(update=utils_node.force_viewport_update, name="Mode", description="Interpolation type of band values",
                                  items=interpolation_items, default="linear")
 
     def update_add(self, context):
@@ -63,18 +67,20 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
         new_item.node_name = self.name
 
         self["add_item"] = False
+        utils_node.force_viewport_update(self, context)
 
     def update_remove(self, context):
         if len(self.ramp_items) > 2:
             self.ramp_items.remove(len(self.ramp_items) - 1)
         self["remove_item"] = False
+        utils_node.force_viewport_update(self, context)
 
     # This is a bit of a hack, we use BoolProperties as buttons
-    add_item = BoolProperty(name="Add", description="Add an offset",
+    add_item: BoolProperty(name="Add", description="Add an offset",
                             default=False, update=update_add)
-    remove_item = BoolProperty(name="Remove", description="Remove last offset",
+    remove_item: BoolProperty(name="Remove", description="Remove last offset",
                                default=False, update=update_remove)
-    ramp_items = CollectionProperty(type=ColorRampItem)
+    ramp_items: CollectionProperty(type=ColorRampItem)
     
     def init(self, context):
         self.add_input("LuxCoreSocketFloat0to1", "Amount", 1)
@@ -112,7 +118,7 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
         for index, item in enumerate(self.ramp_items):
             row = layout.row(align=True)
 
-            split = row.split(align=True, percentage=0.55)
+            split = row.split(align=True, factor=0.55)
             split.prop(item, "offset", slider=True)
             split.prop(item, "value")
 
@@ -142,11 +148,11 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture):
             else:
                 row.prop(item, "add_keyframe", toggle=True, icon=icons.ADD_KEYFRAME)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "band",
             "interpolation": self.interpolation,
-            "amount": self.inputs["Amount"].export(exporter, props),
+            "amount": self.inputs["Amount"].export(exporter, depsgraph, props),
         }
         
         for index, item in enumerate(self.ramp_items):            

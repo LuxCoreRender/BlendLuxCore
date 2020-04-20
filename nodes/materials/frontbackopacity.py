@@ -1,8 +1,9 @@
-from .. import LuxCoreNodeMaterial
+import bpy
+from ..base import LuxCoreNodeMaterial
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeMatFrontBackOpacity(LuxCoreNodeMaterial):
+class LuxCoreNodeMatFrontBackOpacity(bpy.types.Node, LuxCoreNodeMaterial):
     """
     Not a standalone material, but a node that offers
     optional extra properties for all materials, to
@@ -18,10 +19,10 @@ class LuxCoreNodeMatFrontBackOpacity(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
-        input_mat_name = utils_node.export_material_input(self.inputs["Material"], exporter, props, luxcore_name)
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        input_mat_name = utils_node.export_material_input(self.inputs["Material"], exporter, depsgraph, props, luxcore_name)
         definitions = {
-            "transparency.front": self.inputs["Front Opacity"].export(exporter, props),
-            "transparency.back": self.inputs["Back Opacity"].export(exporter, props),
+            "transparency.front": self.inputs["Front Opacity"].export(exporter, depsgraph, props),
+            "transparency.back": self.inputs["Back Opacity"].export(exporter, depsgraph, props),
         }
         return self.create_props(props, definitions, input_mat_name)

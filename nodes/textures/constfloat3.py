@@ -1,8 +1,10 @@
+import bpy
 import math
 from bpy.props import FloatVectorProperty, BoolProperty, EnumProperty, StringProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from mathutils import Color
 from ...ui import icons
+from ...utils import node as utils_node
 
 
 def channel_linear_to_srgb(channel):
@@ -27,7 +29,7 @@ def srgb_to_linear(color):
     return Color([channel_srgb_to_linear(c) for c in color])
 
 
-class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
+class LuxCoreNodeTexConstfloat3(bpy.types.Node, LuxCoreNodeTexture):
     """
     Constant color.
     Note that we do not offer a direct hex code input,
@@ -39,13 +41,14 @@ class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
     """
     bl_label = "Constant Color"
 
-    show_picker = BoolProperty(name="Color Picker", default=True)
-    show_values = BoolProperty(name="Values", default=False)
+    show_picker: BoolProperty(name="Color Picker", default=True)
+    show_values: BoolProperty(name="Values", default=False)
 
     def update_value(self, context):
         self["value_hsv"] = linear_to_srgb(self.value).hsv
+        utils_node.force_viewport_update(self, context)
 
-    value = FloatVectorProperty(name="Color", description="A constant color",
+    value: FloatVectorProperty(name="Color", description="A constant color",
                                 soft_min=0, soft_max=1, subtype="COLOR",
                                 precision=3,
                                 update=update_value)
@@ -54,16 +57,17 @@ class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
         col = Color()
         col.hsv = self.value_hsv
         self["value"] = srgb_to_linear(col)
+        utils_node.force_viewport_update(self, context)
 
     # This is a helper property to offer an "HSV view" on the value property
-    value_hsv = FloatVectorProperty(soft_min=0, soft_max=1, precision=3,
+    value_hsv: FloatVectorProperty(soft_min=0, soft_max=1, precision=3,
                                     update=update_value_hsv)
 
     input_mode_items = [
         ("RGB", "RGB", "", 0),
         ("HSV", "HSV", "", 1),
     ]
-    input_mode = EnumProperty(name="Input Mode", items=input_mode_items, default="RGB")
+    input_mode: EnumProperty(name="Input Mode", items=input_mode_items, default="RGB")
 
     def init(self, context):
         self.outputs.new("LuxCoreSocketColor", "Color")
@@ -94,7 +98,7 @@ class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture):
 
         layout.prop(self, "value")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "constfloat3",
             "value": list(self.value),

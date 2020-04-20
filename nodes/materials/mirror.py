@@ -1,9 +1,7 @@
 import bpy
-from bpy.props import FloatProperty
-from .. import LuxCoreNodeMaterial
-from ..sockets import LuxCoreSocketFloat
+from ..base import LuxCoreNodeMaterial
 
-class LuxCoreNodeMatMirror(LuxCoreNodeMaterial):
+class LuxCoreNodeMatMirror(bpy.types.Node, LuxCoreNodeMaterial):
     """mirror material node"""
     bl_label = "Mirror Material"
     bl_width_default = 160
@@ -14,10 +12,10 @@ class LuxCoreNodeMatMirror(LuxCoreNodeMaterial):
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "mirror",
-            "kr": self.inputs["Reflection Color"].export(exporter, props),
+            "kr": self.inputs["Reflection Color"].export(exporter, depsgraph, props),
         }
-        self.export_common_inputs(exporter, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

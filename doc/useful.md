@@ -1,7 +1,6 @@
 Useful Resources:
 * Latest Blender API: https://docs.blender.org/api/current/
-* https://docs.blender.org/api/2.79/info_tips_and_tricks.html
-* https://www.blender.org/api/blender_python_api_2_77_release/bpy.types.RenderEngine.html?
+* https://docs.blender.org/api/current/info_tips_and_tricks.html
 
 #### Interactive debugging
 
@@ -25,8 +24,8 @@ class Test:
     def update_b(self, context):
         self["a"] = int(self.b)
 
-    a = IntProperty(update=update_a)
-    b = StringProperty(update=update_b)
+    a: IntProperty(update=update_a)
+    b: StringProperty(update=update_b)
 ```
 
 #### Creating a hidden datablock
@@ -37,3 +36,9 @@ the hidden datablocks.
 
 The VRay addon uses this to create hidden helper textures, for example to use their colorramp in a custom node 
 (as a workaround to the fact that addons can't create colorramps).
+
+#### Subscribe to a Blender-defined property
+
+It is possible to attach a listener function to an existing property via `bpy.msgbus`:
+* https://devtalk.blender.org/t/addon-development-question-attaching-callback-to-buttons/8677/2
+* https://developer.blender.org/P563

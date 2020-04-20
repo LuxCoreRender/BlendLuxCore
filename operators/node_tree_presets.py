@@ -3,7 +3,7 @@ import bpy
 from bpy.props import StringProperty, IntProperty
 from mathutils import Color
 from .. import utils
-from .utils import poll_object, make_nodetree_name
+from .utils import poll_object, make_nodetree_name, show_nodetree
 
 
 def new_node(bl_idname, node_tree, previous_node, output=0, input=0):
@@ -20,6 +20,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     basic_mapping = OrderedDict([
+        ("Disney", "LuxCoreNodeMatDisney"),
         ("Mix", "LuxCoreNodeMatMix"),
         ("Matte", "LuxCoreNodeMatMatte"),
         ("Glossy", "LuxCoreNodeMatGlossy2"),
@@ -31,7 +32,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         ("Matte Translucent", "LuxCoreNodeMatMatteTranslucent"),
     ])
 
-    preset = StringProperty()
+    preset: StringProperty()
     categories = OrderedDict([
         ("Basic", list(basic_mapping.keys())),
         ("Advanced", [
@@ -134,6 +135,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         elif self.preset == "Colored Glass":
             self._preset_colored_glass(obj, node_tree, output)
 
+        show_nodetree(context, node_tree)
         return {"FINISHED"}
 
     def _preset_smoke(self, obj, node_tree, output):
@@ -149,7 +151,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         # Attach to output node
         volume_pointer = new_node("LuxCoreNodeTreePointer", node_tree, output, "Volume", "Interior Volume")
         volume_pointer.node_tree = vol_node_tree
-        volume_pointer.location.y -= 100
+        volume_pointer.location.x -= 40
+        volume_pointer.location.y -= 120
 
         # Add volume nodes
         vol_output = vol_nodes.new("LuxCoreNodeVolOutput")
@@ -161,7 +164,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             smoke_node.domain = obj
             heterogeneous.auto_step_settings = True
             heterogeneous.domain = obj
-        smoke_node.source = "density"
+
         smoke_node.wrap = "black"
         # Use IOR of air (doesn't really matter)
         heterogeneous.inputs["IOR"].default_value = 1
@@ -183,16 +186,52 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         # Attach to output node
         volume_pointer = new_node("LuxCoreNodeTreePointer", node_tree, output, "Volume", "Interior Volume")
         volume_pointer.node_tree = vol_node_tree
-        volume_pointer.location.y -= 100
+        volume_pointer.location.x -= 40
+        volume_pointer.location.y -= 120
 
         # Add volume nodes
         vol_output = vol_nodes.new("LuxCoreNodeVolOutput")
         vol_output.location = 300, 200
 
         heterogeneous = new_node("LuxCoreNodeVolHeterogeneous", vol_node_tree, vol_output)
+
+        flame_gain = new_node("LuxCoreNodeTexMath", vol_node_tree, heterogeneous, 0, "Emission")
+        flame_gain.location.y -= 200
+        flame_gain.mode = "scale"
+        # Use a high gain value so the fire is visible with the default sky
+        flame_gain.inputs["Value 2"].default_value = 1
+
+        # Colors for the flame
+        flame_band = new_node("LuxCoreNodeTexBand", vol_node_tree, flame_gain, 0, "Value 1")
+        flame_band.update_add(bpy.context)
+        flame_band.update_add(bpy.context)
+        flame_band.update_add(bpy.context)
+        # Black
+        flame_band.ramp_items[0].offset = 0
+        flame_band.ramp_items[0].value = (0, 0, 0)
+        # Dark red
+        flame_band.ramp_items[1].offset = 0.25
+        flame_band.ramp_items[1].value = (0.35, 0.03, 0)
+        # Orange/yellow
+        flame_band.ramp_items[2].offset = 0.8
+        flame_band.ramp_items[2].value = (0.9, 0.4, 0)
+        # Blue
+        flame_band.ramp_items[3].offset = 0.95
+        flame_band.ramp_items[3].value = (0.03, 0.3, 0.8)
+        # White
+        flame_band.ramp_items[4].offset = 1
+        flame_band.ramp_items[4].value = (1, 1, 1)
+
         # Scattering
         heterogeneous.inputs["Scattering Scale"].default_value = 10
         smoke_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, heterogeneous, 0, "Scattering")
+
+        # Emission (flame) - these nodes need to be below the others
+        vol_node_tree.links.new(smoke_node.outputs["flame"], flame_band.inputs["Amount"])
+
+        smoke_node.location.y += 200
+
+
         # Use IOR of air (doesn't really matter)
         heterogeneous.inputs["IOR"].default_value = 1
 
@@ -200,51 +239,17 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             smoke_node.domain = obj
             heterogeneous.auto_step_settings = True
             heterogeneous.domain = obj
-        smoke_node.source = "density"
         smoke_node.wrap = "black"
-
-        # Emission (fire) - these nodes need to be below the others
-        fire_gain = new_node("LuxCoreNodeTexMath", vol_node_tree, heterogeneous, 0, "Emission")
-        fire_gain.location.y -= 200
-        fire_gain.mode = "scale"
-        # Use a high gain value so the fire is visible with the default sky
-        fire_gain.inputs["Value 2"].default_value = 100000
-
-        # Colors for the flame
-        fire_band = new_node("LuxCoreNodeTexBand", vol_node_tree, fire_gain, 0, "Value 1")
-        fire_band.update_add(bpy.context)
-        fire_band.update_add(bpy.context)
-        fire_band.update_add(bpy.context)
-        # Black
-        fire_band.ramp_items[0].offset = 0
-        fire_band.ramp_items[0].value = (0, 0, 0)
-        # Dark red
-        fire_band.ramp_items[1].offset = 0.25
-        fire_band.ramp_items[1].value = (0.35, 0.03, 0)
-        # Orange/yellow
-        fire_band.ramp_items[2].offset = 0.8
-        fire_band.ramp_items[2].value = (0.9, 0.4, 0)
-        # Blue
-        fire_band.ramp_items[3].offset = 0.95
-        fire_band.ramp_items[3].value = (0.03, 0.3, 0.8)
-        # White
-        fire_band.ramp_items[4].offset = 1
-        fire_band.ramp_items[4].value = (1, 1, 1)
-
-        fire_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, fire_band, 0, "Amount")
-        if is_smoke_domain:
-            fire_node.domain = obj
-        fire_node.source = "fire"
-        fire_node.wrap = "black"
 
         # A smoke material setup only makes sense on the smoke domain object
         if not is_smoke_domain:
             self.report({"ERROR"}, 'Object "%s" is not a smoke domain!' % obj.name)
 
     def _preset_colored_glass(self, obj, node_tree, output):
-        new_node("LuxCoreNodeMatGlass", node_tree, output)
+        glass = new_node("LuxCoreNodeMatGlass", node_tree, output)
+        glass.location.y += 40
         clear_vol = new_node("LuxCoreNodeVolClear", node_tree, output, 0, "Interior Volume")
-        clear_vol.location.y -= 280
+        clear_vol.location.y -= 260
         clear_vol.inputs["Absorption"].default_value = (0.9, 0.1, 0.1)
 
 
@@ -259,7 +264,7 @@ class LUXCORE_MATERIAL_MT_node_tree_preset(bpy.types.Menu):
 
         for category, presets in LUXCORE_OT_preset_material.categories.items():
             col = row.column()
-            col.label(category)
+            col.label(text=category)
 
             for preset in presets:
                 op = col.operator("luxcore.preset_material", text=preset)

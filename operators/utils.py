@@ -16,6 +16,14 @@ def poll_node(context):
     return context.node and not context.node.id_data.library
 
 
+def poll_node_tree(context):
+    space = context.space_data
+    if space.type != 'NODE_EDITOR':
+        return False
+    node_tree = space.node_tree
+    return node_tree and not node_tree.library and node_tree.bl_idname in TREE_TYPES
+
+
 def poll_object(context):
     return context.object and not context.object.library
 
@@ -69,7 +77,7 @@ def init_tex_node_tree(node_tree):
     output.select = False
 
 
-def init_vol_node_tree(node_tree):
+def init_vol_node_tree(node_tree, default_IOR=1.5):
     # Seems like we still need this.
     # User counting does not work reliably with Python PointerProperty.
     # Sometimes, the material this tree is linked to is not counted as user.
@@ -83,11 +91,12 @@ def init_vol_node_tree(node_tree):
 
     clear = nodes.new("LuxCoreNodeVolClear")
     clear.location = 50, 200
+    clear.inputs["IOR"].default_value = default_IOR
 
     node_tree.links.new(clear.outputs[0], output.inputs[0])
 
 
-class LUXCORE_OT_set_node_tree(bpy.types.Operator):
+class LUXCORE_OT_set_node_tree:
     """
     Generic version. Do not use in UI.
     There are subclasses for materials and volumes
@@ -112,7 +121,7 @@ class LUXCORE_OT_set_node_tree(bpy.types.Operator):
                     mat.update_tag()
 
 
-class LUXCORE_MT_node_tree(bpy.types.Menu):
+class LUXCORE_MT_node_tree:
     """
     Generic version. Do not use in UI.
     There are subclasses for materials and volumes
@@ -150,10 +159,10 @@ class LUXCORE_MT_node_tree(bpy.types.Menu):
         if not trees:
             # No node trees of this type in the scene yet
             if tree_type == "ALL":
-                col.label("No node trees available")
+                col.label(text="No node trees available")
             else:
                 tree_type_pretty = tree_type.split("_")[1]
-                col.label("No " + tree_type_pretty + " node trees available")
+                col.label(text="No " + tree_type_pretty + " node trees available")
 
             if tree_type == "luxcore_material_nodetree":
                 # Volumes need a more complicated new operator (Todo)
@@ -168,3 +177,14 @@ class LUXCORE_MT_node_tree(bpy.types.Menu):
 
             op = col.operator(set_operator, text=text, icon=icon)
             op.node_tree_index = index
+
+
+def show_nodetree(context, node_tree):
+    for area in context.screen.areas:
+        if area.type == "NODE_EDITOR":
+            for space in area.spaces:
+                if space.type == "NODE_EDITOR":
+                    space.tree_type = node_tree.bl_idname
+                    space.node_tree = node_tree
+                    return True
+    return False

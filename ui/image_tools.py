@@ -1,14 +1,15 @@
 from bpy.types import Panel
-from . import denoiser
 from ..utils.refresh_button import template_refresh_button
 from ..utils import ui as utils_ui
-from ..engine import LuxCoreRenderEngine
+from ..engine.base import LuxCoreRenderEngine
 from . import icons
+from ..properties.denoiser import LuxCoreDenoiser
+from ..properties.display import LuxCoreDisplaySettings
 
 
 class LuxCoreImagePanel:
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = "LuxCore"
 
     @classmethod
@@ -18,20 +19,27 @@ class LuxCoreImagePanel:
 
 
 class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
+    bl_space_type = 'IMAGE_EDITOR'
+    bl_region_type = 'UI'
     bl_label = "Display"
+    bl_category = "LuxCore"
+    bl_order = 1
 
     def draw(self, context):
         layout = self.layout
-        display = context.scene.luxcore.display
-        config = context.scene.luxcore.config
+        scene = context.scene
 
-        text = "Resume" if display.paused else "Pause"
-        icon = "PLAY" if display.paused else "PAUSE"
+        display = scene.luxcore.display
+        config = scene.luxcore.config
+
+        text = "Resume" if LuxCoreDisplaySettings.paused else "Pause"
+        icon = "PLAY" if LuxCoreDisplaySettings.paused else "PAUSE"
         row = layout.row()
         row.enabled = LuxCoreRenderEngine.final_running
-        row.prop(display, "paused", text=text, icon=icon, toggle=True)
+        row.operator("luxcore.toggle_pause", text=text, icon=icon)
 
-        template_refresh_button(display, "refresh", layout, "Refreshing film...")
+        template_refresh_button(LuxCoreDisplaySettings.refresh, "luxcore.request_display_refresh",
+                                layout, "Refreshing film...")
         layout.prop(display, "interval")
 
         if config.engine == "PATH" and config.use_tiles:
@@ -44,15 +52,37 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
 
 class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
     bl_label = "Denoiser"
+    bl_order = 2
 
     def draw(self, context):
         layout = self.layout
         image = context.space_data.image
 
-        denoiser.draw(context, layout)
+        config = context.scene.luxcore.config
+        denoiser = context.scene.luxcore.denoiser
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
+        col.prop(denoiser, "type", expand=False)
+
+        if denoiser.type == "OIDN":
+            layout.prop(denoiser, "max_memory_MB")
+
+        if denoiser.enabled and denoiser.type == "BCD":
+            if config.sampler == "METROPOLIS" and not config.use_tiles:
+                layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
+
+        sub = layout.column(align=True)
+        # The user should not be able to request a refresh when denoiser is disabled
+        sub.enabled = denoiser.enabled
+        template_refresh_button(LuxCoreDenoiser.refresh, "luxcore.request_denoiser_refresh",
+                                sub, "Running denoiser...")
 
         col = layout.column()
-        col.label("Change the pass to see the result", icon=icons.INFO)
+        col.label(text="Change the pass to see the result", icon=icons.INFO)
         if image:
             iuser = context.space_data.image_user
             col.template_image_layers(image, iuser)
@@ -62,26 +92,27 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
             entry = log_entries[-1]
             col = layout.column(align=True)
             box = col.box()
-            box.label("Denoised Image Stats", icon="IMAGE_DATA")
+            box.label(text="Denoised Image Stats", icon="IMAGE_DATA")
             box = col.box()
             subcol = box.column()
-            subcol.label("Samples: %d" % entry.samples)
-            subcol.label("Render Time: " + utils_ui.humanize_time(entry.elapsed_render_time))
-            subcol.label("Denoising Duration: " + utils_ui.humanize_time(entry.elapsed_denoiser_time))
+            subcol.label(text="Samples: %d" % entry.samples)
+            subcol.label(text="Render Time: " + utils_ui.humanize_time(entry.elapsed_render_time))
+            subcol.label(text="Denoising Duration: " + utils_ui.humanize_time(entry.elapsed_denoiser_time))
 
             if context.scene.luxcore.denoiser.type == "BCD":
                 box = col.box()
                 subcol = box.column()
-                subcol.label("Last Denoiser Settings:", icon="UI")
-                subcol.label("Remove Fireflies: " + ("Enabled" if entry.filter_spikes else "Disabled"))
-                subcol.label("Histogram Distance Threshold: " + str(entry.hist_dist_thresh))
-                subcol.label("Search Window Radius: " + str(entry.search_window_radius))
-                subcol.label("Scales: " + str(entry.scales))
-                subcol.label("Patch Radius: " + str(entry.patch_radius))
+                subcol.label(text="Last Denoiser Settings:", icon="UI")
+                subcol.label(text="Remove Fireflies: " + ("Enabled" if entry.filter_spikes else "Disabled"))
+                subcol.label(text="Histogram Distance Threshold: " + str(entry.hist_dist_thresh))
+                subcol.label(text="Search Window Radius: " + str(entry.search_window_radius))
+                subcol.label(text="Scales: " + str(entry.scales))
+                subcol.label(text="Patch Radius: " + str(entry.patch_radius))
 
 
 class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
     bl_label = "Statistics"
+    bl_order = 3
 
     def draw(self, context):
         layout = self.layout
@@ -89,8 +120,8 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
         statistics_collection = context.scene.luxcore.statistics
         active_index = image.render_slots.active_index
 
-        if len(context.scene.render.layers) > 1:
-            layout.label("Only stats of last rendered render layer are shown", icon=icons.WARNING)
+        if len(context.scene.view_layers) > 1:
+           layout.label(text="Only stats of last rendered render layer are shown", icon=icons.WARNING)
 
         layout.prop(statistics_collection, "compare")
 
@@ -110,15 +141,17 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
     @staticmethod
     def icon(stat, other_stat):
-        if not stat.can_compare():
-            return "NONE"
-
-        if stat.is_better(other_stat):
-            return "COLOR_GREEN"
-        elif stat.is_equal(other_stat):
-            return "COLOR_BLUE"
-        else:
-            return "COLOR_RED"
+        return "NONE"
+        # TODO 2.8 try to find good icons for better/worse/equal
+        # if not stat.can_compare():
+        #     return "NONE"
+        #
+        # if stat.is_better(other_stat):
+        #     return "COLOR_GREEN"
+        # elif stat.is_equal(other_stat):
+        #     return "COLOR_BLUE"
+        # else:
+        #     return "COLOR_RED"
 
     def stat_lists_by_category(self, stats):
         stat_lists = []
@@ -136,11 +169,11 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
             col = split.column()
             for stat in stat_list:
-                col.label(stat.name)
+                col.label(text=stat.name)
 
             col = split.column()
             for stat in stat_list:
-                col.label(str(stat))
+                col.label(text=str(stat))
 
     def draw_stat_comparison(self, context, stats, other_stats, layout):
         statistics_collection = context.scene.luxcore.statistics
@@ -150,7 +183,7 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
         # Header
         split = layout.split()
-        split.label()
+        split.label(text="")
         split.prop(statistics_collection, "first_slot", text="")
         split.prop(statistics_collection, "second_slot", text="")
 
@@ -164,16 +197,16 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
             # The column for the labels
             col = split.column()
             for stat, _ in comparison_stat_list:
-                col.label(stat.name)
+                col.label(text=stat.name)
 
             # The column for the first stats
             col = split.column()
             # col.prop(statistics_collection, "first_slot", text="")
             for stat, other_stat in comparison_stat_list:
-                col.label(str(stat), icon=self.icon(stat, other_stat))
+                col.label(text=str(stat), icon=self.icon(stat, other_stat))
 
             # The column for the other stats
             col = split.column()
             # col.prop(statistics_collection, "second_slot", text="")
             for stat, other_stat in comparison_stat_list:
-                col.label(str(other_stat), icon=self.icon(other_stat, stat))
+                col.label(text=str(other_stat), icon=self.icon(other_stat, stat))

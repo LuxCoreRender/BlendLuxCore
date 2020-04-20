@@ -1,223 +1,423 @@
-from bl_ui.properties_data_lamp import DataButtonsPanel
-from bpy.types import Panel
+from bl_ui.properties_data_light import DataButtonsPanel
+import bpy
 from . import icons
+from bpy.types import Panel
+from ..utils import ui as utils_ui
+from cycles.ui import panel_node_draw
 
-# TODO: add warning/info label about gain problems (e.g. "why is my HDRI black when a sun is in the scene")
 
-
-class LUXCORE_LAMP_PT_context_lamp(DataButtonsPanel, Panel):
-    """
-    Lamp UI Panel
-    """
+class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = ""
-    bl_options = {"HIDE_HEADER"}
+    bl_label = "Light"
+    bl_order = 1
 
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.lamp and engine == "LUXCORE"
+        return context.light and engine == "LUXCORE"
 
     def draw_image_controls(self, context):
         layout = self.layout
-        lamp = context.lamp
+        light = context.light
 
+        layout.use_property_split = True
+        layout.use_property_decorate = False      
+        
         col = layout.column(align=True)
-        col.label("Image:")
-        col.template_ID(lamp.luxcore, "image", open="image.open")
-        if lamp.luxcore.image:
-            col.prop(lamp.luxcore, "gamma")
-        lamp.luxcore.image_user.draw(layout, context.scene)
-
-    def draw_ies_controls(self, context):
-        layout = self.layout
-        lamp = context.lamp
-
-        col = layout.column(align=True)
-        col.prop(lamp.luxcore.ies, "use", toggle=True)
-
-        if lamp.luxcore.ies.use:
-            box = col.box()
-
-            row = box.row()
-            row.label("IES Data:")
-            row.prop(lamp.luxcore.ies, "file_type", expand=True)
-
-            if lamp.luxcore.ies.file_type == "TEXT":
-                box.prop(lamp.luxcore.ies, "file_text")
-                iesfile = lamp.luxcore.ies.file_text
-            else:
-                # lamp.luxcore.ies.file_type == "PATH":
-                box.prop(lamp.luxcore.ies, "file_path")
-                iesfile = lamp.luxcore.ies.file_path
-
-            sub = box.row(align=True)
-            sub.active = bool(iesfile)
-            sub.prop(lamp.luxcore.ies, "flipz")
-            sub.prop(lamp.luxcore.ies, "map_width")
-            sub.prop(lamp.luxcore.ies, "map_height")
+        col.label(text="Image:")
+        col.template_ID(light.luxcore, "image", open="image.open")
+        if light.luxcore.image:
+            col.prop(light.luxcore, "gamma")
+        light.luxcore.image_user.draw(layout, context.scene)
 
     def draw(self, context):
         layout = self.layout
-        lamp = context.lamp
+        light = context.light
 
-        layout.prop(lamp, "type", expand=True)
+        row = layout.row(align=True)
+        row.prop(light, "type", expand=True)
 
-        split = layout.split()
+        layout.prop(light.luxcore, "use_cycles_settings")
 
-        col = split.column(align=True)
-        col.prop(lamp.luxcore, "rgb_gain", text="")
-        col.prop(lamp.luxcore, "gain")
+        if context.light.luxcore.use_cycles_settings:
+            self.draw_cycles_settings(context)
+        else:
+            self.draw_luxcore_settings(context)
 
-        col = split.column(align=True)
-        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
-        op.target = "SCENE"
-        lightgroups = context.scene.luxcore.lightgroups
-        col.prop_search(lamp.luxcore, "lightgroup",
-                        lightgroups, "custom",
-                        icon=icons.LIGHTGROUP, text="")
+    def draw_cycles_settings(self, context):
+        layout = self.layout
+        light = context.light
+        is_area_light = light.type == "AREA"
+        is_portal = is_area_light and light.cycles.is_portal
+
+        layout.use_property_decorate = False
+        layout.use_property_split = True
+
+        if is_portal:
+            col = layout.column(align=True)
+            col.label(text="LuxCore doesn't have portal lights,", icon=icons.INFO)
+            col.label(text="use environment light cache instead")
+
+        col = layout.column()
+        col.active = not is_portal
+
+        col.prop(light, "color")
+        col.prop(light, "energy")
+        col.separator()
+
+        if light.type == "POINT":
+            col.prop(light, "shadow_soft_size", text="Size")
+        elif light.type == "SUN":
+            col.prop(light, "angle")
+        elif is_area_light:
+            col.prop(light, "shape", text="Shape")
+            sub = col.column(align=True)
+
+            if light.shape in {"SQUARE", "DISK"}:
+                sub.prop(light, "size")
+            elif light.shape in {"RECTANGLE", "ELLIPSE"}:
+                sub.prop(light, "size", text="Size X")
+                sub.prop(light, "size_y", text="Y")
+
+        # Warnings and info regarding LuxCore use
+        if is_area_light and light.shape not in {"SQUARE", "RECTANGLE"}:
+            layout.label(text="Unsupported shape", icon=icons.WARNING)
+
+        if not is_portal and not light.cycles.cast_shadow:
+            layout.label(text="Cast Shadow is disabled, but unsupported by LuxCore", icon=icons.WARNING)
+
+        if light.type == "SPOT" and light.shadow_soft_size > 0:
+            layout.label(text="Size (soft shadows) not supported by LuxCore spotlights", icon=icons.WARNING)
+
+    def draw_luxcore_settings(self, context):
+        layout = self.layout
+        light = context.light
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        if light.type == "AREA" and light.luxcore.node_tree:
+            col.label(text="Light color is defined by emission node", icon=icons.INFO)
+        elif light.type == "SUN" and light.luxcore.light_type == "sun":
+            col.label(icon="INFO", text="Sun color and brightness are driven by the sun position")
+        else:
+            col.prop(light.luxcore, "rgb_gain", text="Color")
+        
+        layout.separator()
+        
+        col = layout.column(align=True)
+        if light.type in {"POINT", "SPOT", "AREA"}:
+            col.prop(light.luxcore, "light_unit")
+
+        if light.luxcore.light_unit == "power" and light.type in {"POINT", "SPOT", "AREA"}:
+            col.prop(light.luxcore, "power")
+            col.prop(light.luxcore, "efficacy")
+            col.prop(light.luxcore, "normalizebycolor")
+            
+        elif light.luxcore.light_unit == "lumen" and light.type in {"POINT", "SPOT", "AREA"}:
+            col.prop(light.luxcore, "lumen")
+            col.prop(light.luxcore, "normalizebycolor")
+            
+        elif light.luxcore.light_unit == "candela" and light.type in {"POINT", "SPOT", "AREA"}:
+            col.prop(light.luxcore, "candela")
+            if light.type == "AREA":
+                col.prop(light.luxcore, "per_square_meter")
+            col.prop(light.luxcore, "normalizebycolor")
+            
+        elif light.type == "SUN" and light.luxcore.light_type == "distant":
+            col.prop(light.luxcore, "gain", text='Gain (Lux)')
+            col.prop(light.luxcore, "exposure", slider=True)
+                
+        else:
+            col = layout.column(align=True)
+            if light.type == "SUN" and light.luxcore.light_type == "sun":
+                col.prop(light.luxcore, "sun_sky_gain")
+            else:
+                col.prop(light.luxcore, "gain")
+            col.prop(light.luxcore, "exposure", slider=True)
+                
+            col = col.column(align=True)
+            col.prop(light.luxcore, "normalizebycolor")
 
         layout.separator()
 
         # TODO: split this stuff into separate panels for each light type?
-        if lamp.type == "POINT":
-            row = layout.row(align=True)
-            row.prop(lamp.luxcore, "power")
-            row.prop(lamp.luxcore, "efficacy")
-
-            layout.prop(lamp.luxcore, "radius")
-
-            # IES Data
-            self.draw_ies_controls(context)
-
+        if light.type == "POINT":
+            layout.prop(light, "shadow_soft_size", text="Radius")                        
+            
             self.draw_image_controls(context)
 
-        elif lamp.type == "SUN":
-            layout.prop(lamp.luxcore, "sun_type", expand=True)
+        elif light.type == "SUN":
+            layout.prop(light.luxcore, "light_type", expand=False)
 
-            if lamp.luxcore.sun_type == "sun":
+            if light.luxcore.light_type == "sun":
+                layout.prop(light.luxcore, "relsize")
+                layout.prop(light.luxcore, "turbidity")
                 world = context.scene.world
                 if world and world.luxcore.light == "sky2" and world.luxcore.sun != context.object:
                     layout.operator("luxcore.attach_sun_to_sky", icon=icons.WORLD)
-                layout.prop(lamp.luxcore, "relsize")
-                layout.prop(lamp.luxcore, "turbidity")
-            elif lamp.luxcore.sun_type == "distant":
-                layout.prop(lamp.luxcore, "theta")
+            elif light.luxcore.light_type == "distant":
+                layout.prop(light.luxcore, "theta")
+                layout.prop(light.luxcore, "normalize_distant")
+            elif light.luxcore.light_type == "hemi":
+                self.draw_image_controls(context)
+                layout.prop(light.luxcore, "sampleupperhemisphereonly")
 
-        elif lamp.type == "SPOT":
-            row = layout.row(align=True)
-            row.prop(lamp.luxcore, "power")
-            row.prop(lamp.luxcore, "efficacy")
-
-            row = layout.row(align=True)
-            row.prop(lamp, "spot_size", slider=True)
-            if lamp.luxcore.image is None:
-                # projection does not have this property
-                row.prop(lamp, "spot_blend", slider=True)
-            layout.prop(lamp, "show_cone")
-
+        elif light.type == "SPOT":
             self.draw_image_controls(context)
 
-        elif lamp.type == "HEMI":
-            self.draw_image_controls(context)
-            layout.prop(lamp.luxcore, "sampleupperhemisphereonly")
-
-        elif lamp.type == "AREA":
-            row = layout.row(align=True)
-            row.prop(lamp.luxcore, "power")
-            row.prop(lamp.luxcore, "efficacy")
-
-            if lamp.luxcore.is_laser:
-                layout.prop(lamp, "size", text="Size")
+        elif light.type == "AREA":
+            if light.luxcore.is_laser:
+                col = layout.column(align=True)
+                col.prop(light, "size", text="Size")
             else:
-                row = layout.row()
+                col = layout.column(align=True)
                 if context.object:
-                    row.prop(context.object.luxcore, "visible_to_camera")
-                row.prop(lamp.luxcore, "spread_angle", slider=True)
+                    col.prop(context.object.luxcore, "visible_to_camera")
+                col.prop(light.luxcore, "spread_angle", slider=True)
 
                 col = layout.column(align=True)
-                # the shape controls should be two horizontal buttons
-                sub = col.row(align=True)
-                sub.prop(lamp, "shape", expand=True)
-                # put the size controls horizontal, too
-                row = col.row(align=True)
+                col.prop(light, "shape", expand=False)
+                if light.shape not in {"SQUARE", "RECTANGLE"}:
+                    col.label(text="Unsupported shape", icon=icons.WARNING)
 
-                if lamp.shape == "SQUARE":
-                    row.prop(lamp, "size", text="Size")
+                col = layout.column(align=True)
+
+                if light.shape in {"RECTANGLE", "ELLIPSE"}:
+                    col.prop(light, "size", text="Size X")
+                    col.prop(light, "size_y", text="Y")
                 else:
-                    row.prop(lamp, "size", text="Size X")
-                    row.prop(lamp, "size_y")
+                    col.prop(light, "size", text="Size")
 
-                self.draw_ies_controls(context)
+            layout.prop(light.luxcore, "is_laser")
 
-            layout.prop(lamp.luxcore, "is_laser")
-
-
-def draw_vismap_ui(layout, light_or_world):
-    layout.prop(light_or_world.luxcore.vismap, "type")
-    if light_or_world.luxcore.vismap.type == "cache":
+        layout.separator()
+        
         col = layout.column(align=True)
-        col.prop(light_or_world.luxcore.vismap, "cache_map_width")
-        col.prop(light_or_world.luxcore.vismap, "cache_samples")
+        op = col.operator("luxcore.switch_space_data_context", text="Show Light Groups")
+        op.target = "SCENE"
+        lightgroups = context.scene.luxcore.lightgroups
+        col.prop_search(light.luxcore, "lightgroup",
+                        lightgroups, "custom",
+                        icon=icons.LIGHTGROUP, text="")
 
 
-class LUXCORE_LAMP_PT_performance(DataButtonsPanel, Panel):
+def draw_envlight_cache_ui(layout, scene, light_or_world):
+    envlight_cache = scene.luxcore.config.envlight_cache
+    col = layout.column()
+    col.active = envlight_cache.enabled
+    col.prop(light_or_world.luxcore, "use_envlight_cache")
+
+    if light_or_world.luxcore.use_envlight_cache and not envlight_cache.enabled:
+        layout.label(text="Cache is disabled in render settings", icon=icons.INFO)
+        col = layout.column(align=True)
+        col.use_property_split = False
+        col.prop(envlight_cache, "enabled", text="Enable cache", toggle=True)
+
+
+class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
     """
-    Lamp UI Panel, shows stuff that affects the performance of the render
+    Light UI Panel, shows stuff that affects the performance of the render
     """
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
     bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 3
 
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return context.lamp and engine == "LUXCORE"
+        return context.light and engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
-        lamp = context.lamp
+        light = context.light
 
-        layout.prop(lamp.luxcore, "importance")
+        layout.use_property_split = True
+        layout.use_property_decorate = False      
 
-        if lamp.type == "HEMI":
+        layout.prop(light.luxcore, "importance")
+
+        if not light.luxcore.use_cycles_settings and light.type == "SUN" and light.luxcore.light_type == "hemi":
             # infinite (with image) and constantinfinte lights
-            draw_vismap_ui(layout, lamp)
+            draw_envlight_cache_ui(layout, context.scene, light)
 
 
-class LUXCORE_LAMP_PT_visibility(DataButtonsPanel, Panel):
+class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Visibility"
     bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 4
 
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
+        if engine != "LUXCORE":
+            return False
 
-        visible = False
-        if context.lamp:
-            # Visible for sky2, sun, infinite, constantinfinite
-            if context.lamp.type == "SUN" and context.lamp.luxcore.sun_type == "sun":
-                visible = True
-            elif context.lamp.type == "HEMI":
-                visible = True
+        light = context.light
+        if not light or light.luxcore.use_cycles_settings:
+            return False
 
-        return context.lamp and engine == "LUXCORE" and visible
+        # Visible for sky2, sun, infinite, constantinfinite, area
+        return ((light.type == "SUN" and light.luxcore.light_type == "sun")
+                or light.type == "HEMI"
+                or (light.type == "AREA" and not light.luxcore.is_laser))
 
     def draw(self, context):
         layout = self.layout
-        lamp = context.lamp
+        light = context.light
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False      
 
         # These settings only work with PATH and TILEPATH, not with BIDIR
         enabled = context.scene.luxcore.config.engine == "PATH"
-
-        sub = layout.column()
-        sub.enabled = enabled
-        sub.label("Visibility for indirect light rays:")
-        row = sub.row()
-        row.prop(lamp.luxcore, "visibility_indirect_diffuse")
-        row.prop(lamp.luxcore, "visibility_indirect_glossy")
-        row.prop(lamp.luxcore, "visibility_indirect_specular")
-
+        
         if not enabled:
-            layout.label("Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+            layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+
+        col = layout.column()
+        col.enabled = enabled
+        col.label(text="Visibility for indirect light rays:")
+        col = col.column()        
+        col.prop(light.luxcore, "visibility_indirect_diffuse")
+        col.prop(light.luxcore, "visibility_indirect_glossy")
+        
+        if light.type == "SUN":
+            col.prop(light.luxcore, "sun_visibility_indirect_specular")
+            if light.luxcore.sun_visibility_indirect_specular:
+                col.label(text="Indirect Specular rays can create unwanted fireflies", icon=icons.WARNING)
+        else: 
+            col.prop(light.luxcore, "visibility_indirect_specular")
+
+
+class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):
+    bl_label = "Spot Shape"
+    bl_context = "data"    
+    bl_order = 2
+
+    @classmethod
+    def poll(cls, context):
+        light = context.light
+        return (light and light.type == 'SPOT') and context.engine == "LUXCORE"
+
+    def draw(self, context):
+        layout = self.layout
+        light = context.light
+        
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.prop(light, "spot_size", text="Size")
+        if light.luxcore.image is None:
+            col.prop(light, "spot_blend", text="Blend", slider=True)
+        col.prop(light, "show_cone")
+
+
+class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
+    bl_label = "IES Light"
+    bl_context = "data"
+    bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 2
+
+    @classmethod
+    def poll(cls, context):
+        light = context.light
+        return (light and not light.luxcore.use_cycles_settings
+                and light.type in {"AREA", "POINT"} and context.engine == "LUXCORE")
+
+    def draw_header(self, context):
+        layout = self.layout
+        light = context.light
+
+        layout.prop(light.luxcore.ies, "use", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        light = context.light
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = light.luxcore.ies.use
+        layout.prop(light.luxcore.ies, "file_type", text="IES Data", expand=False)
+
+        if light.luxcore.ies.file_type == "TEXT":
+            layout.prop(light.luxcore.ies, "file_text")
+            iesfile = light.luxcore.ies.file_text
+        else:
+            # light.luxcore.ies.file_type == "PATH":
+            layout.prop(light.luxcore.ies, "file_path")
+            iesfile = light.luxcore.ies.file_path
+
+        col = layout.column(align=True)
+        col.enabled = bool(iesfile)
+        col.prop(light.luxcore.ies, "flipz")
+        col.prop(light.luxcore.ies, "map_width")
+        col.prop(light.luxcore.ies, "map_height")
+
+
+class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
+    bl_label = "Nodes"
+    bl_context = "data"
+    bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 3
+
+    @classmethod
+    def poll(cls, context):
+        light = context.light
+        return (light and not light.luxcore.use_cycles_settings
+                and light.type == "AREA" and context.engine == "LUXCORE")
+
+    def draw(self, context):
+        layout = self.layout
+        light = context.light
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        utils_ui.template_node_tree(layout, light.luxcore, "node_tree", icons.NTREE_TEXTURE,
+                                    "LUXCORE_MT_texture_select_node_tree",
+                                    "luxcore.tex_show_nodetree",
+                                    "luxcore.tex_nodetree_new",
+                                    "luxcore.texture_unlink")
+
+
+class LUXCORE_LIGHT_PT_cycles_nodes(DataButtonsPanel, Panel):
+    bl_label = "Nodes"
+    bl_context = "data"
+    bl_order = 2
+
+    @classmethod
+    def poll(cls, context):
+        if context.engine != "LUXCORE" or not context.light:
+            return False
+        is_portal = context.light.type == "AREA" and context.light.cycles.is_portal
+        return context.light.luxcore.use_cycles_settings and not is_portal
+
+    def draw(self, context):
+        layout = self.layout
+
+        light = context.light
+        panel_node_draw(layout, light, "OUTPUT_LIGHT", "Surface")
+
+
+def compatible_panels():
+    panels = [
+        "DATA_PT_context_light",
+    ]
+    types = bpy.types
+    return [getattr(types, p) for p in panels if hasattr(types, p)]
+
+
+def register():
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.add("LUXCORE")
+
+
+def unregister():
+    for panel in compatible_panels():
+        panel.COMPAT_ENGINES.remove("LUXCORE")

@@ -1,5 +1,6 @@
 import bpy
 from .node import find_nodes
+from ..nodes import TREE_TYPES
 
 
 """
@@ -10,20 +11,43 @@ e.g. replace old nodes with updated ones when socket names change.
 
 def run():
     for node_tree in bpy.data.node_groups:
-        update_output_nodes_volume_change(node_tree)
-        update_glossy_nodes_ior_change(node_tree)
-        update_volume_nodes_asymmetry_change(node_tree)
-        update_smoke_nodes_add_color_output(node_tree)
+        if node_tree.bl_idname not in TREE_TYPES:
+            continue
+
+        update_mat_output_volume_change(node_tree)
+        update_glossy_ior_change(node_tree)
+        update_volume_asymmetry_change(node_tree)
         update_colormix_remove_min_max_sockets(node_tree)
         update_imagemap_remove_gamma_brightness_sockets(node_tree)
         update_cloth_remove_repeat_sockets(node_tree)
         update_imagemap_add_alpha_output(node_tree)
+        update_smoke_multiple_output_channels(node_tree)
+        update_mat_output_add_shape_input(node_tree)
+
+    for scene in bpy.data.scenes:
+        config = scene.luxcore.config
+        # Reworked after v2.2beta4, DLSC is no longer part of the light strategy enum, but a separate checkbox.
+        # Commit: 87ef293cdac2011da28365941414f88ff2658903
+        if config.light_strategy == "":
+            # It was probably DLS_CACHE. We have no way to find out,
+            # but that is the only entry that was ever removed.
+            # Restore the default here and enable the new DLSC BoolProperty
+            config.light_strategy = "LOG_POWER"
+            config.dls_cache.enabled = True
+
+    # Since commit 28a45283c249085ec1ae8ff38665f6d3655bb998 we use the Cycles DOF properties instead
+    # of our own. Apply the old properties if an old scene uses them.
+    for camera in bpy.data.cameras:
+        if camera.luxcore.use_dof:
+            camera.dof.use_dof = True
+            camera.dof.aperture_fstop = camera.luxcore.fstop
+            camera.luxcore.use_dof = False
 
 
-def update_output_nodes_volume_change(node_tree):
+def update_mat_output_volume_change(node_tree):
     # commit 3078719a9a33a7e2a798965294463dce6c8b7749
 
-    for old_output in find_nodes(node_tree, "LuxCoreNodeMatOutput"):
+    for old_output in find_nodes(node_tree, "LuxCoreNodeMatOutput", False):
         if "Interior Volume" in old_output.inputs:
             continue
 
@@ -58,11 +82,11 @@ def update_output_nodes_volume_change(node_tree):
         node_tree.nodes.remove(old_output)
 
 
-def update_glossy_nodes_ior_change(node_tree):
+def update_glossy_ior_change(node_tree):
     # commit c3152dec8e0e07e676a60be56ba4578dbe297df6
 
-    affected_nodes = find_nodes(node_tree, "LuxCoreNodeMatGlossy2")
-    affected_nodes += find_nodes(node_tree, "LuxCoreNodeMatGlossyCoating")
+    affected_nodes = find_nodes(node_tree, "LuxCoreNodeMatGlossy2", False)
+    affected_nodes += find_nodes(node_tree, "LuxCoreNodeMatGlossyCoating", False)
 
     for node in affected_nodes:
         if "IOR" not in node.inputs:
@@ -72,14 +96,14 @@ def update_glossy_nodes_ior_change(node_tree):
             print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
 
-def update_volume_nodes_asymmetry_change(node_tree):
+def update_volume_asymmetry_change(node_tree):
     # commit 2387d1c300b5a1f6931592efcdd0574d243356e7
 
     if node_tree.bl_idname != "luxcore_volume_nodes":
         return
 
-    affected_nodes = find_nodes(node_tree, "LuxCoreNodeVolHeterogeneous")
-    affected_nodes += find_nodes(node_tree, "LuxCoreNodeVolHomogeneous")
+    affected_nodes = find_nodes(node_tree, "LuxCoreNodeVolHeterogeneous", False)
+    affected_nodes += find_nodes(node_tree, "LuxCoreNodeVolHomogeneous", False)
 
     for node in affected_nodes:
         asymmetry_socket = node.inputs["Asymmetry"]
@@ -89,23 +113,10 @@ def update_volume_nodes_asymmetry_change(node_tree):
             print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
 
-def update_smoke_nodes_add_color_output(node_tree):
-    # commit f31f3be5409df9866c9b7364ce79e8e7aee0e875
-
-    if node_tree.bl_idname != "luxcore_volume_nodes":
-        return
-
-    for node in find_nodes(node_tree, "LuxCoreNodeTexSmoke"):
-        if "Color" not in node.outputs:
-            color = node.outputs.new("LuxCoreSocketColor", "Color")
-            color.enabled = False
-            print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
-
-
 def update_colormix_remove_min_max_sockets(node_tree):
     # commit 432b1ba020b07f46758fd19b4b3af91cca0c90ff
 
-    for node in find_nodes(node_tree, "LuxCoreNodeTexColorMix"):
+    for node in find_nodes(node_tree, "LuxCoreNodeTexColorMix", False):
         if node.mode == "clamp" and "Min" in node.inputs and "Max" in node.inputs:
             socket_min = node.inputs["Min"]
             socket_max = node.inputs["Max"]
@@ -119,7 +130,7 @@ def update_colormix_remove_min_max_sockets(node_tree):
 def update_imagemap_remove_gamma_brightness_sockets(node_tree):
     # commit 428110b2c1bdbf8c54a54030939b3c76cb018644
 
-    for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap"):
+    for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap", False):
         updated = False
         if "Gamma" in node.inputs:
             socket_gamma = node.inputs["Gamma"]
@@ -140,7 +151,7 @@ def update_imagemap_remove_gamma_brightness_sockets(node_tree):
 def update_cloth_remove_repeat_sockets(node_tree):
     # commit ec3fccdccb3e4c95a4230df8b38f6494bb8e4583
 
-    for node in find_nodes(node_tree, "LuxCoreNodeMatCloth"):
+    for node in find_nodes(node_tree, "LuxCoreNodeMatCloth", False):
         if "Repeat U" in node.inputs and "Repeat V" in node.inputs:
             socket_repeat_u = node.inputs["Repeat U"]
             socket_repeat_v = node.inputs["Repeat V"]
@@ -154,7 +165,48 @@ def update_cloth_remove_repeat_sockets(node_tree):
 def update_imagemap_add_alpha_output(node_tree):
     # commit 09f23b0d758bce9383a0fa8c64ccbeb73706bccf
 
-    for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap"):
+    for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap", False):
         if "Alpha" not in node.outputs:
             node.outputs.new("LuxCoreSocketFloatUnbounded", "Alpha")
             print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_smoke_multiple_output_channels(node_tree):
+    # commit 204c96ec0d7f5d8d0dbdd183da61b69718aa1747
+
+    for node in find_nodes(node_tree, "LuxCoreNodeTexSmoke", False):
+        if "density" in node.outputs:
+            continue
+
+        node.outputs.new("LuxCoreSocketFloatPositive", "density")
+        node.outputs.new("LuxCoreSocketFloatPositive", "fire")
+        node.outputs.new("LuxCoreSocketFloatPositive", "heat")
+        node.outputs.new("LuxCoreSocketColor", "color")
+        node.outputs.new("LuxCoreSocketColor", "velocity")
+
+        map_source_to_old_output_name = {
+            "density": "Value",
+            "fire": "Value",
+            "heat": "Value",
+            "color": "Color",
+            "velocity": "Color",
+        }
+        old_output_name = map_source_to_old_output_name[node.source]
+        new_output_name = node.source
+
+        for link in node.outputs[old_output_name].links:
+            node_tree.links.new(node.outputs[new_output_name], link.to_socket)
+
+        node.outputs.remove(node.outputs["Color"])
+        node.outputs.remove(node.outputs["Value"])
+
+        print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
+
+def update_mat_output_add_shape_input(node_tree):
+    # commit e20355a7567b22df4d05e8b303c98dbc697b9c08
+
+    for node in find_nodes(node_tree, "LuxCoreNodeMatOutput", False):
+        if "Shape" not in node.inputs:
+            node.inputs.new("LuxCoreSocketShape", "Shape")
+            print('Updated output node "%s" in tree %s to new version' % (node.name, node_tree.name))

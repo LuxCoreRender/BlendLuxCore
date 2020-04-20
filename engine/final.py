@@ -2,27 +2,32 @@ from time import time, sleep
 from .. import export, utils
 from ..draw.final import FrameBufferFinal
 from ..utils import render as utils_render
+from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import view_layer as utils_view_layer
+from ..properties.denoiser import LuxCoreDenoiser
+from ..properties.display import LuxCoreDisplaySettings
 
 
-def render(engine, scene):
+def render(engine, depsgraph):
     print("=" * 50)
-    scene.luxcore.errorlog.clear()
-    scene.luxcore.denoiser_log.clear()
-    render_slot_stats = scene.luxcore.statistics.get_active()
+    scene = depsgraph.scene_eval
+    LuxCoreErrorLog.clear()
+    # scene.luxcore.denoiser_log.clear()  # TODO 2.8 merge denoiser log with statistics
+    statistics = scene.luxcore.statistics.get_active()
 
     if utils.is_valid_camera(scene.camera):
         tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
-        if len(scene.render.layers) > 1 and tonemapper.is_automatic():
+        if len(scene.view_layers) > 1 and tonemapper.is_automatic():
             msg = ("Using an automatic tonemapper with multiple "
                    "renderlayers will result in brightness differences")
-            scene.luxcore.errorlog.add_warning(msg)
+            LuxCoreErrorLog.add_warning(msg)
 
     _check_halt_conditions(engine, scene)
 
-    for layer_index, layer in enumerate(scene.render.layers):
+    for layer_index, layer in enumerate(scene.view_layers):
         print('[Engine/Final] Rendering layer "%s"' % layer.name)
 
-        dummy_result = engine.begin_result(0, 0, 1, 1, layer.name)
+        dummy_result = engine.begin_result(0, 0, 1, 1, layer=layer.name)
 
         # Check if the layer is disabled. Cycles does this the same way,
         # to be honest I have no idea why they don't just check layer.use
@@ -33,11 +38,15 @@ def render(engine, scene):
 
         engine.end_result(dummy_result, cancel=True, do_merge_results=False)
 
+        #ToDO 2.8 check if we could use this
+        #if not layer.use:
+        #    continue
+
         # This property is used during export, e.g. to check for layer visibility
-        scene.luxcore.active_layer_index = layer_index
+        utils_view_layer.State.active_view_layer = layer.name
 
         _add_passes(engine, layer, scene)
-        _render_layer(engine, scene, render_slot_stats)
+        _render_layer(engine, depsgraph, statistics, layer)
 
         if engine.test_break():
             # Blender skips the rest of the render layers anyway
@@ -46,10 +55,11 @@ def render(engine, scene):
         print('[Engine/Final] Finished rendering layer "%s"' % layer.name)
     
 
-def _render_layer(engine, scene, render_slot_stats):
+def _render_layer(engine, depsgraph, statistics, view_layer):
     engine.reset()
-    engine.exporter = export.Exporter(scene, render_slot_stats)
-    engine.session = engine.exporter.create_session(engine=engine)
+    engine.exporter = export.Exporter(statistics)
+    engine.session = engine.exporter.create_session(depsgraph, engine=engine, view_layer=view_layer)
+    scene = depsgraph.scene_eval
 
     if engine.session is None:
         # session is None, but no error was thrown
@@ -58,12 +68,12 @@ def _render_layer(engine, scene, render_slot_stats):
 
     engine.framebuffer = FrameBufferFinal(scene)
 
-    # Create session (in case of OpenCL engines, render kernels are compiled here)
+    # Create session
     start = time()
     engine.session.Start()
     session_init_time = time() - start
     print("Session started in %.1f s" % session_init_time)
-    render_slot_stats.session_init_time.value = session_init_time
+    statistics.session_init_time.value = session_init_time
 
     config = engine.session.GetRenderConfig()
 
@@ -98,42 +108,41 @@ def _render_layer(engine, scene, render_slot_stats):
 
     while True:
         now = time()
-        # These two properties are shown as "buttons" in the UI
-        refresh_requested = scene.luxcore.display.refresh or scene.luxcore.denoiser.refresh
+        manual_refresh_requested = LuxCoreDisplaySettings.refresh or LuxCoreDenoiser.refresh
         update_stats = (now - last_stat_refresh) > _stat_refresh_interval(start, scene)
-        time_until_film_refresh = scene.luxcore.display.interval - (now - last_film_refresh)
+        time_until_film_refresh = depsgraph.scene.luxcore.display.interval - (now - last_film_refresh)
         fast_refresh = now - start < FAST_REFRESH_DURATION
 
-        if scene.luxcore.display.paused:
+        if LuxCoreDisplaySettings.paused:
             if not engine.session.IsInPause():
                 engine.session.Pause()
-                utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh=0)
-                engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
+                utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh=0)
+                engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=False)
                 engine.update_stats("", "Paused")
         else:
             if engine.session.IsInPause():
                 engine.session.Resume()
 
         # Do session update (imagepipeline, lightgroups)
-        changes = engine.exporter.get_changes()
+        changes = engine.exporter.get_changes(depsgraph)
         engine.exporter.update_session(changes, engine.session)
 
         if engine.session.IsInPause():
-            if changes or refresh_requested:
-                engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
+            if changes or manual_refresh_requested:
+                engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=False)
         else:
-            if fast_refresh or update_stats or refresh_requested:
+            if fast_refresh or update_stats or changes or manual_refresh_requested or (time_until_film_refresh <= 0):
                 # We have to check the stats often to see if a halt condition is met
                 # But film drawing is expensive, so we don't do it every time we check stats
                 draw_film = fast_refresh or (time_until_film_refresh <= 0)
 
                 # Refresh quickly when user changed something or requested a refresh via button
-                draw_film |= changes or refresh_requested
+                draw_film |= changes or manual_refresh_requested
 
                 stats = utils_render.update_stats(engine.session)
                 if draw_film:
                     time_until_film_refresh = 0
-                utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh)
+                utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh)
 
                 # Check if the user cancelled during the expensive stats update
                 if engine.test_break() or engine.session.HasDone():
@@ -142,16 +151,16 @@ def _render_layer(engine, scene, render_slot_stats):
                 last_stat_refresh = now
                 if draw_film:
                     # Show updated film (this operation is expensive)
-                    engine.framebuffer.draw(engine, engine.session, scene, render_stopped=False)
+                    engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=False)
                     last_film_refresh = now
 
-            utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh)
+            utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh)
 
             # Compute and print the optimal clamp value. Done only once after a warmup phase.
             # Only do this if clamping is disabled, otherwise the value is meaningless.
             samples = stats.Get("stats.renderengine.pass").GetInt()
             if not checked_optimal_clamp and samples > clamp_warmup_samples:
-                clamp_value = utils_render.find_suggested_clamp_value(engine.session, scene)
+                clamp_value = utils_render.find_suggested_clamp_value(engine.session, depsgraph.scene)
                 print("Recommended clamp value:", clamp_value)
                 checked_optimal_clamp = True
 
@@ -171,8 +180,8 @@ def _render_layer(engine, scene, render_slot_stats):
     # User wants to stop or halt condition is reached
     # Update stats to refresh film and draw the final result
     stats = utils_render.update_stats(engine.session)
-    utils_render.update_status_msg(stats, engine, scene, config, time_until_film_refresh=0)
-    engine.framebuffer.draw(engine, engine.session, scene, render_stopped=True)
+    utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh=0)
+    engine.framebuffer.draw(engine, engine.session, depsgraph.scene, render_stopped=True)
     engine.update_stats("Render", "Stopping session...")
     if engine.session.IsInPause():
         engine.session.Resume()
@@ -196,7 +205,7 @@ def _stat_refresh_interval(start, scene):
 
 
 def _check_halt_conditions(engine, scene):
-    enabled_layers = [layer for layer in scene.render.layers if layer.use]
+    enabled_layers = [layer for layer in scene.view_layers if layer.use]
     needs_halt_condition = len(enabled_layers) > 1 or engine.is_animation
 
     is_halt_enabled = True
@@ -211,8 +220,7 @@ def _check_halt_conditions(engine, scene):
                 is_halt_enabled &= has_halt_condition
 
                 if not has_halt_condition:
-                    msg = 'Halt condition missing for render layer "%s"' % layer.name
-                    scene.luxcore.errorlog.add_error(msg)
+                    LuxCoreErrorLog.add_error('Halt condition missing for render layer "%s"' % layer.name)
             else:
                 is_halt_enabled = False
 
@@ -234,63 +242,63 @@ def _add_passes(engine, layer, scene):
 
     # Denoiser
     if scene.luxcore.denoiser.enabled:
-        engine.add_pass("DENOISED", 3, "RGB", layer.name)
+        engine.add_pass("DENOISED", 3, "RGB", layer=layer.name)
 
     if aovs.rgb:
-        engine.add_pass("RGB", 3, "RGB", layer.name)
+        engine.add_pass("RGB", 3, "RGB", layer=layer.name)
     if aovs.rgba:
-        engine.add_pass("RGBA", 4, "RGBA", layer.name)
+        engine.add_pass("RGBA", 4, "RGBA", layer=layer.name)
     if aovs.alpha:
-        engine.add_pass("ALPHA", 1, "A", layer.name)
+        engine.add_pass("ALPHA", 1, "A", layer=layer.name)
     # Note: If the Depth pass is already added by Blender and we add it again, it won't be
     # displayed correctly in the "Depth" view mode of the "Combined" pass in the image editor.
     if aovs.depth and not layer.use_pass_z:
-        engine.add_pass("Depth", 1, "Z", layer.name)
+        engine.add_pass("Depth", 1, "Z", layer=layer.name)
     if aovs.albedo:
-        engine.add_pass("ALBEDO", 3, "RGB", layer.name)
+        engine.add_pass("ALBEDO", 3, "RGB", layer=layer.name)
     if aovs.material_id:
-        engine.add_pass("MATERIAL_ID", 1, "X", layer.name)
+        engine.add_pass("MATERIAL_ID", 1, "X", layer=layer.name)
     if aovs.material_id_color:
-        engine.add_pass("MATERIAL_ID_COLOR", 3, "RGB", layer.name)
+        engine.add_pass("MATERIAL_ID_COLOR", 3, "RGB", layer=layer.name)
     if aovs.object_id:
-        engine.add_pass("OBJECT_ID", 1, "X", layer.name)
+        engine.add_pass("OBJECT_ID", 1, "X", layer=layer.name)
     if aovs.emission:
-        engine.add_pass("EMISSION", 3, "RGB", layer.name)
+        engine.add_pass("EMISSION", 3, "RGB", layer=layer.name)
     if aovs.direct_diffuse:
-        engine.add_pass("DIRECT_DIFFUSE", 3, "RGB", layer.name)
+        engine.add_pass("DIRECT_DIFFUSE", 3, "RGB", layer=layer.name)
     if aovs.direct_glossy:
-        engine.add_pass("DIRECT_GLOSSY", 3, "RGB", layer.name)
+        engine.add_pass("DIRECT_GLOSSY", 3, "RGB", layer=layer.name)
     if aovs.indirect_diffuse:
-        engine.add_pass("INDIRECT_DIFFUSE", 3, "RGB", layer.name)
+        engine.add_pass("INDIRECT_DIFFUSE", 3, "RGB", layer=layer.name)
     if aovs.indirect_glossy:
-        engine.add_pass("INDIRECT_GLOSSY", 3, "RGB", layer.name)
+        engine.add_pass("INDIRECT_GLOSSY", 3, "RGB", layer=layer.name)
     if aovs.indirect_specular:
-        engine.add_pass("INDIRECT_SPECULAR", 3, "RGB", layer.name)
+        engine.add_pass("INDIRECT_SPECULAR", 3, "RGB", layer=layer.name)
     if aovs.position:
-        engine.add_pass("POSITION", 3, "XYZ", layer.name)
+        engine.add_pass("POSITION", 3, "XYZ", layer=layer.name)
     if aovs.shading_normal:
-        engine.add_pass("SHADING_NORMAL", 3, "XYZ", layer.name)
+        engine.add_pass("SHADING_NORMAL", 3, "XYZ", layer=layer.name)
     if aovs.avg_shading_normal:
-        engine.add_pass("AVG_SHADING_NORMAL", 3, "XYZ", layer.name)
+        engine.add_pass("AVG_SHADING_NORMAL", 3, "XYZ", layer=layer.name)
     if aovs.geometry_normal:
-        engine.add_pass("GEOMETRY_NORMAL", 3, "XYZ", layer.name)
+        engine.add_pass("GEOMETRY_NORMAL", 3, "XYZ", layer=layer.name)
     if aovs.uv:
         # We need to pad the UV pass to 3 elements (Blender can't handle 2 elements)
-        engine.add_pass("UV", 3, "UVA", layer.name)
+        engine.add_pass("UV", 3, "UVA", layer=layer.name)
     if aovs.direct_shadow_mask:
-        engine.add_pass("DIRECT_SHADOW_MASK", 1, "X", layer.name)
+        engine.add_pass("DIRECT_SHADOW_MASK", 1, "X", layer=layer.name)
     if aovs.indirect_shadow_mask:
-        engine.add_pass("INDIRECT_SHADOW_MASK", 1, "X", layer.name)
+        engine.add_pass("INDIRECT_SHADOW_MASK", 1, "X", layer=layer.name)
     if aovs.raycount:
-        engine.add_pass("RAYCOUNT", 1, "X", layer.name)
+        engine.add_pass("RAYCOUNT", 1, "X", layer=layer.name)
     if aovs.samplecount:
-        engine.add_pass("SAMPLECOUNT", 1, "X", layer.name)
+        engine.add_pass("SAMPLECOUNT", 1, "X", layer=layer.name)
     if aovs.convergence:
-        engine.add_pass("CONVERGENCE", 1, "X", layer.name)
+        engine.add_pass("CONVERGENCE", 1, "X", layer=layer.name)
     if aovs.noise:
-        engine.add_pass("NOISE", 1, "X", layer.name)
+        engine.add_pass("NOISE", 1, "X", layer=layer.name)
     if aovs.irradiance:
-        engine.add_pass("IRRADIANCE", 3, "RGB", layer.name)
+        engine.add_pass("IRRADIANCE", 3, "RGB", layer=layer.name)
 
     # Light groups
     lightgroups = scene.luxcore.lightgroups
@@ -300,5 +308,5 @@ def _add_passes(engine, layer, scene):
     # Note: this behaviour has to be the same as in the update_render_passes() method of the RenderEngine class
     if lightgroup_pass_names != [default_group_name]:
         for name in lightgroup_pass_names:
-            engine.add_pass(name, 3, "RGB", layer.name)
+            engine.add_pass(name, 3, "RGB", layer=layer.name)
 

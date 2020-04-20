@@ -1,9 +1,11 @@
+import bpy
 from bpy.props import FloatProperty, EnumProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ... import utils
+from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
+class LuxCoreNodeTexPointiness(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Pointiness"
     bl_width_default = 180
 
@@ -12,17 +14,21 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
         ("convex", "Convex", "Only use hills"),
         ("both", "Both", "Use both hills and dents"),
     ]
-    curvature_mode = EnumProperty(items=curvature_items, default="both")
+    curvature_mode: EnumProperty(update=utils_node.force_viewport_update, items=curvature_items, default="both")
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Multiplier", 10)
         
         self.outputs.new("LuxCoreSocketFloatUnbounded", "Value")
+        
+        # This node potentially requires a mesh re-export in viewport, 
+        # because it depends on a LuxCore shape to pre-process the data
+        utils_node.force_viewport_mesh_update2(self.id_data)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "curvature_mode", expand=True)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         # Pointiness is a hitpointalpha texture behind the scenes, just that it implicitly enables pointiness
         # calculation on the mesh (handled in luxcore object export) and has some nice wrapping to get only part of
         # the pointiness information (see code below)
@@ -82,7 +88,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture):
 
             luxcore_name = name_clamp
 
-        multiplier = self.inputs["Multiplier"].export(exporter, props)
+        multiplier = self.inputs["Multiplier"].export(exporter, depsgraph, props)
 
         if multiplier != 1:
             multiplier_name = luxcore_name + "_multiplier"

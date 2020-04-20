@@ -99,12 +99,11 @@ class LuxCoreIORPresetCommonProperties():
     """ A property-only class to work around Blender's inheritance limits. """
     bl_idname = "luxcore.ior_preset_common_properties"
     bl_label = ""
-    node_name = StringProperty()
-    node_tree_index = IntProperty()
+    node_name: StringProperty()
+    node_tree_index: IntProperty()
 
 
-class LuxCoreIORPresetBase(bpy.types.Operator,
-                           LuxCoreIORPresetCommonProperties):
+class LuxCoreIORPresetBase(LuxCoreIORPresetCommonProperties):
     """ A base class for LUXCORE_OT_ior_preset_* common methods. Do not call"""
 
     bl_idname = "luxcore.ior_preset_base"
@@ -112,7 +111,7 @@ class LuxCoreIORPresetBase(bpy.types.Operator,
     def cb_ior_preset(self, context):
         return []
 
-    ior_preset = EnumProperty(name="IOR Preset",
+    ior_preset: EnumProperty(name="IOR Preset",
                               description="Index of Refraction Preset Values",
                               items=cb_ior_preset)
 
@@ -129,7 +128,8 @@ class LuxCoreIORPresetBase(bpy.types.Operator,
         return {'FINISHED'}
 
 
-class LUXCORE_OT_ior_preset_names(LuxCoreIORPresetBase,
+class LUXCORE_OT_ior_preset_names(bpy.types.Operator,
+                                  LuxCoreIORPresetBase,
                                   LuxCoreIORPresetCommonProperties):
     """ A custom operator to return a list of IOR presets sorted by name """
 
@@ -147,12 +147,13 @@ class LUXCORE_OT_ior_preset_names(LuxCoreIORPresetBase,
         LUXCORE_OT_ior_preset_names.callback_strings = items
         return items
 
-    ior_preset = EnumProperty(name="IOR Preset",
+    ior_preset: EnumProperty(name="IOR Preset",
                               description="Index of Refraction Preset Values",
                               items=cb_ior_preset)
 
 
-class LUXCORE_OT_ior_preset_values(LuxCoreIORPresetBase,
+class LUXCORE_OT_ior_preset_values(bpy.types.Operator,
+                                   LuxCoreIORPresetBase,
                                    LuxCoreIORPresetCommonProperties):
     """ A custom operator to return a list of IOR presets sorted by value """
 
@@ -170,6 +171,6 @@ class LUXCORE_OT_ior_preset_values(LuxCoreIORPresetBase,
         LUXCORE_OT_ior_preset_values.callback_strings = items
         return items
 
-    ior_preset = EnumProperty(name="IOR Preset",
+    ior_preset: EnumProperty(name="IOR Preset",
                               description="Index of Refraction Preset Values",
                               items=cb_ior_preset)

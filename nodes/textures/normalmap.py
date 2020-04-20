@@ -1,12 +1,14 @@
+import bpy
 from bpy.props import EnumProperty, FloatProperty, IntProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from .imagemap import NORMAL_SCALE_DESC
+from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexNormalmap(LuxCoreNodeTexture):
+class LuxCoreNodeTexNormalmap(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Normalmap"
 
-    scale = FloatProperty(name="Height", default=1, min=0, soft_max=5,
+    scale: FloatProperty(update=utils_node.force_viewport_update, name="Height", default=1, min=0, soft_max=5,
                           description=NORMAL_SCALE_DESC)
 
     def init(self, context):
@@ -17,10 +19,10 @@ class LuxCoreNodeTexNormalmap(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "scale")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "normalmap",
-            "texture": self.inputs["Color"].export(exporter, props),
+            "texture": self.inputs["Color"].export(exporter, depsgraph, props),
             "scale": self.scale,
         }
 

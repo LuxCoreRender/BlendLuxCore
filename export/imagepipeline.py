@@ -2,12 +2,22 @@ from collections import OrderedDict
 from ..bin import pyluxcore
 from .. import utils
 from .image import ImageExporter
+from ..utils.errorlog import LuxCoreErrorLog
 
 
 def convert(scene, context=None, index=0):
     try:
-        prefix = "film.imagepipelines.%d." % index
+        prefix = "film.imagepipelines.%03d." % index
         definitions = OrderedDict()
+
+        if utils.in_material_shading_mode(context):
+            index = _output_switcher(definitions, 0, "ALBEDO")
+            _exposure_compensated_tonemapper(definitions, index, scene)
+            return utils.create_props(prefix, definitions)
+
+        if utils.using_photongi_debug_mode(context, scene):
+            _exposure_compensated_tonemapper(definitions, 0, scene)
+            return utils.create_props(prefix, definitions)
 
         if not utils.is_valid_camera(scene.camera):
             # Can not work without a camera
@@ -20,14 +30,13 @@ def convert(scene, context=None, index=0):
     except Exception as error:
         import traceback
         traceback.print_exc()
-        msg = 'Imagepipeline: %s' % error
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning('Imagepipeline: %s' % error)
         return pyluxcore.Properties()
 
 
 def convert_defs(context, scene, definitions, plugin_index, define_radiancescales=True):
     pipeline = scene.camera.data.luxcore.imagepipeline
-    use_filesaver = utils.use_filesaver(context, scene)
+    using_filesaver = utils.using_filesaver(context, scene)
     # Start index of plugins. Some AOVs prepend their own plugins.
     index = plugin_index
 
@@ -38,34 +47,34 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
     if pipeline.tonemapper.enabled:
         index = convert_tonemapper(definitions, index, pipeline.tonemapper)
 
-    if not (context and scene.luxcore.viewport.denoise):
+    if use_backgroundimage(context, scene):
         # Note: Blender expects the alpha to be NOT premultiplied, so we only
         # premultiply it when the backgroundimage plugin is used
-        if use_backgroundimage(context, scene):
-            index = _premul_alpha(definitions, index)
+        index = _premul_alpha(definitions, index)
+        index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
 
-        if use_backgroundimage(context, scene):
-            index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
+    if pipeline.mist.is_enabled(context):
+        index = _mist(definitions, index, pipeline.mist)
 
-        if pipeline.mist.enabled:
-            index = _mist(definitions, index, pipeline.mist, scene)
+    if pipeline.bloom.is_enabled(context):
+        index = _bloom(definitions, index, pipeline.bloom)
 
-        if pipeline.bloom.enabled:
-            index = _bloom(definitions, index, pipeline.bloom)
+    if pipeline.coloraberration.is_enabled(context):
+        index = _coloraberration(definitions, index, pipeline.coloraberration)
 
-        if pipeline.coloraberration.enabled:
-            index = _coloraberration(definitions, index, pipeline.coloraberration)
+    if pipeline.vignetting.is_enabled(context):
+        index = _vignetting(definitions, index, pipeline.vignetting)
 
-        if pipeline.vignetting.enabled:
-            index = _vignetting(definitions, index, pipeline.vignetting)
+    if pipeline.camera_response_func.is_enabled(context):
+        index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
 
-        if pipeline.camera_response_func.enabled:
-            index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
+    if pipeline.white_balance.is_enabled(context):
+        index = _white_balance(definitions, index, pipeline.white_balance)
 
-        if pipeline.contour_lines.enabled:
-            index = _contour_lines(definitions, index, pipeline.contour_lines)
+    if pipeline.contour_lines.is_enabled(context):
+        index = _contour_lines(definitions, index, pipeline.contour_lines)
 
-    if use_filesaver:
+    if using_filesaver:
         # Needs gamma correction (Blender applies it for us,
         # but now we export for luxcoreui)
         index = _gamma(definitions, index)
@@ -79,7 +88,7 @@ def use_backgroundimage(context, scene):
     viewport_in_camera_view = context and context.region_data.view_perspective == "CAMERA"
     final_render = not context
     pipeline = scene.camera.data.luxcore.imagepipeline
-    return pipeline.backgroundimage.enabled and (final_render or viewport_in_camera_view)
+    return pipeline.backgroundimage.is_enabled(context) and (final_render or viewport_in_camera_view)
 
 
 def _fallback(definitions):
@@ -87,14 +96,14 @@ def _fallback(definitions):
     Fallback imagepipeline if no camera is in the scene
     """
     index = 0
-    definitions[str(index) + ".type"] = "NOP"
-    index += 1
-    definitions[str(index) + ".type"] = "TONEMAP_AUTOLINEAR"
-    index += 1
-    # The result of autolinear looks too bright in Blender.
-    # Apply the default scale of 0.5 that is also the default in the camera settings
     definitions[str(index) + ".type"] = "TONEMAP_LINEAR"
-    definitions[str(index) + ".scale"] = 0.5
+    definitions[str(index) + ".scale"] = 1
+
+
+def _exposure_compensated_tonemapper(definitions, index, scene):
+    definitions[str(index) + ".type"] = "TONEMAP_LINEAR"
+    definitions[str(index) + ".scale"] = 1 / pow(2, (scene.view_settings.exposure))
+    return index + 1
 
 
 def convert_tonemapper(definitions, index, tonemapper):
@@ -135,8 +144,7 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
                                         backgroundimage.image_user,
                                         scene)
     except OSError as error:
-        msg = "Imagepipeline: %s" % error
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning("Imagepipeline: %s" % error)
         # Skip this plugin
         return index
 
@@ -147,14 +155,12 @@ def _backgroundimage(definitions, index, backgroundimage, scene):
     return index + 1
 
 
-def _mist(definitions, index, mist, scene):
-    worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-
+def _mist(definitions, index, mist):
     definitions[str(index) + ".type"] = "MIST"
     definitions[str(index) + ".color"] = list(mist.color)
     definitions[str(index) + ".amount"] = mist.amount / 100
-    definitions[str(index) + ".startdistance"] = mist.start_distance * worldscale
-    definitions[str(index) + ".enddistance"] = mist.end_distance * worldscale
+    definitions[str(index) + ".startdistance"] = mist.start_distance
+    definitions[str(index) + ".enddistance"] = mist.end_distance
     definitions[str(index) + ".excludebackground"] = mist.exclude_background
     return index + 1
 
@@ -178,6 +184,12 @@ def _vignetting(definitions, index, vignetting):
     return index + 1
 
 
+def _white_balance(definitions, index, white_balance):
+    definitions[str(index) + ".type"] = "WHITE_BALANCE"
+    definitions[str(index) + ".temperature"] = white_balance.temperature
+    return index + 1
+
+
 def _camera_response_func(definitions, index, camera_response_func, scene):
     if camera_response_func.type == "PRESET":
         name = camera_response_func.preset
@@ -188,8 +200,8 @@ def _camera_response_func(definitions, index, camera_response_func, scene):
                                      must_exist=True, must_be_existing_file=True)
         except OSError as error:
             # Make the error message more precise
-            scene.luxcore.errorlog.add_warning('Could not find .crf file at path "%s" (%s)'
-                                               % (camera_response_func.file, error))
+            LuxCoreErrorLog.add_warning('Could not find .crf file at path "%s" (%s)'
+                                        % (camera_response_func.file, error))
             name = None
     else:
         raise NotImplementedError("Unknown crf type: " + camera_response_func.type)
@@ -215,6 +227,12 @@ def _contour_lines(definitions, index, contour_lines):
 def _gamma(definitions, index):
     definitions[str(index) + ".type"] = "GAMMA_CORRECTION"
     definitions[str(index) + ".value"] = 2.2
+    return index + 1
+
+
+def _output_switcher(definitions, index, channel):
+    definitions[str(index) + ".type"] = "OUTPUT_SWITCHER"
+    definitions[str(index) + ".channel"] = channel
     return index + 1
 
 

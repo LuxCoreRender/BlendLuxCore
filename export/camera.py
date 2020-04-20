@@ -3,9 +3,10 @@ from mathutils import Vector, Matrix
 from ..bin import pyluxcore
 from .. import utils
 from ..nodes.output import get_active_output
+from ..utils.errorlog import LuxCoreErrorLog
 
 
-def convert(exporter, scene, context=None, is_camera_moving=False):
+def convert(exporter, scene, depsgraph, context=None, is_camera_moving=False):
     prefix = "scene.camera."
     definitions = {}
 
@@ -31,17 +32,17 @@ def convert(exporter, scene, context=None, is_camera_moving=False):
     _motion_blur(scene, definitions, context, is_camera_moving)
 
     cam_props = utils.create_props(prefix, definitions)
-    cam_props.Set(_get_volume_props(exporter, scene))
+    cam_props.Set(_get_volume_props(exporter, scene, depsgraph))
     return cam_props
 
 
 def _view_ortho(scene, context, definitions):
     cam_matrix = Matrix(context.region_data.view_matrix).inverted()
     lookat_orig, lookat_target, up_vector = _calc_lookat(cam_matrix, scene)
-    world_scale = utils.get_worldscale(scene, False)
 
     definitions["type"] = "orthographic"
-    zoom = 0.915 * world_scale * context.region_data.view_distance * 35 / context.space_data.lens
+    #zoom = 1.0275 * world_scale * context.region_data.view_distance * 35 / context.space_data.lens
+    zoom = 1.0275 * context.region_data.view_distance * 35 / context.space_data.lens
 
     # Move the camera origin away from the viewport center to avoid clipping
     origin = Vector(lookat_orig)
@@ -61,10 +62,10 @@ def _view_persp(scene, context, definitions):
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
 
-    definitions["type"] = "perspective"
-    zoom = 2
-    definitions["fieldofview"] = math.degrees(2 * math.atan(16 / context.space_data.lens))
+    definitions["type"] = "perspective"    
+    zoom = 2.25
 
+    definitions["fieldofview"] = math.degrees(2 * math.atan(16 / context.space_data.lens))
     definitions["screenwindow"] = utils.calc_screenwindow(zoom, 0, 0, scene, context)
 
 
@@ -75,24 +76,27 @@ def _view_camera(scene, context, definitions):
         raise Exception("%s Objects as cameras are not supported, use a CAMERA object" % camera.type)
 
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
-    world_scale = utils.get_worldscale(scene, False)
     
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
     
     # Magic zoom formula for camera viewport zoom from Cycles export code
+    # %blender_root%\intern\cycles\blender\blender_camera.cpp, line 666ff
+
+    #zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2) / world_scale
     zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
 
     if camera.data.type == "ORTHO":
         definitions["type"] = "orthographic"
-        zoom *= 0.5 * world_scale * camera.data.ortho_scale
+        #zoom *= 0.5*world_scale * camera.data.ortho_scale
+        zoom *= 0.5 * camera.data.ortho_scale
     elif camera.data.type == "PANO":
         definitions["type"] = "environment"
     elif camera.data.type == "PERSP":
         definitions["type"] = "perspective"
         definitions["fieldofview"] = math.degrees(camera.data.angle)
-        _depth_of_field(scene, definitions)
+        _depth_of_field(scene, definitions, context)
     else:
         raise NotImplementedError("Unknown camera.data.type")
 
@@ -107,7 +111,6 @@ def _final(scene, definitions):
         raise Exception("%s Objects as cameras are not supported, use a CAMERA object" % camera.type)
 
     lookat_orig, lookat_target, up_vector = _calc_lookat(camera.matrix_world, scene)
-    world_scale = utils.get_worldscale(scene, False)
     definitions["lookat.orig"] = lookat_orig
     definitions["lookat.target"] = lookat_target
     definitions["up"] = up_vector
@@ -115,7 +118,8 @@ def _final(scene, definitions):
 
     if camera.data.type == "ORTHO":
         cam_type = "orthographic"
-        zoom = 0.5 * world_scale * camera.data.ortho_scale
+        #zoom = 0.5 * world_scale * camera.data.ortho_scale
+        zoom = 0.5 * camera.data.ortho_scale
 
     elif camera.data.type == "PANO":
         cam_type = "environment"
@@ -132,32 +136,31 @@ def _final(scene, definitions):
     definitions["screenwindow"] = utils.calc_screenwindow(zoom, camera.data.shift_x, camera.data.shift_y, scene)
 
 
-def _depth_of_field(scene, definitions):
+def _depth_of_field(scene, definitions, context=None):
     camera = scene.camera
 
-    if not camera.data.luxcore.use_dof:
+    if not camera.data.dof.use_dof or utils.in_material_shading_mode(context):
         return
 
-    definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.luxcore.fstop)
+    definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.dof.aperture_fstop)
 
     if camera.data.luxcore.use_autofocus:
         definitions["autofocus.enable"] = True
     else:
-        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-        dof_obj = camera.data.dof_object
+        dof_obj = camera.data.dof.focus_object
 
         if dof_obj:
             # Use distance along camera Z direction
             cam_matrix = camera.matrix_world
             lookat_orig = cam_matrix.to_translation()
-            lookat_target = cam_matrix * Vector((0, 0, -1))
+            lookat_target = cam_matrix @ Vector((0, 0, -1))
 
             lookat_dir = (lookat_target - lookat_orig).normalized()
             dof_dir = dof_obj.matrix_world.to_translation() - lookat_orig
 
-            definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir)) * worldscale
+            definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir))
         else:
-            definitions["focaldistance"] = camera.data.dof_distance * worldscale
+            definitions["focaldistance"] = camera.data.dof.focus_distance
 
 
 def _clipping(scene, definitions):
@@ -167,9 +170,8 @@ def _clipping(scene, definitions):
         return
 
     if camera.data.luxcore.use_clipping:
-        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
-        clip_start = camera.data.clip_start * worldscale
-        clip_end = camera.data.clip_end * worldscale
+        clip_start = camera.data.clip_start
+        clip_end = camera.data.clip_end
 
         definitions["cliphither"] = clip_start
         definitions["clipyon"] = clip_end
@@ -183,7 +185,7 @@ def _clipping(scene, definitions):
 
         if warning:
             msg = 'Camera: %s' % warning
-            scene.luxcore.errorlog.add_warning(msg, obj_name=camera.name)
+            LuxCoreErrorLog.add_warning(msg, obj_name=camera.name)
 
 
 def _clipping_plane(scene, definitions):
@@ -194,12 +196,11 @@ def _clipping_plane(scene, definitions):
 
     if cam_settings.use_clipping_plane and cam_settings.clipping_plane:
         plane = cam_settings.clipping_plane
-        normal = plane.rotation_euler.to_matrix() * Vector((0, 0, 1))
-        worldscale = utils.get_worldscale(scene, as_scalematrix=False)
+        normal = plane.rotation_euler.to_matrix() @ Vector((0, 0, 1))
 
         definitions.update({
             "clippingplane.enable": cam_settings.use_clipping_plane,
-            "clippingplane.center": list(plane.location * worldscale),
+            "clippingplane.center": list(plane.location),
             "clippingplane.normal": list(normal),
         })
     else:
@@ -232,14 +233,13 @@ def _motion_blur(scene, definitions, context, is_camera_moving):
 
 
 def _calc_lookat(cam_matrix, scene):
-    cam_matrix = utils.get_scaled_to_world(cam_matrix, scene)
     lookat_orig = list(cam_matrix.to_translation())
-    lookat_target = list(cam_matrix * Vector((0, 0, -1)))
-    up_vector = list(cam_matrix.to_3x3() * Vector((0, 1, 0)))
+    lookat_target = list(cam_matrix @ Vector((0, 0, -1)))
+    up_vector = list(cam_matrix.to_3x3() @ Vector((0, 1, 0)))
     return lookat_orig, lookat_target, up_vector
 
 
-def _get_volume_props(exporter, scene):
+def _get_volume_props(exporter, scene, depsgraph):
     props = pyluxcore.Properties()
 
     if not utils.is_valid_camera(scene.camera):
@@ -254,11 +254,11 @@ def _get_volume_props(exporter, scene):
         active_output = get_active_output(volume_node_tree)
 
         try:
-            active_output.export(exporter, props, luxcore_name)
+            active_output.export(exporter, depsgraph, props, luxcore_name)
             props.Set(pyluxcore.Property("scene.camera.volume", luxcore_name))
         except Exception as error:
             msg = 'Camera: %s' % error
-            scene.luxcore.errorlog.add_warning(msg, obj_name=scene.camera.name)
+            LuxCoreErrorLog.add_warning(msg, obj_name=scene.camera.name)
 
     props.Set(pyluxcore.Property("scene.camera.autovolume.enable", cam_settings.auto_volume))
     return props

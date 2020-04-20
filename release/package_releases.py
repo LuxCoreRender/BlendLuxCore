@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+#
+# Note: On Windows, you need to have the git binary in your PATH for this script to work.
 
 import argparse
 import os
@@ -8,6 +10,33 @@ import subprocess
 import shutil
 import tarfile
 import zipfile
+import stat
+import uuid
+import platform
+
+# From https://docs.python.org/3/library/shutil.html#rmtree-example
+def remove_readonly(func, path, _):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+def rmtree(path):
+    if platform.system() == "Windows":
+        # We have to rename the directory/file before removing it, otherwise it
+        # leaves a locked "shadow" behind and blocks any attempt to create a
+        # new directory/file with the same name
+
+        head, tail = os.path.split(path)
+        if not tail:
+            # It is a directory, go up one level
+            head = os.path.dirname(head)
+
+        temp_name = str(uuid.uuid4())
+        temp_path = os.path.join(head, temp_name)
+        os.rename(path, temp_path)
+        shutil.rmtree(temp_path, ignore_errors=False, onerror=remove_readonly)
+    else:
+        shutil.rmtree(path)
+
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -23,23 +52,24 @@ WINDOWS_FILES = [
     "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
-    "OpenImageDenoise.dll",
+    "OpenImageDenoise.dll", "denoise.exe",
 ]
 
 MAC_FILES = [
-    "libembree3.dylib", "libembree3.3.dylib", "libtbb.dylib",
-    "libtbbmalloc.dylib", "pyluxcore.so",
-    "pyluxcoretools.zip", "libomp.dylib",
+    "libembree3.3.dylib", "libomp.dylib", 
+    "libOpenImageDenoise.1.2.0.dylib", "libOpenImageIO.1.8.dylib", 
+    "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
+    "pyluxcore.so", "pyluxcoretools.zip", "denoise"
 ]
 
-OIDN_WIN = "oidn-windows.zip"
+#OIDN_WIN = "oidn-windows.zip"
 OIDN_LINUX = "oidn-linux.tar.gz"
-OIDN_MAC = "oidn-macos.tar.gz"
+#OIDN_MAC = "oidn-macos.tar.gz"
 
 OIDN_urls = {
-    OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.9.0/oidn-0.9.0.x64.vc14.windows.zip",
-    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.9.0/oidn-0.9.0.x86_64.linux.tar.gz",
-    OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v0.9.0/oidn-0.9.0.x86_64.macos.tar.gz",
+    #OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
+    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
+    #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
 }
 
 
@@ -52,7 +82,8 @@ def build_name(prefix, version_string, suffix):
 
 
 def build_zip_name(version_string, suffix):
-    return "BlendLuxCore-" + version_string + suffix.split(".")[0]
+    suffix_without_extension = suffix.replace(".tar.bz2", "").replace(".zip", "").replace(".tar.gz", "").replace(".dmg", "")
+    return "BlendLuxCore-" + version_string + suffix_without_extension
 
 
 def extract_files_from_tar(tar_path, files_to_extract, destination):
@@ -83,7 +114,7 @@ def extract_files_from_tar(tar_path, files_to_extract, destination):
             if not os.path.isfile(dst):
                 shutil.move(src, dst)
 
-    shutil.rmtree(temp_dir)
+    rmtree(temp_dir)
 
 
 def extract_files_from_zip(zip_path, files_to_extract, destination):
@@ -111,14 +142,27 @@ def extract_files_from_zip(zip_path, files_to_extract, destination):
             print('Moving "%s" to "%s"' % (src, dst))
             shutil.move(src, dst)
 
-    shutil.rmtree(temp_dir)
+    rmtree(temp_dir)
+    
+    
+def extract_files_from_dmg(dmg_path, files_to_extract, destination):
 
+    print("Extracting dmg file:", dmg_path)
+    vol_name = dmg_path.replace(".dmg", "") 
+    for f in files_to_extract:
+        print('Extracting "%s" to "%s"' % (f, destination))
+        cmd = ("7z e -o" + destination + " " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
+        print(cmd)
+        os.system(cmd)
+        
 
 def extract_files_from_archive(archive_path, files_to_extract, destination):
     if archive_path.endswith(".zip"):
         extract_files_from_zip(archive_path, files_to_extract, destination)
     elif archive_path.endswith(".tar.gz") or archive_path.endswith(".tar.bz2"):
         extract_files_from_tar(archive_path, files_to_extract, destination)
+    elif archive_path.endswith(".dmg"):
+        extract_files_from_dmg(archive_path, files_to_extract, destination)
     else:
         raise Exception("Unknown archive type:", archive_path)
 
@@ -135,6 +179,19 @@ def extract_luxcore_tar(prefix, platform_suffixes, file_names, version_string):
 
         tar_name = build_name(prefix, version_string, suffix)
         extract_files_from_archive(tar_name, file_names, destination)
+        
+def extract_luxcore_dmg(prefix, platform_suffixes, file_names, version_string):
+    for suffix in platform_suffixes:
+        dst_name = build_zip_name(version_string, suffix)
+        destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
+        
+        print()
+        print_divider()
+        print("Extracting dmg to", dst_name)
+        print_divider()
+        
+        dmg_name = build_name(prefix, version_string, suffix)
+        extract_files_from_dmg(dmg_name, file_names, destination)
 
 
 def extract_luxcore_zip(prefix, platform_suffixes, file_names, version_string):
@@ -158,15 +215,18 @@ def main():
     args = parser.parse_args()
 
     # Archives we need.
-    url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/luxcorerender_"
+    if args.version_string == "latest":
+        url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/"
+    else:
+        url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/luxcorerender_"
     prefix = "luxcorerender-"
     suffixes = [
         "-linux64.tar.bz2",
         "-linux64-opencl.tar.bz2",
         "-win64.zip",
         "-win64-opencl.zip",
-        "-mac64.tar.gz",
-        "-mac64-opencl.tar.gz",
+        "-mac64.dmg",
+        "-mac64-opencl.dmg",
     ]
 
     # Download LuxCore binaries for all platforms
@@ -207,7 +267,7 @@ def main():
     if os.path.exists(repo_path):
         # Clone fresh because we delete some stuff after cloning
         print('Destinaton already exists, deleting it: "%s"' % repo_path)
-        shutil.rmtree(repo_path)
+        rmtree(repo_path)
 
     clone_args = ["git", "clone", "https://github.com/LuxCoreRender/BlendLuxCore.git"]
     git_process = subprocess.Popen(clone_args)
@@ -216,6 +276,10 @@ def main():
     # If the current version tag already exists, set the repository to this version
     # This is used in case we re-package a release
     os.chdir("BlendLuxCore")
+
+    print("Checking out master")
+    subprocess.check_output(["git", "checkout", "master"])
+
     tags_raw = subprocess.check_output(["git", "tag", "-l"])
     tags = [tag.decode("utf-8") for tag in tags_raw.splitlines()]
 
@@ -226,15 +290,15 @@ def main():
 
     os.chdir("..")
 
-    # Delete developer stuff that is not needed by users (e.g. tests directory)
+    # Delete developer stuff that is not needed by users
     to_delete = [
-        os.path.join(repo_path, "tests"),
         os.path.join(repo_path, "doc"),
         os.path.join(repo_path, ".github"),
         os.path.join(repo_path, ".git"),
+        os.path.join(repo_path, "scripts"),
     ]
     for path in to_delete:
-        shutil.rmtree(path)
+        rmtree(path)
 
     print()
     print_divider()
@@ -249,7 +313,7 @@ def main():
 
         if os.path.exists(destination):
             print("(Already exists, cleaning it)")
-            shutil.rmtree(destination)
+            rmtree(destination)
 
         shutil.copytree(repo_path, destination)
 
@@ -275,23 +339,23 @@ def main():
         name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, name, "BlendLuxCore", "bin")
 
-        if "win64" in suffix:
-            extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
-        elif "linux64" in suffix:
+        #if "win64" in suffix:
+        #    extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
+        if "linux64" in suffix:
             extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
-        elif "mac64" in suffix:
-            extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
+        #elif "mac64" in suffix:
+        #    extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
 
     # Linux archives are tar.bz2
-    linux_suffixes = [suffix for suffix in suffixes if suffix.startswith("-linux")]
+    linux_suffixes = [suffix for suffix in suffixes if "-linux" in suffix]
     extract_luxcore_tar(prefix, linux_suffixes, LINUX_FILES, args.version_string)
 
-    # Mac archives are tar.gz
-    mac_suffixes = [suffix for suffix in suffixes if suffix.startswith("-mac")]
-    extract_luxcore_tar(prefix, mac_suffixes, MAC_FILES, args.version_string)
+    # Mac archives are dmg
+    mac_suffixes = [suffix for suffix in suffixes if "-mac" in suffix]
+    extract_luxcore_dmg(prefix, mac_suffixes, MAC_FILES, args.version_string)
 
     # Windows archives are zip
-    windows_suffixes = [suffix for suffix in suffixes if suffix.startswith("-win")]
+    windows_suffixes = [suffix for suffix in suffixes if "-win" in suffix]
     extract_luxcore_zip(prefix, windows_suffixes, WINDOWS_FILES, args.version_string)
 
     # Package everything
@@ -302,7 +366,7 @@ def main():
 
     release_dir = os.path.join(script_dir, "release-" + args.version_string)
     if os.path.exists(release_dir):
-        shutil.rmtree(release_dir)
+        rmtree(release_dir)
     os.mkdir(release_dir)
 
     for suffix in suffixes:
@@ -317,7 +381,7 @@ def main():
 
     print()
     print_divider()
-    print("Results can be found in: release-" + args.version_string)
+    print("Results can be found in: " + release_dir)
     print_divider()
 
 

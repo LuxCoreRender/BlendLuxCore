@@ -1,9 +1,11 @@
-from bpy.props import BoolProperty, PointerProperty, IntProperty
+import bpy
+from bpy.props import BoolProperty, PointerProperty, IntProperty, FloatVectorProperty
 from ...bin import pyluxcore
 from ... import utils
 from ...utils import node as utils_node
 from ..output import LuxCoreNodeOutput, update_active, get_active_output
 from ...ui import icons
+from ...utils.errorlog import LuxCoreErrorLog
 
 SHADOWCATCHER_DESC = (
     "Make this material transparent and only catch shadows on it. "
@@ -13,7 +15,7 @@ SHADOWCATCHER_DESC = (
 
 ONLY_INFINITE_DESC = (
     "Only consider shadows of infinite lights (sky, HDRI, "
-    "flat colored background) for the shadowcatcher"
+    "flat colored background) for the shadow catcher"
 )
 
 MATERIAL_ID_DESC = (
@@ -23,7 +25,7 @@ MATERIAL_ID_DESC = (
 )
 
 
-class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
+class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
     """
     Material output node.
     This is where the export starts (if the output is active).
@@ -31,21 +33,24 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
     bl_label = "Material Output"
     bl_width_default = 220
 
-    active = BoolProperty(name="Active", default=True, update=update_active)
-    is_shadow_catcher = BoolProperty(name="Shadow Catcher", default=False,
-                                     description=SHADOWCATCHER_DESC)
-    shadow_catcher_only_infinite = BoolProperty(name="Only Infinite Lights", default=False,
-                                                description=ONLY_INFINITE_DESC)
-    id = IntProperty(name="Material ID", default=-1, min=-1, soft_max=32767,
+    active: BoolProperty(name="Active", default=True, update=update_active)
+    id: IntProperty(update=utils_node.force_viewport_update, name="Material ID", default=-1, min=-1, soft_max=32767,
                      description=MATERIAL_ID_DESC)
-    use_photongi = BoolProperty(name="Use PhotonGI Cache", default=True,
+    use_photongi: BoolProperty(name="Use PhotonGI Cache", default=True,
                                 description="Disable for mirror-like surfaces like "
                                             "metal or glossy with low roughness")
+    shadow_color: FloatVectorProperty(name="Shadow Color", subtype="COLOR", default=(0, 0, 0), min=0, max=1,
+                                      update=utils_node.update_opengl_materials)
+    is_shadow_catcher: BoolProperty(update=utils_node.force_viewport_update, name="Shadow Catcher", default=False,
+                                     description=SHADOWCATCHER_DESC)
+    shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
+                                                description=ONLY_INFINITE_DESC)
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
         self.inputs.new("LuxCoreSocketVolume", "Interior Volume")
         self.inputs.new("LuxCoreSocketVolume", "Exterior Volume")
+        self.inputs.new("LuxCoreSocketShape", "Shape")
         super().init(context)
 
     def copy(self, orig_node):
@@ -70,20 +75,27 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         super().draw_buttons(context, layout)
 
         # PhotonGI currently only works with Path engine
-        if (context.scene.luxcore.config.photongi.enabled
-                and context.scene.luxcore.config.engine == "PATH"):
-            layout.prop(self, "use_photongi")
+        col = layout.column()
+        col.active = (context.scene.luxcore.config.photongi.enabled
+                      and context.scene.luxcore.config.engine == "PATH")
+        col.prop(self, "use_photongi")
 
         layout.prop(self, "id")
 
-        # Shadow catcher
+        row = layout.row()
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
+        row.active = not engine_is_bidir
+        row.alignment = "LEFT"
+        row.prop(self, "shadow_color", text="")
+        row.label(text="Shadow Color")
+
+        # Shadow catcher
         col = layout.column()
         col.active = not engine_is_bidir
         col.prop(self, "is_shadow_catcher")
 
         if engine_is_bidir:
-            col.label("Not supported by Bidir engine", icon=icons.INFO)
+            col.label(text="Not supported by Bidir engine", icon=icons.INFO)
         elif self.is_shadow_catcher:
             col.prop(self, "shadow_catcher_only_infinite")
             # Some settings that should be used with shadow catcher
@@ -102,8 +114,9 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
                     layout.prop(luxcore_world, "sampleupperhemisphereonly",
                                 icon=icons.WORLD, toggle=True)
 
-    def export(self, exporter, props, luxcore_name):
+    def export(self, exporter, depsgraph, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."
+        definitions = {}
 
         # Invalidate node cache
         # TODO have one global properties object so this is no longer necessary
@@ -112,17 +125,17 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
         # We have to export volumes before the material definition because LuxCore properties
         # do not support forward declarations (the volume has to be already defined when it is
         # referenced in the material)
-        interior_volume_name = self.inputs["Interior Volume"].export(exporter, props)
-        exterior_volume_name = self.inputs["Exterior Volume"].export(exporter, props)
+        interior_volume_name = self.inputs["Interior Volume"].export(exporter, depsgraph, props)
+        exterior_volume_name = self.inputs["Exterior Volume"].export(exporter, depsgraph, props)
 
         # Export the material
-        exported_name = self.inputs["Material"].export(exporter, props, luxcore_name)
+        exported_name = self.inputs["Material"].export(exporter, depsgraph, props, luxcore_name)
 
         # Attach the volumes
         if interior_volume_name:
-            props.Set(pyluxcore.Property(prefix + "volume.interior", interior_volume_name))
+            definitions["volume.interior"] = interior_volume_name
         if exterior_volume_name:
-            props.Set(pyluxcore.Property(prefix + "volume.exterior", exterior_volume_name))
+            definitions["volume.exterior"] = exterior_volume_name
 
         if exported_name is None or exported_name != luxcore_name:
             # Export failed, e.g. because no node is linked or it's not a material node
@@ -131,23 +144,26 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput):
 
         if self.id != -1:
             # LuxCore only assigns a random ID if the ID is not set at all
-            props.Set(pyluxcore.Property(prefix + "id", self.id))
-        props.Set(pyluxcore.Property(prefix + "shadowcatcher.enable", self.is_shadow_catcher))
-        props.Set(pyluxcore.Property(prefix + "shadowcatcher.onlyinfinitelights", self.shadow_catcher_only_infinite))
-        props.Set(pyluxcore.Property(prefix + "photongi.enable", self.use_photongi))
+            definitions["id"] = self.id
+        definitions["shadowcatcher.enable"] = self.is_shadow_catcher
+        definitions["shadowcatcher.onlyinfinitelights"] = self.shadow_catcher_only_infinite
+        definitions["photongi.enable"] = self.use_photongi
+        definitions["transparency.shadow"] = list(self.shadow_color)
 
-    def _convert_volume(self, exporter, node_tree, props):
+        props.Set(utils.create_props(prefix, definitions))
+
+    def _convert_volume(self, exporter, depsgraph, node_tree, props):
         if node_tree is None:
             return None
 
         try:
             luxcore_name = utils.get_luxcore_name(node_tree)
             active_output = get_active_output(node_tree)
-            active_output.export(exporter, props, luxcore_name)
+            active_output.export(exporter, depsgraph, props, luxcore_name)
             return luxcore_name
         except Exception as error:
             msg = 'Node Tree "%s": %s' % (node_tree.name, error)
-            exporter.scene.luxcore.errorlog.add_warning(msg)
+            LuxCoreErrorLog.add_warning(msg)
             import traceback
             traceback.print_exc()
             return None

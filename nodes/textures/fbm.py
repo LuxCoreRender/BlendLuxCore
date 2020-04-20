@@ -1,17 +1,17 @@
 import bpy
 from bpy.props import EnumProperty, FloatProperty, IntProperty
-from .. import LuxCoreNodeTexture
-
-from .. import sockets
+from ..base import LuxCoreNodeTexture
 from ... import utils
+from ...utils import node as utils_node
 
-class LuxCoreNodeTexfBM(LuxCoreNodeTexture):
+
+class LuxCoreNodeTexfBM(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "fBM"
     bl_width_default = 200
 
 
-    octaves = IntProperty(name="Octaves", default=8, min=1, max=29)
-    roughness = FloatProperty(name="Roughness", default=0.5, min=0, max=1)
+    octaves: IntProperty(update=utils_node.force_viewport_update, name="Octaves", default=8, min=1, max=29)
+    roughness: FloatProperty(update=utils_node.force_viewport_update, name="Roughness", default=0.5, min=0, max=1)
     
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")
@@ -22,9 +22,8 @@ class LuxCoreNodeTexfBM(LuxCoreNodeTexture):
         layout.prop(self, "octaves")
         layout.prop(self, "roughness")
     
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
-        
-        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
        
         definitions = {
             "type": "fbm",
@@ -32,7 +31,10 @@ class LuxCoreNodeTexfBM(LuxCoreNodeTexture):
             "roughness": self.roughness,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
+            "mapping.transformation": utils.matrix_to_list(transformation),
         }
-        
+
+        if mapping_type == "uvmapping3d":
+            definitions["mapping.uvindex"] = uvindex
+
         return self.create_props(props, definitions, luxcore_name)

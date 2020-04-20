@@ -1,13 +1,13 @@
 import bpy
 from bpy.props import EnumProperty, FloatProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 
 from .. import NOISE_BASIS_ITEMS
 
-from .. import sockets
 from ... import utils
+from ...utils import node as utils_node
 
-class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Musgrave"
     bl_width_default = 200    
 
@@ -19,17 +19,17 @@ class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
         ("fbm", "FBM", ""),
     ]
 
-    musgrave_type = EnumProperty(name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
-    noise_basis = EnumProperty(name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
-    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)
-    h =FloatProperty(name="Dimension", default=1.0, min=0)
-    lacu = FloatProperty(name="Lacunarity", default=2.0)
-    octs = FloatProperty(name="Octaves", default=2.0, min=0)
-    offset = FloatProperty(name="Offset", default=1.0)
-    gain = FloatProperty(name="Gain", default=1.0, min=0)
-    iscale = FloatProperty(name="Intensity", default=1.0)
-    bright = FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast = FloatProperty(name="Contrast", default=1.0, min=0)
+    musgrave_type: EnumProperty(update=utils_node.force_viewport_update, name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
+    noise_basis: EnumProperty(update=utils_node.force_viewport_update, name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
+    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
+    h: FloatProperty(update=utils_node.force_viewport_update, name="Dimension", default=1.0, min=0)
+    lacu: FloatProperty(update=utils_node.force_viewport_update, name="Lacunarity", default=2.0)
+    octs: FloatProperty(update=utils_node.force_viewport_update, name="Octaves", default=2.0, min=0)
+    offset: FloatProperty(update=utils_node.force_viewport_update, name="Offset", default=1.0)
+    gain: FloatProperty(update=utils_node.force_viewport_update, name="Gain", default=1.0, min=0)
+    iscale: FloatProperty(update=utils_node.force_viewport_update, name="Intensity", default=1.0)
+    bright: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(update=utils_node.force_viewport_update, name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")
@@ -60,8 +60,8 @@ class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
         column.prop(self, "bright")
         column.prop(self, "contrast")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
-        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
        
         definitions = {
             "type": "blender_musgrave",
@@ -75,7 +75,7 @@ class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
             "contrast": self.contrast,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
+            "mapping.transformation": utils.matrix_to_list(transformation),
         }
         if self.musgrave_type in ('ridged_multifractal', 'hybrid_multifractal', 'hetero_terrain'):
             definitions["offset"] = self.offset
@@ -86,4 +86,7 @@ class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture):
         if self.musgrave_type != 'fbm':
             definitions["iscale"] = self.iscale            
         
+        if mapping_type == "uvmapping3d":
+            definitions["mapping.uvindex"] = uvindex
+
         return self.create_props(props, definitions, luxcore_name)

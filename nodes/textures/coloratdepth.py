@@ -1,14 +1,14 @@
 import bpy
 from bpy.props import FloatProperty
-from .. import LuxCoreNodeTexture
-from ... import utils
+from ..base import LuxCoreNodeTexture
+from ...utils import node as utils_node
 from .. import COLORDEPTH_DESC
 
-class LuxCoreNodeTexColorAtDepth(LuxCoreNodeTexture):
+class LuxCoreNodeTexColorAtDepth(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Color at depth"
     bl_width_default = 200
     
-    color_depth = FloatProperty(name="Absorption Depth", default=1.0, min=0,
+    color_depth: FloatProperty(update=utils_node.force_viewport_update, name="Absorption Depth", default=1.0, min=0,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
 
@@ -19,8 +19,8 @@ class LuxCoreNodeTexColorAtDepth(LuxCoreNodeTexture):
     def draw_buttons(self, context, layout):
         layout.prop(self, "color_depth")
     
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
-        abs_col = self.inputs["Absorption"].export(exporter, props)
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        abs_col = self.inputs["Absorption"].export(exporter, depsgraph, props)
 
         definitions = {
             "type": "colordepth",

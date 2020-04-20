@@ -1,7 +1,9 @@
+import bpy
 from bpy.props import EnumProperty, FloatProperty, BoolProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 from ... import utils
 from ...ui import icons
+from ...utils import node as utils_node
 
 MIX_DESCRIPTION = (
     "Linear interpolation between two values/textures according to the amount "
@@ -28,11 +30,16 @@ INPUT_SETTINGS = {
         0: ["Value 1", True],
         1: ["Value 2", True],
         2: ["Fac", True]
-    }
+    },
+    "rounding": {
+        0: ["Value", True],
+        1: ["Increment", True],
+        2: ["", False]
+    },
 }
 
 
-class LuxCoreNodeTexMath(LuxCoreNodeTexture):
+class LuxCoreNodeTexMath(bpy.types.Node, LuxCoreNodeTexture):
     """Math node with several math operations"""
     bl_label = "Math"
 
@@ -43,6 +50,12 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
         for i in current_settings.keys():
             self.inputs[i].name = current_settings[i][0]
             self.inputs[i].enabled = current_settings[i][1]
+
+        if self.mode == "rounding":
+            # Set a sensible default value for the increment.
+            # Usually, rounding results in an integer.
+            self.inputs[1].default_value = 1
+        utils_node.force_viewport_update(self, context)
 
     mode_items = [
         ("scale", "Multiply", "Value 1 * Value 2", 0),
@@ -55,19 +68,21 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
         ("power", "Power", "(Value 1) ^ (Value 2)", 7),
         ("lessthan", "Less Than", "Value 1 < Value 2 (returns 0 if false, 1 if true)", 8),
         ("greaterthan", "Greater Than", "Value 1 > Value 2 (returns 0 if false, 1 if true)", 9),
+        ("rounding", "Round", "Round the input to the nearest increment", 10),
+        ("modulo", "Modulo", "Return the remainder of the floating point division Value 1 / Value 2", 11),
     ]
-    mode = EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
+    mode: EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
-    mode_clamp_min = FloatProperty(name="Min", description="", default=0)
-    mode_clamp_max = FloatProperty(name="Max", description="", default=1)
+    mode_clamp_min: FloatProperty(update=utils_node.force_viewport_update, name="Min", description="", default=0)
+    mode_clamp_max: FloatProperty(update=utils_node.force_viewport_update, name="Max", description="", default=1)
 
-    clamp_output = BoolProperty(name="Clamp", default=False,
+    clamp_output: BoolProperty(update=utils_node.force_viewport_update, name="Clamp", default=False,
                                 description="Limit the output value to 0..1 range")
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value 1", 1)
         self.add_input("LuxCoreSocketFloatUnbounded", "Value 2", 1)
-        self.add_input("LuxCoreSocketFloat0to1", "Fac", 0.5) # for mix mode
+        self.add_input("LuxCoreSocketFloat0to1", "Fac", 0.5)  # for mix mode
         self.inputs["Fac"].enabled = False
 
         self.outputs.new("LuxCoreSocketFloatUnbounded", "Value")
@@ -89,29 +104,35 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture):
             layout.prop(self, "mode_clamp_max")
 
             if self.mode_clamp_min > self.mode_clamp_max:
-                layout.label("Min should be smaller than max!", icon=icons.WARNING)
+                layout.label(text="Min should be smaller than max!", icon=icons.WARNING)
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": self.mode,
         }
 
         if self.mode == "abs":
-            definitions["texture"] = self.inputs[0].export(exporter, props)
+            definitions["texture"] = self.inputs[0].export(exporter, depsgraph, props)
         elif self.mode == "clamp":
-            definitions["texture"] = self.inputs[0].export(exporter, props)
+            definitions["texture"] = self.inputs[0].export(exporter, depsgraph, props)
             definitions["min"] = self.mode_clamp_min
             definitions["max"] = self.mode_clamp_max
         elif self.mode == "mix":
-            definitions["texture1"] = self.inputs[0].export(exporter, props)
-            definitions["texture2"] = self.inputs[1].export(exporter, props)
-            definitions["amount"] = self.inputs[2].export(exporter, props)
+            definitions["texture1"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["texture2"] = self.inputs[1].export(exporter, depsgraph, props)
+            definitions["amount"] = self.inputs[2].export(exporter, depsgraph, props)
         elif self.mode == "power":
-            definitions["base"] = self.inputs[0].export(exporter, props)
-            definitions["exponent"] = self.inputs[1].export(exporter, props)
+            definitions["base"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["exponent"] = self.inputs[1].export(exporter, depsgraph, props)
+        elif self.mode == "rounding":
+            definitions["texture"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["increment"] = self.inputs[1].export(exporter, depsgraph, props)
+        elif self.mode == "modulo":
+            definitions["texture"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["modulo"] = self.inputs[1].export(exporter, depsgraph, props)
         else:
-            definitions["texture1"] = self.inputs[0].export(exporter, props)
-            definitions["texture2"] = self.inputs[1].export(exporter, props)
+            definitions["texture1"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["texture2"] = self.inputs[1].export(exporter, depsgraph, props)
 
         luxcore_name = self.create_props(props, definitions, luxcore_name)
 

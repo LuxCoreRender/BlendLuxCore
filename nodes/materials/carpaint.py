@@ -1,18 +1,21 @@
+import bpy
 from bpy.props import FloatProperty, EnumProperty
-from .. import LuxCoreNodeMaterial
+from ..base import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
 from ...ui import icons
+from ...utils import node as utils_node
 
 REFLECTION_DESCRIPTION = "Glossy layer reflection value"
 
 
-class LuxCoreSocketReflection(LuxCoreSocketFloat):
+class LuxCoreSocketReflection(bpy.types.NodeSocket, LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
-    default_value = FloatProperty(min=0.00001, max=1, description=REFLECTION_DESCRIPTION)
+    default_value: FloatProperty(min=0.00001, max=1, description=REFLECTION_DESCRIPTION,
+                                 update=utils_node.force_viewport_update)
     slider = True
 
 
-class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
+class LuxCoreNodeMatCarpaint(bpy.types.Node, LuxCoreNodeMaterial):
     """
     carpaint material node
 
@@ -36,19 +39,20 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
         self.inputs['R1'].enabled = enabled
         self.inputs['R2'].enabled = enabled
         self.inputs['R3'].enabled = enabled
+        utils_node.force_viewport_update(self, context)
 
     preset_items = [
         ("manual", "Manual settings", "", 0),
-        ("2k acrylack", "2k Acrylack", "", 1),
+        ("2k_acrylack", "2k Acrylack", "", 1),
         ("blue", "Blue", "", 2),
-        ("blue matte", "Blue Matte", "", 3),
+        ("blue_matte", "Blue Matte", "", 3),
         ("bmw339", "BMW 339", "", 4),
-        ("ford f8", "Ford F8", "", 5),
-        ("opel titan", "Opel Titan", "", 6),
-        ("polaris silber", "Polaris Silber", "", 7),
+        ("ford_f8", "Ford F8", "", 5),
+        ("opel_titan", "Opel Titan", "", 6),
+        ("polaris_silber", "Polaris Silber", "", 7),
         ("white", "White", "", 8),
     ]
-    preset = EnumProperty(name="Preset", items=preset_items, default="manual", update=update_preset)
+    preset: EnumProperty(name="Preset", items=preset_items, default="manual", update=update_preset)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Diffuse Color", (0.3, 0.3, 0.3))
@@ -72,25 +76,25 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial):
         op.url = "https://wiki.luxcorerender.org/LuxCoreRender_Materials_Car_Paint"
         layout.prop(self, "preset")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "carpaint",
-            "kd": self.inputs["Diffuse Color"].export(exporter, props),
-            "ka": self.inputs["Absorption Color"].export(exporter, props),
-            "ks1": self.inputs["Specular Color 1"].export(exporter, props),
-            "ks2": self.inputs["Specular Color 2"].export(exporter, props),
-            "ks3": self.inputs["Specular Color 3"].export(exporter, props),
-            "d": self.inputs["Absorption Depth (nm)"].export(exporter, props),
-            "m1": self.inputs["M1"].export(exporter, props),
-            "m2": self.inputs["M2"].export(exporter, props),
-            "m3": self.inputs["M3"].export(exporter, props),
-            "r1": self.inputs["R1"].export(exporter, props),
-            "r2": self.inputs["R2"].export(exporter, props),
-            "r3": self.inputs["R3"].export(exporter, props),
+            "kd": self.inputs["Diffuse Color"].export(exporter, depsgraph, props),
+            "ka": self.inputs["Absorption Color"].export(exporter, depsgraph, props),
+            "ks1": self.inputs["Specular Color 1"].export(exporter, depsgraph,  props),
+            "ks2": self.inputs["Specular Color 2"].export(exporter, depsgraph, props),
+            "ks3": self.inputs["Specular Color 3"].export(exporter, depsgraph, props),
+            "d": self.inputs["Absorption Depth (nm)"].export(exporter, depsgraph, props),
+            "m1": self.inputs["M1"].export(exporter, depsgraph, props),
+            "m2": self.inputs["M2"].export(exporter, depsgraph, props),
+            "m3": self.inputs["M3"].export(exporter, depsgraph, props),
+            "r1": self.inputs["R1"].export(exporter, depsgraph, props),
+            "r2": self.inputs["R2"].export(exporter, depsgraph, props),
+            "r3": self.inputs["R3"].export(exporter, depsgraph, props),
         }
 
         if self.preset != "manual":
             definitions["preset"] = self.preset
 
-        self.export_common_inputs(exporter, props, definitions)
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

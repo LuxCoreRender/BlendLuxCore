@@ -22,7 +22,7 @@ class LUXCORE_OT_camera_new_volume_node_tree(bpy.types.Operator):
         name += "_Volume"
 
         node_tree = bpy.data.node_groups.new(name=name, type="luxcore_volume_nodes")
-        init_vol_node_tree(node_tree)
+        init_vol_node_tree(node_tree, default_IOR=1)
 
         if context.camera:
             context.camera.luxcore.volume = node_tree
@@ -45,12 +45,12 @@ class LUXCORE_OT_camera_unlink_volume_node_tree(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class LUXCORE_OT_camera_set_volume_node_tree(LUXCORE_OT_set_node_tree):
+class LUXCORE_OT_camera_set_volume_node_tree(bpy.types.Operator, LUXCORE_OT_set_node_tree):
     """ Dropdown operator volume version """
 
     bl_idname = "luxcore.camera_set_volume_node_tree"
 
-    node_tree_index = IntProperty()
+    node_tree_index: IntProperty()
 
     @classmethod
     def poll(cls, context):
@@ -63,7 +63,7 @@ class LUXCORE_OT_camera_set_volume_node_tree(LUXCORE_OT_set_node_tree):
 
 
 # This is a menu, not an operator
-class LUXCORE_VOLUME_MT_camera_select_volume_node_tree(LUXCORE_MT_node_tree):
+class LUXCORE_VOLUME_MT_camera_select_volume_node_tree(bpy.types.Menu, LUXCORE_MT_node_tree):
     """ Dropdown menu camera version """
 
     bl_idname = "LUXCORE_VOLUME_MT_camera_select_volume_node_tree"

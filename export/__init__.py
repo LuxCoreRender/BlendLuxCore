@@ -4,12 +4,14 @@ from ..bin import pyluxcore
 from .. import utils
 from ..utils import render as utils_render
 from ..utils import compatibility as utils_compatibility
+from ..utils.errorlog import LuxCoreErrorLog
 from . import (
-    blender_object, caches, camera, config, duplis,
-    group_instance, imagepipeline, light, material,
+    caches, camera, config,
+    imagepipeline, light, material,
     motion_blur, hair, halt, world,
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
+from .caches.object_cache import supports_live_transform
 
 
 class Change:
@@ -42,26 +44,21 @@ class Change:
 
 
 class Exporter(object):
-    def __init__(self, blender_scene, stats=None):
-        self.scene = blender_scene
+    def __init__(self, stats=None):
+        self.scene = None  # TODO I would like to remove this, the evaluated scene is temporary
         self.stats = stats
 
         self.config_cache = caches.StringCache()
         self.camera_cache = caches.CameraCache()
-        self.object_cache = caches.ObjectCache()
+        # self.object_cache = caches.ObjectCache()
+        self.object_cache2 = caches.ObjectCache2()
         self.material_cache = caches.MaterialCache()
         self.visibility_cache = caches.VisibilityCache()
         self.world_cache = caches.WorldCache()
         self.imagepipeline_cache = caches.StringCache()
         self.halt_cache = caches.StringCache()
-        # This dict contains ExportedObject and ExportedLight instances
-        self.exported_objects = {}
-        # Contains mesh_definitions for multi-user meshes.
-        # Keys are made with utils.make_key(blender_obj.data)
-        self.shared_meshes = {}
-
-        self.dupli_groups = {}
-
+        self.motion_blur_enabled = False
+        
         # A dictionary with the following mapping:
         # {node_key: luxcore_name}
         # Most of the time node_key == luxcore_name, but some nodes have to insert
@@ -74,22 +71,18 @@ class Exporter(object):
         # If a light/material uses a lightgroup, the id is stored here during export
         self.lightgroup_cache = set()
 
-        self.objs_updated_by_export = set()
-        self.mats_updated_by_export = set()
-
-    def create_session(self, context=None, engine=None):
+    def create_session(self, depsgraph, context=None, engine=None, view_layer=None):
         # Notes:
         # In final render, context is None
-        # In viewport render, engine is None (we can't show messages or check test_break() anyway)
 
         print("[Exporter] Creating session")
         start = time()
+        # TODO 2.8 I'm not too happy about this, we shouldn't keep any reference to temporary data, even if only for a while
+        self.scene = depsgraph.scene_eval
         scene = self.scene
         stats = self.stats
         if stats:
             stats.reset()
-        updated_objs_pre = self.object_cache.diff(scene)
-        updated_mats_pre = self.material_cache.diff()
 
         # We have to run the compatibility code before export because it could be that
         # the user has linked/appended assets with node trees from previous versions of
@@ -101,49 +94,58 @@ class Exporter(object):
         scene_props = pyluxcore.Properties()
 
         # Camera (needs to be parsed first because it is needed for hair tesselation)
-        self.camera_cache.diff(self, scene, context)  # Init camera cache
+        self.camera_cache.diff(self, scene, depsgraph, context)  # Init camera cache
         luxcore_scene.Parse(self.camera_cache.props)
 
-        # Objects and lamps
-        objs = context.visible_objects if context else scene.objects
-        len_objs = len(objs)
-
-        for index, obj in enumerate(objs, start=1):
-            if obj.type in blender_object.EXPORTABLE_OBJECTS:
-                if engine:
-                    engine.update_stats("Export", "Object: %s (%d/%d)" % (obj.name, index, len_objs))
-                self._convert_object(scene_props, obj, scene, context, luxcore_scene, engine=engine)
-
-                # Objects are the most expensive to export, so they dictate the progress
-                if engine:
-                    engine.update_progress(index / len_objs)
-            # Regularly check if we should abort the export (important in heavy scenes)
-            if engine and engine.test_break():
-                return None
-
-        # Motion blur
         if utils.is_valid_camera(scene.camera):
             blur_settings = scene.camera.data.luxcore.motion_blur
             # Don't export camera blur in viewport
             camera_blur = blur_settings.camera_blur and not context
-            enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)
+            self.motion_blur_enabled = blur_settings.enable and (blur_settings.object_blur or camera_blur)\
+                                       and (blur_settings.shutter > 0)
 
-            if enabled and blur_settings.shutter > 0:
-                motion_blur_props, cam_moving = motion_blur.convert(context, scene, objs, self.exported_objects)
+        # Objects and lights
+        is_viewport_render = context is not None
+        instances = self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene,
+                                                 scene_props, is_viewport_render)
+        if instances is None:
+            # Export was cancelled by user
+            return None
+
+        if is_viewport_render:
+            self.visibility_cache.init(depsgraph)
+
+        # Motion blur
+        # Motion blur seems not to work in viewport render, i.e. matrix_world is the same on every frame
+        if not context and utils.is_valid_camera(scene.camera):
+            if self.motion_blur_enabled:
+                motion_blur_props, cam_moving = motion_blur.convert(context, engine, scene, depsgraph,
+                                                                    self.object_cache2.exported_objects)
 
                 if cam_moving:
                     # Re-export the camera with motion blur enabled
                     # (This is fast and we only have to step through the scene once in total, not twice)
-                    camera_props = camera.convert(self, scene, context, cam_moving)
+                    camera_props = camera.convert(self, scene, depsgraph, context, cam_moving)
                     motion_blur_props.Set(camera_props)
 
                 scene_props.Set(motion_blur_props)
 
         # World
-        world_props = world.convert(self, scene)
+        world_props = world.convert(self, depsgraph, scene, is_viewport_render)
         scene_props.Set(world_props)
 
+        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
+            print("-" * 50)
+            print("DEBUG: Scene Properties:\n")
+            print("(Note: does not contain dupli props, only the props of the base object)\n")
+            print(scene_props)
+            print("-" * 50)
         luxcore_scene.Parse(scene_props)
+        # We can only duplicate the instances *after* the scene_props were parsed so the base
+        # objects are available for luxcore_scene
+        self.object_cache2.duplicate_instances(instances, luxcore_scene, stats)
+        # The instances dict can be quite large, delete explicitely (TODO maybe even call gc.collect()?)
+        del instances
 
         # Regularly check if we should abort the export (important in heavy scenes)
         if engine and engine.test_break():
@@ -172,18 +174,17 @@ class Exporter(object):
         light_count = luxcore_scene.GetLightCount()
         if light_count > 1000:
             msg = "The scene contains a lot of light sources (%d), performance might suffer" % light_count
-            scene.luxcore.errorlog.add_warning(msg)
+            LuxCoreErrorLog.add_warning(msg)
         if stats:
             stats.light_count.value = light_count
 
         # Create the renderconfig
-        self._print_debug_info(scene, config_props, luxcore_scene)
+        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
+            print("-" * 50)
+            print("DEBUG: Config Properties:\n")
+            print(config_props)
+            print("-" * 50)
         renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
-
-        # Check which objects were flagged for update by our own export,
-        # these should not be considered for the next viewport update.
-        self.objs_updated_by_export = self.object_cache.diff(scene) - updated_objs_pre
-        self.mats_updated_by_export = self.material_cache.diff() - updated_mats_pre
 
         # Regularly check if we should abort the export (important in heavy scenes)
         if engine and engine.test_break():
@@ -194,63 +195,122 @@ class Exporter(object):
         if stats:
             stats.export_time.value = export_time
             self._init_stats(stats, config_props, scene)
+            
+        # TODO
+        # if config_props.Get("renderengine.type").GetString().endswith("OCL") and not renderconfig.HasCachedKernels():
+        #     if engine:
+        #         message = "Compiling OpenCL kernels (just once, takes a few minutes)"
+        #         engine.report({"INFO"}, message)
+        #         engine.update_stats(message, "")
+            
+        #     # Pre-compile for viewport and final.
+        #     # Don't pre-compile tiled path engine, because it is rarely used (the kernel will be 
+        #     # compiled on-demand when tiled path is used the first time)
+        #     # Copy config props so we can pass scene.epsilon.min and scene.epsilon.max to the kernel
+        #     config_props_copy = pyluxcore.Properties(config_props)
+        #     config_props_copy.Set(pyluxcore.Property("kernelcachefill.renderengine.types", ["PATHOCL", "RTPATHOCL"]))
+        #     pyluxcore.KernelCacheFill(config_props_copy)
 
         if engine:
-            if config_props.Get("renderengine.type").GetString().endswith("OCL"):
-                message = "Creating RenderSession and compiling OpenCL kernels..."
-            else:
-                message = "Creating RenderSession..."
+            message = "Creating RenderSession"
+            # Inform about pre-computations that can take a long time to complete, like caches
+            
+            if config_props.Get("renderengine.type").GetString().endswith("OCL") and not renderconfig.HasCachedKernels():
+                kernel_compile_msg = "Compiling OpenCL kernels (just once, takes a few minutes)"
+                engine.report({"INFO"}, kernel_compile_msg)
+                message += ", " + kernel_compile_msg
+            
+            # The second argument of Get() is used as fallback if the property is not set
+            cache_indirect = config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
+            cache_caustics = config_props.Get("path.photongi.caustic.enabled", [False]).GetBool()
+            cache_envlight = scene.luxcore.config.envlight_cache.enabled
+            cache_dls = config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE"
+            
+            if stats:
+                stats.cache_indirect.value = cache_indirect
+                stats.cache_caustics.value = cache_caustics
+                stats.cache_envlight.value = cache_envlight
+                stats.cache_dls.value = cache_dls
+            
+            cache_state = {
+                "Indirect Light": cache_indirect,
+                "Caustics": cache_caustics,
+                "Env. Light": cache_envlight,
+                "DLSC": cache_dls,
+            }
+            enabled_caches = [key for key, value in cache_state.items() if value]
 
+            if any(enabled_caches):
+                message += ", computing caches (" + ", ".join(enabled_caches) + ")"
+
+            message += " ..."
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
 
-        session = pyluxcore.RenderSession(renderconfig)
-        return session
+        # Do not hold reference to temporary data
+        self.scene = None
+        return pyluxcore.RenderSession(renderconfig)
 
-    def get_changes(self, context=None):
-        scene = self.scene
+    def get_viewport_changes(self, depsgraph, context=None):
+        self.scene = depsgraph.scene_eval
         changes = Change.NONE
+
+        config_props = config.convert(self, self.scene, context)
+        if self.config_cache.diff(config_props):
+            changes |= Change.CONFIG
+
+        if self.camera_cache.diff(self, self.scene, depsgraph, context):
+            changes |= Change.CAMERA
+
+        # Do not hold reference to temporary data
+        self.scene = None
+        return changes
+
+    def get_changes(self, depsgraph, context=None, changes=None):
+        self.scene = depsgraph.scene_eval
         final = context is None
 
+        # Particle system counts might have changed
+        supports_live_transform.cache_clear()
+
         if not final:
-            # Changes that only need to be checked in viewport render, not in final render
-            config_props = config.convert(self, scene, context)
-            if self.config_cache.diff(config_props):
-                changes |= Change.CONFIG
+            if changes is None:
+                changes = self.get_viewport_changes(depsgraph, context)
 
-            if self.camera_cache.diff(self, scene, context):
-                changes |= Change.CAMERA
-
-            if self.object_cache.diff(scene, self.objs_updated_by_export):
+            if self.object_cache2.diff(depsgraph):
                 changes |= Change.OBJECT
 
-            if self.material_cache.diff(self.mats_updated_by_export):
+            if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
 
-            if self.visibility_cache.diff(context):
+            if self.visibility_cache.diff(depsgraph):
                 changes |= Change.VISIBILITY
 
-            if self.world_cache.diff(context):
+            if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
 
+        if changes is None:
+            changes = Change.NONE
+
         # Relevant during final render
-        imagepipeline_props = imagepipeline.convert(scene, context)
+        imagepipeline_props = imagepipeline.convert(depsgraph.scene, context)
         if self.imagepipeline_cache.diff(imagepipeline_props):
             changes |= Change.IMAGEPIPELINE
 
         if final:
             # Halt conditions are only used during final render
-            halt_props = halt.convert(scene)
+            halt_props = halt.convert(depsgraph.scene)
             if self.halt_cache.diff(halt_props):
                 changes |= Change.HALT
 
+        # Do not hold reference to temporary data
+        self.scene = None
         return changes
 
-    def update(self, context, session, changes):
+    def update(self, depsgraph, context, session, changes):
+        self.scene = depsgraph.scene_eval
         print("[Exporter] Update because of:", Change.to_string(changes))
         # Invalidate node cache
         self.node_cache.clear()
-        self.shared_meshes.clear()
-        self.dupli_groups.clear()
 
         if changes & Change.CONFIG:
             # We already converted the new config settings during get_changes(), re-use them
@@ -261,17 +321,17 @@ class Exporter(object):
             session.BeginSceneEdit()
 
             try:
-                props = self._update_scene(context, changes, luxcore_scene)
+                props = self._update_scene(depsgraph, context, changes, luxcore_scene)
                 luxcore_scene.Parse(props)
             except Exception as error:
-                context.scene.luxcore.errorlog.add_error(error)
+                LuxCoreErrorLog.add_error(error)
                 import traceback
                 traceback.print_exc()
 
             try:
                 session.EndSceneEdit()
             except RuntimeError as error:
-                context.scene.luxcore.errorlog.add_error(error)
+                LuxCoreErrorLog.add_error(error)
                 # Probably no light source, save ourselves by adding one (otherwise a crash happens)
                 props = pyluxcore.Properties()
                 props.Set(pyluxcore.Property("scene.lights.__SAVIOR__.type", "constantinfinite"))
@@ -286,8 +346,8 @@ class Exporter(object):
         if changes & Change.REQUIRES_SESSION_PARSE:
             self.update_session(changes, session)
 
-        self.objs_updated_by_export.clear()
-        self.mats_updated_by_export.clear()
+        # Do not hold reference to temporary data
+        self.scene = None
 
         # We have to return and re-assign the session in the RenderEngine,
         # because it might have been replaced in _update_config()
@@ -298,52 +358,6 @@ class Exporter(object):
             session.Parse(self.imagepipeline_cache.props)
         if changes & Change.HALT:
             session.Parse(self.halt_cache.props)
-
-    def _convert_object(self, props, obj, scene, context, luxcore_scene,
-                        update_mesh=False, dupli_suffix="", engine=None,
-                        check_dupli_parent=False):
-        key = utils.make_key(obj)
-        old_exported_obj = None
-
-        if key not in self.exported_objects:
-            # We have to update the mesh because the object was not yet exported
-            update_mesh = True
-        
-        if not update_mesh:
-            # We need the previously exported mesh defintions
-            old_exported_obj = self.exported_objects[key]
-
-        # Note: exported_obj can also be an instance of ExportedLight, but they behave the same
-        obj_props, exported_obj = blender_object.convert(self, obj, scene, context, luxcore_scene, old_exported_obj,
-                                                         update_mesh, dupli_suffix)
-
-        # Convert particles and dupliverts/faces
-        if obj.is_duplicator:
-            if obj.dupli_type == "GROUP":
-                group_instance.convert(self, obj, scene, context, luxcore_scene, props)
-            else:
-                duplis.convert(self, obj, scene, context, luxcore_scene, engine)
-
-        # When moving a duplicated object, update the parent, too (concerns dupliverts/faces)
-        if check_dupli_parent and obj.parent and obj.parent.is_duplicator:
-            self._convert_object(props, obj.parent, scene, context, luxcore_scene,
-                                 update_mesh, dupli_suffix, engine, check_dupli_parent)
-
-        # Convert hair
-        for psys in obj.particle_systems:
-            settings = psys.settings
-            # render_type OBJECT and GROUP are handled by duplis.convert() above
-            if settings.type == "HAIR" and settings.render_type == "PATH":
-                hair.convert_hair(self, obj, psys, luxcore_scene, scene, context, engine)
-                
-        if exported_obj is None:
-            # Object is not visible or an error happened.
-            # In case of an error, it was already reported by blender_object.convert()
-            return
-
-        props.Set(obj_props)
-        self.exported_objects[key] = exported_obj
-        return exported_obj
 
     def _update_config(self, session, config_props):
         renderconfig = session.GetRenderConfig()
@@ -358,7 +372,7 @@ class Exporter(object):
         session.Start()
         return session
 
-    def _update_scene(self, context, changes, luxcore_scene):
+    def _update_scene(self, depsgraph, context, changes, luxcore_scene):
         props = pyluxcore.Properties()
 
         if changes & Change.CAMERA:
@@ -366,60 +380,36 @@ class Exporter(object):
             props.Set(self.camera_cache.props)
 
         if changes & Change.OBJECT:
-            for obj in self.object_cache.changed_transform:
-                print("transformed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=False,
-                                     check_dupli_parent=True)
-
-            for obj in self.object_cache.changed_mesh:
-                print("mesh changed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene, update_mesh=True,
-                                     check_dupli_parent=True)
-
-            for obj in self.object_cache.changed_lights:
-                print("light changed:", obj.name)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene,
-                                     check_dupli_parent=True)
+            self.object_cache2.update(self, depsgraph, luxcore_scene, props)
 
         if changes & Change.MATERIAL:
-            for mat in self.material_cache.changed_materials:
-                luxcore_name, mat_props = material.convert(self, mat, context.scene, context)
-                props.Set(mat_props)
+            # for mat in self.material_cache.changed_materials:
+            #     luxcore_name, mat_props = material.convert(self, mat, context.scene, context)
+            #     props.Set(mat_props)
+            self.material_cache.update(self, depsgraph, context, props)
 
         if changes & Change.VISIBILITY:
             for key in self.visibility_cache.objects_to_remove:
-                if key not in self.exported_objects:
-                    print('[Exporter] WARNING: Can not delete key "%s" from luxcore_scene' % key)
-                    print("The object was probably renamed")
-                    continue
+                print("Removing object with key", key)
 
-                exported_thing = self.exported_objects[key]
+                try:
+                    exported_obj = self.object_cache2.exported_objects.pop(key)
+                    exported_obj.delete(luxcore_scene)
+                except KeyError:
+                    # This is ok, not every exportable object is added to exported_objects
+                    pass
 
-                if exported_thing is None:
-                    print('[Exporter] Value for key "%s" is None!' % key)
-                    continue
-
-                # exported_objects contains instances of ExportedObject and ExportedLight
-                if isinstance(exported_thing, utils.ExportedObject):
-                    remove_func = luxcore_scene.DeleteObject
-                else:
-                    remove_func = luxcore_scene.DeleteLight
-
-                for luxcore_name in exported_thing.luxcore_names:
-                    print("[Exporter] Deleting", luxcore_name)
-                    remove_func(luxcore_name)
-
-                del self.exported_objects[key]
-
-            for key in self.visibility_cache.objects_to_add:
-                obj = utils.obj_from_key(key, context.visible_objects)
-                self._convert_object(props, obj, context.scene, context, luxcore_scene)
+            if self.visibility_cache.objects_to_remove:
+                # luxcore_scene.RemoveUnusedMeshes()  # TODO for some reason this deletes even some meshes that are still in use
+                luxcore_scene.RemoveUnusedMaterials()
+                luxcore_scene.RemoveUnusedTextures()
+                luxcore_scene.RemoveUnusedImageMaps()
 
         if changes & Change.WORLD:
             if not context.scene.world or context.scene.world.luxcore.light == "none":
                 luxcore_scene.DeleteLight(WORLD_BACKGROUND_LIGHT_NAME)
 
-            world_props = world.convert(self, context.scene)
+            world_props = world.convert(self, depsgraph, context.scene, is_viewport_render=True)
             props.Set(world_props)
 
         return props
@@ -432,8 +422,6 @@ class Exporter(object):
 
         config_settings = scene.luxcore.config
         path_settings = config_settings.path
-
-        stats.light_strategy.value = utils_render.light_strategy_to_str(config_settings.light_strategy)
 
         if render_engine == "BIDIRCPU":
             path_depths = (
@@ -453,12 +441,6 @@ class Exporter(object):
             stats.clamping.value = path_settings.clamping
         else:
             stats.clamping.value = 0
-
-    def _print_debug_info(self, scene, config_props, luxcore_scene):
-        if scene.luxcore.debug.enabled and scene.luxcore.debug.print_properties:
-            print("-" * 50)
-            print("DEBUG: Config Properties:\n")
-            print(config_props)
-            print("DEBUG: Scene Properties:\n")
-            print(luxcore_scene.ToProperties())
-            print("-" * 50)
+        
+        stats.use_hybridbackforward.value = (config_props.Get("path.hybridbackforward.enable", [False]).GetBool()
+                                             and render_engine != "BIDIRCPU")

@@ -3,6 +3,8 @@ from ..bin import pyluxcore
 from .. import utils
 from . import imagepipeline
 from .imagepipeline import use_backgroundimage
+from ..utils.errorlog import LuxCoreErrorLog
+from ..utils import view_layer as utils_view_layer
 
 # set of channels that don"t use an HDR format
 LDR_CHANNELS = {
@@ -28,6 +30,10 @@ def convert(exporter, scene, context=None, engine=None):
         # Reset the output index
         _add_output.index = 0
 
+        if utils.in_material_shading_mode(context):
+            _add_output(definitions, "ALBEDO")
+            return utils.create_props(prefix, definitions)
+
         # If we have a context, we are in viewport render.
         # If engine.is_preview, we are in material preview. Both don't need AOVs.
         final = not context and not (engine and engine.is_preview)
@@ -45,14 +51,14 @@ def convert(exporter, scene, context=None, engine=None):
 
         if final:
             # This is the layer that is currently being exported, not the active layer in the UI!
-            current_layer = utils.get_current_render_layer(scene)
+            current_layer = utils_view_layer.get_current_view_layer(scene)
             aovs = current_layer.luxcore.aovs
         else:
             # AOVs should not be accessed in viewport render
             # (they are a render layer property and those are not evaluated for viewport)
             aovs = None
 
-        use_transparent_film = pipeline.transparent_film and not utils.use_filesaver(context, scene)
+        use_transparent_film = pipeline.transparent_film and not utils.using_filesaver(context, scene)
 
         # Some AOVs need tonemapping with a custom imagepipeline
         pipeline_index = 0
@@ -111,12 +117,21 @@ def convert(exporter, scene, context=None, engine=None):
                                                      group_id, exporter.lightgroup_cache)
 
             if not any([group.enabled for group in scene.luxcore.lightgroups.get_all_groups()]):
-                scene.luxcore.errorlog.add_warning("All light groups are disabled.")
+                LuxCoreErrorLog.add_warning("All light groups are disabled.")
 
             # Denoiser imagepipeline
             if scene.luxcore.denoiser.enabled:
                 pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,
                                                               pipeline_index, definitions)
+                                                              
+            config = scene.luxcore.config
+            use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
+
+            if use_adaptive_sampling and not utils.using_filesaver(context, scene):
+                noise_detection_pipeline_index = pipeline_index
+                pipeline_index = _make_noise_detection_imagepipeline(context, scene, pipeline_props,
+                                                                     pipeline_index, definitions)
+                pipeline_props.Set(pyluxcore.Property("film.noiseestimation.index", noise_detection_pipeline_index))
 
         props = utils.create_props(prefix, definitions)
         props.Set(pipeline_props)
@@ -125,8 +140,7 @@ def convert(exporter, scene, context=None, engine=None):
     except Exception as error:
         import traceback
         traceback.print_exc()
-        msg = "AOVs: %s" % error
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning("AOVs: %s" % error)
         return pyluxcore.Properties()
 
 
@@ -172,11 +186,10 @@ def _make_imagepipeline(props, context, scene, output_name, pipeline_index, outp
     if tonemapper.is_automatic():
         # We can not work with an automatic tonemapper because
         # every AOV will differ in brightness
-        msg = "Use a non-automatic tonemapper to get tonemapped AOVs"
-        scene.luxcore.errorlog.add_warning(msg)
+        LuxCoreErrorLog.add_warning("Use a non-automatic tonemapper to get tonemapped AOVs")
         return pipeline_index
 
-    prefix = "film.imagepipelines." + str(pipeline_index) + "."
+    prefix = "film.imagepipelines.%03d." % pipeline_index
     definitions = OrderedDict()
     index = 0
 
@@ -210,14 +223,14 @@ def _make_imagepipeline(props, context, scene, output_name, pipeline_index, outp
 
 
 def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
-    prefix = "film.imagepipelines." + str(pipeline_index) + "."
+    prefix = "film.imagepipelines.%03d." % pipeline_index
     definitions = OrderedDict()
     index = 0
 
     if scene.luxcore.denoiser.type == "BCD":
         index = get_BCD_props(definitions, scene, index)
     elif scene.luxcore.denoiser.type == "OIDN":
-        index = get_OIDN_props(definitions, index)
+        index = get_OIDN_props(definitions, scene, index)
 
     index = imagepipeline.convert_defs(context, scene, definitions, index)
 
@@ -242,8 +255,10 @@ def get_BCD_props(definitions, scene, index):
     return index + 1
 
 
-def get_OIDN_props(definitions, index):
+def get_OIDN_props(definitions, scene, index):
+    denoiser = scene.luxcore.denoiser
     definitions[str(index) + ".type"] = "INTEL_OIDN"
+    definitions[str(index) + ".oidnmemory"] = denoiser.max_memory_MB
     return index + 1
 
 
@@ -251,4 +266,19 @@ def _make_denoiser_imagepipeline(context, scene, props, engine, pipeline_index, 
     props.Set(get_denoiser_imgpipeline_props(context, scene, pipeline_index))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
     engine.aov_imagepipelines["DENOISED"] = pipeline_index
+    return pipeline_index + 1
+
+
+def _make_noise_detection_imagepipeline(context, scene, props, pipeline_index, output_definitions):
+    prefix = "film.imagepipelines.%03d." % pipeline_index
+    definitions = OrderedDict()
+
+    index = 0
+    index = imagepipeline.convert_defs(context, scene, definitions, index)
+    definitions[f"{index}.type"] = "GAMMA_CORRECTION"
+    definitions[f"{index}.value"] = 2.2
+
+    props.Set(utils.create_props(prefix, definitions))
+    _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
+
     return pipeline_index + 1

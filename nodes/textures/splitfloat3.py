@@ -1,7 +1,8 @@
-from .. import LuxCoreNodeTexture
+import bpy
+from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexSplitFloat3(LuxCoreNodeTexture):
+class LuxCoreNodeTexSplitFloat3(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Split RGB"
     bl_width_default = 100
 
@@ -11,7 +12,7 @@ class LuxCoreNodeTexSplitFloat3(LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketFloatUnbounded", "G")
         self.outputs.new("LuxCoreSocketFloatUnbounded", "B")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         if output_socket == self.outputs["R"]:
             channel = 0
         elif output_socket == self.outputs["G"]:
@@ -23,7 +24,7 @@ class LuxCoreNodeTexSplitFloat3(LuxCoreNodeTexture):
 
         definitions = {
             "type": "splitfloat3",
-            "texture": self.inputs[0].export(exporter, props),
+            "texture": self.inputs[0].export(exporter, depsgraph, props),
             "channel": channel,
         }
 

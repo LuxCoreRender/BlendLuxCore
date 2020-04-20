@@ -1,23 +1,25 @@
+import bpy
 from bpy.props import EnumProperty, FloatProperty
-from .. import LuxCoreNodeTexture
+from ..base import LuxCoreNodeTexture
 
 from .. import NOISE_BASIS_ITEMS
 
 from ... import utils
+from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderDistortedNoise(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Distorted Noise"
     bl_width_default = 200
 
-    noise_basis = EnumProperty(name="Noise Basis", description="Type of noise used", items=NOISE_BASIS_ITEMS,
+    noise_basis: EnumProperty(update=utils_node.force_viewport_update, name="Noise Basis", description="Type of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
-    noise_type = EnumProperty(name="Type", description="Type of noise used", items=NOISE_BASIS_ITEMS,
+    noise_type: EnumProperty(update=utils_node.force_viewport_update, name="Type", description="Type of noise used", items=NOISE_BASIS_ITEMS,
                                   default="blender_original")
-    dist_amount = FloatProperty(name="Distortion", default=1.00)
-    noise_size = FloatProperty(name="Noise Size", default=0.25, min=0)    
-    bright = FloatProperty(name="Brightness", default=1.0, min=0)
-    contrast = FloatProperty(name="Contrast", default=1.0, min=0)
+    dist_amount: FloatProperty(update=utils_node.force_viewport_update, name="Distortion", default=1.00)
+    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
+    bright: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1.0, min=0)
+    contrast: FloatProperty(update=utils_node.force_viewport_update, name="Contrast", default=1.0, min=0)
 
     def init(self, context):
         self.add_input("LuxCoreSocketMapping3D", "3D Mapping")
@@ -35,8 +37,8 @@ class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
         column.prop(self, "bright")
         column.prop(self, "contrast")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
-        mapping_type, transformation = self.inputs["3D Mapping"].export(exporter, props)
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
+        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
        
         definitions = {
             "type": "blender_distortednoise",
@@ -48,7 +50,10 @@ class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture):
             "contrast": self.contrast,
             # Mapping
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation, exporter.scene, True),
+            "mapping.transformation": utils.matrix_to_list(transformation),
         }
-        
+
+        if mapping_type == "uvmapping3d":
+            definitions["mapping.uvindex"] = uvindex
+
         return self.create_props(props, definitions, luxcore_name)

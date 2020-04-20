@@ -1,3 +1,4 @@
+import math
 from . import calc_filmsize
 from .. import utils
 from ..handlers.draw_imageeditor import TileStats
@@ -8,6 +9,8 @@ from ..properties.statistics import (
     rays_per_sample_to_string,
     get_rays_per_sample,
 )
+from ..utils.errorlog import LuxCoreErrorLog
+from . import view_layer
 
 ENGINE_TO_STR = {
     "PATHCPU": "Path CPU",
@@ -83,7 +86,7 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
         else:
             refresh_message = "Refreshing film..."
     else:
-        refresh_message = "Film refresh in %ds" % time_until_film_refresh
+        refresh_message = "Film refresh in %d s" % math.ceil(time_until_film_refresh)
 
     # Note: the first argument is only shown in the UI.
     # The second argument is shown in the UI and printed in the console
@@ -128,18 +131,10 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
 
 def get_pretty_stats(config, stats, scene, context=None):
     halt = utils.get_halt_conditions(scene)
-    errorlog = scene.luxcore.errorlog
 
     # Here we collect strings in a list and later join them
     # so the result will look like: "message 1 | message 2 | ..."
     pretty = []
-
-    # Name of the current render layer
-    if len(scene.render.layers) > 1:
-        render_layer = utils.get_current_render_layer(scene)
-        # render_layer is None in viewport render
-        if render_layer:
-            pretty.append(render_layer.name)
 
     if context:
         # In viewport, the usual halt conditions are irrelevant, only the time counts
@@ -150,6 +145,11 @@ def get_pretty_stats(config, stats, scene, context=None):
             rendered_time = viewport_halt_time
         pretty.append("Time: %ds/%ds" % (rendered_time, viewport_halt_time))
     else:
+        #  Name of the current render layer
+        if len(scene.view_layers) > 1:
+            layer = view_layer.get_current_view_layer(scene)
+            pretty.append(layer.name)
+
         # Time
         if halt.enable and halt.use_time:
             rendered_time = stats.Get("stats.renderengine.time").GetFloat()
@@ -187,13 +187,13 @@ def get_pretty_stats(config, stats, scene, context=None):
     # Errors and warnings
     error_str = ""
 
-    if errorlog.errors:
-        error_str += utils.pluralize("%d Error", len(errorlog.errors))
+    if LuxCoreErrorLog.errors:
+        error_str += utils.pluralize("%d Error", len(LuxCoreErrorLog.errors))
 
-    if errorlog.warnings:
+    if LuxCoreErrorLog.warnings:
         if error_str:
             error_str += ", "
-        error_str += utils.pluralize("%d Warning", len(errorlog.warnings))
+        error_str += utils.pluralize("%d Warning", len(LuxCoreErrorLog.warnings))
 
     if error_str:
         pretty.append(error_str)

@@ -4,7 +4,7 @@ from ..output import LuxCoreNodeOutput, update_active
 from ... import utils
 
 
-class LuxCoreNodeTexOutput(LuxCoreNodeOutput):
+class LuxCoreNodeTexOutput(bpy.types.Node, LuxCoreNodeOutput):
     """
     Texture output node.
     This is where the export starts (if the output is active).
@@ -12,19 +12,19 @@ class LuxCoreNodeTexOutput(LuxCoreNodeOutput):
     bl_label = "Texture Output"
     bl_width_default = 160
 
-    active = BoolProperty(name="Active", default=True, update=update_active)
+    active: BoolProperty(name="Active", default=True, update=update_active)
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketColor", "Color")
         self.inputs["Color"].needs_link = True
         super().init(context)
 
-    def export(self, exporter, props, luxcore_name):
+    def export(self, exporter, depsgraph, props, luxcore_name):
         # Invalidate node cache
         # TODO have one global properties object so this is no longer necessary
         exporter.node_cache.clear()
 
-        color = self.inputs["Color"].export(exporter, props, luxcore_name)
+        color = self.inputs["Color"].export(exporter, depsgraph, props, luxcore_name)
 
         if not self.inputs["Color"].is_linked:
             # We need a helper texture

@@ -1,5 +1,5 @@
 import bpy
-from . import LuxCoreNode
+from .base import LuxCoreNode
 from .. import utils
 from ..utils import node as utils_node
 
@@ -78,7 +78,7 @@ class LuxCoreNodeOutput(LuxCoreNode):
             # we don't need to check the others
             break
 
-    def export(self, exporter, props, luxcore_name):
+    def export(self, exporter, depsgraph, props, luxcore_name):
         raise NotImplementedError("Subclasses have to override this method!")
 
     def set_active(self, active):

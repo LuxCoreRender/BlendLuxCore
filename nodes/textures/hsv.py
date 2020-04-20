@@ -1,7 +1,8 @@
-from .. import LuxCoreNodeTexture
+import bpy
+from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexHSV(LuxCoreNodeTexture):
+class LuxCoreNodeTexHSV(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Hue Saturation Value"
 
     def init(self, context):
@@ -12,12 +13,12 @@ class LuxCoreNodeTexHSV(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketColor", "Color")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "hsv",
-            "texture": self.inputs["Color"].export(exporter, props),
-            "hue": self.inputs["Hue"].export(exporter, props),
-            "saturation": self.inputs["Saturation"].export(exporter, props),
-            "value": self.inputs["Value"].export(exporter, props),
+            "texture": self.inputs["Color"].export(exporter, depsgraph, props),
+            "hue": self.inputs["Hue"].export(exporter, depsgraph, props),
+            "saturation": self.inputs["Saturation"].export(exporter, depsgraph, props),
+            "value": self.inputs["Value"].export(exporter, depsgraph, props),
         }
         return self.create_props(props, definitions, luxcore_name)

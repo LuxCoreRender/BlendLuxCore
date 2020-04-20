@@ -19,29 +19,35 @@ SEARCH_WINDOW_RADIUS_DESC = (
     "Higher values improve the denoiser result, but lead to longer computation time"
 )
 FILTER_SPIKES_DESC = "Filter outliers from the input samples"
+MAX_MEMORY_DESC = (
+    "Approximate maximum amount of memory to use in megabytes (actual memory usage "
+    "may be higher). Limiting memory usage may cause slower denoising due to internally "
+    "splitting the image into overlapping tiles"
+)
 
 
 class LuxCoreDenoiser(PropertyGroup):
-    enabled = BoolProperty(name="", default=False, description="Enable/disable denoiser")
+    refresh = False
+
+    enabled: BoolProperty(name="", default=False, description="Enable/disable denoiser")
     type_items = [
         ("BCD", "BCD", "Bayesian Collaborative Denoiser", 0),
         ("OIDN", "OIDN", "Intel Open Image Denoiser", 1),
     ]
-    type = EnumProperty(name="Type", items=type_items, default="OIDN")
-    show_advanced = BoolProperty(name="Show Advanced", default=False,
-                                 description="Show advanced settings. They usually don't need to get tweaked")
-
-    refresh = BoolProperty(name="Run Denoiser", default=False,
-                           description=REFRESH_DESC)
+    type: EnumProperty(name="Type", items=type_items, default="OIDN")
 
     # BCD settings
-    scales = IntProperty(name="Scales", default=3, min=1, soft_max=5,
+    scales: IntProperty(name="Scales", default=3, min=1, soft_max=5,
                          description=SCALES_DESC)
-    hist_dist_thresh = FloatProperty(name="Histogram Distance Threshold", default=1, min=0, soft_max=3,
+    hist_dist_thresh: FloatProperty(name="Histogram Distance Threshold", default=1, min=0, soft_max=3,
                                      description=HIST_DIST_THRESH_DESC)
     # TODO: description for patch radius
-    patch_radius = IntProperty(name="Patch Radius", default=1, min=1, soft_max=3)
-    search_window_radius = IntProperty(name="Search Window Radius", default=6, min=1, soft_max=9,
+    patch_radius: IntProperty(name="Patch Radius", default=1, min=1, soft_max=3)
+    search_window_radius: IntProperty(name="Search Window Radius", default=6, min=1, soft_max=9,
                                        description=SEARCH_WINDOW_RADIUS_DESC)
-    filter_spikes = BoolProperty(name="Remove Fireflies", default=False,
+    filter_spikes: BoolProperty(name="Remove Fireflies", default=False,
                                  description=FILTER_SPIKES_DESC)
+
+    # OIDN settings
+    max_memory_MB: IntProperty(name="Max. Memory (MB)", default=6000, min=100, soft_min=1000,
+                               description=MAX_MEMORY_DESC)

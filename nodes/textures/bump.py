@@ -1,21 +1,12 @@
 import bpy
-from bpy.props import FloatProperty
-from .. import LuxCoreNodeTexture
-from ..sockets import LuxCoreSocketFloat
-from ... import utils
+from ..base import LuxCoreNodeTexture
+from ...utils import node as utils_node
+from ...ui import icons
 
 
-class LuxCoreSocketBumpHeight(LuxCoreSocketFloat):
-    # Allow negative values for inverting the bump. These values are in meters.
-    default_value = FloatProperty(default=0.001, soft_min=-0.01, soft_max=0.01,
-                                  precision=3, step=0.001,
-                                  subtype="DISTANCE", description="Bump height")
-
-
-class LuxCoreNodeTexBump(LuxCoreNodeTexture):
-    """ A scale texture which applies worldscale """
+class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Bump"
-    bl_width_default = 180
+    bl_width_default = 190
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value", 0.0)
@@ -23,29 +14,25 @@ class LuxCoreNodeTexBump(LuxCoreNodeTexture):
 
         self.outputs.new("LuxCoreSocketBump", "Bump")
 
-    def sub_export(self, exporter, props, luxcore_name=None, output_socket=None):
+    def draw_buttons(self, context, layout):
+        utils_node.draw_uv_info(context, layout)
+
+        show_triplanar_warning = False
+        value_node = utils_node.get_linked_node(self.inputs["Value"])
+        if value_node and value_node.bl_idname == "LuxCoreNodeTexTriplanar":
+            show_triplanar_warning = True
+        else:
+            height_node = utils_node.get_linked_node(self.inputs["Bump Height"])
+            if height_node and height_node.bl_idname == "LuxCoreNodeTexTriplanar":
+                show_triplanar_warning = True
+
+        if show_triplanar_warning:
+            layout.label(text="Use triplanar bump node instead!", icon=icons.WARNING)
+
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "scale",
-            "texture1": self.inputs["Value"].export(exporter, props),
+            "texture1": self.inputs["Value"].export(exporter, depsgraph, props),
+            "texture2": self.inputs["Bump Height"].export(exporter, depsgraph, props),
         }
-
-        bump_height = self.inputs["Bump Height"].export(exporter, props)
-        worldscale = utils.get_worldscale(exporter.scene, as_scalematrix=False)
-
-        if self.inputs["Bump Height"].is_linked:
-            # Bump height is textured, we need a scale texture to apply worldscale
-            tex_name = self.make_name() + "bump_helper"
-            helper_prefix = "scene.textures." + tex_name + "."
-            helper_defs = {
-                "type": "scale",
-                "texture1": bump_height,
-                "texture2": worldscale,
-            }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
-
-            definitions["texture2"] = tex_name
-        else:
-            # Bump height is just a value, we can apply worldscale directly
-            definitions["texture2"] = bump_height * worldscale
-
         return self.create_props(props, definitions, luxcore_name)

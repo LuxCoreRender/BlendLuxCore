@@ -5,30 +5,11 @@ import re
 import os
 import hashlib
 from ..bin import pyluxcore
+from . import view_layer
 
+MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
+EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
-
-
-class ExportedObject(object):
-    def __init__(self, mesh_definitions, luxcore_name):
-        """
-        :param luxcore_name: The true base name of this object (without material index suffix). Passed
-                             separately because the names in mesh_definitions are incorrect for shared meshes
-        """
-
-        # Note that luxcore_names is a list of names (because an object in Blender can have multiple materials,
-        # while in LuxCore it can have only one material, so we have to split it into multiple LuxCore objects)
-        self.luxcore_names = []
-        for _, material_index in mesh_definitions:
-            self.luxcore_names.append(luxcore_name + "%03d" % material_index)
-        # list of lists of the form [lux_obj_name, material_index]
-        self.mesh_definitions = mesh_definitions
-
-
-class ExportedLight(object):
-    def __init__(self, luxcore_name):
-        # this is a list to make it compatible with ExportedObject
-        self.luxcore_names = [luxcore_name]
 
 
 def sanitize_luxcore_name(string):
@@ -45,19 +26,26 @@ def make_key(datablock):
     # renamed during viewport render.
     # Note that the memory address changes on undo/redo, but in this case the viewport render
     # is stopped and re-started anyway, so it should not be a problem.
-    return str(datablock.as_pointer())
+    assert isinstance(datablock, bpy.types.ID)
+    return str(datablock.original.as_pointer())
 
 
-def make_key_from_name(datablock):
-    """ Old make_key method, not sure if we need it anymore """
-    key = datablock.name
-    if hasattr(datablock, "type"):
-        key += datablock.type
-    if hasattr(datablock, "data") and hasattr(datablock.data, "type"):
-        key += datablock.data.type
-    if datablock.library:
-        key += datablock.library.name
+def make_key_from_bpy_struct(bpy_struct):
+    return str(bpy_struct.as_pointer())
+
+
+def make_key_from_instance(dg_obj_instance):
+    if dg_obj_instance.is_instance:
+        key = make_key(dg_obj_instance.object)
+        key += "_" + make_key(dg_obj_instance.parent)
+        key += persistent_id_to_str(dg_obj_instance.persistent_id)
+    else:
+        key = make_key(dg_obj_instance.object.original)
     return key
+
+
+def make_name_from_instance(dg_obj_instance):
+    return sanitize_luxcore_name(make_key_from_instance(dg_obj_instance))
 
 
 def get_pretty_name(datablock):
@@ -84,9 +72,9 @@ def get_luxcore_name(datablock, is_viewport_render=True):
 
     if not is_viewport_render:
         # Final render - we can use pretty names
-        key = sanitize_luxcore_name(get_pretty_name(datablock)) + "_" + key
+        key = get_pretty_name(datablock) + key
 
-    return key
+    return sanitize_luxcore_name(key)
 
 
 def obj_from_key(key, objects):
@@ -96,9 +84,26 @@ def obj_from_key(key, objects):
     return None
 
 
-def make_object_id(name):
-    # We do this similar to Cycles: hash the object's name to get a "stable" object ID
-    digest = hashlib.md5(name.encode("utf-8")).digest()
+def persistent_id_to_str(persistent_id):
+    # Apparently we need all entries in persistent_id, otherwise
+    # there are collisions when instances are nested
+    return "_".join([str(pid) for pid in persistent_id])
+
+
+def make_object_id(dg_obj_instance):
+    chosen_id = dg_obj_instance.object.original.luxcore.id
+    if chosen_id != -1:
+        return chosen_id
+
+    if dg_obj_instance.is_instance:
+        # random_id seems to be a 4-Byte integer in range -0xffffffff to 0xffffffff.
+        return dg_obj_instance.random_id & 0xfffffffe
+
+    key = dg_obj_instance.object.original.name
+
+    # We do this similar to Cycles: hash the object's name to get an ID that's stable over
+    # frames and between re-renders (as long as the object is not renamed).
+    digest = hashlib.md5(key.encode("utf-8")).digest()
     as_int = int.from_bytes(digest, byteorder="little")
     # Truncate to 4 bytes because LuxCore uses unsigned int for the object ID.
     # Make sure it's not exactly 0xffffffff because that's LuxCore's Null index for object IDs.
@@ -120,60 +125,19 @@ def create_props(prefix, definitions):
     return props
 
 
-def get_worldscale(scene, as_scalematrix=True):
-    unit_settings = scene.unit_settings
-
-    if unit_settings.system in {"METRIC", "IMPERIAL"}:
-        # The units used in modelling are for display only. behind
-        # the scenes everything is in meters
-        ws = unit_settings.scale_length
-    else:
-        ws = 1
-
-    if as_scalematrix:
-        return mathutils.Matrix.Scale(ws, 4)
-    else:
-        return ws
-
-
-def get_scaled_to_world(matrix, scene):
-    matrix = matrix.copy()
-    sm = get_worldscale(scene)
-    matrix *= sm
-    ws = get_worldscale(scene, as_scalematrix=False)
-    matrix[0][3] *= ws
-    matrix[1][3] *= ws
-    matrix[2][3] *= ws
-    return matrix
-
-
-def matrix_to_list(matrix, scene=None, apply_worldscale=False, invert=False):
+def matrix_to_list(matrix, invert=False):
     """
     Flatten a 4x4 matrix into a list
     Returns list[16]
-    You only have to pass a valid scene if apply_worldscale is True
     """
-
-    if apply_worldscale:
-        matrix = get_scaled_to_world(matrix, scene)
+    # Copy required for BlenderMatrix4x4ToList(), not sure why, but if we don't
+    # make a copy, we only get an identity matrix in C++
+    matrix = matrix.copy()
 
     if invert:
-        matrix = matrix.copy()
         matrix.invert_safe()
 
-    l = [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-         matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-         matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-         matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
-
-    if matrix.determinant() == 0:
-        # The matrix is non-invertible. This can happen if e.g. the scale on one axis is 0.
-        # Prevent a RuntimeError from LuxCore by adding a small random epsilon.
-        # TODO maybe look for a better way to handle this
-        from random import random
-        return [float(i) + (1e-5 + random() * 1e-5) for i in l]
-    else:
-        return [float(i) for i in l]
+    return pyluxcore.BlenderMatrix4x4ToList(matrix)
 
 
 def calc_filmsize_raw(scene, context=None):
@@ -271,12 +235,11 @@ def calc_blender_border(scene, context=None):
 
 def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     # shift is in range -2..2
-    # offset is in range -4..4
+    # offset is in range -1..1
     render = scene.render
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
     border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
-    world_scale = get_worldscale(scene, False)
 
     # Following: Black Magic
     scale = 1
@@ -286,8 +249,12 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     if context:
         # Viewport rendering
         if context.region_data.view_perspective == "CAMERA":
+            # Camera view
             offset_x, offset_y = context.region_data.view_camera_offset
-            # Camera view            
+            
+            if scene.camera and scene.camera.data.type == "ORTHO":                    
+                scale = 0.5 * scene.camera.data.ortho_scale
+                
             if render.use_border:
                 offset_x = 0
                 offset_y = 0
@@ -297,11 +264,13 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
                                                             scene.camera.data.sensor_fit)
                     
                 if scene.camera and scene.camera.data.type == "ORTHO":
-                    zoom = 0.5 * scene.camera.data.ortho_scale * world_scale
-                    scale = zoom
+                    # zoom = scale * world_scale
+                    zoom = scale
+                    
             else:
                 # No border
                 aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw, scene.camera.data.sensor_fit)
+                
         else:
             # Normal viewport
             aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw)
@@ -310,6 +279,9 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
         aspectratio, xaspect, yaspect = calc_aspect(render.resolution_x * render.pixel_aspect_x,
                                                     render.resolution_y * render.pixel_aspect_y,
                                                     scene.camera.data.sensor_fit)
+        
+        if scene.camera and scene.camera.data.type == "ORTHO":                    
+            scale = 0.5 * scene.camera.data.ortho_scale                
 
     dx = scale * 2 * (shift_x + 2 * xaspect * offset_x)
     dy = scale * 2 * (shift_y + 2 * yaspect * offset_y)
@@ -350,8 +322,8 @@ def calc_aspect(width, height, fit="AUTO"):
     return aspect, xaspect, yaspect
 
 
-def find_active_uv(uv_textures):
-    for uv in uv_textures:
+def find_active_uv(uv_layers):
+    for uv in uv_layers:
         if uv.active_render:
             return uv
     return None
@@ -364,74 +336,36 @@ def find_active_vertex_color_layer(vertex_colors):
     return None
 
 
-def is_obj_visible(obj, scene, context=None, is_dupli=False):
-    """
-    Find out if an object is visible.
-    Note: if the object is an emitter, check emitter visibility with is_duplicator_visible() below.
-    """
-    if is_dupli:
-        return True
+def is_instance_visible(dg_obj_instance, obj):
+    return (dg_obj_instance.show_self or dg_obj_instance.show_particles) and is_obj_visible(obj)
 
-    # Mimic Blender behaviour: if object is duplicated via a parent, it should be invisible
-    if obj.parent and obj.parent.dupli_type != "NONE":
+
+def is_obj_visible(obj):
+    if obj.type not in EXPORTABLE_OBJECTS or obj.luxcore.exclude_from_render:
         return False
 
-    # Check if object is used as camera clipping plane
-    if is_valid_camera(scene.camera) and obj == scene.camera.data.luxcore.clipping_plane:
+    # Do not export the object if it's made completely invisible through Cycles settings
+    # (some addons like HardOps do this to hide objects)
+    return is_obj_visible_in_cycles(obj)
+
+
+def is_obj_visible_in_cycles(obj):
+    c_vis = obj.cycles_visibility
+    return any((c_vis.camera, c_vis.diffuse, c_vis.glossy, c_vis.transmission, c_vis.scatter, c_vis.shadow))
+
+
+def visible_to_camera(dg_obj_instance, is_viewport_render, view_layer=None):
+    obj = dg_obj_instance.parent if dg_obj_instance.is_instance else dg_obj_instance.object
+    if not obj.luxcore.visible_to_camera:
         return False
-
-    render_layer = get_current_render_layer(scene)
-    if render_layer:
-        # We need the list of excluded layers in the settings of this render layer
-        exclude_layers = render_layer.layers_exclude
-    else:
-        # We don't account for render layer visiblity in viewport/preview render
-        # so we create a mock list here
-        exclude_layers = [False] * 20
-
-    on_visible_layer = False
-    for lv in [ol and sl and not el for ol, sl, el in zip(obj.layers, scene.layers, exclude_layers)]:
-        on_visible_layer |= lv
-
-    hidden_in_outliner = obj.hide if context else obj.hide_render
-    return on_visible_layer and not hidden_in_outliner
-
-
-def is_obj_visible_to_cam(obj, scene, context=None):
-    visible_to_cam = obj.luxcore.visible_to_camera
-    render_layer = get_current_render_layer(scene)
-
-    if render_layer:
-        on_visible_layer = False
-        for lv in [ol and sl for ol, sl in zip(obj.layers, render_layer.layers)]:
-            on_visible_layer |= lv
-
-        return visible_to_cam and on_visible_layer
-    else:
-        # We don't account for render layer visiblity in viewport/preview render
-        return visible_to_cam
-
-
-def is_duplicator_visible(obj):
-    """ Find out if a particle/hair emitter or duplicator is visible """
-    assert obj.is_duplicator
-
-    # obj.is_duplicator is also true if it has particle/hair systems - they allow to show the duplicator
-    for psys in obj.particle_systems:
-        if psys.settings.use_render_emitter:
-            return True
-
-    # Dupliframes duplicate the original object, so it must be visible
-    if obj.dupli_type == "FRAMES":
-        return True
-
-    # Duplicators (Dupliverts/faces) are always hidden
-    return False
+    if is_viewport_render:
+        obj = obj.original
+    return not obj.indirect_only_get(view_layer=view_layer)
 
 
 def get_theme(context):
-    current_theme_name = context.user_preferences.themes.items()[0][0]
-    return context.user_preferences.themes[current_theme_name]
+    current_theme_name = context.preferences.themes.items()[0][0]
+    return context.preferences.themes[current_theme_name]
 
 
 def get_abspath(path, library=None, must_exist=False, must_be_existing_file=False, must_be_existing_dir=False):
@@ -453,6 +387,7 @@ def get_abspath(path, library=None, must_exist=False, must_be_existing_file=Fals
 
 
 def absorption_at_depth_scaled(abs_col, depth, scale=1):
+    assert depth > 0
     abs_col = list(abs_col)
     assert len(abs_col) == 3
 
@@ -484,13 +419,18 @@ def use_obj_motion_blur(obj, scene):
     return object_blur and obj.luxcore.enable_motion_blur
 
 
+def has_deforming_modifiers(obj):
+    return any([mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers])
+
+
 def can_share_mesh(obj):
-    modified = any([mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers])
-    return not modified and obj.data and obj.data.users > 1
+    if not obj.data or obj.data.users < 2:
+        return False
+    return not has_deforming_modifiers(obj)
 
 
-def use_instancing(obj, scene, context):
-    if context:
+def use_instancing(obj, scene, is_viewport_render):
+    if is_viewport_render:
         # Always instance in viewport so we can move the object/light around
         return True
 
@@ -506,9 +446,15 @@ def use_instancing(obj, scene, context):
 
 
 def find_smoke_domain_modifier(obj):
-    for mod in obj.modifiers:
-        if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
-            return mod
+    if bpy.app.version[:2] < (2, 82):
+        for mod in obj.modifiers:
+            if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
+                return mod
+    else:
+        for mod in obj.modifiers:
+            if mod.type == "FLUID" and mod.fluid_type == "DOMAIN":
+                return mod
+
     return None
 
 
@@ -528,24 +474,31 @@ def clamp(value, _min=0, _max=1):
     return max(_min, min(_max, value))
 
 
-def use_filesaver(context, scene):
-    return context is None and scene.luxcore.config.use_filesaver
+def using_filesaver(is_viewport_render, scene):
+    return not is_viewport_render and scene.luxcore.config.use_filesaver
 
 
-def get_current_render_layer(scene):
-    """ This is the layer that is currently being exported, not the active layer in the UI """
-    active_layer_index = scene.luxcore.active_layer_index
+def using_bidir_in_viewport(scene):
+    return scene.luxcore.config.engine == "BIDIR" and scene.luxcore.viewport.use_bidir
 
-    # If active layer index is -1 we are trying to access it
-    # in an incorrect situation, e.g. viewport render
-    if active_layer_index == -1:
-        return None
 
-    return scene.render.layers[active_layer_index]
+def using_hybridbackforward_in_viewport(scene):
+    config = scene.luxcore.config
+    return (config.engine == "PATH" and not config.use_tiles
+            and config.path.hybridbackforward_enable and scene.luxcore.viewport.add_light_tracing)
+
+
+def using_photongi_debug_mode(is_viewport_render, scene):
+    if is_viewport_render:
+        return False
+    config = scene.luxcore.config
+    if config.engine != "PATH":
+        return False
+    return config.photongi.enabled and config.photongi.debug != "off"
 
 
 def get_halt_conditions(scene):
-    render_layer = get_current_render_layer(scene)
+    render_layer = view_layer.get_current_view_layer(scene)
 
     if render_layer and render_layer.luxcore.halt.enable:
         # Global halt conditions are overridden by this render layer
@@ -608,6 +561,43 @@ def image_sequence_resolve_all(image):
 
     return sorted(indexed_filepaths, key=lambda elem: elem[0])
 
+def openVDB_sequence_resolve_all(file):
+    filepath = get_abspath(file)
+    basedir, filename = os.path.split(filepath)
+    filename_noext, ext = os.path.splitext(filename)
+
+    # A file sequence has a running number at the end of the filename, e.g. name001.ext
+    # in case of the Blender cache files the structure is name_frame_index.ext
+
+    #Test if the filename structure matches the Blender nomenclature
+    matchstr = r'(.*)_([0-9]{6})_([0-9]{2})'
+    matchObj = re.match(matchstr, filename_noext)
+
+    if not matchObj:
+        matchstr = r'(\D*)([0-9]+)'
+        # Test if the filename structure matches a general sequence structure
+        matchObj = re.match(matchstr, filename_noext)
+
+    name = ""
+
+
+    if matchObj:
+        name = matchObj.group(1)
+    else:
+        # Input isn't from a sequence
+        return []
+
+    indexed_filepaths = []
+    for f in os.scandir(basedir):
+        filename_noext2, ext2 = os.path.splitext(f.name)
+        if ext == ext2:
+            matchObj = re.match(matchstr, filename_noext2)
+            if matchObj and name == matchObj.group(1):
+                elem = (int(matchObj.group(2)), f.path)
+                indexed_filepaths.append(elem)
+
+    return sorted(indexed_filepaths, key=lambda elem: elem[0])
+
 
 def is_valid_camera(obj):
     return obj and hasattr(obj, "type") and obj.type == "CAMERA"
@@ -616,3 +606,26 @@ def is_valid_camera(obj):
 def get_blendfile_name():
     basename = bpy.path.basename(bpy.data.filepath)
     return os.path.splitext(basename)[0]  # remove ".blend"
+
+
+def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_render, scene):
+    file_path_abs = get_abspath(file_path, library=scene.library)
+
+    if not os.path.isfile(file_path_abs) and not save_or_overwrite:
+        # Do not save the cache file
+        return ""
+    else:
+        if using_filesaver(is_viewport_render, scene) and file_path.startswith("//"):
+            # It is a relative path and we are using filesaver - don't make it
+            # an absolute path, just strip the leading "//"
+            return file_path[2:]
+        else:
+            if os.path.isfile(file_path) and save_or_overwrite:
+                # To overwrite the file, we first have to delete it, otherwise
+                # LuxCore loads the cache from this file
+                os.remove(file_path)
+            return file_path_abs
+
+
+def in_material_shading_mode(context):
+    return context and context.space_data.shading.type == "MATERIAL"

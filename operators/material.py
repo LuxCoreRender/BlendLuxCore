@@ -3,7 +3,7 @@ from bpy.props import IntProperty, StringProperty, EnumProperty
 from .. import utils
 from .utils import (
     poll_object, poll_material, init_mat_node_tree, make_nodetree_name,
-    LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree
+    LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree, show_nodetree,
 )
 from ..ui import icons
 
@@ -34,7 +34,25 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
         # For viewport render, we have to update the luxcore object
         # because the newly created material is not yet assigned there
         obj.update_tag()
+        show_nodetree(context, node_tree)
 
+        return {"FINISHED"}
+
+
+class LUXCORE_OT_material_unlink(bpy.types.Operator):
+    bl_idname = "luxcore.material_unlink"
+    bl_label = ""
+    bl_description = "Unlink data-block"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return poll_object(context)
+
+    def execute(self, context):
+        obj = context.active_object
+        if obj.material_slots:
+            obj.material_slots[obj.active_material_index].material = None
         return {"FINISHED"}
 
 
@@ -75,7 +93,7 @@ class LUXCORE_OT_material_set(bpy.types.Operator):
     bl_description = "Assign this node tree"
     bl_options = {"UNDO"}
 
-    material_index = IntProperty()
+    material_index: IntProperty()
 
     @classmethod
     def poll(cls, context):
@@ -97,7 +115,7 @@ class LUXCORE_MT_material_select(bpy.types.Menu):
         layout = self.layout
 
         if not bpy.data.materials:
-            layout.label("No materials available")
+            layout.label(text="No materials available")
 
         row = layout.row()
         col = row.column()
@@ -142,7 +160,7 @@ class LuxCore_OT_material_select(bpy.types.Operator):
         LuxCore_OT_material_select.callback_strings = items
         return items
 
-    material = EnumProperty(name="Materials", items=callback)
+    material: EnumProperty(name="Materials", items=callback)
 
     @classmethod
     def poll(cls, context):
@@ -171,19 +189,24 @@ class LUXCORE_OT_material_show_nodetree(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.object
-        return obj and obj.active_material and obj.active_material.luxcore.node_tree
+        if not obj:
+            return False
+
+        mat = obj.active_material
+        if not mat:
+            return False
+
+        if mat.luxcore.use_cycles_nodes:
+            return mat.node_tree
+        else:
+            return mat.luxcore.node_tree
 
     def execute(self, context):
         mat = context.active_object.active_material
-        node_tree = mat.luxcore.node_tree
+        node_tree = mat.node_tree if mat.luxcore.use_cycles_nodes else mat.luxcore.node_tree
 
-        for area in context.screen.areas:
-            if area.type == "NODE_EDITOR":
-                for space in area.spaces:
-                    if space.type == "NODE_EDITOR":
-                        space.tree_type = node_tree.bl_idname
-                        space.node_tree = node_tree
-                        return {"FINISHED"}
+        if show_nodetree(context, node_tree):
+            return {"FINISHED"}
 
         self.report({"ERROR"}, "Open a node editor first")
         return {"CANCELLED"}
@@ -200,7 +223,8 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         return poll_object(context)
 
     def execute(self, context):
-        if getattr(context, "material", None):
+        mat = getattr(context, "material", None)
+        if mat:
             name = make_nodetree_name(context.material.name)
         else:
             name = "Material Node Tree"
@@ -208,18 +232,19 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         node_tree = bpy.data.node_groups.new(name=name, type="luxcore_material_nodes")
         init_mat_node_tree(node_tree)
 
-        if getattr(context, "material", None):
+        if mat:
             context.material.luxcore.node_tree = node_tree
 
+        show_nodetree(context, node_tree)
         return {"FINISHED"}
 
 
-class LUXCORE_OT_set_mat_node_tree(LUXCORE_OT_set_node_tree):
+class LUXCORE_OT_set_mat_node_tree(bpy.types.Operator, LUXCORE_OT_set_node_tree):
     """ Dropdown Operator Material version """
 
     bl_idname = "luxcore.set_mat_node_tree"
 
-    node_tree_index = IntProperty()
+    node_tree_index: IntProperty()
 
     @classmethod
     def poll(cls, context):
@@ -233,7 +258,7 @@ class LUXCORE_OT_set_mat_node_tree(LUXCORE_OT_set_node_tree):
 
 
 # Note: this is a menu, not an operator
-class LUXCORE_MATERIAL_MT_node_tree(LUXCORE_MT_node_tree):
+class LUXCORE_MATERIAL_MT_node_tree(bpy.types.Menu, LUXCORE_MT_node_tree):
     """ Dropdown Menu Material version """
 
     bl_idname = "LUXCORE_MATERIAL_MT_node_tree"

@@ -71,7 +71,7 @@ class LUXCORE_OT_select_crf(bpy.types.Operator):
         LUXCORE_OT_select_crf.callback_strings = items
         return items
 
-    crf_preset = EnumProperty(name="CRF Preset",
+    crf_preset: EnumProperty(name="CRF Preset",
                               description="Camera Response Function presets",
                               items=cb_crf_preset)
 
