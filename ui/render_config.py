@@ -33,7 +33,7 @@ def luxcore_render_draw(panel, context):
     
 class LUXCORE_RENDER_PT_luxcore_presets(PresetPanel, Panel):
     bl_label = "LuxCore Presets"
-    preset_subdir = "BlendLuxCore"
+    preset_subdir = "BlendLuxCore/Sampling"
     preset_operator = "script.execute_preset"
     preset_add_operator = "render.luxcore_preset_add"
     COMPAT_ENGINES = {'LUXCORE'}

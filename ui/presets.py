@@ -20,8 +20,32 @@ class AddPresetLuxcore(AddPresetBase, Operator):
         "luxcore.photongi.caustic_enabled",
         "luxcore.photongi.indirect_enabled",
         "luxcore.envlight_cache.enabled",
-        "luxcore.dls_cache.enabled",
+        "luxcore.dls_cache.enabled"
     ]
 
-    preset_subdir = "BlendLuxCore"
+    preset_subdir = "BlendLuxCore/Sampling"
+    
+class Add_Image_Pipeline_PresetLuxcore(AddPresetBase, Operator):
+    '''Add an LuxCore Image Pipeline Preset'''
+    bl_idname = "render.luxcore_image_pipeline_preset_add"
+    bl_label = "Add LuxCore Image Pipeline Preset"
+    preset_menu = "LUXCORE_RENDER_PT_luxcore_image_pipeline_presets"
+
+    preset_defines = [
+        "luxcore = bpy.context.scene.luxcore.config",
+        "pipeline = bpy.pipeline = bpy.context.camera.luxcore.imagepipeline"
+    ]
+
+    preset_values = [
+        "luxcore.preset_version",
+        "pipeline.bloom.enabled",
+        "pipeline.mist.enabled",
+        "pipeline.vignetting.enabled",
+        "pipeline.coloraberration.enabled",
+        "pipeline.camera_response_func.enabled",
+        "pipeline.white_balance.enabled",
+        "pipeline.contour_lines.enabled"
+    ]
+
+    preset_subdir = "BlendLuxCore/ImagePipeline"
 
