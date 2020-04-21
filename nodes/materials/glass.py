@@ -108,10 +108,10 @@ class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
         if self.inputs["Dispersion"].is_linked or cauchyc > 0:
             definitions["cauchyc"] = cauchyc
 
-        film_thickness = self.inputs["Film Thickness (nm)"].export(exporter, props)
+        film_thickness = self.inputs["Film Thickness (nm)"].export(exporter, depsgraph, props)
         if not self.rough and self.inputs["Film Thickness (nm)"].is_linked or film_thickness > 0:
             definitions["filmthickness"] = film_thickness
-            definitions["filmior"] = self.inputs["Film IOR"].export(exporter, props)
+            definitions["filmior"] = self.inputs["Film IOR"].export(exporter, depsgraph, props)
 
         if self.rough:
             Roughness.export(self, exporter, depsgraph, props, definitions)
