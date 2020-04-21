@@ -454,6 +454,7 @@ def find_smoke_domain_modifier(obj):
         for mod in obj.modifiers:
             if mod.type == "FLUID" and mod.fluid_type == "DOMAIN":
                 return mod
+
     return None
 
 
