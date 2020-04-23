@@ -49,10 +49,11 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         if world.luxcore.light != "none":
             is_sky = world.luxcore.light == "sky2"
             col = layout.column(align=True)
-            if is_sky:
-                col.label(icon="INFO", text="Sky color and brightness are driven by the sun position")
+            if (is_sky or (world.luxcore.light == "infinite" and world.luxcore.image)):
+                rgb_gain_label = "Tint"
             else:
-                col.prop(world.luxcore, "rgb_gain", text="Color")
+                rgb_gain_label = "Color" 
+            col.prop(world.luxcore, "rgb_gain", text=rgb_gain_label)
 
             has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
 
