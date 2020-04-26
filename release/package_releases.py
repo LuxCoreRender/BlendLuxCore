@@ -53,6 +53,7 @@ WINDOWS_FILES = [
     "OpenImageIO.dll", "pyluxcore.pyd",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
     "OpenImageDenoise.dll", "denoise.exe",
+    "nvrtc64_101_0.dll", "nvrtc-builtins64_101.dll",
 ]
 
 MAC_FILES = [
@@ -225,6 +226,7 @@ def main():
         "-linux64-opencl.tar.bz2",
         "-win64.zip",
         "-win64-opencl.zip",
+        "-win64-cuda.zip",
         "-mac64.dmg",
         "-mac64-opencl.dmg",
     ]

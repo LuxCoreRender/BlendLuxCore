@@ -171,8 +171,8 @@ class FrameBuffer(object):
             raise Exception("Binary not found. Download it from "
                             "https://github.com/OpenImageDenoise/oidn/releases")
         if self._transparent:
-            # TODO: enable ALPHA AOV and use it in case of transparent film
-            raise Exception("Does not work with transparent film yet")
+            self._alpha = numpy.zeros((self._height, self._width, 1), dtype="float32")
+            luxcore_session.GetFilm().GetOutputFloat(pyluxcore.FilmOutputType.ALPHA, self._alpha)
 
         self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE, self._noisy_file_path)
         self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.ALBEDO, self._albedo_file_path)
@@ -196,14 +196,20 @@ class FrameBuffer(object):
 
     def load_denoiser_result(self, scene):
         self._denoiser_process = None
+        shape = (self._height * self._width * 3)
         try:
             with open(self._denoised_file_path, "rb") as f:
-                data, scale = utils.pfm.load_pfm(f, as_flat_list=True)
+                data, scale = utils.pfm.load_pfm(f)
             TempfileManager.delete_files(id(self))
         except FileNotFoundError:
             TempfileManager.delete_files(id(self))
             raise Exception("Denoising failed, check console for details")
 
+        if self._transparent:
+            shape = (self._height * self._width * 4)
+            data = numpy.concatenate((data,self._alpha), axis=2)
+
+        data = numpy.resize(data, shape)
         self.buffer[:] = data
         self._update_texture(scene)
         self.denoiser_result_cached = True
