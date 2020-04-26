@@ -38,13 +38,28 @@ class Add_Image_Pipeline_PresetLuxcore(AddPresetBase, Operator):
 
     preset_values = [
         "luxcore.preset_version",
+        
         "pipeline.bloom.enabled",
+        "pipeline.bloom.radius",
+        "pipeline.bloom.weight",
+        
         "pipeline.mist.enabled",
+        "pipeline.mist.color",
+        "pipeline.mist.amount",
+        "pipeline.mist.start_distance",
+        "pipeline.mist.end_distance",
+        
         "pipeline.vignetting.enabled",
+        "pipeline.vignetting.scale",
+        
         "pipeline.coloraberration.enabled",
+        "pipeline.coloraberration.amount",
+        
         "pipeline.camera_response_func.enabled",
+        "pipeline.camera_response_func.type",
+        
         "pipeline.white_balance.enabled",
-        "pipeline.contour_lines.enabled"
+        "pipeline.white_balance.temperature"
     ]
 
     preset_subdir = "BlendLuxCore/ImagePipeline"
