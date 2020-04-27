@@ -138,7 +138,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
         # Denoiser
         if scene.luxcore.denoiser.enabled:
-            self.register_pass(scene, renderlayer, "DENOISED", 3, "RGB", "COLOR")
+            transparent = scene.camera.data.luxcore.imagepipeline.transparent_film
+            if transparent:
+                self.register_pass(scene, renderlayer, "DENOISED", 4, "RGBA", "COLOR")
+            else:
+                self.register_pass(scene, renderlayer, "DENOISED", 3, "RGB", "COLOR")
 
         aovs = renderlayer.luxcore.aovs
 
