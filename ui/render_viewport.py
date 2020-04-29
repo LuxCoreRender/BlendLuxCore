@@ -8,7 +8,7 @@ from ..properties.display import LuxCoreDisplaySettings
 
 class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "View Settings"
+    bl_label = "Viewport Render"
     bl_options = {"DEFAULT_CLOSED"}
     bl_order = 8
 
@@ -24,24 +24,7 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         viewport = context.scene.luxcore.viewport
         config = context.scene.luxcore.config
         luxcore_engine = config.engine
-        display = context.scene.luxcore.display
         
-        if config.engine == "PATH" and config.use_tiles:
-            box = layout.box()
-            box.label(text="Tile Highlighting:")
-
-            col = box.column(align=True)
-            col.prop(display, "show_converged", text="Converged")
-            col.prop(display, "show_notconverged", text="Unconverged")
-            col.prop(display, "show_pending", text="Pending")
-
-            box.prop(display, "show_passcounts")
-        
-        layout.label(text="Render Settings")
-        layout.prop(display, "interval")
-        template_refresh_button(LuxCoreDisplaySettings.refresh, "luxcore.request_display_refresh",
-                                layout, "Refreshing film...")
-        layout.label(text="Viewport Settings")
         layout.prop(viewport, "halt_time")
         layout.prop(viewport, "denoise")
 

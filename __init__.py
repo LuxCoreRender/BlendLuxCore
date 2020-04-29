@@ -2,6 +2,7 @@ import bpy
 import addon_utils
 import platform
 import os
+import shutil
 
 _, luxblend_is_enabled = addon_utils.check("luxrender")
 if luxblend_is_enabled:
@@ -12,20 +13,26 @@ if luxblend_is_enabled:
                     "and restart Blender before you can enable the "
                     "new addon.")
 
+user_addon_dir = bpy.utils.script_path_user()
+user_script_dir = bpy.utils.script_path_pref()
+preset_dir = user_addon_dir + "/presets/BlendLuxcore/"
+lux_preset_dir = user_addon_dir + "/addons/BlendLuxCore/presets/"
+
+if not os.path.isdir(preset_dir):
+    print("Copying LuxCore Presets")
+    shutil.copytree(lux_preset_dir, preset_dir)
+    
 if platform.system() == "Darwin":
     if bpy.app.version < (2, 82, 7):
         raise Exception("\n\nUnsupported Blender version. 2.82a or higher is required.")
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
-        
-    addon_dir = bpy.utils.script_path_user()
-    user_script_dir = bpy.utils.script_path_pref()
     
     try:
         denoiser = user_script_dir + "/addons/BlendLuxCore/bin/denoise"
     except: 
-        denoiser = addon_dir + "/addons/BlendLuxCore/bin/denoise"
+        denoiser = user_addon_dir + "/addons/BlendLuxCore/bin/denoise"
         
     if not os.access(denoiser, os.X_OK): # Check for execution access
         print("Patching LuxCore Denoiser")
