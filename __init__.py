@@ -28,7 +28,6 @@ if platform.system() == "Darwin":
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
-    
     try:
         denoiser = user_script_dir + "/addons/BlendLuxCore/bin/denoise"
     except: 
@@ -37,6 +36,22 @@ if platform.system() == "Darwin":
     if not os.access(denoiser, os.X_OK): # Check for execution access
         print("Patching LuxCore Denoiser")
         os.chmod(denoiser ,  0o755)
+        
+elif platform.system() == "Windows":
+    # Ensure nvrtc-builtins64_101.dll can be found
+    import os
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    bin_directory = os.path.join(current_dir, "bin")
+
+    from ctypes import windll, c_wchar_p
+    from ctypes.wintypes import DWORD
+
+    AddDllDirectory = windll.kernel32.AddDllDirectory
+    AddDllDirectory.restype = DWORD
+    AddDllDirectory.argtypes = [c_wchar_p]
+
+    os.environ["PATH"] = bin_directory + os.pathsep + os.environ["PATH"]
+    AddDllDirectory(bin_directory)
 
 try:
     from .bin import pyluxcore
