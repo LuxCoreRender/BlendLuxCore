@@ -28,6 +28,7 @@ if platform.system() == "Darwin":
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
+        
     try:
         denoiser = user_script_dir + "/addons/BlendLuxCore/bin/denoise"
     except: 
