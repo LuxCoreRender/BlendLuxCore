@@ -49,7 +49,8 @@ class LuxCoreOpenCLSettings(PropertyGroup):
         concat = ""
         for device_tuple in device_list:
             name = device_tuple[0]
-            concat += name
+            device_type = device_tuple[1]
+            concat += name + device_type
         return concat
 
     def devices_to_selection_string(self):

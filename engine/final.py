@@ -242,7 +242,11 @@ def _add_passes(engine, layer, scene):
 
     # Denoiser
     if scene.luxcore.denoiser.enabled:
-        engine.add_pass("DENOISED", 3, "RGB", layer=layer.name)
+        transparent = scene.camera.data.luxcore.imagepipeline.transparent_film
+        if transparent:
+            engine.add_pass("DENOISED", 4, "RGBA", layer=layer.name)
+        else:
+            engine.add_pass("DENOISED", 3, "RGB", layer=layer.name)
 
     if aovs.rgb:
         engine.add_pass("RGB", 3, "RGB", layer=layer.name)

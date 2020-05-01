@@ -114,7 +114,12 @@ class FrameBufferFinal(object):
 
         if output_name in engine.aov_imagepipelines:
             index = engine.aov_imagepipelines[output_name]
-            output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+            
+            if output_name == "DENOISED" and self._transparent:
+                output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
+            else:
+                output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+
             convert_func = DEFAULT_AOV_SETTINGS.convert_func
         else:
             convert_func = aov.convert_func
@@ -139,7 +144,11 @@ class FrameBufferFinal(object):
             return
 
         output_name = engine.DENOISED_OUTPUT_NAME
-        output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+        
+        if self._transparent:
+            output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
+        else:
+            output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
         # Refresh when ending the render (Esc/halt condition) or when the user presses the refresh button
         refresh_denoised = render_stopped or LuxCoreDenoiser.refresh
