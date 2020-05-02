@@ -214,26 +214,46 @@ def link_asset(context, asset, location, rotation):
     filename = asset["url"]
     filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
 
-    with bpy.data.libraries.load(filepath, link=True) as (data_from, data_to):
+    scene = context.scene
+    link_model = (scene.luxcoreOL.model.append_method == 'LINK_COLLECTION')
+
+    with bpy.data.libraries.load(filepath, link=link_model) as (data_from, data_to):
         data_to.objects = [name for name in data_from.objects if name not in ["Plane", "Camera"]]
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=Vector(location), rotation=rotation)
-    main_object = bpy.context.view_layer.objects.active
-    main_object.name = asset["name"]
     bbox_min = asset["bbox_min"]
     bbox_max = asset["bbox_max"]
-
-    main_object.empty_display_size = 0.5*max(bbox_max[0] - bbox_min[0], bbox_max[1] - bbox_min[1], bbox_max[2] - bbox_min[2])
-    main_object.instance_type = 'COLLECTION'
-    main_object.matrix_world.translation = location
-
     bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
+
+    # Add new collection, where the assets are placed into
     col = bpy.data.collections.new(asset["name"])
-    col.instance_offset = bbox_center
-    main_object.instance_collection = col
+
+    # Add parent empty for asset collection
+    main_object = bpy.data.objects.new(asset["name"], None)
+    main_object.empty_display_size = 0.5 * max(bbox_max[0] - bbox_min[0], bbox_max[1] - bbox_min[1],
+                                               bbox_max[2] - bbox_min[2])
+
+    main_object.location = location
+    main_object.rotation_euler = rotation
+    main_object.empty_display_size = 0.5*max(bbox_max[0] - bbox_min[0], bbox_max[1] - bbox_min[1], bbox_max[2] - bbox_min[2])
+
+    if link_model:
+        main_object.instance_type = 'COLLECTION'
+        main_object.instance_collection = col
+        col.instance_offset = bbox_center
+    else:
+        scene.collection.children.link(col)
+
+    scene.collection.objects.link(main_object)
 
     # Objects have to be linked to show up in a scene
     for obj in data_to.objects:
+        if not link_model:
+            obj = obj.copy()
+            obj.data.make_local()
+            obj.parent = main_object
+            obj.matrix_parent_inverse = main_object.matrix_world.inverted() @ Matrix.Translation(-1*bbox_center)
+
+        # Add objects to asset collection
         col.objects.link(obj)
 
 

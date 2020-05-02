@@ -106,8 +106,8 @@ class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
         ('LINK_COLLECTION', 'Link Collection', ''),
         ('APPEND_OBJECTS', 'Append Objects', ''),
     ]
-    append_method: EnumProperty(name = "Import Method", items = append_method_items,
-    description = "choose if the assets will be linked or appended", default = "LINK_COLLECTION"
+    append_method: EnumProperty(name="Import Method", items=append_method_items,
+    description="choose if the assets will be linked or appended", default="LINK_COLLECTION"
 
 )
 
