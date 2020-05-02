@@ -14,7 +14,6 @@ if luxblend_is_enabled:
                     "new addon.")
 
 user_addon_dir = bpy.utils.script_path_user()
-user_script_dir = bpy.utils.script_path_pref()
 preset_dir = user_addon_dir + "/presets/BlendLuxcore"
 lux_preset_dir = user_addon_dir + "/addons/BlendLuxCore/presets"
 
@@ -28,10 +27,8 @@ if platform.system() == "Darwin":
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
-    try:
-        denoiser = user_script_dir + "/addons/BlendLuxCore/bin/denoise"
-    except: 
-        denoiser = user_addon_dir + "/addons/BlendLuxCore/bin/denoise"
+    
+    denoiser = user_addon_dir + "/addons/BlendLuxCore/bin/denoise"
         
     if not os.access(denoiser, os.X_OK): # Check for execution access
         print("Patching LuxCore Denoiser")
