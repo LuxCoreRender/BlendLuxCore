@@ -248,10 +248,14 @@ def link_asset(context, asset, location, rotation):
     # Objects have to be linked to show up in a scene
     for obj in data_to.objects:
         if not link_model:
-            obj = obj.copy()
             obj.data.make_local()
-            obj.parent = main_object
-            obj.matrix_parent_inverse = main_object.matrix_world.inverted() @ Matrix.Translation(-1*bbox_center)
+            parent = obj
+            while parent.parent != None:
+                parent = parent.parent
+
+            if parent != main_object:
+                parent.parent = main_object
+                parent.matrix_parent_inverse = main_object.matrix_world.inverted() @ Matrix.Translation(-1*bbox_center)
 
         # Add objects to asset collection
         col.objects.link(obj)
