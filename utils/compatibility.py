@@ -22,7 +22,9 @@ def run():
         update_cloth_remove_repeat_sockets(node_tree)
         update_imagemap_add_alpha_output(node_tree)
         update_smoke_multiple_output_channels(node_tree)
+        update_smoke_mantaflow_simulation(node_tree)
         update_mat_output_add_shape_input(node_tree)
+
 
     for scene in bpy.data.scenes:
         config = scene.luxcore.config
@@ -202,6 +204,44 @@ def update_smoke_multiple_output_channels(node_tree):
 
         print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
+
+def update_smoke_mantaflow_simulation(node_tree):
+    # commit 6184e20b1fe2a5766c7ea89c4588641909bc9454
+    for node in find_nodes(node_tree, "LuxCoreNodeTexSmoke", False):
+        if "flame" in node.outputs:
+            continue
+        # Copy current output sockets for reconnection after update
+        old_sockets = {}
+        for e in node.outputs:
+            links = []
+            for link in e.links:
+                links.append(link.to_socket)
+            if e.name == 'fire':
+                old_sockets['flame'] = links.copy()
+            else:
+                old_sockets[e.name] = links.copy()
+
+        node.outputs.remove(node.outputs["density"])
+        node.outputs.remove(node.outputs["fire"])
+        node.outputs.remove(node.outputs["heat"])
+        node.outputs.remove(node.outputs["color"])
+        node.outputs.remove(node.outputs["velocity"])
+
+        node.outputs.new("LuxCoreSocketFloatPositive", "density")
+        node.outputs.new("LuxCoreSocketFloatPositive", "flame")
+        node.outputs.new("LuxCoreSocketFloatPositive", "heat")
+        node.outputs.new("LuxCoreSocketFloatPositive", "temperature")
+        node.outputs.new("LuxCoreSocketColor", "color")
+        node.outputs.new("LuxCoreSocketColor", "velocity")
+
+        for output in node.outputs:
+            try:
+                for link in old_sockets[output.name]:
+                    node_tree.links.new(output, link)
+            except KeyError:
+                pass
+
+        print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
 def update_mat_output_add_shape_input(node_tree):
     # commit e20355a7567b22df4d05e8b303c98dbc697b9c08

@@ -481,6 +481,8 @@ def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
     definitions["gain"] = apply_exposure(gain, world.luxcore.exposure)
     definitions["importance"] = importance
     definitions["id"] = lightgroup_id
+    
+    tint_color = list(world.luxcore.rgb_gain)
 
     light_type = world.luxcore.light
     if light_type == "sky2":
@@ -500,18 +502,23 @@ def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
         else:
             # Use world turbidity
             definitions["turbidity"] = world.luxcore.turbidity
+        
+        for i in range(3):
+            definitions["gain"][i] *= tint_color[i]
 
     elif light_type == "infinite":
         if world.luxcore.image:
             transformation = Matrix.Rotation(world.luxcore.rotation, 4, "Z")
             _convert_infinite(definitions, world, scene, transformation)
+            for i in range(3):
+                definitions["gain"][i] *= tint_color[i]
         else:
             # Fallback if no image is set
             definitions["type"] = "constantinfinite"
-            definitions["color"] = list(world.luxcore.rgb_gain)
+            definitions["color"] = tint_color
     else:
         definitions["type"] = "constantinfinite"
-        definitions["color"] = list(world.luxcore.rgb_gain)
+        definitions["color"] = tint_color
 
     _indirect_light_visibility(definitions, world)
 
