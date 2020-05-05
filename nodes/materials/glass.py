@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import FloatProperty, BoolProperty
-from ..base import LuxCoreNodeMaterial, Roughness
+from ..base import LuxCoreNodeMaterial, Roughness, ThinFilmCoating
 from ..sockets import LuxCoreSocketFloat
 from ..output import get_active_output
 from ...ui import icons
@@ -43,7 +43,7 @@ class LuxCoreSocketCauchyC(bpy.types.NodeSocket, LuxCoreSocketFloat):
 class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
     """ Node for the three LuxCore materials glass, roughglass and archglass """
     bl_label = "Glass Material"
-    bl_width_default = 160
+    bl_width_default = 190
 
     use_anisotropy: BoolProperty(name=Roughness.aniso_name,
                                   default=False,
@@ -56,14 +56,15 @@ class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
     architectural: BoolProperty(update=utils_node.force_viewport_update, name="Architectural",
                                  default=False,
                                  description=ARCHGLASS_DESCRIPTION)
+    use_thinfilmcoating: BoolProperty(name="Thin Film Coating", default=False,
+                                      update=ThinFilmCoating.toggle)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Transmission Color", (1, 1, 1))
         self.add_input("LuxCoreSocketColor", "Reflection Color", (1, 1, 1))
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
         self.add_input("LuxCoreSocketCauchyC", "Dispersion", 0)
-        self.add_input("LuxCoreSocketFloatPositive", "Film Thickness (nm)", 0)
-        self.add_input("LuxCoreSocketFloatPositive", "Film IOR", 1.5)
+        ThinFilmCoating.init(self)
 
         Roughness.init(self, default=0.05, init_enabled=False)
         self.add_common_inputs()
@@ -82,6 +83,8 @@ class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
         row = layout.row()
         row.enabled = not self.rough
         row.prop(self, "architectural")
+        
+        layout.prop(self, "use_thinfilmcoating")
 
         if self.get_interior_volume():
             layout.label(text="Using IOR of interior volume", icon=icons.INFO)
@@ -108,10 +111,8 @@ class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
         if self.inputs["Dispersion"].is_linked or cauchyc > 0:
             definitions["cauchyc"] = cauchyc
 
-        film_thickness = self.inputs["Film Thickness (nm)"].export(exporter, depsgraph, props)
-        if not self.rough and self.inputs["Film Thickness (nm)"].is_linked or film_thickness > 0:
-            definitions["filmthickness"] = film_thickness
-            definitions["filmior"] = self.inputs["Film IOR"].export(exporter, depsgraph, props)
+        if self.use_thinfilmcoating:
+            ThinFilmCoating.export(self, exporter, depsgraph, props, definitions)
 
         if self.rough:
             Roughness.export(self, exporter, depsgraph, props, definitions)

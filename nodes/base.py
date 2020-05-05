@@ -467,3 +467,28 @@ class Roughness:
 
             definitions["uroughness_bf"] = uroughness
             definitions["vroughness_bf"] = vroughness
+
+
+class ThinFilmCoating:
+    THICKNESS_NAME = "Film Thickness (nm)"
+    IOR_NAME = "Film IOR"
+    
+    @staticmethod
+    def init(node):
+        node.add_input("LuxCoreSocketFilmThickness", ThinFilmCoating.THICKNESS_NAME, 300, enabled=False)
+        node.add_input("LuxCoreSocketFilmIOR", ThinFilmCoating.IOR_NAME, 1.5, enabled=False)
+
+    @staticmethod
+    def toggle(node, context):
+        node.inputs[ThinFilmCoating.THICKNESS_NAME].enabled = node.use_thinfilmcoating
+        node.inputs[ThinFilmCoating.IOR_NAME].enabled = node.use_thinfilmcoating
+        utils_node.force_viewport_update(node, context)
+        
+    @staticmethod
+    def export(node, exporter, depsgraph, props, definitions):
+        thickness_socket = node.inputs[ThinFilmCoating.THICKNESS_NAME]
+        thickness = thickness_socket.export(exporter, depsgraph, props)
+        
+        if thickness_socket.is_linked or thickness > 0:
+            definitions["filmthickness"] = thickness
+            definitions["filmior"] = node.inputs[ThinFilmCoating.IOR_NAME].export(exporter, depsgraph, props)
