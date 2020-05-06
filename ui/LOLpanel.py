@@ -19,7 +19,7 @@
 import bpy
 from bpy.types import Panel
 from os.path import basename, dirname
-
+from ..utils import LOLutils as utils
 
 def draw_panel_categories(self, context):
     scene = context.scene
@@ -131,22 +131,23 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
 
     @classmethod
     def poll(cls, context):
-        #eturn len(download.download_threads) > 0
-        return True
+        return len(utils.download_threads) > 0
+
 
     def draw(self, context):
         layout = self.layout
-        #TODO
-        #for threaddata in download.download_threads:
-        #    tcom = threaddata[2]
-        #    asset_data = threaddata[1]
-        #    row = layout.row()
-        #    row.label(text=asset_data['name'])
-        #    row.label(text=str(int(tcom.progress)) + ' %')
-        #    row.operator('scene.blenderkit_download_kill', text='', icon='CANCEL')
-        #    if tcom.passargs.get('retry_counter', 0) > 0:
-        #        row = layout.row()
-        #        row.label(text='failed. retrying ... ', icon='ERROR')
-        #        row.label(text=str(tcom.passargs["retry_counter"]))
-        #
-        #        layout.separator()
+
+        for threaddata in utils.download_threads:
+           tcom = threaddata[2]
+           asset_data = threaddata[1]
+           row = layout.row()
+           row.label(text=asset_data['name'])
+           row.label(text=str(int(tcom.progress)) + ' %')
+           #TODO: Implement operator for killing download
+           #row.operator('scene.blenderkit_download_kill', text='', icon='CANCEL')
+           # if tcom.passargs.get('retry_counter', 0) > 0:
+           #     row = layout.row()
+           #     row.label(text='failed. retrying ... ', icon='ERROR')
+           #     row.label(text=str(tcom.passargs["retry_counter"]))
+           #
+           #     layout.separator()

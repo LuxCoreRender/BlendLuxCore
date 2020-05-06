@@ -22,7 +22,6 @@ def _init_persistent_cache_file_path(settings, suffix):
 
 
 def _init_LuxCoreOnlineLibrary():
-    # TODO: implement LOL initialization
     from os.path import basename, dirname
 
     name = basename(dirname(dirname(__file__)))
@@ -44,7 +43,6 @@ def _init_LuxCoreOnlineLibrary():
     if not os.path.exists(os.path.join(user_preferences.global_dir, "model", "preview")):
         os.makedirs(os.path.join(user_preferences.global_dir, "model", "preview"))
 
-    # user_preferences.login_attempt = False
 
 @persistent
 def handler(_):

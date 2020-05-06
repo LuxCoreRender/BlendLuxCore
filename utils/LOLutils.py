@@ -139,7 +139,6 @@ def download_file(asset, location, rotation):
     return True
 
 
-#TODO: Implement threaded downloader
 class Downloader(threading.Thread):
     def __init__(self, asset, tcom):
         super(Downloader, self).__init__()
@@ -223,6 +222,9 @@ def link_asset(context, asset, location, rotation):
     bbox_min = asset["bbox_min"]
     bbox_max = asset["bbox_max"]
     bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
+
+    # TODO: Check if asset is already used in scene and override append/link selection
+    # If the same model is first linked and then appended it breaks relationships and transformaton in blender
 
     # Add new collection, where the assets are placed into
     col = bpy.data.collections.new(asset["name"])

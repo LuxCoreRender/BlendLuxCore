@@ -965,7 +965,6 @@ class LOLAssetBarOperator(Operator):
                         rotation = scene.cursor.rotation_euler
 
                     utils.load_asset(context, assets[asset_search_index], loc, rotation)
-
                     ui_props.dragging = False
                     return {'RUNNING_MODAL'}
             else:
