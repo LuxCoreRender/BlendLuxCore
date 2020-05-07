@@ -277,8 +277,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
     # Caustic cache
     caustic_enabled: BoolProperty(name="Use Caustic Cache", default=False,
                                   description="Accelerates rendering of caustics at the cost of blurring them")
-    caustic_maxsize: FloatProperty(name="Max. Size (Millions)", default=1, soft_min=0.1, min=0.01, soft_max=10,
-                                    precision=0, step=1,
+    caustic_maxsize: FloatProperty(name="Max. Size (Millions)", default=0.1, soft_min=0.01, min=0.001, soft_max=10,
+                                    precision=1, step=1,
                                     description="Max. number of photons stored in caustic cache (value in millions)")
     caustic_lookup_radius: FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
                                           description=LOOKUP_RADIUS_DESC)
