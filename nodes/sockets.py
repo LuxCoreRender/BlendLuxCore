@@ -265,15 +265,15 @@ class LuxCoreSocketIOR(bpy.types.NodeSocket, LuxCoreSocketFloat):
         
         
 class LuxCoreSocketFilmThickness(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, precision=1, step=10,
-                                  description="", # TODO description
+    default_value: FloatProperty(min=0, precision=1, step=10, soft_max=4000,
+                                  description="Thickness of the film in nanometers",
                                   update=utils_node.force_viewport_update)
     
     
 class LuxCoreSocketFilmIOR(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value: FloatProperty(min=1, soft_max=4.0, max=25, step=0.1,
                                  precision=FLOAT_UI_PRECISION, 
-                                 description=IOR_DESCRIPTION, # TODO custom description?
+                                 description="Index of refraction of the film",
                                  update=utils_node.force_viewport_update)
 
 
