@@ -20,6 +20,12 @@ ARCHGLASS_DESCRIPTION = (
     "for camera rays, which looks better if the edges of the glass sheets are visible"
 )
 
+THIN_FILM_DESCRIPTION = (
+    "Simulate the effect of light waves interfering with themselves in a thin film "
+    "coating on the surface of the material. The resulting colors are controlled by "
+    "the film thickness, film IOR and the angle of incidence"
+)
+
 
 class LuxCoreSocketCauchyC(bpy.types.NodeSocket, LuxCoreSocketFloat):
     default_value: FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.01342,
@@ -57,6 +63,7 @@ class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
                                  default=False,
                                  description=ARCHGLASS_DESCRIPTION)
     use_thinfilmcoating: BoolProperty(name="Thin Film Coating", default=False,
+                                      description=THIN_FILM_DESCRIPTION,
                                       update=ThinFilmCoating.toggle)
 
     def init(self, context):

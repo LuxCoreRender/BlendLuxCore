@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import BoolProperty
 from ..base import LuxCoreNodeMaterial, ThinFilmCoating
+from .glass import THIN_FILM_DESCRIPTION
 
 
 class LuxCoreNodeMatDisney(bpy.types.Node, LuxCoreNodeMaterial):
@@ -12,6 +13,7 @@ class LuxCoreNodeMatDisney(bpy.types.Node, LuxCoreNodeMaterial):
         ThinFilmCoating.toggle(self, context)
     
     use_thinfilmcoating: BoolProperty(name="Thin Film Coating", default=False,
+                                      description=THIN_FILM_DESCRIPTION,
                                       update=update_use_thinfilmcoating)
 
     def init(self, context):
