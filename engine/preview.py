@@ -85,7 +85,9 @@ def enable_log_output():
 
 def _export_mat_scene(engine, depsgraph, active_mat):
     from ..export.caches.exported_data import ExportedObject, ExportedMesh
-    from ..export.caches.object_cache import get_material, uses_pointiness
+    from ..export.caches.object_cache import export_material, uses_pointiness, uses_random_per_island
+    from ..nodes.output import get_active_output
+    from ..nodes.textures.random_per_island import DATAINDEX_RANDOM_PER_ISLAND
 
     exporter = engine.exporter
     scene = depsgraph.scene_eval
@@ -107,20 +109,21 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     luxcore_scene.Parse(cam_props)
 
     # Objects
-    for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
-        obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
-        if not obj.name == 'preview_hair' and not utils.is_instance_visible(dg_obj_instance, obj, None):
+    for dg_obj_instance in depsgraph.object_instances:
+        obj = dg_obj_instance.object
+        
+        if not utils.is_instance_visible(dg_obj_instance, obj, None):
             continue
 
-        # Use LuxBall instead of Blender Shaderball
-        if obj.name == "CurveCircle.002" or obj.name == "preview_shaderball.003":
+        # Don't export lights and floor from preview scene
+        if obj.name in {"CurveCircle.002", "preview_shaderball.003", "Floor"} or obj.type == "LIGHT":
             continue
 
         if obj.name == "preview_shaderball":
-            use_instancing = False
+            # Use LuxBall instead of Blender Shaderball
             is_viewport_render = False
-            obj_key = utils.make_key_from_instance(dg_obj_instance)
-            mesh_key = exporter.object_cache2._get_mesh_key(obj, use_instancing, is_viewport_render)
+            obj_key = "Preview_LuxBall_Object"
+            mesh_key = "Preview_LuxBall_Mesh"
 
             mesh_definitions = []
             props = pyluxcore.Properties()
@@ -132,32 +135,63 @@ def _export_mat_scene(engine, depsgraph, active_mat):
             mesh_definitions.append((mesh_key, 0))
             scene_props.Set(props)
 
-            exported_mesh = ExportedMesh(mesh_definitions)
+            mat_names = []
+            for idx, (shape_name, mat_index) in enumerate(mesh_definitions):
+                shape = shape_name
+                lux_mat_name, mat_props, node_tree = export_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                scene_props.Set(mat_props)
+                mat_names.append(lux_mat_name)
 
-            if exported_mesh:
-                mat_names = []
-                for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
-                    lux_mat_name, mat_props, node_tree = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
-                    scene_props.Set(mat_props)
-                    mat_names.append(lux_mat_name)
+                if node_tree:
+                    output_node = get_active_output(node_tree)
+                    if output_node:
+                        # Convert the whole shape stack
+                        shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
 
-                    if node_tree and uses_pointiness(node_tree):
-                        # Replace shape definition with pointiness shape
+                    # Add some shapes at the end that are required by some nodes in the node tree
+
+                    if uses_pointiness(node_tree):
+                        # Note: Since Blender still does not make use of the vertex alpha channel 
+                        # as of 2.82, we use it to store the pointiness information.
                         pointiness_shape = shape_name + "_pointiness"
                         prefix = "scene.shapes." + pointiness_shape + "."
                         scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
-                        scene_props.Set(pyluxcore.Property(prefix + "source", shape_name))
-                        exported_mesh.mesh_definitions[idx] = [pointiness_shape, mat_index]
+                        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+                        shape = pointiness_shape
 
-                exported_obj = ExportedObject(obj_key, exported_mesh.mesh_definitions, mat_names, None, True)
+                    if uses_random_per_island(node_tree):
+                        island_aov_shape = shape_name + "_island_aov"
+                        prefix = "scene.shapes." + island_aov_shape + "."
+                        scene_props.Set(pyluxcore.Property(prefix + "type", "islandaov"))
+                        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+                        scene_props.Set(pyluxcore.Property(prefix + "dataindex", DATAINDEX_RANDOM_PER_ISLAND))
+                        shape = island_aov_shape
 
-                scene_props.Set(exported_obj.get_props())
-                exporter.object_cache2.exported_objects[obj_key] = exported_obj
+                        random_tri_aov_shape = shape_name + "_random_tri_aov_shape"
+                        prefix = "scene.shapes." + random_tri_aov_shape + "."
+                        scene_props.Set(pyluxcore.Property(prefix + "type", "randomtriangleaov"))
+                        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+                        scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", DATAINDEX_RANDOM_PER_ISLAND))
+                        scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", DATAINDEX_RANDOM_PER_ISLAND))
+                        shape = random_tri_aov_shape
 
-        # Don't export lights and floor from preview scene
-        elif not (obj.type == 'LIGHT' or obj.name == 'Floor'):
+                mesh_definitions[idx] = [shape, mat_index]
+
+            exported_obj = ExportedObject(obj_key, mesh_definitions, mat_names, None, True)
+
+            scene_props.Set(exported_obj.get_props())
+            exporter.object_cache2.exported_objects[obj_key] = exported_obj
+        else:
             exporter.object_cache2._convert_obj(exporter, dg_obj_instance, obj, depsgraph,
                                                 luxcore_scene, scene_props, False)
+    
+    # Limit max. subdivision level for previews
+    for shape_key in scene_props.GetAllUniqueSubNames("scene.shapes"):
+        shape_props = scene_props.GetAllProperties(shape_key)
+        if shape_props.Get(shape_key + ".type", [""]).GetString() == "subdiv":
+            max_level = shape_props.Get(shape_key + ".maxlevel", [0]).GetInt()
+            shape_props.Set(pyluxcore.Property(shape_key + ".maxlevel", min(max_level, 1)))
+            scene_props.Set(shape_props)
 
     # Lights (either two area lights or a sun+sky setup)
     _create_lights(scene, luxcore_scene, scene_props, is_world_sphere)
@@ -165,7 +199,6 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     if not is_world_sphere:
         _create_backplates(luxcore_scene, scene_props)
     _create_ground(luxcore_scene, scene_props)
-
 
     luxcore_scene.Parse(scene_props)
 

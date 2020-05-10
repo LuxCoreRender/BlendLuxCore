@@ -62,9 +62,14 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
                 "kr": self.inputs["Reflection Color"].export(exporter, depsgraph, props),
             }
         elif self.input_type == "preset":
+            if self.preset == "amorphous_carbon":
+                name = "amorphous carbon"
+            else:
+                name = self.preset
+            
             definitions = {
                 "type": "fresnelpreset",
-                "name": self.preset,
+                "name": name,
             }
         else:
             #Fresnel data file

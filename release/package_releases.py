@@ -52,22 +52,23 @@ WINDOWS_FILES = [
     "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
-    "OpenImageDenoise.dll",
+    "OpenImageDenoise.dll", "denoise.exe",
+    "nvrtc64_101_0.dll", "nvrtc-builtins64_101.dll",
 ]
 
 MAC_FILES = [
     "libembree3.3.dylib", "libomp.dylib", 
-    "libOpenImageDenoise.1.1.0.dylib", "libOpenImageIO.1.8.dylib", 
+    "libOpenImageDenoise.1.2.0.dylib", "libOpenImageIO.1.8.dylib", 
     "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
     "pyluxcore.so", "pyluxcoretools.zip", "denoise"
 ]
 
-OIDN_WIN = "oidn-windows.zip"
+#OIDN_WIN = "oidn-windows.zip"
 OIDN_LINUX = "oidn-linux.tar.gz"
 #OIDN_MAC = "oidn-macos.tar.gz"
 
 OIDN_urls = {
-    OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
+    #OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
     OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
     #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
 }
@@ -225,6 +226,7 @@ def main():
         "-linux64-opencl.tar.bz2",
         "-win64.zip",
         "-win64-opencl.zip",
+        "-win64-cuda.zip",
         "-mac64.dmg",
         "-mac64-opencl.dmg",
     ]
@@ -339,9 +341,9 @@ def main():
         name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, name, "BlendLuxCore", "bin")
 
-        if "win64" in suffix:
-            extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
-        elif "linux64" in suffix:
+        #if "win64" in suffix:
+        #    extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
+        if "linux64" in suffix:
             extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
         #elif "mac64" in suffix:
         #    extract_files_from_archive(OIDN_MAC, ["denoise"], destination)

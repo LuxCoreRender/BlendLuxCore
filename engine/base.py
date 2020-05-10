@@ -42,7 +42,6 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def __init__(self):
         self.session = None
-        self.starting_session = False
         self.DENOISED_OUTPUT_NAME = "DENOISED"
         self.reset()
 
@@ -52,6 +51,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         self.error = None
         self.aov_imagepipelines = {}
         self.viewport_start_time = 0
+        self.starting_session = False
+        self.viewport_starting_message_shown = False
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
@@ -137,7 +138,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
         # Denoiser
         if scene.luxcore.denoiser.enabled:
-            self.register_pass(scene, renderlayer, "DENOISED", 3, "RGB", "COLOR")
+            transparent = scene.camera.data.luxcore.imagepipeline.transparent_film
+            if transparent:
+                self.register_pass(scene, renderlayer, "DENOISED", 4, "RGBA", "COLOR")
+            else:
+                self.register_pass(scene, renderlayer, "DENOISED", 3, "RGB", "COLOR")
 
         aovs = renderlayer.luxcore.aovs
 

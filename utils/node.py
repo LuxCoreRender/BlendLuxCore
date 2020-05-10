@@ -1,3 +1,4 @@
+import bpy
 import mathutils
 from ..bin import pyluxcore
 from .errorlog import LuxCoreErrorLog
@@ -31,10 +32,7 @@ def has_valid_uv_map(obj):
     if not obj.data:
         return False
 
-    if obj.type in {"CURVE", "SURFACE", "FONT"}:
-        if not obj.data.use_uv_as_generated:
-            return False
-    elif obj.type == "MESH" and len(obj.data.uv_layers) == 0:
+    if obj.type == "MESH" and len(obj.data.uv_layers) == 0:
         return False
 
     return True
@@ -217,7 +215,16 @@ def force_viewport_mesh_update(_, context):
             if slot.material == mat:
                 if obj.data:
                     obj.data.update_tag()
-                    continue
+                    break
+
+
+def force_viewport_mesh_update2(node_tree):
+    for obj in bpy.data.objects:
+        for slot in obj.material_slots:
+            if slot.material.luxcore.node_tree == node_tree:
+                if obj.data:
+                    obj.data.update_tag()
+                    break
 
 
 def update_opengl_materials(_, context):

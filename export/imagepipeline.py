@@ -7,7 +7,7 @@ from ..utils.errorlog import LuxCoreErrorLog
 
 def convert(scene, context=None, index=0):
     try:
-        prefix = "film.imagepipelines.%d." % index
+        prefix = "film.imagepipelines.%03d." % index
         definitions = OrderedDict()
 
         if utils.in_material_shading_mode(context):

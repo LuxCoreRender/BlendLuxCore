@@ -12,6 +12,25 @@ def _show_hybrid_metropolis_warning(context):
             and config.sampler == "METROPOLIS" and opencl.use_native_cpu)
 
 
+def _get_gpu_devices(device_list):
+    return [device for device in device_list if device.type in {"OPENCL_GPU", "CUDA_GPU"}]
+
+
+def _show_openCL_device_warning(context):
+    config = context.scene.luxcore.config
+    opencl = context.scene.luxcore.opencl
+
+    gpu_devices = _get_gpu_devices(opencl.devices)
+    # We don't show OpenCL CPU devices, we just need them to check if there are other devices
+    cpu_devices = [device for device in opencl.devices if device.type == "OPENCL_CPU"]
+    other_devices = set(opencl.devices) - (set(gpu_devices) | set(cpu_devices))
+
+    has_gpus = any([device.enabled for device in gpu_devices])
+    has_others = any([device.enabled for device in other_devices])
+
+    return (config.engine == "PATH" and config.device == "OCL" and not has_gpus and not has_others)
+
+
 class LUXCORE_RENDER_PT_performance(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
@@ -27,34 +46,13 @@ class LUXCORE_RENDER_PT_performance(RenderButtonsPanel, Panel):
         for device in devices:
             layout.prop(device, "enabled", text=device.name)
 
-    def _show_openCL_device_warning(self, context):
-        config = context.scene.luxcore.config
-        opencl = context.scene.luxcore.opencl
-        
-        gpu_devices = [device for device in opencl.devices if device.type == "OPENCL_GPU"]
-        # We don't show OpenCL CPU devices, we just need them to check if there are other devices
-        cpu_devices = [device for device in opencl.devices if device.type == "OPENCL_CPU"]
-        other_devices = set(opencl.devices) - (set(gpu_devices) | set(cpu_devices))
-
-        has_gpus = any([device.enabled for device in gpu_devices])
-        has_others = any([device.enabled for device in other_devices])
-
-        return (config.engine == "PATH" and config.device == "OCL" and not has_gpus and not has_others)
-
     def draw_header(self, context):
-        opencl = context.scene.luxcore.opencl
-        layout = self.layout
-        
-        if _show_hybrid_metropolis_warning(context):
+        if _show_hybrid_metropolis_warning(context) or _show_openCL_device_warning(context):
             self.layout.label(text="", icon=icons.WARNING)
-
-        if self._show_openCL_device_warning(context):
-            layout.label(text="", icon=icons.WARNING)
 
     def draw(self, context):
         layout = self.layout
         config = context.scene.luxcore.config
-        opencl = context.scene.luxcore.opencl
 
         layout.use_property_split = True
         layout.use_property_decorate = False      
@@ -89,7 +87,6 @@ class LUXCORE_RENDER_PT_performance_cpu_devices(RenderButtonsPanel, Panel):
 
     def draw(self, context):
         layout = self.layout
-        config = context.scene.luxcore.config
         opencl = context.scene.luxcore.opencl
 
         layout.enabled = opencl.use_native_cpu
@@ -119,23 +116,9 @@ class LUXCORE_RENDER_PT_performance_gpu_devices(RenderButtonsPanel, Panel):
         config = context.scene.luxcore.config
         return context.scene.render.engine == "LUXCORE" and config.engine == "PATH" and config.device == "OCL"
 
-    def _show_openCL_device_warning(self, context):
-        config = context.scene.luxcore.config
-        opencl = context.scene.luxcore.opencl
-        
-        gpu_devices = [device for device in opencl.devices if device.type == "OPENCL_GPU"]
-        # We don't show OpenCL CPU devices, we just need them to check if there are other devices
-        cpu_devices = [device for device in opencl.devices if device.type == "OPENCL_CPU"]
-        other_devices = set(opencl.devices) - (set(gpu_devices) | set(cpu_devices))
-
-        has_gpus = any([device.enabled for device in gpu_devices])
-        has_others = any([device.enabled for device in other_devices])
-
-        return (config.engine == "PATH" and config.device == "OCL" and not has_gpus and not has_others)
-
     def draw_header(self, context):
         layout = self.layout
-        if self._show_openCL_device_warning(context):
+        if _show_openCL_device_warning(context):
             layout.label(text="", icon=icons.WARNING)            
 
     def draw(self, context):
@@ -151,12 +134,18 @@ class LUXCORE_RENDER_PT_performance_gpu_devices(RenderButtonsPanel, Panel):
         layout.operator("luxcore.update_opencl_devices")
 
         if opencl.devices:
-            if self._show_openCL_device_warning(context):
+            if _show_openCL_device_warning(context):
                 layout.label(text="Select at least one OpenCL device!", icon=icons.WARNING)
 
-            gpu_devices = [device for device in opencl.devices if device.type == "OPENCL_GPU"] 
+            gpu_devices = _get_gpu_devices(opencl.devices)
             for device in gpu_devices:
-                layout.prop(device, "enabled", text=device.name)
+                if device.type == "OPENCL_GPU":
+                    suffix = " (OpenCL)"
+                elif device.type == "CUDA_GPU":
+                    suffix = " (CUDA)"
+                else:
+                    suffix = ""
+                layout.prop(device, "enabled", text=device.name + suffix)
 
 
 class LUXCORE_RENDER_PT_performance_tiled(RenderButtonsPanel, Panel):

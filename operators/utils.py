@@ -177,3 +177,14 @@ class LUXCORE_MT_node_tree:
 
             op = col.operator(set_operator, text=text, icon=icon)
             op.node_tree_index = index
+
+
+def show_nodetree(context, node_tree):
+    for area in context.screen.areas:
+        if area.type == "NODE_EDITOR":
+            for space in area.spaces:
+                if space.type == "NODE_EDITOR":
+                    space.tree_type = node_tree.bl_idname
+                    space.node_tree = node_tree
+                    return True
+    return False
