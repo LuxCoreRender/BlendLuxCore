@@ -7,6 +7,7 @@ from bpy.props import (
 from math import radians
 from .halt import NOISE_THRESH_WARMUP_DESC, NOISE_THRESH_STEP_DESC
 
+
 TILED_DESCRIPTION = (
     "Render the image in quadratic chunks instead of sampling the whole film at once;\n"
     "Causes lower memory usage; Uses a special sampler"
