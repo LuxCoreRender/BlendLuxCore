@@ -158,18 +158,18 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         if self.image.source == "SEQUENCE":
             frame_change_pre.have_to_check_node_trees = True
 
-        try:
-            filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
-        except OSError as error:
-            msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-            LuxCoreErrorLog.add_warning(msg)
-            return [1, 0, 1]
+        # try:
+        #     filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
+        # except OSError as error:
+        #     msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
+        #     LuxCoreErrorLog.add_warning(msg)
+        #     return [1, 0, 1]
 
         uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
 
         definitions = {
             "type": "imagemap",
-            "file": filepath,
+            # "file": filepath,
             "wrap": self.wrap,
             # Mapping
             "mapping.type": "uvmapping2d",
@@ -192,7 +192,41 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
                 "gain": self.brightness,
             })
 
-        luxcore_name = self.create_props(props, definitions, luxcore_name)
+        prefix = "scene.textures." + luxcore_name + "."
+        definitions["storage"] = "float"
+        definitions["blob.width"] = self.image.size[0]
+        definitions["blob.height"] = self.image.size[1]
+        definitions["blob.channelcount"] = self.image.channels
+        
+        print(definitions)
+        
+        imagemap_props = utils.create_props(prefix, definitions)
+        
+        # Blob
+        from time import time
+        s = time()
+        import numpy
+        import array
+        from ...bin import pyluxcore
+        
+        size = self.image.size[0] * self.image.size[1] * self.image.channels
+        # data = numpy.zeros([size])
+        data = array.array("f", [0]) * size
+        self.image.pixels.foreach_get(data)
+        
+        # prop = pyluxcore.Property(prefix + "blob", [])
+        # prop.AddAllFloat(data)
+        
+        prop = pyluxcore.Property(prefix + "blob", [data])
+        
+        # del data
+        # import gc
+        # gc.collect()
+        
+        imagemap_props.Set(prop)
+        
+        props.Set(imagemap_props)
+        print("prop set %.3f s" % (time() - s))
         
         if self.projection == "box":
             tex_name = luxcore_name + "_triplanar"
