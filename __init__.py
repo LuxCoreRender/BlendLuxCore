@@ -2,7 +2,6 @@ import bpy
 import addon_utils
 import platform
 import os
-import shutil
 
 _, luxblend_is_enabled = addon_utils.check("luxrender")
 if luxblend_is_enabled:
