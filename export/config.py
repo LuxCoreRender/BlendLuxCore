@@ -405,13 +405,13 @@ def _convert_photongi_settings(context, scene, definitions, config):
     definitions.update({
         "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000000),
         "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
-        "path.photongi.glossinessusagethreshold": photongi.glossinessusagethreshold,
 
         "path.photongi.indirect.enabled": photongi.indirect_enabled,
         "path.photongi.indirect.maxsize": 0,  # Set to 0 to use haltthreshold stop condition
         "path.photongi.indirect.haltthreshold": indirect_haltthreshold,
         "path.photongi.indirect.lookup.radius": indirect_radius,
         "path.photongi.indirect.lookup.normalangle": degrees(photongi.indirect_normalangle),
+        "path.photongi.indirect.glossinessusagethreshold": photongi.indirect_glossinessusagethreshold,
         "path.photongi.indirect.usagethresholdscale": photongi.indirect_usagethresholdscale,
 
         "path.photongi.caustic.enabled": photongi.caustic_enabled,
