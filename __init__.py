@@ -13,14 +13,6 @@ if luxblend_is_enabled:
                     "and restart Blender before you can enable the "
                     "new addon.")
 
-user_addon_dir = bpy.utils.script_path_user()
-preset_dir = user_addon_dir + "/presets/BlendLuxcore"
-lux_preset_dir = user_addon_dir + "/addons/BlendLuxCore/presets"
-
-if not os.path.isdir(preset_dir):
-    print("Symlinking LuxCore Presets")
-    os.symlink(lux_preset_dir, preset_dir, target_is_directory=True)
-    
 if platform.system() == "Darwin":
     if bpy.app.version < (2, 82, 7):
         raise Exception("\n\nUnsupported Blender version. 2.82a or higher is required.")
@@ -28,6 +20,7 @@ if platform.system() == "Darwin":
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
     
+    user_addon_dir = bpy.utils.script_path_user()
     denoiser = user_addon_dir + "/addons/BlendLuxCore/bin/denoise"
         
     if not os.access(denoiser, os.X_OK): # Check for execution access

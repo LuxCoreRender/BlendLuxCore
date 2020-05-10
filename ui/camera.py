@@ -144,22 +144,12 @@ class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
 
         if motion_blur.camera_blur:
             layout.label(text="Camera blur is only visible in final render", icon=icons.INFO)
-            
-class LUXCORE_RENDER_PT_luxcore_image_pipeline_presets(PresetPanel, Panel):
-    bl_label = "LuxCore Image PipelinePresets"
-    preset_subdir = "BlendLuxCore/ImagePipeline"
-    preset_operator = "script.execute_preset"
-    preset_add_operator = "render.luxcore_image_pipeline_preset_add"
-    COMPAT_ENGINES = {'LUXCORE'}
 
 class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
     bl_label = "Image pipeline"
     bl_order = 8
     COMPAT_ENGINES = {"LUXCORE"}
     
-    def draw_header_preset(self, context):
-        LUXCORE_RENDER_PT_luxcore_image_pipeline_presets.draw_panel_header(self.layout)
-        
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True

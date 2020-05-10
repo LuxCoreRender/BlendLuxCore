@@ -1,12 +1,10 @@
 import bpy
-from . import icons, presets
+from . import icons
 from .. import utils
 
 from bpy.types import Panel
 from bl_ui.properties_render import RENDER_PT_context
 from bl_ui.properties_render import RenderButtonsPanel
-from bl_ui.utils import PresetPanel
-
 
 def luxcore_render_draw(panel, context):
     layout = panel.layout
@@ -31,21 +29,11 @@ def luxcore_render_draw(panel, context):
 
     layout.operator("luxcore.use_cycles_settings")
     
-class LUXCORE_RENDER_PT_luxcore_presets(PresetPanel, Panel):
-    bl_label = "LuxCore Presets"
-    preset_subdir = "BlendLuxCore/Sampling"
-    preset_operator = "script.execute_preset"
-    #preset_add_operator = "render.luxcore_preset_add"
-    COMPAT_ENGINES = {'LUXCORE'}
-
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Paths"
     bl_order = 2
     
-    def draw_header_preset(self, context):
-        LUXCORE_RENDER_PT_luxcore_presets.draw_panel_header(self.layout)
-
     def draw(self, context):
         pass
 
