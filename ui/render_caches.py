@@ -82,6 +82,7 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         col = layout.column(align=True)
         col.prop(photongi, "photon_maxcount")
         col.prop(photongi, "photon_maxdepth")
+        col.prop(photongi, "glossinessusagethreshold")
 
         col = layout.column(align=True)
         col.prop(photongi, "debug")
@@ -122,7 +123,6 @@ class LUXCORE_RENDER_PT_caches_photongi_indirect(RenderButtonsPanel, Panel):
             col.prop(photongi, "indirect_haltthreshold_custom")
         col.prop(photongi, "indirect_usagethresholdscale")
         col.prop(photongi, "indirect_normalangle")
-        col.prop(photongi, "indirect_glossinessusagethreshold")
         col = layout.column(align=True)
         col.prop(photongi, "indirect_lookup_radius_auto")
         if not photongi.indirect_lookup_radius_auto:

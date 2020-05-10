@@ -103,6 +103,18 @@ PHOTONGI_HALTTHRESH_DESC = (
     "cache, but take longer to compute"
 )
 
+PHOTONGI_GLOSSINESSTHRESH_DESC = (
+    "If a material's roughness is higher than this threshold, indirect cache entries can be stored on it. "
+    "If the roughness is below the threshold, it will be considered in the caustic cache computation"
+)
+
+PHOTONGI_INDIRECT_USAGETHRESHOLDSCALE_DESC = (
+    "In corners and other areas with fine detail, LuxCore uses brute force pathtracing instead of the cache "
+    "entries. This parameter is multiplied with the lookup radius and controls the size of the pathtraced area "
+    "around corners. Smaller values can increase performance, but might lead to splotches and light leaks near "
+    "corners. Use a larger value if you encounter such artifacts"
+)
+
 HYBRID_BACKFORWARD_DESC = (
     "Trace rays from lights in addition to rays from the camera. Enable if your scene contains caustics"
 )
@@ -240,6 +252,10 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                     description="Max. number of photons traced (value in millions)")
     photon_maxdepth: IntProperty(name="Photon Depth", default=8, min=3, max=64,
                                   description="Max. depth of photon paths. At each bounce, a photon might be stored")
+    # I use 0.049 as default because then glossy materials with default roughness (0.05) are cached
+    glossinessusagethreshold: FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
+                                            description=PHOTONGI_GLOSSINESSTHRESH_DESC)
+    
     # Indirect cache
     indirect_enabled: BoolProperty(name="Use Indirect Cache", default=True,
                                    description="Accelerates rendering of indirect light")
@@ -260,19 +276,8 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                            description=LOOKUP_RADIUS_DESC)
     indirect_normalangle: FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
                                          subtype="ANGLE", description=NORMAL_ANGLE_DESC)
-    # I use 0.049 as default because then glossy materials with default roughness (0.05) are cached
-    indirect_glossinessusagethreshold: FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
-                                                      description="Only if a material's roughness is higher than "
-                                                                  "this threshold, cache entries are stored on it")
     indirect_usagethresholdscale: FloatProperty(name="Brute Force Radius Scale", default=8, min=0, precision=1,
-                                                 description="In corners and other areas with fine detail, LuxCore "
-                                                             "uses brute force pathtracing instead of the cache "
-                                                             "entries. This parameter is multiplied with the lookup "
-                                                             "radius and controls the size of the pathtraced area "
-                                                             "around corners. "
-                                                             "Smaller values can increase performance, but might lead "
-                                                             "to splotches and light leaks near corners. Use a larger "
-                                                             "value if you encounter such artifacts")
+                                                 description=PHOTONGI_INDIRECT_USAGETHRESHOLDSCALE_DESC)
 
     # Caustic cache
     caustic_enabled: BoolProperty(name="Use Caustic Cache", default=False,
@@ -289,12 +294,11 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                                        "The step samples parameter controls how often the cache is rebuilt")
     caustic_updatespp: IntProperty(name="Step Samples", default=8, min=1,
                                    description="How often to rebuild the cache if periodic update is enabled")
-    # TODO description
     caustic_updatespp_radiusreduction: FloatProperty(name="Radius Reduction", default=96, min=1, soft_min=70,
-                                                     max=99.9, soft_max=99, subtype="PERCENTAGE")
-    # TODO description
+                                                     max=99.9, soft_max=99, subtype="PERCENTAGE",
+                                                     description="Shrinking factor for the lookup radius after each pass")
     caustic_updatespp_minradius: FloatProperty(name="Minimum Radius", default=0.003, min=0.00001,
-                                               subtype="DISTANCE")
+                                               subtype="DISTANCE", description="Radius at which the radius reduction stops")
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),
