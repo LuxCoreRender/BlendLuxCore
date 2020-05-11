@@ -75,7 +75,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         if transmission == 1 and metallic == 0:
             # It's effectively glass instead of a disney material.
             # Don't use mix for performance reasons.
-            roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+            roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
                                                      luxcore_name, obj_name, group_node)
 
             definitions = {
@@ -117,7 +117,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                 
                 # Glass/Roughglass
                 luxcore_name_glass = luxcore_name + "_glass"
-                roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+                roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
                                                         luxcore_name_glass, obj_name, group_node)
 
                 definitions = {
@@ -215,7 +215,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         }
         props.Set(utils.create_props(helper_prefix, helper_defs))
 
-        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
                                                  luxcore_name, obj_name, group_node)
 
         definitions = {
@@ -259,13 +259,29 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
     elif node.bl_idname == "ShaderNodeBsdfGlass":
         prefix = "scene.materials."
         color = _socket(node.inputs["Color"], props, material, obj_name, group_node)
-        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
                                                  luxcore_name, obj_name, group_node)
 
         definitions = {
             "type": "glass" if roughness == 0 else "roughglass",
             "kt": color,
             "kr": color, # Nonsense, maybe leave white even if it breaks compatibility with Cycles?
+            "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node),
+        }
+
+        if roughness != 0:
+            definitions["uroughness"] = roughness
+            definitions["vroughness"] = roughness
+    elif node.bl_idname == "ShaderNodeBsdfRefraction":
+        prefix = "scene.materials."
+        color = _socket(node.inputs["Color"], props, material, obj_name, group_node)
+        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
+                                                 luxcore_name, obj_name, group_node)
+
+        definitions = {
+            "type": "glass" if roughness == 0 else "roughglass",
+            "kt": color,
+            "kr": [0, 0, 0],
             "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node),
         }
 
@@ -285,7 +301,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         props.Set(utils.create_props(helper_prefix, helper_defs))
 
         # TODO emulate actual anisotropy and rotation somehow ...
-        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props,
+        roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
                                                  luxcore_name, obj_name, group_node)
 
         definitions = {
@@ -692,7 +708,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
     return luxcore_name
 
 
-def _squared_roughness_to_linear(socket, props, luxcore_name, obj_name, group_node):
+def _squared_roughness_to_linear(socket, props, material, luxcore_name, obj_name, group_node):
     roughness = _socket(socket, props, material, obj_name, group_node)
     if socket.is_linked and roughness != ERROR_VALUE:
         # Implicitly create a math texture with unique name
