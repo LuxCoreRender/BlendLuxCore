@@ -61,7 +61,7 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
     if luxcore_name is None:
         luxcore_name = str(node.as_pointer()) + output_socket.name
         if group_node:
-            luxcore_name += str(group_node.as_pointer())
+            luxcore_name += str(group_node[-1].as_pointer())
         luxcore_name = utils.sanitize_luxcore_name(luxcore_name)
 
     if node.bl_idname == "ShaderNodeBsdfPrincipled":
@@ -448,15 +448,19 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             return ERROR_VALUE
 
         link = utils_node.get_link(current_input)
+        
+        if group_node is None:
+            _group_node = []
+        else:
+            _group_node = group_node.copy()
+        
+        _group_node.append(node)
+        
         # I call _node instead of _socket here because I need to pass the
         # luxcore_name in case the node group is the first node in the tree
-        return _node(link.from_node, link.from_socket, props, luxcore_name, obj_name, node)
+        return _node(link.from_node, link.from_socket, props, luxcore_name, obj_name, _group_node)
     elif node.bl_idname == "NodeGroupInput":
-        # TODO I set group_node to None, but what about nested groups?
-        if group_node is None:
-            LuxCoreErrorLog.add_warning("Nested groups are not supported yet", obj_name=obj_name)
-            return ERROR_VALUE
-        return _socket(group_node.inputs[output_socket.name], props, obj_name, None)
+        return _socket(group_node[-1].inputs[output_socket.name], props, obj_name, group_node[:-1])
     elif node.bl_idname == "ShaderNodeEmission":
         prefix = "scene.materials."
 
