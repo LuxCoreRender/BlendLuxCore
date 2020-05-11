@@ -634,6 +634,21 @@ def _node(node, output_socket, props, luxcore_name=None, obj_name="", group_node
             luxcore_name = luxcore_name + "strength"
         else:
             definitions["scale"] = strength_socket.default_value
+    elif node.bl_idname == "ShaderNodeNewGeometry":
+        prefix = "scene.textures."
+        definitions = {}
+        
+        # TODO: when support for pointiness and random per island is added, we have to:
+        #  - make sure the necessary shapes are added during object export
+        #  - make sure the mesh is re-exported when one of these outputs is used the first time during viewport render, 
+        #    otherwise we crash LuxCore in case of random per island, or the feature doesn't work in case of pointiness
+        if output_socket.name == "Position":
+            definitions["type"] = "position"
+        elif output_socket.name == "Normal":
+            definitions["type"] = "shadingnormal"
+        else:
+            LuxCoreErrorLog.add_warning(f"Unsupported geometry output socket: {output_socket.name}", obj_name=obj_name)
+            return ERROR_VALUE
     else:
         LuxCoreErrorLog.add_warning(f"Unsupported node type: {node.name}", obj_name=obj_name)
 
