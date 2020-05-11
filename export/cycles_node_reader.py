@@ -679,6 +679,19 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         else:
             LuxCoreErrorLog.add_warning(f"Unsupported Object Info output socket: {output_socket.name}", obj_name=obj_name)
             return ERROR_VALUE
+    elif node.bl_idname == "ShaderNodeBlackbody":
+        temperature_socket = node.inputs["Temperature"]
+        if temperature_socket.is_linked:
+            LuxCoreErrorLog.add_warning(f"LuxCore does not support textured blackbody temperature", obj_name=obj_name)
+            return ERROR_VALUE
+        
+        prefix = "scene.textures."
+        
+        definitions = {
+            "type": "blackbody",
+            "temperature": temperature_socket.default_value,
+            "normalize": True,
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unsupported node type: {node.name}", obj_name=obj_name)
 
