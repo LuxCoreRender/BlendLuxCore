@@ -34,7 +34,7 @@ def _show_openCL_device_warning(context):
 class LUXCORE_RENDER_PT_performance(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
-    bl_order = 5
+    bl_order = 7
 
     @classmethod
     def poll(cls, context):

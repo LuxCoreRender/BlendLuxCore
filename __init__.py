@@ -1,6 +1,7 @@
 import bpy
 import addon_utils
 import platform
+import os
 
 _, luxblend_is_enabled = addon_utils.check("luxrender")
 if luxblend_is_enabled:
@@ -17,6 +18,14 @@ if platform.system() == "Darwin":
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
+    
+    user_addon_dir = bpy.utils.script_path_user()
+    denoiser = user_addon_dir + "/addons/BlendLuxCore/bin/denoise"
+        
+    if not os.access(denoiser, os.X_OK): # Check for execution access
+        print("Patching LuxCore Denoiser")
+        os.chmod(denoiser ,  0o755)
+        
 elif platform.system() == "Windows":
     # Ensure nvrtc-builtins64_101.dll can be found
     import os

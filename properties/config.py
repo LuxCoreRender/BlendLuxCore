@@ -341,7 +341,7 @@ class LuxCoreConfig(PropertyGroup):
     Main config storage class.
     Access (in ui or export) with scene.luxcore.config
     """
-
+    
     # These settings are mostly not directly transferrable to LuxCore properties
     # They need some if/else decisions and aggregation, e.g. to build the engine name from parts
     engines = [

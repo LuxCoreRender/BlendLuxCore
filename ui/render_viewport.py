@@ -2,11 +2,13 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from .. import utils
 from . import icons
+from ..utils.refresh_button import template_refresh_button
+from ..properties.display import LuxCoreDisplaySettings
 
 
 class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "LuxCore Viewport Settings"
+    bl_label = "Viewport Render"
     bl_options = {"DEFAULT_CLOSED"}
     bl_order = 8
 
@@ -22,7 +24,7 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         viewport = context.scene.luxcore.viewport
         config = context.scene.luxcore.config
         luxcore_engine = config.engine
-
+        
         layout.prop(viewport, "halt_time")
         layout.prop(viewport, "denoise")
 
