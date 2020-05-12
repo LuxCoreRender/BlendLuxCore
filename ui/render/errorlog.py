@@ -1,7 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from . import icons
-from ..utils.errorlog import LuxCoreErrorLog
+from .. import icons
+from ...utils.errorlog import LuxCoreErrorLog
 
 
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):

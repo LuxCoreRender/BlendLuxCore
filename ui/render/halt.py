@@ -1,8 +1,8 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bl_ui.properties_view_layer import ViewLayerButtonsPanel
 from bpy.types import Panel
-from ..utils import ui as utils_ui
-from . import icons
+from ...utils import ui as utils_ui
+from .. import icons
 
 
 def draw(layout, context, halt):

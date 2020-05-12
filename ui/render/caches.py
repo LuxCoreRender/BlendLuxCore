@@ -2,8 +2,8 @@ import os
 import math
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from . import icons
-from .. import utils
+from .. import icons
+from ... import utils
 
 
 def draw_persistent_file_ui(context, layout, settings):

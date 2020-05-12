@@ -1,8 +1,8 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 import bpy
-from .. import utils
-from . import icons
+from ... import utils
+from .. import icons
 
 
 def _show_hybrid_metropolis_warning(context):

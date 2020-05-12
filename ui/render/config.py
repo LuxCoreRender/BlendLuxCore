@@ -1,6 +1,6 @@
 import bpy
-from . import icons
-from .. import utils
+from .. import icons
+from ... import utils
 
 from bpy.types import Panel
 from bl_ui.properties_render import RENDER_PT_context
