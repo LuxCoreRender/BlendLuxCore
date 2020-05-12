@@ -39,12 +39,35 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             "Smoke",
             "Fire and Smoke",
             "Colored Glass",
+            "Hybrid Glass",
         ]),
     ])
 
     @classmethod
     def poll(cls, context):
         return poll_object(context)
+        
+    @classmethod
+    def description(cls, context, properties):
+        preset = properties.preset
+        
+        if preset in cls.basic_mapping:
+            return "Add a simple " + preset + " node setup"
+        # Category: Advanced
+        elif preset == "Smoke":
+            return "Add a smoke setup"
+        elif preset == "Fire and Smoke":
+            return "Add a setup for fire and smoke"
+        elif preset == "Colored Glass":
+            return ("Add a setup for colored glass, using an interior volume for correct "
+                    "coloration based on ray length inside the glass")
+        elif preset == "Hybrid Glass":
+            return ('Add a setup for thin sheets of glass, using white shadow color to '
+                    'allow direct light through the glass while keeping refraction visible '
+                    'to camera rays (which is not the case when using the "Architectural" '
+                    'setting on a glass node)')
+        else:
+            raise Exception("Unknown preset: " + preset)
 
     def _add_node_tree(self, name):
         node_tree = bpy.data.node_groups.new(name=name, type="luxcore_material_nodes")
@@ -134,6 +157,8 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             self._preset_fire_and_smoke(obj, node_tree, output)
         elif self.preset == "Colored Glass":
             self._preset_colored_glass(obj, node_tree, output)
+        elif self.preset == "Hybrid Glass":
+            self._preset_hybrid_glass(obj, node_tree, output)
 
         show_nodetree(context, node_tree)
         return {"FINISHED"}
@@ -248,9 +273,21 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
     def _preset_colored_glass(self, obj, node_tree, output):
         glass = new_node("LuxCoreNodeMatGlass", node_tree, output)
         glass.location.y += 40
+        
         clear_vol = new_node("LuxCoreNodeVolClear", node_tree, output, 0, "Interior Volume")
-        clear_vol.location.y -= 260
+        clear_vol.location.y -= 280
         clear_vol.inputs["Absorption"].default_value = (0.9, 0.1, 0.1)
+
+    def _preset_hybrid_glass(self, obj, node_tree, output):
+        output.shadow_color = (1, 1, 1)
+        
+        glass = new_node("LuxCoreNodeMatGlass", node_tree, output)
+        glass.location.y += 40
+        
+        clear_vol = new_node("LuxCoreNodeVolClear", node_tree, output, 0, "Interior Volume")
+        clear_vol.location.y -= 280
+        clear_vol.color_depth = 0.2
+        clear_vol.inputs["Absorption"].default_value = (0.4, 0.8, 0.7)
 
 
 class LUXCORE_MATERIAL_MT_node_tree_preset(bpy.types.Menu):
