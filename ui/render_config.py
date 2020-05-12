@@ -6,6 +6,7 @@ from bpy.types import Panel
 from bl_ui.properties_render import RENDER_PT_context
 from bl_ui.properties_render import RenderButtonsPanel
 
+
 def luxcore_render_draw(panel, context):
     layout = panel.layout
     scene = context.scene
@@ -28,7 +29,8 @@ def luxcore_render_draw(panel, context):
     col.prop(config, "engine", expand=False)
 
     layout.operator("luxcore.use_cycles_settings")
-    
+
+
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Paths"
@@ -151,6 +153,7 @@ class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
             op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
             layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
 
+
 class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
@@ -222,6 +225,7 @@ class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
         if config.filter == "GAUSSIAN":
             layout.prop(config, "gaussian_alpha")
 
+
 def compatible_panels():
     panels = [
         "RENDER_PT_color_management",
@@ -242,4 +246,3 @@ def unregister():
     RENDER_PT_context.remove(luxcore_render_draw)
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.remove("LUXCORE")
-
