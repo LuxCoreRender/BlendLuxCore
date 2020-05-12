@@ -180,6 +180,7 @@ class LUXCORE_RENDER_PT_performance_tiled(RenderButtonsPanel, Panel):
         if utils.use_two_tiled_passes(context.scene):
             layout.label(text="(Doubling amount of samples because of denoiser)")
 
+
 class LUXCORE_RENDER_PT_performance_tiled_multipass(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_performance_tiled"
