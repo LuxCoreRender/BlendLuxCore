@@ -46,6 +46,7 @@ LINUX_FILES = [
     "libembree3.so.3", "libtbb.so.2", "libtbbmalloc.so.2",
     "pyluxcore.so", "pyluxcoretools.zip",
     "libOpenImageDenoise.so.0",
+    # TODO CUDA files
 ]
 
 WINDOWS_FILES = [
@@ -224,7 +225,7 @@ def main():
     suffixes = [
         "-linux64.tar.bz2",
         "-linux64-opencl.tar.bz2",
-        "-linux64-cuda.tar.bz2",
+        # "-linux64-cuda.tar.bz2",  # TODO need to find out how to include the necessary CUDA files
         "-win64.zip",
         "-win64-opencl.zip",
         "-win64-cuda.zip",
