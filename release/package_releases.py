@@ -224,6 +224,7 @@ def main():
     suffixes = [
         "-linux64.tar.bz2",
         "-linux64-opencl.tar.bz2",
+        "-linux64-cuda.tar.bz2",
         "-win64.zip",
         "-win64-opencl.zip",
         "-win64-cuda.zip",
