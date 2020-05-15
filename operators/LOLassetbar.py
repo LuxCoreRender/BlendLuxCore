@@ -15,6 +15,12 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+#
+#  This code is based on the Blenderkit Addon
+#  Homepage: https://www.blenderkit.com/
+#  Sourcecode: https://github.com/blender/blender-addons/tree/master/blenderkit
+#
+# #####
 
 import bpy
 from bpy.types import Operator
