@@ -26,11 +26,18 @@ import bpy
 from math import pi
 from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, \
     FloatProperty, FloatVectorProperty, StringProperty
-
+from ...utils.lol import utils as utils
 
 def switch_search_results(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
+    assets = scene.luxcoreOL.get('assets')
+
+    if scene.luxcoreOL.on_search:
+        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
+        scene.luxcoreOL.search_category = self.category
+
+    utils.load_previews(context, assets)
 
     #TODO: Implement
     #if ui_props.asset_type == 'MODEL':
