@@ -154,6 +154,9 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
 
         for idx, threaddata in enumerate(utils.download_threads):
            tcom = threaddata[2]
+           if tcom.passargs['thumbnail']:
+               continue
+
            asset_data = threaddata[1]
            row = layout.row()
            row.label(text=asset_data['name'])

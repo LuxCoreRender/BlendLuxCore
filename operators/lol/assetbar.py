@@ -78,8 +78,12 @@ def draw_callback_2d_progress(self, context):
     # y = ui_props.reports_y
     index = 0
     for threaddata in utils.download_threads:
-        asset_data = threaddata[1]
         tcom = threaddata[2]
+
+        if tcom.passargs['thumbnail']:
+            continue
+
+        asset_data = threaddata[1]
 
         index = 0
         for i, a in enumerate(assets):
@@ -89,6 +93,9 @@ def draw_callback_2d_progress(self, context):
 
         iname = utils.previmg_name(index)
         img = bpy.data.images.get(iname)
+        if img is None:
+            img = utils.get_thumbnail('thumbnail_notready.jpg')
+
 
         if tcom.passargs.get('downloaders'):
             for d in tcom.passargs['downloaders']:
@@ -119,8 +126,11 @@ def draw_callback_3d_progress(self, context):
         return
 
     for threaddata in utils.download_threads:
-        asset_data = threaddata[1]
         tcom = threaddata[2]
+        if tcom.passargs['thumbnail']:
+            continue
+
+        asset_data = threaddata[1]
         bbox_min = Vector(asset_data["bbox_min"])
         bbox_max = Vector(asset_data["bbox_max"])
         bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
@@ -224,7 +234,7 @@ def draw_callback_2d_search(self, context):
                     img = bpy.data.images.get(iname)
 
                     if img is None:
-                        img = utils.download_thumbnail(self, context, assets[index], index)
+                        img = utils.get_thumbnail('thumbnail_notready.jpg')
 
                     w = int(ui_props.thumb_size * img.size[0] / max(img.size[0], img.size[1]))
                     h = int(ui_props.thumb_size * img.size[1] / max(img.size[0], img.size[1]))
@@ -314,6 +324,9 @@ def draw_callback_2d_search(self, context):
             ui_props.draw_drag_image or ui_props.draw_snapped_bounds) and ui_props.active_index > -1:
         iname = utils.previmg_name(ui_props.active_index)
         img = bpy.data.images.get(iname)
+        if img is None:
+            img = utils.get_thumbnail('thumbnail_notready.jpg')
+
         linelength = 35
         ui_bgl.draw_image(ui_props.mouse_x + linelength, ui_props.mouse_y - linelength - ui_props.thumb_size,
                           ui_props.thumb_size, ui_props.thumb_size, img, 1)

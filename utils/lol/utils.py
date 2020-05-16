@@ -40,7 +40,7 @@ import urllib.error
 import zipfile
 from mathutils import Vector, Matrix
 import threading
-from ...handlers.lol.LOLtimer import timer_update
+from ...handlers.lol.timer import timer_update
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
@@ -64,7 +64,6 @@ def download_table_of_contents(self, context):
 
 
 def get_categories(context):
-    uiprops = context.scene.luxcoreOL
     assets = context.scene.luxcoreOL['assets']
     categories = {}
 
@@ -76,40 +75,6 @@ def get_categories(context):
             categories[cat] = categories[cat] + 1
 
     context.scene.luxcoreOL['categories'] = categories
-
-
-def download_thumbnail(self, context, asset, index):
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
-
-    imagename = asset['url'][:-4] + '.jpg'
-    # print("=======================================")
-    # print("Download thumbnail: ", imagename)
-    # print()
-
-    try:
-        thumbnailpath = os.path.join(user_preferences.global_dir, "model", "preview", imagename)
-
-        with urllib.request.urlopen(LOL_HOST_URL + "/assets/preview/" + imagename, timeout=60) as url_handle, \
-                open(thumbnailpath, "wb") as file_handle:
-            file_handle.write(url_handle.read())
-
-        if os.path.exists(thumbnailpath):
-            imagename = previmg_name(index)
-            img = bpy.data.images.get(imagename)
-            if img is None:
-                img = bpy.data.images.load(thumbnailpath)
-                img.colorspace_settings.name = 'Linear'
-                img.name = imagename
-
-        if img == None:
-            img = get_thumbnail('thumbnail_notready.jpg')
-
-        return img
-
-    except ConnectionError as error:
-        self.report({"ERROR"}, "Connection error: Could not download "+ imagename)
-        return {"CANCELLED"}
 
 
 def calc_hash(filename):
@@ -126,10 +91,11 @@ def calc_hash(filename):
 def is_downloading(asset):
     global download_threads
     for thread_data in download_threads:
+        if thread_data[2].passargs['thumbnail']:
+            continue
         if asset['hash'] == thread_data[1]['hash']:
             # print(asset["name"], "is downloading")
             return thread_data[2]
-
     return None
 
 
@@ -139,6 +105,7 @@ def download_file(asset, location, rotation):
     if tcom is None:
         tcom = ThreadCom()
         tcom.passargs['downloaders'] = [downloader]
+        tcom.passargs['thumbnail'] = False
 
         downloadthread = Downloader(asset, tcom)
         downloadthread.start()
@@ -149,7 +116,6 @@ def download_file(asset, location, rotation):
         tcom.passargs['downloaders'].append(downloader)
 
     return True
-
 
 class Downloader(threading.Thread):
     def __init__(self, asset, tcom):
@@ -171,42 +137,64 @@ class Downloader(threading.Thread):
         user_preferences = bpy.context.preferences.addons[name].preferences
 
         print("Download Thread running")
-        filename = self.asset["url"]
         tcom = self.tcom
 
-        with tempfile.TemporaryDirectory() as temp_dir_path:
-            temp_zip_path = os.path.join(temp_dir_path, filename)
-            # print(temp_zip_path)
-            url = LOL_HOST_URL + "/assets/" + filename
+        if tcom.passargs['thumbnail']:
+            # Thumbnail  download
             try:
-                print("Downloading:", url)
+                imagename = self.asset['url'][:-4] + '.jpg'
+                thumbnailpath = os.path.join(user_preferences.global_dir, "model", "preview", imagename)
 
-                with urllib.request.urlopen(url, timeout=60) as url_handle, \
-                        open(temp_zip_path, "wb") as file_handle:
-                    total_length = url_handle.headers.get('Content-Length')
-                    tcom.file_size = int(total_length)
+                with urllib.request.urlopen(LOL_HOST_URL + "/assets/preview/" + imagename, timeout=60) as url_handle, \
+                        open(thumbnailpath, "wb") as file_handle:
+                    file_handle.write(url_handle.read())
 
-                    dl = 0
-                    data = url_handle.read(8192)
-                    file_handle.write(data)
-                    while len(data) == 8192:
-                        data = url_handle.read(8192)
-                        dl += len(data)
-                        tcom.downloaded = dl
-                        tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
+                imgname = previmg_name(tcom.passargs['index'])
+                img = bpy.data.images.load(thumbnailpath)
+                img.name = imgname
+                img.colorspace_settings.name = 'Linear'
 
-                        file_handle.write(data)
-                        if self.stopped():
-                            url_handle.close()
-                            return
-                print("Download finished")
-                with zipfile.ZipFile(temp_zip_path) as zf:
-                    print("Extracting zip to", os.path.join(user_preferences.global_dir, "model"))
-                    zf.extractall(os.path.join(user_preferences.global_dir, "model"))
                 tcom.finished = True
 
-            except urllib.error.URLError as err:
-                print("Could not download: %s" % err)
+            except ConnectionError as error:
+                self.report({"ERROR"}, "Connection error: Could not download " + imagename)
+        else:
+            #Asset download
+            filename = self.asset["url"]
+
+            with tempfile.TemporaryDirectory() as temp_dir_path:
+                temp_zip_path = os.path.join(temp_dir_path, filename)
+                # print(temp_zip_path)
+                url = LOL_HOST_URL + "/assets/" + filename
+                try:
+                    print("Downloading:", url)
+
+                    with urllib.request.urlopen(url, timeout=60) as url_handle, \
+                            open(temp_zip_path, "wb") as file_handle:
+                        total_length = url_handle.headers.get('Content-Length')
+                        tcom.file_size = int(total_length)
+
+                        dl = 0
+                        data = url_handle.read(8192)
+                        file_handle.write(data)
+                        while len(data) == 8192:
+                            data = url_handle.read(8192)
+                            dl += len(data)
+                            tcom.downloaded = dl
+                            tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
+
+                            file_handle.write(data)
+                            if self.stopped():
+                                url_handle.close()
+                                return
+                    print("Download finished")
+                    with zipfile.ZipFile(temp_zip_path) as zf:
+                        print("Extracting zip to", os.path.join(user_preferences.global_dir, "model"))
+                        zf.extractall(os.path.join(user_preferences.global_dir, "model"))
+                    tcom.finished = True
+
+                except urllib.error.URLError as err:
+                    print("Could not download: %s" % err)
 
 
 class ThreadCom:  # object passed to threads to read background process stdout info
@@ -372,6 +360,30 @@ def guard_from_crash():
     return True
 
 
+def download_thumbnail(self, context, asset, index):
+    name = basename(dirname(dirname(dirname(__file__))))
+    user_preferences = context.preferences.addons[name].preferences
+
+    # print("=======================================")
+    # print("Download thumbnail: ", imagename)
+    # print()
+
+    tcom = is_downloading(asset)
+    if tcom is None:
+        tcom = ThreadCom()
+        tcom.passargs['thumbnail'] = True
+        tcom.passargs['index'] = index
+
+        downloadthread = Downloader(asset, tcom)
+        downloadthread.start()
+
+        download_threads.append([downloadthread, asset, tcom])
+        bpy.app.timers.register(timer_update)
+
+
+    return True
+
+
 def get_thumbnail(imagename):
     name = dirname(dirname(dirname(__file__)))
     path = os.path.join(name, 'thumbnails', imagename)
@@ -417,4 +429,8 @@ def load_previews(context, assets):
                     img.filepath = tpath
                     img.reload()
                 img.colorspace_settings.name = 'Linear'
+            else:
+                # print('Thumbnail not cached: ', imgname)
+                download_thumbnail(None, context, asset, i)
+
             i += 1

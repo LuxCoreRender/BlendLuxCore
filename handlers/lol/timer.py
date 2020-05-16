@@ -34,15 +34,16 @@ def timer_update():
         thread, asset, tcom = threaddata
         if tcom.finished:
             thread.stop()
-            for d in tcom.passargs['downloaders']:
-                utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
+            if not tcom.passargs['thumbnail']:
+                for d in tcom.passargs['downloaders']:
+                    utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
 
             utils.download_threads.remove(threaddata)
             for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
                 if area.type == 'VIEW_3D':
                     area.tag_redraw()
 
-            return None
+                return None
         for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
             if area.type == 'VIEW_3D':
                 area.tag_redraw()
