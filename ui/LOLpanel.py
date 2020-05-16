@@ -143,14 +143,17 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
     def draw(self, context):
         layout = self.layout
 
-        for threaddata in utils.download_threads:
+        for idx, threaddata in enumerate(utils.download_threads):
            tcom = threaddata[2]
            asset_data = threaddata[1]
            row = layout.row()
            row.label(text=asset_data['name'])
            row.label(text=str(int(tcom.progress)) + ' %')
            #TODO: Implement operator for killing download
-           #row.operator('scene.blenderkit_download_kill', text='', icon='CANCEL')
+           row.operator('scene.luxcore_ol_download_kill', text='', icon='CANCEL').thread_index = idx
+
+           # TODO: Implement retry download
+
            # if tcom.passargs.get('retry_counter', 0) > 0:
            #     row = layout.row()
            #     row.label(text='failed. retrying ... ', icon='ERROR')

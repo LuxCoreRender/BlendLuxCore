@@ -322,6 +322,8 @@ def draw_infobox(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
 
+    #TODO: Implement
+
     # rating_possible, rated, asset, asset_data = is_rating_possible()
 
     # if rating_possible:  # (not rated or ui_props.rating_menu_on):
@@ -977,3 +979,18 @@ class LOLAssetBarOperator(Operator):
                 return {'RUNNING_MODAL'}
 
         return {'PASS_THROUGH'}
+
+
+class LOLAssetKillDownloadOperator(bpy.types.Operator):
+    """Kill a download"""
+    bl_idname = "scene.luxcore_ol_download_kill"
+    bl_label = "LuxCore Online Library Kill Asset Download"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    thread_index: IntProperty(name="Thread index", description='index of the thread to kill', default=-1)
+
+    def execute(self, context):
+        td = utils.download_threads[self.thread_index]
+        utils.download_threads.remove(td)
+        td[0].stop()
+        return {'FINISHED'}
