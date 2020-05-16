@@ -25,7 +25,8 @@
 import bpy
 from bpy.types import Panel
 from os.path import basename, dirname
-from ..utils import LOLutils as utils
+from ...utils.lol import utils as utils
+
 
 def draw_panel_categories(self, context):
     scene = context.scene
@@ -33,7 +34,7 @@ def draw_panel_categories(self, context):
         return
     categories = scene.luxcoreOL['categories']
 
-    name = basename(dirname(dirname(__file__)))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = bpy.context.preferences.addons[name].preferences
 
     layout = self.layout
@@ -59,7 +60,11 @@ def draw_panel_model_search(self, context):
     model_props = scene.luxcoreOL.model
     layout = self.layout
     col = layout.column(align=True)
-    col.prop(model_props, "free_only")
+
+    #TODO: Implement non_free models if needed
+    # Currently all available models are free
+
+    # col.prop(model_props, "free_only")
 
     ui_props = scene.luxcoreOL.ui
 
@@ -79,6 +84,9 @@ def draw_panel_model_search(self, context):
 
     layout.separator()
     layout.label(text='Import method:')
+    if model_props.switched_append_method:
+        col = layout.column()
+        col.text()
     col = layout.column()
     col.prop(model_props, 'append_method', expand=True, icon_only=False)
 
@@ -100,20 +108,21 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         ui_props = scene.luxcoreOL.ui
 
         layout = self.layout
-        name = basename(dirname(dirname(__file__)))
+        name = basename(dirname(dirname(dirname(__file__))))
         user_preferences = bpy.context.preferences.addons[name].preferences
 
         #layout.use_property_split = True
         #layout.use_property_decorate = False
 
-        row = layout.row()
-        row.scale_x = 1.6
-        row.scale_y = 1.6
-        row.prop(ui_props, 'asset_type', expand=True, icon_only=True)
-
-        if bpy.data.filepath == '':
-            col = layout.column(align=True)
-            col.label(text="It's better to save the file first.")
+        #TODO: implement additional modes, i.e. material, textures, brushes if needed
+        # row = layout.row()
+        # row.scale_x = 1.6
+        # row.scale_y = 1.6
+        # row.prop(ui_props, 'asset_type', expand=True, icon_only=True)
+        # row.enabled = False
+        # if bpy.data.filepath == '':
+        #     col = layout.column(align=True)
+        #     col.label(text="It's better to save the file first.")
 
         if ui_props.asset_type == 'MODEL':
             draw_panel_model_search(self, context)

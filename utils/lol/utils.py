@@ -40,7 +40,7 @@ import urllib.error
 import zipfile
 from mathutils import Vector, Matrix
 import threading
-from ..handlers.LOLtimer import timer_update
+from ...handlers.lol.LOLtimer import timer_update
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
@@ -79,7 +79,7 @@ def get_categories(context):
 
 
 def download_thumbnail(self, context, asset, index):
-    name = basename(dirname(dirname(__file__)))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     imagename = asset['url'][:-4] + '.jpg'
@@ -167,7 +167,7 @@ class Downloader(threading.Thread):
 
     # def main_download_thread(asset_data, tcom, scene_id, api_key):
     def run(self):
-        name = basename(dirname(dirname(__file__)))
+        name = basename(dirname(dirname(dirname(__file__))))
         user_preferences = bpy.context.preferences.addons[name].preferences
 
         print("Download Thread running")
@@ -219,7 +219,7 @@ class ThreadCom:  # object passed to threads to read background process stdout i
 
 
 def link_asset(context, asset, location, rotation):
-    name = basename(dirname(dirname(__file__)))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     filename = asset["url"]
@@ -276,7 +276,7 @@ def link_asset(context, asset, location, rotation):
 
 
 def load_asset(context, asset, location, rotation):
-    name = basename(dirname(dirname(__file__)))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     filename = asset["url"]
@@ -333,8 +333,9 @@ def get_search_props():
 def save_prefs(self, context):
     # first check context, so we don't do this on registration or blender startup
     if not bpy.app.background: #(hasattr kills blender)
-        # TODO:
-        #user_preferences = bpy.context.preferences.addons['blenderkit'].preferences
+        name = basename(dirname(dirname(dirname(__file__))))
+        user_preferences = context.preferences.addons[name].preferences
+        # TODO: Implement
         test = 1
         #prefs = {
         #    'global_dir': user_preferences.global_dir,
@@ -372,7 +373,7 @@ def guard_from_crash():
 
 
 def get_thumbnail(imagename):
-    name = dirname(dirname(__file__))
+    name = dirname(dirname(dirname(__file__)))
     path = os.path.join(name, 'thumbnails', imagename)
 
     imagename = '.%s' % imagename
@@ -395,7 +396,7 @@ def previmg_name(index, fullsize=False):
 
 
 def load_previews(context, assets):
-    name = basename(dirname(dirname(__file__)))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     if assets is not None and len(assets) != 0:

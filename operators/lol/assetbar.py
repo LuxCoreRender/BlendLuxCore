@@ -24,14 +24,13 @@
 
 import bpy
 from bpy.types import Operator
-from bpy.props import BoolProperty, IntProperty, EnumProperty, StringProperty, FloatVectorProperty
+from bpy.props import BoolProperty, IntProperty, StringProperty
 from os.path import basename, dirname
 import math
-import mathutils
 from mathutils import Vector
 
-from ..utils import LOLutils as utils
-from ..draw import LOLviewport as ui_bgl
+from ...utils.lol import utils as utils
+from ...draw.lol import viewport as ui_bgl
 from bpy_extras import view3d_utils
 
 
@@ -156,7 +155,7 @@ def draw_callback_2d_search(self, context):
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
 
-    name = basename(dirname(dirname(__file__)))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     region = self.region
@@ -242,6 +241,8 @@ def draw_callback_2d_search(self, context):
                     else:
                         ui_bgl.draw_rect(x, y, w, h, white)
 
+    # TODO: Transfer to LOL
+
     #                 result = search_results[index]
     #                 if result['downloaded'] > 0:
     #                     ui_bgl.draw_rect(x, y - 2, int(w * result['downloaded'] / 100.0), 2, green)
@@ -254,7 +255,9 @@ def draw_callback_2d_search(self, context):
     #                 if v_icon is not None:
     #                     img = utils.get_thumbnail(v_icon)
     #                     ui_bgl.draw_image(x + ui_props.thumb_size - 26, y + 2, 24, 24, img, 1)
-    #
+
+    # TODO: Transfer to LOL
+
     #     s = bpy.context.scene
     #     props = utils.get_search_props()
     #     # if props.report != '' and props.is_searching or props.search_error:
@@ -660,7 +663,7 @@ class LOLAssetBarOperator(Operator):
         scene = context.scene
         ui_props = context.scene.luxcoreOL.ui
 
-        name = basename(dirname(dirname(__file__)))
+        name = basename(dirname(dirname(dirname(__file__))))
         user_preferences = bpy.context.preferences.addons[name].preferences
         assets = scene.luxcoreOL.get('assets')
 
@@ -717,7 +720,7 @@ class LOLAssetBarOperator(Operator):
 
             if ui_props.dragging and not ui_bgl.mouse_in_asset_bar(context, mx, my):  # and my < r.height - ui_props.bar_height \
                 # and mx > 0 and mx < r.width and my > 0:
-                sprops = bpy.context.scene.blenderkit_models
+                sprops = bpy.context.scene.luxcoreOL.model
                 if event.type == 'WHEELUPMOUSE':
                     sprops.offset_rotation_amount += sprops.offset_rotation_step
                 elif event.type == 'WHEELDOWNMOUSE':

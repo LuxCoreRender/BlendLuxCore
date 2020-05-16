@@ -5,7 +5,7 @@ from bpy.props import (
     StringProperty,
 )
 from ..ui import icons
-from ..utils import LOLutils as utils
+from ..utils.lol import utils as utils
 
 
 class LuxCoreAddonPreferences(AddonPreferences):

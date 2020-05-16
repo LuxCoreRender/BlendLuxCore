@@ -215,7 +215,7 @@ def update_ui_size(context, area, region):
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
 
-    name = basename(dirname(dirname(__file__)))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = bpy.context.preferences.addons[name].preferences
 
     ui_scale = bpy.context.preferences.view.ui_scale
@@ -338,19 +338,18 @@ def mouse_raycast(context, mx, my):
     has_hit, snapped_location, snapped_normal, face_index, object, matrix = bpy.context.scene.ray_cast(
         bpy.context.view_layer, ray_origin, vec)
 
-    # rote = mathutils.Euler((0, 0, math.pi))
     randoffset = math.pi
     if has_hit:
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
         up = Vector((0, 0, 1))
-        props = bpy.context.scene.blenderkit_models
-        if props.randomize_rotation and snapped_normal.angle(up) < math.radians(10.0):
-            randoffset = props.offset_rotation_amount + math.pi + (
-                    random.random() - 0.5) * props.randomize_rotation_amount
-        else:
-            randoffset = props.offset_rotation_amount  # we don't rotate this way on walls and ceilings. + math.pi
-        # snapped_rotation.z += math.pi + (random.random() - 0.5) * .2
-
+        # TODO: Implement randomized rotation
+        # props = bpy.context.scene.luxcoreOL.model
+        # if props.randomize_rotation and snapped_normal.angle(up) < math.radians(10.0):
+        #     randoffset = props.offset_rotation_amount + math.pi + (
+        #             random.random() - 0.5) * props.randomize_rotation_amount
+        # else:
+        #     randoffset = props.offset_rotation_amount  # we don't rotate this way on walls and ceilings. + math.pi
+        # # snapped_rotation.z += math.pi + (random.random() - 0.5) * .2
     else:
         snapped_rotation = mathutils.Quaternion((0, 0, 0, 0)).to_euler()
 
@@ -386,12 +385,14 @@ def floor_raycast(context, mx, my):
         object = None
         matrix = None
         snapped_rotation = snapped_normal.to_track_quat('Z', 'Y').to_euler()
-        props = bpy.context.scene.blenderkit_models
+
+        props = bpy.context.scene.luxcoreOL.model
         if props.randomize_rotation:
             randoffset = props.offset_rotation_amount + math.pi + (
                     random.random() - 0.5) * props.randomize_rotation_amount
         else:
             randoffset = props.offset_rotation_amount + math.pi
+
         snapped_rotation.rotate_axis('Z', randoffset)
 
     return has_hit, snapped_location, snapped_normal, snapped_rotation, face_index, object, matrix

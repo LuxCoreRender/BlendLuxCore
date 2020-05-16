@@ -23,14 +23,16 @@
 # #####
 
 import bpy
-from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, FloatVectorProperty, StringProperty
+from math import pi
+from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, \
+    FloatProperty, FloatVectorProperty, StringProperty
 
 
 def switch_search_results(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
 
-    #TODO:
+    #TODO: Implement
     #if ui_props.asset_type == 'MODEL':
     #    scene['search results'] = scene.get('LOL model search')
     #    scene['search results orig'] = scene.get('LOL model search orig')
@@ -108,14 +110,36 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
 
 class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
     free_only: BoolProperty(name="Free only", default=True)
+    switched_append_method: BoolProperty(name="Switched Append Method", default=False)
     append_method_items = [
         ('LINK_COLLECTION', 'Link Collection', ''),
         ('APPEND_OBJECTS', 'Append Objects', ''),
     ]
     append_method: EnumProperty(name="Import Method", items=append_method_items,
-    description="choose if the assets will be linked or appended", default="LINK_COLLECTION"
+    description="choose if the assets will be linked or appended", default="LINK_COLLECTION")
 
-)
+    randomize_rotation: BoolProperty(name='Randomize Rotation',
+                                     description="randomize rotation at placement",
+                                     default=False)
+    randomize_rotation_amount: FloatProperty(name="Randomization Max Angle",
+                                             description="maximum angle for random rotation",
+                                             default=pi / 36,
+                                             min=0,
+                                             max=2 * pi,
+                                             subtype='ANGLE')
+    offset_rotation_amount: FloatProperty(name="Offset Rotation",
+                                          description="offset rotation, hidden prop",
+                                          default=0,
+                                          min=0,
+                                          max=360,
+                                          subtype='ANGLE')
+    offset_rotation_step: FloatProperty(name="Offset Rotation Step",
+                                        description="offset rotation, hidden prop",
+                                        default=pi / 2,
+                                        min=0,
+                                        max=180,
+                                        subtype='ANGLE')
+
 
 class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
     ui: PointerProperty(type=LuxCoreOnlineLibraryUI)
