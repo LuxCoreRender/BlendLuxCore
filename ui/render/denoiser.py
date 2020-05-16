@@ -1,14 +1,14 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from ..utils.refresh_button import template_refresh_button
-from ..engine.base import LuxCoreRenderEngine
-from . import icons
-from ..properties.denoiser import LuxCoreDenoiser
+from ...utils.refresh_button import template_refresh_button
+from ...engine.base import LuxCoreRenderEngine
+from .. import icons
+from ...properties.denoiser import LuxCoreDenoiser
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "LuxCore Denoiser"
+    bl_label = "Denoiser"
     bl_options = {'DEFAULT_CLOSED'}
     bl_order = 6
 

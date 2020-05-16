@@ -1,8 +1,8 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bl_ui.properties_view_layer import ViewLayerButtonsPanel
 from bpy.types import Panel
-from ..utils import ui as utils_ui
-from . import icons
+from ...utils import ui as utils_ui
+from .. import icons
 
 
 def draw(layout, context, halt):
@@ -59,10 +59,10 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
     These are the global halt conditions shown in the render settings
     """
 
-    bl_label = "LuxCore Halt Conditions"
+    bl_label = "Halt Conditions"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 10
+    bl_order = 5
 
     @classmethod
     def poll(cls, context):

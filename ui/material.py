@@ -141,6 +141,22 @@ class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
         row = layout.row(align=True)
         preview = context.material.luxcore.preview
         row.prop(preview, "zoom")
+        
+        
+class LUXCORE_PT_material_settings(MaterialButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Settings"
+    bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 4
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return context.material and (engine == "LUXCORE") and context.material.luxcore.use_cycles_nodes
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(context.material, "pass_index")
 
 
 # Since we can't disable the original MATERIAL_PT_viewport panel, it makes no sense to add our own

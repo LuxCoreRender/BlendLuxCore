@@ -2,8 +2,8 @@ import os
 import math
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from . import icons
-from .. import utils
+from .. import icons
+from ... import utils
 
 
 def draw_persistent_file_ui(context, layout, settings):
@@ -38,9 +38,9 @@ def draw_persistent_file_ui(context, layout, settings):
 
 class LUXCORE_RENDER_PT_caches(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "LuxCore Caches"
+    bl_label = "Caches"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 11
+    bl_order = 4
 
     @classmethod
     def poll(cls, context):
@@ -82,6 +82,7 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         col = layout.column(align=True)
         col.prop(photongi, "photon_maxcount")
         col.prop(photongi, "photon_maxdepth")
+        col.prop(photongi, "glossinessusagethreshold")
 
         col = layout.column(align=True)
         col.prop(photongi, "debug")
@@ -122,7 +123,6 @@ class LUXCORE_RENDER_PT_caches_photongi_indirect(RenderButtonsPanel, Panel):
             col.prop(photongi, "indirect_haltthreshold_custom")
         col.prop(photongi, "indirect_usagethresholdscale")
         col.prop(photongi, "indirect_normalangle")
-        col.prop(photongi, "indirect_glossinessusagethreshold")
         col = layout.column(align=True)
         col.prop(photongi, "indirect_lookup_radius_auto")
         if not photongi.indirect_lookup_radius_auto:

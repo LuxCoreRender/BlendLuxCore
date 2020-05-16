@@ -1,10 +1,20 @@
 import bpy
-from ..base import LuxCoreNodeMaterial
+from bpy.props import BoolProperty
+from ..base import LuxCoreNodeMaterial, ThinFilmCoating
+from .glass import THIN_FILM_DESCRIPTION
 
 
 class LuxCoreNodeMatDisney(bpy.types.Node, LuxCoreNodeMaterial):
     bl_label = "Disney Material"
-    bl_width_default = 160
+    bl_width_default = 190
+    
+    def update_use_thinfilmcoating(self, context):
+        self.inputs["Film Amount"].enabled = self.use_thinfilmcoating
+        ThinFilmCoating.toggle(self, context)
+    
+    use_thinfilmcoating: BoolProperty(name="Thin Film Coating", default=False,
+                                      description=THIN_FILM_DESCRIPTION,
+                                      update=update_use_thinfilmcoating)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Base Color", [0.7] * 3)
@@ -18,9 +28,14 @@ class LuxCoreNodeMatDisney(bpy.types.Node, LuxCoreNodeMaterial):
         self.add_input("LuxCoreSocketFloat0to1", "Sheen Tint", 0)
         self.add_input("LuxCoreSocketFloat0to1", "Clearcoat", 0)
         self.add_input("LuxCoreSocketFloat0to1", "Clearcoat Gloss", 1)
+        self.add_input("LuxCoreSocketFloat0to1", "Film Amount", 1, enabled=False)
+        ThinFilmCoating.init(self)
         self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
+        
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "use_thinfilmcoating")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
@@ -37,6 +52,14 @@ class LuxCoreNodeMatDisney(bpy.types.Node, LuxCoreNodeMaterial):
             "clearcoat": self.inputs["Clearcoat"].export(exporter, depsgraph, props),
             "clearcoatgloss": self.inputs["Clearcoat Gloss"].export(exporter, depsgraph, props),
         }
+        
+        if self.use_thinfilmcoating:
+            amount_socket = self.inputs["Film Amount"]
+            amount = amount_socket.export(exporter, depsgraph, props)
+            
+            if amount_socket.is_linked or amount > 0:
+                definitions["filmamount"] = amount
+                ThinFilmCoating.export(self, exporter, depsgraph, props, definitions)
 
         self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

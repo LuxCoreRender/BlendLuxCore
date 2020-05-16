@@ -1,8 +1,8 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 import bpy
-from .. import utils
-from . import icons
+from ... import utils
+from .. import icons
 
 
 def _show_hybrid_metropolis_warning(context):
@@ -34,7 +34,7 @@ def _show_openCL_device_warning(context):
 class LUXCORE_RENDER_PT_performance(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
-    bl_order = 5
+    bl_order = 7
 
     @classmethod
     def poll(cls, context):
@@ -179,6 +179,7 @@ class LUXCORE_RENDER_PT_performance_tiled(RenderButtonsPanel, Panel):
 
         if utils.use_two_tiled_passes(context.scene):
             layout.label(text="(Doubling amount of samples because of denoiser)")
+
 
 class LUXCORE_RENDER_PT_performance_tiled_multipass(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}

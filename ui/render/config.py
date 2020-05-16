@@ -1,6 +1,6 @@
 import bpy
-from . import icons
-from .. import utils
+from .. import icons
+from ... import utils
 
 from bpy.types import Panel
 from bl_ui.properties_render import RENDER_PT_context
@@ -30,69 +30,12 @@ def luxcore_render_draw(panel, context):
 
     layout.operator("luxcore.use_cycles_settings")
 
-            
-class LUXCORE_RENDER_PT_filter(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "Pixel Filter"
-    bl_order = 4
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        config = context.scene.luxcore.config
-        denoiser = context.scene.luxcore.denoiser
-        scene = context.scene
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False      
-
-        # Filter settings
-
-        filter_forced_none = denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE"
-        if filter_forced_none:
-            layout.label(text='Filter set to "None" (required by denoiser)', icon=icons.INFO)
-        
-        col = layout.column(align=True)      
-        col.enabled = not filter_forced_none        
-        col.prop(config, "filter")
-
-        col = layout.column(align=True)      
-        col.enabled = config.filter != "NONE"
-        col.prop(config, "filter_width")
-        if config.filter == "GAUSSIAN":
-            layout.prop(config, "gaussian_alpha")
-
-
-class LUXCORE_RENDER_PT_light_strategy(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "Light Strategy"
-    bl_order = 3
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        config = context.scene.luxcore.config
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        col = layout.column()
-        if config.dls_cache.enabled:
-            col.label(text="Using direct light sampling cache", icon=icons.INFO)
-            col = layout.column()
-            col.active = False
-
-        # Light strategy        
-        col.prop(config, "light_strategy")
-
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Paths"
     bl_order = 2
-
+    
     def draw(self, context):
         pass
 
@@ -131,15 +74,15 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
 
 class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
-    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_bounces"
-    bl_label = "Add Light Tracing"
+    bl_label = "Light Tracing"
+    bl_order = 3
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
         config = context.scene.luxcore.config
-        return config.engine == "PATH" and not config.use_tiles
+        engine = context.scene.render.engine
+        return config.engine == "PATH" and not config.use_tiles and engine == 'LUXCORE'
 
     def error(self, context):
         use_native_cpu = context.scene.luxcore.opencl.use_native_cpu
@@ -227,6 +170,15 @@ class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
 
         layout.use_property_split = True
         layout.use_property_decorate = False
+        
+        # Light strategy
+        col = layout.column()
+        if config.dls_cache.enabled:
+            col.label(text="Using direct light sampling cache", icon=icons.INFO)
+            col = layout.column()
+            col.active = False
+        
+        col.prop(config, "light_strategy")
 
         # Seed settings
         row = layout.row(align=True)      
@@ -256,6 +208,22 @@ class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
         else:
             row_sampler = layout.row()
             row_sampler.label(text="Tiled path uses special sampler", icon=icons.INFO)
+        
+        # Filter settings
+
+        filter_forced_none = denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE"
+        if filter_forced_none:
+            layout.label(text='Filter set to "None" (required by denoiser)', icon=icons.INFO)
+        
+        col = layout.column(align=True)      
+        col.enabled = not filter_forced_none        
+        col.prop(config, "filter")
+
+        col = layout.column(align=True)      
+        col.enabled = config.filter != "NONE"
+        col.prop(config, "filter_width")
+        if config.filter == "GAUSSIAN":
+            layout.prop(config, "gaussian_alpha")
 
 
 def compatible_panels():
@@ -278,4 +246,3 @@ def unregister():
     RENDER_PT_context.remove(luxcore_render_draw)
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.remove("LUXCORE")
-

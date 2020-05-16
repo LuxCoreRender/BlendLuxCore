@@ -1,12 +1,13 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from . import icons
-from ..utils.errorlog import LuxCoreErrorLog
+from .. import icons
+from ...utils.errorlog import LuxCoreErrorLog
 
 
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "LuxCore Error Log"
+    bl_label = "Error Log"
+    bl_options = {'DEFAULT_CLOSED'}
     bl_order = 9
 
     @classmethod
@@ -26,7 +27,7 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
 
         self._draw(LuxCoreErrorLog.errors, "Errors:", icons.ERROR)
         self._draw(LuxCoreErrorLog.warnings, "Warnings:", icons.WARNING)
-
+        
     def _draw(self, errors_or_warnings, label, icon=icons.NONE):
         if len(errors_or_warnings) == 0:
             return

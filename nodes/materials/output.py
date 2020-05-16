@@ -24,6 +24,15 @@ MATERIAL_ID_DESC = (
     "(the ID Mask node in the compositor can't handle those numbers)"
 )
 
+SHADOW_COLOR_DESC = (
+    "Black is the physically correct shadow color. Set it to white to "
+    "let light pass through the material unobstructed, while keeping "
+    "the appearance the same for anything but shadow rays (useful e.g. "
+    "for thin sheets of glass as an alternative to architectural glass, "
+    "to have refraction visible but let direct light pass through for "
+    "better performance)"
+)
+
 
 class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
     """
@@ -40,7 +49,8 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
                                 description="Disable for mirror-like surfaces like "
                                             "metal or glossy with low roughness")
     shadow_color: FloatVectorProperty(name="Shadow Color", subtype="COLOR", default=(0, 0, 0), min=0, max=1,
-                                      update=utils_node.update_opengl_materials)
+                                      update=utils_node.update_opengl_materials,
+                                      description=SHADOW_COLOR_DESC)
     is_shadow_catcher: BoolProperty(update=utils_node.force_viewport_update, name="Shadow Catcher", default=False,
                                      description=SHADOWCATCHER_DESC)
     shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
