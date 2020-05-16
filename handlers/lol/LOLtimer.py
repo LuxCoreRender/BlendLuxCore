@@ -25,7 +25,7 @@
 import bpy
 
 def timer_update():
-    from ..utils import LOLutils as utils
+    from ...utils.lol import utils as utils
     '''check for running and finished downloads and react. write progressbars too.'''
     if len(utils.download_threads) == 0:
         return None
