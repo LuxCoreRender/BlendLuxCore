@@ -40,8 +40,10 @@ import urllib.error
 import zipfile
 from mathutils import Vector, Matrix
 import threading
+from threading import _MainThread
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences
+
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
@@ -182,6 +184,12 @@ class Downloader(threading.Thread):
                             dl += len(data)
                             tcom.downloaded = dl
                             tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
+
+                            # Stop download if Blender is closed
+                            for thread in threading.enumerate():
+                                if isinstance(thread, _MainThread):
+                                    if not thread.is_alive():
+                                        self.stop()
 
                             file_handle.write(data)
                             if self.stopped():
