@@ -102,6 +102,8 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
                              update=utils_node.force_viewport_update)
 
     def init(self, context):
+        self.show_thumbnail = utils.get_addon_preferences(bpy.context).image_node_thumb_default
+
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
 
         self.outputs.new("LuxCoreSocketColor", "Color")
