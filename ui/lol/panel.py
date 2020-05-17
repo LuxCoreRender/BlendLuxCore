@@ -25,6 +25,7 @@
 import bpy
 from bpy.types import Panel
 from os.path import basename, dirname
+from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
 
 
@@ -34,8 +35,7 @@ def draw_panel_categories(self, context):
         return
     categories = scene.luxcoreOL['categories']
 
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = bpy.context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
 
     layout = self.layout
     layout.separator()
@@ -108,8 +108,7 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         ui_props = scene.luxcoreOL.ui
 
         layout = self.layout
-        name = basename(dirname(dirname(dirname(__file__))))
-        user_preferences = bpy.context.preferences.addons[name].preferences
+        # user_preferences = get_addon_preferences(context)
 
         #layout.use_property_split = True
         #layout.use_property_decorate = False

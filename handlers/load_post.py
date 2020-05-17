@@ -24,8 +24,7 @@ def _init_persistent_cache_file_path(settings, suffix):
 def _init_LuxCoreOnlineLibrary():
     from os.path import basename, dirname
 
-    name = basename(dirname(dirname(__file__)))
-    user_preferences = bpy.context.preferences.addons[name].preferences
+    user_preferences = utils.get_addon_preferences(bpy.context)
     ui_props = bpy.context.scene.luxcoreOL.ui
     utils.lol.utils.download_table_of_contents(None, bpy.context)
     utils.lol.utils.get_categories(bpy.context)

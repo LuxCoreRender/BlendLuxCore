@@ -41,6 +41,7 @@ import zipfile
 from mathutils import Vector, Matrix
 import threading
 from ...handlers.lol.timer import timer_update
+from ...utils import get_addon_preferences
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
@@ -133,8 +134,7 @@ class Downloader(threading.Thread):
 
     # def main_download_thread(asset_data, tcom, scene_id, api_key):
     def run(self):
-        name = basename(dirname(dirname(dirname(__file__))))
-        user_preferences = bpy.context.preferences.addons[name].preferences
+        user_preferences = get_addon_preferences(bpy.context)
 
         print("Download Thread running")
         tcom = self.tcom

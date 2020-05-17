@@ -33,6 +33,7 @@ import mathutils
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
 from os.path import basename, dirname
+from ... import utils
 
 
 def draw_downloader(x, y, percent=0, img=None):
@@ -215,8 +216,7 @@ def update_ui_size(context, area, region):
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
 
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = bpy.context.preferences.addons[name].preferences
+    user_preferences = utils.get_addon_preferences(context)
 
     ui_scale = bpy.context.preferences.view.ui_scale
 
