@@ -1,11 +1,9 @@
 from os.path import basename, dirname
 from bpy.types import AddonPreferences
-from bpy.props import (
-    IntProperty,
-    StringProperty,
-)
+from bpy.props import IntProperty, StringProperty, EnumProperty
 from ..ui import icons
-from ..utils.lol import utils as utils
+from .. import utils
+from ..utils.lol import utils as lol_utils
 
 
 class LuxCoreAddonPreferences(AddonPreferences):
@@ -14,12 +12,18 @@ class LuxCoreAddonPreferences(AddonPreferences):
     # We use dirname() two times to go up one level in the file system
     bl_idname = basename(dirname(dirname(__file__)))
 
-    default_global_dict = utils.default_global_dict()
+    gpu_backend_items = [
+        ("OPENCL", "OpenCL", "Use OpenCL for GPU acceleration", 0),
+        ("CUDA", "CUDA", "Use CUDA for GPU acceleration", 1),
+    ]
+    gpu_backend: EnumProperty(items=gpu_backend_items, default="OPENCL")
+
+    default_global_dict = lol_utils.default_global_dict()
 
     global_dir: StringProperty(
         name="Global Files Directory",
         description="Global storage for your assets, will use subdirectories for the contents",
-        subtype='DIR_PATH', default=default_global_dict, update=utils.save_prefs)
+        subtype='DIR_PATH', default=default_global_dict, update=lol_utils.save_prefs)
 
     project_subdir: StringProperty(
         name="Project Assets Subdirectory", description="where data will be stored for individual projects",
@@ -31,6 +35,11 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+        
+        if utils.is_cuda_build():
+            row = layout.row()
+            row.label(text="GPU API:")
+            row.prop(self, "gpu_backend", expand=True)
 
         row = layout.row()
         row.label(text="Update or downgrade:")

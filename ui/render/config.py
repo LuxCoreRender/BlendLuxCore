@@ -18,11 +18,19 @@ def luxcore_render_draw(panel, context):
 
     # Device
     col_device = layout.column(align=True)
-    col_device.active = config.engine == "PATH"
-    col_device.prop(config, "device", text="Device")
-    if config.device == "OCL" and not utils.is_opencl_build():
-        # pyluxcore was compiled without OpenCL support
-        col_device.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
+    if config.engine == "PATH":
+        col_device.prop(config, "device", text="Device")
+        
+        if config.device == "OCL":
+            gpu_backend = utils.get_addon_preferences(context).gpu_backend
+            
+            if gpu_backend == "OPENCL" and not utils.is_opencl_build():
+                col_device.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
+            if gpu_backend == "CUDA" and not utils.is_cuda_build():
+                col_device.label(text="No CUDA support in this BlendLuxCore version", icon=icons.ERROR)
+    else:
+        col_device.enabled = False
+        col_device.prop(config, "bidir_device", text="Device")
 
     # Engine
     col = layout.column(align=True)
@@ -75,7 +83,8 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
 class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Tracing"
-    bl_order = 3
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
+    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_bounces"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -85,7 +94,7 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
         return config.engine == "PATH" and not config.use_tiles and engine == 'LUXCORE'
 
     def error(self, context):
-        use_native_cpu = context.scene.luxcore.opencl.use_native_cpu
+        use_native_cpu = context.scene.luxcore.devices.use_native_cpu
         config = context.scene.luxcore.config
         return config.device == "OCL" and not use_native_cpu
 
@@ -116,7 +125,7 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
 
             col = layout.column(align=True)
             col.use_property_split = False
-            col.prop(context.scene.luxcore.opencl, "use_native_cpu", toggle=True, text="Fix this problem")
+            col.prop(context.scene.luxcore.devices, "use_native_cpu", toggle=True, text="Fix this problem")
 
 
 class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
@@ -224,6 +233,69 @@ class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
         col.prop(config, "filter_width")
         if config.filter == "GAUSSIAN":
             layout.prop(config, "gaussian_alpha")
+
+
+class LUXCORE_RENDER_PT_lightpaths_tiled(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths_advanced"
+    bl_label = "Tiled"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        config = context.scene.luxcore.config
+        return config.engine == "PATH"
+
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        layout.prop(config, "use_tiles", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.enabled = config.use_tiles
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.prop(config.tile, "size")
+        col.prop(config.tile, "path_sampling_aa_size")
+
+        if utils.use_two_tiled_passes(context.scene):
+            layout.label(text="(Doubling amount of samples because of denoiser)")
+
+
+class LUXCORE_RENDER_PT_lightpaths_tiled_multipass(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths_tiled"
+    bl_label = "Multipass"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        config = context.scene.luxcore.config
+        return config.use_tiles
+
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        layout.prop(config.tile, "multipass_enable", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = config.tile.multipass_enable
+
+        col = layout.column(align=True)
+        col.prop(config.tile, "multipass_convtest_threshold")
+        col.prop(config.tile, "multipass_convtest_threshold_reduction")
+        col.prop(config.tile, "multipass_convtest_warmup")
 
 
 def compatible_panels():

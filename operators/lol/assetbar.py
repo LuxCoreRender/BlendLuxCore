@@ -29,6 +29,7 @@ from os.path import basename, dirname
 import math
 from mathutils import Vector
 
+from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
 from ...draw.lol import viewport as ui_bgl
 from bpy_extras import view3d_utils
@@ -676,8 +677,7 @@ class LOLAssetBarOperator(Operator):
         scene = context.scene
         ui_props = context.scene.luxcoreOL.ui
 
-        name = basename(dirname(dirname(dirname(__file__))))
-        user_preferences = bpy.context.preferences.addons[name].preferences
+        user_preferences = get_addon_preferences(context)
         assets = scene.luxcoreOL.get('assets')
 
         if scene.luxcoreOL.on_search:

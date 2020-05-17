@@ -128,7 +128,7 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
         definitions["opencl.gpu.use"] = False
         definitions["opencl.native.threads.count"] = 0
     else:
-        opencl = scene.luxcore.opencl
+        opencl = scene.luxcore.devices
         definitions["opencl.cpu.use"] = False
         definitions["opencl.gpu.use"] = True
         definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
