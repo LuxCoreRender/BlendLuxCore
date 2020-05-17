@@ -2,7 +2,8 @@ from os.path import basename, dirname
 from bpy.types import AddonPreferences
 from bpy.props import IntProperty, StringProperty, EnumProperty
 from ..ui import icons
-from ..utils.lol import utils as utils
+from .. import utils
+from ..utils.lol import utils as lol_utils
 
 
 class LuxCoreAddonPreferences(AddonPreferences):
@@ -17,12 +18,12 @@ class LuxCoreAddonPreferences(AddonPreferences):
     ]
     gpu_backend: EnumProperty(items=gpu_backend_items, default="OPENCL")
 
-    default_global_dict = utils.default_global_dict()
+    default_global_dict = lol_utils.default_global_dict()
 
     global_dir: StringProperty(
         name="Global Files Directory",
         description="Global storage for your assets, will use subdirectories for the contents",
-        subtype='DIR_PATH', default=default_global_dict, update=utils.save_prefs)
+        subtype='DIR_PATH', default=default_global_dict, update=lol_utils.save_prefs)
 
     project_subdir: StringProperty(
         name="Project Assets Subdirectory", description="where data will be stored for individual projects",
