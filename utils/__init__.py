@@ -2,8 +2,9 @@ import bpy
 import mathutils
 import math
 import re
-import os
 import hashlib
+import os
+from os.path import basename, dirname
 from ..bin import pyluxcore
 from . import view_layer
 
@@ -526,7 +527,11 @@ def pluralize(format_str, amount):
 
 
 def is_opencl_build():
-    return not pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool()
+    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_OPENCL").GetBool()
+    
+    
+def is_cuda_build():
+    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_CUDA").GetBool()
 
 
 def image_sequence_resolve_all(image):
@@ -629,3 +634,8 @@ def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_ren
 
 def in_material_shading_mode(context):
     return context and context.space_data.shading.type == "MATERIAL"
+
+
+def get_addon_preferences(context):
+    addon_name = basename(dirname(dirname(__file__)))
+    return context.preferences.addons[addon_name].preferences

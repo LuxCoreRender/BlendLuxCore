@@ -380,8 +380,10 @@ class LuxCoreConfig(PropertyGroup):
 
     # Only available when engine is PATH (not BIDIR)
     devices = [
-        ("CPU", "CPU", "Use the arithmetic logic units in your central processing unit", 0),
-        ("OCL", "OpenCL", "Use the good ol' pixel cruncher", 1),
+        ("CPU", "CPU", "CPU only", 0),
+        # Still called OCL for historical reasons, currently it means either OpenCL or CUDA, depending on selection in addon preferences
+        ("OCL", "GPU", "Use GPU(s) and optionally the CPU. You can choose between OpenCL and CUDA in the addon preferences. "
+                       "You can enable/disable each device in the Devices panel below", 1),
     ]
     device: EnumProperty(name="Device", items=devices, default="CPU")
     # A trick so we can show the user that bidir can only be used on the CPU (see UI code)
@@ -465,7 +467,7 @@ class LuxCoreConfig(PropertyGroup):
                                                   "This option is ignored in Non-OpenCL builds")
 
     def film_opencl_device_items_callback(self, context):
-        devices = context.scene.luxcore.opencl.devices
+        devices = context.scene.luxcore.devices.devices
         items = [("none", "None", "", 0)]
         items += [(str(i), device.name, "", i + 1) for i, device in enumerate(devices) if device.type == "OPENCL_GPU"]
         # There is a known bug with using a callback,

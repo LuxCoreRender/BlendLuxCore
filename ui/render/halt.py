@@ -62,7 +62,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
     bl_label = "Halt Conditions"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 5
+    bl_order = 9
 
     @classmethod
     def poll(cls, context):
