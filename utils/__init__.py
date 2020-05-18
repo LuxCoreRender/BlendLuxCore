@@ -337,12 +337,20 @@ def find_active_vertex_color_layer(vertex_colors):
     return None
 
 
-def is_instance_visible(dg_obj_instance, obj):
-    return (dg_obj_instance.show_self or dg_obj_instance.show_particles) and is_obj_visible(obj)
+def is_instance_visible(dg_obj_instance, obj, context):
+    if not (dg_obj_instance.show_self or dg_obj_instance.show_particles):
+        return False
+    
+    if context:    
+        viewport_vis_obj = dg_obj_instance.parent if dg_obj_instance.parent else obj
+        if not viewport_vis_obj.visible_in_viewport_get(context.space_data):
+            return False
+        
+    return is_obj_visible(obj)
 
 
 def is_obj_visible(obj):
-    if obj.type not in EXPORTABLE_OBJECTS or obj.luxcore.exclude_from_render:
+    if obj.luxcore.exclude_from_render or obj.type not in EXPORTABLE_OBJECTS:
         return False
 
     # Do not export the object if it's made completely invisible through Cycles settings
