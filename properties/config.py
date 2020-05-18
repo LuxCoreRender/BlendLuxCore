@@ -349,14 +349,23 @@ class LuxCoreConfig(PropertyGroup):
         ("BIDIR", "Bidir", "Bidirectional path tracer; " + COMPLEX_DESC, 1),
     ]
     engine: EnumProperty(name="Engine", items=engines, default="PATH")
-
-    # Only available when tiled rendering is off
+    
+    # Only available when tiled rendering is off (because it uses a special tiled sampler)
     samplers = [
         ("SOBOL", "Sobol", SIMPLE_DESC, 0),
         ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
         ("RANDOM", "Random", "Recommended only if the BCD denoiser is used (use Sobol otherwise)", 2),
     ]
     sampler: EnumProperty(name="Sampler", items=samplers, default="SOBOL")
+    
+    samplers_gpu = [
+        ("SOBOL", "Sobol", "Best suited sampler for the GPU", 0),
+        ("RANDOM", "Random", "Recommended only if the BCD denoiser is used (use Sobol otherwise)", 1),
+    ]
+    sampler_gpu: EnumProperty(name="Sampler", items=samplers_gpu, default="SOBOL")
+    
+    def get_sampler(self):
+        return self.sampler_gpu if self.device == "OCL" else self.sampler
 
     # SOBOL properties
     sobol_adaptive_strength: FloatProperty(name="Adaptive Strength", default=0.9, min=0, max=0.95,

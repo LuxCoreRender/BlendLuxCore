@@ -5,13 +5,6 @@ from ... import utils
 from .. import icons
 
 
-def _show_hybrid_metropolis_warning(context):
-    config = context.scene.luxcore.config
-    opencl = context.scene.luxcore.devices
-    return (config.engine == "PATH" and config.device == "OCL" and not config.path.hybridbackforward_enable
-            and config.sampler == "METROPOLIS" and opencl.use_native_cpu)
-
-
 def _get_gpu_devices(context, device_list):
     gpu_backend = utils.get_addon_preferences(context).gpu_backend
     if gpu_backend == "OPENCL":
@@ -42,7 +35,7 @@ class LUXCORE_RENDER_PT_devices(RenderButtonsPanel, Panel):
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw_header(self, context):
-        if _show_hybrid_metropolis_warning(context) or _show_openCL_device_warning(context):
+        if _show_openCL_device_warning(context):
             self.layout.label(text="", icon=icons.WARNING)
 
     def draw(self, context):
@@ -131,8 +124,3 @@ class LUXCORE_RENDER_PT_cpu_devices(RenderButtonsPanel, Panel):
         sub = layout.column(align=True)
         sub.enabled = context.scene.render.threads_mode == 'FIXED'
         sub.prop(context.scene.render, "threads")
-
-        if _show_hybrid_metropolis_warning(context):
-            col = layout.column(align=True)
-            col.label(text="CPU should be disabled if Metropolis", icon=icons.WARNING)
-            col.label(text="sampler is used (can cause artifacts)")

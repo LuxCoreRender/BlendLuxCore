@@ -175,7 +175,6 @@ class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
 
         config = context.scene.luxcore.config
         denoiser = context.scene.luxcore.denoiser
-        scene = context.scene
 
         layout.use_property_split = True
         layout.use_property_decorate = False
@@ -198,15 +197,21 @@ class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
         # Sampler settings
         if not (config.engine == "PATH" and config.use_tiles):
             row_sampler = layout.row()
-            row_sampler.prop(config, "sampler", expand=False)
+            
+            if config.device == "OCL":
+                row_sampler.prop(config, "sampler_gpu", expand=False)
+            else:
+                row_sampler.prop(config, "sampler", expand=False)
+                
+            sampler = config.get_sampler()
 
-            if config.sampler in {"SOBOL", "RANDOM"}:
+            if sampler in {"SOBOL", "RANDOM"}:
                 col = layout.column(align=True)
                 col.prop(config, "sobol_adaptive_strength", slider=True)
                 if config.sobol_adaptive_strength > 0:
                     col.prop(config.noise_estimation, "warmup")
                     col.prop(config.noise_estimation, "step")
-            elif config.sampler == "METROPOLIS":
+            elif sampler == "METROPOLIS":
                 if denoiser.enabled and denoiser.type == "BCD":
                     layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
 

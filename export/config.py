@@ -259,13 +259,16 @@ def _convert_final_engine(scene, definitions, config):
         # TILEPATH needs exactly this sampler
         sampler = "TILEPATHSAMPLER"
     else:
-        sampler = config.sampler
+        sampler = config.get_sampler()
+        
+    if sampler in {"SOBOL", "RANDOM"}:
         adaptive_strength = config.sobol_adaptive_strength
         if adaptive_strength > 0:
             definitions["film.noiseestimation.warmup"] = config.noise_estimation.warmup
             definitions["film.noiseestimation.step"] = config.noise_estimation.step
         definitions["sampler.sobol.adaptive.strength"] = adaptive_strength
         definitions["sampler.random.adaptive.strength"] = adaptive_strength
+    elif sampler == "METROPOLIS":
         _convert_metropolis_settings(definitions, config)
 
     return luxcore_engine, sampler

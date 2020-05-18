@@ -72,7 +72,7 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
             layout.prop(denoiser, "max_memory_MB")
 
         if denoiser.enabled and denoiser.type == "BCD":
-            if config.sampler == "METROPOLIS" and not config.use_tiles:
+            if config.get_sampler() == "METROPOLIS" and not config.use_tiles:
                 layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
 
         sub = layout.column(align=True)
