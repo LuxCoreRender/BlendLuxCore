@@ -42,7 +42,7 @@ def luxcore_render_draw(panel, context):
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Paths"
-    bl_order = 2
+    bl_order = 20
     
     def draw(self, context):
         pass
@@ -128,7 +128,7 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
             col.prop(context.scene.luxcore.devices, "use_native_cpu", toggle=True, text="Fix this problem")
 
 
-class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
+class LUXCORE_RENDER_PT_lightpaths_clamping(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
     lux_predecessor = "LUXCORE_RENDER_PT_add_light_tracing"
@@ -161,146 +161,6 @@ class LUXCORE_RENDER_PT_clamping(RenderButtonsPanel, Panel):
             # Show a button that can be used to set the optimal clamp value
             op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
             layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
-
-
-class LUXCORE_RENDER_PT_lightpaths_advanced(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
-    lux_predecessor = "LUXCORE_RENDER_PT_clamping"
-    bl_label = "Advanced"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        config = context.scene.luxcore.config
-        denoiser = context.scene.luxcore.denoiser
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-        
-        # Light strategy
-        col = layout.column()
-        if config.dls_cache.enabled:
-            col.label(text="Using direct light sampling cache", icon=icons.INFO)
-            col = layout.column()
-            col.active = False
-        
-        col.prop(config, "light_strategy")
-
-        # Seed settings
-        row = layout.row(align=True)      
-        row.active = not config.use_animated_seed
-        row.prop(config, "seed")
-        row.prop(config, "use_animated_seed", text="", icon="TIME", toggle=True)
-
-        # Sampler settings
-        if not (config.engine == "PATH" and config.use_tiles):
-            row_sampler = layout.row()
-            
-            if config.device == "OCL":
-                row_sampler.prop(config, "sampler_gpu", expand=False)
-            else:
-                row_sampler.prop(config, "sampler", expand=False)
-                
-            sampler = config.get_sampler()
-
-            if sampler in {"SOBOL", "RANDOM"}:
-                col = layout.column(align=True)
-                col.prop(config, "sobol_adaptive_strength", slider=True)
-                if config.sobol_adaptive_strength > 0:
-                    col.prop(config.noise_estimation, "warmup")
-                    col.prop(config.noise_estimation, "step")
-            elif sampler == "METROPOLIS":
-                if denoiser.enabled and denoiser.type == "BCD":
-                    layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
-
-                col = layout.column(align=True)
-                col.prop(config, "metropolis_largesteprate", slider=True)
-                col.prop(config, "metropolis_maxconsecutivereject")
-                col.prop(config, "metropolis_imagemutationrate", slider=True)
-        else:
-            row_sampler = layout.row()
-            row_sampler.label(text="Tiled path uses special sampler", icon=icons.INFO)
-        
-        # Filter settings
-
-        filter_forced_none = denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE"
-        if filter_forced_none:
-            layout.label(text='Filter set to "None" (required by denoiser)', icon=icons.INFO)
-        
-        col = layout.column(align=True)      
-        col.enabled = not filter_forced_none        
-        col.prop(config, "filter")
-
-        col = layout.column(align=True)      
-        col.enabled = config.filter != "NONE"
-        col.prop(config, "filter_width")
-        if config.filter == "GAUSSIAN":
-            layout.prop(config, "gaussian_alpha")
-
-
-class LUXCORE_RENDER_PT_lightpaths_tiled(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths_advanced"
-    bl_label = "Tiled"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        config = context.scene.luxcore.config
-        return config.engine == "PATH"
-
-    def draw_header(self, context):
-        layout = self.layout
-        config = context.scene.luxcore.config
-        layout.prop(config, "use_tiles", text="")
-
-    def draw(self, context):
-        layout = self.layout
-        config = context.scene.luxcore.config
-
-        layout.enabled = config.use_tiles
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        col = layout.column(align=True)
-        col.prop(config.tile, "size")
-        col.prop(config.tile, "path_sampling_aa_size")
-
-        if utils.use_two_tiled_passes(context.scene):
-            layout.label(text="(Doubling amount of samples because of denoiser)")
-
-
-class LUXCORE_RENDER_PT_lightpaths_tiled_multipass(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    bl_parent_id = "LUXCORE_RENDER_PT_lightpaths_tiled"
-    bl_label = "Multipass"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        config = context.scene.luxcore.config
-        return config.use_tiles
-
-    def draw_header(self, context):
-        layout = self.layout
-        config = context.scene.luxcore.config
-        layout.prop(config.tile, "multipass_enable", text="")
-
-    def draw(self, context):
-        layout = self.layout
-        config = context.scene.luxcore.config
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        layout.enabled = config.tile.multipass_enable
-
-        col = layout.column(align=True)
-        col.prop(config.tile, "multipass_convtest_threshold")
-        col.prop(config.tile, "multipass_convtest_threshold_reduction")
-        col.prop(config.tile, "multipass_convtest_warmup")
 
 
 def compatible_panels():

@@ -10,7 +10,7 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Viewport Render"
     bl_options = {"DEFAULT_CLOSED"}
-    bl_order = 10
+    bl_order = 100
 
     @classmethod
     def poll(cls, context):

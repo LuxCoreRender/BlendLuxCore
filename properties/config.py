@@ -9,8 +9,7 @@ from .halt import NOISE_THRESH_WARMUP_DESC, NOISE_THRESH_STEP_DESC
 
 
 TILED_DESCRIPTION = (
-    "Render the image in quadratic chunks instead of sampling the whole film at once;\n"
-    "Causes lower memory usage; Uses a special sampler"
+    'Use the special "Tiled Path" engine, which is slower than the regular Path engine, but uses less memory'
 )
 TILE_SIZE_DESC = (
     "Note that OpenCL devices will automatically render multiple tiles if it increases performance"
@@ -373,6 +372,26 @@ class LuxCoreConfig(PropertyGroup):
 
     # Noise estimation (used by adaptive samplers like SOBOL and RANDOM)
     noise_estimation: PointerProperty(type=LuxCoreConfigNoiseEstimation)
+    
+    # Sampler pattern (used by SOBOL and RANDOM)
+    sampler_patterns = [
+        ("PROGRESSIVE", "Progressive", "Optimized for quick feedback, sampling 1 sample per pixel in each pass over the image", 0),
+        ("CACHE_FRIENDLY", "Cache-friendly", "Optimized for faster rendering", 1),
+    ]
+    sampler_pattern: EnumProperty(name="Pattern", items=sampler_patterns, default="PROGRESSIVE")
+    
+    out_of_core_supersampling_items = [
+        ("4", "4", "", 0),
+        ("8", "8", "", 1),
+        ("16", "16", "", 2),
+        ("32", "32", "", 3),
+        ("64", "64", "", 4),
+    ]
+    out_of_core_supersampling: EnumProperty(name="Supersampling", items=out_of_core_supersampling_items, default="16",
+                                            description="Multiplier for the samples per pass")
+    out_of_core: BoolProperty(name="Out of Core", default=False, 
+                              description="Enable storage of image pixels, meshes and other data in CPU RAM if GPU RAM is not sufficient. "
+                                          "Enabling this option causes the scene to use more CPU RAM")
 
     # METROPOLIS properties
     # sampler.metropolis.largesteprate
@@ -399,7 +418,7 @@ class LuxCoreConfig(PropertyGroup):
     bidir_device: EnumProperty(name="Device", items=devices, default="CPU",
                                 description="Bidir only available on CPU")
 
-    use_tiles: BoolProperty(name="Tiled", default=False, description=TILED_DESCRIPTION)
+    use_tiles: BoolProperty(name="Use Tiled Path (slower)", default=False, description=TILED_DESCRIPTION)
 
     # Special properties of the various engines
     path: PointerProperty(type=LuxCoreConfigPath)

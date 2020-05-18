@@ -6,7 +6,7 @@ class LUXCORE_RENDER_PT_debug_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "LuxCore DEBUG Settings"
     bl_options = {'DEFAULT_CLOSED'}    
-    bl_order = 10
+    bl_order = 998
 
     @classmethod
     def poll(cls, context):

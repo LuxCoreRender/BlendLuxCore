@@ -10,7 +10,7 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Denoiser"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 6
+    bl_order = 60
 
     @classmethod
     def poll(cls, context):

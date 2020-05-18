@@ -25,6 +25,8 @@ def draw(layout, context, halt):
     col.prop(halt, "samples")
 
     config = context.scene.luxcore.config
+    
+    # TODO also do this for cache-friendly and out-of-core sampling patterns (beware of overlap! See ui/render/sampling.py)
 
     if halt.use_samples and config.engine == "PATH" and config.use_tiles:
         # some special warnings about tile path usage
@@ -62,7 +64,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
     bl_label = "Halt Conditions"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 9
+    bl_order = 90
 
     @classmethod
     def poll(cls, context):
@@ -120,7 +122,7 @@ class LUXCORE_RENDERLAYER_PT_halt_conditions(Panel, ViewLayerButtonsPanel):
     """
 
     bl_label = "Override Halt Conditions"
-    bl_order = 4
+    bl_order = 40
     COMPAT_ENGINES = {"LUXCORE"}
 
     @classmethod

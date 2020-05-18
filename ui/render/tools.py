@@ -7,7 +7,7 @@ class LUXCORE_RENDER_PT_tools(Panel, RenderButtonsPanel):
     bl_label = "LuxCore Tools"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_options = {"DEFAULT_CLOSED"}
-    bl_order = 100
+    bl_order = 999
 
     @classmethod
     def poll(cls, context):
