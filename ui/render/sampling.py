@@ -7,8 +7,18 @@ from bpy.types import Panel
 from bl_ui.properties_render import RenderButtonsPanel
 
 
-def _using_tiled_path(config):
-    return config.engine == "PATH" and config.use_tiles
+def calc_samples_per_pass(config):
+    if config.using_tiled_path():
+        return config.tile.path_sampling_aa_size**2
+    elif config.get_sampler() in {"SOBOL", "RANDOM"}:
+        if config.using_out_of_core():
+            return int(config.out_of_core_supersampling) * SamplingOverlap.OUT_OF_CORE
+        else:
+            if config.sampler_pattern == "PROGRESSIVE":
+                return SamplingOverlap.PROGRESSIVE
+            elif config.sampler_pattern == "CACHE_FRIENDLY":
+                return SamplingOverlap.CACHE_FRIENDLY
+    return -1
 
 
 class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
@@ -22,13 +32,12 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
 
         config = context.scene.luxcore.config
         sampler = config.get_sampler()
-        using_out_of_core = config.device == "OCL" and config.out_of_core
         denoiser = context.scene.luxcore.denoiser
 
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        if _using_tiled_path(config):
+        if config.using_tiled_path():
             row = layout.row()
             row.label(text="Tiled path uses special sampler", icon=icons.INFO)
             
@@ -49,7 +58,7 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
 
             if sampler in {"SOBOL", "RANDOM"}:
                 col = layout.column()
-                col.active = not using_out_of_core
+                col.active = not config.using_out_of_core()
                 col.prop(config, "sampler_pattern")
                 
                 if config.device == "OCL":
@@ -67,23 +76,12 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
                 col.prop(config, "metropolis_imagemutationrate", slider=True)
         
         # Samples (per pixel) per pass info
-        # TODO: not correct yet (due to overlap)
-        samples_per_pass = -1
-        if _using_tiled_path(config):
-            samples_per_pass = pow(config.tile.path_sampling_aa_size, 2)
-        elif sampler in {"SOBOL", "RANDOM"}:
-            if using_out_of_core:
-                samples_per_pass = int(config.out_of_core_supersampling) * SamplingOverlap.OUT_OF_CORE
-            else:
-                if config.sampler_pattern == "PROGRESSIVE":
-                    samples_per_pass = SamplingOverlap.PROGRESSIVE
-                elif config.sampler_pattern == "CACHE_FRIENDLY":
-                    samples_per_pass = SamplingOverlap.CACHE_FRIENDLY
-
+        
+        samples_per_pass = calc_samples_per_pass(config)
         if samples_per_pass != -1:
             row = layout.row()
             row.alignment = "RIGHT"
-            row.label(text=f"Samples per pass: {samples_per_pass}")
+            row.label(text=f"Samples per Pass: {samples_per_pass}")
 
 
 class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
@@ -95,7 +93,7 @@ class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         config = context.scene.luxcore.config
-        return _using_tiled_path(config)
+        return config.using_tiled_path()
 
     def draw_header(self, context):
         layout = self.layout
@@ -127,7 +125,7 @@ class LUXCORE_RENDER_PT_sampling_adaptivity(RenderButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         config = context.scene.luxcore.config
-        return config.get_sampler() in {"SOBOL", "RANDOM"} and not _using_tiled_path(config)
+        return config.get_sampler() in {"SOBOL", "RANDOM"} and not config.using_tiled_path()
 
     def draw(self, context):
         layout = self.layout

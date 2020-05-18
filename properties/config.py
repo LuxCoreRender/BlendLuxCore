@@ -392,6 +392,9 @@ class LuxCoreConfig(PropertyGroup):
     out_of_core: BoolProperty(name="Out of Core", default=False, 
                               description="Enable storage of image pixels, meshes and other data in CPU RAM if GPU RAM is not sufficient. "
                                           "Enabling this option causes the scene to use more CPU RAM")
+    
+    def using_out_of_core(self):
+        return self.device == "OCL" and self.out_of_core
 
     # METROPOLIS properties
     # sampler.metropolis.largesteprate
@@ -419,6 +422,9 @@ class LuxCoreConfig(PropertyGroup):
                                 description="Bidir only available on CPU")
 
     use_tiles: BoolProperty(name="Use Tiled Path (slower)", default=False, description=TILED_DESCRIPTION)
+    
+    def using_tiled_path(self):
+        return self.engine == "PATH" and self.use_tiles
 
     # Special properties of the various engines
     path: PointerProperty(type=LuxCoreConfigPath)
