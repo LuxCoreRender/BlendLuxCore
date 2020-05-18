@@ -68,22 +68,22 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
         
         # Samples (per pixel) per pass info
         # TODO: not correct yet (due to overlap)
-        # samples_per_pass = -1
-        # if _using_tiled_path(config):
-        #     samples_per_pass = pow(config.tile.path_sampling_aa_size, 2)
-        # elif sampler in {"SOBOL", "RANDOM"}:
-        #     if using_out_of_core:
-        #         samples_per_pass = int(config.out_of_core_supersampling) * SamplingOverlap.OUT_OF_CORE
-        #     else:
-        #         if config.sampler_pattern == "PROGRESSIVE":
-        #             samples_per_pass = SamplingOverlap.PROGRESSIVE
-        #         elif config.sampler_pattern == "CACHE_FRIENDLY":
-        #             samples_per_pass = SamplingOverlap.CACHE_FRIENDLY
+        samples_per_pass = -1
+        if _using_tiled_path(config):
+            samples_per_pass = pow(config.tile.path_sampling_aa_size, 2)
+        elif sampler in {"SOBOL", "RANDOM"}:
+            if using_out_of_core:
+                samples_per_pass = int(config.out_of_core_supersampling) * SamplingOverlap.OUT_OF_CORE
+            else:
+                if config.sampler_pattern == "PROGRESSIVE":
+                    samples_per_pass = SamplingOverlap.PROGRESSIVE
+                elif config.sampler_pattern == "CACHE_FRIENDLY":
+                    samples_per_pass = SamplingOverlap.CACHE_FRIENDLY
 
-        # if samples_per_pass != -1:
-        #     row = layout.row()
-        #     row.alignment = "RIGHT"
-        #     row.label(text=f"Samples per pass: {samples_per_pass}")
+        if samples_per_pass != -1:
+            row = layout.row()
+            row.alignment = "RIGHT"
+            row.label(text=f"Samples per pass: {samples_per_pass}")
 
 
 class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
