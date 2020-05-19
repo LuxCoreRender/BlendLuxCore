@@ -237,6 +237,7 @@ def _color_LUT(definitions, index, color_LUT, scene):
 
         definitions[str(index) + ".type"] = "COLOR_LUT"
         definitions[str(index) + ".file"] = filepath
+        definitions[str(index) + ".strength"] = color_LUT.strength / 100
         return index + 1, gamma_corrected
     else:
         return index, False

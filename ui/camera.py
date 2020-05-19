@@ -424,6 +424,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_LUT(CameraButtonsPanel, Panel):
             layout.operator("luxcore.set_raw_view_transform")
 
         layout.prop(color_LUT, "file")
+        layout.prop(color_LUT, "strength")
 
 
 class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):

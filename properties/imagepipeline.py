@@ -179,6 +179,9 @@ class LuxCoreImagepipelineColorLUT(PropertyGroup, LuxCoreImagepipelinePlugin):
     file: StringProperty(name="CUBE File", subtype="FILE_PATH",
                          description="Path to the .cube file")
 
+    strength: FloatProperty(name="Strength", default=100, min=0, max=100, precision=1, subtype="PERCENTAGE",
+                            description="Mix between input without LUT and result with LUT")
+
 
 class LuxCoreImagepipelineContourLines(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Irradiance Contour Lines"
