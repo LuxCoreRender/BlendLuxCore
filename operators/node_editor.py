@@ -3,7 +3,10 @@ from mathutils import Vector
 from .. import utils
 from ..utils import node as utils_node
 from ..nodes.output import get_active_output, OUTPUT_MAP
-from ..nodes.sockets import LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketVector
+from ..nodes.sockets import (
+    LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketVector,
+    LuxCoreSocketMapping2D, LuxCoreSocketMapping3D,
+)
 from .utils import poll_node_tree
 
 luxcore_viewer_reroute_mark = "luxcore_viewer_reroute"
@@ -178,7 +181,10 @@ class LUXCORE_OT_node_editor_add_image(bpy.types.Operator):
         space = context.space_data
         node_tree = space.node_tree
         
-        allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat}
+        allowed_inputs = {
+            LuxCoreSocketColor, LuxCoreSocketFloat,
+            LuxCoreSocketMapping2D, LuxCoreSocketMapping3D,
+        }
 
         for node in [node for node in node_tree.nodes if node.select]:
             unlinked_input = None
@@ -188,14 +194,30 @@ class LUXCORE_OT_node_editor_add_image(bpy.types.Operator):
                     break
             if not unlinked_input:
                 continue
-            
-            img_node = node_tree.nodes.new("LuxCoreNodeTexImagemap")
-            img_node.location = node.location + Vector((-240, 0))
-            node_tree.links.new(img_node.outputs["Color"], unlinked_input)
-            
-            mapping_node = node_tree.nodes.new("LuxCoreNodeTexMapping2D")
-            mapping_node.location = img_node.location + Vector((-200, 0))
-            node_tree.links.new(mapping_node.outputs[0], img_node.inputs[0])
+
+            def is_2d_socket(socket):
+                return isinstance(unlinked_input, LuxCoreSocketMapping2D)
+            def is_3d_socket(socket):
+                return isinstance(unlinked_input, LuxCoreSocketMapping3D)
+
+            if is_2d_socket(unlinked_input) or is_3d_socket(unlinked_input):
+                tex_node = node
+            else:
+                tex_node = node_tree.nodes.new("LuxCoreNodeTexImagemap")
+                tex_node.location = node.location + Vector((-240, 0))
+                node_tree.links.new(tex_node.outputs["Color"], unlinked_input)
+                unlinked_input = tex_node.inputs[0]
+
+            if is_2d_socket(unlinked_input):
+                mapping_node = node_tree.nodes.new("LuxCoreNodeTexMapping2D")
+                offset = Vector((-200, 0))
+            else:
+                assert is_3d_socket(unlinked_input)
+                mapping_node = node_tree.nodes.new("LuxCoreNodeTexMapping3D")
+                offset = Vector((-300, 0))
+
+            mapping_node.location = tex_node.location + offset
+            node_tree.links.new(mapping_node.outputs[0], unlinked_input)
             
             node.select = False
 
