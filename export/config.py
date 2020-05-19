@@ -68,7 +68,7 @@ def convert(exporter, scene, context=None, engine=None):
             "scene.epsilon.max": config.max_epsilon,
         })
 
-        if config.film_opencl_enable and config.film_opencl_device != "none":
+        if config.film_opencl_enable and config.film_opencl_device not in {"", "none"}:
             definitions["film.opencl.enable"] = True
             definitions["film.opencl.device"] = int(config.film_opencl_device)
         else:
@@ -122,6 +122,8 @@ def convert(exporter, scene, context=None, engine=None):
         msg = 'Config: %s' % error
         # Note: Exceptions in the config are critical, we can't render without a config
         LuxCoreErrorLog.add_error(msg)
+        import traceback
+        traceback.print_exc()
         return pyluxcore.Properties()
 
 
