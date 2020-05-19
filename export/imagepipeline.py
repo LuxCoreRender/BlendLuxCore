@@ -65,16 +65,20 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
     if pipeline.vignetting.is_enabled(context):
         index = _vignetting(definitions, index, pipeline.vignetting)
 
+    if pipeline.white_balance.is_enabled(context):
+        index = _white_balance(definitions, index, pipeline.white_balance)
+
     if pipeline.camera_response_func.is_enabled(context):
         index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
 
-    if pipeline.white_balance.is_enabled(context):
-        index = _white_balance(definitions, index, pipeline.white_balance)
+    gamma_corrected = False
+    if pipeline.color_LUT.is_enabled(context):
+        index, gamma_corrected = _color_LUT(definitions, index, pipeline.color_LUT, scene)
 
     if pipeline.contour_lines.is_enabled(context):
         index = _contour_lines(definitions, index, pipeline.contour_lines)
 
-    if using_filesaver:
+    if using_filesaver and not gamma_corrected:
         # Needs gamma correction (Blender applies it for us,
         # but now we export for luxcoreui)
         index = _gamma(definitions, index)
@@ -213,6 +217,29 @@ def _camera_response_func(definitions, index, camera_response_func, scene):
         return index + 1
     else:
         return index
+
+
+def _color_LUT(definitions, index, color_LUT, scene):
+    try:
+        library = scene.camera.data.library
+        filepath = utils.get_abspath(color_LUT.file, library,
+                                     must_exist=True, must_be_existing_file=True)
+    except OSError as error:
+        # Make the error message more precise
+        LuxCoreErrorLog.add_warning('Could not find .cube file at path "%s" (%s)'
+                                    % (color_LUT.file, error))
+        filepath = None
+
+    if filepath:
+        gamma_corrected = color_LUT.input_colorspace == "SRGB_GAMMA_CORRECTED"
+        if gamma_corrected:
+            index = _gamma(definitions, index)
+
+        definitions[str(index) + ".type"] = "COLOR_LUT"
+        definitions[str(index) + ".file"] = filepath
+        return index + 1, gamma_corrected
+    else:
+        return index, False
 
 
 def _contour_lines(definitions, index, contour_lines):

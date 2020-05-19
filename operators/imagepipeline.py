@@ -91,3 +91,19 @@ class LUXCORE_OT_select_crf(bpy.types.Operator):
     def invoke(self, context, event):
         context.window_manager.invoke_search_popup(self)
         return {'FINISHED'}
+
+
+class LUXCORE_OT_set_raw_view_transform(bpy.types.Operator):
+    bl_idname = "luxcore.set_raw_view_transform"
+    bl_label = "Set View Transform to Raw"
+    bl_description = ""
+    bl_property = "crf_preset"
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene
+
+    def execute(self, context):
+        context.scene.view_settings.view_transform = "Raw"
+        context.scene.view_settings.gamma = 1
+        return {'FINISHED'}
