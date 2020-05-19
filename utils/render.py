@@ -14,12 +14,12 @@ from . import view_layer
 
 ENGINE_TO_STR = {
     "PATHCPU": "Path CPU",
-    "PATHOCL": "Path OpenCL",
+    "PATHOCL": "Path GPU",
     "TILEPATHCPU": "Tile Path CPU",
-    "TILEPATHOCL": "Tile Path OpenCL",
+    "TILEPATHOCL": "Tile Path GPU",
     "BIDIRCPU": "Bidir CPU",
     "BIDIRVMCPU": "BidirVM CPU",
-    "RTPATHOCL": "RT Path OpenCL",
+    "RTPATHOCL": "RT Path GPU",
     "RTPATHCPU": "RT Path CPU",
 }
 
