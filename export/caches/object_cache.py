@@ -401,7 +401,7 @@ class ObjectCache2:
             for dg_update in depsgraph.updates:
                 if dg_update.is_updated_geometry and isinstance(dg_update.id, bpy.types.Object):
                     obj = dg_update.id
-                    if not utils.is_obj_visible(obj, context) or not obj.visible_in_viewport_get(context.space_data):
+                    if not utils.is_obj_visible(obj) or not obj.visible_in_viewport_get(context.space_data):
                         continue
 
                     if obj.type in MESH_OBJECTS:
