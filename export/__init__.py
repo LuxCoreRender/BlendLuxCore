@@ -216,7 +216,8 @@ class Exporter(object):
             # Inform about pre-computations that can take a long time to complete, like caches
             
             if config_props.Get("renderengine.type").GetString().endswith("OCL") and not renderconfig.HasCachedKernels():
-                kernel_compile_msg = "Compiling OpenCL kernels (just once, takes a few minutes)"
+                gpu_backend = utils.get_addon_preferences(bpy.context).gpu_backend
+                kernel_compile_msg = f"Compiling {gpu_backend} kernels (just once, takes a few minutes)"
                 engine.report({"INFO"}, kernel_compile_msg)
                 message += ", " + kernel_compile_msg
             

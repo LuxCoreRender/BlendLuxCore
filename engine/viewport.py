@@ -114,7 +114,8 @@ def view_draw(engine, context, depsgraph):
             renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
             
             if not renderconfig.HasCachedKernels():
-                message = "Compiling OpenCL kernels (just once, takes a few minutes)"
+                gpu_backend = utils.get_addon_preferences(context).gpu_backend
+                message = f"Compiling {gpu_backend} kernels (just once, takes a few minutes)"
         
         engine.update_stats("Starting viewport render", message)
         engine.viewport_starting_message_shown = True
