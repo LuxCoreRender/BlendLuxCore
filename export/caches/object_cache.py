@@ -184,8 +184,6 @@ class ObjectCache2:
                 # This code is for singular objects and for duplis that should be movable later in a viewport render
                 if not utils.is_instance_visible(dg_obj_instance, obj, context):
                     continue
-                if view_layer and obj.name not in view_layer.objects:
-                    continue
 
                 if engine:
                     if engine.test_break():
