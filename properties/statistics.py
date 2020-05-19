@@ -179,7 +179,7 @@ class LuxCoreRenderStats:
         categories = []
         categories.append("Statistics")
         self.render_time = Stat("Render Time", categories[-1],
-                                0, greater_is_better, time_to_string, get_rounded)
+                                0, smaller_is_better, time_to_string, get_rounded)
         self.samples = Stat("Samples", categories[-1], 0, greater_is_better)
         categories.append("Performance")
         self.samples_per_sec = Stat("Samples/Sec", categories[-1],
