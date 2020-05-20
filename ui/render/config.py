@@ -36,7 +36,9 @@ def luxcore_render_draw(panel, context):
     col = layout.column(align=True)
     col.prop(config, "engine", expand=False)
 
-    layout.operator("luxcore.use_cycles_settings")
+    row = layout.row()
+    row.operator("luxcore.use_cycles_settings")
+    row.operator("luxcore.render_settings_helper")
 
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):

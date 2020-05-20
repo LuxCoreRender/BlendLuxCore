@@ -165,7 +165,6 @@ class LUXCORE_MT_node_tree:
                 col.label(text="No " + tree_type_pretty + " node trees available")
 
             if tree_type == "luxcore_material_nodetree":
-                # Volumes need a more complicated new operator (Todo)
                 col.operator("luxcore.mat_nodetree_new", text="New Node Tree", icon=icons.ADD)
                 col.menu("LUXCORE_MT_node_tree_preset")
 
@@ -188,3 +187,21 @@ def show_nodetree(context, node_tree):
                     space.node_tree = node_tree
                     return True
     return False
+
+
+def use_cycles_settings():
+    use_cycles_material_nodes()
+
+    for light in bpy.data.lights:
+        light.luxcore.use_cycles_settings = True
+        light.update_tag()
+
+    for world in bpy.data.worlds:
+        world.luxcore.use_cycles_settings = True
+        world.update_tag()
+
+
+def use_cycles_material_nodes():
+    for mat in bpy.data.materials:
+        if mat.use_nodes and mat.node_tree:
+            mat.luxcore.use_cycles_nodes = True

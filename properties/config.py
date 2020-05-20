@@ -109,9 +109,9 @@ MAX_CONSECUTIVE_REJECT_DESC = (
 IMAGE_MUTATION_RATE_DESC = "Maximum distance over the image plane for a small mutation"
 
 LOOKUP_RADIUS_DESC = (
-    "Choose this value according to the size of your scene. "
-    "The default value is suited for a room-sized scene. "
-    "Larger values can degrade rendering performance"
+    "Controls the sharpness of the caustics. "
+    "Choose this value according to the size of your scene and the required detail in your caustics. "
+    "Too large values can degrade rendering performance, too small values can lead to non-resolving, noisy caustics"
 )
 
 NORMAL_ANGLE_DESC = (

@@ -647,3 +647,16 @@ def in_material_shading_mode(context):
 def get_addon_preferences(context):
     addon_name = basename(dirname(dirname(__file__)))
     return context.preferences.addons[addon_name].preferences
+
+
+def count_index(func):
+    """
+    A decorator that increments an index each time the decorated function is called.
+    It also passes the index as a keyword argument to the function.
+    """
+    def wrapper(*args, **kwargs):
+        kwargs["index"] = wrapper.index
+        wrapper.index += 1
+        return func(*args, **kwargs)
+    wrapper.index = 0
+    return wrapper
