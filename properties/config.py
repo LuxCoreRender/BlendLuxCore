@@ -34,7 +34,8 @@ RANDOM_DESC = (
 )
 
 TILED_DESCRIPTION = (
-    'Use the special "Tiled Path" engine, which is slower than the regular Path engine, but uses less memory'
+    'Use the special "Tiled Path" engine, which is slower than the regular Path engine, but uses less memory. '
+    'Does not support the "Add Light Tracing" option'
 )
 TILE_SIZE_DESC = (
     "Note that OpenCL devices will automatically render multiple tiles if it increases performance"
