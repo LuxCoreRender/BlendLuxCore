@@ -8,6 +8,31 @@ from math import radians
 from .halt import NOISE_THRESH_WARMUP_DESC, NOISE_THRESH_STEP_DESC
 
 
+PATH_DESC = (
+    'Traces rays from the camera (and from lights, if "Add Light Tracing" or caustics cache are used).\n'
+    'Suited for almost all scene types and lighting scenarios.\n'
+    'Can run on the CPU, GPU or both.\n'
+    'Supports several caches to accelerate indirect light, environment light sampling and many-light sampling.\n'
+    'Can render complex SDS-caustics (e.g. caustics seen in a mirror) efficiently with the caustics cache.\n'
+    'All AOV types and special features like shadow catcher or indirect light visibility flags for lights are supported'
+)
+
+BIDIR_DESC = (
+    "Traces and combines rays from the camera and lights.\n"
+    "Suited for some special edge-case types of scenes that can't be rendered efficiently by the Path engine.\n"
+    "Slower than the Path engine otherwise.\n"
+    'Limited to the CPU, can not run on the GPU.\n'
+    "Can not render complex SDS-caustics (e.g. caustics seen in a mirror) efficiently.\n"
+    "Does not support all AOV types and special features like shadow catcher or indirect light visibility flags for lights"
+)
+
+SOBOL_DESC = "Optimized random noise pattern. Supports noise-aware adaptive sampling"
+METROPOLIS_DESC = "Sampler that focuses samples on brighter parts of the image. Not noise-aware. Suited for rendering caustics"
+RANDOM_DESC = (
+    "Random noise pattern. Supports noise-aware adaptive sampling. "
+    "Recommended only if the BCD denoiser is used (use Sobol otherwise)"
+)
+
 TILED_DESCRIPTION = (
     'Use the special "Tiled Path" engine, which is slower than the regular Path engine, but uses less memory'
 )
@@ -25,9 +50,6 @@ THRESH_REDUCT_DESC = (
     "then continue with the lowered noise level"
 )
 THRESH_WARMUP_DESC = "How many samples to render before starting the convergence tests"
-
-SIMPLE_DESC = "Recommended for scenes with simple lighting (outdoors, studio setups, indoors with large windows)"
-COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoors with small windows)"
 
 FILTER_DESC = (
     "Pixel filtering slightly blurs the image, which reduces noise and \n"
@@ -344,22 +366,22 @@ class LuxCoreConfig(PropertyGroup):
     # These settings are mostly not directly transferrable to LuxCore properties
     # They need some if/else decisions and aggregation, e.g. to build the engine name from parts
     engines = [
-        ("PATH", "Path", "Unidirectional path tracer; " + SIMPLE_DESC, 0),
-        ("BIDIR", "Bidir", "Bidirectional path tracer; " + COMPLEX_DESC, 1),
+        ("PATH", "Path", PATH_DESC, 0),
+        ("BIDIR", "Bidir", BIDIR_DESC, 1),
     ]
     engine: EnumProperty(name="Engine", items=engines, default="PATH")
-    
+
     # Only available when tiled rendering is off (because it uses a special tiled sampler)
     samplers = [
-        ("SOBOL", "Sobol", SIMPLE_DESC, 0),
-        ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
-        ("RANDOM", "Random", "Recommended only if the BCD denoiser is used (use Sobol otherwise)", 2),
+        ("SOBOL", "Sobol", SOBOL_DESC, 0),
+        ("METROPOLIS", "Metropolis", METROPOLIS_DESC, 1),
+        ("RANDOM", "Random", RANDOM_DESC, 2),
     ]
     sampler: EnumProperty(name="Sampler", items=samplers, default="SOBOL")
     
     samplers_gpu = [
-        ("SOBOL", "Sobol", "Best suited sampler for the GPU", 0),
-        ("RANDOM", "Random", "Recommended only if the BCD denoiser is used (use Sobol otherwise)", 1),
+        ("SOBOL", "Sobol", "Best suited sampler for the GPU. " + SOBOL_DESC, 0),
+        ("RANDOM", "Random", RANDOM_DESC, 1),
     ]
     sampler_gpu: EnumProperty(name="Sampler", items=samplers_gpu, default="SOBOL")
     
