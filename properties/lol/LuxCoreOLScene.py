@@ -37,8 +37,6 @@ def switch_search_results(self, context):
         assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
         scene.luxcoreOL.search_category = self.category
 
-    utils.load_previews(context, assets)
-
     #TODO: Implement
     #if ui_props.asset_type == 'MODEL':
     #    scene['search results'] = scene.get('LOL model search')

@@ -157,6 +157,7 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
                continue
 
            asset_data = threaddata[1]
+
            row = layout.row()
            row.label(text=asset_data['name'])
            row.label(text=str(int(tcom.progress)) + ' %')

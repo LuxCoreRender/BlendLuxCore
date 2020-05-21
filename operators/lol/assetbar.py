@@ -86,13 +86,7 @@ def draw_callback_2d_progress(self, context):
 
         asset_data = threaddata[1]
 
-        index = 0
-        for i, a in enumerate(assets):
-            if asset_data['hash'] == a['hash']:
-                index = i
-                break
-
-        iname = utils.previmg_name(index)
+        iname = asset_data['thumbnail']
         img = bpy.data.images.get(iname)
         if img is None:
             img = utils.get_thumbnail('thumbnail_notready.jpg')
@@ -231,10 +225,10 @@ def draw_callback_2d_search(self, context):
                             ui_props.margin + ui_props.thumb_size) + ui_props.margin + ui_props.drawoffset
 
                     index = a + ui_props.scrolloffset + b * ui_props.wcount
-                    iname = utils.previmg_name(index)
+                    iname = assets[index]['thumbnail']
                     img = bpy.data.images.get(iname)
 
-                    if img is None:
+                    if img is None or img.size[0] == 0:
                         img = utils.get_thumbnail('thumbnail_notready.jpg')
 
                     w = int(ui_props.thumb_size * img.size[0] / max(img.size[0], img.size[1]))
@@ -323,7 +317,7 @@ def draw_callback_2d_search(self, context):
     # Scroll assets with mouse wheel
     if ui_props.dragging and (
             ui_props.draw_drag_image or ui_props.draw_snapped_bounds) and ui_props.active_index > -1:
-        iname = utils.previmg_name(ui_props.active_index)
+        iname = assets[ui_props.active_index]['thumbnail']
         img = bpy.data.images.get(iname)
         if img is None:
             img = utils.get_thumbnail('thumbnail_notready.jpg')
@@ -615,12 +609,11 @@ class LOLAssetBarOperator(Operator):
         scene.luxcoreOL.on_search = self.do_search
 
         assets = scene.luxcoreOL.get('assets')
+        utils.load_previews(context, assets)
 
         if scene.luxcoreOL.on_search:
             assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
             scene.luxcoreOL.search_category = self.category
-
-        utils.load_previews(context, assets)
 
         if ui_props.assetbar_on:
             if not self.keep_running:

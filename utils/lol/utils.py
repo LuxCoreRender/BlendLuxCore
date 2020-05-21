@@ -61,6 +61,7 @@ def download_table_of_contents(self, context):
         # print("Found %i assets in library." % len(assets))
         context.scene.luxcoreOL['assets'] = assets
         request.close()
+        return {"SUCCESS"}
     except ConnectionError as error:
         self.report({"ERROR"}, "Connection error: Could not download table of contents")
         return {"CANCELLED"}
@@ -109,11 +110,12 @@ def download_file(asset, location, rotation):
         tcom = ThreadCom()
         tcom.passargs['downloaders'] = [downloader]
         tcom.passargs['thumbnail'] = False
+        asset_data = asset.to_dict()
 
-        downloadthread = Downloader(asset, tcom)
+        downloadthread = Downloader(asset_data, tcom)
         downloadthread.start()
 
-        download_threads.append([downloadthread, asset, tcom])
+        download_threads.append([downloadthread, asset_data, tcom])
         bpy.app.timers.register(timer_update)
     else:
         tcom.passargs['downloaders'].append(downloader)
@@ -128,7 +130,7 @@ class Downloader(threading.Thread):
         self._stop_event = threading.Event()
 
     def stop(self):
-        print("Download Thread stopped")
+        # print("Download Thread stopped")
         self._stop_event.set()
 
     def stopped(self):
@@ -138,7 +140,7 @@ class Downloader(threading.Thread):
     def run(self):
         user_preferences = get_addon_preferences(bpy.context)
 
-        print("Download Thread running")
+        # print("Download Thread running")
         tcom = self.tcom
 
         if tcom.passargs['thumbnail']:
@@ -151,7 +153,7 @@ class Downloader(threading.Thread):
                         open(thumbnailpath, "wb") as file_handle:
                     file_handle.write(url_handle.read())
 
-                imgname = previmg_name(tcom.passargs['index'])
+                imgname = self.asset['thumbnail']
                 img = bpy.data.images.load(thumbnailpath)
                 img.name = imgname
                 img.colorspace_settings.name = 'Linear'
@@ -380,7 +382,6 @@ def download_thumbnail(self, context, asset, index):
     if tcom is None:
         tcom = ThreadCom()
         tcom.passargs['thumbnail'] = True
-        tcom.passargs['index'] = index
 
         downloadthread = Downloader(asset, tcom)
         downloadthread.start()
@@ -425,9 +426,10 @@ def load_previews(context, assets):
             tpath = os.path.join(user_preferences.global_dir, "model", "preview", asset['url'][:-4] + '.jpg')
             imgname = previmg_name(i)
 
+            asset["thumbnail"] = imgname
             if os.path.exists(tpath):
                 img = bpy.data.images.get(imgname)
-                if img is None:
+                if img is None or img.size[0] == 0:
                     img = bpy.data.images.load(tpath)
                     img.name = imgname
                 elif img.filepath != tpath:
