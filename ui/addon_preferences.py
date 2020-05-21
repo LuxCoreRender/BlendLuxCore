@@ -1,6 +1,6 @@
 from os.path import basename, dirname
 from bpy.types import AddonPreferences
-from bpy.props import IntProperty, StringProperty, EnumProperty
+from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 from ..ui import icons
 from .. import utils
 from ..utils.lol import utils as lol_utils
@@ -18,12 +18,16 @@ class LuxCoreAddonPreferences(AddonPreferences):
     ]
     gpu_backend: EnumProperty(items=gpu_backend_items, default="OPENCL")
 
-    default_global_dict = lol_utils.default_global_dict()
+    image_node_thumb_default: BoolProperty(
+        name="Show Thumbnails by Default", default=True,
+        description="Decide wether the thumbnail is visible on new image nodes (changes do not affect existing nodes)"
+    )
 
     global_dir: StringProperty(
         name="Global Files Directory",
         description="Global storage for your assets, will use subdirectories for the contents",
-        subtype='DIR_PATH', default=default_global_dict, update=lol_utils.save_prefs)
+        subtype='DIR_PATH', default=lol_utils.get_default_directory(), update=lol_utils.save_prefs
+    )
 
     project_subdir: StringProperty(
         name="Project Assets Subdirectory", description="where data will be stored for individual projects",
@@ -40,6 +44,12 @@ class LuxCoreAddonPreferences(AddonPreferences):
             row = layout.row()
             row.label(text="GPU API:")
             row.prop(self, "gpu_backend", expand=True)
+
+        row = layout.row()
+        row.label(text="Image Nodes:")
+        row = row.row()
+        row.alignment = "LEFT"
+        row.prop(self, "image_node_thumb_default")
 
         row = layout.row()
         row.label(text="Update or downgrade:")

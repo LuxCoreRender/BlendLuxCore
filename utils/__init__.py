@@ -337,12 +337,20 @@ def find_active_vertex_color_layer(vertex_colors):
     return None
 
 
-def is_instance_visible(dg_obj_instance, obj):
-    return (dg_obj_instance.show_self or dg_obj_instance.show_particles) and is_obj_visible(obj)
+def is_instance_visible(dg_obj_instance, obj, context):
+    if not (dg_obj_instance.show_self or dg_obj_instance.show_particles):
+        return False
+    
+    if context:    
+        viewport_vis_obj = dg_obj_instance.parent if dg_obj_instance.parent else obj
+        if not viewport_vis_obj.visible_in_viewport_get(context.space_data):
+            return False
+        
+    return is_obj_visible(obj)
 
 
 def is_obj_visible(obj):
-    if obj.type not in EXPORTABLE_OBJECTS or obj.luxcore.exclude_from_render:
+    if obj.luxcore.exclude_from_render or obj.type not in EXPORTABLE_OBJECTS:
         return False
 
     # Do not export the object if it's made completely invisible through Cycles settings
@@ -639,3 +647,16 @@ def in_material_shading_mode(context):
 def get_addon_preferences(context):
     addon_name = basename(dirname(dirname(__file__)))
     return context.preferences.addons[addon_name].preferences
+
+
+def count_index(func):
+    """
+    A decorator that increments an index each time the decorated function is called.
+    It also passes the index as a keyword argument to the function.
+    """
+    def wrapper(*args, **kwargs):
+        kwargs["index"] = wrapper.index
+        wrapper.index += 1
+        return func(*args, **kwargs)
+    wrapper.index = 0
+    return wrapper

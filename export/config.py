@@ -11,6 +11,12 @@ from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
 
 
+class SamplingOverlap:
+    PROGRESSIVE = 1
+    CACHE_FRIENDLY = 32
+    OUT_OF_CORE = 32
+
+
 def convert(exporter, scene, context=None, engine=None):
     try:
         prefix = ""
@@ -62,7 +68,7 @@ def convert(exporter, scene, context=None, engine=None):
             "scene.epsilon.max": config.max_epsilon,
         })
 
-        if config.film_opencl_enable and config.film_opencl_device != "none":
+        if config.film_opencl_enable and config.film_opencl_device not in {"", "none"}:
             definitions["film.opencl.enable"] = True
             definitions["film.opencl.device"] = int(config.film_opencl_device)
         else:
@@ -116,6 +122,8 @@ def convert(exporter, scene, context=None, engine=None):
         msg = 'Config: %s' % error
         # Note: Exceptions in the config are critical, we can't render without a config
         LuxCoreErrorLog.add_error(msg)
+        import traceback
+        traceback.print_exc()
         return pyluxcore.Properties()
 
 
@@ -259,14 +267,47 @@ def _convert_final_engine(scene, definitions, config):
         # TILEPATH needs exactly this sampler
         sampler = "TILEPATHSAMPLER"
     else:
-        sampler = config.sampler
+        sampler = config.get_sampler()
+        
+    if sampler in {"SOBOL", "RANDOM"}:
+        sampler_type = sampler.lower()
+        
+        # Adaptive sampling
         adaptive_strength = config.sobol_adaptive_strength
         if adaptive_strength > 0:
             definitions["film.noiseestimation.warmup"] = config.noise_estimation.warmup
             definitions["film.noiseestimation.step"] = config.noise_estimation.step
-        definitions["sampler.sobol.adaptive.strength"] = adaptive_strength
-        definitions["sampler.random.adaptive.strength"] = adaptive_strength
+        definitions[f"sampler.{sampler_type}.adaptive.strength"] = adaptive_strength
+        
+        # Sampler pattern
+        if config.out_of_core:
+            bucketsize = 1
+            tilesize = 16
+            supersampling = int(config.out_of_core_supersampling)
+            overlapping = SamplingOverlap.OUT_OF_CORE
+        else:
+            if config.sampler_pattern == "PROGRESSIVE":
+                bucketsize = 16
+                tilesize = 16
+                supersampling = 1
+                overlapping = SamplingOverlap.PROGRESSIVE
+            elif config.sampler_pattern == "CACHE_FRIENDLY":
+                bucketsize = 1
+                tilesize = 16
+                supersampling = 1
+                overlapping = SamplingOverlap.CACHE_FRIENDLY
+            else:
+                raise Exception("Unknown sampler pattern")
+        
+        definitions[f"sampler.{sampler_type}.bucketsize"] = bucketsize  # Must be power of 2
+        definitions[f"sampler.{sampler_type}.tilesize"] = tilesize  # Must be power of 2
+        definitions[f"sampler.{sampler_type}.supersampling"] = supersampling
+        definitions[f"sampler.{sampler_type}.overlapping"] = overlapping
+    elif sampler == "METROPOLIS":
         _convert_metropolis_settings(definitions, config)
+    
+    if config.out_of_core:
+        definitions["opencl.outofcore.enable"] = True
 
     return luxcore_engine, sampler
 

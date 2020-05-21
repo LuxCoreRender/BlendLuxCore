@@ -70,24 +70,32 @@ class VisibilityCache:
         # sets containing keys
         self.last_visible_objects = None
         self.objects_to_remove = None
+        
+        self.has_new_objects = False
 
-    def init(self, depsgraph):
-        self.last_visible_objects = self._get_visible_objects(depsgraph)
+    def init(self, depsgraph, context):
+        self.last_visible_objects = self._get_visible_objects(depsgraph, context)
 
-    def diff(self, depsgraph):
-        visible_objs = self._get_visible_objects(depsgraph)
+    def diff(self, depsgraph, context):
+        visible_objs = self._get_visible_objects(depsgraph, context)
         self.objects_to_remove = self.last_visible_objects - visible_objs
+        self.has_new_objects = bool(visible_objs - self.last_visible_objects)
+        print("has_new_objs:", self.has_new_objects)
         self.last_visible_objects = visible_objs
-        return bool(self.objects_to_remove)
+        return bool(self.objects_to_remove) or self.has_new_objects
 
-    def _get_visible_objects(self, depsgraph):
+    def _get_visible_objects(self, depsgraph, context):
         keys = set()
 
         for dg_obj_instance in depsgraph.object_instances:
             if not supports_live_transform(dg_obj_instance.particle_system):
                 continue
 
-            if dg_obj_instance.show_self and not dg_obj_instance.object.luxcore.exclude_from_render:
+            if dg_obj_instance.show_self:
+                # For duplis, check visibility of parent (emitter)
+                obj = dg_obj_instance.parent if dg_obj_instance.parent else dg_obj_instance.object
+                if obj.luxcore.exclude_from_render or not obj.visible_in_viewport_get(context.space_data):
+                    continue
                 keys.add(utils.make_key_from_instance(dg_obj_instance))
         return keys
 

@@ -8,9 +8,34 @@ from math import radians
 from .halt import NOISE_THRESH_WARMUP_DESC, NOISE_THRESH_STEP_DESC
 
 
+PATH_DESC = (
+    'Traces rays from the camera (and from lights, if "Add Light Tracing" or caustics cache are used).\n'
+    'Suited for almost all scene types and lighting scenarios.\n'
+    'Can run on the CPU, GPU or both.\n'
+    'Supports several caches to accelerate indirect light, environment light sampling and many-light sampling.\n'
+    'Can render complex SDS-caustics (e.g. caustics seen in a mirror) efficiently with the caustics cache.\n'
+    'All AOV types and special features like shadow catcher or indirect light visibility flags for lights are supported'
+)
+
+BIDIR_DESC = (
+    "Traces and combines rays from the camera and lights.\n"
+    "Suited for some special edge-case types of scenes that can't be rendered efficiently by the Path engine.\n"
+    "Slower than the Path engine otherwise.\n"
+    'Limited to the CPU, can not run on the GPU.\n'
+    "Can not render complex SDS-caustics (e.g. caustics seen in a mirror) efficiently.\n"
+    "Does not support all AOV types and special features like shadow catcher or indirect light visibility flags for lights"
+)
+
+SOBOL_DESC = "Optimized random noise pattern. Supports noise-aware adaptive sampling"
+METROPOLIS_DESC = "Sampler that focuses samples on brighter parts of the image. Not noise-aware. Suited for rendering caustics"
+RANDOM_DESC = (
+    "Random noise pattern. Supports noise-aware adaptive sampling. "
+    "Recommended only if the BCD denoiser is used (use Sobol otherwise)"
+)
+
 TILED_DESCRIPTION = (
-    "Render the image in quadratic chunks instead of sampling the whole film at once;\n"
-    "Causes lower memory usage; Uses a special sampler"
+    'Use the special "Tiled Path" engine, which is slower than the regular Path engine, but uses less memory. '
+    'Does not support the "Add Light Tracing" option'
 )
 TILE_SIZE_DESC = (
     "Note that OpenCL devices will automatically render multiple tiles if it increases performance"
@@ -26,9 +51,6 @@ THRESH_REDUCT_DESC = (
     "then continue with the lowered noise level"
 )
 THRESH_WARMUP_DESC = "How many samples to render before starting the convergence tests"
-
-SIMPLE_DESC = "Recommended for scenes with simple lighting (outdoors, studio setups, indoors with large windows)"
-COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoors with small windows)"
 
 FILTER_DESC = (
     "Pixel filtering slightly blurs the image, which reduces noise and \n"
@@ -87,9 +109,9 @@ MAX_CONSECUTIVE_REJECT_DESC = (
 IMAGE_MUTATION_RATE_DESC = "Maximum distance over the image plane for a small mutation"
 
 LOOKUP_RADIUS_DESC = (
-    "Choose this value according to the size of your scene. "
-    "The default value is suited for a room-sized scene. "
-    "Larger values can degrade rendering performance"
+    "Controls the sharpness of the caustics. "
+    "Choose this value according to the size of your scene and the required detail in your caustics. "
+    "Too large values can degrade rendering performance, too small values can lead to non-resolving, noisy caustics"
 )
 
 NORMAL_ANGLE_DESC = (
@@ -345,18 +367,27 @@ class LuxCoreConfig(PropertyGroup):
     # These settings are mostly not directly transferrable to LuxCore properties
     # They need some if/else decisions and aggregation, e.g. to build the engine name from parts
     engines = [
-        ("PATH", "Path", "Unidirectional path tracer; " + SIMPLE_DESC, 0),
-        ("BIDIR", "Bidir", "Bidirectional path tracer; " + COMPLEX_DESC, 1),
+        ("PATH", "Path", PATH_DESC, 0),
+        ("BIDIR", "Bidir", BIDIR_DESC, 1),
     ]
     engine: EnumProperty(name="Engine", items=engines, default="PATH")
 
-    # Only available when tiled rendering is off
+    # Only available when tiled rendering is off (because it uses a special tiled sampler)
     samplers = [
-        ("SOBOL", "Sobol", SIMPLE_DESC, 0),
-        ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
-        ("RANDOM", "Random", "Recommended only if the BCD denoiser is used (use Sobol otherwise)", 2),
+        ("SOBOL", "Sobol", SOBOL_DESC, 0),
+        ("METROPOLIS", "Metropolis", METROPOLIS_DESC, 1),
+        ("RANDOM", "Random", RANDOM_DESC, 2),
     ]
     sampler: EnumProperty(name="Sampler", items=samplers, default="SOBOL")
+    
+    samplers_gpu = [
+        ("SOBOL", "Sobol", "Best suited sampler for the GPU. " + SOBOL_DESC, 0),
+        ("RANDOM", "Random", RANDOM_DESC, 1),
+    ]
+    sampler_gpu: EnumProperty(name="Sampler", items=samplers_gpu, default="SOBOL")
+    
+    def get_sampler(self):
+        return self.sampler_gpu if self.device == "OCL" else self.sampler
 
     # SOBOL properties
     sobol_adaptive_strength: FloatProperty(name="Adaptive Strength", default=0.9, min=0, max=0.95,
@@ -364,6 +395,29 @@ class LuxCoreConfig(PropertyGroup):
 
     # Noise estimation (used by adaptive samplers like SOBOL and RANDOM)
     noise_estimation: PointerProperty(type=LuxCoreConfigNoiseEstimation)
+    
+    # Sampler pattern (used by SOBOL and RANDOM)
+    sampler_patterns = [
+        ("PROGRESSIVE", "Progressive", "Optimized for quick feedback, sampling 1 sample per pixel in each pass over the image", 0),
+        ("CACHE_FRIENDLY", "Cache-friendly", "Optimized for faster rendering", 1),
+    ]
+    sampler_pattern: EnumProperty(name="Pattern", items=sampler_patterns, default="PROGRESSIVE")
+    
+    out_of_core_supersampling_items = [
+        ("4", "4", "", 0),
+        ("8", "8", "", 1),
+        ("16", "16", "", 2),
+        ("32", "32", "", 3),
+        ("64", "64", "", 4),
+    ]
+    out_of_core_supersampling: EnumProperty(name="Supersampling", items=out_of_core_supersampling_items, default="16",
+                                            description="Multiplier for the samples per pass")
+    out_of_core: BoolProperty(name="Out of Core", default=False, 
+                              description="Enable storage of image pixels, meshes and other data in CPU RAM if GPU RAM is not sufficient. "
+                                          "Enabling this option causes the scene to use more CPU RAM")
+    
+    def using_out_of_core(self):
+        return self.device == "OCL" and self.out_of_core
 
     # METROPOLIS properties
     # sampler.metropolis.largesteprate
@@ -390,7 +444,10 @@ class LuxCoreConfig(PropertyGroup):
     bidir_device: EnumProperty(name="Device", items=devices, default="CPU",
                                 description="Bidir only available on CPU")
 
-    use_tiles: BoolProperty(name="Tiled", default=False, description=TILED_DESCRIPTION)
+    use_tiles: BoolProperty(name="Use Tiled Path (slower)", default=False, description=TILED_DESCRIPTION)
+    
+    def using_tiled_path(self):
+        return self.engine == "PATH" and self.use_tiles
 
     # Special properties of the various engines
     path: PointerProperty(type=LuxCoreConfigPath)

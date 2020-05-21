@@ -8,7 +8,7 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Error Log"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 11
+    bl_order = 110
 
     @classmethod
     def poll(cls, context):

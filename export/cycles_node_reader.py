@@ -702,7 +702,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             if links:
                 link = links[0]
                 print("current node", node.name, "failed, testing next node:", link.from_node.name)
-                return _node(link.from_node, link.from_socket, props, luxcore_name, obj_name, group_node)
+                return _node(link.from_node, link.from_socket, props, material, luxcore_name, obj_name, group_node)
 
         return ERROR_VALUE
 

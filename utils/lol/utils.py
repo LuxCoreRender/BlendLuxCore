@@ -349,7 +349,7 @@ def save_prefs(self, context):
         #    print(e)
 
 
-def default_global_dict():
+def get_default_directory():
     from os.path import expanduser
     home = expanduser("~")
     return home + os.sep + 'LuxCoreOnlineLibrary_data'

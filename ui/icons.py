@@ -39,3 +39,8 @@ EXPANDABLE_OPENED = "TRIA_DOWN"
 
 FAKE_USER_ON = "FAKE_USER_ON"
 FAKE_USER_OFF = "FAKE_USER_OFF"
+
+GREEN_RHOMBUS = "KEYTYPE_JITTER_VEC"  # used to signal "better" in statistics comparison
+RED_RHOMBUS = "KEYTYPE_EXTREME_VEC"  # used to signal "worse" in statistics comparison
+
+ARROW_RIGHT = "FORWARD"

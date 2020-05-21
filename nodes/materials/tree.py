@@ -111,10 +111,10 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
     ]),
 
-LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
+        NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
-        NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),

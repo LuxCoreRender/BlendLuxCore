@@ -3,6 +3,7 @@ from bl_ui.properties_view_layer import ViewLayerButtonsPanel
 from bpy.types import Panel
 from ...utils import ui as utils_ui
 from .. import icons
+from .sampling import calc_samples_per_pass
 
 
 def draw(layout, context, halt):
@@ -25,26 +26,39 @@ def draw(layout, context, halt):
     col.prop(halt, "samples")
 
     config = context.scene.luxcore.config
+    denoiser = context.scene.luxcore.denoiser
+    
+    if halt.use_samples:
+        samples_per_pass = calc_samples_per_pass(config)
+        
+        if config.engine == "PATH" and config.use_tiles:
+            # some special warnings about tile path usage
+            if config.tile.multipass_enable and halt.samples % samples_per_pass != 0:
+                layout.label(text="Should be a multiple of %d" % samples_per_pass, icon=icons.WARNING)
 
-    if halt.use_samples and config.engine == "PATH" and config.use_tiles:
-        # some special warnings about tile path usage
-        aa = config.tile.path_sampling_aa_size
-        samples_per_pass = aa**2
+            if denoiser.enabled and denoiser.type == "BCD":
+                # BCD Denoiser needs one warmup pass plus at least one sample collecting pass
+                min_samples = samples_per_pass * 2
+            else:
+                min_samples = samples_per_pass
 
-        if config.tile.multipass_enable and halt.samples % samples_per_pass != 0:
-            layout.label(text="Should be a multiple of %d" % samples_per_pass, icon=icons.WARNING)
+            if halt.samples < min_samples:
+                layout.label(text="Use at least %d samples!" % min_samples, icon=icons.WARNING)
 
-        if context.scene.luxcore.denoiser.enabled and context.scene.luxcore.denoiser.type == "BCD":
-            # BCD Denoiser needs one warmup pass plus at least one sample collecting pass
-            min_samples = samples_per_pass * 2
-        else:
-            min_samples = samples_per_pass
+            if not config.tile.multipass_enable and halt.samples > min_samples:
+                layout.label(text="Samples halt condition overriden by disabled multipass", icon=icons.INFO)
+        elif config.get_sampler() in {"SOBOL", "RANDOM"} and config.using_out_of_core() or config.sampler_pattern == "CACHE_FRIENDLY":
+            if halt.samples % samples_per_pass != 0:
+                layout.label(text="Should be a multiple of %d" % samples_per_pass, icon=icons.WARNING)
 
-        if halt.samples < min_samples:
-            layout.label(text="Use at least %d samples!" % min_samples, icon=icons.WARNING)
+            if denoiser.enabled and denoiser.type == "BCD":
+                # BCD Denoiser needs one warmup pass plus at least one sample collecting pass
+                min_samples = samples_per_pass * 2
+            else:
+                min_samples = samples_per_pass
 
-        if not config.tile.multipass_enable and halt.samples > min_samples:
-            layout.label(text="Samples halt condition overriden by disabled multipass", icon=icons.INFO)
+            if halt.samples < min_samples:
+                layout.label(text="Use at least %d samples!" % min_samples, icon=icons.WARNING)
 
     col = layout.column(align=True)
     col.prop(halt, "use_noise_thresh")
@@ -62,7 +76,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
     bl_label = "Halt Conditions"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 9
+    bl_order = 90
 
     @classmethod
     def poll(cls, context):
@@ -120,7 +134,7 @@ class LUXCORE_RENDERLAYER_PT_halt_conditions(Panel, ViewLayerButtonsPanel):
     """
 
     bl_label = "Override Halt Conditions"
-    bl_order = 4
+    bl_order = 40
     COMPAT_ENGINES = {"LUXCORE"}
 
     @classmethod

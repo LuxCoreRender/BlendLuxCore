@@ -53,9 +53,9 @@ luxcore_node_categories_volume = [
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MATH", "Math", items=[
         # Note: 2D textures make no sense for volumes
+        NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
-        NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),

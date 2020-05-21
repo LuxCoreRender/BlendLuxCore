@@ -125,7 +125,7 @@ def convert(exporter, scene, context=None, engine=None):
                                                               pipeline_index, definitions)
                                                               
             config = scene.luxcore.config
-            use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
+            use_adaptive_sampling = config.get_sampler() in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
 
             if use_adaptive_sampling and not utils.using_filesaver(context, scene):
                 noise_detection_pipeline_index = pipeline_index
@@ -144,20 +144,7 @@ def convert(exporter, scene, context=None, engine=None):
         return pyluxcore.Properties()
 
 
-def count_index(func):
-    """
-    A decorator that increments an index each time the decorated function is called.
-    It also passes the index as a keyword argument to the function.
-    """
-    def wrapper(*args, **kwargs):
-        kwargs["index"] = wrapper.index
-        wrapper.index += 1
-        return func(*args, **kwargs)
-    wrapper.index = 0
-    return wrapper
-
-
-@count_index
+@utils.count_index
 def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, index=0):
     definitions[str(index) + ".type"] = output_type_str
 

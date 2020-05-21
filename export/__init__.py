@@ -107,13 +107,13 @@ class Exporter(object):
         # Objects and lights
         is_viewport_render = context is not None
         instances = self.object_cache2.first_run(self, depsgraph, view_layer, engine, luxcore_scene,
-                                                 scene_props, is_viewport_render)
+                                                 scene_props, context)
         if instances is None:
             # Export was cancelled by user
             return None
 
         if is_viewport_render:
-            self.visibility_cache.init(depsgraph)
+            self.visibility_cache.init(depsgraph, context)
 
         # Motion blur
         # Motion blur seems not to work in viewport render, i.e. matrix_world is the same on every frame
@@ -195,31 +195,27 @@ class Exporter(object):
         if stats:
             stats.export_time.value = export_time
             self._init_stats(stats, config_props, scene)
-            
-        # TODO
-        # if config_props.Get("renderengine.type").GetString().endswith("OCL") and not renderconfig.HasCachedKernels():
-        #     if engine:
-        #         message = "Compiling OpenCL kernels (just once, takes a few minutes)"
-        #         engine.report({"INFO"}, message)
-        #         engine.update_stats(message, "")
-            
-        #     # Pre-compile for viewport and final.
-        #     # Don't pre-compile tiled path engine, because it is rarely used (the kernel will be 
-        #     # compiled on-demand when tiled path is used the first time)
-        #     # Copy config props so we can pass scene.epsilon.min and scene.epsilon.max to the kernel
-        #     config_props_copy = pyluxcore.Properties(config_props)
-        #     config_props_copy.Set(pyluxcore.Property("kernelcachefill.renderengine.types", ["PATHOCL", "RTPATHOCL"]))
-        #     pyluxcore.KernelCacheFill(config_props_copy)
 
+        # Pre-compile CUDA or OpenCL kernels for viewport and final.
+        renderengine_type = config_props.Get("renderengine.type").GetString()
+        if renderengine_type.endswith("OCL") and not renderconfig.HasCachedKernels():
+            if engine:
+                message = "Compiling OpenCL kernels (just once, takes a few minutes)"
+                engine.report({"INFO"}, message)
+                engine.update_stats(message, "")
+
+            # Copy config props so we can pass scene.epsilon.min, scene.epsilon.max and opencl.devices.select to the kernel
+            config_props_copy = pyluxcore.Properties(config_props)
+            engines = ["PATHOCL", "RTPATHOCL"]
+            if renderengine_type == "TILEPATHOCL":
+                # Only pre-compile for tiled path if requested, since it's rarely used
+                engines.append("TILEPATHOCL")
+            config_props_copy.Set(pyluxcore.Property("kernelcachefill.renderengine.types", engines))
+            pyluxcore.KernelCacheFill(config_props_copy)
+
+        # Inform about pre-computations that can take a long time to complete, like caches
         if engine:
             message = "Creating RenderSession"
-            # Inform about pre-computations that can take a long time to complete, like caches
-            
-            if config_props.Get("renderengine.type").GetString().endswith("OCL") and not renderconfig.HasCachedKernels():
-                kernel_compile_msg = "Compiling OpenCL kernels (just once, takes a few minutes)"
-                engine.report({"INFO"}, kernel_compile_msg)
-                message += ", " + kernel_compile_msg
-            
             # The second argument of Get() is used as fallback if the property is not set
             cache_indirect = config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
             cache_caustics = config_props.Get("path.photongi.caustic.enabled", [False]).GetBool()
@@ -282,8 +278,11 @@ class Exporter(object):
             if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
 
-            if self.visibility_cache.diff(depsgraph):
+            if self.visibility_cache.diff(depsgraph, context):
                 changes |= Change.VISIBILITY
+                
+                if self.visibility_cache.has_new_objects:
+                    changes |= Change.OBJECT
 
             if self.world_cache.diff(depsgraph):
                 changes |= Change.WORLD
@@ -380,7 +379,7 @@ class Exporter(object):
             props.Set(self.camera_cache.props)
 
         if changes & Change.OBJECT:
-            self.object_cache2.update(self, depsgraph, luxcore_scene, props)
+            self.object_cache2.update(self, depsgraph, luxcore_scene, props, context)
 
         if changes & Change.MATERIAL:
             # for mat in self.material_cache.changed_materials:

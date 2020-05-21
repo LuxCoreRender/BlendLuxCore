@@ -72,7 +72,7 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
             layout.prop(denoiser, "max_memory_MB")
 
         if denoiser.enabled and denoiser.type == "BCD":
-            if config.sampler == "METROPOLIS" and not config.use_tiles:
+            if config.get_sampler() == "METROPOLIS" and not config.use_tiles:
                 layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
 
         sub = layout.column(align=True)
@@ -141,17 +141,15 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
     @staticmethod
     def icon(stat, other_stat):
-        return "NONE"
-        # TODO 2.8 try to find good icons for better/worse/equal
-        # if not stat.can_compare():
-        #     return "NONE"
-        #
-        # if stat.is_better(other_stat):
-        #     return "COLOR_GREEN"
-        # elif stat.is_equal(other_stat):
-        #     return "COLOR_BLUE"
-        # else:
-        #     return "COLOR_RED"
+        if not stat.can_compare():
+            return icons.NONE
+
+        if stat.is_better(other_stat):
+            return icons.GREEN_RHOMBUS
+        elif stat.is_equal(other_stat):
+            return icons.NONE
+        else:
+            return icons.RED_RHOMBUS
 
     def stat_lists_by_category(self, stats):
         stat_lists = []
