@@ -205,7 +205,7 @@ def draw_callback_2d_search(self, context):
                     ui_bgl.draw_image(ui_props.bar_x, arrow_y, 25,
                                       ui_props.thumb_size, utils.get_thumbnail('arrow_left.png'), 1)
 
-                if len(assets) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount) + 1:
+                if len(assets) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount):
                     if ui_props.active_index == -1:
                         ui_bgl.draw_rect(ui_props.bar_x + ui_props.bar_width - 25,
                                          ui_props.bar_y - ui_props.bar_height, 25,
