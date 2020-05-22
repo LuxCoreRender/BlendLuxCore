@@ -111,6 +111,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
     margin: IntProperty(name="Margin", default=margin_def, min=-1, max=256)
     highlight_margin: IntProperty(name="Highlight Margin", default=int(margin_def / 2), min=-10, max=256)
     has_hit: BoolProperty(name="has_hit", default=False)
+    thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False)
 
 
 class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):

@@ -44,7 +44,6 @@ from threading import _MainThread
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences
 
-
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
 download_threads = []

@@ -602,14 +602,16 @@ class LOLAssetBarOperator(Operator):
         scene = context.scene
         ui_props = scene.luxcoreOL.ui
 
-        utils.download_table_of_contents(self, context)
-        utils.get_categories(context)
-
         scene.luxcoreOL.search_category = ""
         scene.luxcoreOL.on_search = self.do_search
 
         assets = scene.luxcoreOL.get('assets')
-        utils.load_previews(context, assets)
+
+        if not ui_props.thumbnails_loaded:
+            utils.load_previews(context, assets)
+            ui_props.thumbnails_loaded = True
+
+
         ui_props.scrolloffset = 0
 
         if scene.luxcoreOL.on_search:
