@@ -6,7 +6,10 @@ from time import time
 from ... import utils
 from ...bin import pyluxcore
 from .. import mesh_converter
-from ..hair import convert_hair, warn_about_missing_uvs, set_hair_props, make_hair_shape_name
+from ..hair import (
+    convert_hair, warn_about_missing_uvs, set_hair_props, 
+    make_hair_shape_name, get_hair_material_index,
+)
 from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
@@ -313,29 +316,34 @@ class ObjectCache2:
                 psys_key = make_psys_key(obj, psys, is_for_duplication)
                 lux_obj = make_hair_shape_name(obj_key, psys)
                 visible_to_cam = utils.visible_to_camera(dg_obj_instance, is_viewport_render, view_layer)
+                mat_index = get_hair_material_index(psys)
 
                 try:
-                    lux_shape, lux_mat = self.exported_hair[psys_key]
+                    lux_shape = self.exported_hair[psys_key]
                 except KeyError:
-                    lux_shape, lux_mat, mat = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
-                                                           scene_props, is_viewport_render, is_for_duplication,
-                                                           dg_obj_instance.matrix_world, visible_to_cam, engine)
-                    if lux_shape and lux_mat:
+                    lux_shape = convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene,
+                                             scene_props, is_viewport_render, is_for_duplication,
+                                             dg_obj_instance.matrix_world, visible_to_cam, engine)
+                    if lux_shape:
+                        mat = get_material(obj, mat_index, depsgraph)
                         if mat:
                             node_tree = mat.luxcore.node_tree
                             if node_tree:
                                 lux_shape = self._define_shapes(lux_shape, node_tree, exporter, depsgraph, scene_props)
                         
-                        self.exported_hair[psys_key] = (lux_shape, lux_mat)
+                        self.exported_hair[psys_key] = lux_shape
                         
-                if lux_shape and lux_mat:
+                if lux_shape:
+                    lux_mat, mat_props, node_tree = export_material(obj, mat_index, exporter, depsgraph,
+                                                                    is_viewport_render)
+                    scene_props.Set(mat_props)
                     set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, visible_to_cam,
                                 is_for_duplication, dg_obj_instance.matrix_world,
                                 settings.luxcore.hair.instancing == "enabled")
 
                 # TODO handle case when exported_stuff is None
                 #  (we'll have to create a new ExportedObject just for the hair mesh)
-                if exported_stuff and lux_shape and lux_mat:
+                if exported_stuff and lux_shape:
                     # Should always be the case because lights can't have particle systems
                     assert isinstance(exported_stuff, ExportedObject)
                     exported_stuff.parts.append(ExportedPart(lux_obj, lux_shape, lux_mat))

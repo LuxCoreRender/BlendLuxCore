@@ -205,19 +205,11 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
         if not success:
             return None, None
 
-        from .caches.object_cache import export_material, get_material
-        # For some reason this index is not starting at 0 but at 1 (Blender is strange)
-        lux_mat_name, mat_props, node_tree = export_material(obj, psys.settings.material - 1, exporter, depsgraph,
-                                                             is_viewport_render)
-
-        scene_props.Set(mat_props)
-
         time_elapsed = time() - start_time
         if exporter.stats:
             exporter.stats.export_time_hair.value += time_elapsed
         print("[%s: %s] Hair export finished (%.3f s)" % (obj.name, psys.name, time_elapsed))
-        mat = get_material(obj, psys.settings.material - 1, depsgraph)
-        return lux_shape_name, lux_mat_name, mat
+        return lux_shape_name
     except Exception as error:
         msg = "[%s: %s] %s" % (obj.name, psys.name, error)
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
@@ -246,3 +238,8 @@ def make_hair_shape_name(obj_key, psys):
     # Can't use the memory address of the psys as key because it changes
     # when the psys is updated (e.g. because some hair moves)
     return obj_key + "_" + utils.sanitize_luxcore_name(psys.name)
+
+
+def get_hair_material_index(psys):
+    # For some reason this index is not starting at 0 but at 1 (Blender is strange)
+    return psys.settings.material - 1
