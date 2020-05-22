@@ -330,6 +330,8 @@ class Exporter(object):
             try:
                 session.EndSceneEdit()
             except RuntimeError as error:
+                import traceback
+                traceback.print_exc()
                 LuxCoreErrorLog.add_error(error)
                 # Probably no light source, save ourselves by adding one (otherwise a crash happens)
                 props = pyluxcore.Properties()
