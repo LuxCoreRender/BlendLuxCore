@@ -610,6 +610,7 @@ class LOLAssetBarOperator(Operator):
 
         assets = scene.luxcoreOL.get('assets')
         utils.load_previews(context, assets)
+        ui_props.scrolloffset = 0
 
         if scene.luxcoreOL.on_search:
             assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
