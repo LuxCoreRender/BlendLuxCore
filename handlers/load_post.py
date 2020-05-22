@@ -29,12 +29,12 @@ def _init_LuxCoreOnlineLibrary():
     utils.lol.utils.download_table_of_contents(None, bpy.context)
     utils.lol.utils.get_categories(bpy.context)
 
-    # search.load_previews()
     bpy.context.scene.luxcoreOL.on_search = False
     bpy.context.scene.luxcoreOL.search_category = ""
 
     ui_props.assetbar_on = False
     ui_props.turn_off = False
+    ui_props.thumbnails_loaded = False
     if not os.path.exists(user_preferences.global_dir):
         os.makedirs(user_preferences.global_dir)
     if not os.path.exists(os.path.join(user_preferences.global_dir, "model")):
