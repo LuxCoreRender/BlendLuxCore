@@ -26,9 +26,8 @@ if platform.system() == "Darwin":
         print("Patching LuxCore Denoiser")
         os.chmod(denoiser ,  0o755)
         
-elif platform.system() == "Windows":
+if platform.system() == "Windows":
     # Ensure nvrtc-builtins64_101.dll can be found
-    import os
     current_dir = os.path.dirname(os.path.realpath(__file__))
     bin_directory = os.path.join(current_dir, "bin")
 
@@ -41,6 +40,11 @@ elif platform.system() == "Windows":
 
     os.environ["PATH"] = bin_directory + os.pathsep + os.environ["PATH"]
     AddDllDirectory(bin_directory)
+
+if platform.system() in {"Linux", "Darwin"}:
+    import certifi
+    os.environ['SSL_CERT_FILE'] = certifi.where()
+    os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 
 try:
     from .bin import pyluxcore
