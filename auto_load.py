@@ -2,9 +2,7 @@
 # https://gist.github.com/JacquesLucke/11fecc6ea86ef36ea72f76ca547e795b
 # on 25/05/2019
 
-import os
 import bpy
-import sys
 import typing
 import inspect
 import pkgutil
