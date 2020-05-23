@@ -45,38 +45,54 @@ LOL_HOST_URL = "https://luxcorerender.org/lol"
 
 download_threads = []
 
-def download_table_of_contents(self, context):
-    # print("=======================================")
-    # print("Download table of contents")
-    # print()
-    try:
-        import urllib.request
-        request = urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60)
 
-        import json
-        assets = json.loads(request.read())
+class TableOfContentsDownloader(threading.Thread):
+    TOC_download_done = False
+    assets = None
 
-        # print("Found %i assets in library." % len(assets))
-        context.scene.luxcoreOL['assets'] = assets
-        request.close()
-        return {"SUCCESS"}
-    except ConnectionError as error:
-        self.report({"ERROR"}, "Connection error: Could not download table of contents")
-        return {"CANCELLED"}
+    def __init__(self):
+        super(TableOfContentsDownloader, self).__init__()
+
+    def run(self):
+        try:
+            import urllib.request
+            with urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60) as request:
+                import json
+                TableOfContentsDownloader.assets = json.loads(request.read())
+                TableOfContentsDownloader.TOC_download_done = True
+        except ConnectionError as error:
+            print("Connection error: Could not download table of contents")
+            print(error)
 
 
-def get_categories(context):
-    assets = context.scene.luxcoreOL['assets']
+def react_to_TOC_download_done():
+    if TableOfContentsDownloader.TOC_download_done:
+        scene = bpy.context.scene
+        scene.luxcoreOL['assets'] = TableOfContentsDownloader.assets
+        get_categories(scene)
+        return None
+    else:
+        return 0.5
+
+
+def download_table_of_contents():
+    bpy.app.timers.register(react_to_TOC_download_done)
+    downloadthread = TableOfContentsDownloader()
+    downloadthread.start()
+
+
+def get_categories(scene):
+    assets = scene.luxcoreOL['assets']
     categories = {}
 
     for asset in assets:
         cat = asset['category']
-        if not cat in categories:
+        try:
+            categories[cat] += 1
+        except KeyError:
             categories[cat] = 1
-        else:
-            categories[cat] = categories[cat] + 1
 
-    context.scene.luxcoreOL['categories'] = categories
+    scene.luxcoreOL['categories'] = categories
 
 
 def calc_hash(filename):
