@@ -1,11 +1,7 @@
-import json
 import platform
 import os
 import shutil
 import tempfile
-import urllib.request
-import urllib.error
-import zipfile
 import re
 from collections import OrderedDict
 
@@ -121,6 +117,7 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
             self.report({"ERROR"}, "Response not ok")
             return {"CANCELLED"}
 
+        import json
         response = json.loads(response_raw.text or response_raw.content)
 
         # Info about the currently installed version
@@ -199,6 +196,8 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
             temp_zip_path = os.path.join(temp_dir_path, "default.zip")
 
             url = requested_release.download_url
+            import urllib.request
+            import urllib.error
             try:
                 print("Downloading:", url)
                 with urllib.request.urlopen(url, timeout=60) as url_handle, \
@@ -213,6 +212,7 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
             # Call dirname twice to go up 2 levels (from addons/BlendLuxCore/operators/)
             blendluxcore_dir = os.path.dirname(current_dir)
 
+            import zipfile
             with zipfile.ZipFile(temp_zip_path) as zf:
                 print("Extracting zip to", temp_dir_path)
                 zf.extractall(temp_dir_path)

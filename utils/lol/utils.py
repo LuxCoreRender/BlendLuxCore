@@ -31,13 +31,10 @@
 import bpy
 import uuid
 from os.path import basename, dirname
-import json
 import hashlib
 import tempfile
 import os
-import urllib.request
 import urllib.error
-import zipfile
 from mathutils import Vector, Matrix
 import threading
 from threading import _MainThread
@@ -53,8 +50,10 @@ def download_table_of_contents(self, context):
     # print("Download table of contents")
     # print()
     try:
+        import urllib.request
         request = urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60)
 
+        import json
         assets = json.loads(request.read())
 
         # print("Found %i assets in library." % len(assets))
@@ -137,6 +136,7 @@ class Downloader(threading.Thread):
 
     # def main_download_thread(asset_data, tcom, scene_id, api_key):
     def run(self):
+        import urllib.request
         user_preferences = get_addon_preferences(bpy.context)
 
         # print("Download Thread running")
@@ -197,6 +197,7 @@ class Downloader(threading.Thread):
                                 url_handle.close()
                                 return
                     print("Download finished")
+                    import zipfile
                     with zipfile.ZipFile(temp_zip_path) as zf:
                         print("Extracting zip to", os.path.join(user_preferences.global_dir, "model"))
                         zf.extractall(os.path.join(user_preferences.global_dir, "model"))
@@ -343,6 +344,7 @@ def save_prefs(self, context):
         #        os.makedirs(paths._presets)
         #    f = open(fpath, 'w')
         #    with open(fpath, 'w') as s:
+        #        import json
         #        json.dump(prefs, s)
         #except Exception as e:
         #    print(e)
