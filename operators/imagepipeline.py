@@ -97,7 +97,6 @@ class LUXCORE_OT_set_raw_view_transform(bpy.types.Operator):
     bl_idname = "luxcore.set_raw_view_transform"
     bl_label = "Set View Transform to Raw"
     bl_description = ""
-    bl_property = "crf_preset"
 
     @classmethod
     def poll(cls, context):
