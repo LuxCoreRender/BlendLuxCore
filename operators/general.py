@@ -1,4 +1,3 @@
-import webbrowser
 import bpy
 from bpy.props import StringProperty, BoolProperty
 from .utils import init_vol_node_tree, poll_node, use_cycles_settings, use_cycles_material_nodes
@@ -208,6 +207,7 @@ class LUXCORE_OT_open_website(bpy.types.Operator):
     url: StringProperty()
 
     def execute(self, context):
+        import webbrowser
         webbrowser.open(self.url)
         return {"FINISHED"}
 
@@ -236,6 +236,7 @@ class LUXCORE_OT_open_website_popup(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
+        import webbrowser
         webbrowser.open(self.url)
         return {"FINISHED"}
 
