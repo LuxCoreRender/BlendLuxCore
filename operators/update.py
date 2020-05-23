@@ -1,5 +1,3 @@
-import requests
-from requests import ConnectionError
 import json
 import platform
 import os
@@ -112,9 +110,10 @@ class LUXCORE_OT_change_version(bpy.types.Operator):
         """
         releases.clear()
 
+        import requests
         try:
             response_raw = requests.get(GITHUB_API_RELEASE_URL)
-        except ConnectionError as error:
+        except requests.ConnectionError as error:
             self.report({"ERROR"}, "Connection error")
             return {"CANCELLED"}
 
