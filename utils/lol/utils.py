@@ -46,42 +46,19 @@ LOL_HOST_URL = "https://luxcorerender.org/lol"
 download_threads = []
 
 
-class TableOfContentsDownloader(threading.Thread):
-    TOC_download_done = False
-    assets = None
-
-    def __init__(self):
-        super(TableOfContentsDownloader, self).__init__()
-
-    def run(self):
-        try:
-            import urllib.request
-            with urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60) as request:
-                import json
-                TableOfContentsDownloader.assets = json.loads(request.read())
-                TableOfContentsDownloader.TOC_download_done = True
-        except ConnectionError as error:
-            print("Connection error: Could not download table of contents")
-            print(error)
+def download_table_of_contents(scene):
+    try:
+        import urllib.request
+        with urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60) as request:
+            import json
+            scene.luxcoreOL['assets'] = json.loads(request.read())
+        init_categories(scene)
+    except ConnectionError as error:
+        print("Connection error: Could not download table of contents")
+        print(error)
 
 
-def react_to_TOC_download_done():
-    if TableOfContentsDownloader.TOC_download_done:
-        scene = bpy.context.scene
-        scene.luxcoreOL['assets'] = TableOfContentsDownloader.assets
-        get_categories(scene)
-        return None
-    else:
-        return 0.5
-
-
-def download_table_of_contents():
-    bpy.app.timers.register(react_to_TOC_download_done)
-    downloadthread = TableOfContentsDownloader()
-    downloadthread.start()
-
-
-def get_categories(scene):
+def init_categories(scene):
     assets = scene.luxcoreOL['assets']
     categories = {}
 

@@ -24,7 +24,6 @@ def _init_persistent_cache_file_path(settings, suffix):
 def _init_LuxCoreOnlineLibrary():
     user_preferences = utils.get_addon_preferences(bpy.context)
     ui_props = bpy.context.scene.luxcoreOL.ui
-    utils.lol.utils.download_table_of_contents()
 
     bpy.context.scene.luxcoreOL.on_search = False
     bpy.context.scene.luxcoreOL.search_category = ""
@@ -32,6 +31,8 @@ def _init_LuxCoreOnlineLibrary():
     ui_props.assetbar_on = False
     ui_props.turn_off = False
     ui_props.thumbnails_loaded = False
+    ui_props.ToC_loaded = False
+
     if not os.path.exists(user_preferences.global_dir):
         os.makedirs(user_preferences.global_dir)
     if not os.path.exists(os.path.join(user_preferences.global_dir, "model")):
