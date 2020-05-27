@@ -605,9 +605,9 @@ class LOLAssetBarOperator(Operator):
         scene.luxcoreOL.search_category = ""
         scene.luxcoreOL.on_search = self.do_search
         if not ui_props.ToC_loaded:
-            utils.download_table_of_contents(None, bpy.context)
-            utils.get_categories(bpy.context)
-            ui_props.ToC_loaded = True
+            # TODO might want to check if the download failed, e.g. because of missing internet connection
+            utils.download_table_of_contents(context.scene)
+            scene.luxcoreOL.ui.ToC_loaded = True
 
         assets = scene.luxcoreOL.get('assets')
 

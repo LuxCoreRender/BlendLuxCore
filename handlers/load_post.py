@@ -22,8 +22,6 @@ def _init_persistent_cache_file_path(settings, suffix):
 
 
 def _init_LuxCoreOnlineLibrary():
-    from os.path import basename, dirname
-
     user_preferences = utils.get_addon_preferences(bpy.context)
     ui_props = bpy.context.scene.luxcoreOL.ui
 

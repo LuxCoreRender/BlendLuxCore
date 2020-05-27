@@ -45,38 +45,31 @@ LOL_HOST_URL = "https://luxcorerender.org/lol"
 
 download_threads = []
 
-def download_table_of_contents(self, context):
-    # print("=======================================")
-    # print("Download table of contents")
-    # print()
+
+def download_table_of_contents(scene):
     try:
         import urllib.request
-        request = urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60)
-
-        import json
-        assets = json.loads(request.read())
-
-        # print("Found %i assets in library." % len(assets))
-        context.scene.luxcoreOL['assets'] = assets
-        request.close()
-        return {"SUCCESS"}
+        with urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60) as request:
+            import json
+            scene.luxcoreOL['assets'] = json.loads(request.read())
+        init_categories(scene)
     except ConnectionError as error:
-        self.report({"ERROR"}, "Connection error: Could not download table of contents")
-        return {"CANCELLED"}
+        print("Connection error: Could not download table of contents")
+        print(error)
 
 
-def get_categories(context):
-    assets = context.scene.luxcoreOL['assets']
+def init_categories(scene):
+    assets = scene.luxcoreOL['assets']
     categories = {}
 
     for asset in assets:
         cat = asset['category']
-        if not cat in categories:
+        try:
+            categories[cat] += 1
+        except KeyError:
             categories[cat] = 1
-        else:
-            categories[cat] = categories[cat] + 1
 
-    context.scene.luxcoreOL['categories'] = categories
+    scene.luxcoreOL['categories'] = categories
 
 
 def calc_hash(filename):

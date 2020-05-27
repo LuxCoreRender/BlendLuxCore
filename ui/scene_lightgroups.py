@@ -62,9 +62,13 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
                  icon=lightgroup_icon(group.enabled),
                  icon_only=True, toggle=True)
         
+        if not is_default_group:
+            col = row.column()
+            op = col.operator("luxcore.select_objects_in_lightgroup", icon=icons.OBJECT, text="")
+            op.index = index
+
         col = row.column()
-        col.enabled = group.enabled        
-        
+        col.enabled = group.enabled
 
         if is_default_group:
             col.label(text="Default Light Group")
@@ -80,7 +84,7 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
 
         if group.show_settings:
             # Lower row (gain settings, RGB gain, temperature)
-            box = col.box()
+            box = box.box()
             box.enabled = group.enabled
 
             row = box.row()
