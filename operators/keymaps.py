@@ -5,6 +5,9 @@ addon_keymaps = []
 
 
 def register():
+    # Don't register keymaps if blender is executed in background mode with '-b'
+    if bpy.app.background:
+        return
     wm = bpy.context.window_manager
     keymap = wm.keyconfigs.addon.keymaps.new(name="Node Editor", space_type="NODE_EDITOR")
     
@@ -22,6 +25,8 @@ def register():
     
 
 def unregister():
+    if bpy.app.background:
+        return
     for keymap, keymap_item in addon_keymaps:
         keymap.keymap_items.remove(keymap_item)
     addon_keymaps.clear()
