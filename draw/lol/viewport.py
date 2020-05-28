@@ -229,6 +229,7 @@ def update_ui_size(context, area, region):
 
     for r in area.regions:
         if r.type == 'TOOLS':
+            ui_props.bar_start = r.width * reg_multiplier
             ui_props.bar_x = r.width * reg_multiplier + ui_props.margin + ui_props.bar_x_offset * ui_scale
         elif r.type == 'UI':
             ui_props.bar_end = r.width * reg_multiplier + 100 * ui_scale

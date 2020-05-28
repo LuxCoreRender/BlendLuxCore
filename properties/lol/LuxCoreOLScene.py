@@ -88,6 +88,10 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
     drag_length: IntProperty(name="Drag length", default=0)
     draw_drag_image: BoolProperty(name="Draw Drag Image", default=False)
     draw_snapped_bounds: BoolProperty(name="Draw Snapped Bounds", default=False)
+    drag_bar_init: BoolProperty(name="Drag Initialisation", default=False)
+    drag_bar_x: IntProperty(name="Drag bar x offset", default=0)
+    drag_bar_y: IntProperty(name="Drag bar y offset", default=0)
+    dragging_bar: BoolProperty(name="Drag Bar Initialisation", default=False)
 
     snapped_location: FloatVectorProperty(name="Snapped Location", default=(0, 0, 0))
     snapped_bbox_min: FloatVectorProperty(name="Snapped Bbox Min", default=(0, 0, 0))
@@ -102,6 +106,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
 
     bar_x: IntProperty(name="Bar X", default=100, min=0, max=5000)
     bar_y: IntProperty(name="Bar Y", default=100, min=50, max=5000)
+    bar_start: IntProperty(name="Bar End", default=100, min=0, max=5000)
     bar_end: IntProperty(name="Bar End", default=100, min=0, max=5000)
     bar_width: IntProperty(name="Bar Width", default=100, min=0, max=5000)
 

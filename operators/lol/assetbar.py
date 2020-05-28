@@ -173,7 +173,7 @@ def draw_callback_2d_search(self, context):
     # background of asset bar
 
     if not ui_props.dragging:
-        if len(assets) == 0:
+        if len(assets) == 0 or ui_props.wcount == 0:
             return
 
         h_draw = min(ui_props.hcount, math.ceil(len(assets) / ui_props.wcount))
@@ -189,7 +189,7 @@ def draw_callback_2d_search(self, context):
 
         if len(assets) != 0:
             if ui_props.scrolloffset > 0 or ui_props.wcount * ui_props.hcount < len(assets):
-                ui_props.drawoffset = 35
+                ui_props.drawoffset = 25
             else:
                 ui_props.drawoffset = 0
 
@@ -601,7 +601,11 @@ class LOLAssetBarOperator(Operator):
     def invoke(self, context, event):
         scene = context.scene
         ui_props = scene.luxcoreOL.ui
+        ui_props.drag_init = False
+        ui_props.dragging = False
 
+        ui_props.drag_bar_init = False
+        ui_props.dragging_bar = False
         scene.luxcoreOL.search_category = ""
         scene.luxcoreOL.on_search = self.do_search
         if not ui_props.ToC_loaded:
@@ -773,7 +777,6 @@ class LOLAssetBarOperator(Operator):
             return {'RUNNING_MODAL'}
 
         if event.type == 'MOUSEMOVE':  # Apply
-
             region = self.region
             mx = event.mouse_region_x
             my = event.mouse_region_y
@@ -791,6 +794,19 @@ class LOLAssetBarOperator(Operator):
                 if ui_props.drag_length > 0:
                     ui_props.dragging = True
                     ui_props.drag_init = False
+
+            if ui_props.drag_bar_init:
+                if abs(ui_props.drag_bar_x - ui_props.mouse_x) + abs(ui_props.drag_bar_y - ui_props.mouse_y) > 0:
+                    ui_props.dragging_bar = True
+                    ui_props.drag_bar_init = False
+
+            if ui_props.dragging_bar:
+                if ui_bgl.mouse_in_asset_bar(context, mx, my):
+                    ui_props.bar_x_offset = min(region.width - ui_props.bar_end - ui_props.bar_start - 2*ui_props.drawoffset - ui_props.thumb_size, ui_props.drag_bar_x + ui_props.mouse_x)
+                    ui_props.bar_y_offset = min(region.height - ui_props.bar_height, ui_props.drag_bar_y - ui_props.mouse_y)
+                    print(ui_props.bar_x_offset, ui_props.bar_y_offset, region.width, ui_props.bar_start, ui_props.bar_end, 2*ui_props.drawoffset, ui_props.thumb_size)
+                else:
+                    ui_props.dragging_bar = False
 
             if not (ui_props.dragging and ui_bgl.mouse_in_region(region, mx, my)) and not \
                     ui_bgl.mouse_in_asset_bar(context, mx, my):  #
@@ -993,6 +1009,29 @@ class LOLAssetBarOperator(Operator):
                     return {'RUNNING_MODAL'}
             else:
                 return {'RUNNING_MODAL'}
+
+        if event.type == 'MIDDLEMOUSE':
+            region = self.region
+            mx = event.mouse_x - region.x
+            my = event.mouse_y - region.y
+            ui_props = context.scene.luxcoreOL.ui
+
+            if ui_bgl.mouse_in_asset_bar(context, mx, my):
+                if event.value == 'PRESS':
+                    ui_props.drag_bar_init = True
+                    print(ui_props.bar_x_offset, ui_props.bar_y_offset, mx, my)
+                    ui_props.drag_bar_x = ui_props.bar_x_offset - mx
+                    ui_props.drag_bar_y = ui_props.bar_y_offset + my
+                    print(ui_props.drag_bar_x, ui_props.drag_bar_y)
+
+                elif event.value == 'RELEASE':
+                    ui_props.drag_bar_init = False
+                    ui_props.dragging_bar = False
+
+                return {'RUNNING_MODAL'}
+            else:
+                ui_props.drag_bar_init = False
+                ui_props.dragging_bar = False
 
         return {'PASS_THROUGH'}
 
