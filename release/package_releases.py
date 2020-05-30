@@ -59,7 +59,8 @@ WINDOWS_FILES = [
 
 MAC_FILES = [
     "libembree3.3.dylib", "libomp.dylib", 
-    "libOpenImageDenoise.1.2.0.dylib", "libOpenImageIO.1.8.dylib", 
+    "libOpenImageDenoise.1.2.0.dylib", "libOpenImageIO.1.8.dylib",
+    "libcuda.dylib", "libnvrtc.dylib",
     "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
     "pyluxcore.so", "pyluxcoretools.zip", "denoise"
 ]
@@ -227,10 +228,7 @@ def main():
         "-linux64-opencl.tar.bz2",
         # "-linux64-cuda.tar.bz2",  # TODO need to find out how to include the necessary CUDA files
         "-win64.zip",
-        "-win64-opencl.zip",
-        "-win64-cuda.zip",
-        "-mac64.dmg",
-        "-mac64-opencl.dmg",
+        "-mac64.dmg"
     ]
 
     # Download LuxCore binaries for all platforms
