@@ -225,7 +225,7 @@ def main():
     prefix = "luxcorerender-"
     suffixes = [
         "-linux64.tar.bz2",
-        "-linux64-opencl.tar.bz2",
+        # "-linux64-opencl.tar.bz2",
         # "-linux64-cuda.tar.bz2",  # TODO need to find out how to include the necessary CUDA files
         "-win64.zip",
         "-mac64.dmg"
