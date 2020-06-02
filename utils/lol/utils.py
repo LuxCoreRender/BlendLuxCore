@@ -59,10 +59,15 @@ def download_table_of_contents(context):
         init_categories(scene)
         bg_task = Thread(target=check_cache, args=(context, ))
         bg_task.start()
-
+        return True
     except ConnectionError as error:
         print("Connection error: Could not download table of contents")
         print(error)
+        return False
+    except urllib.error.URLError as error:
+        print("URL error: Could not download table of contents")
+        print(error)
+        return False
 
 
 def init_categories(scene):

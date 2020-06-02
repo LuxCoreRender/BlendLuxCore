@@ -614,8 +614,10 @@ class LOLAssetBarOperator(Operator):
         scene.luxcoreOL.on_search = self.do_search
 
         if not ui_props.ToC_loaded:
-            utils.download_table_of_contents(context)
-            scene.luxcoreOL.ui.ToC_loaded = True
+            if utils.download_table_of_contents(context):
+                scene.luxcoreOL.ui.ToC_loaded = True
+            else:
+                return {'CANCELLED'}
 
         assets = scene.luxcoreOL.get('assets')
 
