@@ -99,6 +99,7 @@ def draw_callback_2d_progress(self, context):
                                                             d['location'])
                 if loc is not None:
                     ui_bgl.draw_image(loc[0], loc[1], 50, 50, img, 0.5)
+
         # else:
         #     ui_bgl.draw_progress(x, y - index * 30, text='downloading %s' % asset_data['name'],
         #                   percent=tcom.progress)
@@ -210,8 +211,7 @@ def draw_callback_2d_search(self, context):
                     if ui_props.active_index == -1:
                         ui_bgl.draw_rect(assetbar_props.x + assetbar_props.width - 25,
                                          assetbar_props.y - assetbar_props.height, 25,
-                                         assetbar_props.height,
-                                         highlight)
+                                         assetbar_props.height, highlight)
 
                     ui_bgl.draw_image(assetbar_props.x + assetbar_props.width - 25, arrow_y, 25,
                                       ui_props.thumb_size, utils.get_thumbnail('arrow_right.png'), 1)
@@ -247,11 +247,9 @@ def draw_callback_2d_search(self, context):
                     else:
                         ui_bgl.draw_rect(x, y, w, h, white)
 
+                    if assets[index]['downloaded'] > 0:
+                        ui_bgl.draw_rect(x, y - 2, int(w * assets[index]['downloaded'] / 100.0), 2, green)
     # TODO: Transfer to LOL
-
-    #                 result = search_results[index]
-    #                 if result['downloaded'] > 0:
-    #                     ui_bgl.draw_rect(x, y - 2, int(w * result['downloaded'] / 100.0), 2, green)
     #
     #                 if (result.get('can_download', True)) == 0:
     #                     img = utils.get_thumbnail('locked.png')
@@ -616,8 +614,7 @@ class LOLAssetBarOperator(Operator):
         scene.luxcoreOL.on_search = self.do_search
 
         if not ui_props.ToC_loaded:
-            # TODO might want to check if the download failed, e.g. because of missing internet connection
-            utils.download_table_of_contents(context.scene)
+            utils.download_table_of_contents(context)
             scene.luxcoreOL.ui.ToC_loaded = True
 
         assets = scene.luxcoreOL.get('assets')
@@ -1088,5 +1085,14 @@ class LOLAssetKillDownloadOperator(bpy.types.Operator):
     def execute(self, context):
         td = utils.download_threads[self.thread_index]
         utils.download_threads.remove(td)
+        scene = bpy.context.scene
+        assets = scene.luxcoreOL['assets']
+
+        asset = td[1]
+        for a in assets:
+            if a['hash'] == asset['hash']:
+                a['downloaded'] = 0.0
+                break
+
         td[0].stop()
         return {'FINISHED'}

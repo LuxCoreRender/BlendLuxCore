@@ -32,6 +32,9 @@ def timer_update():
 
     for threaddata in utils.download_threads:
         thread, asset, tcom = threaddata
+        scene = bpy.context.scene
+        assets = scene.luxcoreOL['assets']
+
         if tcom.finished:
             thread.stop()
             if not tcom.passargs['thumbnail']:
@@ -39,11 +42,22 @@ def timer_update():
                     utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
 
             utils.download_threads.remove(threaddata)
+            for a in assets:
+                if a['hash'] == asset['hash']:
+                    a['downloaded'] = 100.0
+                    break
+
             for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
                 if area.type == 'VIEW_3D':
                     area.tag_redraw()
 
                 return None
+
+        for a in assets:
+            if a['hash'] == asset['hash']:
+                a['downloaded'] = tcom.progress
+                break
+
         for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
             if area.type == 'VIEW_3D':
                 area.tag_redraw()

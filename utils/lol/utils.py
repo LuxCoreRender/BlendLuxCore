@@ -37,7 +37,7 @@ import os
 import urllib.error
 from mathutils import Vector, Matrix
 import threading
-from threading import _MainThread
+from threading import _MainThread, Thread
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences
 
@@ -45,14 +45,21 @@ LOL_HOST_URL = "https://luxcorerender.org/lol"
 
 download_threads = []
 
-
-def download_table_of_contents(scene):
+def download_table_of_contents(context):
+    scene = context.scene
     try:
         import urllib.request
         with urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60) as request:
             import json
             scene.luxcoreOL['assets'] = json.loads(request.read())
+
+        for asset in scene.luxcoreOL['assets']:
+            asset['downloaded'] = 0.0
+
         init_categories(scene)
+        bg_task = Thread(target=check_cache, args=(context, ))
+        bg_task.start()
+
     except ConnectionError as error:
         print("Connection error: Could not download table of contents")
         print(error)
@@ -70,6 +77,23 @@ def init_categories(scene):
             categories[cat] = 1
 
     scene.luxcoreOL['categories'] = categories
+
+
+def check_cache(args):
+    (context) = args
+    name = basename(dirname(dirname(dirname(__file__))))
+    user_preferences = context.preferences.addons[name].preferences
+
+    scene = context.scene
+    assets = scene.luxcoreOL['assets']
+
+    for asset in assets:
+        filename = asset["url"]
+        filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
+
+        if os.path.exists(filepath):
+            if calc_hash(filepath) == asset["hash"]:
+                asset['downloaded'] = 100.0
 
 
 def calc_hash(filename):
