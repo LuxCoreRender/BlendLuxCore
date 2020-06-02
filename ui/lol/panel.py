@@ -27,6 +27,7 @@ from bpy.types import Panel
 from os.path import basename, dirname
 from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
+from .. import icons
 
 
 def draw_panel_categories(self, context):
@@ -108,10 +109,6 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         ui_props = scene.luxcoreOL.ui
 
         layout = self.layout
-        # user_preferences = get_addon_preferences(context)
-
-        #layout.use_property_split = True
-        #layout.use_property_decorate = False
 
         #TODO: implement additional modes, i.e. material, textures, brushes if needed
         # row = layout.row()
@@ -122,6 +119,13 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         # if bpy.data.filepath == '':
         #     col = layout.column(align=True)
         #     col.label(text="It's better to save the file first.")
+
+        col = layout.column(align=True)
+        col.scale_x = 1.4
+        col.scale_y = 1.4
+        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation")
+        op.url = "https://salt.bountysource.com/teams/luxcorerender"
+        layout.separator()
 
         if ui_props.asset_type == 'MODEL':
             draw_panel_model_search(self, context)
