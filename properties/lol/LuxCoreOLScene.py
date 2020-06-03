@@ -78,8 +78,12 @@ class LuxCoreOnlineLibraryAssetBar(bpy.types.PropertyGroup):
     drag_y: IntProperty(name="Drag bar y offset", default=0)
     dragging: BoolProperty(name="Dragging asset", default=False)
 
-    resize_x: BoolProperty(name="Resize assetbar in x direction", default=False)
-    resize_y: BoolProperty(name="Resize assetbar in y direction", default=False)
+    resize_x_left: BoolProperty(name="Resize assetbar in x direction", default=False)
+    resize_x_right: BoolProperty(name="Resize assetbar in x direction", default=False)
+    resize_y_top: BoolProperty(name="Resize assetbar in y direction", default=False)
+    resize_y_down: BoolProperty(name="Resize assetbar in y direction", default=False)
+    resize_xy: IntProperty(name="Resize bar offset", default=0)
+    resize_wh: IntProperty(name="Resize bar offset", default=0)
 
     wcount: IntProperty(name="Width Count", default=10, min=0, max=5000)
     hcount: IntProperty(name="Rows", default=5, min=0, max=5000)

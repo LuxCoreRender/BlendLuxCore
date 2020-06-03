@@ -209,7 +209,7 @@ def draw_text(text, x, y, size, color=(1, 1, 1, 0.5)):
     blf.draw(font_id, text)
 
 
-def update_ui_size(context, area, region):
+def init_ui_size(context, area, region):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
     assetbar_props = ui_props.assetbar
@@ -219,7 +219,6 @@ def update_ui_size(context, area, region):
         assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
 
     user_preferences = utils.get_addon_preferences(context)
-
     ui_scale = bpy.context.preferences.view.ui_scale
 
     assetbar_props.margin = assetbar_props.bl_rna.properties['margin'].default * ui_scale
@@ -252,6 +251,55 @@ def update_ui_size(context, area, region):
 
     ui_props.rating_x = assetbar_props.x
     ui_props.rating_y = assetbar_props.y - assetbar_props.height
+
+
+def update_ui_size(context, area, region):
+    scene = context.scene
+    ui_props = scene.luxcoreOL.ui
+    assetbar_props = ui_props.assetbar
+
+    assets = scene.luxcoreOL['assets']
+    if scene.luxcoreOL.on_search:
+        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+
+    user_preferences = utils.get_addon_preferences(context)
+
+    ui_scale = bpy.context.preferences.view.ui_scale
+
+    assetbar_props.margin = assetbar_props.bl_rna.properties['margin'].default * ui_scale
+    ui_props.thumb_size = user_preferences.thumb_size * ui_scale
+
+    reg_multiplier = 1
+    if not bpy.context.preferences.system.use_region_overlap:
+        reg_multiplier = 0
+
+    for r in area.regions:
+        if r.type == 'TOOLS':
+            assetbar_props.start = r.width * reg_multiplier
+            assetbar_props.x = r.width * reg_multiplier + assetbar_props.margin + assetbar_props.x_offset * ui_scale
+        elif r.type == 'UI':
+            assetbar_props.end = r.width * reg_multiplier + 100 * ui_scale
+
+    if assetbar_props.width < ui_props.thumb_size + 2*assetbar_props.margin + assetbar_props.drawoffset:
+        assetbar_props.width = region.width - assetbar_props.end - assetbar_props.start
+
+    if (assetbar_props.start + assetbar_props.x_offset + assetbar_props.width) > region.width - assetbar_props.end:
+        assetbar_props.x_offset = region.width - assetbar_props.end - assetbar_props.width
+
+        if (assetbar_props.start + assetbar_props.x_offset + assetbar_props.width) > region.width - assetbar_props.end:
+            assetbar_props.width = region.width - assetbar_props.end - assetbar_props.start
+
+
+
+    assetbar_props.y = region.height - assetbar_props.y_offset * ui_scale
+
+    assetbar_props.wcount = math.floor(
+        (assetbar_props.width - 2 * assetbar_props.drawoffset) / (ui_props.thumb_size + assetbar_props.margin))
+
+    if assets != None and assetbar_props.wcount > 0:
+        assetbar_props.hcount = assetbar_props.height / (ui_props.thumb_size + 2*assetbar_props.margin)
+    else:
+        assetbar_props.hcount = 1
 
 
 def get_largest_3dview():

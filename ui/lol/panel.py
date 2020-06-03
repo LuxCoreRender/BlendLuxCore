@@ -123,8 +123,15 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         col = layout.column(align=True)
         col.scale_x = 1.4
         col.scale_y = 1.4
-        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation")
+        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Patreon)")
+        op.url = "https://www.patreon.com/Draviastudio"
+
+        col = layout.column(align=True)
+        col.scale_x = 1.4
+        col.scale_y = 1.4
+        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Bountysource)")
         op.url = "https://salt.bountysource.com/teams/luxcorerender"
+
         layout.separator()
 
         if ui_props.asset_type == 'MODEL':
