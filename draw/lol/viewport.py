@@ -280,6 +280,12 @@ def update_ui_size(context, area, region):
         elif r.type == 'UI':
             assetbar_props.end = r.width * reg_multiplier + 100 * ui_scale
 
+    if assetbar_props.height < ui_props.thumb_size + 2 * assetbar_props.margin:
+        assetbar_props.height = ui_props.thumb_size + 2 * assetbar_props.margin
+
+    if region.height - assetbar_props.y_offset - assetbar_props.height < 0:
+        assetbar_props.y_offset = region.height - assetbar_props.height
+
     if assetbar_props.width < ui_props.thumb_size + 2*assetbar_props.margin + assetbar_props.drawoffset:
         assetbar_props.width = region.width - assetbar_props.end - assetbar_props.start
 

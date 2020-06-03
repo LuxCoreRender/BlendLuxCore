@@ -72,4 +72,3 @@ class LuxCoreAddonPreferences(AddonPreferences):
         col.prop(self, "global_dir")
         col.prop(self, "project_subdir")
         col.prop(self, "thumb_size")
-        col.prop(self, "max_assetbar_rows")
