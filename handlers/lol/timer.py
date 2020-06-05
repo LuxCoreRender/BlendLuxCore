@@ -38,14 +38,14 @@ def timer_update():
         if tcom.finished:
             thread.stop()
             if not tcom.passargs['thumbnail']:
+                for a in assets:
+                    if a['hash'] == asset['hash']:
+                        a['downloaded'] = 100.0
+                        break
                 for d in tcom.passargs['downloaders']:
                     utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
 
             utils.download_threads.remove(threaddata)
-            for a in assets:
-                if a['hash'] == asset['hash']:
-                    a['downloaded'] = 100.0
-                    break
 
             for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
                 if area.type == 'VIEW_3D':
@@ -53,10 +53,11 @@ def timer_update():
 
                 return None
 
-        for a in assets:
-            if a['hash'] == asset['hash']:
-                a['downloaded'] = tcom.progress
-                break
+        if not tcom.passargs['thumbnail']:
+            for a in assets:
+                if a['hash'] == asset['hash']:
+                    a['downloaded'] = tcom.progress
+                    break
 
         for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
             if area.type == 'VIEW_3D':
