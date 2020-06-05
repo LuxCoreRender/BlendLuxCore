@@ -162,8 +162,7 @@ def draw_callback_2d_search(self, context):
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
 
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
 
     region = self.region
     hcolor = (1, 1, 1, .07)
@@ -602,6 +601,11 @@ class LOLAssetBarOperator(Operator):
         ui_props = scene.luxcoreOL.ui
         assetbar_props = ui_props.assetbar
 
+        user_preferences = get_addon_preferences(context)
+
+        if not user_preferences.use_library:
+            return {'CANCELLED'}
+
         ui_props.drag_init = False
         ui_props.dragging = False
 
@@ -696,6 +700,9 @@ class LOLAssetBarOperator(Operator):
         user_preferences = get_addon_preferences(context)
         assets = scene.luxcoreOL.get('assets')
         context.window.cursor_set("DEFAULT")
+
+        if not user_preferences.use_library:
+            return {'CANCELLED'}
 
         if scene.luxcoreOL.on_search:
             assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]

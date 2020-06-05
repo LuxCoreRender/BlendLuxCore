@@ -102,7 +102,10 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
 
     @classmethod
     def poll(cls, context):
-        return True
+        name = basename(dirname(dirname(dirname(__file__))))
+        user_preferences = context.preferences.addons[name].preferences
+
+        return user_preferences.use_library
 
     def draw(self, context):
         scene = context.scene
