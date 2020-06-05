@@ -239,10 +239,7 @@ def init_ui_size(context, area, region):
     assetbar_props.wcount = math.floor(
         (assetbar_props.width - 2 * assetbar_props.drawoffset) / (ui_props.thumb_size + assetbar_props.margin))
 
-    if assets != None and assetbar_props.wcount > 0:
-        assetbar_props.hcount = min(user_preferences.max_assetbar_rows, math.ceil(len(assets) / assetbar_props.wcount))
-    else:
-        assetbar_props.hcount = 1
+    assetbar_props.hcount = 1
     assetbar_props.height = (ui_props.thumb_size + assetbar_props.margin) * assetbar_props.hcount + assetbar_props.margin
     assetbar_props.y = region.height - assetbar_props.y_offset * ui_scale
 
