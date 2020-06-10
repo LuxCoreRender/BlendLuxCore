@@ -39,7 +39,7 @@ from mathutils import Vector, Matrix
 import threading
 from threading import _MainThread, Thread
 from ...handlers.lol.timer import timer_update
-from ...utils import get_addon_preferences
+from ...utils import get_addon_preferences, compatibility
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
@@ -293,6 +293,7 @@ def link_asset(context, asset, location, rotation):
 
         # Add objects to asset collection
         col.objects.link(obj)
+        compatibility.run()
 
 
 def load_asset(context, asset, location, rotation):
