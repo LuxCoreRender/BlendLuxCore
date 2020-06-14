@@ -31,29 +31,23 @@ from ...utils.lol import utils as utils
 def switch_search_results(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
-    assets = scene.luxcoreOL.get('assets')
+    assets = utils.get_search_props(context)
+    utils.load_previews(context, assets)
+    ui_props.scrolloffset = 0
 
-    if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
-        scene.luxcoreOL.search_category = self.category
+    if ui_props.asset_type == 'MODEL':
+        asset_props = scene.luxcoreOL.model
+    if ui_props.asset_type == 'SCENE':
+        asset_props = scene.luxcoreOL.scene
+    if ui_props.asset_type == 'MATERIAL':
+        asset_props = scene.luxcoreOL.material
 
-    #TODO: Implement
-    #if ui_props.asset_type == 'MODEL':
-    #    scene['search results'] = scene.get('LOL model search')
-    #    scene['search results orig'] = scene.get('LOL model search orig')
-    #elif ui_props.asset_type == 'SCENE':
-    #    scene['search results'] = scene.get('LOL scene search')
-    #    scene['search results orig'] = scene.get('LOL scene search orig')
-    #elif ui_props.asset_type == 'MATERIAL':
-    #    scene['search results'] = scene.get('LOL material search')
-    #    scene['search results orig'] = scene.get('LOL material search orig')
-    #elif ui_props.asset_type == 'TEXTURE':
-    #    scene['search results'] = scene.get('LOL texture search')
-    #    scene['search results orig'] = scene.get('LOL texture search orig')
-    #elif ui_props.asset_type == 'BRUSH':
-    #    scene['search results'] = scene.get('LOL brush search')
-    #    scene['search results orig'] = scene.get('LOL brush search orig')
-    #search.load_previews()
+    if not 'categories' in asset_props.keys():
+        utils.init_categories(context)
+
+    scene.luxcoreOL.on_search = False
+    self.category = ""
+    scene.luxcoreOL.search_category = self.category
 
 
 class LuxCoreOnlineLibraryAssetBar(bpy.types.PropertyGroup):
@@ -103,10 +97,10 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
 
     asset_items = [
         ('MODEL', 'Model', 'Browse models', 'OBJECT_DATAMODE', 0),
-        # ('SCENE', 'SCENE', 'Browse scenes', 'SCENE_DATA', 1),
+        ('SCENE', 'SCENE', 'Browse scenes', 'SCENE_DATA', 1),
         ('MATERIAL', 'Material', 'Browse materials', 'MATERIAL', 2),
         # ('TEXTURE', 'Texture', 'Browse textures', 'TEXTURE', 3),
-        ('BRUSH', 'Brush', 'Browse brushes', 'BRUSH_DATA', 3)
+        # ('BRUSH', 'Brush', 'Browse brushes', 'BRUSH_DATA', 3)
     ]
     asset_type: EnumProperty(name="Active Asset Type", items=asset_items, description="Activate asset in UI",
                              default="MODEL", update=switch_search_results)
@@ -170,9 +164,19 @@ class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
                                         subtype='ANGLE')
 
 
+class LuxCoreOnlineLibraryMaterial(bpy.types.PropertyGroup):
+    free_only: BoolProperty(name="Free only", default=True)
+
+
 class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
+    free_only: BoolProperty(name="Free only", default=True)
+
+
+class LuxCoreOnlineLibrary(bpy.types.PropertyGroup):
     ui: PointerProperty(type=LuxCoreOnlineLibraryUI)
     model: PointerProperty(type=LuxCoreOnlineLibraryModel)
+    material: PointerProperty(type=LuxCoreOnlineLibraryMaterial)
+    scene: PointerProperty(type=LuxCoreOnlineLibraryScene)
     on_search: BoolProperty(name="on_search", default=False)
     search_category: StringProperty(name="search_category", default="")
 
@@ -188,4 +192,3 @@ class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
 
 #class LuxCoreOnlineLibrarySceneBrush(bpy.types.PropertyGroup):
 
-#class LuxCoreOnlineLibrarySceneMaterial(bpy.types.PropertyGroup):

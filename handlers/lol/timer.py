@@ -24,6 +24,7 @@
 
 import bpy
 
+
 def timer_update():
     from ...utils.lol import utils as utils
     '''check for running and finished downloads and react. write progressbars too.'''
@@ -33,7 +34,7 @@ def timer_update():
     for threaddata in utils.download_threads:
         thread, asset, tcom = threaddata
         scene = bpy.context.scene
-        assets = scene.luxcoreOL['assets']
+        assets = utils.get_search_props(bpy.context)
 
         if tcom.finished:
             thread.stop()

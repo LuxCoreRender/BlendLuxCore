@@ -65,16 +65,6 @@ def draw_callback_2d(self, context):
 
 
 def draw_callback_2d_progress(self, context):
-    green = (.2, 1, .2, .3)
-    offset = 0
-    row_height = 35
-
-    scene = context.scene
-    ui_props = scene.luxcoreOL.ui
-    assets = scene.luxcoreOL['assets']
-    if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
-
     # x = ui_props.reports_x
     # y = ui_props.reports_y
     index = 0
@@ -157,10 +147,10 @@ def draw_callback_2d_search(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
     assetbar_props = scene.luxcoreOL.ui.assetbar
-    assets = scene.luxcoreOL['assets']
+    assets = utils.get_search_props(context)
 
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
     user_preferences = get_addon_preferences(context)
 
@@ -262,7 +252,7 @@ def draw_callback_2d_search(self, context):
     # TODO: Transfer to LOL
 
     #     s = bpy.context.scene
-    #     props = utils.get_search_props()
+    #     props = utils.get_search_props(context)
     #     # if props.report != '' and props.is_searching or props.search_error:
     #     #     ui_bgl.draw_text(props.report, assetbar_props.x,
     #     #                      assetbar_props.y - 15 - assetbar_props.margin - assetbar_props.height, 15)
@@ -620,12 +610,10 @@ class LOLAssetBarOperator(Operator):
         scene.luxcoreOL.on_search = self.do_search
 
         if not ui_props.ToC_loaded:
-            if utils.download_table_of_contents(context):
-                scene.luxcoreOL.ui.ToC_loaded = True
-            else:
+            if not utils.download_table_of_contents(context):
                 return {'CANCELLED'}
 
-        assets = scene.luxcoreOL.get('assets')
+        assets = utils.get_search_props(context)
 
         if not ui_props.thumbnails_loaded:
             utils.load_previews(context, assets)
@@ -633,9 +621,11 @@ class LOLAssetBarOperator(Operator):
 
         ui_props.scrolloffset = 0
 
+
         if scene.luxcoreOL.on_search:
-            assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
+            assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
             scene.luxcoreOL.search_category = self.category
+
 
         if ui_props.assetbar_on:
             if not self.keep_running:
@@ -698,14 +688,14 @@ class LOLAssetBarOperator(Operator):
         assetbar_props = ui_props.assetbar
 
         user_preferences = get_addon_preferences(context)
-        assets = scene.luxcoreOL.get('assets')
+        assets = utils.get_search_props(context)
         context.window.cursor_set("DEFAULT")
 
         if not user_preferences.use_library:
             return {'CANCELLED'}
 
         if scene.luxcoreOL.on_search:
-            assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+            assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
         areas = []
 
@@ -1049,10 +1039,10 @@ class LOLAssetBarOperator(Operator):
                         target_slot = ''
 
                     #TODO:_Implement Material drop
-                    # if ui_props.asset_type == 'MATERIAL':
-                    #     ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = mouse_raycast(
-                    #         context, mx, my)
-                    #
+                    if ui_props.asset_type == 'MATERIAL':
+                        ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = ui_bgl.mouse_raycast(
+                            context, mx, my)
+
                     #     if not ui_props.has_hit:
                     #         # this is last attempt to get object under mouse - for curves and other objects than mesh.
                     #         ui_props.dragging = False
@@ -1065,24 +1055,24 @@ class LOLAssetBarOperator(Operator):
                     #             ui_props.has_hit = True
                     #         utils.selection_set(sel)
                     #
-                    #     if not ui_props.has_hit:
-                    #         return {'RUNNING_MODAL'}
-                    #
-                    #     else:
-                    #         # first, test if object can have material applied.
-                    #         # TODO add other types here if droppable.
-                    #         if object is not None and not object.is_library_indirect and object.type == 'MESH':
-                    #             target_object = object.name
-                    #             # create final mesh to extract correct material slot
-                    #             depsgraph = bpy.context.evaluated_depsgraph_get()
-                    #             object_eval = object.evaluated_get(depsgraph)
-                    #             temp_mesh = object_eval.to_mesh()
-                    #             target_slot = temp_mesh.polygons[face_index].material_index
-                    #             object_eval.to_mesh_clear()
-                    #         else:
-                    #             self.report({'WARNING'}, "Invalid or library object as input:")
-                    #             target_object = ''
-                    #             target_slot = ''
+                        if not ui_props.has_hit:
+                            return {'RUNNING_MODAL'}
+
+                        else:
+                            # first, test if object can have material applied.
+                            #TODO: add other types here if droppable.
+                            if object is not None and not object.is_library_indirect and object.type == 'MESH':
+                                target_object = object.name
+                                # create final mesh to extract correct material slot
+                                depsgraph = context.evaluated_depsgraph_get()
+                                object_eval = object.evaluated_get(depsgraph)
+                                temp_mesh = object_eval.to_mesh()
+                                target_slot = temp_mesh.polygons[face_index].material_index
+                                object_eval.to_mesh_clear()
+                            else:
+                                self.report({'WARNING'}, "Invalid or library object as input:")
+                                target_object = ''
+                                target_slot = ''
 
                 # Click interaction
                 else:
@@ -1108,7 +1098,7 @@ class LOLAssetBarOperator(Operator):
                         loc = scene.cursor.location
                         rotation = scene.cursor.rotation_euler
 
-                    utils.load_asset(context, assets[asset_search_index], loc, rotation)
+                    utils.load_asset(context, assets[asset_search_index], loc, rotation, target_object, target_slot)
                     ui_props.dragging = False
                     return {'RUNNING_MODAL'}
             else:
@@ -1152,7 +1142,7 @@ class LOLAssetKillDownloadOperator(bpy.types.Operator):
         td = utils.download_threads[self.thread_index]
         utils.download_threads.remove(td)
         scene = bpy.context.scene
-        assets = scene.luxcoreOL['assets']
+        assets = utils.get_search_props(context)
 
         asset = td[1]
         for a in assets:

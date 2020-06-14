@@ -39,6 +39,14 @@ def _init_LuxCoreOnlineLibrary():
         os.makedirs(os.path.join(user_preferences.global_dir, "model"))
     if not os.path.exists(os.path.join(user_preferences.global_dir, "model", "preview")):
         os.makedirs(os.path.join(user_preferences.global_dir, "model", "preview"))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, "material")):
+        os.makedirs(os.path.join(user_preferences.global_dir, "material"))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, "material", "preview")):
+        os.makedirs(os.path.join(user_preferences.global_dir, "material", "preview"))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, "scene")):
+        os.makedirs(os.path.join(user_preferences.global_dir, "scene"))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, "scene", "preview")):
+        os.makedirs(os.path.join(user_preferences.global_dir, "scene", "preview"))
 
 
 @persistent

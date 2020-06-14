@@ -33,7 +33,8 @@ import mathutils
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
 from os.path import basename, dirname
-from ... import utils
+from ...utils import get_addon_preferences
+from ...utils.lol import utils as utils
 
 
 def draw_downloader(x, y, percent=0, img=None):
@@ -214,11 +215,11 @@ def init_ui_size(context, area, region):
     ui_props = scene.luxcoreOL.ui
     assetbar_props = ui_props.assetbar
 
-    assets = scene.luxcoreOL['assets']
-    if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+    # assets = utils.get_search_props(context)
+    # if scene.luxcoreOL.on_search:
+    #     assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
-    user_preferences = utils.get_addon_preferences(context)
+    user_preferences = get_addon_preferences(context)
     ui_scale = bpy.context.preferences.view.ui_scale
 
     assetbar_props.margin = assetbar_props.bl_rna.properties['margin'].default * ui_scale
@@ -255,11 +256,11 @@ def update_ui_size(context, area, region):
     ui_props = scene.luxcoreOL.ui
     assetbar_props = ui_props.assetbar
 
-    assets = scene.luxcoreOL['assets']
+    assets = utils.get_search_props(context)
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
-    user_preferences = utils.get_addon_preferences(context)
+    user_preferences = get_addon_preferences(context)
 
     ui_scale = bpy.context.preferences.view.ui_scale
 
@@ -291,7 +292,6 @@ def update_ui_size(context, area, region):
 
         if (assetbar_props.start + assetbar_props.x_offset + assetbar_props.width) > region.width - assetbar_props.end:
             assetbar_props.width = region.width - assetbar_props.end - assetbar_props.start
-
 
 
     assetbar_props.y = region.height - assetbar_props.y_offset * ui_scale
@@ -361,9 +361,9 @@ def get_asset_under_mouse(context, mousex, mousey):
     ui_props = scene.luxcoreOL.ui
     assetbar_props = ui_props.assetbar
 
-    assets = scene.luxcoreOL.get('assets')
+    assets = utils.get_search_props(context)
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
     if assets is not None:
         h_draw = min(assetbar_props.hcount, math.ceil(len(assets) / assetbar_props.wcount))

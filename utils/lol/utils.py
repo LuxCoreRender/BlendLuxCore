@@ -41,22 +41,37 @@ from threading import _MainThread, Thread
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
 
-LOL_HOST_URL = "https://luxcorerender.org/lol"
+# LOL_HOST_URL = "https://luxcorerender.org/lol"
+LOL_HOST_URL = "http://127.0.0.1/lol"
 
 download_threads = []
 
 def download_table_of_contents(context):
     scene = context.scene
+    ui_props = scene.luxcoreOL.ui
+
     try:
         import urllib.request
-        with urllib.request.urlopen(LOL_HOST_URL + "/assets.json", timeout=60) as request:
+        with urllib.request.urlopen(LOL_HOST_URL + "/assets_model.json", timeout=60) as request:
             import json
-            scene.luxcoreOL['assets'] = json.loads(request.read())
+            scene.luxcoreOL.model['assets'] = json.loads(request.read())
+            for asset in scene.luxcoreOL.model['assets']:
+                asset['downloaded'] = 0.0
 
-        for asset in scene.luxcoreOL['assets']:
-            asset['downloaded'] = 0.0
+            with urllib.request.urlopen(LOL_HOST_URL + "/assets_scene.json", timeout=60) as request:
+                import json
+                scene.luxcoreOL.scene['assets'] = json.loads(request.read())
+                for asset in scene.luxcoreOL.scene['assets']:
+                    asset['downloaded'] = 0.0
 
-        init_categories(scene)
+            with urllib.request.urlopen(LOL_HOST_URL + "/assets_material.json", timeout=60) as request:
+                import json
+                scene.luxcoreOL.material['assets'] = json.loads(request.read())
+                for asset in scene.luxcoreOL.material['assets']:
+                    asset['downloaded'] = 0.0
+
+        context.scene.luxcoreOL.ui.ToC_loaded = True
+        init_categories(context)
         bg_task = Thread(target=check_cache, args=(context, ))
         bg_task.start()
         return True
@@ -70,8 +85,10 @@ def download_table_of_contents(context):
         return False
 
 
-def init_categories(scene):
-    assets = scene.luxcoreOL['assets']
+def init_categories(context):
+    scene = context.scene
+    ui_props = scene.luxcoreOL.ui
+    assets = get_search_props(context)
     categories = {}
 
     for asset in assets:
@@ -81,7 +98,14 @@ def init_categories(scene):
         except KeyError:
             categories[cat] = 1
 
-    scene.luxcoreOL['categories'] = categories
+    if ui_props.asset_type == 'MODEL':
+        asset_props = scene.luxcoreOL.model
+    if ui_props.asset_type == 'SCENE':
+        asset_props = scene.luxcoreOL.scene
+    if ui_props.asset_type == 'MATERIAL':
+        asset_props = scene.luxcoreOL.material
+
+    asset_props['categories'] = categories
 
 
 def check_cache(args):
@@ -90,7 +114,7 @@ def check_cache(args):
     user_preferences = context.preferences.addons[name].preferences
 
     scene = context.scene
-    assets = scene.luxcoreOL['assets']
+    assets = get_search_props(context)
 
     for asset in assets:
         filename = asset["url"]
@@ -123,9 +147,10 @@ def is_downloading(asset):
     return None
 
 
-def download_file(asset, location, rotation):
-    downloader = {'location': (location[0],location[1],location[2]), 'rotation': (rotation[0],rotation[1],rotation[2])}
-    tcom  = is_downloading(asset)
+def download_file(asset, location, rotation, target_object, target_slot):
+    downloader = {'location': (location[0],location[1],location[2]), 'rotation': (rotation[0],rotation[1],rotation[2]),
+                  'target_object': target_object, 'target_slot': target_slot}
+    tcom = is_downloading(asset)
     if tcom is None:
         tcom = ThreadCom()
         tcom.passargs['downloaders'] = [downloader]
@@ -296,12 +321,42 @@ def link_asset(context, asset, location, rotation):
         compatibility.run()
 
 
-def load_asset(context, asset, location, rotation):
+def append_material(context, asset, target_object, target_slot):
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     filename = asset["url"]
-    filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3]+'blend')
+    filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
+
+    with bpy.data.libraries.load(filepath, link=False) as (data_from, data_to):
+        data_to.materials = [name for name in data_from.materials if name == asset["name"]]
+
+    if len(data_to.materials) == 1:
+        print(target_object, target_slot, data_to.materials[0].name)
+        if len(bpy.data.objects[target_object].material_slots) == 0:
+            bpy.data.objects[target_object].data.materials.append(data_to.materials[0])
+        else:
+            bpy.data.objects[target_object].material_slots[target_slot].material = data_to.materials[0]
+        compatibility.run()
+
+
+
+def load_asset(context, asset, location, rotation, target_object, target_slot):
+    name = basename(dirname(dirname(dirname(__file__))))
+    user_preferences = context.preferences.addons[name].preferences
+
+    ui_props = context.scene.luxcoreOL.ui
+
+    #TODO: write method for this as it is used serveral times
+    if ui_props.asset_type == 'MODEL':
+        filename = asset["url"]
+        filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
+    elif ui_props.asset_type == 'MATERIAL':
+        filename = asset["url"]
+        filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
+    elif ui_props.asset_type == 'SCENE':
+        filename = asset["url"]
+        filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
 
     ''' Check if model is cached '''
     download = False
@@ -315,39 +370,43 @@ def load_asset(context, asset, location, rotation):
 
     if download:
         print("Download asset")
-        download_file(asset, location, rotation)
+        download_file(asset, location, rotation, target_object, target_slot)
     else:
-        link_asset(context, asset, location, rotation)
+        if ui_props.asset_type == 'MATERIAL':
+            append_material(context, asset, target_object, target_slot)
+        else:
+            link_asset(context, asset, location, rotation)
 
 
-def get_search_props():
-    scene = bpy.context.scene
+def get_search_props(context):
+    scene = context.scene
     if scene is None:
         return
-    uiprops = scene.luxcoreOL.ui
+    ui_props = scene.luxcoreOL.ui
     props = None
-    if uiprops.asset_type == 'MODEL':
-        if not hasattr(scene, 'LuxCoreAssets_models'):
-            return
-        props = scene.LuxCoreAssets_models
-    if uiprops.asset_type == 'SCENE':
-        if not hasattr(scene, 'LuxCoreAssets_scene'):
-            return
-        props = scene.LuxCoreAssets_scene
-    if uiprops.asset_type == 'MATERIAL':
-        if not hasattr(scene, 'LuxCoreAssets_mat'):
-            return
-        props = scene.LuxCoreAssets_mat
 
-    if uiprops.asset_type == 'TEXTURE':
-        if not hasattr(scene, 'LuxCoreAssets_tex'):
+    if ui_props.asset_type == 'MODEL':
+        if not 'assets' in scene.luxcoreOL.model:
             return
-        # props = scene.LuxCoreAssets_tex
+        props = scene.luxcoreOL.model['assets']
+    if ui_props.asset_type == 'SCENE':
+        if not 'assets' in scene.luxcoreOL.scene:
+            return
+        props = scene.luxcoreOL.scene['assets']
+    if ui_props.asset_type == 'MATERIAL':
+        if not 'assets' in scene.luxcoreOL.material:
+            return
+        props = scene.luxcoreOL.material['assets']
 
-    if uiprops.asset_type == 'BRUSH':
-        if not hasattr(scene, 'LuxCoreAssets_brush'):
-            return;
-        props = scene.LuxCoreAssets_brush
+    # if ui_props.asset_type == 'TEXTURE':
+    #     if not hasattr(scene.luxcoreOL.texture, 'assets'):
+    #         return
+    #     props = scene.luxcoreOL.texture['assets']
+
+    # if ui_props.asset_type == 'BRUSH':
+    #     if not hasattr(scene.luxcoreOL, 'brush'):
+    #         return
+    #     props = scene.luxcoreOL.brush['assets']
     return props
 
 
@@ -443,11 +502,16 @@ def previmg_name(index, fullsize=False):
 def load_previews(context, assets):
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
+    ui_props = context.scene.luxcoreOL.ui
 
     if assets is not None and len(assets) != 0:
         i = 0
         for asset in assets:
-            tpath = os.path.join(user_preferences.global_dir, "model", "preview", asset['url'][:-4] + '.jpg')
+            if ui_props.asset_type == 'MATERIAL':
+                tpath = os.path.join(user_preferences.global_dir, ui_props.asset_type.lower(), "preview",
+                                     asset['name'] + '.jpg')
+            else:
+                tpath = os.path.join(user_preferences.global_dir, ui_props.asset_type.lower(), "preview", asset['url'][:-4] + '.jpg')
             imgname = previmg_name(i)
 
             asset["thumbnail"] = imgname
