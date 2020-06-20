@@ -44,7 +44,11 @@ def timer_update():
                         a['downloaded'] = 100.0
                         break
                 for d in tcom.passargs['downloaders']:
-                    utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
+                    if tcom.passargs['asset type'] == 'MATERIAL':
+                        utils.append_material(bpy.context, asset, d['target_object'], d['target_slot'])
+                    else:
+                        utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
+
 
             utils.download_threads.remove(threaddata)
 

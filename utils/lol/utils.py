@@ -40,6 +40,7 @@ import threading
 from threading import _MainThread, Thread
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
+from ...utils.errorlog import LuxCoreErrorLog
 
 # LOL_HOST_URL = "https://luxcorerender.org/lol"
 LOL_HOST_URL = "http://127.0.0.1/lol"
@@ -48,7 +49,6 @@ download_threads = []
 
 def download_table_of_contents(context):
     scene = context.scene
-    ui_props = scene.luxcoreOL.ui
 
     try:
         import urllib.request
@@ -114,11 +114,28 @@ def check_cache(args):
     user_preferences = context.preferences.addons[name].preferences
 
     scene = context.scene
-    assets = get_search_props(context)
-
+    assets = scene.luxcoreOL.model['assets']
     for asset in assets:
         filename = asset["url"]
         filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
+
+        if os.path.exists(filepath):
+            if calc_hash(filepath) == asset["hash"]:
+                asset['downloaded'] = 100.0
+
+    assets = scene.luxcoreOL.scene['assets']
+    for asset in assets:
+        filename = asset["url"]
+        filepath = os.path.join(user_preferences.global_dir, "scene", filename[:-3] + 'blend')
+
+        if os.path.exists(filepath):
+            if calc_hash(filepath) == asset["hash"]:
+                asset['downloaded'] = 100.0
+
+    assets = scene.luxcoreOL.material['assets']
+    for asset in assets:
+        filename = asset["url"]
+        filepath = os.path.join(user_preferences.global_dir, "material", filename[:-3] + 'blend')
 
         if os.path.exists(filepath):
             if calc_hash(filepath) == asset["hash"]:
@@ -147,7 +164,7 @@ def is_downloading(asset):
     return None
 
 
-def download_file(asset, location, rotation, target_object, target_slot):
+def download_file(asset_type, asset, location, rotation, target_object, target_slot):
     downloader = {'location': (location[0],location[1],location[2]), 'rotation': (rotation[0],rotation[1],rotation[2]),
                   'target_object': target_object, 'target_slot': target_slot}
     tcom = is_downloading(asset)
@@ -155,6 +172,7 @@ def download_file(asset, location, rotation, target_object, target_slot):
         tcom = ThreadCom()
         tcom.passargs['downloaders'] = [downloader]
         tcom.passargs['thumbnail'] = False
+        tcom.passargs['asset type'] = asset_type
         asset_data = asset.to_dict()
 
         downloadthread = Downloader(asset_data, tcom)
@@ -193,9 +211,9 @@ class Downloader(threading.Thread):
             # Thumbnail  download
             try:
                 imagename = self.asset['url'][:-4] + '.jpg'
-                thumbnailpath = os.path.join(user_preferences.global_dir, "model", "preview", imagename)
+                thumbnailpath = os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower(), "preview", imagename)
 
-                with urllib.request.urlopen(LOL_HOST_URL + "/assets/preview/" + imagename, timeout=60) as url_handle, \
+                with urllib.request.urlopen(os.path.join(LOL_HOST_URL, tcom.passargs['asset type'].lower(), "preview", imagename), timeout=60) as url_handle, \
                         open(thumbnailpath, "wb") as file_handle:
                     file_handle.write(url_handle.read())
 
@@ -207,7 +225,11 @@ class Downloader(threading.Thread):
                 tcom.finished = True
 
             except ConnectionError as error:
-                self.report({"ERROR"}, "Connection error: Could not download " + imagename)
+                print("Connection error: Could not download " + imagename)
+                print(error)
+            except urllib.error.HTTPError as error:
+                print("HTTPError error: Could not download " + imagename)
+                print(error)
         else:
             #Asset download
             filename = self.asset["url"]
@@ -215,7 +237,7 @@ class Downloader(threading.Thread):
             with tempfile.TemporaryDirectory() as temp_dir_path:
                 temp_zip_path = os.path.join(temp_dir_path, filename)
                 # print(temp_zip_path)
-                url = LOL_HOST_URL + "/assets/" + filename
+                url = os.path.join(LOL_HOST_URL, tcom.passargs['asset type'].lower(), filename)
                 try:
                     print("Downloading:", url)
 
@@ -246,8 +268,8 @@ class Downloader(threading.Thread):
                     print("Download finished")
                     import zipfile
                     with zipfile.ZipFile(temp_zip_path) as zf:
-                        print("Extracting zip to", os.path.join(user_preferences.global_dir, "model"))
-                        zf.extractall(os.path.join(user_preferences.global_dir, "model"))
+                        print("Extracting zip to", os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
+                        zf.extractall(os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
                     tcom.finished = True
 
                 except urllib.error.URLError as err:
@@ -322,21 +344,25 @@ def link_asset(context, asset, location, rotation):
 
 
 def append_material(context, asset, target_object, target_slot):
+    if target_object == None:
+        return
+
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     filename = asset["url"]
-    filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
+    filepath = os.path.join(user_preferences.global_dir, "material", filename[:-3] + 'blend')
 
     with bpy.data.libraries.load(filepath, link=False) as (data_from, data_to):
         data_to.materials = [name for name in data_from.materials if name == asset["name"]]
 
     if len(data_to.materials) == 1:
-        print(target_object, target_slot, data_to.materials[0].name)
+        # print(target_object, target_slot, data_to.materials[0].name)
         if len(bpy.data.objects[target_object].material_slots) == 0:
             bpy.data.objects[target_object].data.materials.append(data_to.materials[0])
         else:
-            bpy.data.objects[target_object].material_slots[target_slot].material = data_to.materials[0]
+            if bpy.data.objects[target_object].library == None:
+                bpy.data.objects[target_object].material_slots[target_slot].material = data_to.materials[0]
         compatibility.run()
 
 
@@ -348,15 +374,12 @@ def load_asset(context, asset, location, rotation, target_object, target_slot):
     ui_props = context.scene.luxcoreOL.ui
 
     #TODO: write method for this as it is used serveral times
-    if ui_props.asset_type == 'MODEL':
+    if ui_props.asset_type == 'SCENE':
         filename = asset["url"]
         filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
-    elif ui_props.asset_type == 'MATERIAL':
+    else:
         filename = asset["url"]
-        filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
-    elif ui_props.asset_type == 'SCENE':
-        filename = asset["url"]
-        filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
+        filepath = os.path.join(user_preferences.global_dir, ui_props.asset_type.lower(), filename[:-3] + 'blend')
 
     ''' Check if model is cached '''
     download = False
@@ -370,7 +393,7 @@ def load_asset(context, asset, location, rotation, target_object, target_slot):
 
     if download:
         print("Download asset")
-        download_file(asset, location, rotation, target_object, target_slot)
+        download_file(ui_props.asset_type, asset, location, rotation, target_object, target_slot)
     else:
         if ui_props.asset_type == 'MATERIAL':
             append_material(context, asset, target_object, target_slot)
@@ -454,17 +477,13 @@ def guard_from_crash():
 
 
 def download_thumbnail(self, context, asset, index):
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
-
-    # print("=======================================")
-    # print("Download thumbnail: ", imagename)
-    # print()
+    ui_props = context.scene.luxcoreOL.ui
 
     tcom = is_downloading(asset)
     if tcom is None:
         tcom = ThreadCom()
         tcom.passargs['thumbnail'] = True
+        tcom.passargs['asset type'] = ui_props.asset_type
 
         downloadthread = Downloader(asset, tcom)
         downloadthread.start()

@@ -31,6 +31,9 @@ from ...utils.lol import utils as utils
 def switch_search_results(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
+    if not ui_props.ToC_loaded:
+        utils.download_table_of_contents(context)
+
     assets = utils.get_search_props(context)
     utils.load_previews(context, assets)
     ui_props.scrolloffset = 0
@@ -97,7 +100,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
 
     asset_items = [
         ('MODEL', 'Model', 'Browse models', 'OBJECT_DATAMODE', 0),
-        ('SCENE', 'SCENE', 'Browse scenes', 'SCENE_DATA', 1),
+        # ('SCENE', 'SCENE', 'Browse scenes', 'SCENE_DATA', 1),
         ('MATERIAL', 'Material', 'Browse materials', 'MATERIAL', 2),
         # ('TEXTURE', 'Texture', 'Browse textures', 'TEXTURE', 3),
         # ('BRUSH', 'Brush', 'Browse brushes', 'BRUSH_DATA', 3)

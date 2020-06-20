@@ -88,7 +88,7 @@ def draw_callback_2d_progress(self, context):
                 loc = view3d_utils.location_3d_to_region_2d(bpy.context.region, bpy.context.space_data.region_3d,
                                                             d['location'])
                 if loc is not None:
-                    ui_bgl.draw_image(loc[0], loc[1], 50, 50, img, 0.5)
+                    ui_bgl.draw_downloader(loc[0], loc[1], tcom.progress, img)
 
         # else:
         #     ui_bgl.draw_progress(x, y - index * 30, text='downloading %s' % asset_data['name'],
@@ -110,6 +110,7 @@ def draw_callback_3d_progress(self, context):
     # 'star trek' mode gets here, blocked by now ;)
     if not utils.guard_from_crash():
         return
+    ui_props = context.scene.luxcoreOL.ui
 
     for threaddata in utils.download_threads:
         tcom = threaddata[2]
@@ -117,14 +118,15 @@ def draw_callback_3d_progress(self, context):
             continue
 
         asset_data = threaddata[1]
-        bbox_min = Vector(asset_data["bbox_min"])
-        bbox_max = Vector(asset_data["bbox_max"])
-        bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
+        if ui_props.asset_type == 'MODEL':
+            bbox_min = Vector(asset_data["bbox_min"])
+            bbox_max = Vector(asset_data["bbox_max"])
+            bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
 
-        if tcom.passargs.get('downloaders'):
-            for d in tcom.passargs['downloaders']:
-                ui_bgl.draw_bbox(d['location'], d['rotation'], bbox_min-bbox_center, bbox_max-bbox_center,
-                               progress=tcom.progress)
+            if tcom.passargs.get('downloaders'):
+                for d in tcom.passargs['downloaders']:
+                    ui_bgl.draw_bbox(d['location'], d['rotation'], bbox_min-bbox_center, bbox_max-bbox_center,
+                                   progress=tcom.progress)
 
 
 def draw_callback_3d(self, context):
@@ -311,8 +313,8 @@ def draw_callback_2d_search(self, context):
             img = utils.get_thumbnail('thumbnail_notready.jpg')
 
         linelength = 35
-        ui_bgl.draw_image(ui_props.mouse_x + linelength, ui_props.mouse_y - linelength - ui_props.thumb_size,
-                          ui_props.thumb_size, ui_props.thumb_size, img, 1)
+        ui_bgl.draw_image(ui_props.mouse_x + linelength, ui_props.mouse_y - linelength - 50,
+                          50, 50, img, 1)
         ui_bgl.draw_line2d(ui_props.mouse_x, ui_props.mouse_y, ui_props.mouse_x + linelength,
                            ui_props.mouse_y - linelength, 2, white)
 
@@ -621,11 +623,9 @@ class LOLAssetBarOperator(Operator):
 
         ui_props.scrolloffset = 0
 
-
         if scene.luxcoreOL.on_search:
             assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
             scene.luxcoreOL.search_category = self.category
-
 
         if ui_props.assetbar_on:
             if not self.keep_running:
