@@ -42,8 +42,7 @@ from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
 from ...utils.errorlog import LuxCoreErrorLog
 
-# LOL_HOST_URL = "https://luxcorerender.org/lol"
-LOL_HOST_URL = "http://127.0.0.1/lol"
+LOL_HOST_URL = "https://luxcorerender.org/lol"
 
 download_threads = []
 
@@ -58,11 +57,11 @@ def download_table_of_contents(context):
             for asset in scene.luxcoreOL.model['assets']:
                 asset['downloaded'] = 0.0
 
-            with urllib.request.urlopen(LOL_HOST_URL + "/assets_scene.json", timeout=60) as request:
-                import json
-                scene.luxcoreOL.scene['assets'] = json.loads(request.read())
-                for asset in scene.luxcoreOL.scene['assets']:
-                    asset['downloaded'] = 0.0
+            # with urllib.request.urlopen(LOL_HOST_URL + "/assets_scene.json", timeout=60) as request:
+            #     import json
+            #     scene.luxcoreOL.scene['assets'] = json.loads(request.read())
+            #     for asset in scene.luxcoreOL.scene['assets']:
+            #         asset['downloaded'] = 0.0
 
             with urllib.request.urlopen(LOL_HOST_URL + "/assets_material.json", timeout=60) as request:
                 import json
@@ -123,14 +122,14 @@ def check_cache(args):
             if calc_hash(filepath) == asset["hash"]:
                 asset['downloaded'] = 100.0
 
-    assets = scene.luxcoreOL.scene['assets']
-    for asset in assets:
-        filename = asset["url"]
-        filepath = os.path.join(user_preferences.global_dir, "scene", filename[:-3] + 'blend')
-
-        if os.path.exists(filepath):
-            if calc_hash(filepath) == asset["hash"]:
-                asset['downloaded'] = 100.0
+    # assets = scene.luxcoreOL.scene['assets']
+    # for asset in assets:
+    #     filename = asset["url"]
+    #     filepath = os.path.join(user_preferences.global_dir, "scene", filename[:-3] + 'blend')
+    #
+    #     if os.path.exists(filepath):
+    #         if calc_hash(filepath) == asset["hash"]:
+    #             asset['downloaded'] = 100.0
 
     assets = scene.luxcoreOL.material['assets']
     for asset in assets:
@@ -209,12 +208,12 @@ class Downloader(threading.Thread):
 
         if tcom.passargs['thumbnail']:
             # Thumbnail  download
+            imagename = self.asset['url'][:-4] + '.jpg'
+            thumbnailpath = os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower(), "preview",
+                                         imagename)
+            url = LOL_HOST_URL + "/" + tcom.passargs['asset type'].lower() + "/preview/" + imagename
             try:
-                imagename = self.asset['url'][:-4] + '.jpg'
-                thumbnailpath = os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower(), "preview", imagename)
-
-                with urllib.request.urlopen(os.path.join(LOL_HOST_URL, tcom.passargs['asset type'].lower(), "preview", imagename), timeout=60) as url_handle, \
-                        open(thumbnailpath, "wb") as file_handle:
+                with urllib.request.urlopen(url, timeout=60) as url_handle, open(thumbnailpath, "wb") as file_handle:
                     file_handle.write(url_handle.read())
 
                 imgname = self.asset['thumbnail']
@@ -236,8 +235,7 @@ class Downloader(threading.Thread):
 
             with tempfile.TemporaryDirectory() as temp_dir_path:
                 temp_zip_path = os.path.join(temp_dir_path, filename)
-                # print(temp_zip_path)
-                url = os.path.join(LOL_HOST_URL, tcom.passargs['asset type'].lower(), filename)
+                url = LOL_HOST_URL + "/" + tcom.passargs['asset type'].lower() + "/" + filename
                 try:
                     print("Downloading:", url)
 
