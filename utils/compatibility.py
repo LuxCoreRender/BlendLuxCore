@@ -266,3 +266,12 @@ def update_glass_disney_add_film_sockets(node_tree):
         
         ThinFilmCoating.init(node)
         print('Updated node "%s" in tree %s to new version' % (node.name, node_tree.name))
+
+
+def update_invert_add_maximum_input(node_tree):
+    # commit 4fcce04f9c51dce990e2480810265c1f1b13c8c5
+
+    for node in find_nodes(node_tree, "LuxCoreNodeTexInvert", False):
+        if "Maximum" not in node.inputs:
+            node.add_input("LuxCoreSocketFloatPositive", "Maximum", 1)
+            print('Updated invert node "%s" in tree %s to new version' % (node.name, node_tree.name))
