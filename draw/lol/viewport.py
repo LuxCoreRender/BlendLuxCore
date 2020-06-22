@@ -265,7 +265,6 @@ def update_ui_size(context, area, region):
     ui_scale = bpy.context.preferences.view.ui_scale
 
     assetbar_props.margin = assetbar_props.bl_rna.properties['margin'].default * ui_scale
-    ui_props.thumb_size = user_preferences.thumb_size * ui_scale
 
     reg_multiplier = 1
     if not bpy.context.preferences.system.use_region_overlap:

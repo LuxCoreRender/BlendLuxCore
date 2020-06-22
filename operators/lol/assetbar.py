@@ -748,6 +748,7 @@ class LOLAssetBarOperator(Operator):
             mx = event.mouse_region_x
             my = event.mouse_region_y
 
+
             if ui_props.dragging and not ui_bgl.mouse_in_asset_bar(context, mx, my):
                 # and my < r.height - assetbar_props.height \
                 # and mx > 0 and mx < r.width and my > 0:
@@ -772,6 +773,14 @@ class LOLAssetBarOperator(Operator):
 
             if not ui_bgl.mouse_in_asset_bar(context, mx, my):
                 return {'PASS_THROUGH'}
+
+            if event.ctrl and ui_bgl.mouse_in_asset_bar(context, mx, my):
+                if event.type == 'WHEELDOWNMOUSE':
+                    ui_props.thumb_size = min(256, ui_props.thumb_size + 8)
+
+                elif event.type == 'WHEELUPMOUSE':
+                    ui_props.thumb_size = max(48, ui_props.thumb_size - 8)
+                return {'RUNNING_MODAL'}
 
             if (event.type == 'WHEELDOWNMOUSE') and len(assets) - ui_props.scrolloffset > (
                     assetbar_props.wcount * assetbar_props.hcount):
