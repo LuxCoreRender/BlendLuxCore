@@ -31,6 +31,7 @@ def timer_update():
     if len(utils.download_threads) == 0:
         return None
 
+    running = 0
     for threaddata in utils.download_threads:
         thread, asset, tcom = threaddata
         scene = bpy.context.scene
@@ -57,6 +58,12 @@ def timer_update():
                     area.tag_redraw()
 
                 return None
+        else:
+            if thread.is_alive():
+                running = running + 1
+            elif running < 10:
+                running = running + 1
+                thread.start()
 
         if not tcom.passargs['thumbnail']:
             for a in assets:

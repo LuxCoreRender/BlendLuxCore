@@ -175,7 +175,6 @@ def download_file(asset_type, asset, location, rotation, target_object, target_s
         asset_data = asset.to_dict()
 
         downloadthread = Downloader(asset_data, tcom)
-        downloadthread.start()
 
         download_threads.append([downloadthread, asset_data, tcom])
         bpy.app.timers.register(timer_update)
@@ -484,7 +483,6 @@ def download_thumbnail(self, context, asset, index):
         tcom.passargs['asset type'] = ui_props.asset_type
 
         downloadthread = Downloader(asset, tcom)
-        downloadthread.start()
 
         download_threads.append([downloadthread, asset, tcom])
         bpy.app.timers.register(timer_update)
@@ -545,6 +543,9 @@ def load_previews(context, assets):
                     img.reload()
                 img.colorspace_settings.name = 'Linear'
             else:
+                if imgname in bpy.data.images:
+                    img = bpy.data.images[imgname]
+                    bpy.data.images.remove(img)
                 # print('Thumbnail not cached: ', imgname)
                 download_thumbnail(None, context, asset, i)
 
