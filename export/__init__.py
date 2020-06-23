@@ -333,13 +333,9 @@ class Exporter(object):
                 import traceback
                 traceback.print_exc()
                 LuxCoreErrorLog.add_error(error)
-                # Probably no light source, save ourselves by adding one (otherwise a crash happens)
-                props = pyluxcore.Properties()
-                props.Set(pyluxcore.Property("scene.lights.__SAVIOR__.type", "constantinfinite"))
-                props.Set(pyluxcore.Property("scene.lights.__SAVIOR__.color", [0, 0, 0]))
-                luxcore_scene.Parse(props)
-                # Try again
-                session.EndSceneEdit()
+                print("Fatal error, stopping session.")
+                session.Stop()  # TODO not sure if this works
+                raise
 
             if session.IsInPause():
                 session.Resume()
