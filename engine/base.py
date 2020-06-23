@@ -56,11 +56,14 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
-        if getattr(self, "session", None):
-            if not self.is_preview:
-                print("[Engine] del: stopping session")
-            self.session.Stop()
-            del self.session
+        try:
+            if getattr(self, "session", None):
+                if not self.is_preview:
+                    print("[Engine] del: stopping session")
+                self.session.Stop()
+                del self.session
+        except ReferenceError:
+            print("[Engine] del: RenderEngine struct was already deleted")
 
     def log_listener(self, msg):
         if "Direct light sampling cache entries" in msg:
