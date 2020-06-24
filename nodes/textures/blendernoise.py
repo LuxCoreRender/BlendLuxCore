@@ -3,6 +3,7 @@ from bpy.props import EnumProperty, FloatProperty, IntProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
 from ...utils import node as utils_node
+from ...ui import icons
 
 
 class LuxCoreNodeTexBlenderNoise(bpy.types.Node, LuxCoreNodeTexture):
@@ -18,8 +19,9 @@ class LuxCoreNodeTexBlenderNoise(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
 
     def draw_buttons(self, context, layout):
+        layout.label(text="Fully Random!", icon=icons.WARNING)
+
         layout.prop(self, "noise_depth")
-        layout.separator()
         column = layout.column(align=True)
         column.prop(self, "bright")
         column.prop(self, "contrast")

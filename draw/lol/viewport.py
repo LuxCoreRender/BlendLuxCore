@@ -33,7 +33,8 @@ import mathutils
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
 from os.path import basename, dirname
-from ... import utils
+from ...utils import get_addon_preferences
+from ...utils.lol import utils as utils
 
 
 def draw_downloader(x, y, percent=0, img=None):
@@ -209,18 +210,19 @@ def draw_text(text, x, y, size, color=(1, 1, 1, 0.5)):
     blf.draw(font_id, text)
 
 
-def update_ui_size(context, area, region):
+def init_ui_size(context, area, region):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
-    assets = scene.luxcoreOL['assets']
-    if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+    assetbar_props = ui_props.assetbar
 
-    user_preferences = utils.get_addon_preferences(context)
+    # assets = utils.get_search_props(context)
+    # if scene.luxcoreOL.on_search:
+    #     assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
+    user_preferences = get_addon_preferences(context)
     ui_scale = bpy.context.preferences.view.ui_scale
 
-    ui_props.margin = ui_props.bl_rna.properties['margin'].default * ui_scale
+    assetbar_props.margin = assetbar_props.bl_rna.properties['margin'].default * ui_scale
     ui_props.thumb_size = user_preferences.thumb_size * ui_scale
 
     reg_multiplier = 1
@@ -229,26 +231,77 @@ def update_ui_size(context, area, region):
 
     for r in area.regions:
         if r.type == 'TOOLS':
-            ui_props.bar_x = r.width * reg_multiplier + ui_props.margin + ui_props.bar_x_offset * ui_scale
+            assetbar_props.start = r.width * reg_multiplier
+            assetbar_props.x = r.width * reg_multiplier + assetbar_props.margin + assetbar_props.x_offset * ui_scale
         elif r.type == 'UI':
-            ui_props.bar_end = r.width * reg_multiplier + 100 * ui_scale
+            assetbar_props.end = r.width * reg_multiplier + 100 * ui_scale
 
-    ui_props.bar_width = region.width - ui_props.bar_x - ui_props.bar_end
-    ui_props.wcount = math.floor(
-        (ui_props.bar_width - 2 * ui_props.drawoffset) / (ui_props.thumb_size + ui_props.margin))
+    assetbar_props.width = region.width - assetbar_props.x - assetbar_props.end
+    assetbar_props.wcount = math.floor(
+        (assetbar_props.width - 2 * assetbar_props.drawoffset) / (ui_props.thumb_size + assetbar_props.margin))
 
-    if assets != None and ui_props.wcount > 0:
-        ui_props.hcount = min(user_preferences.max_assetbar_rows, math.ceil(len(assets) / ui_props.wcount))
+    assetbar_props.hcount = 1
+    assetbar_props.height = (ui_props.thumb_size + assetbar_props.margin) * assetbar_props.hcount + assetbar_props.margin
+    assetbar_props.y = region.height - assetbar_props.y_offset * ui_scale
+
+    ui_props.reports_y = assetbar_props.y - assetbar_props.height - 100
+    ui_props.reports_x = assetbar_props.x
+
+    ui_props.rating_x = assetbar_props.x
+    ui_props.rating_y = assetbar_props.y - assetbar_props.height
+
+
+def update_ui_size(context, area, region):
+    scene = context.scene
+    ui_props = scene.luxcoreOL.ui
+    assetbar_props = ui_props.assetbar
+
+    assets = utils.get_search_props(context)
+    if scene.luxcoreOL.on_search:
+        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+
+    user_preferences = get_addon_preferences(context)
+
+    ui_scale = bpy.context.preferences.view.ui_scale
+
+    assetbar_props.margin = assetbar_props.bl_rna.properties['margin'].default * ui_scale
+
+    reg_multiplier = 1
+    if not bpy.context.preferences.system.use_region_overlap:
+        reg_multiplier = 0
+
+    for r in area.regions:
+        if r.type == 'TOOLS':
+            assetbar_props.start = r.width * reg_multiplier
+            assetbar_props.x = r.width * reg_multiplier + assetbar_props.margin + assetbar_props.x_offset * ui_scale
+        elif r.type == 'UI':
+            assetbar_props.end = r.width * reg_multiplier + 100 * ui_scale
+
+    if assetbar_props.height < ui_props.thumb_size + 2 * assetbar_props.margin:
+        assetbar_props.height = ui_props.thumb_size + 2 * assetbar_props.margin
+
+    if region.height - assetbar_props.y_offset - assetbar_props.height < 0:
+        assetbar_props.y_offset = region.height - assetbar_props.height
+
+    if assetbar_props.width < ui_props.thumb_size + 2*assetbar_props.margin + assetbar_props.drawoffset:
+        assetbar_props.width = region.width - assetbar_props.end - assetbar_props.start
+
+    if (assetbar_props.start + assetbar_props.x_offset + assetbar_props.width) > region.width - assetbar_props.end:
+        assetbar_props.x_offset = region.width - assetbar_props.end - assetbar_props.width
+
+        if (assetbar_props.start + assetbar_props.x_offset + assetbar_props.width) > region.width - assetbar_props.end:
+            assetbar_props.width = region.width - assetbar_props.end - assetbar_props.start
+
+
+    assetbar_props.y = region.height - assetbar_props.y_offset * ui_scale
+
+    assetbar_props.wcount = math.floor(
+        (assetbar_props.width - 2 * assetbar_props.drawoffset) / (ui_props.thumb_size + assetbar_props.margin))
+
+    if assets != None and assetbar_props.wcount > 0:
+        assetbar_props.hcount = assetbar_props.height / (ui_props.thumb_size + 2*assetbar_props.margin)
     else:
-        ui_props.hcount = 1
-    ui_props.bar_height = (ui_props.thumb_size + ui_props.margin) * ui_props.hcount + ui_props.margin
-    ui_props.bar_y = region.height - ui_props.bar_y_offset * ui_scale
-
-    ui_props.reports_y = ui_props.bar_y - ui_props.bar_height - 100
-    ui_props.reports_x = ui_props.bar_x
-
-    ui_props.rating_x = ui_props.bar_x
-    ui_props.rating_y = ui_props.bar_y - ui_props.bar_height
+        assetbar_props.hcount = 1
 
 
 def get_largest_3dview():
@@ -286,9 +339,10 @@ def mouse_in_area(mx, my, x, y, w, h):
 def mouse_in_asset_bar(context, mx, my):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
+    assetbar_props = ui_props.assetbar
 
-    if ui_props.bar_y - ui_props.bar_height < my < ui_props.bar_y \
-            and ui_props.bar_x < mx < ui_props.bar_x + ui_props.bar_width:
+    if assetbar_props.y - assetbar_props.height < my < assetbar_props.y \
+            and assetbar_props.x < mx < assetbar_props.x + assetbar_props.width:
         return True
     else:
         return False
@@ -304,23 +358,24 @@ def mouse_in_region(region, mx, my):
 def get_asset_under_mouse(context, mousex, mousey):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
+    assetbar_props = ui_props.assetbar
 
-    assets = scene.luxcoreOL.get('assets')
+    assets = utils.get_search_props(context)
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
     if assets is not None:
-        h_draw = min(ui_props.hcount, math.ceil(len(assets) / ui_props.wcount))
+        h_draw = min(assetbar_props.hcount, math.ceil(len(assets) / assetbar_props.wcount))
         for b in range(0, h_draw):
-            w_draw = min(ui_props.wcount, len(assets) - b * ui_props.wcount - ui_props.scrolloffset)
+            w_draw = min(assetbar_props.wcount, len(assets) - b * assetbar_props.wcount - ui_props.scrolloffset)
             for a in range(0, w_draw):
-                x = ui_props.bar_x + a * (ui_props.margin + ui_props.thumb_size) + ui_props.margin + ui_props.drawoffset
-                y = ui_props.bar_y - ui_props.margin - (ui_props.thumb_size + ui_props.margin) * (b + 1)
+                x = assetbar_props.x + a * (assetbar_props.margin + ui_props.thumb_size) + assetbar_props.margin + assetbar_props.drawoffset
+                y = assetbar_props.y - assetbar_props.margin - (ui_props.thumb_size + assetbar_props.margin) * (b + 1)
                 w = ui_props.thumb_size
                 h = ui_props.thumb_size
 
                 if x < mousex < x + w and y < mousey < y + h:
-                    return a + ui_props.wcount * b + ui_props.scrolloffset
+                    return a + assetbar_props.wcount * b + ui_props.scrolloffset
     return -3
 
 def mouse_raycast(context, mx, my):

@@ -29,13 +29,10 @@ class LuxCoreAddonPreferences(AddonPreferences):
         subtype='DIR_PATH', default=lol_utils.get_default_directory(), update=lol_utils.save_prefs
     )
 
-    project_subdir: StringProperty(
-        name="Project Assets Subdirectory", description="where data will be stored for individual projects",
-        subtype='DIR_PATH', default="model",
-    )
     max_assetbar_rows: IntProperty(name="Max Assetbar Rows", description="max rows of assetbar in the 3d view",
                                    default=1, min=0, max=20)
     thumb_size: IntProperty(name="Assetbar Thumbnail Size", default=96, min=-1, max=256)
+    use_library: BoolProperty(name="Use LuxCore Online Library", default=True)
 
     def draw(self, context):
         layout = self.layout
@@ -69,7 +66,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
         col.label(text="LuxCore Online Library (LOL) Preferences:")
         col = layout.column()
 
-        col.prop(self, "global_dir")
-        col.prop(self, "project_subdir")
-        col.prop(self, "thumb_size")
-        col.prop(self, "max_assetbar_rows")
+        col.prop(self, "use_library")
+        if self.use_library:
+            col.prop(self, "global_dir")
+            col.prop(self, "thumb_size")

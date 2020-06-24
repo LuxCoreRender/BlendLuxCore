@@ -65,16 +65,6 @@ def draw_callback_2d(self, context):
 
 
 def draw_callback_2d_progress(self, context):
-    green = (.2, 1, .2, .3)
-    offset = 0
-    row_height = 35
-
-    scene = context.scene
-    ui_props = scene.luxcoreOL.ui
-    assets = scene.luxcoreOL['assets']
-    if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
-
     # x = ui_props.reports_x
     # y = ui_props.reports_y
     index = 0
@@ -98,7 +88,8 @@ def draw_callback_2d_progress(self, context):
                 loc = view3d_utils.location_3d_to_region_2d(bpy.context.region, bpy.context.space_data.region_3d,
                                                             d['location'])
                 if loc is not None:
-                    ui_bgl.draw_image(loc[0], loc[1], 50, 50, img, 0.5)
+                    ui_bgl.draw_downloader(loc[0], loc[1], tcom.progress, img)
+
         # else:
         #     ui_bgl.draw_progress(x, y - index * 30, text='downloading %s' % asset_data['name'],
         #                   percent=tcom.progress)
@@ -119,6 +110,7 @@ def draw_callback_3d_progress(self, context):
     # 'star trek' mode gets here, blocked by now ;)
     if not utils.guard_from_crash():
         return
+    ui_props = context.scene.luxcoreOL.ui
 
     for threaddata in utils.download_threads:
         tcom = threaddata[2]
@@ -126,14 +118,15 @@ def draw_callback_3d_progress(self, context):
             continue
 
         asset_data = threaddata[1]
-        bbox_min = Vector(asset_data["bbox_min"])
-        bbox_max = Vector(asset_data["bbox_max"])
-        bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
+        if ui_props.asset_type == 'MODEL':
+            bbox_min = Vector(asset_data["bbox_min"])
+            bbox_max = Vector(asset_data["bbox_max"])
+            bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
 
-        if tcom.passargs.get('downloaders'):
-            for d in tcom.passargs['downloaders']:
-                ui_bgl.draw_bbox(d['location'], d['rotation'], bbox_min-bbox_center, bbox_max-bbox_center,
-                               progress=tcom.progress)
+            if tcom.passargs.get('downloaders'):
+                for d in tcom.passargs['downloaders']:
+                    ui_bgl.draw_bbox(d['location'], d['rotation'], bbox_min-bbox_center, bbox_max-bbox_center,
+                                   progress=tcom.progress)
 
 
 def draw_callback_3d(self, context):
@@ -155,13 +148,13 @@ def draw_callback_3d(self, context):
 def draw_callback_2d_search(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
-    assets = scene.luxcoreOL['assets']
+    assetbar_props = scene.luxcoreOL.ui.assetbar
+    assets = utils.get_search_props(context)
 
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
 
     region = self.region
     hcolor = (1, 1, 1, .07)
@@ -173,58 +166,57 @@ def draw_callback_2d_search(self, context):
     # background of asset bar
 
     if not ui_props.dragging:
-        if len(assets) == 0:
+        if len(assets) == 0 or assetbar_props.wcount == 0:
             return
 
-        h_draw = min(ui_props.hcount, math.ceil(len(assets) / ui_props.wcount))
+        h_draw = min(assetbar_props.hcount, math.ceil(len(assets) / assetbar_props.wcount))
 
-        if ui_props.wcount > len(assets):
-            bar_width = len(assets) * (ui_props.thumb_size + ui_props.margin) + ui_props.margin
+        if assetbar_props.wcount > len(assets):
+            bar_width = len(assets) * (ui_props.thumb_size + assetbar_props.margin) + assetbar_props.margin
         else:
-            bar_width = ui_props.bar_width
+            bar_width = assetbar_props.width
 
-        row_height = ui_props.thumb_size + ui_props.margin
-        ui_bgl.draw_rect(ui_props.bar_x, ui_props.bar_y - ui_props.bar_height, bar_width,
-                         ui_props.bar_height, hcolor)
+        row_height = ui_props.thumb_size + assetbar_props.margin
+        ui_bgl.draw_rect(assetbar_props.x, assetbar_props.y - assetbar_props.height, bar_width,
+                         assetbar_props.height, hcolor)
 
         if len(assets) != 0:
-            if ui_props.scrolloffset > 0 or ui_props.wcount * ui_props.hcount < len(assets):
-                ui_props.drawoffset = 35
+            if ui_props.scrolloffset > 0 or assetbar_props.wcount * assetbar_props.hcount < len(assets):
+                assetbar_props.drawoffset = 25
             else:
-                ui_props.drawoffset = 0
+                assetbar_props.drawoffset = 0
 
             # Draw scroll arrows
-            if ui_props.wcount * ui_props.hcount < len(assets):
-                arrow_y = ui_props.bar_y - int((ui_props.bar_height + ui_props.thumb_size) / 2) + ui_props.margin
+            if assetbar_props.wcount * assetbar_props.hcount < len(assets):
+                arrow_y = assetbar_props.y - int((assetbar_props.height + ui_props.thumb_size) / 2) + assetbar_props.margin
                 if ui_props.scrolloffset > 0:
 
                     if ui_props.active_index == -2:
-                        ui_bgl.draw_rect(ui_props.bar_x, ui_props.bar_y - ui_props.bar_height, 25,
-                                         ui_props.bar_height, highlight)
+                        ui_bgl.draw_rect(assetbar_props.x, assetbar_props.y - assetbar_props.height, 25,
+                                         assetbar_props.height, highlight)
 
-                    ui_bgl.draw_image(ui_props.bar_x, arrow_y, 25,
+                    ui_bgl.draw_image(assetbar_props.x, arrow_y, 25,
                                       ui_props.thumb_size, utils.get_thumbnail('arrow_left.png'), 1)
 
-                if len(assets) - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount):
+                if len(assets) - ui_props.scrolloffset > (assetbar_props.wcount * assetbar_props.hcount):
                     if ui_props.active_index == -1:
-                        ui_bgl.draw_rect(ui_props.bar_x + ui_props.bar_width - 25,
-                                         ui_props.bar_y - ui_props.bar_height, 25,
-                                         ui_props.bar_height,
-                                         highlight)
+                        ui_bgl.draw_rect(assetbar_props.x + assetbar_props.width - 25,
+                                         assetbar_props.y - assetbar_props.height, 25,
+                                         assetbar_props.height, highlight)
 
-                    ui_bgl.draw_image(ui_props.bar_x + ui_props.bar_width - 25, arrow_y, 25,
+                    ui_bgl.draw_image(assetbar_props.x + assetbar_props.width - 25, arrow_y, 25,
                                       ui_props.thumb_size, utils.get_thumbnail('arrow_right.png'), 1)
 
             # Draw asset thumbnails
             for b in range(0, h_draw):
-                w_draw = min(ui_props.wcount, len(assets) - b * ui_props.wcount - ui_props.scrolloffset)
+                w_draw = min(assetbar_props.wcount, len(assets) - b * assetbar_props.wcount - ui_props.scrolloffset)
 
-                y = ui_props.bar_y - (b + 1) * (row_height)
+                y = assetbar_props.y - (b + 1) * (row_height)
                 for a in range(0, w_draw):
-                    x = ui_props.bar_x + a * (
-                            ui_props.margin + ui_props.thumb_size) + ui_props.margin + ui_props.drawoffset
+                    x = assetbar_props.x + a * (
+                            assetbar_props.margin + ui_props.thumb_size) + assetbar_props.margin + assetbar_props.drawoffset
 
-                    index = a + ui_props.scrolloffset + b * ui_props.wcount
+                    index = a + ui_props.scrolloffset + b * assetbar_props.wcount
                     iname = assets[index]['thumbnail']
                     img = bpy.data.images.get(iname)
 
@@ -240,17 +232,15 @@ def draw_callback_2d_search(self, context):
                     if img is not None:
                         ui_bgl.draw_image(x, y, w, w, img, 1, crop=crop)
                         if index == ui_props.active_index:
-                            ui_bgl.draw_rect(x - ui_props.highlight_margin, y - ui_props.highlight_margin,
-                                             w + 2 * ui_props.highlight_margin, w + 2 * ui_props.highlight_margin,
+                            ui_bgl.draw_rect(x - assetbar_props.highlight_margin, y - assetbar_props.highlight_margin,
+                                             w + 2 * assetbar_props.highlight_margin, w + 2 * assetbar_props.highlight_margin,
                                              highlight)
                     else:
                         ui_bgl.draw_rect(x, y, w, h, white)
 
+                    if assets[index]['downloaded'] > 0:
+                        ui_bgl.draw_rect(x - assetbar_props.highlight_margin, y - assetbar_props.highlight_margin, int(w * assets[index]['downloaded'] / 100.0), 2, green)
     # TODO: Transfer to LOL
-
-    #                 result = search_results[index]
-    #                 if result['downloaded'] > 0:
-    #                     ui_bgl.draw_rect(x, y - 2, int(w * result['downloaded'] / 100.0), 2, green)
     #
     #                 if (result.get('can_download', True)) == 0:
     #                     img = utils.get_thumbnail('locked.png')
@@ -264,10 +254,10 @@ def draw_callback_2d_search(self, context):
     # TODO: Transfer to LOL
 
     #     s = bpy.context.scene
-    #     props = utils.get_search_props()
+    #     props = utils.get_search_props(context)
     #     # if props.report != '' and props.is_searching or props.search_error:
-    #     #     ui_bgl.draw_text(props.report, ui_props.bar_x,
-    #     #                      ui_props.bar_y - 15 - ui_props.margin - ui_props.bar_height, 15)
+    #     #     ui_bgl.draw_text(props.report, assetbar_props.x,
+    #     #                      assetbar_props.y - 15 - assetbar_props.margin - assetbar_props.height, 15)
     #
     #     props = s.blenderkitUI
     #     if ui_props.draw_tooltip:
@@ -323,8 +313,8 @@ def draw_callback_2d_search(self, context):
             img = utils.get_thumbnail('thumbnail_notready.jpg')
 
         linelength = 35
-        ui_bgl.draw_image(ui_props.mouse_x + linelength, ui_props.mouse_y - linelength - ui_props.thumb_size,
-                          ui_props.thumb_size, ui_props.thumb_size, img, 1)
+        ui_bgl.draw_image(ui_props.mouse_x + linelength, ui_props.mouse_y - linelength - 50,
+                          50, 50, img, 1)
         ui_bgl.draw_line2d(ui_props.mouse_x, ui_props.mouse_y, ui_props.mouse_x + linelength,
                            ui_props.mouse_y - linelength, 2, white)
 
@@ -601,25 +591,40 @@ class LOLAssetBarOperator(Operator):
     def invoke(self, context, event):
         scene = context.scene
         ui_props = scene.luxcoreOL.ui
+        assetbar_props = ui_props.assetbar
+
+        user_preferences = get_addon_preferences(context)
+
+        if not user_preferences.use_library:
+            return {'CANCELLED'}
+
+        ui_props.drag_init = False
+        ui_props.dragging = False
+
+        assetbar_props.drag_init = False
+        assetbar_props.dragging = False
+        assetbar_props.resize_x_left = False
+        assetbar_props.resize_x_right = False
+        assetbar_props.resize_y_top = False
+        assetbar_props.resize_y_down = False
 
         scene.luxcoreOL.search_category = ""
         scene.luxcoreOL.on_search = self.do_search
-        if not ui_props.ToC_loaded:
-            # TODO might want to check if the download failed, e.g. because of missing internet connection
-            utils.download_table_of_contents(context.scene)
-            scene.luxcoreOL.ui.ToC_loaded = True
 
-        assets = scene.luxcoreOL.get('assets')
+        if not ui_props.ToC_loaded:
+            if not utils.download_table_of_contents(context):
+                return {'CANCELLED'}
+
+        assets = utils.get_search_props(context)
 
         if not ui_props.thumbnails_loaded:
             utils.load_previews(context, assets)
             ui_props.thumbnails_loaded = True
 
-
         ui_props.scrolloffset = 0
 
         if scene.luxcoreOL.on_search:
-            assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
+            assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
             scene.luxcoreOL.search_category = self.category
 
         if ui_props.assetbar_on:
@@ -634,6 +639,8 @@ class LOLAssetBarOperator(Operator):
 
         if context.area.type != 'VIEW_3D':
             self.report({'WARNING'}, "View3D not found, cannot run operator")
+            ui_props.turn_off = True
+            ui_props.assetbar_on = False
             return {'CANCELLED'}
 
         # the arguments we pass the the callback
@@ -647,17 +654,19 @@ class LOLAssetBarOperator(Operator):
         for r in self.area.regions:
             if r.type == 'WINDOW':
                 self.region = r
+                break
 
         global active_window, active_area, active_region
         active_window = self.window
         active_area = self.area
         active_region = self.region
 
+        ui_bgl.init_ui_size(context, active_area, active_region)
+
         self._handle_2d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_2d, args, 'WINDOW', 'POST_PIXEL')
         self._handle_2d_progress = bpy.types.SpaceView3D.draw_handler_add(draw_callback_2d_progress, args, 'WINDOW', 'POST_PIXEL')
         self._handle_3d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d, args, 'WINDOW', 'POST_VIEW')
         self._handle_3d_progress = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d_progress, args, 'WINDOW', 'POST_VIEW')
-
 
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
@@ -676,12 +685,17 @@ class LOLAssetBarOperator(Operator):
     def modal(self, context, event):
         scene = context.scene
         ui_props = context.scene.luxcoreOL.ui
+        assetbar_props = ui_props.assetbar
 
         user_preferences = get_addon_preferences(context)
-        assets = scene.luxcoreOL.get('assets')
+        assets = utils.get_search_props(context)
+        context.window.cursor_set("DEFAULT")
+
+        if not user_preferences.use_library:
+            return {'CANCELLED'}
 
         if scene.luxcoreOL.on_search:
-            assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == scene.luxcoreOL.search_category]
+            assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
         areas = []
 
@@ -716,6 +730,9 @@ class LOLAssetBarOperator(Operator):
                 ui_props.assetbar_on = False
                 return {'CANCELLED'}
 
+        if not assetbar_props.wcount > 0:
+            ui_props.turn_off = True
+
         if ui_props.turn_off:
             ui_props.assetbar_on = False
             ui_props.turn_off = False
@@ -731,8 +748,12 @@ class LOLAssetBarOperator(Operator):
             mx = event.mouse_region_x
             my = event.mouse_region_y
 
-            if ui_props.dragging and not ui_bgl.mouse_in_asset_bar(context, mx, my):  # and my < r.height - ui_props.bar_height \
+
+            if ui_props.dragging and not ui_bgl.mouse_in_asset_bar(context, mx, my):
+                # and my < r.height - assetbar_props.height \
                 # and mx > 0 and mx < r.width and my > 0:
+                context.window.cursor_set("NONE")
+
                 sprops = bpy.context.scene.luxcoreOL.model
                 if event.type == 'WHEELUPMOUSE':
                     sprops.offset_rotation_amount += sprops.offset_rotation_step
@@ -753,18 +774,26 @@ class LOLAssetBarOperator(Operator):
             if not ui_bgl.mouse_in_asset_bar(context, mx, my):
                 return {'PASS_THROUGH'}
 
+            if event.ctrl and ui_bgl.mouse_in_asset_bar(context, mx, my):
+                if event.type == 'WHEELDOWNMOUSE':
+                    ui_props.thumb_size = min(256, ui_props.thumb_size + 8)
+
+                elif event.type == 'WHEELUPMOUSE':
+                    ui_props.thumb_size = max(48, ui_props.thumb_size - 8)
+                return {'RUNNING_MODAL'}
+
             if (event.type == 'WHEELDOWNMOUSE') and len(assets) - ui_props.scrolloffset > (
-                    ui_props.wcount * ui_props.hcount):
-                if ui_props.hcount > 1:
-                    ui_props.scrolloffset += ui_props.wcount
+                    assetbar_props.wcount * assetbar_props.hcount):
+                if assetbar_props.hcount > 1:
+                    ui_props.scrolloffset += assetbar_props.wcount
                 else:
                     ui_props.scrolloffset += 1
-                if len(assets) - ui_props.scrolloffset < (ui_props.wcount * ui_props.hcount):
-                    ui_props.scrolloffset = len(assets) - (ui_props.wcount * ui_props.hcount)
+                if len(assets) - ui_props.scrolloffset < (assetbar_props.wcount * assetbar_props.hcount):
+                    ui_props.scrolloffset = len(assets) - (assetbar_props.wcount * assetbar_props.hcount)
 
             if event.type == 'WHEELUPMOUSE' and ui_props.scrolloffset > 0:
-                if ui_props.hcount > 1:
-                    ui_props.scrolloffset -= ui_props.wcount
+                if assetbar_props.hcount > 1:
+                    ui_props.scrolloffset -= assetbar_props.wcount
                 else:
                     ui_props.scrolloffset -= 1
                 if ui_props.scrolloffset < 0:
@@ -773,7 +802,6 @@ class LOLAssetBarOperator(Operator):
             return {'RUNNING_MODAL'}
 
         if event.type == 'MOUSEMOVE':  # Apply
-
             region = self.region
             mx = event.mouse_region_x
             my = event.mouse_region_y
@@ -781,16 +809,68 @@ class LOLAssetBarOperator(Operator):
             ui_props.mouse_x = mx
             ui_props.mouse_y = my
 
-            #if ui_props.dragging_rating or ui_props.rating_menu_on:
-            #    res = interact_rating(region, mx, my, event)
-            #    if res == True:
-            #        return {'RUNNING_MODAL'}
+            if assetbar_props.resize_x_right:
+                if (assetbar_props.start + assetbar_props.x_offset + assetbar_props.resize_wh + mx) <= region.width - assetbar_props.end:
+                    assetbar_props.width = max(assetbar_props.resize_wh + mx, 2*assetbar_props.margin + ui_props.thumb_size + 50)
+                context.window.cursor_set("MOVE_X")
+                return {'RUNNING_MODAL'}
 
+            elif assetbar_props.resize_x_left:
+                if assetbar_props.resize_wh - assetbar_props.resize_xy - mx >= 2 * assetbar_props.margin + ui_props.thumb_size + 50:
+                    assetbar_props.x_offset = assetbar_props.resize_xy + mx
+                    assetbar_props.width = assetbar_props.resize_wh - assetbar_props.x_offset
+                context.window.cursor_set("MOVE_X")
+                return {'RUNNING_MODAL'}
+
+            if assetbar_props.resize_y_top:
+                if region.height - assetbar_props.resize_xy + my - assetbar_props.resize_wh >= 2*assetbar_props.margin + ui_props.thumb_size:
+                    assetbar_props.y_offset = assetbar_props.resize_xy - my
+                    assetbar_props.height = region.height - assetbar_props.y_offset - assetbar_props.resize_wh
+
+                context.window.cursor_set("MOVE_Y")
+                return {'RUNNING_MODAL'}
+
+            elif assetbar_props.resize_y_down:
+                assetbar_props.height = max(assetbar_props.resize_wh - my, 2*assetbar_props.margin + ui_props.thumb_size)
+                context.window.cursor_set("MOVE_Y")
+                return {'RUNNING_MODAL'}
+
+            if ui_bgl.mouse_in_asset_bar(context, mx, my):
+                if (mx - assetbar_props.x_offset - assetbar_props.start - assetbar_props.width + 1 <= 0) and \
+                        (mx - assetbar_props.x_offset - assetbar_props.start - assetbar_props.width + 1) >= -2:
+                    context.window.cursor_set("MOVE_X")
+
+                if (mx - assetbar_props.x_offset-assetbar_props.start - 1) <= 2 and \
+                        (mx - assetbar_props.x_offset-assetbar_props.start - 1) >= 0:
+                    context.window.cursor_set("MOVE_X")
+
+                if (region.height - assetbar_props.y_offset - my - 1) >= 0 and \
+                        (region.height - assetbar_props.y_offset - my - 1) <= 2:
+                    context.window.cursor_set("MOVE_Y")
+
+                if (region.height - assetbar_props.y_offset - my - assetbar_props.height + 1) <= 0 and \
+                        (region.height - assetbar_props.y_offset - my - assetbar_props.height + 1) >= -2:
+                    context.window.cursor_set("MOVE_Y")
+
+            # Start dragging an asset into the 3D scene
             if ui_props.drag_init:
                 ui_props.drag_length += 1
                 if ui_props.drag_length > 0:
                     ui_props.dragging = True
                     ui_props.drag_init = False
+
+            # Init dragging the assetbar
+            if assetbar_props.drag_init:
+                if abs(assetbar_props.drag_x - ui_props.mouse_x) + abs(assetbar_props.drag_y - ui_props.mouse_y) > 0:
+                    assetbar_props.dragging = True
+                    assetbar_props.drag_init = False
+
+            # Dragging the assetbar
+            if assetbar_props.dragging:
+                context.window.cursor_set("HAND")
+                if (assetbar_props.start + assetbar_props.drag_x + ui_props.mouse_x + assetbar_props.width) <= region.width - assetbar_props.end:
+                    assetbar_props.x_offset = min(region.width - assetbar_props.end - assetbar_props.start - 2*assetbar_props.drawoffset - ui_props.thumb_size, assetbar_props.drag_x + ui_props.mouse_x)
+                assetbar_props.y_offset = min(region.height - assetbar_props.height, assetbar_props.drag_y - ui_props.mouse_y)
 
             if not (ui_props.dragging and ui_bgl.mouse_in_region(region, mx, my)) and not \
                     ui_bgl.mouse_in_asset_bar(context, mx, my):  #
@@ -801,14 +881,10 @@ class LOLAssetBarOperator(Operator):
                 ui_props.draw_drag_image = False
                 ui_props.draw_snapped_bounds = False
                 ui_props.draw_tooltip = False
-                bpy.context.window.cursor_set("DEFAULT")
                 return {'PASS_THROUGH'}
 
-
             if not ui_props.dragging:
-                bpy.context.window.cursor_set("DEFAULT")
-
-                if assets != None and ui_props.wcount * ui_props.hcount > len(assets) and ui_props.scrolloffset > 0:
+                if assets != None and assetbar_props.wcount * assetbar_props.hcount > len(assets) and ui_props.scrolloffset > 0:
                     ui_props.scrolloffset = 0
 
                 asset_search_index = ui_bgl.get_asset_under_mouse(context, mx, my)
@@ -824,17 +900,16 @@ class LOLAssetBarOperator(Operator):
                 else:
                     ui_props.draw_tooltip = False
 
-                #if mx > ui_props.bar_x + ui_props.bar_width - 50 and search_results_orig[
-                #    'count'] - ui_props.scrolloffset > (ui_props.wcount * ui_props.hcount) + 1:
-                #    ui_props.active_index = -1
-                #    return {'RUNNING_MODAL'}
+                if mx > assetbar_props.x + assetbar_props.width - 50 and len(assets) - ui_props.scrolloffset > (assetbar_props.wcount * assetbar_props.hcount) + 1:
+                    ui_props.active_index = -1
+                    return {'RUNNING_MODAL'}
 
-                if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:
+                if mx < assetbar_props.x + 50 and ui_props.scrolloffset > 0:
                     ui_props.active_index = -2
                     return {'RUNNING_MODAL'}
 
             else:
-                result = False
+                context.window.cursor_set("NONE")
                 if ui_props.dragging and ui_bgl.mouse_in_region(region, mx, my):
                     ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = ui_bgl.mouse_raycast(
                         context, mx, my)
@@ -861,6 +936,7 @@ class LOLAssetBarOperator(Operator):
             my = event.mouse_y - region.y
 
             if event.value == 'PRESS' and ui_bgl.mouse_in_asset_bar(context, mx, my):
+                #TODO: Implement context menu
                 #bpy.ops.wm.call_menu(name='OBJECT_MT_LOL_asset_menu')
                 return {'RUNNING_MODAL'}
 
@@ -870,40 +946,83 @@ class LOLAssetBarOperator(Operator):
             my = event.mouse_y - region.y
 
             ui_props = context.scene.luxcoreOL.ui
-            if event.value == 'PRESS' and ui_props.active_index > -1:
-                if ui_props.asset_type == 'MODEL' or ui_props.asset_type == 'MATERIAL':
-                    # check if asset is locked and let the user know in that case
-                    asset_search_index = ui_props.active_index
-                    asset_data = assets[asset_search_index]
-                    # if not asset_data['can_download']:
-                    #     message = 'Asset locked. Find out how to unlock Everything and ...'
-                    #     link_text = 'support all BlenderKit artists.'
-                    #     url = paths.get_bkit_url() + '/get-blenderkit/' + asset_data['id'] + '/?from_addon'
-                    #     bpy.ops.wm.blenderkit_url_dialog('INVOKE_REGION_WIN', url=url, message=message,
-                    #                                      link_text=link_text)
-                    #     return {'RUNNING_MODAL'}
-                    # go on with drag init
-                    ui_props.drag_init = True
-                    context.window.cursor_set("NONE")
-                    ui_props.draw_tooltip = False
-                    ui_props.drag_length = 0
+            if event.value == 'PRESS':
+                if (mx - assetbar_props.x_offset-assetbar_props.start - 1) <= 2 and \
+                        (mx - assetbar_props.x_offset-assetbar_props.start - 1) >= 0:
+                    assetbar_props.resize_x_left = True
+                    context.window.cursor_set("MOVE_X")
+                    assetbar_props.resize_xy = assetbar_props.x_offset - mx
+                    assetbar_props.resize_wh = assetbar_props.x_offset + assetbar_props.width
+                    return {'RUNNING_MODAL'}
 
-            if not ui_props.dragging and not ui_bgl.mouse_in_asset_bar(context, mx, my):
+                elif(mx - assetbar_props.x_offset - assetbar_props.start - assetbar_props.width + 1 <= 0) and \
+                        (mx - assetbar_props.x_offset - assetbar_props.start - assetbar_props.width + 1) >= -2:
+                    assetbar_props.resize_x_right = True
+                    assetbar_props.resize_wh = assetbar_props.width - mx
+                    context.window.cursor_set("MOVE_X")
+                    return {'RUNNING_MODAL'}
+
+                elif (region.height - assetbar_props.y_offset - my - 1) >= 0 and \
+                        (region.height - assetbar_props.y_offset - my - 1) <= 2:
+                    assetbar_props.resize_y_top = True
+                    context.window.cursor_set("MOVE_Y")
+                    assetbar_props.resize_xy = assetbar_props.y_offset + my
+                    assetbar_props.resize_wh = region.height - assetbar_props.y_offset - assetbar_props.height
+                    return {'RUNNING_MODAL'}
+
+                elif(region.height - assetbar_props.y_offset - my - assetbar_props.height + 1) <= 0 and \
+                        (region.height - assetbar_props.y_offset - my - assetbar_props.height + 1) >= -2:
+                    assetbar_props.resize_y_down = True
+                    context.window.cursor_set("MOVE_Y")
+                    assetbar_props.resize_wh = assetbar_props.height + my
+                    return {'RUNNING_MODAL'}
+
+                elif ui_props.active_index > -1:
+                    if ui_props.asset_type == 'MODEL' or ui_props.asset_type == 'MATERIAL':
+                        # check if asset is locked and let the user know in that case
+                        asset_search_index = ui_props.active_index
+                        asset_data = assets[asset_search_index]
+                        # if not asset_data['can_download']:
+                        #     message = 'Asset locked. Find out how to unlock Everything and ...'
+                        #     link_text = 'support all BlenderKit artists.'
+                        #     url = paths.get_bkit_url() + '/get-blenderkit/' + asset_data['id'] + '/?from_addon'
+                        #     bpy.ops.wm.blenderkit_url_dialog('INVOKE_REGION_WIN', url=url, message=message,
+                        #                                      link_text=link_text)
+                        #     return {'RUNNING_MODAL'}
+                        # go on with drag init
+                        ui_props.drag_init = True
+                        context.window.cursor_set("NONE")
+                        ui_props.draw_tooltip = False
+                        ui_props.drag_length = 0
+
+            if not ui_props.dragging and not ui_bgl.mouse_in_asset_bar(context, mx, my) and \
+                not assetbar_props.resize_x_left and not assetbar_props.resize_x_right and  \
+                not assetbar_props.resize_y_top and not assetbar_props.resize_y_down:
                 return {'PASS_THROUGH'}
 
             if event.value == 'RELEASE':  # Confirm
+                if assetbar_props.resize_x_left or assetbar_props.resize_x_right or \
+                        assetbar_props.resize_y_top or assetbar_props.resize_y_down:
+                    assetbar_props.resize_x_left = False
+                    assetbar_props.resize_x_right = False
+
+                    assetbar_props.resize_y_top = False
+                    assetbar_props.resize_y_down = False
+                    return {'RUNNING_MODAL'}
+
                 ui_props.drag_init = False
 
                 # scroll by a whole page
-                if mx > ui_props.bar_x + ui_props.bar_width - 50 and len(
-                        assets) - ui_props.scrolloffset > ui_props.wcount * ui_props.hcount:
-                    ui_props.scrolloffset = min(
-                        ui_props.scrolloffset + (ui_props.wcount * ui_props.hcount),
-                        len(assets) - ui_props.wcount * ui_props.hcount)
-                    return {'RUNNING_MODAL'}
-                if mx < ui_props.bar_x + 50 and ui_props.scrolloffset > 0:
-                    ui_props.scrolloffset = max(0, ui_props.scrolloffset - ui_props.wcount * ui_props.hcount)
-                    return {'RUNNING_MODAL'}
+                if ui_bgl.mouse_in_asset_bar(context, mx, my):
+                    if mx > assetbar_props.x + assetbar_props.width - 50 and len(
+                            assets) - ui_props.scrolloffset > assetbar_props.wcount * assetbar_props.hcount:
+                        ui_props.scrolloffset = min(
+                            ui_props.scrolloffset + (assetbar_props.wcount * assetbar_props.hcount),
+                            len(assets) - assetbar_props.wcount * assetbar_props.hcount)
+                        return {'RUNNING_MODAL'}
+                    if mx < assetbar_props.x + 50 and ui_props.scrolloffset > 0:
+                        ui_props.scrolloffset = max(0, ui_props.scrolloffset - assetbar_props.wcount * assetbar_props.hcount)
+                        return {'RUNNING_MODAL'}
 
                 # Drag-drop interaction
                 if ui_props.dragging and ui_bgl.mouse_in_region(region, mx, my):
@@ -929,10 +1048,10 @@ class LOLAssetBarOperator(Operator):
                         target_slot = ''
 
                     #TODO:_Implement Material drop
-                    # if ui_props.asset_type == 'MATERIAL':
-                    #     ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = mouse_raycast(
-                    #         context, mx, my)
-                    #
+                    if ui_props.asset_type == 'MATERIAL':
+                        ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = ui_bgl.mouse_raycast(
+                            context, mx, my)
+
                     #     if not ui_props.has_hit:
                     #         # this is last attempt to get object under mouse - for curves and other objects than mesh.
                     #         ui_props.dragging = False
@@ -945,24 +1064,24 @@ class LOLAssetBarOperator(Operator):
                     #             ui_props.has_hit = True
                     #         utils.selection_set(sel)
                     #
-                    #     if not ui_props.has_hit:
-                    #         return {'RUNNING_MODAL'}
-                    #
-                    #     else:
-                    #         # first, test if object can have material applied.
-                    #         # TODO add other types here if droppable.
-                    #         if object is not None and not object.is_library_indirect and object.type == 'MESH':
-                    #             target_object = object.name
-                    #             # create final mesh to extract correct material slot
-                    #             depsgraph = bpy.context.evaluated_depsgraph_get()
-                    #             object_eval = object.evaluated_get(depsgraph)
-                    #             temp_mesh = object_eval.to_mesh()
-                    #             target_slot = temp_mesh.polygons[face_index].material_index
-                    #             object_eval.to_mesh_clear()
-                    #         else:
-                    #             self.report({'WARNING'}, "Invalid or library object as input:")
-                    #             target_object = ''
-                    #             target_slot = ''
+                        if not ui_props.has_hit:
+                            return {'RUNNING_MODAL'}
+
+                        else:
+                            # first, test if object can have material applied.
+                            #TODO: add other types here if droppable.
+                            if object is not None and not object.is_library_indirect and object.type == 'MESH':
+                                target_object = object.name
+                                # create final mesh to extract correct material slot
+                                depsgraph = context.evaluated_depsgraph_get()
+                                object_eval = object.evaluated_get(depsgraph)
+                                temp_mesh = object_eval.to_mesh()
+                                target_slot = temp_mesh.polygons[face_index].material_index
+                                object_eval.to_mesh_clear()
+                            else:
+                                self.report({'WARNING'}, "Invalid or library object as input:")
+                                target_object = ''
+                                target_slot = ''
 
                 # Click interaction
                 else:
@@ -988,11 +1107,34 @@ class LOLAssetBarOperator(Operator):
                         loc = scene.cursor.location
                         rotation = scene.cursor.rotation_euler
 
-                    utils.load_asset(context, assets[asset_search_index], loc, rotation)
+                    utils.load_asset(context, assets[asset_search_index], loc, rotation, target_object, target_slot)
                     ui_props.dragging = False
                     return {'RUNNING_MODAL'}
             else:
                 return {'RUNNING_MODAL'}
+
+        if event.type == 'MIDDLEMOUSE':
+            region = self.region
+            mx = event.mouse_x - region.x
+            my = event.mouse_y - region.y
+            ui_props = context.scene.luxcoreOL.ui
+            assetbar_props = ui_props.assetbar
+
+            if ui_bgl.mouse_in_asset_bar(context, mx, my):
+                if event.value == 'PRESS':
+                    assetbar_props.drag_init = True
+                    assetbar_props.drag_x = assetbar_props.x_offset - mx
+                    assetbar_props.drag_y = assetbar_props.y_offset + my
+                    context.window.cursor_set("HAND")
+
+                elif event.value == 'RELEASE':
+                    assetbar_props.drag_init = False
+                    assetbar_props.dragging = False
+
+                return {'RUNNING_MODAL'}
+            else:
+                assetbar_props.drag_init = False
+                assetbar_props.dragging = False
 
         return {'PASS_THROUGH'}
 
@@ -1008,5 +1150,14 @@ class LOLAssetKillDownloadOperator(bpy.types.Operator):
     def execute(self, context):
         td = utils.download_threads[self.thread_index]
         utils.download_threads.remove(td)
+        scene = bpy.context.scene
+        assets = utils.get_search_props(context)
+
+        asset = td[1]
+        for a in assets:
+            if a['hash'] == asset['hash']:
+                a['downloaded'] = 0.0
+                break
+
         td[0].stop()
         return {'FINISHED'}

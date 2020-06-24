@@ -14,6 +14,9 @@ def start_session(engine):
     try:
         engine.session.Start()
         engine.viewport_start_time = time()
+    except ReferenceError:
+        print("Could not start render session because RenderEngine struct was deleted")
+        return
     except Exception as error:
         del engine.session
         engine.session = None

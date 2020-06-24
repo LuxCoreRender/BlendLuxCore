@@ -24,26 +24,53 @@
 
 import bpy
 
+
 def timer_update():
     from ...utils.lol import utils as utils
     '''check for running and finished downloads and react. write progressbars too.'''
     if len(utils.download_threads) == 0:
         return None
 
+    running = 0
     for threaddata in utils.download_threads:
         thread, asset, tcom = threaddata
+        scene = bpy.context.scene
+        assets = utils.get_search_props(bpy.context)
+
         if tcom.finished:
             thread.stop()
             if not tcom.passargs['thumbnail']:
+                for a in assets:
+                    if a['hash'] == asset['hash']:
+                        a['downloaded'] = 100.0
+                        break
                 for d in tcom.passargs['downloaders']:
-                    utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
+                    if tcom.passargs['asset type'] == 'MATERIAL':
+                        utils.append_material(bpy.context, asset, d['target_object'], d['target_slot'])
+                    else:
+                        utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
+
 
             utils.download_threads.remove(threaddata)
+
             for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
                 if area.type == 'VIEW_3D':
                     area.tag_redraw()
 
                 return None
+        else:
+            if thread.is_alive():
+                running = running + 1
+            elif running < 10:
+                running = running + 1
+                thread.start()
+
+        if not tcom.passargs['thumbnail']:
+            for a in assets:
+                if a['hash'] == asset['hash']:
+                    a['downloaded'] = tcom.progress
+                    break
+
         for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
             if area.type == 'VIEW_3D':
                 area.tag_redraw()

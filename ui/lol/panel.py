@@ -27,13 +27,24 @@ from bpy.types import Panel
 from os.path import basename, dirname
 from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
+from .. import icons
 
 
 def draw_panel_categories(self, context):
     scene = context.scene
-    if not 'categories' in scene.luxcoreOL.keys():
+    ui_props = scene.luxcoreOL.ui
+
+    if ui_props.asset_type == 'MODEL':
+        asset_props = scene.luxcoreOL.model
+    if ui_props.asset_type == 'SCENE':
+        asset_props = scene.luxcoreOL.scene
+    if ui_props.asset_type == 'MATERIAL':
+        asset_props = scene.luxcoreOL.material
+
+    if not 'categories' in asset_props.keys():
         return
-    categories = scene.luxcoreOL['categories']
+
+    categories = asset_props['categories']
 
     user_preferences = get_addon_preferences(context)
 
@@ -91,6 +102,48 @@ def draw_panel_model_search(self, context):
     col.prop(model_props, 'append_method', expand=True, icon_only=False)
 
 
+def draw_panel_scene_search(self, context):
+    scene = context.scene
+    # scene_props = scene.luxcoreOL.scene
+    layout = self.layout
+    ui_props = scene.luxcoreOL.ui
+
+    if ui_props.assetbar_on:
+        icon = 'HIDE_OFF'
+        tooltip = 'Click to Hide Asset Bar'
+    else:
+        icon = 'HIDE_ON'
+        tooltip = 'Click to Show Asset Bar'
+
+    assetbar_operator = layout.operator('view3d.luxcore_ol_asset_bar', text='Asset Bar', icon=icon)
+    assetbar_operator.keep_running = False
+    assetbar_operator.do_search = False
+    assetbar_operator.tooltip = tooltip
+
+
+def draw_panel_material_search(self, context):
+    scene = context.scene
+    mat_props = scene.luxcoreOL.material
+    layout = self.layout
+    col = layout.column(align=True)
+
+    ui_props = scene.luxcoreOL.ui
+
+    if ui_props.assetbar_on:
+        icon = 'HIDE_OFF'
+        tooltip = 'Click to Hide Asset Bar'
+    else:
+        icon = 'HIDE_ON'
+        tooltip = 'Click to Show Asset Bar'
+
+    assetbar_operator = layout.operator('view3d.luxcore_ol_asset_bar', text='Asset Bar', icon=icon)
+    assetbar_operator.keep_running = False
+    assetbar_operator.do_search = False
+    assetbar_operator.tooltip = tooltip
+
+    draw_panel_categories(self, context)
+
+
 class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
     bl_label = "LuxCore Online Library"
     bl_category = "LuxCoreOnlineLibrary"
@@ -101,34 +154,48 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
 
     @classmethod
     def poll(cls, context):
-        return True
+        name = basename(dirname(dirname(dirname(__file__))))
+        user_preferences = context.preferences.addons[name].preferences
+
+        return user_preferences.use_library
 
     def draw(self, context):
         scene = context.scene
         ui_props = scene.luxcoreOL.ui
 
         layout = self.layout
-        # user_preferences = get_addon_preferences(context)
 
-        #layout.use_property_split = True
-        #layout.use_property_decorate = False
+        col = layout.column(align=True)
+        col.scale_x = 1.4
+        col.scale_y = 1.4
+        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Patreon)")
+        op.url = "https://www.patreon.com/Draviastudio"
+
+        col = layout.column(align=True)
+        col.scale_x = 1.4
+        col.scale_y = 1.4
+        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Bountysource)")
+        op.url = "https://salt.bountysource.com/teams/luxcorerender"
+
+        layout.separator()
 
         #TODO: implement additional modes, i.e. material, textures, brushes if needed
-        # row = layout.row()
-        # row.scale_x = 1.6
-        # row.scale_y = 1.6
-        # row.prop(ui_props, 'asset_type', expand=True, icon_only=True)
-        # row.enabled = False
-        # if bpy.data.filepath == '':
-        #     col = layout.column(align=True)
-        #     col.label(text="It's better to save the file first.")
+        row = layout.row()
+        row.scale_x = 1.6
+        row.scale_y = 1.6
+        row.prop(ui_props, 'asset_type', expand=True, icon_only=True)
+
+        if bpy.data.filepath == '':
+            col = layout.column(align=True)
+            col.label(text="It's better to save the file first.")
+
 
         if ui_props.asset_type == 'MODEL':
             draw_panel_model_search(self, context)
-        #elif ui_props.asset_type == 'SCENE':
-            #draw_panel_scene_search(self, context)
-        #elif ui_props.asset_type == 'MATERIAL':
-            #draw_panel_material_search(self, context)
+        elif ui_props.asset_type == 'SCENE':
+            draw_panel_scene_search(self, context)
+        elif ui_props.asset_type == 'MATERIAL':
+            draw_panel_material_search(self, context)
         #elif ui_props.asset_type == 'BRUSH':
             #if context.sculpt_object or context.image_paint_object:
                 #draw_panel_brush_search(self, context)
@@ -161,11 +228,9 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
            row = layout.row()
            row.label(text=asset_data['name'])
            row.label(text=str(int(tcom.progress)) + ' %')
-           #TODO: Implement operator for killing download
            row.operator('scene.luxcore_ol_download_kill', text='', icon='CANCEL').thread_index = idx
 
            # TODO: Implement retry download
-
            # if tcom.passargs.get('retry_counter', 0) > 0:
            #     row = layout.row()
            #     row.label(text='failed. retrying ... ', icon='ERROR')

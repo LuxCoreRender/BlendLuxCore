@@ -325,6 +325,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
 
     def _preset_hybrid_glass(self, obj, node_tree, output):
         output.shadow_color = (1, 1, 1)
+        output.show_advanced = True
         
         glass = new_node("LuxCoreNodeMatGlass", node_tree, output)
         glass.location.y += 40

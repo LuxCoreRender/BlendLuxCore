@@ -31,30 +31,62 @@ from ...utils.lol import utils as utils
 def switch_search_results(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
-    assets = scene.luxcoreOL.get('assets')
+    if not ui_props.ToC_loaded:
+        utils.download_table_of_contents(context)
 
-    if scene.luxcoreOL.on_search:
-        assets = [asset for asset in scene.luxcoreOL['assets'] if asset['category'] == self.category]
-        scene.luxcoreOL.search_category = self.category
+    assets = utils.get_search_props(context)
+    utils.load_previews(context, assets)
+    ui_props.scrolloffset = 0
 
-    #TODO: Implement
-    #if ui_props.asset_type == 'MODEL':
-    #    scene['search results'] = scene.get('LOL model search')
-    #    scene['search results orig'] = scene.get('LOL model search orig')
-    #elif ui_props.asset_type == 'SCENE':
-    #    scene['search results'] = scene.get('LOL scene search')
-    #    scene['search results orig'] = scene.get('LOL scene search orig')
-    #elif ui_props.asset_type == 'MATERIAL':
-    #    scene['search results'] = scene.get('LOL material search')
-    #    scene['search results orig'] = scene.get('LOL material search orig')
-    #elif ui_props.asset_type == 'TEXTURE':
-    #    scene['search results'] = scene.get('LOL texture search')
-    #    scene['search results orig'] = scene.get('LOL texture search orig')
-    #elif ui_props.asset_type == 'BRUSH':
-    #    scene['search results'] = scene.get('LOL brush search')
-    #    scene['search results orig'] = scene.get('LOL brush search orig')
-    #search.load_previews()
+    if ui_props.asset_type == 'MODEL':
+        asset_props = scene.luxcoreOL.model
+    if ui_props.asset_type == 'SCENE':
+        asset_props = scene.luxcoreOL.scene
+    if ui_props.asset_type == 'MATERIAL':
+        asset_props = scene.luxcoreOL.material
 
+    if not 'categories' in asset_props.keys():
+        utils.init_categories(context)
+
+    scene.luxcoreOL.on_search = False
+    self.category = ""
+    scene.luxcoreOL.search_category = self.category
+
+
+class LuxCoreOnlineLibraryAssetBar(bpy.types.PropertyGroup):
+    ui_scale = 1
+    thumb_size_def = 96
+    margin_def = 0
+
+    height: IntProperty(name="Assetbar Height", default=thumb_size_def + 2 * margin_def, min=-1, max=2048)
+    width: IntProperty(name="Assetbar Width", default=100, min=0, max=5000)
+
+    x_offset: IntProperty(name="Bar X Offset", default=20, min=0, max=5000)
+    y_offset: IntProperty(name="Bar Y Offset", default=100, min=0, max=5000)
+    drawoffset: IntProperty(name="Draw Offset", default=0)
+
+    x: IntProperty(name="Bar X", default=100, min=0, max=5000)
+    y: IntProperty(name="Bar Y", default=100, min=50, max=5000)
+    start: IntProperty(name="Bar Start", default=100, min=0, max=5000)
+    end: IntProperty(name="Bar End", default=100, min=0, max=5000)
+
+    drag_init: BoolProperty(name="Drag assetbar initialisation", default=False)
+    drag_x: IntProperty(name="Drag bar x offset", default=0)
+    drag_y: IntProperty(name="Drag bar y offset", default=0)
+    dragging: BoolProperty(name="Dragging asset", default=False)
+
+    resize_x_left: BoolProperty(name="Resize assetbar in x direction", default=False)
+    resize_x_right: BoolProperty(name="Resize assetbar in x direction", default=False)
+    resize_y_top: BoolProperty(name="Resize assetbar in y direction", default=False)
+    resize_y_down: BoolProperty(name="Resize assetbar in y direction", default=False)
+    resize_xy: IntProperty(name="Resize bar offset", default=0)
+    resize_wh: IntProperty(name="Resize bar offset", default=0)
+
+    wcount: IntProperty(name="Width Count", default=10, min=0, max=5000)
+    hcount: IntProperty(name="Rows", default=5, min=0, max=5000)
+
+    margin: IntProperty(name="Margin", default=margin_def, min=-1, max=256)
+    highlight_margin: IntProperty(name="Highlight Margin", default=int(margin_def / 2), min=-10, max=256)
 
 
 class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
@@ -62,7 +94,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
     thumb_size_def = 96
     margin_def = 0
 
-    thumb_size: IntProperty(name="Thumbnail Size", default=96, min=-1, max=256)
+    thumb_size: IntProperty(name="Thumbnail Size", default=thumb_size_def, min=-1, max=256)
     assetbar_on: BoolProperty(name="Assetbar On", default=False)
     turn_off: BoolProperty(name="Turn Off", default=False)
 
@@ -71,7 +103,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
         # ('SCENE', 'SCENE', 'Browse scenes', 'SCENE_DATA', 1),
         ('MATERIAL', 'Material', 'Browse materials', 'MATERIAL', 2),
         # ('TEXTURE', 'Texture', 'Browse textures', 'TEXTURE', 3),
-        ('BRUSH', 'Brush', 'Browse brushes', 'BRUSH_DATA', 3)
+        # ('BRUSH', 'Brush', 'Browse brushes', 'BRUSH_DATA', 3)
     ]
     asset_type: EnumProperty(name="Active Asset Type", items=asset_items, description="Activate asset in UI",
                              default="MODEL", update=switch_search_results)
@@ -81,7 +113,6 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
 
     active_index: IntProperty(name="Active Index", default=-3)
     scrolloffset: IntProperty(name="Scroll Offset", default=0)
-    drawoffset: IntProperty(name="Draw Offset", default=0)
 
     dragging: BoolProperty(name="Dragging", default=False)
     drag_init: BoolProperty(name="Drag Initialisation", default=False)
@@ -96,23 +127,11 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
 
     snapped_rotation: FloatVectorProperty(name="Snapped Rotation", default=(0, 0, 0), subtype='QUATERNION')
 
-    bar_height: IntProperty(name="Bar Height", default=thumb_size_def + 2 * margin_def, min=-1, max=2048)
-    bar_x_offset: IntProperty(name="Bar X Offset", default=20, min=0, max=5000)
-    bar_y_offset: IntProperty(name="Bar Y Offset", default=100, min=0, max=5000)
-
-    bar_x: IntProperty(name="Bar X", default=100, min=0, max=5000)
-    bar_y: IntProperty(name="Bar Y", default=100, min=50, max=5000)
-    bar_end: IntProperty(name="Bar End", default=100, min=0, max=5000)
-    bar_width: IntProperty(name="Bar Width", default=100, min=0, max=5000)
-
-    wcount: IntProperty(name="Width Count", default=10, min=0, max=5000)
-    hcount: IntProperty(name="Rows", default=5, min=0, max=5000)
-
-    margin: IntProperty(name="Margin", default=margin_def, min=-1, max=256)
-    highlight_margin: IntProperty(name="Highlight Margin", default=int(margin_def / 2), min=-10, max=256)
     has_hit: BoolProperty(name="has_hit", default=False)
     thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
     ToC_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
+
+    assetbar: PointerProperty(type=LuxCoreOnlineLibraryAssetBar)
 
 
 class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
@@ -148,9 +167,19 @@ class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
                                         subtype='ANGLE')
 
 
+class LuxCoreOnlineLibraryMaterial(bpy.types.PropertyGroup):
+    free_only: BoolProperty(name="Free only", default=True)
+
+
 class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
+    free_only: BoolProperty(name="Free only", default=True)
+
+
+class LuxCoreOnlineLibrary(bpy.types.PropertyGroup):
     ui: PointerProperty(type=LuxCoreOnlineLibraryUI)
     model: PointerProperty(type=LuxCoreOnlineLibraryModel)
+    material: PointerProperty(type=LuxCoreOnlineLibraryMaterial)
+    scene: PointerProperty(type=LuxCoreOnlineLibraryScene)
     on_search: BoolProperty(name="on_search", default=False)
     search_category: StringProperty(name="search_category", default="")
 
@@ -166,4 +195,3 @@ class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
 
 #class LuxCoreOnlineLibrarySceneBrush(bpy.types.PropertyGroup):
 
-#class LuxCoreOnlineLibrarySceneMaterial(bpy.types.PropertyGroup):
