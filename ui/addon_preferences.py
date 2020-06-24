@@ -1,9 +1,15 @@
+import bpy
 from os.path import basename, dirname
 from bpy.types import AddonPreferences
 from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 from ..ui import icons
 from .. import utils
 from ..utils.lol import utils as lol_utils
+
+
+SUPPORTED_BLENDER_VERSIONS = {
+    (2, 83, 0),
+}
 
 
 class LuxCoreAddonPreferences(AddonPreferences):
@@ -36,6 +42,9 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+        
+        if bpy.app.version not in SUPPORTED_BLENDER_VERSIONS:
+            layout.label(text="No official support for this Blender version!", icon=icons.WARNING)
         
         if utils.is_cuda_build():
             row = layout.row()

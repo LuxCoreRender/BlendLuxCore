@@ -3,8 +3,6 @@ import addon_utils
 import platform
 import os
 
-if bpy.app.version[:2] != (2, 83):
-    raise Exception("\n\nUnsupported Blender version. 2.83 is required.")
 
 _, luxblend_is_enabled = addon_utils.check("luxrender")
 if luxblend_is_enabled:
