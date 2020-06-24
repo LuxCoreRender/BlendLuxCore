@@ -3,6 +3,9 @@ import addon_utils
 import platform
 import os
 
+if bpy.app.version < (2, 83, 0):
+    raise Exception("\n\nUnsupported Blender version. 2.83 or higher is required.")
+
 _, luxblend_is_enabled = addon_utils.check("luxrender")
 if luxblend_is_enabled:
     addon_utils.disable("luxrender", default_set=True)
@@ -18,13 +21,6 @@ if platform.system() == "Darwin":
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
-    
-    user_addon_dir = bpy.utils.script_path_user()
-    denoiser = user_addon_dir + "/addons/BlendLuxCore/bin/denoise"
-        
-    if not os.access(denoiser, os.X_OK): # Check for execution access
-        print("Patching LuxCore Denoiser")
-        os.chmod(denoiser ,  0o755)
         
 if platform.system() == "Windows":
     # Ensure nvrtc-builtins64_101.dll can be found
@@ -46,6 +42,13 @@ if platform.system() in {"Linux", "Darwin"}:
     import certifi
     os.environ["SSL_CERT_FILE"] = certifi.where()
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
+    
+    # Make sure denoiser is executable
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    denoiser_path = os.path.join(current_dir, "bin", "denoise")
+    if not os.access(denoiser_path, os.X_OK):
+        print("Making LuxCore denoiser executable")
+        os.chmod(denoiser_path, 0o755)
 
 try:
     from .bin import pyluxcore
