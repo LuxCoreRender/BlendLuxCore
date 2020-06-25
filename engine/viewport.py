@@ -36,7 +36,7 @@ def start_session(engine):
 
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
-    if engine.starting_session:
+    if engine.starting_session or engine.viewport_fatal_error:
         # Prevent deadlock
         return
 
@@ -61,6 +61,7 @@ def view_update(engine, context, depsgraph, changes=None):
             engine.session = None
             # Reset the exporter to invalidate all caches
             engine.exporter = None
+            engine.viewport_fatal_error = str(error)
 
             engine.update_stats("Error: ", str(error))
             LuxCoreErrorLog.add_error(error)
@@ -90,6 +91,11 @@ def view_draw(engine, context, depsgraph):
     scene = depsgraph.scene_eval
     
     if engine.starting_session:
+        engine.tag_redraw()
+        return
+        
+    if engine.viewport_fatal_error:
+        engine.update_stats("Error:", engine.viewport_fatal_error)
         engine.tag_redraw()
         return
     
