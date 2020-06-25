@@ -7,10 +7,13 @@ from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
 
 
-CUSTOM_NORMALS_SUPPORTED_VERSIONS = {
-    (2, 82, 7),
-    (2, 83, 0),
-}
+def custom_normals_supported():
+    version = bpy.app.version
+    if version == (2, 82, 7):
+        return True
+    if version[:2] == (2, 83):
+        return True
+    return False
 
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
@@ -20,7 +23,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         if mesh is None:
             return None
         
-        if mesh.has_custom_normals and bpy.app.version not in CUSTOM_NORMALS_SUPPORTED_VERSIONS:
+        if mesh.has_custom_normals and not custom_normals_supported():
             LuxCoreErrorLog.add_warning("Custom normals not supported for this Blender version", obj_name=obj.name)
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
