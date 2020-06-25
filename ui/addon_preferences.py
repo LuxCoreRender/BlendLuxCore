@@ -8,6 +8,7 @@ from ..utils.lol import utils as lol_utils
 
 
 SUPPORTED_BLENDER_VERSIONS = {
+    (2, 82, 7),
     (2, 83, 0),
 }
 
