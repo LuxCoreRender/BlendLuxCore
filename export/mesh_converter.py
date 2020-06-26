@@ -1,6 +1,5 @@
 import bpy
 from contextlib import contextmanager
-import numpy as np
 from .caches.exported_data import ExportedMesh
 from time import time
 from .. import utils

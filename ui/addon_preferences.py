@@ -5,12 +5,7 @@ from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 from ..ui import icons
 from .. import utils
 from ..utils.lol import utils as lol_utils
-
-
-SUPPORTED_BLENDER_VERSIONS = {
-    (2, 82, 7),
-    (2, 83, 0),
-}
+from ..export.mesh_converter import custom_normals_supported
 
 
 class LuxCoreAddonPreferences(AddonPreferences):
@@ -44,7 +39,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
     def draw(self, context):
         layout = self.layout
         
-        if bpy.app.version not in SUPPORTED_BLENDER_VERSIONS:
+        if not custom_normals_supported():
             layout.label(text="No official support for this Blender version!", icon=icons.WARNING)
         
         if utils.is_cuda_build():
