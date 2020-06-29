@@ -113,11 +113,13 @@ def view_draw(engine, context, depsgraph):
             }
             luxcore_scene.Parse(utils.create_props("", definitions))
             
+            devices = scene.luxcore.devices
             definitions = {
                 "renderengine.type": "RTPATHOCL",
                 "sampler.type": "TILEPATHSAMPLER",
                 "scene.epsilon.min": config.min_epsilon,
                 "scene.epsilon.max": config.max_epsilon,
+                "opencl.devices.select": devices.devices_to_selection_string(),
             }
             config_props = utils.create_props("", definitions)
             renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
