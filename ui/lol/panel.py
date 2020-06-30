@@ -24,7 +24,6 @@
 
 import bpy
 from bpy.types import Panel
-from os.path import basename, dirname
 from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
 from .. import icons
@@ -45,8 +44,6 @@ def draw_panel_categories(self, context):
         return
 
     categories = asset_props['categories']
-
-    user_preferences = get_addon_preferences(context)
 
     layout = self.layout
     layout.separator()
@@ -70,7 +67,6 @@ def draw_panel_model_search(self, context):
     scene = context.scene
     model_props = scene.luxcoreOL.model
     layout = self.layout
-    col = layout.column(align=True)
 
     #TODO: Implement non_free models if needed
     # Currently all available models are free
@@ -123,9 +119,7 @@ def draw_panel_scene_search(self, context):
 
 def draw_panel_material_search(self, context):
     scene = context.scene
-    mat_props = scene.luxcoreOL.material
     layout = self.layout
-    col = layout.column(align=True)
 
     ui_props = scene.luxcoreOL.ui
 
@@ -154,8 +148,7 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
 
     @classmethod
     def poll(cls, context):
-        name = basename(dirname(dirname(dirname(__file__))))
-        user_preferences = context.preferences.addons[name].preferences
+        user_preferences = get_addon_preferences(context)
 
         return user_preferences.use_library
 
@@ -171,11 +164,14 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Patreon)")
         op.url = "https://www.patreon.com/Draviastudio"
 
+        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Bountysource)")
+        op.url = "https://salt.bountysource.com/teams/luxcorerender"
+
         col = layout.column(align=True)
         col.scale_x = 1.4
         col.scale_y = 1.4
-        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Bountysource)")
-        op.url = "https://salt.bountysource.com/teams/luxcorerender"
+        op = col.operator("luxcore.open_website", icon=icons.URL, text="License: CC-BY-SA")
+        op.url = "https://github.com/LuxCoreRender/LoL/blob/master/COPYING.txt"
 
         layout.separator()
 
@@ -188,7 +184,6 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         if bpy.data.filepath == '':
             col = layout.column(align=True)
             col.label(text="It's better to save the file first.")
-
 
         if ui_props.asset_type == 'MODEL':
             draw_panel_model_search(self, context)
@@ -213,7 +208,6 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
     @classmethod
     def poll(cls, context):
         return len(utils.download_threads) > 0
-
 
     def draw(self, context):
         layout = self.layout
