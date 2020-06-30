@@ -8,6 +8,7 @@ import tempfile
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import pfm
+from shutil import which
 
 NULL = 0
 
@@ -73,9 +74,10 @@ class FrameBuffer(object):
         self._normal_file_path = self._make_denoiser_filepath("normal")
         self._denoised_file_path = self._make_denoiser_filepath("denoised")
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        self._denoiser_path = os.path.join(os.path.dirname(current_dir), "bin", "denoise")
-        if platform.system() == "Windows":
-            self._denoiser_path += ".exe"
+        self._denoiser_path = which(
+            "denoise",
+            path=os.path.join(current_dir, "bin")+os.pathsep+os.environ["PATH"]
+        )
         self._denoiser_process = None
         self.denoiser_result_cached = False
 

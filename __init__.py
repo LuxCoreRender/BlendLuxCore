@@ -2,6 +2,7 @@ import bpy
 import addon_utils
 import platform
 import os
+from shutil import which
 
 
 _, luxblend_is_enabled = addon_utils.check("luxrender")
@@ -43,7 +44,11 @@ if platform.system() in {"Linux", "Darwin"}:
     
     # Make sure denoiser is executable
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    denoiser_path = os.path.join(current_dir, "bin", "denoise")
+    denoiser_path = which(
+        'denoise',
+        mode=os.F_OK,
+        path=os.path.join(current_dir, "bin")+os.pathsep+os.environ["PATH"]
+    )
     if not os.access(denoiser_path, os.X_OK):
         print("Making LuxCore denoiser executable")
         os.chmod(denoiser_path, 0o755)
