@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import PointerProperty, IntProperty
 from . import (
-    config, debug, denoiser, denoiser_log, display, halt, lightgroups, devices, statistics, viewport,
+    config, debug, denoiser, display, halt, lightgroups, devices, statistics, viewport,
 )
 
 
@@ -12,7 +12,6 @@ from . import (
 class LuxCoreScene(bpy.types.PropertyGroup):
     config: PointerProperty(type=config.LuxCoreConfig)
     denoiser: PointerProperty(type=denoiser.LuxCoreDenoiser)
-    denoiser_log: PointerProperty(type=denoiser_log.LuxCoreDenoiserLog)
     halt: PointerProperty(type=halt.LuxCoreHaltConditions)
     display: PointerProperty(type=display.LuxCoreDisplaySettings)
     devices: PointerProperty(type=devices.LuxCoreDeviceSettings)

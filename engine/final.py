@@ -12,7 +12,6 @@ def render(engine, depsgraph):
     print("=" * 50)
     scene = depsgraph.scene_eval
     LuxCoreErrorLog.clear()
-    # scene.luxcore.denoiser_log.clear()  # TODO 2.8 merge denoiser log with statistics
     statistics = scene.luxcore.statistics.get_active()
 
     if utils.is_valid_camera(scene.camera):

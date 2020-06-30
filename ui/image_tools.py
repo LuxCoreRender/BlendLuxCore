@@ -87,28 +87,6 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
             iuser = context.space_data.image_user
             col.template_image_layers(image, iuser)
 
-        log_entries = context.scene.luxcore.denoiser_log.entries
-        if log_entries:
-            entry = log_entries[-1]
-            col = layout.column(align=True)
-            box = col.box()
-            box.label(text="Denoised Image Stats", icon="IMAGE_DATA")
-            box = col.box()
-            subcol = box.column()
-            subcol.label(text="Samples: %d" % entry.samples)
-            subcol.label(text="Render Time: " + utils_ui.humanize_time(entry.elapsed_render_time))
-            subcol.label(text="Denoising Duration: " + utils_ui.humanize_time(entry.elapsed_denoiser_time))
-
-            if context.scene.luxcore.denoiser.type == "BCD":
-                box = col.box()
-                subcol = box.column()
-                subcol.label(text="Last Denoiser Settings:", icon="UI")
-                subcol.label(text="Remove Fireflies: " + ("Enabled" if entry.filter_spikes else "Disabled"))
-                subcol.label(text="Histogram Distance Threshold: " + str(entry.hist_dist_thresh))
-                subcol.label(text="Search Window Radius: " + str(entry.search_window_radius))
-                subcol.label(text="Scales: " + str(entry.scales))
-                subcol.label(text="Patch Radius: " + str(entry.patch_radius))
-
 
 class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
     bl_label = "Statistics"

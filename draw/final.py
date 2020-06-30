@@ -2,7 +2,6 @@ from time import time, sleep
 from ..bin import pyluxcore
 from .. import utils
 from ..export.aovs import get_denoiser_imgpipeline_props
-from ..properties.denoiser_log import DenoiserLogEntry
 from ..properties.denoiser import LuxCoreDenoiser
 from ..properties.display import LuxCoreDisplaySettings
 from ..utils import view_layer as utils_view_layer
@@ -200,11 +199,7 @@ class FrameBufferFinal(object):
                 session.Resume()
 
             # Add denoiser log entry
-            rendered_time = stats.Get("stats.renderengine.time").GetFloat()
-            settings = scene.luxcore.denoiser
             elapsed = self.denoiser_last_elapsed_time
-            log_entry = DenoiserLogEntry(samples, rendered_time, elapsed, settings)
-            scene.luxcore.denoiser_log.add(log_entry)
 
             # Reset the refresh button
             LuxCoreDenoiser.refresh = False
