@@ -1,14 +1,14 @@
 import bgl
 import math
 import os
-import platform
 import numpy
 import subprocess
 import tempfile
+from shutil import which
+from os.path import dirname
 from ..bin import pyluxcore
 from .. import utils
 from ..utils import pfm
-from shutil import which
 
 NULL = 0
 
@@ -73,11 +73,10 @@ class FrameBuffer(object):
         self._albedo_file_path = self._make_denoiser_filepath("albedo")
         self._normal_file_path = self._make_denoiser_filepath("normal")
         self._denoised_file_path = self._make_denoiser_filepath("denoised")
-        current_dir = os.path.dirname(os.path.realpath(__file__))
-        self._denoiser_path = which(
-            "oidnDenoise",
-            path=os.path.join(current_dir, "bin")+os.pathsep+os.environ["PATH"]
-        )
+        current_dir = dirname(os.path.realpath(__file__))
+        addon_dir = dirname(current_dir)  # Go up one level
+        self._denoiser_path = which("oidnDenoise",
+                                    path=os.path.join(addon_dir, "bin") + os.pathsep + os.environ["PATH"])
         self._denoiser_process = None
         self.denoiser_result_cached = False
 

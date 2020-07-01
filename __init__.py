@@ -4,6 +4,10 @@ import platform
 import os
 from shutil import which
 
+def get_bin_directory():
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(current_dir, "bin")
+
 
 _, luxblend_is_enabled = addon_utils.check("luxrender")
 if luxblend_is_enabled:
@@ -23,8 +27,7 @@ if platform.system() == "Darwin":
         
 if platform.system() == "Windows":
     # Ensure nvrtc-builtins64_101.dll can be found
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    bin_directory = os.path.join(current_dir, "bin")
+    bin_directory = get_bin_directory()
 
     from ctypes import windll, c_wchar_p
     from ctypes.wintypes import DWORD
@@ -43,12 +46,7 @@ if platform.system() in {"Linux", "Darwin"}:
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
     
     # Make sure denoiser is executable
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    denoiser_path = which(
-        'oidnDenoise',
-        mode=os.F_OK,
-        path=os.path.join(current_dir, "bin")+os.pathsep+os.environ["PATH"]
-    )
+    denoiser_path = which("oidnDenoise", mode=os.F_OK, path=get_bin_directory() + os.pathsep + os.environ["PATH"])
     if not os.access(denoiser_path, os.X_OK):
         print("Making LuxCore denoiser executable")
         os.chmod(denoiser_path, 0o755)
