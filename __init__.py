@@ -45,7 +45,7 @@ if platform.system() in {"Linux", "Darwin"}:
     # Make sure denoiser is executable
     current_dir = os.path.dirname(os.path.realpath(__file__))
     denoiser_path = which(
-        'denoise',
+        'oidnDenoise',
         mode=os.F_OK,
         path=os.path.join(current_dir, "bin")+os.pathsep+os.environ["PATH"]
     )

@@ -53,16 +53,16 @@ WINDOWS_FILES = [
     "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
-    "OpenImageDenoise.dll", "denoise.exe",
+    "OpenImageDenoise.dll", "oidnDenoise.exe",
     "nvrtc64_101_0.dll", "nvrtc-builtins64_101.dll",
 ]
 
 MAC_FILES = [
     "libembree3.3.dylib", "libomp.dylib", 
-    "libOpenImageDenoise.1.2.0.dylib", "libOpenImageIO.1.8.dylib",
+    "libOpenImageDenoise.1.2.1.dylib", "libOpenImageIO.1.8.dylib",
     "libcuda.dylib", "libnvrtc.dylib",
     "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
-    "pyluxcore.so", "pyluxcoretools.zip", "denoise"
+    "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
 ]
 
 #OIDN_WIN = "oidn-windows.zip"
@@ -70,9 +70,9 @@ OIDN_LINUX = "oidn-linux.tar.gz"
 #OIDN_MAC = "oidn-macos.tar.gz"
 
 OIDN_urls = {
-    #OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
-    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
-    #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
+    #OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x64.vc14.windows.zip",
+    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.linux.tar.gz",
+    #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.macos.tar.gz",
 }
 
 
@@ -342,11 +342,11 @@ def main():
         destination = os.path.join(script_dir, name, "BlendLuxCore", "bin")
 
         #if "win64" in suffix:
-        #    extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
+        #    extract_files_from_archive(OIDN_WIN, ["oidnDenoise.exe"], destination)
         if "linux64" in suffix:
-            extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
+            extract_files_from_archive(OIDN_LINUX, ["oidnDenoise"], destination)
         #elif "mac64" in suffix:
-        #    extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
+        #    extract_files_from_archive(OIDN_MAC, ["oidnDenoise"], destination)
 
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if "-linux" in suffix]
