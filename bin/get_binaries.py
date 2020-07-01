@@ -15,12 +15,12 @@ WINDOWS_FILES = [
     "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd", "luxcoreui.exe",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
-    "OpenImageDenoise.dll", "denoise.exe", 
+    "OpenImageDenoise.dll", "oidnDenoise.exe", 
 ]
 
 MAC_FILES = [
-    "libembree3.3.dylib", "libomp.dylib", "libOpenImageDenoise.1.2.0.dylib", "libOpenImageIO.1.8.dylib", "libtbb.dylib",
-    "libtbbmalloc.dylib", "libtiff.5.dylib", "pyluxcore.so", "pyluxcoretools.zip", "denoise"
+    "libembree3.3.dylib", "libomp.dylib", "libOpenImageDenoise.1.2.1.dylib", "libOpenImageIO.1.8.dylib", "libtbb.dylib",
+    "libtbbmalloc.dylib", "libtiff.5.dylib", "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
 ]
 
 
