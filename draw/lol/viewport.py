@@ -32,7 +32,6 @@ import mathutils
 
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
-from os.path import basename, dirname
 from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
 
