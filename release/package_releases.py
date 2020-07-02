@@ -65,6 +65,7 @@ MAC_FILES = [
     "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
 ]
 
+# On Windows and macOS, OIDN is downloaded by the LuxCore build script, so we don't need to do it here
 #OIDN_WIN = "oidn-windows.zip"
 OIDN_LINUX = "oidn-linux.tar.gz"
 #OIDN_MAC = "oidn-macos.tar.gz"
@@ -341,6 +342,7 @@ def main():
         name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, name, "BlendLuxCore", "bin")
 
+        # On Windows and macOS, OIDN is downloaded by the LuxCore build script, so we don't need to do it here
         #if "win64" in suffix:
         #    extract_files_from_archive(OIDN_WIN, ["oidnDenoise.exe"], destination)
         if "linux64" in suffix:
