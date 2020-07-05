@@ -26,6 +26,7 @@ def run():
         update_smoke_mantaflow_simulation(node_tree)
         update_mat_output_add_shape_input(node_tree)
         update_glass_disney_add_film_sockets(node_tree)
+        update_invert_add_maximum_input(node_tree)
 
     for scene in bpy.data.scenes:
         config = scene.luxcore.config
