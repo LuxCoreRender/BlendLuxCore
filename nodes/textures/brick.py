@@ -44,10 +44,10 @@ class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
     
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
-
+        
         definitions = {
             "type": "brick",
-            "brickbond": self.brickbond,            
+            "brickbond": self.brickbond.replace("_", " "),
             "bricktex": self.inputs["bricktex"].export(exporter, depsgraph, props),
             "mortartex": self.inputs["mortartex"].export(exporter, depsgraph, props),
             "brickmodtex": self.inputs["brickmodtex"].export(exporter, depsgraph, props),
