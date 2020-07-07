@@ -154,7 +154,9 @@ HYBRID_BACKFORWARD_GLOSSINESS_DESC = (
 )
 
 ENVLIGHT_CACHE_DESC = (
-    "Compute a cache with multiple visibility maps for the scene (works like "
+    "Enable in scenes where the world environment is only visible through small openings (e.g. a room with small windows). "
+    "Do not use in open scenes, as it can be detrimental to performance in this case. "
+    "Computes a cache with multiple visibility maps (works like "
     "automatic portals). Note that it might consume a lot of RAM"
 )
 
@@ -235,7 +237,7 @@ class LuxCoreConfigTile(PropertyGroup):
 
 class LuxCoreConfigDLSCache(PropertyGroup):
     # Overrides other light strategies when enabled
-    enabled: BoolProperty(name="Enabled", default=False, description=DLSC_DESC)
+    enabled: BoolProperty(name="", default=False, description=DLSC_DESC)
 
     entry_radius_auto: BoolProperty(name="Automatic Entry Radius", default=True,
                                      description="Automatically choose a good entry radius")
@@ -340,7 +342,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
 
 
 class LuxCoreConfigEnvLightCache(PropertyGroup):
-    enabled: BoolProperty(name="Enabled", default=False, description=ENVLIGHT_CACHE_DESC)
+    enabled: BoolProperty(name="", default=False, description=ENVLIGHT_CACHE_DESC)
     # TODO description
     quality: FloatProperty(name="Quality", default=0.5, min=0, max=1)
 
