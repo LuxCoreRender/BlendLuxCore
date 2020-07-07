@@ -223,9 +223,9 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         return poll_object(context)
 
     def execute(self, context):
-        mat = getattr(context, "material", None)
+        mat = context.object.active_material
         if mat:
-            name = make_nodetree_name(context.material.name)
+            name = make_nodetree_name(mat.name)
         else:
             name = "Material Node Tree"
 
@@ -233,7 +233,7 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
         init_mat_node_tree(node_tree)
 
         if mat:
-            context.material.luxcore.node_tree = node_tree
+            mat.luxcore.node_tree = node_tree
 
         show_nodetree(context, node_tree)
         return {"FINISHED"}

@@ -134,12 +134,11 @@ def lux_node_header_draw(panel, context):
             row.enabled = has_material_slots
 
             # id_from is the material the node tree is attached to
-            if id_from:
-                lux_mat_template_ID(row, id_from)
-            else:
-                # When the material slot link type is set to "Data" instead of "Object",
-                # id_from is None, so try active material instead
-                lux_mat_template_ID(row, ob.active_material)
+            mat = id_from if id_from else ob.active_material
+            lux_mat_template_ID(row, mat)
+
+            if mat and (not mat.luxcore.node_tree and not mat.luxcore.use_cycles_nodes):
+                layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use LuxCore Material Nodes")
     # End of specialized LuxCore code
     ###########################################################################################
 
