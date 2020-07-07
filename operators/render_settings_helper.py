@@ -74,6 +74,7 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
 
         # Caustic cache
         if self.has_SDS_caustics == "YES":
+            config.photongi.enabled = True
             config.photongi.caustic_enabled = True
             # Disable radius shrinking
             config.photongi.caustic_updatespp_minradius = config.photongi.caustic_lookup_radius
