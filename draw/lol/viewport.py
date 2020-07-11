@@ -256,6 +256,10 @@ def update_ui_size(context, area, region):
     assetbar_props = ui_props.assetbar
 
     assets = utils.get_search_props(context)
+
+    if ui_props.local:
+        assets = [asset for asset in utils.get_search_props(context) if asset['local']]
+
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
@@ -360,6 +364,10 @@ def get_asset_under_mouse(context, mousex, mousey):
     assetbar_props = ui_props.assetbar
 
     assets = utils.get_search_props(context)
+
+    if ui_props.local:
+        assets = [asset for asset in utils.get_search_props(context) if asset['local']]
+
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 

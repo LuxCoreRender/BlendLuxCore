@@ -50,7 +50,6 @@ def timer_update():
                     else:
                         utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
 
-
             utils.download_threads.remove(threaddata)
 
             for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:

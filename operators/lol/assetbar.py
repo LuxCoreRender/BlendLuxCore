@@ -151,6 +151,9 @@ def draw_callback_2d_search(self, context):
     assetbar_props = scene.luxcoreOL.ui.assetbar
     assets = utils.get_search_props(context)
 
+    if ui_props.local:
+        assets = [asset for asset in utils.get_search_props(context) if asset['local']]
+
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
 
@@ -623,6 +626,9 @@ class LOLAssetBarOperator(Operator):
 
         ui_props.scrolloffset = 0
 
+        if ui_props.local:
+            assets = [asset for asset in utils.get_search_props(context) if asset['local']]
+
         if scene.luxcoreOL.on_search:
             assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
             scene.luxcoreOL.search_category = self.category
@@ -693,6 +699,9 @@ class LOLAssetBarOperator(Operator):
 
         if not user_preferences.use_library:
             return {'CANCELLED'}
+
+        if ui_props.local:
+            assets = [asset for asset in utils.get_search_props(context) if asset['local']]
 
         if scene.luxcoreOL.on_search:
             assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]

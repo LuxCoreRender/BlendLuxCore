@@ -87,6 +87,8 @@ def draw_panel_model_search(self, context):
     assetbar_operator.do_search = False
     assetbar_operator.tooltip = tooltip
 
+    col = layout.column(align=True)
+    col.prop(ui_props, 'local', expand=True, icon_only=False)
     draw_panel_categories(self, context)
 
     layout.separator()

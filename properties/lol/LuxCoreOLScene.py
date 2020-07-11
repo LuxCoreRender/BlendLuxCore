@@ -28,6 +28,10 @@ from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, 
     FloatProperty, FloatVectorProperty, StringProperty
 from ...utils.lol import utils as utils
 
+def switch_local(self, context):
+    utils.init_categories(context)
+
+
 def switch_search_results(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
@@ -130,6 +134,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
     has_hit: BoolProperty(name="has_hit", default=False)
     thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
     ToC_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
+    local: BoolProperty(name="Local only", default=False, update=switch_local)
 
     assetbar: PointerProperty(type=LuxCoreOnlineLibraryAssetBar)
 

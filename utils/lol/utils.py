@@ -30,7 +30,7 @@
 
 import bpy
 import uuid
-from os.path import basename, dirname
+from os.path import basename, dirname, join, isfile
 import hashlib
 import tempfile
 import os
@@ -46,28 +46,60 @@ LOL_HOST_URL = "https://luxcorerender.org/lol"
 
 download_threads = []
 
+def load_local_TOC(context, asset_type):
+    import json
+
+    assets = []
+
+    name = basename(dirname(dirname(dirname(__file__))))
+    user_preferences = context.preferences.addons[name].preferences
+
+    filepath = join(user_preferences.global_dir, 'local_assets_' + asset_type + '.json')
+    if isfile(filepath):
+        with open(filepath) as file_handle:
+            assets = json.loads(file_handle.read())
+
+    for asset in assets:
+        asset['downloaded'] = 100.0
+        asset['local'] = True
+
+    return assets
+
 def download_table_of_contents(context):
     scene = context.scene
 
     try:
         import urllib.request
+
         with urllib.request.urlopen(LOL_HOST_URL + "/assets_model.json", timeout=60) as request:
             import json
-            scene.luxcoreOL.model['assets'] = json.loads(request.read())
-            for asset in scene.luxcoreOL.model['assets']:
+            assets = json.loads(request.read())
+            for asset in assets:
                 asset['downloaded'] = 0.0
+                asset['local'] = False
 
-            # with urllib.request.urlopen(LOL_HOST_URL + "/assets_scene.json", timeout=60) as request:
-            #     import json
-            #     scene.luxcoreOL.scene['assets'] = json.loads(request.read())
-            #     for asset in scene.luxcoreOL.scene['assets']:
-            #         asset['downloaded'] = 0.0
+            assets.extend(load_local_TOC(context, 'model'))
+            scene.luxcoreOL.model['assets'] = assets
 
-            with urllib.request.urlopen(LOL_HOST_URL + "/assets_material.json", timeout=60) as request:
-                import json
-                scene.luxcoreOL.material['assets'] = json.loads(request.read())
-                for asset in scene.luxcoreOL.material['assets']:
-                    asset['downloaded'] = 0.0
+        # with urllib.request.urlopen(LOL_HOST_URL + "/assets_scene.json", timeout=60) as request:
+        #     import json
+        #     assets = json.loads(request.read())
+        #     for asset in scene.luxcoreOL.scene['assets']:
+        #         asset['downloaded'] = 0.0
+        #         asset['local'] = False
+        #
+        #     assets.extend(load_local_TOC(context, 'scene'))
+        #     scene.luxcoreOL.scene['assets'] = assets
+
+        with urllib.request.urlopen(LOL_HOST_URL + "/assets_material.json", timeout=60) as request:
+            import json
+            assets = json.loads(request.read())
+            for asset in assets:
+                asset['downloaded'] = 0.0
+                asset['local'] = False
+
+            assets.extend(load_local_TOC(context, 'material'))
+            scene.luxcoreOL.material['assets'] = assets
 
         context.scene.luxcoreOL.ui.ToC_loaded = True
         init_categories(context)
@@ -87,8 +119,12 @@ def download_table_of_contents(context):
 def init_categories(context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
-    assets = get_search_props(context)
     categories = {}
+
+    assets = get_search_props(context)
+
+    if ui_props.local:
+        assets = [asset for asset in get_search_props(context) if asset['local']]
 
     for asset in assets:
         cat = asset['category']
