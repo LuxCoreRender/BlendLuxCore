@@ -6,6 +6,8 @@ from bpy.props import (
 from bpy.types import PropertyGroup
 from ..utils import node as utils_node
 
+import re
+
 # OpenCL engines support 8 lightgroups
 # However one group is always there (the default group), so 7 can be user-defined
 MAX_LIGHTGROUPS = 8 - 1
@@ -138,3 +140,7 @@ class LuxCoreLightGroupSettings(PropertyGroup):
 
     def get_all_groups(self):
         return [self.default] + [group for group in self.custom]
+
+
+def is_lightgroup_pass_name(string):
+    return re.fullmatch(r"LG \d: \".*\"", string)
