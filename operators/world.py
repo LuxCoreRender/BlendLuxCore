@@ -126,7 +126,7 @@ class LUXCORE_OT_create_sun_hemi(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.world
+        return getattr(context, "world", None)
 
     def execute(self, context):
         light_data = bpy.data.lights.new(name="Hemi Sun", type="SUN")
