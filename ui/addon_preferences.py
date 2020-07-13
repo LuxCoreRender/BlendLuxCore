@@ -54,17 +54,17 @@ class LuxCoreAddonPreferences(AddonPreferences):
         row.prop(self, "image_node_thumb_default")
 
         row = layout.row()
-        row.label(text="Update or downgrade:")
-        row.operator("luxcore.change_version", icon=icons.DOWNLOAD)
-        # Add empty space to the right of the button
-        row.label(text="")
-
-        row = layout.row()
         row.label(text="Community:")
         op = row.operator("luxcore.open_website", text="Forums", icon=icons.URL)
         op.url = "https://forums.luxcorerender.org/"
         op = row.operator("luxcore.open_website", text="Discord", icon=icons.URL)
         op.url = "https://discord.gg/chPGsKV"
+
+        row = layout.row()
+        row.label(text="Download:")
+        op = row.operator("luxcore.open_website", text="BlendLuxCore Releases", icon=icons.URL)
+        op.url = "https://github.com/LuxCoreRender/BlendLuxCore/releases"
+        row.label(text="")
 
         layout.separator()
         col = layout.column()
