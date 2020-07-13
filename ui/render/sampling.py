@@ -51,7 +51,7 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
             # Not tiled, regular sampling
             row = layout.row()
             
-            if config.device == "OCL":
+            if config.device == "OCL" and config.engine == "PATH":
                 row.prop(config, "sampler_gpu")
             else:
                 row.prop(config, "sampler")

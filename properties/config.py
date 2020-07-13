@@ -444,7 +444,7 @@ class LuxCoreConfig(PropertyGroup):
     device: EnumProperty(name="Device", items=devices, default="CPU")
     # A trick so we can show the user that bidir can only be used on the CPU (see UI code)
     bidir_device: EnumProperty(name="Device", items=devices, default="CPU",
-                                description="Bidir only available on CPU")
+                               description="Bidir is only available on CPU. Switch to the Path engine if you want to render on the GPU")
 
     use_tiles: BoolProperty(name="Use Tiled Path (slower)", default=False, description=TILED_DESCRIPTION)
     
