@@ -1,6 +1,6 @@
 from bl_ui.properties_scene import SceneButtonsPanel
 from bpy.types import Panel
-from ..properties.lightgroups import MAX_LIGHTGROUPS
+from ..properties.lightgroups import MAX_CUSTOM_LIGHTGROUPS
 from . import icons
 
 
@@ -32,6 +32,8 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
+        layout.operator("luxcore.create_lightgroup_nodes", icon=icons.NODETREE)
+
         if self._are_all_groups_disabled(context):
             layout.label(text="All groups disabled.", icon=icons.WARNING)
 
@@ -41,7 +43,7 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         for i, group in enumerate(groups.custom):
             self.draw_lightgroup(layout, group, i)
 
-        if len(groups.custom) < MAX_LIGHTGROUPS:
+        if len(groups.custom) < MAX_CUSTOM_LIGHTGROUPS:
             layout.operator("luxcore.add_lightgroup", icon=icons.ADD)
 
     @staticmethod
@@ -51,12 +53,7 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         # Upper row (enable/disable, name, remove)
         box = col.box()
         row = box.row()
-        col = row.column()
-        
-        col.prop(group, "show_settings",
-                 icon=settings_toggle_icon(group.show_settings),
-                 icon_only=True, emboss=False)
-        
+
         col = row.column()
         col.prop(group, "enabled",
                  icon=lightgroup_icon(group.enabled),
@@ -81,26 +78,6 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
             op = row.operator("luxcore.remove_lightgroup",
                               text="", icon=icons.CLEAR, emboss=False)
             op.index = index
-
-        if group.show_settings:
-            # Lower row (gain settings, RGB gain, temperature)
-            box = box.box()
-            box.enabled = group.enabled
-
-            row = box.row()
-            row.prop(group, 'gain')
-
-            row = box.row()
-            row.prop(group, 'use_rgb_gain')
-            sub = row.split()
-            sub.active = group.use_rgb_gain
-            sub.prop(group, 'rgb_gain')
-
-            row = box.row()
-            row.prop(group, 'use_temperature', text="Temperature (K)")
-            sub = row.split()
-            sub.active = group.use_temperature
-            sub.prop(group, 'temperature', slider=True, text="")
 
     def _are_all_groups_disabled(self, context):
         return not any([group.enabled for group in context.scene.luxcore.lightgroups.get_all_groups()])

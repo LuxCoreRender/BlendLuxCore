@@ -145,8 +145,7 @@ def create_mixer(editor):
     add_x_offset = 190
     last_output = None
 
-    # MAX_LIGHTGROUPS only counts user-defined groups, we also need the default group
-    for i in range(MAX_LIGHTGROUPS + 1):
+    for i in range(MAX_LIGHTGROUPS):
         input_index_offset = i * MIXER_SOCKET_INDEX_STEP
         # Light Group i
         mixer.inputs.new("NodeSocketColor", f"Light Group {i + 1}")
@@ -193,9 +192,13 @@ def has_light_group_outputs(renderlayer_node):
 
 class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
     bl_idname = "luxcore.create_lightgroup_nodes"
-    bl_label = "Create Light Group Nodes"
-    bl_description = ""
+    bl_label = "Create/Update Light Group Nodes"
+    bl_description = ""  # TODO
     bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.scene.luxcore.lightgroups.custom) > 0
 
     def execute(self, context):
         scene = context.scene
@@ -251,13 +254,22 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
             mixer_instance.location = (renderlayer_node.location.x + renderlayer_node.width + 100, renderlayer_node.location.y - 50)
             mixer_instance[LUX_MIXER_INSTANCE_MARK] = True
 
-        # Connect render layer outputs to mixer inputs
+        # Connect render layer outputs to mixer inputs and make sure the names match
         lg_index = 0
         for output in renderlayer_node.outputs:
-            if is_lightgroup_pass_name(output.name):
-                scene.node_tree.links.new(output, mixer_instance.inputs[lg_index * MIXER_SOCKET_INDEX_STEP])
+            # Blender does not remove old sockets on the render layer node, they are just disabled
+            if output.enabled and is_lightgroup_pass_name(output.name):
+                mixer_input = mixer_instance.inputs[lg_index * MIXER_SOCKET_INDEX_STEP]
+                scene.node_tree.links.new(output, mixer_input)
+                mixer_input.name = output.name
                 lg_index += 1
 
-        # TODO Enable denoiser AOVs and setup denoiser node, disable LuxCore denoiser
+        # Disable inputs of unused light groups
+        for i in range(MAX_LIGHTGROUPS):
+            enabled = i <= len(scene.luxcore.lightgroups.custom)
+            for j in range(MIXER_SOCKET_INDEX_STEP):
+                mixer_instance.inputs[i * MIXER_SOCKET_INDEX_STEP + j].enabled = enabled
+
+        # TODO Enable denoiser AOVs and setup denoiser node
 
         return {"FINISHED"}

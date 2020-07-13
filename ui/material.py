@@ -92,7 +92,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                 layout.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
 
             if not mat.luxcore.node_tree and not mat.luxcore.use_cycles_nodes:
-                layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use LuxCore Material Nodes")
+                layout.operator("luxcore.mat_nodetree_new", icon=icons.NODETREE, text="Use LuxCore Material Nodes")
 
             if mat.use_nodes and mat.node_tree:
                 layout.prop(mat.luxcore, "use_cycles_nodes")
