@@ -118,6 +118,8 @@ def draw_panel_scene_search(self, context):
     assetbar_operator.do_search = False
     assetbar_operator.tooltip = tooltip
 
+    col = layout.column(align=True)
+    col.prop(ui_props, 'local', expand=True, icon_only=False)
 
 def draw_panel_material_search(self, context):
     scene = context.scene
@@ -137,6 +139,9 @@ def draw_panel_material_search(self, context):
     assetbar_operator.do_search = False
     assetbar_operator.tooltip = tooltip
 
+    col = layout.column(align=True)
+    col.prop(ui_props, 'local', expand=True, icon_only=False)
+
     draw_panel_categories(self, context)
 
 
@@ -147,6 +152,7 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "VIEW3D_PT_LUXCORE_ONLINE_LIBRARY"
+    bl_order = 1
 
     @classmethod
     def poll(cls, context):
@@ -206,6 +212,7 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = "Downloads"
+    bl_order = 3
 
     @classmethod
     def poll(cls, context):
@@ -233,3 +240,48 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
            #     row.label(text=str(tcom.passargs["retry_counter"]))
            #
            #     layout.separator()
+
+
+class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_LOCAL(Panel):
+    bl_category = "LuxCoreOnlineLibrary"
+    bl_idname = "VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_LOCAL"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label = "Local"
+    bl_order = 2
+
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        upload_props = context.scene.luxcoreOL.upload
+
+        col = layout.column(align=True)
+        col.prop(upload_props, 'name')
+
+        col = layout.column(align=True)
+        col.prop(upload_props, 'category')
+
+        col = layout.column(align=True)
+        col.prop(upload_props, 'autorender')
+        if upload_props.autorender:
+            col = layout.column(align=True)
+            col.prop(upload_props, "samples")
+
+        col = layout.column(align=True)
+        col.label(text="Thumbnail:")
+
+        if not upload_props.autorender:
+            col = layout.column(align=True)
+            col.prop(upload_props, "show_thumbnail", icon=icons.IMAGE)
+
+            if upload_props.show_thumbnail:
+                layout.template_ID_preview(upload_props, "thumbnail", open="image.open")
+            else:
+                layout.template_ID(upload_props, "thumbnail", open="image.open")
+
+
+        col = layout.column(align=True)
+        op = col.operator("scene.luxcore_ol_add_local", text="Add asset...")

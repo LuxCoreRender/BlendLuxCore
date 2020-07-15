@@ -123,8 +123,11 @@ def init_categories(context):
 
     assets = get_search_props(context)
 
+    if assets == None or len(assets) == 0:
+        return
+
     if ui_props.local:
-        assets = [asset for asset in get_search_props(context) if asset['local']]
+        assets = [asset for asset in assets if asset['local']]
 
     for asset in assets:
         cat = asset['category']
@@ -194,7 +197,6 @@ def is_downloading(asset):
         if thread_data[2].passargs['thumbnail']:
             continue
         if asset['hash'] == thread_data[1]['hash']:
-            # print(asset["name"], "is downloading")
             return thread_data[2]
     return None
 
@@ -202,6 +204,9 @@ def is_downloading(asset):
 def download_file(asset_type, asset, location, rotation, target_object, target_slot):
     downloader = {'location': (location[0],location[1],location[2]), 'rotation': (rotation[0],rotation[1],rotation[2]),
                   'target_object': target_object, 'target_slot': target_slot}
+    if asset['local']:
+        return True
+
     tcom = is_downloading(asset)
     if tcom is None:
         tcom = ThreadCom()
@@ -523,7 +528,6 @@ def download_thumbnail(self, context, asset, index):
         download_threads.append([downloadthread, asset, tcom])
         bpy.app.timers.register(timer_update)
 
-
     return True
 
 
@@ -582,7 +586,7 @@ def load_previews(context, assets):
                 if imgname in bpy.data.images:
                     img = bpy.data.images[imgname]
                     bpy.data.images.remove(img)
-                # print('Thumbnail not cached: ', imgname)
-                download_thumbnail(None, context, asset, i)
+                if not asset['local']:
+                    download_thumbnail(None, context, asset, i)
 
             i += 1

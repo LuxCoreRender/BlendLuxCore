@@ -180,6 +180,15 @@ class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
     free_only: BoolProperty(name="Free only", default=True)
 
 
+class LuxCoreOnlineLibraryUpload(bpy.types.PropertyGroup):
+    name: StringProperty(name="Asset name", description="Assign a name to the asset", default="Default")
+    category: StringProperty(name='Category', description="Assign a category to the asset", default="misc")
+    autorender: BoolProperty(name="Autorender thumbnail", default=True)
+    samples: IntProperty(name="Samples", default=50, min=1)
+    show_thumbnail: BoolProperty(name="", default=True, description="Show thumbnail")
+    thumbnail: PointerProperty(name="Image", type=bpy.types.Image)
+
+
 class LuxCoreOnlineLibrary(bpy.types.PropertyGroup):
     ui: PointerProperty(type=LuxCoreOnlineLibraryUI)
     model: PointerProperty(type=LuxCoreOnlineLibraryModel)
@@ -187,6 +196,7 @@ class LuxCoreOnlineLibrary(bpy.types.PropertyGroup):
     scene: PointerProperty(type=LuxCoreOnlineLibraryScene)
     on_search: BoolProperty(name="on_search", default=False)
     search_category: StringProperty(name="search_category", default="")
+    upload: PointerProperty(type=LuxCoreOnlineLibraryUpload)
 
     @classmethod
     def register(cls):
