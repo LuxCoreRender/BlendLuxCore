@@ -33,17 +33,6 @@ def calc_bbox(context, objects):
             bbox_max[0] = max(bbox_max[0], corner[0])
             bbox_max[1] = max(bbox_max[1], corner[1])
             bbox_max[2] = max(bbox_max[2], corner[2])
-                    
-        # bbox0 = obj.matrix_world @ Vector((obj.bound_box[0][0], obj.bound_box[0][1], obj.bound_box[0][2], 1))
-        # bbox6 = obj.matrix_world @ Vector((obj.bound_box[6][0], obj.bound_box[6][1], obj.bound_box[6][2], 1))
-
-#        bbox_min[0] = min(bbox_min[0], bbox0[0])
-#        bbox_min[1] = min(bbox_min[1], bbox0[1])
-#        bbox_min[2] = min(bbox_min[2], bbox0[2])
-
-#        bbox_max[0] = max(bbox_max[0], bbox6[0])
-#        bbox_max[1] = max(bbox_max[1], bbox6[1])
-#        bbox_max[2] = max(bbox_max[2], bbox6[2])
 
     return (bbox_min, bbox_max)
 

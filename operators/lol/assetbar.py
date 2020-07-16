@@ -152,10 +152,10 @@ def draw_callback_2d_search(self, context):
     assets = utils.get_search_props(context)
 
     if ui_props.local:
-        assets = [asset for asset in utils.get_search_props(context) if asset['local']]
+        assets = [asset for asset in assets if asset['local']]
 
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
     user_preferences = get_addon_preferences(context)
 
@@ -627,10 +627,10 @@ class LOLAssetBarOperator(Operator):
         ui_props.scrolloffset = 0
 
         if ui_props.local:
-            assets = [asset for asset in utils.get_search_props(context) if asset['local']]
+            assets = [asset for asset in assets if asset['local']]
 
         if scene.luxcoreOL.on_search:
-            assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+            assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
             scene.luxcoreOL.search_category = self.category
 
         if ui_props.assetbar_on:
@@ -701,10 +701,10 @@ class LOLAssetBarOperator(Operator):
             return {'CANCELLED'}
 
         if ui_props.local:
-            assets = [asset for asset in utils.get_search_props(context) if asset['local']]
+            assets = [asset for asset in assets if asset['local']]
 
         if scene.luxcoreOL.on_search:
-            assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+            assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
         areas = []
 
