@@ -200,7 +200,8 @@ class Exporter(object):
         renderengine_type = config_props.Get("renderengine.type").GetString()
         if renderengine_type.endswith("OCL") and not renderconfig.HasCachedKernels():
             if engine:
-                message = "Compiling OpenCL kernels (just once, takes a few minutes)"
+                gpu_backend = utils.get_addon_preferences(bpy.context).gpu_backend
+                message = f"Compiling {gpu_backend} kernels (just once, takes a few minutes)"
                 engine.report({"INFO"}, message)
                 engine.update_stats(message, "")
 
