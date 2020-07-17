@@ -259,7 +259,7 @@ class Downloader(threading.Thread):
                 imgname = self.asset['thumbnail']
                 img = bpy.data.images.load(thumbnailpath)
                 img.name = imgname
-                img.colorspace_settings.name = 'Linear'
+                # img.colorspace_settings.name = 'Linear'
 
                 tcom.finished = True
 
@@ -540,7 +540,7 @@ def get_thumbnail(imagename):
 
     if img == None:
         img = bpy.data.images.load(path)
-        img.colorspace_settings.name = 'Linear'
+        # img.colorspace_settings.name = 'Linear'
         img.name = imagename
         img.name = imagename
 
@@ -581,7 +581,7 @@ def load_previews(context, assets):
                         img.unpack(method='USE_ORIGINAL')
                     img.filepath = tpath
                     img.reload()
-                img.colorspace_settings.name = 'Linear'
+                # img.colorspace_settings.name = 'Linear'
             else:
                 if imgname in bpy.data.images:
                     img = bpy.data.images[imgname]

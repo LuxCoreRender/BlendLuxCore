@@ -243,16 +243,6 @@ def draw_callback_2d_search(self, context):
 
                     if assets[index]['downloaded'] > 0:
                         ui_bgl.draw_rect(x - assetbar_props.highlight_margin, y - assetbar_props.highlight_margin, int(w * assets[index]['downloaded'] / 100.0), 2, green)
-    # TODO: Transfer to LOL
-    #
-    #                 if (result.get('can_download', True)) == 0:
-    #                     img = utils.get_thumbnail('locked.png')
-    #                     ui_bgl.draw_image(x + 2, y + 2, 24, 24, img, 1)
-    #
-    #                 v_icon = verification_icons[result.get('verification_status', 'validated')]
-    #                 if v_icon is not None:
-    #                     img = utils.get_thumbnail(v_icon)
-    #                     ui_bgl.draw_image(x + ui_props.thumb_size - 26, y + 2, 24, 24, img, 1)
 
     # TODO: Transfer to LOL
 
