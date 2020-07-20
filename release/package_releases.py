@@ -62,7 +62,7 @@ MAC_FILES = [
     "libOpenImageDenoise.1.2.1.dylib", "libOpenImageIO.1.8.dylib",
     "libcuda.dylib", "libnvrtc.dylib",
     "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
-    "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
+    "pyluxcore.so", "pyluxcoretools.zip", "denoise"
 ]
 
 # On Windows and macOS, OIDN is downloaded by the LuxCore build script, so we don't need to do it here
