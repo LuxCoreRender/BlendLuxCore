@@ -20,6 +20,9 @@ trigger:
   branches:
     include:
     - '*'
+  tags:
+    include:
+    - 'blendluxcore_v*'
 
 jobs:
 - job: DetectBuildType
