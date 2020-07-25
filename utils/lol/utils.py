@@ -40,7 +40,6 @@ import threading
 from threading import _MainThread, Thread
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
-from ...utils.errorlog import LuxCoreErrorLog
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
@@ -109,8 +108,7 @@ def init_categories(context):
 
 def check_cache(args):
     (context) = args
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
 
     scene = context.scene
     assets = scene.luxcoreOL.model['assets']
@@ -218,7 +216,9 @@ class Downloader(threading.Thread):
                 imgname = self.asset['thumbnail']
                 img = bpy.data.images.load(thumbnailpath)
                 img.name = imgname
-                img.colorspace_settings.name = 'Linear'
+                if bpy.app.version < (2, 83, 0):
+                    # Needed in old Blender versions so the images are not too dark
+                    img.colorspace_settings.name = 'Linear'
 
                 tcom.finished = True
 
@@ -283,8 +283,7 @@ class ThreadCom:  # object passed to threads to read background process stdout i
 
 
 def link_asset(context, asset, location, rotation):
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
 
     filename = asset["url"]
     filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
@@ -344,8 +343,7 @@ def append_material(context, asset, target_object, target_slot):
     if target_object == None:
         return
 
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
 
     filename = asset["url"]
     filepath = os.path.join(user_preferences.global_dir, "material", filename[:-3] + 'blend')
@@ -365,8 +363,7 @@ def append_material(context, asset, target_object, target_slot):
 
 
 def load_asset(context, asset, location, rotation, target_object, target_slot):
-    name = basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
 
     ui_props = context.scene.luxcoreOL.ui
 
@@ -433,8 +430,7 @@ def get_search_props(context):
 def save_prefs(self, context):
     # first check context, so we don't do this on registration or blender startup
     if not bpy.app.background: #(hasattr kills blender)
-        name = basename(dirname(dirname(dirname(__file__))))
-        user_preferences = context.preferences.addons[name].preferences
+        # user_preferences = get_addon_preferences(context)
         # TODO: Implement
         test = 1
         #prefs = {
@@ -492,17 +488,21 @@ def download_thumbnail(self, context, asset, index):
 
 
 def get_thumbnail(imagename):
-    name = dirname(dirname(dirname(__file__)))
-    path = os.path.join(name, 'thumbnails', imagename)
+    # Prepend a dot so the image is hidden to users, e.g. in Blender's search
+    imagename_blender = '.' + imagename
 
-    imagename = '.%s' % imagename
-    img = bpy.data.images.get(imagename)
+    img = bpy.data.images.get(imagename_blender)
 
-    if img == None:
+    if img is None:
+        addon_base_dir = dirname(dirname(dirname(__file__)))
+        path = os.path.join(addon_base_dir, 'thumbnails', imagename)
+
         img = bpy.data.images.load(path)
-        img.colorspace_settings.name = 'Linear'
-        img.name = imagename
-        img.name = imagename
+        img.name = imagename_blender
+
+        if bpy.app.version < (2, 83, 0):
+            # Needed in old Blender versions so the images are not too dark
+            img.colorspace_settings.name = 'Linear'
 
     return img
 
@@ -532,6 +532,7 @@ def load_previews(context, assets):
             asset["thumbnail"] = imgname
             if os.path.exists(tpath):
                 img = bpy.data.images.get(imgname)
+
                 if img is None or img.size[0] == 0:
                     img = bpy.data.images.load(tpath)
                     img.name = imgname
@@ -541,7 +542,10 @@ def load_previews(context, assets):
                         img.unpack(method='USE_ORIGINAL')
                     img.filepath = tpath
                     img.reload()
-                img.colorspace_settings.name = 'Linear'
+
+                if bpy.app.version < (2, 83, 0):
+                    # Needed in old Blender versions so the images are not too dark
+                    img.colorspace_settings.name = 'Linear'
             else:
                 if imgname in bpy.data.images:
                     img = bpy.data.images[imgname]

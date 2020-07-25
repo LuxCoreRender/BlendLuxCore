@@ -289,7 +289,9 @@ def draw_callback_2d_search(self, context):
     #                 else:
     #                     iname = utils.previmg_name(ui_props.active_index)
     #                     img = bpy.data.images.get(iname)
-    #                 img.colorspace_settings.name = 'Linear'
+                    # if bpy.app.version < (2, 83, 0):
+                    #     # Needed in old Blender versions so the images are not too dark
+                    #     img.colorspace_settings.name = 'Linear'
     #
     #             gimg = None
     #             atip = ''
