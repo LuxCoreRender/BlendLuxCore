@@ -530,7 +530,8 @@ def load_previews(context, assets):
             imgname = previmg_name(i)
 
             asset["thumbnail"] = imgname
-            if os.path.exists(tpath):
+            # Sometimes empty files are created - possibly failed downloads? Re-download in this case.
+            if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
                 img = bpy.data.images.get(imgname)
 
                 if img is None or img.size[0] == 0:
