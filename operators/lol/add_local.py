@@ -161,7 +161,7 @@ class LOLAddLocalOperator(Operator):
 
         assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), "local")
         blendfilepath = join(assetpath, new_asset['name'].replace(" ", "_") + ".blend")
-        bpy.data.libraries.write(blendfilepath, data_block, fake_user = True)
+        bpy.data.libraries.write(blendfilepath, data_block, fake_user=True)
 
         new_asset['hash'] = calc_hash(blendfilepath)
         assets.append(new_asset)

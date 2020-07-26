@@ -36,12 +36,11 @@ def calc_bbox(context, objects):
 
     return (bbox_min, bbox_max)
 
+
 def render_material_thumbnail(assetname, blendfile, thumbnail, samples):
     context = bpy.context
     scene = context.scene
-    name = 'BlendLuxCore'
-    # name = basename(dirname(dirname(dirname(__file__))))
-    print(basename(dirname(dirname(dirname(__file__)))))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     with bpy.data.libraries.load(blendfile, link=True) as (mat_from, mat_to):
@@ -70,13 +69,11 @@ def render_material_thumbnail(assetname, blendfile, thumbnail, samples):
 def render_model_thumbnail(assetname, blendfile, thumbnail, samples):
     context = bpy.context
     scene = context.scene
-    name = 'BlendLuxCore'
-    # name = basename(dirname(dirname(dirname(__file__))))
-    print(basename(dirname(dirname(dirname(__file__)))))
+    name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
     
     with bpy.data.libraries.load(blendfile, link=True) as (data_from, data_to):
-        data_to.objects = [name for name in data_from.objects if name not in ["Plane", "Camera"]]
+        data_to.objects = [name for name in data_from.objects]
    
     # Add new collection, where the assets are placed into
     col = bpy.data.collections.new(assetname)
