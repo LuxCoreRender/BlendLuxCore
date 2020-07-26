@@ -172,13 +172,8 @@ def draw_callback_2d_search(self, context):
 
         h_draw = min(assetbar_props.hcount, math.ceil(len(assets) / assetbar_props.wcount))
 
-        if assetbar_props.wcount > len(assets):
-            bar_width = len(assets) * (ui_props.thumb_size + assetbar_props.margin) + assetbar_props.margin
-        else:
-            bar_width = assetbar_props.width
-
         row_height = ui_props.thumb_size + assetbar_props.margin
-        ui_bgl.draw_rect(assetbar_props.x, assetbar_props.y - assetbar_props.height, bar_width,
+        ui_bgl.draw_rect(assetbar_props.x, assetbar_props.y - assetbar_props.height, assetbar_props.width,
                          assetbar_props.height, hcolor)
 
         if len(assets) != 0:
