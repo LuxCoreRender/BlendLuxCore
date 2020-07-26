@@ -257,9 +257,24 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_LOCAL(Panel):
         layout.use_property_decorate = False
 
         upload_props = context.scene.luxcoreOL.upload
+        ui_props = context.scene.luxcoreOL.ui
 
-        col = layout.column(align=True)
-        col.prop(upload_props, 'name')
+        if ui_props.asset_type == "MATERIAL":
+            obj = context.active_object
+            if obj:
+                is_sortable = len(obj.material_slots) > 1
+                rows = 1
+                if (is_sortable):
+                    rows = 4
+
+                col = layout.column(align=True)
+                col.label(text="Material:")
+                col = layout.column(align=True)
+                col.template_list("MATERIAL_UL_matslots", "", obj, "material_slots", obj, "active_material_index",
+                                  rows=rows)
+        else:
+            col = layout.column(align=True)
+            col.prop(upload_props, 'name')
 
         col = layout.column(align=True)
         col.prop(upload_props, 'category')
@@ -282,6 +297,10 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_LOCAL(Panel):
             else:
                 layout.template_ID(upload_props, "thumbnail", open="image.open")
 
+        if (upload_props.thumbnail is None and not upload_props.autorender):
+            col2 = layout.column(align=True)
+            col2.label(text="No thumbnail available", icon=icons.WARNING)
 
         col = layout.column(align=True)
-        op = col.operator("scene.luxcore_ol_add_local", text="Add asset...")
+        col.enabled = (upload_props.thumbnail is not None or upload_props.autorender)
+        col.operator("scene.luxcore_ol_add_local", text="Add asset...")

@@ -36,11 +36,43 @@ def calc_bbox(context, objects):
 
     return (bbox_min, bbox_max)
 
-
-def render_thumbnail(assetname, blendfile, thumbnail, samples):
+def render_material_thumbnail(assetname, blendfile, thumbnail, samples):
     context = bpy.context
     scene = context.scene
     name = 'BlendLuxCore'
+    # name = basename(dirname(dirname(dirname(__file__))))
+    print(basename(dirname(dirname(dirname(__file__)))))
+    user_preferences = context.preferences.addons[name].preferences
+
+    with bpy.data.libraries.load(blendfile, link=True) as (mat_from, mat_to):
+        mat_to.materials = mat_from.materials
+
+    mat = mat_to.materials[0]
+
+    context.view_layer.objects.active = bpy.data.objects['Luxball']
+    bpy.data.objects['Luxball'].material_slots[0].material = mat
+    context.view_layer.objects.active = bpy.data.objects['Luxball ring']
+    bpy.data.objects['Luxball ring'].material_slots[0].material = mat
+    run()
+
+    context.scene.view_settings.gamma = 1
+    context.scene.view_settings.exposure = 1
+    context.scene.view_settings.look = 'Very High Contrast'
+    context.scene.luxcore.halt.enable = True
+    context.scene.luxcore.halt.use_samples = True
+    context.scene.luxcore.halt.samples = int(samples)
+    context.scene.render.image_settings.file_format = 'JPEG'
+    context.scene.render.filepath = thumbnail
+
+    bpy.ops.render.render(write_still=True)
+
+
+def render_model_thumbnail(assetname, blendfile, thumbnail, samples):
+    context = bpy.context
+    scene = context.scene
+    name = 'BlendLuxCore'
+    # name = basename(dirname(dirname(dirname(__file__))))
+    print(basename(dirname(dirname(dirname(__file__)))))
     user_preferences = context.preferences.addons[name].preferences
     
     with bpy.data.libraries.load(blendfile, link=True) as (data_from, data_to):
@@ -114,7 +146,11 @@ argv = argv[argv.index("--") + 1:]
 
 blendfile = argv[0]
 assetname = splitext(basename(argv[0]))[0]
-thumbnail = join(dirname(argv[0]),'preview', assetname + '.jpg')
+thumbnail = join(dirname(dirname(argv[0])), "preview", "local", assetname + ".jpg")
 samples = argv[1]
+type = argv[2]
 
-render_thumbnail(assetname, blendfile, thumbnail, samples)
+if type == 'model':
+    render_model_thumbnail(assetname, blendfile, thumbnail, samples)
+elif type == 'material':
+    render_material_thumbnail(assetname, blendfile, thumbnail, samples)

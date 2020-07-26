@@ -29,7 +29,7 @@ import hashlib
 from bpy.types import Operator
 from bpy.props import BoolProperty, IntProperty, StringProperty, CollectionProperty
 
-from os.path import basename, dirname, isfile, join
+from os.path import basename, dirname, isfile, join, splitext
 from ...utils.lol import utils as lol_utils
 
 from mathutils import Vector
@@ -140,7 +140,6 @@ class LOLAddLocalOperator(Operator):
 
         new_asset['name'] = upload_props.name
         new_asset['category'] = upload_props.category
-        new_asset['url'] = upload_props.name.replace(" ", "_")+'.zip'
 
         if ui_props.asset_type == 'MODEL':
             (bbox_min, bbox_max) = calc_bbox(context, context.selected_objects)
@@ -149,15 +148,19 @@ class LOLAddLocalOperator(Operator):
             data_block = set(context.selected_objects)
 
         elif ui_props.asset_type == 'MATERIAL':
-            data_block = set(context.active_object.active_material)
+            new_asset['name'] = context.active_object.active_material.name
+            new_asset['category'] = upload_props.category
+            data_block = {context.active_object.active_material}
 
         filepath = join(user_preferences.global_dir, 'local_assets_' + ui_props.asset_type.lower() + '.json')
         if isfile(filepath):
             with open(filepath) as file_handle:
                 assets = json.loads(file_handle.read())
 
-        assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower())
-        blendfilepath = join(assetpath, upload_props.name.replace(" ", "_") + ".blend")
+        new_asset['url'] = join("local", new_asset['name'].replace(" ", "_")+'.zip')
+
+        assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), "local")
+        blendfilepath = join(assetpath, new_asset['name'].replace(" ", "_") + ".blend")
         bpy.data.libraries.write(blendfilepath, data_block, fake_user = True)
 
         new_asset['hash'] = calc_hash(blendfilepath)
@@ -172,10 +175,14 @@ class LOLAddLocalOperator(Operator):
             from subprocess import Popen
 
             studio = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'studio.blend') + '"'
+            if ui_props.asset_type == 'MATERIAL':
+                studio = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'material_thumbnail.blend') + '"'
+
             script = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'render_thumbnail.py') + '"'
 
             process = Popen(bpy.app.binary_path + ' ' + studio
-                            + ' -b --python ' + script + ' -- ' + blendfilepath + ' ' + str(upload_props.samples))
+                            + ' -b --python ' + script + ' -- ' + blendfilepath + ' ' + str(upload_props.samples)
+                            + ' ' + ui_props.asset_type.lower())
             process.wait()
         else:
             from shutil import copyfile
