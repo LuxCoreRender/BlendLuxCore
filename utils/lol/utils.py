@@ -30,7 +30,7 @@
 
 import bpy
 import uuid
-from os.path import basename, dirname, join, isfile
+from os.path import basename, dirname, join, isfile, splitext
 import hashlib
 import tempfile
 import os
@@ -67,6 +67,7 @@ def load_local_TOC(context, asset_type):
 
 def download_table_of_contents(context):
     scene = context.scene
+    ui_props = context.scene.luxcoreOL.ui
 
     try:
         import urllib.request
@@ -101,7 +102,10 @@ def download_table_of_contents(context):
             assets.extend(load_local_TOC(context, 'material'))
             scene.luxcoreOL.material['assets'] = assets
 
-        context.scene.luxcoreOL.ui.ToC_loaded = True
+        load_previews(context, 'MODEL')
+        load_previews(context, 'MATERIAL')
+        ui_props.ToC_loaded = True
+        ui_props.thumbnails_loaded = True
         init_categories(context)
         bg_task = Thread(target=check_cache, args=(context, ))
         bg_task.start()
@@ -224,6 +228,7 @@ def download_file(asset_type, asset, location, rotation, target_object, target_s
 
     return True
 
+
 class Downloader(threading.Thread):
     def __init__(self, asset, tcom):
         super(Downloader, self).__init__()
@@ -248,7 +253,7 @@ class Downloader(threading.Thread):
 
         if tcom.passargs['thumbnail']:
             # Thumbnail  download
-            imagename = self.asset['url'][:-4] + '.jpg'
+            imagename = splitext(self.asset['url'])[0] + '.jpg'
             thumbnailpath = os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower(), "preview",
                                          imagename)
             url = LOL_HOST_URL + "/" + tcom.passargs['asset type'].lower() + "/preview/" + imagename
@@ -256,9 +261,10 @@ class Downloader(threading.Thread):
                 with urllib.request.urlopen(url, timeout=60) as url_handle, open(thumbnailpath, "wb") as file_handle:
                     file_handle.write(url_handle.read())
 
-                imgname = self.asset['thumbnail']
-                img = bpy.data.images.load(thumbnailpath)
-                img.name = imgname
+                imgname = self.asset['thumbnail'].name
+                bpy.data.images.remove(self.asset['thumbnail'])
+                self.asset['thumbnail'] = bpy.data.images.load(thumbnailpath)
+                self.asset['thumbnail'].name = imgname
                 # img.colorspace_settings.name = 'Linear'
 
                 tcom.finished = True
@@ -514,7 +520,7 @@ def guard_from_crash():
     return True
 
 
-def download_thumbnail(self, context, asset, index):
+def download_thumbnail(self, context, asset):
     ui_props = context.scene.luxcoreOL.ui
 
     tcom = is_downloading(asset)
@@ -547,29 +553,44 @@ def get_thumbnail(imagename):
     return img
 
 
-def previmg_name(index, fullsize=False):
+def next_previmg_name(fullsize=False):
     if not fullsize:
-        return '.LOL_preview_'+ str(index).zfill(2)
+        index = len([img for img in bpy.data.images if '.LOL_preview_' in img.name])
+        return '.LOL_preview_' + str(index).zfill(2)
     else:
-        return '.LOL_preview_full_' + str(index).zfill(2)
+        index = len([img for img in bpy.data.images if '.LOL_full_preview_' in img.name])
+        return '.LOL_full_preview_' + str(index).zfill(2)
 
 
-def load_previews(context, assets):
+def clean_previmg(fullsize=False):
+    if not fullsize:
+        for img in [img for img in bpy.data.images if '.LOL_preview_' in img.name]:
+            if img.users == 0:
+                bpy.data.images.remove(img)
+    else:
+        for img in [img for img in bpy.data.images if '.LOL_full_preview_' in img.name]:
+            if img.users == 0:
+                bpy.data.images.remove(img)
+
+
+def load_previews(context, asset_type):
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
     ui_props = context.scene.luxcoreOL.ui
 
-    if assets is not None and len(assets) != 0:
-        i = 0
-        for asset in assets:
-            if ui_props.asset_type == 'MATERIAL':
-                tpath = os.path.join(user_preferences.global_dir, ui_props.asset_type.lower(), "preview",
-                                     asset['name'] + '.jpg')
-            else:
-                tpath = os.path.join(user_preferences.global_dir, ui_props.asset_type.lower(), "preview", asset['url'][:-4] + '.jpg')
-            imgname = previmg_name(i)
+    if asset_type == 'MODEL':
+        assets = context.scene.luxcoreOL.model['assets']
+    elif asset_type == 'SCENE':
+        assets = context.scene.luxcoreOL.scene['assets']
+    elif asset_type == 'MATERIAL':
+        assets = context.scene.luxcoreOL.material['assets']
 
-            asset["thumbnail"] = imgname
+    if assets is not None and len(assets) != 0:
+        clean_previmg()
+        for asset in assets:
+            tpath = join(user_preferences.global_dir, asset_type, "preview", asset['url'][:-4] + '.jpg')
+            imgname = next_previmg_name()
+
             if os.path.exists(tpath):
                 img = bpy.data.images.get(imgname)
                 if img is None or img.size[0] == 0:
@@ -587,6 +608,11 @@ def load_previews(context, assets):
                     img = bpy.data.images[imgname]
                     bpy.data.images.remove(img)
                 if not asset['local']:
-                    download_thumbnail(None, context, asset, i)
+                    rootdir = dirname(dirname(dirname(__file__)))
+                    path = join(rootdir, 'thumbnails', 'thumbnail_notready.jpg')
+                    img = bpy.data.images.load(path)
+                    img.name = imgname
 
-            i += 1
+                    download_thumbnail(None, context, asset)
+
+            asset["thumbnail"] = img

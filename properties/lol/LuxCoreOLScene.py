@@ -29,7 +29,11 @@ from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, 
 from ...utils.lol import utils as utils
 
 def switch_local(self, context):
+    scene = context.scene
+    ui_props = scene.luxcoreOL.ui
+
     utils.init_categories(context)
+    ui_props.scrolloffset = 0
 
 
 def switch_search_results(self, context):
@@ -39,7 +43,6 @@ def switch_search_results(self, context):
         utils.download_table_of_contents(context)
 
     assets = utils.get_search_props(context)
-    utils.load_previews(context, assets)
     ui_props.scrolloffset = 0
 
     if ui_props.asset_type == 'MODEL':
@@ -49,8 +52,7 @@ def switch_search_results(self, context):
     if ui_props.asset_type == 'MATERIAL':
         asset_props = scene.luxcoreOL.material
 
-    if not 'categories' in asset_props.keys():
-        utils.init_categories(context)
+    utils.init_categories(context)
 
     scene.luxcoreOL.on_search = False
     self.category = ""

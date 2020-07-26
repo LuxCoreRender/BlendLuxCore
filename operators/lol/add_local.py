@@ -182,6 +182,6 @@ class LOLAddLocalOperator(Operator):
             copyfile(upload_props.thumbnail.filepath, join(user_preferences.global_dir, ui_props.asset_type.lower(), 'preview', upload_props.name.replace(" ", "_") + ".jpg"))
 
         lol_utils.download_table_of_contents(context)
-        lol_utils.load_previews(context, lol_utils.get_search_props(context))
+        lol_utils.load_previews(context, ui_props.asset_type)
 
         return {'FINISHED'}

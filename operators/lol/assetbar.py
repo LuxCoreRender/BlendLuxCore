@@ -76,11 +76,9 @@ def draw_callback_2d_progress(self, context):
 
         asset_data = threaddata[1]
 
-        iname = asset_data['thumbnail']
-        img = bpy.data.images.get(iname)
+        img = asset_data['thumbnail']
         if img is None:
             img = utils.get_thumbnail('thumbnail_notready.jpg')
-
 
         if tcom.passargs.get('downloaders'):
             for d in tcom.passargs['downloaders']:
@@ -118,7 +116,7 @@ def draw_callback_3d_progress(self, context):
             continue
 
         asset_data = threaddata[1]
-        if ui_props.asset_type == 'MODEL':
+        if tcom.passargs['asset type'] == 'MODEL':
             bbox_min = Vector(asset_data["bbox_min"])
             bbox_max = Vector(asset_data["bbox_max"])
             bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
@@ -220,8 +218,7 @@ def draw_callback_2d_search(self, context):
                             assetbar_props.margin + ui_props.thumb_size) + assetbar_props.margin + assetbar_props.drawoffset
 
                     index = a + ui_props.scrolloffset + b * assetbar_props.wcount
-                    iname = assets[index]['thumbnail']
-                    img = bpy.data.images.get(iname)
+                    img = assets[index]['thumbnail']
 
                     if img is None or img.size[0] == 0:
                         img = utils.get_thumbnail('thumbnail_notready.jpg')
@@ -300,8 +297,7 @@ def draw_callback_2d_search(self, context):
     # Scroll assets with mouse wheel
     if ui_props.dragging and (
             ui_props.draw_drag_image or ui_props.draw_snapped_bounds) and ui_props.active_index > -1:
-        iname = assets[ui_props.active_index]['thumbnail']
-        img = bpy.data.images.get(iname)
+        img = assets[ui_props.active_index]['thumbnail']
         if img is None:
             img = utils.get_thumbnail('thumbnail_notready.jpg')
 
@@ -611,7 +607,7 @@ class LOLAssetBarOperator(Operator):
         assets = utils.get_search_props(context)
 
         if not ui_props.thumbnails_loaded:
-            utils.load_previews(context, assets)
+            utils.load_previews(context, ui_props.asset_type)
             ui_props.thumbnails_loaded = True
 
         ui_props.scrolloffset = 0
