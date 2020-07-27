@@ -582,7 +582,7 @@ def openVDB_sequence_resolve_all(file):
     # A file sequence has a running number at the end of the filename, e.g. name001.ext
     # in case of the Blender cache files the structure is name_frame_index.ext
 
-    #Test if the filename structure matches the Blender nomenclature
+    # Test if the filename structure matches the Blender nomenclature
     matchstr = r'(.*)_([0-9]{6})_([0-9]{2})'
     matchObj = re.match(matchstr, filename_noext)
 
@@ -590,9 +590,6 @@ def openVDB_sequence_resolve_all(file):
         matchstr = r'(\D*)([0-9]+)'
         # Test if the filename structure matches a general sequence structure
         matchObj = re.match(matchstr, filename_noext)
-
-    name = ""
-
 
     if matchObj:
         name = matchObj.group(1)

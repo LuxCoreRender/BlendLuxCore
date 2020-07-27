@@ -80,7 +80,6 @@ class VisibilityCache:
         visible_objs = self._get_visible_objects(depsgraph, context)
         self.objects_to_remove = self.last_visible_objects - visible_objs
         self.has_new_objects = bool(visible_objs - self.last_visible_objects)
-        print("has_new_objs:", self.has_new_objects)
         self.last_visible_objects = visible_objs
         return bool(self.objects_to_remove) or self.has_new_objects
 
