@@ -217,28 +217,31 @@ class Exporter(object):
         # Inform about pre-computations that can take a long time to complete, like caches
         if engine:
             message = "Creating RenderSession"
-            # The second argument of Get() is used as fallback if the property is not set
-            cache_indirect = config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
-            cache_caustics = config_props.Get("path.photongi.caustic.enabled", [False]).GetBool()
-            cache_envlight = scene.luxcore.config.envlight_cache.enabled
-            cache_dls = config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE"
-            
-            if stats:
-                stats.cache_indirect.value = cache_indirect
-                stats.cache_caustics.value = cache_caustics
-                stats.cache_envlight.value = cache_envlight
-                stats.cache_dls.value = cache_dls
-            
-            cache_state = {
-                "Indirect Light": cache_indirect,
-                "Caustics": cache_caustics,
-                "Env. Light": cache_envlight,
-                "DLSC": cache_dls,
-            }
-            enabled_caches = [key for key, value in cache_state.items() if value]
 
-            if any(enabled_caches):
-                message += ", computing caches (" + ", ".join(enabled_caches) + ")"
+            # Caches are never used in viewport render
+            if not is_viewport_render:
+                # The second argument of Get() is used as fallback if the property is not set
+                cache_indirect = config_props.Get("path.photongi.indirect.enabled", [False]).GetBool()
+                cache_caustics = config_props.Get("path.photongi.caustic.enabled", [False]).GetBool()
+                cache_envlight = scene.luxcore.config.envlight_cache.enabled
+                cache_dls = config_props.Get("lightstrategy.type", [""]).GetString() == "DLS_CACHE"
+
+                if stats:
+                    stats.cache_indirect.value = cache_indirect
+                    stats.cache_caustics.value = cache_caustics
+                    stats.cache_envlight.value = cache_envlight
+                    stats.cache_dls.value = cache_dls
+
+                cache_state = {
+                    "Indirect Light": cache_indirect,
+                    "Caustics": cache_caustics,
+                    "Env. Light": cache_envlight,
+                    "DLSC": cache_dls,
+                }
+                enabled_caches = [key for key, value in cache_state.items() if value]
+
+                if any(enabled_caches):
+                    message += ", computing caches (" + ", ".join(enabled_caches) + ")"
 
             message += " ..."
             engine.update_stats("Export Finished (%.1f s)" % export_time, message)
