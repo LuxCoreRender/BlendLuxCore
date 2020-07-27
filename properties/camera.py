@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
+from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty, EnumProperty
 from bpy.types import PropertyGroup
 from .imagepipeline import LuxCoreImagepipeline
 
@@ -43,6 +43,25 @@ class LuxCoreCameraProps(PropertyGroup):
 
     volume: PointerProperty(type=bpy.types.NodeTree)
     auto_volume: BoolProperty(name="Auto-Detect Camera Volume", default=True, description=AUTO_VOLUME_DESC)
+    
+    non_uniform_bokeh: BoolProperty(name="Non-Uniform Bokeh", default=False)
+    bokeh_blades: IntProperty(name="Blades", default=8, min=3,
+                              description="Number of aperture blades")
+    bokeh_anisotropy: FloatProperty(name="Anisotropy", default=0, min=-1, max=1,
+                                    description="Values > 0 expand the bokeh horizontally, "
+                                                "values < 0 expand the bokeh vertically")
+    bokeh_distribution_items = [
+        ("UNIFORM", "Uniform", "", 0),
+        ("EXPONENTIAL", "Exponential", "", 1),
+        ("INVERSEEXPONENTIAL", "Inverse Exponential", "", 2),
+        ("GAUSSIAN", "Gaussian", "", 3),
+        ("INVERSEGAUSSIAN", "Inverse Gaussian", "", 4),
+        ("TRIANGULAR", "Triangular", "", 5),
+    ]
+    bokeh_distribution: EnumProperty(name="Bokeh Distribution", items=bokeh_distribution_items, default="UNIFORM")
+    # The power affects only EXPONENTIAL and INVERSEEXPONENTIAL distributions
+    bokeh_power: IntProperty(name="Power", default=3, min=1, 
+                             description="Higher values lead to more pronounced exponential effects")
 
     # Deprecated properties, we now use the Cycles properties instead.
     # Only kept for backwards compatibility reasons.
