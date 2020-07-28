@@ -337,7 +337,13 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_aberration(CameraButtonsPanel, Pane
         if context.scene.luxcore.viewport.denoise:
             self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
 
-        layout.prop(coloraberration, "amount", slider=True)
+        layout.prop(coloraberration, "uniform")
+        if coloraberration.uniform:
+            layout.prop(coloraberration, "amount", slider=True)
+        else:
+            col = layout.column(align=True)
+            col.prop(coloraberration, "amount", slider=True, text="Strength (X)")
+            col.prop(coloraberration, "amount_y", slider=True)
 
 
 class LUXCORE_CAMERA_PT_image_pipeline_background_image(CameraButtonsPanel, Panel):
