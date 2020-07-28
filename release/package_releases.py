@@ -70,9 +70,9 @@ MAC_FILES = [
     "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
 ]
 
-# On Windows and macOS, OIDN is downloaded by the LuxCore build script, so we don't need to do it here
+# On Windows and macOS, OIDN is downloaded by the LuxCore build script
 OIDN_LINUX = "oidn-linux.tar.gz"
-OIDN_LINUX_URL: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.linux.tar.gz",
+OIDN_LINUX_URL = "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.linux.tar.gz",
 
 
 def print_divider():
