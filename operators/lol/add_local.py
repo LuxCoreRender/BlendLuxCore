@@ -27,9 +27,10 @@ import json
 import hashlib
 
 from bpy.types import Operator
-from bpy.props import BoolProperty, IntProperty, StringProperty, CollectionProperty
+from bpy.props import BoolProperty, IntProperty, StringProperty, CollectionProperty, PointerProperty
 
-from os.path import basename, dirname, isfile, join, splitext
+from os import listdir
+from os.path import basename, dirname, isfile, join, splitext, exists
 from ...utils.lol import utils as lol_utils
 
 from mathutils import Vector
@@ -118,6 +119,8 @@ class LOLAddLocalOperator(Operator):
     bl_label = 'LuxCore Online Library Add Assets Local'
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
+    asset_index: IntProperty(name="asset_index", default=-1, options={'SKIP_SAVE'})
+
     @classmethod
     def description(cls, context, properties):
         return "Add an asset to local library"
@@ -138,57 +141,152 @@ class LOLAddLocalOperator(Operator):
         new_asset = {}
         data_block = set()
 
-        new_asset['name'] = upload_props.name
-        new_asset['category'] = upload_props.category
-
-        if ui_props.asset_type == 'MODEL':
-            (bbox_min, bbox_max) = calc_bbox(context, context.selected_objects)
-            new_asset['bbox_min'] = bbox_min
-            new_asset['bbox_max'] = bbox_max
-            data_block = set(context.selected_objects)
-
-        elif ui_props.asset_type == 'MATERIAL':
-            new_asset['name'] = context.active_object.active_material.name
-            new_asset['category'] = upload_props.category
-            data_block = {context.active_object.active_material}
-
         filepath = join(user_preferences.global_dir, 'local_assets_' + ui_props.asset_type.lower() + '.json')
         if isfile(filepath):
             with open(filepath) as file_handle:
                 assets = json.loads(file_handle.read())
 
-        new_asset['url'] = join("local", new_asset['name'].replace(" ", "_")+'.zip')
+        if self.asset_index == -1:
+            new_asset['name'] = upload_props.name
+            new_asset['category'] = upload_props.category
 
-        assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), "local")
-        blendfilepath = join(assetpath, new_asset['name'].replace(" ", "_") + ".blend")
-        bpy.data.libraries.write(blendfilepath, data_block, fake_user=True)
+            if ui_props.asset_type == 'MODEL':
+                (bbox_min, bbox_max) = calc_bbox(context, context.selected_objects)
+                new_asset['bbox_min'] = bbox_min
+                new_asset['bbox_max'] = bbox_max
+                data_block = set(context.selected_objects)
 
-        new_asset['hash'] = calc_hash(blendfilepath)
+            elif ui_props.asset_type == 'MATERIAL':
+                new_asset['name'] = context.active_object.active_material.name
+                new_asset['category'] = upload_props.category
+                data_block = {context.active_object.active_material}
+
+            new_asset['url'] = join("local", new_asset['name'].replace(" ", "_")+'.zip')
+
+            assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), 'local')
+            blendfilepath = join(assetpath, new_asset['name'].replace(' ', '_') + '.blend')
+            bpy.data.libraries.write(blendfilepath, data_block, fake_user=True)
+            new_asset['hash'] = calc_hash(blendfilepath)
+        else:
+            new_asset['name'] = upload_props.add_list[self.asset_index]['name']
+            new_asset['category'] = upload_props.add_list[self.asset_index]['category']
+
+            if ui_props.asset_type == 'MODEL':
+                bbox_min = upload_props.add_list[self.asset_index]['bbox_min']
+                bbox_max = upload_props.add_list[self.asset_index]['bbox_max']
+                new_asset['bbox_min'] = [bbox_min[0], bbox_min[1], bbox_min[2]]
+                new_asset['bbox_max'] = [bbox_max[0], bbox_max[1], bbox_max[2]]
+
+            new_asset['hash'] = upload_props.add_list[self.asset_index]['hash']
+            new_asset['url'] = upload_props.add_list[self.asset_index]['url']
+            upload_props.add_list.remove(self.asset_index)
+
         assets.append(new_asset)
 
         jsonstr = json.dumps(assets, indent=2)
         with open(filepath, "w") as file_handle:
             file_handle.write(jsonstr)
 
-        if upload_props.autorender:
-            # Render thumnnail image in background
-            from subprocess import Popen
+        if self.asset_index == -1:
+            if upload_props.autorender:
+                # Render thumnnail image in background
+                from subprocess import Popen
 
-            studio = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'studio.blend') + '"'
-            if ui_props.asset_type == 'MATERIAL':
-                studio = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'material_thumbnail.blend') + '"'
+                studio = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'studio.blend') + '"'
+                if ui_props.asset_type == 'MATERIAL':
+                    studio = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'material_thumbnail.blend') + '"'
 
-            script = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'render_thumbnail.py') + '"'
-
-            process = Popen(bpy.app.binary_path + ' ' + studio
-                            + ' -b --python ' + script + ' -- ' + blendfilepath + ' ' + str(upload_props.samples)
-                            + ' ' + ui_props.asset_type.lower())
-            process.wait()
-        else:
-            from shutil import copyfile
-            copyfile(upload_props.thumbnail.filepath, join(user_preferences.global_dir, ui_props.asset_type.lower(), 'preview', upload_props.name.replace(" ", "_") + ".jpg"))
+                script = '"' + join(dirname(dirname(dirname(__file__))), 'scripts', 'LOL', 'render_thumbnail.py') + '"'
+                process = Popen(bpy.app.binary_path + ' ' + studio
+                                + ' -b --python ' + script + ' -- ' + blendfilepath + ' ' + str(upload_props.samples)
+                                + ' ' + ui_props.asset_type.lower())
+                process.wait()
+            else:
+                from shutil import copyfile
+                copyfile(upload_props.thumbnail.filepath, join(user_preferences.global_dir, ui_props.asset_type.lower(), 'preview', new_asset['name'].replace(" ", "_") + ".jpg"))
 
         lol_utils.download_table_of_contents(context)
         lol_utils.load_previews(context, ui_props.asset_type)
+
+        return {'FINISHED'}
+
+
+class LOLScanLocalOperator(Operator):
+    bl_idname = 'scene.luxcore_ol_scan_local'
+    bl_label = 'LuxCore Online Library Scan Local Assets'
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    @classmethod
+    def description(cls, context, properties):
+        return "Find local assets and add them to local library"
+
+
+    def execute(self, context):
+        scene = context.scene
+        ui_props = scene.luxcoreOL.ui
+        upload_props = scene.luxcoreOL.upload
+
+        name = basename(dirname(dirname(dirname(__file__))))
+        user_preferences = context.preferences.addons[name].preferences
+        assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), 'local')
+
+        files = [f for f in listdir(assetpath) if isfile(join(assetpath, f))]
+        # assets = []
+        if len(upload_props.add_list) > 0:
+            upload_props.add_list.clear()
+            lol_utils.clean_previmg()
+
+        assets = lol_utils.load_local_TOC(context, ui_props.asset_type.lower())
+        hashlist = [asset["hash"] for asset in assets]
+
+        for f in files:
+            hash = calc_hash(join(assetpath, f))
+            if not hash in hashlist:
+                new_asset = upload_props.add_list.add()
+                new_asset["name"] = splitext(f)[0].replace("_", " ")
+                new_asset["category"] = "Misc"
+                new_asset["hash"] = hash
+
+                tpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), "preview", "local",
+                                     splitext(f)[0].replace("_", " ") + '.jpg')
+
+                imgname = lol_utils.next_previmg_name()
+
+                if exists(tpath):
+                    img = bpy.data.images.get(imgname)
+                    if img is None or img.size[0] == 0:
+                        img = bpy.data.images.load(tpath)
+                        img.name = imgname
+                    elif img.filepath != tpath:
+                        # had to add this check for autopacking files...
+                        if img.packed_file is not None:
+                            img.unpack(method='USE_ORIGINAL')
+                        img.filepath = tpath
+                        img.reload()
+                    # img.colorspace_settings.name = 'Linear'
+                else:
+                    if imgname in bpy.data.images:
+                        img = bpy.data.images[imgname]
+                        bpy.data.images.remove(img)
+
+                new_asset["thumbnail"] = img
+
+                with bpy.data.libraries.load(join(assetpath, f), link=True) as (data_from, data_to):
+                    data_to.objects = [name for name in data_from.objects]
+
+                bbox_min, bbox_max = calc_bbox(context, data_to.objects)
+
+                for obj in data_to.objects:
+                    bpy.data.objects.remove(obj)
+
+                new_asset['bbox_min'] = bbox_min
+                new_asset['bbox_max'] = bbox_max
+                new_asset["url"] = join("local", splitext(f)[0]+".zip")
+                # assets.append(new_asset)
+
+        # jsonstr = json.dumps(assets, indent=2)
+        #
+        # with open(join(user_preferences.global_dir, "assets_model.json"), "w") as file_handle:
+        #     file_handle.write(jsonstr)
 
         return {'FINISHED'}

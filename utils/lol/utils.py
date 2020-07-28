@@ -37,7 +37,7 @@ import os
 import urllib.error
 from mathutils import Vector, Matrix
 import threading
-from threading import _MainThread, Thread
+from threading import _MainThread, Thread, Lock
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
 from ...utils.errorlog import LuxCoreErrorLog
@@ -45,6 +45,8 @@ from ...utils.errorlog import LuxCoreErrorLog
 LOL_HOST_URL = "https://luxcorerender.org/lol"
 
 download_threads = []
+bg_threads = []
+stop_check_cache = False
 
 def load_local_TOC(context, asset_type):
     import json
@@ -65,11 +67,19 @@ def load_local_TOC(context, asset_type):
 
     return assets
 
+
 def download_table_of_contents(context):
     scene = context.scene
     ui_props = context.scene.luxcoreOL.ui
 
     try:
+        for threaddata in bg_threads:
+            tag, bg_task = threaddata
+            if tag == "check_cache":
+                global stop_check_cache
+                stop_check_cache = True
+
+
         import urllib.request
 
         with urllib.request.urlopen(LOL_HOST_URL + "/assets_model.json", timeout=60) as request:
@@ -107,7 +117,9 @@ def download_table_of_contents(context):
         ui_props.ToC_loaded = True
         ui_props.thumbnails_loaded = True
         init_categories(context)
+
         bg_task = Thread(target=check_cache, args=(context, ))
+        bg_threads.append(["check_cache", bg_task])
         bg_task.start()
         return True
     except ConnectionError as error:
@@ -154,10 +166,12 @@ def check_cache(args):
     (context) = args
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
-
+    global stop_check_cache
     scene = context.scene
     assets = scene.luxcoreOL.model['assets']
     for asset in assets:
+        if stop_check_cache:
+            break
         filename = asset["url"]
         filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
 
@@ -176,12 +190,21 @@ def check_cache(args):
 
     assets = scene.luxcoreOL.material['assets']
     for asset in assets:
+        if stop_check_cache:
+            break
         filename = asset["url"]
         filepath = os.path.join(user_preferences.global_dir, "material", filename[:-3] + 'blend')
 
         if os.path.exists(filepath):
             if calc_hash(filepath) == asset["hash"]:
                 asset['downloaded'] = 100.0
+
+    stop_check_cache = False
+
+    for threaddata in bg_threads:
+        tag, bg_task = threaddata
+        if tag == "check_cache":
+            bg_threads.remove(threaddata)
 
 
 def calc_hash(filename):

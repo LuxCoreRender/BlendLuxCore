@@ -304,3 +304,77 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_LOCAL(Panel):
         col = layout.column(align=True)
         col.enabled = (upload_props.thumbnail is not None or upload_props.autorender)
         col.operator("scene.luxcore_ol_add_local", text="Add asset...")
+        col = layout.column(align=True)
+        col.operator("scene.luxcore_ol_scan_local", text="Search new local assets")
+
+
+def settings_toggle_icon(enabled):
+    return icons.EXPANDABLE_OPENED if enabled else icons.EXPANDABLE_CLOSED
+
+
+class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_SCAN_RESULT(Panel):
+    bl_category = "LuxCoreOnlineLibrary"
+    bl_idname = "VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_SCAN_RESULT"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_label = "Scan Result"
+    bl_order = 3
+
+    @classmethod
+    def poll(self, context):
+        return len(context.scene.luxcoreOL.upload.add_list) > 0
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        upload_props = context.scene.luxcoreOL.upload
+        ui_props = context.scene.luxcoreOL.ui
+
+        # if ui_props.asset_type == "MATERIAL":
+        #
+        # else:
+        #
+
+        for idx, asset in enumerate(upload_props.add_list):
+            self.draw_addlist(upload_props, layout, asset, idx)
+
+    @staticmethod
+    def draw_addlist(upload_props, layout, asset, idx):
+        col = layout.column(align=True)
+        # Upper row (enable/disable, name, remove)
+        box = col.box()
+        row = box.row()
+        col = row.column()
+
+        col.prop(asset, "show_settings",
+                 icon=settings_toggle_icon(asset.show_settings),
+                 icon_only=True, emboss=False)
+        col = row.column()
+        col.prop(asset, "name", text="")
+        # op = row.operator("scene.luxcore_ol_remove_asset",
+        #                   text="", icon=icons.CLEAR, emboss=False)
+        # op.index = idx
+
+        if asset.show_settings:
+            col = box.column(align=True)
+            col.prop(asset, "category")
+            # col = box.column(align=True)
+            # col.prop(asset, "bbox_min")
+            # col = box.column(align=True)
+            # col.prop(asset, "bbox_max")
+
+            col = box.column(align=True)
+            col.label(text="Thumbnail:")
+            col.prop(asset, "show_thumbnail", icon=icons.IMAGE)
+
+            if asset.show_thumbnail:
+                col.template_ID_preview(asset, "thumbnail", open="image.open")
+            else:
+                col.template_ID(asset, "thumbnail", open="image.open")
+
+            col = box.column(align=True)
+            col.enabled = (asset.thumbnail is not None)
+            op = col.operator("scene.luxcore_ol_add_local", text="Add asset...")
+            op.asset_index = idx

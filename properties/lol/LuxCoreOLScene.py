@@ -24,7 +24,7 @@
 
 import bpy
 from math import pi
-from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, \
+from bpy.props import CollectionProperty, PointerProperty, IntProperty, BoolProperty, EnumProperty, \
     FloatProperty, FloatVectorProperty, StringProperty
 from ...utils.lol import utils as utils
 
@@ -182,6 +182,18 @@ class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
     free_only: BoolProperty(name="Free only", default=True)
 
 
+class LuxCoreOnlineLibraryAsset(bpy.types.PropertyGroup):
+    name: StringProperty(name="Asset name", description="Assign a name to the asset", default="Default")
+    category: StringProperty(name="Category", description="Assign a category to the asset", default="misc")
+    url: StringProperty(name="Url", description="Assign a category to the asset", default="")
+    bbox_min: FloatVectorProperty(name="Bounding Box Min", default=(0, 0, 0))
+    bbox_max: FloatVectorProperty(name="Bounding Box Max", default=(1, 1, 1))
+    hash: StringProperty(name="Hash", description="SHA256 hash number for the asset blendfile", default="")
+    show_settings: BoolProperty(default=False)
+    show_thumbnail: BoolProperty(name="", default=True, description="Show thumbnail")
+    thumbnail: PointerProperty(name="Image", type=bpy.types.Image)
+
+
 class LuxCoreOnlineLibraryUpload(bpy.types.PropertyGroup):
     name: StringProperty(name="Asset name", description="Assign a name to the asset", default="Default")
     category: StringProperty(name='Category', description="Assign a category to the asset", default="misc")
@@ -189,6 +201,7 @@ class LuxCoreOnlineLibraryUpload(bpy.types.PropertyGroup):
     samples: IntProperty(name="Samples", default=50, min=1)
     show_thumbnail: BoolProperty(name="", default=True, description="Show thumbnail")
     thumbnail: PointerProperty(name="Image", type=bpy.types.Image)
+    add_list: CollectionProperty(type=LuxCoreOnlineLibraryAsset)
 
 
 class LuxCoreOnlineLibrary(bpy.types.PropertyGroup):
