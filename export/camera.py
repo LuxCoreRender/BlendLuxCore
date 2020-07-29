@@ -138,13 +138,14 @@ def _final(scene, definitions):
 
 def _depth_of_field(scene, definitions, context=None):
     camera = scene.camera
+    settings = camera.data.luxcore
 
     if not camera.data.dof.use_dof or utils.in_material_shading_mode(context):
         return
 
     definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.dof.aperture_fstop)
 
-    if camera.data.luxcore.use_autofocus:
+    if settings.use_autofocus:
         definitions["autofocus.enable"] = True
     else:
         dof_obj = camera.data.dof.focus_object
@@ -161,6 +162,22 @@ def _depth_of_field(scene, definitions, context=None):
             definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir))
         else:
             definitions["focaldistance"] = camera.data.dof.focus_distance
+    
+    if settings.non_uniform_bokeh:
+        definitions["bokeh.blades"] = settings.bokeh_blades
+        definitions["bokeh.distribution.type"] = settings.bokeh_distribution
+        definitions["bokeh.power"] = settings.bokeh_power
+        
+        anisotropy = settings.bokeh_anisotropy
+        if anisotropy > 0:
+            x = 1
+            y = 1 - anisotropy
+        else:
+            x = anisotropy + 1
+            y = 1
+            
+        definitions["bokeh.scale.x"] = x
+        definitions["bokeh.scale.y"] = y
 
 
 def _clipping(scene, definitions):

@@ -111,8 +111,11 @@ class LuxCoreImagepipelineColorAberration(PropertyGroup, LuxCoreImagepipelinePlu
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
     compatible_with_viewport_denoising = False
 
+    uniform: BoolProperty(name="Uniform", default=True)
     amount: FloatProperty(name="Strength", default=0.5, min=0, soft_max=10, max=100, precision=1,
-                           subtype="PERCENTAGE", description="Strength of the color aberration effect")
+                          subtype="PERCENTAGE", description="Strength of the color aberration effect")
+    amount_y: FloatProperty(name="Strength (Y)", default=0.5, min=0, soft_max=10, max=100, precision=1,
+                            subtype="PERCENTAGE", description="Strength of the color aberration effect")
 
 
 class LuxCoreImagepipelineBackgroundImage(PropertyGroup, LuxCoreImagepipelinePlugin):

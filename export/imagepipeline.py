@@ -178,7 +178,12 @@ def _bloom(definitions, index, bloom):
 
 def _coloraberration(definitions, index, coloraberration):
     definitions[str(index) + ".type"] = "COLOR_ABERRATION"
-    definitions[str(index) + ".amount"] = coloraberration.amount / 100
+    amount_x = coloraberration.amount / 100
+    amount_y = coloraberration.amount_y / 100
+    if coloraberration.uniform:
+        definitions[str(index) + ".amount"] = amount_x
+    else:
+        definitions[str(index) + ".amount"] = [amount_x, amount_y]
     return index + 1
 
 

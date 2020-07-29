@@ -9,6 +9,12 @@ LINUX_FILES = [
     "libembree3.so.3", "libtbb.so.2", "libtbbmalloc.so.2",
     "pyluxcore.so", "luxcoreui", "pyluxcoretools.zip",
     "libOpenImageDenoise.so.0",
+    "libnvrtc-builtins.so",
+    "libnvrtc-builtins.so.11.0",
+    "libnvrtc-builtins.so.11.0.194",
+    "libnvrtc.so",
+    "libnvrtc.so.11.0",
+    "libnvrtc.so.11.0.194",
 ]
 
 WINDOWS_FILES = [

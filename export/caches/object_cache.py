@@ -42,6 +42,18 @@ def uses_displacement(obj):
     return False
 
 
+def warn_about_subdivision_levels(obj):
+    for modifier in obj.modifiers:
+        if modifier.type == "SUBSURF" and modifier.show_viewport:
+            if not modifier.show_render:
+                LuxCoreErrorLog.add_warning("Subdivision modifier enabled in viewport, but not in final render",
+                                            obj_name=obj.name)
+            elif modifier.render_levels < modifier.levels:
+                LuxCoreErrorLog.add_warning(
+                    f"Final render subdivision level ({modifier.render_levels}) smaller than viewport subdivision level ({modifier.levels})",
+                    obj_name=obj.name)
+
+
 def get_material(obj, material_index, depsgraph):
     material_override = depsgraph.view_layer_eval.material_override
 
@@ -300,6 +312,8 @@ class ObjectCache2:
         """ Convert one DepsgraphObjectInstance amd keep track of it with self.exported_objects """
         if obj.data is None:
             return None
+
+        warn_about_subdivision_levels(obj)
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
         exported_stuff = None

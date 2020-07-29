@@ -97,22 +97,47 @@ class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
 
     def draw(self, context):
         layout = self.layout
-        cam = context.camera
-        dof_options = cam.dof
         layout.use_property_split = True
-        layout.use_property_decorate = False      
+        
+        cam = context.camera
 
-        layout.enabled = dof_options.use_dof
+        layout.active = cam.dof.use_dof
 
-        layout.prop(dof_options, "aperture_fstop")
+        layout.prop(cam.dof, "aperture_fstop")
         layout.prop(cam.luxcore, "use_autofocus")
 
         col = layout.column(align=True)
-        col.enabled = not cam.luxcore.use_autofocus        
-        col.prop(dof_options, "focus_object")
+        col.active = not cam.luxcore.use_autofocus        
+        col.prop(cam.dof, "focus_object")
         col = layout.column(align=True)
-        col.enabled = (dof_options.focus_object is None and not cam.luxcore.use_autofocus)
-        col.prop(dof_options, "focus_distance", text="Distance")
+        col.active = (cam.dof.focus_object is None and not cam.luxcore.use_autofocus)
+        col.prop(cam.dof, "focus_distance", text="Distance")
+
+
+class LUXCORE_CAMERA_PT_bokeh(CameraButtonsPanel, Panel):
+    bl_label = "Non-Uniform Bokeh"
+    bl_parent_id = "LUXCORE_CAMERA_PT_depth_of_field"
+    bl_options = {'DEFAULT_CLOSED'}
+    COMPAT_ENGINES = {"LUXCORE"}
+    
+    def draw_header(self, context):
+        self.layout.prop(context.camera.luxcore, "non_uniform_bokeh", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        
+        cam = context.camera
+        
+        layout.active = cam.luxcore.non_uniform_bokeh
+
+        layout.prop(cam.luxcore, "bokeh_blades")
+        layout.prop(cam.luxcore, "bokeh_anisotropy")
+        
+        col = layout.column()
+        col.prop(cam.luxcore, "bokeh_distribution")
+        if cam.luxcore.bokeh_distribution in {"EXPONENTIAL", "INVERSEEXPONENTIAL"}:
+            col.prop(cam.luxcore, "bokeh_power")
 
 
 class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
@@ -312,7 +337,13 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_aberration(CameraButtonsPanel, Pane
         if context.scene.luxcore.viewport.denoise:
             self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
 
-        layout.prop(coloraberration, "amount", slider=True)
+        layout.prop(coloraberration, "uniform")
+        if coloraberration.uniform:
+            layout.prop(coloraberration, "amount", slider=True)
+        else:
+            col = layout.column(align=True)
+            col.prop(coloraberration, "amount", slider=True, text="Strength (X)")
+            col.prop(coloraberration, "amount_y", slider=True)
 
 
 class LUXCORE_CAMERA_PT_image_pipeline_background_image(CameraButtonsPanel, Panel):

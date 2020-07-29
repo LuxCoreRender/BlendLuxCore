@@ -1,5 +1,4 @@
 import bpy
-import addon_utils
 import platform
 import os
 from shutil import which
@@ -7,16 +6,6 @@ from shutil import which
 def get_bin_directory():
     current_dir = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(current_dir, "bin")
-
-
-_, luxblend_is_enabled = addon_utils.check("luxrender")
-if luxblend_is_enabled:
-    addon_utils.disable("luxrender", default_set=True)
-    print("Disabled the old LuxBlend addon.")
-    raise Exception("\n\nThe old LuxBlend addon causes conflicts, "
-                    "so it was disabled. Save your user preferences "
-                    "and restart Blender before you can enable the "
-                    "new addon.")
 
 if platform.system() == "Darwin":
     if bpy.app.version < (2, 82, 7):
@@ -70,12 +59,12 @@ except ImportError as error:
 bl_info = {
     "name": "LuxCore",
     "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Philstix",
-    "version": (2, 4),
+    "version": (2, 5),
     "blender": (2, 80, 0),
     "category": "Render",
     "location": "Info header, render engine menu",
     "description": "LuxCore integration for Blender",
-    "warning": "beta1",
+    "warning": "alpha0",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
