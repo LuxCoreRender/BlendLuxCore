@@ -9,6 +9,7 @@ from . import aovs
 from .imagepipeline import use_backgroundimage
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
+from ..utils import get_addon_preferences
 
 
 class SamplingOverlap:
@@ -107,6 +108,11 @@ def convert(exporter, scene, context=None, engine=None):
         # CPU thread settings (we use the properties from Blender here)
         if scene.render.threads_mode == "FIXED":
             definitions["native.threads.count"] = scene.render.threads
+
+        # Enable/disable OptiX
+        preferences = get_addon_preferences(bpy.context)
+        if preferences.gpu_backend == "CUDA":
+            definitions["context.cuda.optix.enable"] = preferences.use_optix_if_available
 
         _convert_seed(scene, definitions)
 

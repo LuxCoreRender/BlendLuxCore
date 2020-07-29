@@ -19,6 +19,12 @@ class LuxCoreAddonPreferences(AddonPreferences):
         ("CUDA", "CUDA", "Use CUDA for GPU acceleration", 1),
     ]
     gpu_backend: EnumProperty(items=gpu_backend_items, default="OPENCL")
+    use_optix_if_available: BoolProperty(name="Use OptiX if Available", default=True,
+                                         description="Use the OptiX backend if possible, to speed up ray/triangle "
+                                                     "intersections and BHV building and to save memory. Check the "
+                                                     "console when rendering to see if OptiX is actually used. "
+                                                     "It usually only makes sense to disable this for benchmark "
+                                                     "comparisons between CUDA and OptiX")
 
     image_node_thumb_default: BoolProperty(
         name="Show Thumbnails by Default", default=True,
@@ -41,11 +47,18 @@ class LuxCoreAddonPreferences(AddonPreferences):
         
         if not custom_normals_supported():
             layout.label(text="No official support for this Blender version!", icon=icons.WARNING)
-        
+            layout.label(text="Custom normals will not work, and there might be other problems!", icon=icons.WARNING)
+
+        row = layout.row()
+        row.label(text="GPU API:")
         if utils.is_cuda_build():
-            row = layout.row()
-            row.label(text="GPU API:")
             row.prop(self, "gpu_backend", expand=True)
+            if self.gpu_backend == "CUDA":
+                layout.prop(self, "use_optix_if_available")
+        elif utils.is_opencl_build():
+            row.label(text="OpenCL")
+        else:
+            row.label(text="Not available in this build")
 
         row = layout.row()
         row.label(text="Image Nodes:")
