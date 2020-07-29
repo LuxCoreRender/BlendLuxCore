@@ -35,7 +35,15 @@ def timer_update():
     for threaddata in utils.download_threads:
         thread, asset, tcom = threaddata
         scene = bpy.context.scene
-        assets = utils.get_search_props(bpy.context)
+
+        asset_type = tcom.passargs['asset type']
+
+        if asset_type == 'MODEL':
+            assets = bpy.context.scene.luxcoreOL.model['assets']
+        elif asset_type == 'SCENE':
+            assets = bpy.context.scene.luxcoreOL.scene['assets']
+        elif asset_type == 'MATERIAL':
+            assets = bpy.context.scene.luxcoreOL.material['assets']
 
         if tcom.finished:
             thread.stop()

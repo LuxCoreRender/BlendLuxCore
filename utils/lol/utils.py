@@ -162,14 +162,11 @@ def init_categories(context):
 
 def check_cache(args):
     (context) = args
-<<<<<<< HEAD
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
     global stop_check_cache
-=======
-    user_preferences = get_addon_preferences(context)
 
->>>>>>> 84223cc353393850fb0c86695454743f02e65108
+    user_preferences = get_addon_preferences(context)
     scene = context.scene
     assets = scene.luxcoreOL.model['assets']
     for asset in assets:
@@ -287,20 +284,13 @@ class Downloader(threading.Thread):
                 with urllib.request.urlopen(url, timeout=60) as url_handle, open(thumbnailpath, "wb") as file_handle:
                     file_handle.write(url_handle.read())
 
-<<<<<<< HEAD
-                imgname = self.asset['thumbnail'].name
-                bpy.data.images.remove(self.asset['thumbnail'])
                 self.asset['thumbnail'] = bpy.data.images.load(thumbnailpath)
-                self.asset['thumbnail'].name = imgname
-                # img.colorspace_settings.name = 'Linear'
-=======
-                imgname = self.asset['thumbnail']
-                img = bpy.data.images.load(thumbnailpath)
-                img.name = imgname
+                self.asset['thumbnail'].name = '.LOL_preview'
+
+                img = self.asset['thumbnail']
                 if bpy.app.version < (2, 83, 0):
                     # Needed in old Blender versions so the images are not too dark
                     img.colorspace_settings.name = 'Linear'
->>>>>>> 84223cc353393850fb0c86695454743f02e65108
 
                 tcom.finished = True
 
@@ -579,17 +569,11 @@ def get_thumbnail(imagename):
         path = os.path.join(addon_base_dir, 'thumbnails', imagename)
 
         img = bpy.data.images.load(path)
-<<<<<<< HEAD
-        # img.colorspace_settings.name = 'Linear'
-        img.name = imagename
-        img.name = imagename
-=======
         img.name = imagename_blender
 
         if bpy.app.version < (2, 83, 0):
             # Needed in old Blender versions so the images are not too dark
             img.colorspace_settings.name = 'Linear'
->>>>>>> 84223cc353393850fb0c86695454743f02e65108
 
     return img
 
@@ -622,36 +606,23 @@ def load_previews(context, asset_type):
         for asset in assets:
             tpath = join(user_preferences.global_dir, asset_type, "preview", splitext(asset['url'])[0] + '.jpg')
 
-<<<<<<< HEAD
-            if os.path.exists(tpath):
+            if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
                 img = bpy.data.images.load(tpath)
                 img.name = '.LOL_preview'
                 asset["thumbnail"] = img
-=======
-            asset["thumbnail"] = imgname
-            # Sometimes empty files are created - possibly failed downloads? Re-download in this case.
-            if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
-                img = bpy.data.images.get(imgname)
-
-                if img is None or img.size[0] == 0:
-                    img = bpy.data.images.load(tpath)
-                    img.name = imgname
-                elif img.filepath != tpath:
-                    # had to add this check for autopacking files...
-                    if img.packed_file is not None:
-                        img.unpack(method='USE_ORIGINAL')
-                    img.filepath = tpath
-                    img.reload()
 
                 if bpy.app.version < (2, 83, 0):
                     # Needed in old Blender versions so the images are not too dark
                     img.colorspace_settings.name = 'Linear'
->>>>>>> 84223cc353393850fb0c86695454743f02e65108
             else:
                 rootdir = dirname(dirname(dirname(__file__)))
                 path = join(rootdir, 'thumbnails', 'thumbnail_notready.jpg')
                 img = bpy.data.images.load(path)
                 img.name = '.LOL_preview'
+                if bpy.app.version < (2, 83, 0):
+                    # Needed in old Blender versions so the images are not too dark
+                    img.colorspace_settings.name = 'Linear'
+
                 asset["thumbnail"] = img
                 if not asset['local']:
                     download_thumbnail(None, context, asset)
