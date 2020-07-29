@@ -179,6 +179,8 @@ class LOLAddLocalOperator(Operator):
 
             new_asset['hash'] = upload_props.add_list[self.asset_index]['hash']
             new_asset['url'] = upload_props.add_list[self.asset_index]['url']
+            upload_props.add_list[self.asset_index]['thumbnail'].use_fake_user = True
+
             upload_props.add_list.remove(self.asset_index)
 
         assets.append(new_asset)
@@ -231,12 +233,12 @@ class LOLScanLocalOperator(Operator):
         assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), 'local')
 
         files = [f for f in listdir(assetpath) if isfile(join(assetpath, f))]
-        # assets = []
+
         if len(upload_props.add_list) > 0:
             upload_props.add_list.clear()
-            lol_utils.clean_previmg()
 
         assets = lol_utils.load_local_TOC(context, ui_props.asset_type.lower())
+
         hashlist = [asset["hash"] for asset in assets]
 
         for f in files:
@@ -248,26 +250,16 @@ class LOLScanLocalOperator(Operator):
                 new_asset["hash"] = hash
 
                 tpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), "preview", "local",
-                                     splitext(f)[0].replace("_", " ") + '.jpg')
-
-                imgname = lol_utils.next_previmg_name()
+                                     splitext(f)[0] + '.jpg')
 
                 if exists(tpath):
-                    img = bpy.data.images.get(imgname)
-                    if img is None or img.size[0] == 0:
-                        img = bpy.data.images.load(tpath)
-                        img.name = imgname
-                    elif img.filepath != tpath:
-                        # had to add this check for autopacking files...
-                        if img.packed_file is not None:
-                            img.unpack(method='USE_ORIGINAL')
-                        img.filepath = tpath
-                        img.reload()
-                    # img.colorspace_settings.name = 'Linear'
+                    img = bpy.data.images.load(tpath)
+                    img.name = '.LOL_preview'
                 else:
-                    if imgname in bpy.data.images:
-                        img = bpy.data.images[imgname]
-                        bpy.data.images.remove(img)
+                    rootdir = dirname(dirname(dirname(__file__)))
+                    path = join(rootdir, 'thumbnails', 'thumbnail_notready.jpg')
+                    img = bpy.data.images.load(path)
+                    img.name = '.LOL_preview'
 
                 new_asset["thumbnail"] = img
 
@@ -282,11 +274,4 @@ class LOLScanLocalOperator(Operator):
                 new_asset['bbox_min'] = bbox_min
                 new_asset['bbox_max'] = bbox_max
                 new_asset["url"] = join("local", splitext(f)[0]+".zip")
-                # assets.append(new_asset)
-
-        # jsonstr = json.dumps(assets, indent=2)
-        #
-        # with open(join(user_preferences.global_dir, "assets_model.json"), "w") as file_handle:
-        #     file_handle.write(jsonstr)
-
         return {'FINISHED'}

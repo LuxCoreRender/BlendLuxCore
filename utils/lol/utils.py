@@ -79,7 +79,6 @@ def download_table_of_contents(context):
                 global stop_check_cache
                 stop_check_cache = True
 
-
         import urllib.request
 
         with urllib.request.urlopen(LOL_HOST_URL + "/assets_model.json", timeout=60) as request:
@@ -114,10 +113,10 @@ def download_table_of_contents(context):
 
         load_previews(context, 'MODEL')
         load_previews(context, 'MATERIAL')
+
         ui_props.ToC_loaded = True
         ui_props.thumbnails_loaded = True
         init_categories(context)
-
         bg_task = Thread(target=check_cache, args=(context, ))
         bg_threads.append(["check_cache", bg_task])
         bg_task.start()
@@ -576,22 +575,13 @@ def get_thumbnail(imagename):
     return img
 
 
-def next_previmg_name(fullsize=False):
-    if not fullsize:
-        index = len([img for img in bpy.data.images if '.LOL_preview_' in img.name])
-        return '.LOL_preview_' + str(index).zfill(2)
-    else:
-        index = len([img for img in bpy.data.images if '.LOL_full_preview_' in img.name])
-        return '.LOL_full_preview_' + str(index).zfill(2)
-
-
 def clean_previmg(fullsize=False):
     if not fullsize:
-        for img in [img for img in bpy.data.images if '.LOL_preview_' in img.name]:
+        for img in [img for img in bpy.data.images if '.LOL_preview' in img.name]:
             if img.users == 0:
                 bpy.data.images.remove(img)
     else:
-        for img in [img for img in bpy.data.images if '.LOL_full_preview_' in img.name]:
+        for img in [img for img in bpy.data.images if '.LOL_full_preview' in img.name]:
             if img.users == 0:
                 bpy.data.images.remove(img)
 
@@ -608,34 +598,20 @@ def load_previews(context, asset_type):
     elif asset_type == 'MATERIAL':
         assets = context.scene.luxcoreOL.material['assets']
 
+    clean_previmg()
     if assets is not None and len(assets) != 0:
-        clean_previmg()
         for asset in assets:
-            tpath = join(user_preferences.global_dir, asset_type, "preview", asset['url'][:-4] + '.jpg')
-            imgname = next_previmg_name()
+            tpath = join(user_preferences.global_dir, asset_type, "preview", splitext(asset['url'])[0] + '.jpg')
 
             if os.path.exists(tpath):
-                img = bpy.data.images.get(imgname)
-                if img is None or img.size[0] == 0:
-                    img = bpy.data.images.load(tpath)
-                    img.name = imgname
-                elif img.filepath != tpath:
-                    # had to add this check for autopacking files...
-                    if img.packed_file is not None:
-                        img.unpack(method='USE_ORIGINAL')
-                    img.filepath = tpath
-                    img.reload()
-                # img.colorspace_settings.name = 'Linear'
+                img = bpy.data.images.load(tpath)
+                img.name = '.LOL_preview'
+                asset["thumbnail"] = img
             else:
-                if imgname in bpy.data.images:
-                    img = bpy.data.images[imgname]
-                    bpy.data.images.remove(img)
+                rootdir = dirname(dirname(dirname(__file__)))
+                path = join(rootdir, 'thumbnails', 'thumbnail_notready.jpg')
+                img = bpy.data.images.load(path)
+                img.name = '.LOL_preview'
+                asset["thumbnail"] = img
                 if not asset['local']:
-                    rootdir = dirname(dirname(dirname(__file__)))
-                    path = join(rootdir, 'thumbnails', 'thumbnail_notready.jpg')
-                    img = bpy.data.images.load(path)
-                    img.name = imgname
-
                     download_thumbnail(None, context, asset)
-
-            asset["thumbnail"] = img

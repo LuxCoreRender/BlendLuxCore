@@ -39,6 +39,8 @@ def switch_local(self, context):
 def switch_search_results(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
+    upload_props = scene.luxcoreOL.upload
+
     if not ui_props.ToC_loaded:
         utils.download_table_of_contents(context)
 
@@ -57,6 +59,8 @@ def switch_search_results(self, context):
     scene.luxcoreOL.on_search = False
     self.category = ""
     scene.luxcoreOL.search_category = self.category
+
+    upload_props.add_list.clear()
 
 
 class LuxCoreOnlineLibraryAssetBar(bpy.types.PropertyGroup):
