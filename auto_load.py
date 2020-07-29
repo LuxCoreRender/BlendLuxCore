@@ -15,6 +15,7 @@ __all__ = (
     "unregister",
 )
 
+IGNORED_MODULE_PREFIX = "libnvrtc"
 modules = None
 ordered_classes = None
 
@@ -58,6 +59,10 @@ def iter_submodules(path, package_name):
 
 def iter_submodule_names(path, root=""):
     for _, module_name, is_package in pkgutil.iter_modules([str(path)]):
+        # Prevent auto_load from attempting to import .so files like the nvrtc libraries
+        if module_name.startswith(IGNORED_MODULE_PREFIX):
+            continue
+        
         if is_package:
             sub_path = path / module_name
             sub_root = root + module_name + "."

@@ -46,7 +46,12 @@ LINUX_FILES = [
     "libembree3.so.3", "libtbb.so.2", "libtbbmalloc.so.2",
     "pyluxcore.so", "pyluxcoretools.zip",
     "libOpenImageDenoise.so.0",
-    # TODO CUDA files
+    "libnvrtc-builtins.so",
+    "libnvrtc-builtins.so.11.0",
+    "libnvrtc-builtins.so.11.0.194",
+    "libnvrtc.so",
+    "libnvrtc.so.11.0",
+    "libnvrtc.so.11.0.194",
 ]
 
 WINDOWS_FILES = [
@@ -65,16 +70,9 @@ MAC_FILES = [
     "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
 ]
 
-# On Windows and macOS, OIDN is downloaded by the LuxCore build script, so we don't need to do it here
-#OIDN_WIN = "oidn-windows.zip"
+# On Windows and macOS, OIDN is downloaded by the LuxCore build script
 OIDN_LINUX = "oidn-linux.tar.gz"
-#OIDN_MAC = "oidn-macos.tar.gz"
-
-OIDN_urls = {
-    #OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x64.vc14.windows.zip",
-    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.linux.tar.gz",
-    #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.macos.tar.gz",
-}
+OIDN_LINUX_URL = "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.linux.tar.gz"
 
 
 def print_divider():
@@ -325,16 +323,15 @@ def main():
     print("Downloading OIDN binaries")
     print_divider()
 
-    for name, url in OIDN_urls.items():
-        # Check if file already downloaded
-        if name in os.listdir(script_dir):
-            print('File already downloaded: "%s"' % name)
-        else:
-            destination = os.path.join(script_dir, name)
-            try:
-                urllib.request.urlretrieve(url, destination)
-            except urllib.error.HTTPError as error:
-                print(error)
+    # Check if file already downloaded
+    if OIDN_LINUX in os.listdir(script_dir):
+        print('File already downloaded: "%s"' % OIDN_LINUX)
+    else:
+        destination = os.path.join(script_dir, OIDN_LINUX)
+        try:
+            urllib.request.urlretrieve(OIDN_LINUX_URL, destination)
+        except urllib.error.HTTPError as error:
+            print(error)
 
     print("Extracting OIDN standalone denoiser")
 
