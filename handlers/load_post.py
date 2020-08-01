@@ -56,21 +56,7 @@ def handler(_):
     for scene in bpy.data.scenes:
         # Update OpenCL devices if .blend is opened on
         # a different computer than it was saved on
-        updated = scene.luxcore.devices.update_devices_if_necessary()
-
-        if updated:
-            # Set first GPU as film OpenCL device, or disable film OpenCL if no GPUs found
-            scene.luxcore.config.film_opencl_enable = False
-            scene.luxcore.config.film_opencl_device = "none"
-            for i, device in enumerate(scene.luxcore.devices.devices):
-                # Intel GPU devices can lead to crashes, so disable them by default
-                if device.type == "OPENCL_GPU" and not "intel" in device.name.lower():
-                    try:
-                        scene.luxcore.config.film_opencl_device = str(i)
-                        scene.luxcore.config.film_opencl_enable = True
-                        break
-                    except TypeError:
-                        pass
+        scene.luxcore.devices.update_devices_if_necessary()
 
         if pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool():
             # OpenCL not available, make sure we are using CPU device

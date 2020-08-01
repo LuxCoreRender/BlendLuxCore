@@ -179,15 +179,10 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-        layout.use_property_decorate = False      
-        cam = context.camera
-        pipeline = cam.luxcore.imagepipeline
+        layout.use_property_decorate = False
+        pipeline = context.camera.luxcore.imagepipeline
 
-        # General settings
         layout.prop(pipeline, "transparent_film")
-        layout.prop(context.scene.luxcore.config, "film_opencl_enable")
-        if context.scene.luxcore.config.film_opencl_enable:
-            layout.prop(context.scene.luxcore.config, "film_opencl_device", text="")
             
 
 class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):

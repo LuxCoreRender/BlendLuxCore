@@ -34,6 +34,7 @@ def convert(exporter, scene, context=None, engine=None):
         denoiser_enabled = ((not is_viewport_render and scene.luxcore.denoiser.enabled)
                             or (is_viewport_render and scene.luxcore.viewport.denoise
                                 and not in_material_shading_mode))
+        preferences = get_addon_preferences(bpy.context)
 
         if is_viewport_render:
             # Viewport render
@@ -69,9 +70,9 @@ def convert(exporter, scene, context=None, engine=None):
             "scene.epsilon.max": config.max_epsilon,
         })
 
-        if config.film_opencl_enable and config.film_opencl_device not in {"", "none"}:
+        if preferences.film_device not in {"", "none"}:
             definitions["film.opencl.enable"] = True
-            definitions["film.opencl.device"] = int(config.film_opencl_device)
+            definitions["film.opencl.device"] = int(preferences.film_device)
         else:
             definitions["film.opencl.enable"] = False
 
@@ -112,7 +113,6 @@ def convert(exporter, scene, context=None, engine=None):
             definitions["native.threads.count"] = scene.render.threads
 
         # Enable/disable OptiX
-        preferences = get_addon_preferences(bpy.context)
         if preferences.gpu_backend == "CUDA":
             definitions["context.cuda.optix.enable"] = preferences.use_optix_if_available
 
