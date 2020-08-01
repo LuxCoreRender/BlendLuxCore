@@ -64,7 +64,6 @@ class LUXCORE_RENDER_PT_viewport_settings_denoiser(RenderButtonsPanel, Panel):
         col = layout.column()
         col.active = can_use_optix
         col.prop(viewport, "denoiser")
-        col.prop(viewport, "sharpness", slider=True)
 
 
 
