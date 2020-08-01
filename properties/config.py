@@ -467,6 +467,8 @@ class LuxCoreConfig(PropertyGroup):
         ("BLACKMANHARRIS", "Blackman-Harris", "Default, usually the best option", 0),
         ("MITCHELL_SS", "Mitchell", "Sharp, but can produce black ringing artifacts around bright pixels", 1),
         ("GAUSSIAN", "Gaussian", "Blurry", 2),
+        ("SINC", "Sinc", "", 4),
+        ("CATMULLROM", "Catmull-Rom", "", 5),
         ("NONE", "None", "Disable pixel filtering. Fastest setting when rendering on GPU", 3)
     ]
     filter: EnumProperty(name="Filter", items=filters, default="BLACKMANHARRIS",
@@ -475,6 +477,7 @@ class LuxCoreConfig(PropertyGroup):
                                  description=FILTER_WIDTH_DESC, subtype="PIXEL")
     gaussian_alpha: FloatProperty(name="Gaussian Filter Alpha", default=2, min=0.1, max=10,
                                    description="Gaussian rate of falloff. Lower values give blurrier images")
+    sinc_tau: FloatProperty(name="Sinc Filter Tau", default=1, min=0.01, max=8)
 
     # Light strategy
     light_strategy_items = [

@@ -88,6 +88,8 @@ def convert(exporter, scene, context=None, engine=None):
         # Filter
         if config.filter == "GAUSSIAN":
             definitions["film.filter.gaussian.alpha"] = config.gaussian_alpha
+        elif config.filter == "SINC":
+            definitions["film.filter.sinc.tau"] = config.sinc_tau
 
         use_filesaver = utils.using_filesaver(context, scene)
 

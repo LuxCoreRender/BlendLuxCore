@@ -186,6 +186,8 @@ class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
         col.prop(config, "filter_width")
         if config.filter == "GAUSSIAN":
             layout.prop(config, "gaussian_alpha")
+        elif config.filter == "SINC":
+            layout.prop(config, "sinc_tau")
         
         # Tiled path
         if config.engine == "PATH":
