@@ -24,18 +24,27 @@
 
 import bpy
 from math import pi
-from bpy.props import PointerProperty, IntProperty, BoolProperty, EnumProperty, \
+from bpy.props import CollectionProperty, PointerProperty, IntProperty, BoolProperty, EnumProperty, \
     FloatProperty, FloatVectorProperty, StringProperty
 from ...utils.lol import utils as utils
+
+def switch_local(self, context):
+    scene = context.scene
+    ui_props = scene.luxcoreOL.ui
+
+    utils.init_categories(context)
+    ui_props.scrolloffset = 0
+
 
 def switch_search_results(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
+    upload_props = scene.luxcoreOL.upload
+
     if not ui_props.ToC_loaded:
         utils.download_table_of_contents(context)
 
     assets = utils.get_search_props(context)
-    utils.load_previews(context, assets)
     ui_props.scrolloffset = 0
 
     if ui_props.asset_type == 'MODEL':
@@ -45,12 +54,13 @@ def switch_search_results(self, context):
     if ui_props.asset_type == 'MATERIAL':
         asset_props = scene.luxcoreOL.material
 
-    if not 'categories' in asset_props.keys():
-        utils.init_categories(context)
+    utils.init_categories(context)
 
     scene.luxcoreOL.on_search = False
     self.category = ""
     scene.luxcoreOL.search_category = self.category
+
+    upload_props.add_list.clear()
 
 
 class LuxCoreOnlineLibraryAssetBar(bpy.types.PropertyGroup):
@@ -130,6 +140,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
     has_hit: BoolProperty(name="has_hit", default=False)
     thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
     ToC_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
+    local: BoolProperty(name="Local only", default=False, update=switch_local)
 
     assetbar: PointerProperty(type=LuxCoreOnlineLibraryAssetBar)
 
@@ -175,6 +186,28 @@ class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
     free_only: BoolProperty(name="Free only", default=True)
 
 
+class LuxCoreOnlineLibraryAsset(bpy.types.PropertyGroup):
+    name: StringProperty(name="Asset name", description="Assign a name to the asset", default="Default")
+    category: StringProperty(name="Category", description="Assign a category to the asset", default="misc")
+    url: StringProperty(name="Url", description="Assign a category to the asset", default="")
+    bbox_min: FloatVectorProperty(name="Bounding Box Min", default=(0, 0, 0))
+    bbox_max: FloatVectorProperty(name="Bounding Box Max", default=(1, 1, 1))
+    hash: StringProperty(name="Hash", description="SHA256 hash number for the asset blendfile", default="")
+    show_settings: BoolProperty(default=False)
+    show_thumbnail: BoolProperty(name="", default=True, description="Show thumbnail")
+    thumbnail: PointerProperty(name="Image", type=bpy.types.Image)
+
+
+class LuxCoreOnlineLibraryUpload(bpy.types.PropertyGroup):
+    name: StringProperty(name="Asset name", description="Assign a name to the asset", default="Default")
+    category: StringProperty(name='Category', description="Assign a category to the asset", default="misc")
+    autorender: BoolProperty(name="Autorender thumbnail", default=True)
+    samples: IntProperty(name="Samples", default=50, min=1)
+    show_thumbnail: BoolProperty(name="", default=True, description="Show thumbnail")
+    thumbnail: PointerProperty(name="Image", type=bpy.types.Image)
+    add_list: CollectionProperty(type=LuxCoreOnlineLibraryAsset)
+
+
 class LuxCoreOnlineLibrary(bpy.types.PropertyGroup):
     ui: PointerProperty(type=LuxCoreOnlineLibraryUI)
     model: PointerProperty(type=LuxCoreOnlineLibraryModel)
@@ -182,6 +215,7 @@ class LuxCoreOnlineLibrary(bpy.types.PropertyGroup):
     scene: PointerProperty(type=LuxCoreOnlineLibraryScene)
     on_search: BoolProperty(name="on_search", default=False)
     search_category: StringProperty(name="search_category", default="")
+    upload: PointerProperty(type=LuxCoreOnlineLibraryUpload)
 
     @classmethod
     def register(cls):

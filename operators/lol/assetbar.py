@@ -76,11 +76,9 @@ def draw_callback_2d_progress(self, context):
 
         asset_data = threaddata[1]
 
-        iname = asset_data['thumbnail']
-        img = bpy.data.images.get(iname)
+        img = asset_data['thumbnail']
         if img is None:
             img = utils.get_thumbnail('thumbnail_notready.jpg')
-
 
         if tcom.passargs.get('downloaders'):
             for d in tcom.passargs['downloaders']:
@@ -118,7 +116,7 @@ def draw_callback_3d_progress(self, context):
             continue
 
         asset_data = threaddata[1]
-        if ui_props.asset_type == 'MODEL':
+        if tcom.passargs['asset type'] == 'MODEL':
             bbox_min = Vector(asset_data["bbox_min"])
             bbox_max = Vector(asset_data["bbox_max"])
             bbox_center = 0.5 * Vector((bbox_max[0] + bbox_min[0], bbox_max[1] + bbox_min[1], 0.0))
@@ -151,8 +149,11 @@ def draw_callback_2d_search(self, context):
     assetbar_props = scene.luxcoreOL.ui.assetbar
     assets = utils.get_search_props(context)
 
+    if ui_props.local:
+        assets = [asset for asset in assets if asset['local']]
+
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
     user_preferences = get_addon_preferences(context)
 
@@ -171,13 +172,8 @@ def draw_callback_2d_search(self, context):
 
         h_draw = min(assetbar_props.hcount, math.ceil(len(assets) / assetbar_props.wcount))
 
-        if assetbar_props.wcount > len(assets):
-            bar_width = len(assets) * (ui_props.thumb_size + assetbar_props.margin) + assetbar_props.margin
-        else:
-            bar_width = assetbar_props.width
-
         row_height = ui_props.thumb_size + assetbar_props.margin
-        ui_bgl.draw_rect(assetbar_props.x, assetbar_props.y - assetbar_props.height, bar_width,
+        ui_bgl.draw_rect(assetbar_props.x, assetbar_props.y - assetbar_props.height, assetbar_props.width,
                          assetbar_props.height, hcolor)
 
         if len(assets) != 0:
@@ -217,8 +213,7 @@ def draw_callback_2d_search(self, context):
                             assetbar_props.margin + ui_props.thumb_size) + assetbar_props.margin + assetbar_props.drawoffset
 
                     index = a + ui_props.scrolloffset + b * assetbar_props.wcount
-                    iname = assets[index]['thumbnail']
-                    img = bpy.data.images.get(iname)
+                    img = assets[index]['thumbnail']
 
                     if img is None or img.size[0] == 0:
                         img = utils.get_thumbnail('thumbnail_notready.jpg')
@@ -240,16 +235,6 @@ def draw_callback_2d_search(self, context):
 
                     if assets[index]['downloaded'] > 0:
                         ui_bgl.draw_rect(x - assetbar_props.highlight_margin, y - assetbar_props.highlight_margin, int(w * assets[index]['downloaded'] / 100.0), 2, green)
-    # TODO: Transfer to LOL
-    #
-    #                 if (result.get('can_download', True)) == 0:
-    #                     img = utils.get_thumbnail('locked.png')
-    #                     ui_bgl.draw_image(x + 2, y + 2, 24, 24, img, 1)
-    #
-    #                 v_icon = verification_icons[result.get('verification_status', 'validated')]
-    #                 if v_icon is not None:
-    #                     img = utils.get_thumbnail(v_icon)
-    #                     ui_bgl.draw_image(x + ui_props.thumb_size - 26, y + 2, 24, 24, img, 1)
 
     # TODO: Transfer to LOL
 
@@ -309,8 +294,7 @@ def draw_callback_2d_search(self, context):
     # Scroll assets with mouse wheel
     if ui_props.dragging and (
             ui_props.draw_drag_image or ui_props.draw_snapped_bounds) and ui_props.active_index > -1:
-        iname = assets[ui_props.active_index]['thumbnail']
-        img = bpy.data.images.get(iname)
+        img = assets[ui_props.active_index]['thumbnail']
         if img is None:
             img = utils.get_thumbnail('thumbnail_notready.jpg')
 
@@ -620,13 +604,16 @@ class LOLAssetBarOperator(Operator):
         assets = utils.get_search_props(context)
 
         if not ui_props.thumbnails_loaded:
-            utils.load_previews(context, assets)
+            utils.load_previews(context, ui_props.asset_type)
             ui_props.thumbnails_loaded = True
 
         ui_props.scrolloffset = 0
 
+        if ui_props.local:
+            assets = [asset for asset in assets if asset['local']]
+
         if scene.luxcoreOL.on_search:
-            assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+            assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
             scene.luxcoreOL.search_category = self.category
 
         if ui_props.assetbar_on:
@@ -696,8 +683,11 @@ class LOLAssetBarOperator(Operator):
         if not user_preferences.use_library:
             return {'CANCELLED'}
 
+        if ui_props.local:
+            assets = [asset for asset in assets if asset['local']]
+
         if scene.luxcoreOL.on_search:
-            assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+            assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
         areas = []
 
