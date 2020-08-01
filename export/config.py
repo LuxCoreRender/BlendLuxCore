@@ -32,7 +32,7 @@ def convert(exporter, scene, context=None, engine=None):
         is_viewport_render = context is not None
         in_material_shading_mode = utils.in_material_shading_mode(context)
         denoiser_enabled = ((not is_viewport_render and scene.luxcore.denoiser.enabled)
-                            or (is_viewport_render and scene.luxcore.viewport.denoise
+                            or (is_viewport_render and scene.luxcore.viewport.use_denoiser
                                 and not in_material_shading_mode))
         preferences = get_addon_preferences(bpy.context)
 

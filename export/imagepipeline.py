@@ -47,6 +47,11 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
     if pipeline.tonemapper.enabled:
         index = convert_tonemapper(definitions, index, pipeline.tonemapper)
 
+    if context and scene.luxcore.viewport.get_denoiser(context) == "OPTIX":
+        definitions[str(index) + ".type"] = "OPTIX_DENOISER"
+        definitions[str(index) + ".sharpness"] = 0
+        index += 1
+
     if use_backgroundimage(context, scene):
         # Note: Blender expects the alpha to be NOT premultiplied, so we only
         # premultiply it when the backgroundimage plugin is used
@@ -85,6 +90,7 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
 
     if define_radiancescales:
         _lightgroups(definitions, scene)
+
     return index
 
 

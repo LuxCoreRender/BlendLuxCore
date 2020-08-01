@@ -329,7 +329,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_aberration(CameraButtonsPanel, Pane
         coloraberration = pipeline.coloraberration
         layout.enabled = coloraberration.enabled
 
-        if context.scene.luxcore.viewport.denoise:
+        if context.scene.luxcore.viewport.get_denoiser(context) == "OIDN":
             self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
 
         layout.prop(coloraberration, "uniform")
@@ -473,7 +473,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
         contour_lines = pipeline.contour_lines
         layout.enabled = contour_lines.enabled
 
-        if context.scene.luxcore.viewport.denoise:
+        if context.scene.luxcore.viewport.get_denoiser(context) == "OIDN":
             self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
 
         layout.prop(contour_lines, "scale")

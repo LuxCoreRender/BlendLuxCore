@@ -10,8 +10,10 @@ from .image_user import LuxCoreImageUser
 
 class LuxCoreImagepipelinePlugin:
     def is_enabled(self, context):
-        using_viewport_denoiser = context and context.scene.luxcore.viewport.denoise
-        if using_viewport_denoiser and not self.compatible_with_viewport_denoising:
+        # Note: We don't need this check for the OptiX denoiser because it is
+        # not executed after the whole imagepipeline like OIDN
+        using_OIDN_in_viewport = context and context.scene.luxcore.viewport.get_denoiser(context) == "OIDN"
+        if using_OIDN_in_viewport and not self.compatible_with_viewport_denoising:
             return False
         return self.enabled
 
