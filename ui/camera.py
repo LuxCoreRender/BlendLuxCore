@@ -121,23 +121,27 @@ class LUXCORE_CAMERA_PT_bokeh(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     
     def draw_header(self, context):
-        self.layout.prop(context.camera.luxcore, "non_uniform_bokeh", text="")
+        self.layout.prop(context.camera.luxcore.bokeh, "non_uniform", text="")
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         
         cam = context.camera
+        bokeh = cam.luxcore.bokeh
         
-        layout.active = cam.luxcore.non_uniform_bokeh
+        layout.active = bokeh.non_uniform
 
-        layout.prop(cam.luxcore, "bokeh_blades")
-        layout.prop(cam.luxcore, "bokeh_anisotropy")
+        layout.prop(bokeh, "blades")
+        layout.prop(bokeh, "anisotropy")
         
         col = layout.column()
-        col.prop(cam.luxcore, "bokeh_distribution")
-        if cam.luxcore.bokeh_distribution in {"EXPONENTIAL", "INVERSEEXPONENTIAL"}:
-            col.prop(cam.luxcore, "bokeh_power")
+        col.prop(bokeh, "distribution")
+        if bokeh.distribution in {"EXPONENTIAL", "INVERSEEXPONENTIAL"}:
+            col.prop(bokeh, "power")
+        elif bokeh.distribution == "CUSTOM":
+            col.template_ID(bokeh, "image", open="image.open")
+            bokeh.image_user.draw(col, context.scene)
 
 
 class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):

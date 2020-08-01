@@ -4,6 +4,7 @@ from ..bin import pyluxcore
 from .. import utils
 from ..nodes.output import get_active_output
 from ..utils.errorlog import LuxCoreErrorLog
+from .image import ImageExporter
 
 
 def convert(exporter, scene, depsgraph, context=None, is_camera_moving=False):
@@ -162,13 +163,18 @@ def _depth_of_field(scene, definitions, context=None):
             definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir))
         else:
             definitions["focaldistance"] = camera.data.dof.focus_distance
-    
-    if settings.non_uniform_bokeh:
-        definitions["bokeh.blades"] = settings.bokeh_blades
-        definitions["bokeh.distribution.type"] = settings.bokeh_distribution
-        definitions["bokeh.power"] = settings.bokeh_power
+
+    bokeh = settings.bokeh
+    if bokeh.non_uniform:
+        distribution = bokeh.distribution
+        if distribution == "CUSTOM" and not bokeh.image:
+            distribution = "UNIFORM"
+
+        definitions["bokeh.distribution.type"] = distribution
+        definitions["bokeh.blades"] = bokeh.blades
+        definitions["bokeh.power"] = bokeh.power
         
-        anisotropy = settings.bokeh_anisotropy
+        anisotropy = bokeh.anisotropy
         if anisotropy > 0:
             x = 1
             y = 1 - anisotropy
@@ -178,6 +184,16 @@ def _depth_of_field(scene, definitions, context=None):
             
         definitions["bokeh.scale.x"] = x
         definitions["bokeh.scale.y"] = y
+
+        if distribution == "CUSTOM":
+            try:
+                filepath = ImageExporter.export(bokeh.image,
+                                                bokeh.image_user,
+                                                scene)
+                definitions["bokeh.distribution.image"] = filepath
+            except OSError as error:
+                LuxCoreErrorLog.add_warning("Camera: %s" % error)
+                definitions["bokeh.distribution.type"] = "UNIFORM"
 
 
 def _clipping(scene, definitions):
