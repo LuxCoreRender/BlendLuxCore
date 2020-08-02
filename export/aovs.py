@@ -45,7 +45,7 @@ def convert(exporter, scene, context=None, engine=None):
                 _add_output(definitions, "ALBEDO")
                 # TODO: This AOV is temporarily disabled for OPTIX because of a bug that leads to
                 #  black squares in the result - re-enable when this is fixed in OptiX
-                if context.scene.luxcore.viewport.get_denoiser(context) == "OIDN":
+                if scene.luxcore.viewport.get_denoiser(context) == "OIDN":
                     _add_output(definitions, "AVG_SHADING_NORMAL")
             return utils.create_props(prefix, definitions)
 
@@ -85,10 +85,11 @@ def convert(exporter, scene, context=None, engine=None):
             _add_output(definitions, "IRRADIANCE")
         if (final and aovs.albedo) or add_DENOISER_AOVs:
             _add_output(definitions, "ALBEDO")
-        # TODO: This AOV is temporarily disabled for OPTIX because of a bug that leads to
-        #  black squares in the result - re-enable when this is fixed in OptiX
-        if (final and aovs.avg_shading_normal) or (add_DENOISER_AOVs and context.scene.luxcore.viewport.get_denoiser(context) == "OIDN"):
-            _add_output(definitions, "AVG_SHADING_NORMAL")
+        if (final and aovs.avg_shading_normal) or add_DENOISER_AOVs:
+            # TODO: This AOV is temporarily disabled for OPTIX because of a bug that leads to
+            #  black squares in the result - re-enable when this is fixed in OptiX
+            if final or (context and scene.luxcore.viewport.get_denoiser(context) == "OIDN"):
+                _add_output(definitions, "AVG_SHADING_NORMAL")
 
         pipeline_props = pyluxcore.Properties()
 
