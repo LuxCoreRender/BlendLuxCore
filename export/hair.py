@@ -94,9 +94,6 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
         start_time = time()
 
         mod = find_psys_modifier(obj, psys)
-        # TODO 2.8 Do we have to check if emitter is on a visible layer
-        # if not is_psys_visible(obj, mod, scene, context):
-        #    return
 
         msg = "[%s: %s] Exporting hair" % (obj.name, psys.name)
         print(msg)
@@ -180,10 +177,9 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
         if engine:
             engine.update_stats("Exporting...", "Refining Hair System %s" % psys.name)
             if engine.test_break():
-                return None, None
+                return None
 
         lux_shape_name = make_hair_shape_name(obj_key, psys)
-        lux_obj_name = lux_shape_name
 
         if is_for_duplication:
             # We have to unapply the transformation which is baked into the Blender hair coordinates
@@ -203,7 +199,7 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
         # Sometimes no hair shape could be created, e.g. if the length
         # of all hairs is 0 (can happen e.g. during animations or if hair length is textured)
         if not success:
-            return None, None
+            return None
 
         time_elapsed = time() - start_time
         if exporter.stats:
@@ -213,9 +209,10 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
     except Exception as error:
         msg = "[%s: %s] %s" % (obj.name, psys.name, error)
         LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
-        import traceback
-        traceback.print_exc()
-        return None, None
+        if str(error).strip() != "Error: Object was not yet evaluated":
+            import traceback
+            traceback.print_exc()
+        return None
 
 
 def set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, visible_to_camera,
