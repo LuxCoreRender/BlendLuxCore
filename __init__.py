@@ -18,15 +18,20 @@ if platform.system() == "Windows":
     # Ensure nvrtc-builtins64_101.dll can be found
     bin_directory = get_bin_directory()
 
-    from ctypes import windll, c_wchar_p
-    from ctypes.wintypes import DWORD
+    try:
+        from ctypes import windll, c_wchar_p
+        from ctypes.wintypes import DWORD
 
-    AddDllDirectory = windll.kernel32.AddDllDirectory
-    AddDllDirectory.restype = DWORD
-    AddDllDirectory.argtypes = [c_wchar_p]
+        AddDllDirectory = windll.kernel32.AddDllDirectory
+        AddDllDirectory.restype = DWORD
+        AddDllDirectory.argtypes = [c_wchar_p]
 
-    os.environ["PATH"] = bin_directory + os.pathsep + os.environ["PATH"]
-    AddDllDirectory(bin_directory)
+        os.environ["PATH"] = bin_directory + os.pathsep + os.environ["PATH"]
+        AddDllDirectory(bin_directory)
+    except AttributeError:
+        # Windows 7 users might be missing this update
+        raise Exception("\n\nYou need to install this update: "
+                        "https://www.microsoft.com/en-us/download/details.aspx?id=26764") from None
 
 if platform.system() in {"Linux", "Darwin"}:
     # Required for downloads from the LuxCore Online Library
