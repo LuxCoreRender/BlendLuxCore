@@ -45,16 +45,6 @@ if platform.system() in {"Linux", "Darwin"}:
         print("Making LuxCore denoiser executable")
         os.chmod(denoiser_path, 0o755)
 
-if platform.system() in "Linux":
-    # Add NVRTC DLLs from the bin directory
-    from ctypes import *
-    libnvrtc_builtins_path = which("libnvrtc-builtins.so", mode=os.F_OK, path=get_bin_directory() + os.pathsep + os.environ["PATH"])
-    print("NVRTC Builtins DLL: " + libnvrtc_builtins_path)
-    cdll.LoadLibrary(libnvrtc_builtins_path)
-    libnvrtc_path = which("libnvrtc.so", mode=os.F_OK, path=get_bin_directory() + os.pathsep + os.environ["PATH"])
-    print("NVRTC DLL: " + libnvrtc_path)
-    cdll.LoadLibrary(libnvrtc_path)
-    
 
 try:
     from .bin import pyluxcore
