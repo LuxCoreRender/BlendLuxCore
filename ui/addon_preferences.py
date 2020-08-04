@@ -74,6 +74,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+        SPLIT_FACTOR = 1/3
         
         if not custom_normals_supported():
             layout.label(text="No official support for this Blender version!", icon=icons.WARNING)
@@ -81,22 +82,34 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         row = layout.row()
         row.label(text="GPU API:")
+        
         if utils.is_cuda_build():
             row.prop(self, "gpu_backend", expand=True)
-            layout.prop(self, "film_device")
+            
             if self.gpu_backend == "CUDA":
-                layout.prop(self, "use_optix_if_available")
+                row = layout.row()
+                split = row.split(factor=SPLIT_FACTOR)
+                split.label(text="")
+                split.prop(self, "use_optix_if_available")
+            
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Film Device:")
+            split.prop(self, "film_device", text="")
         elif utils.is_opencl_build():
             row.label(text="OpenCL")
-            layout.prop(self, "film_device")
+            
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Film Device:")
+            split.prop(self, "film_device", text="")
         else:
             row.label(text="Not available in this build")
-
+        
         row = layout.row()
-        row.label(text="Image Nodes:")
-        row = row.row()
-        row.alignment = "LEFT"
-        row.prop(self, "image_node_thumb_default")
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="Image Nodes:")
+        split.prop(self, "image_node_thumb_default")
 
         row = layout.row()
         row.label(text="Community:")
