@@ -51,6 +51,8 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
         ("OPTIX", "OptiX", "Denoises continuously during viewport rendering", 1),
     ]
     denoiser: EnumProperty(name="Denoiser", items=denoisers, default="OPTIX")
+    min_samples: IntProperty(name="Min. Samples", default=1, min=0, 
+                             description="Minimum amount of samples to be rendered before viewport denoiser is enabled")
 
     @staticmethod
     def can_use_optix_denoiser(context):

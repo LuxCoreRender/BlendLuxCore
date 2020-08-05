@@ -64,6 +64,9 @@ class LUXCORE_RENDER_PT_viewport_settings_denoiser(RenderButtonsPanel, Panel):
         col = layout.column()
         col.active = can_use_optix
         col.prop(viewport, "denoiser")
+        
+        if viewport.get_denoiser(context) == "OPTIX":
+            col.prop(viewport, "min_samples")
 
 
 

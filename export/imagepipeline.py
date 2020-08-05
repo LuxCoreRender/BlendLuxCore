@@ -50,6 +50,7 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
     if context and scene.luxcore.viewport.get_denoiser(context) == "OPTIX":
         definitions[str(index) + ".type"] = "OPTIX_DENOISER"
         definitions[str(index) + ".sharpness"] = 0
+        definitions[str(index) + ".minspp"] = scene.luxcore.viewport.min_samples
         index += 1
 
     if use_backgroundimage(context, scene):
