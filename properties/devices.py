@@ -69,6 +69,15 @@ class LuxCoreDeviceSettings(PropertyGroup):
 
         return selection
 
+    def get_gpu_devices(self, context):
+        gpu_backend = get_addon_preferences(context).gpu_backend
+        if gpu_backend == "OPENCL":
+            return [device for device in self.devices if device.type == "OPENCL_GPU"]
+        elif gpu_backend == "CUDA":
+            return [device for device in self.devices if device.type == "CUDA_GPU"]
+        else:
+            raise Exception("Unknown GPU Backend")
+
     def get_device_props(self):
         """
         Returns pyluxcore.Properties() of the following form:

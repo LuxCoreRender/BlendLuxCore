@@ -79,6 +79,10 @@ def export_material(obj, material_index, exporter, depsgraph, is_viewport_render
     mat = get_material(obj, material_index, depsgraph)
 
     if mat:
+        # We need the original material, not the evaluated one, otherwise 
+        # Blender gives us "NodeTreeUndefined" as mat.node_tree.bl_idname
+        mat = mat.original
+        
         lux_mat_name, mat_props = material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
         node_tree = mat.luxcore.node_tree
         return lux_mat_name, mat_props, node_tree

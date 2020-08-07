@@ -32,8 +32,9 @@ def convert(exporter, scene, context=None, engine=None):
         is_viewport_render = context is not None
         in_material_shading_mode = utils.in_material_shading_mode(context)
         denoiser_enabled = ((not is_viewport_render and scene.luxcore.denoiser.enabled)
-                            or (is_viewport_render and scene.luxcore.viewport.denoise
+                            or (is_viewport_render and scene.luxcore.viewport.use_denoiser
                                 and not in_material_shading_mode))
+        preferences = get_addon_preferences(bpy.context)
 
         if is_viewport_render:
             # Viewport render
@@ -69,9 +70,9 @@ def convert(exporter, scene, context=None, engine=None):
             "scene.epsilon.max": config.max_epsilon,
         })
 
-        if config.film_opencl_enable and config.film_opencl_device not in {"", "none"}:
+        if preferences.film_device not in {"", "none"}:
             definitions["film.opencl.enable"] = True
-            definitions["film.opencl.device"] = int(config.film_opencl_device)
+            definitions["film.opencl.device"] = int(preferences.film_device)
         else:
             definitions["film.opencl.enable"] = False
 
@@ -88,6 +89,8 @@ def convert(exporter, scene, context=None, engine=None):
         # Filter
         if config.filter == "GAUSSIAN":
             definitions["film.filter.gaussian.alpha"] = config.gaussian_alpha
+        elif config.filter == "SINC":
+            definitions["film.filter.sinc.tau"] = config.sinc_tau
 
         use_filesaver = utils.using_filesaver(context, scene)
 
@@ -110,7 +113,6 @@ def convert(exporter, scene, context=None, engine=None):
             definitions["native.threads.count"] = scene.render.threads
 
         # Enable/disable OptiX
-        preferences = get_addon_preferences(bpy.context)
         if preferences.gpu_backend == "CUDA":
             definitions["context.cuda.optix.enable"] = preferences.use_optix_if_available
 

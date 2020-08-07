@@ -56,6 +56,8 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
                                      description=SHADOWCATCHER_DESC)
     shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
                                                 description=ONLY_INFINITE_DESC)
+    is_holdout: BoolProperty(update=utils_node.force_viewport_update, name="Holdout", default=False,
+                             description="Make film transparent on pixels where this material is directly visible")
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
@@ -107,6 +109,15 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
         row.alignment = "LEFT"
         row.prop(self, "shadow_color", text="")
         row.label(text="Shadow Color")
+        
+        row = box.row()
+        row.active = not engine_is_bidir
+        row.prop(self, "is_holdout")
+        if self.is_holdout and utils.is_valid_camera(context.scene.camera):
+            pipeline = context.scene.camera.data.luxcore.imagepipeline
+            if not pipeline.transparent_film:
+                box.prop(pipeline, "transparent_film", text="Enable Transparent Film",
+                            icon=icons.CAMERA, toggle=True)
 
         # Shadow catcher
         col = box.column()
@@ -168,6 +179,7 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
         definitions["shadowcatcher.onlyinfinitelights"] = self.shadow_catcher_only_infinite
         definitions["photongi.enable"] = self.use_photongi
         definitions["transparency.shadow"] = list(self.shadow_color)
+        definitions["holdout.enable"] = self.is_holdout
 
         props.Set(utils.create_props(prefix, definitions))
 

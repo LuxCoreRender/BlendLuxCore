@@ -17,7 +17,7 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
-        layout =self.layout
+        layout = self.layout
         layout.enabled = not LuxCoreRenderEngine.final_running
         layout.prop(context.scene.luxcore.denoiser, "enabled", text="")
 

@@ -1,26 +1,17 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-import bpy
 from ... import utils
 from .. import icons
 
 
-def _get_gpu_devices(context, device_list):
-    gpu_backend = utils.get_addon_preferences(context).gpu_backend
-    if gpu_backend == "OPENCL":
-        return [device for device in device_list if device.type == "OPENCL_GPU"]
-    else:
-        return [device for device in device_list if device.type == "CUDA_GPU"]
-
-
 def _show_openCL_device_warning(context):
     config = context.scene.luxcore.config
-    opencl = context.scene.luxcore.devices
+    devices = context.scene.luxcore.devices
 
-    gpu_devices = _get_gpu_devices(context, opencl.devices)
+    gpu_devices = devices.get_gpu_devices(context)
     # We don't show OpenCL CPU devices, we just need them to check if there are other devices
-    cpu_devices = [device for device in opencl.devices if device.type == "OPENCL_CPU"]
-    other_devices = set(opencl.devices) - (set(gpu_devices) | set(cpu_devices))
+    cpu_devices = [device for device in devices.devices if device.type == "OPENCL_CPU"]
+    other_devices = set(devices.devices) - (set(gpu_devices) | set(cpu_devices))
 
     has_gpus = any([device.enabled for device in gpu_devices])
     has_others = any([device.enabled for device in other_devices])
@@ -74,22 +65,21 @@ class LUXCORE_RENDER_PT_gpu_devices(RenderButtonsPanel, Panel):
 
     def draw(self, context):
         layout = self.layout
-        devices = context.scene.luxcore.devices.devices
+        devices = context.scene.luxcore.devices
 
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        if not devices:
+        if not devices.devices:
             layout.label(text="No devices available.", icon=icons.WARNING)
 
         layout.operator("luxcore.update_opencl_devices")
 
-        if devices:
+        if devices.devices:
             if _show_openCL_device_warning(context):
                 layout.label(text="Select at least one device!", icon=icons.WARNING)
 
-            gpu_devices = _get_gpu_devices(context, devices)
-            for device in gpu_devices:
+            for device in devices.get_gpu_devices(context):
                 layout.prop(device, "enabled", text=device.name)
 
 

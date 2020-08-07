@@ -8,6 +8,9 @@ from ..utils.lol import utils as lol_utils
 from ..export.mesh_converter import custom_normals_supported
 
 
+film_device_items = []
+
+
 class LuxCoreAddonPreferences(AddonPreferences):
     # Must be the addon directory name
     # (by default "BlendLuxCore", but a user/dev might change the folder name)
@@ -19,6 +22,32 @@ class LuxCoreAddonPreferences(AddonPreferences):
         ("CUDA", "CUDA", "Use CUDA for GPU acceleration", 1),
     ]
     gpu_backend: EnumProperty(items=gpu_backend_items, default="OPENCL")
+
+    def film_device_items_callback(self, context):
+        backend_to_type = {
+            "OPENCL": "OPENCL_GPU",
+            "CUDA": "CUDA_GPU",
+        }
+
+        devices = context.scene.luxcore.devices.devices
+        device_type_filter = backend_to_type[self.gpu_backend]
+        gpu_devices = [(index, device) for (index, device) in enumerate(devices) if device.type == device_type_filter]
+
+        items = [(str(index), f"{device.name} ({self.gpu_backend})", "", i)
+                 for i, (index, device) in enumerate(gpu_devices)]
+        # The first item in the list is the default, so we append the CPU fallback at the end
+        items += [("none", "CPU", "", len(items))]
+
+        # There is a known bug with using a callback,
+        # Python must keep a reference to the strings
+        # returned or Blender will misbehave or even crash.
+        global film_device_items
+        film_device_items = items
+        return items
+
+    film_device: EnumProperty(name="Film Device", items=film_device_items_callback,
+                              description="Which device to use to compute the imagepipeline")
+
     use_optix_if_available: BoolProperty(name="Use OptiX if Available", default=True,
                                          description="Use the OptiX backend if possible, to speed up ray/triangle "
                                                      "intersections and BHV building and to save memory. Check the "
@@ -31,6 +60,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
         description="Decide wether the thumbnail is visible on new image nodes (changes do not affect existing nodes)"
     )
 
+    # LuxCore online library properties
     global_dir: StringProperty(
         name="Global Files Directory",
         description="Global storage for your assets, will use subdirectories for the contents",
@@ -44,6 +74,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+        SPLIT_FACTOR = 1/3
         
         if not custom_normals_supported():
             layout.label(text="No official support for this Blender version!", icon=icons.WARNING)
@@ -51,20 +82,34 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         row = layout.row()
         row.label(text="GPU API:")
+        
         if utils.is_cuda_build():
             row.prop(self, "gpu_backend", expand=True)
+            
             if self.gpu_backend == "CUDA":
-                layout.prop(self, "use_optix_if_available")
+                row = layout.row()
+                split = row.split(factor=SPLIT_FACTOR)
+                split.label(text="")
+                split.prop(self, "use_optix_if_available")
+            
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Film Device:")
+            split.prop(self, "film_device", text="")
         elif utils.is_opencl_build():
             row.label(text="OpenCL")
+            
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Film Device:")
+            split.prop(self, "film_device", text="")
         else:
             row.label(text="Not available in this build")
-
+        
         row = layout.row()
-        row.label(text="Image Nodes:")
-        row = row.row()
-        row.alignment = "LEFT"
-        row.prop(self, "image_node_thumb_default")
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="Image Nodes:")
+        split.prop(self, "image_node_thumb_default")
 
         row = layout.row()
         row.label(text="Community:")

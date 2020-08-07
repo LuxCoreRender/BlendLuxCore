@@ -121,23 +121,27 @@ class LUXCORE_CAMERA_PT_bokeh(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     
     def draw_header(self, context):
-        self.layout.prop(context.camera.luxcore, "non_uniform_bokeh", text="")
+        self.layout.prop(context.camera.luxcore.bokeh, "non_uniform", text="")
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         
         cam = context.camera
+        bokeh = cam.luxcore.bokeh
         
-        layout.active = cam.luxcore.non_uniform_bokeh
+        layout.active = bokeh.non_uniform
 
-        layout.prop(cam.luxcore, "bokeh_blades")
-        layout.prop(cam.luxcore, "bokeh_anisotropy")
+        layout.prop(bokeh, "blades")
+        layout.prop(bokeh, "anisotropy")
         
         col = layout.column()
-        col.prop(cam.luxcore, "bokeh_distribution")
-        if cam.luxcore.bokeh_distribution in {"EXPONENTIAL", "INVERSEEXPONENTIAL"}:
-            col.prop(cam.luxcore, "bokeh_power")
+        col.prop(bokeh, "distribution")
+        if bokeh.distribution in {"EXPONENTIAL", "INVERSEEXPONENTIAL"}:
+            col.prop(bokeh, "power")
+        elif bokeh.distribution == "CUSTOM":
+            col.template_ID(bokeh, "image", open="image.open")
+            bokeh.image_user.draw(col, context.scene)
 
 
 class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
@@ -179,15 +183,10 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-        layout.use_property_decorate = False      
-        cam = context.camera
-        pipeline = cam.luxcore.imagepipeline
+        layout.use_property_decorate = False
+        pipeline = context.camera.luxcore.imagepipeline
 
-        # General settings
         layout.prop(pipeline, "transparent_film")
-        layout.prop(context.scene.luxcore.config, "film_opencl_enable")
-        if context.scene.luxcore.config.film_opencl_enable:
-            layout.prop(context.scene.luxcore.config, "film_opencl_device", text="")
             
 
 class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):
@@ -334,7 +333,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_aberration(CameraButtonsPanel, Pane
         coloraberration = pipeline.coloraberration
         layout.enabled = coloraberration.enabled
 
-        if context.scene.luxcore.viewport.denoise:
+        if context.scene.luxcore.viewport.get_denoiser(context) == "OIDN":
             self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
 
         layout.prop(coloraberration, "uniform")
@@ -478,7 +477,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
         contour_lines = pipeline.contour_lines
         layout.enabled = contour_lines.enabled
 
-        if context.scene.luxcore.viewport.denoise:
+        if context.scene.luxcore.viewport.get_denoiser(context) == "OIDN":
             self.layout.label(text="Disabled in viewport because of viewport denoising", icon=icons.INFO)
 
         layout.prop(contour_lines, "scale")
