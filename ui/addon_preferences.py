@@ -64,7 +64,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
     global_dir: StringProperty(
         name="Global Files Directory",
         description="Global storage for your assets, will use subdirectories for the contents",
-        subtype='DIR_PATH', default=lol_utils.get_default_directory(), update=lol_utils.save_prefs
+        subtype='DIR_PATH', default=lol_utils.get_default_directory()
     )
 
     max_assetbar_rows: IntProperty(name="Max Assetbar Rows", description="max rows of assetbar in the 3d view",
