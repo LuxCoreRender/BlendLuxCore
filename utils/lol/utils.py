@@ -499,27 +499,6 @@ def get_search_props(context):
     return props
 
 
-def save_prefs(self, context):
-    # first check context, so we don't do this on registration or blender startup
-    if not bpy.app.background: #(hasattr kills blender)
-        # user_preferences = get_addon_preferences(context)
-        # TODO: Implement
-        test = 1
-        #prefs = {
-        #    'global_dir': user_preferences.global_dir,
-        #}
-        #try:
-        #    fpath = paths.BLENDERKIT_SETTINGS_FILENAME
-        #    if not os.path.exists(paths._presets):
-        #        os.makedirs(paths._presets)
-        #    f = open(fpath, 'w')
-        #    with open(fpath, 'w') as s:
-        #        import json
-        #        json.dump(prefs, s)
-        #except Exception as e:
-        #    print(e)
-
-
 def get_default_directory():
     from os.path import expanduser
     home = expanduser("~")
@@ -530,15 +509,6 @@ def get_scene_id():
     '''gets scene id and possibly also generates a new one'''
     bpy.context.scene['uuid'] = bpy.context.scene.get('uuid', str(uuid.uuid4()))
     return bpy.context.scene['uuid']
-
-
-def guard_from_crash():
-    '''Blender tends to crash when trying to run some functions with the addon going through unregistration process.'''
-    #if bpy.context.preferences.addons.get('BlendLuxCore') is None:
-    #    return False
-    #if bpy.context.preferences.addons['BlendLuxCore'].preferences is None:
-    #    return False
-    return True
 
 
 def download_thumbnail(self, context, asset):
@@ -604,11 +574,12 @@ def load_previews(context, asset_type):
     clean_previmg()
     if assets is not None and len(assets) != 0:
         for asset in assets:
-            tpath = join(user_preferences.global_dir, asset_type, "preview", splitext(asset['url'])[0] + '.jpg')
+            tpath = join(user_preferences.global_dir, asset_type, 'preview', splitext(asset['url'])[0] + '.jpg')
 
             if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
                 img = bpy.data.images.load(tpath)
                 img.name = '.LOL_preview'
+
                 asset["thumbnail"] = img
 
                 if bpy.app.version < (2, 83, 0):
@@ -619,6 +590,7 @@ def load_previews(context, asset_type):
                 path = join(rootdir, 'thumbnails', 'thumbnail_notready.jpg')
                 img = bpy.data.images.load(path)
                 img.name = '.LOL_preview'
+
                 if bpy.app.version < (2, 83, 0):
                     # Needed in old Blender versions so the images are not too dark
                     img.colorspace_settings.name = 'Linear'

@@ -25,7 +25,6 @@
 import bpy
 from bpy.types import Operator
 from bpy.props import BoolProperty, IntProperty, StringProperty
-from os.path import basename, dirname
 import math
 from mathutils import Vector
 
@@ -42,9 +41,6 @@ active_window = None
 active_region = None
 
 def draw_callback_2d(self, context):
-    if not utils.guard_from_crash():
-        return
-
     area = context.area
     window = context.window
     try:
@@ -60,13 +56,10 @@ def draw_callback_2d(self, context):
         go = False
 
     if go and area == area1 and window == window1:
-        #draw_infobox(self, context)
         draw_callback_2d_search(self, context)
 
 
 def draw_callback_2d_progress(self, context):
-    # x = ui_props.reports_x
-    # y = ui_props.reports_y
     index = 0
     for threaddata in utils.download_threads:
         tcom = threaddata[2]
@@ -88,28 +81,8 @@ def draw_callback_2d_progress(self, context):
                 if loc is not None:
                     ui_bgl.draw_downloader(loc[0], loc[1], tcom.progress, img)
 
-        # else:
-        #     ui_bgl.draw_progress(x, y - index * 30, text='downloading %s' % asset_data['name'],
-        #                   percent=tcom.progress)
-        #     index += 1
-    # for process in bg_blender.bg_processes:
-    #     tcom = process[1]
-    #     draw_progress(x, y - index * 30, '%s' % tcom.lasttext,
-    #                   tcom.progress)
-    #     index += 1
-    # global reports
-    # for report in reports:
-    #     report.draw(x, y - index * 30)
-    #     index += 1
-    #     report.fade()
-
 
 def draw_callback_3d_progress(self, context):
-    # 'star trek' mode gets here, blocked by now ;)
-    if not utils.guard_from_crash():
-        return
-    ui_props = context.scene.luxcoreOL.ui
-
     for threaddata in utils.download_threads:
         tcom = threaddata[2]
         if tcom.passargs['thumbnail']:
@@ -129,8 +102,6 @@ def draw_callback_3d_progress(self, context):
 
 def draw_callback_3d(self, context):
     ''' Draw snapped bbox while dragging'''
-    if not utils.guard_from_crash():
-        return
 
     ui_props = context.scene.luxcoreOL.ui
 
@@ -203,6 +174,7 @@ def draw_callback_2d_search(self, context):
                     ui_bgl.draw_image(assetbar_props.x + assetbar_props.width - 25, arrow_y, 25,
                                       ui_props.thumb_size, utils.get_thumbnail('arrow_right.png'), 1)
 
+
             # Draw asset thumbnails
             for b in range(0, h_draw):
                 w_draw = min(assetbar_props.wcount, len(assets) - b * assetbar_props.wcount - ui_props.scrolloffset)
@@ -236,60 +208,33 @@ def draw_callback_2d_search(self, context):
                     if assets[index]['downloaded'] > 0:
                         ui_bgl.draw_rect(x - assetbar_props.highlight_margin, y - assetbar_props.highlight_margin, int(w * assets[index]['downloaded'] / 100.0), 2, green)
 
-    # TODO: Transfer to LOL
+            if -1 < ui_props.active_index < len(assets):
+                asset = assets[ui_props.active_index]
+                tooltip = asset['name'] + '\n\nCategory: ' + asset['category'] + '\nLicence: CC-BY-SA'
+                atip = 'Author:\nCharles Nandeya Ehouman (Sharlybg)\n\nhttps://www.patreon.com/Draviastudio\n\n'
 
-    #     s = bpy.context.scene
-    #     props = utils.get_search_props(context)
-    #     # if props.report != '' and props.is_searching or props.search_error:
-    #     #     ui_bgl.draw_text(props.report, assetbar_props.x,
-    #     #                      assetbar_props.y - 15 - assetbar_props.margin - assetbar_props.height, 15)
-    #
-    #     props = s.blenderkitUI
-    #     if ui_props.draw_tooltip:
-    #         # TODO move this lazy loading into a function and don't duplicate through the code
-    #         iname = utils.previmg_name(ui_props.active_index, fullsize=True)
-    #
-    #         directory = paths.get_temp_dir('%s_search' % mappingdict[props.asset_type])
-    #         sr = scene.get('search results')
-    #         if sr != None and -1 < ui_props.active_index < len(sr):
-    #             r = sr[ui_props.active_index]
-    #             tpath = os.path.join(directory, r['thumbnail'])
-    #
-    #             img = bpy.data.images.get(iname)
-    #             if img == None or img.filepath != tpath:
-    #                 # TODO replace it with a function
-    #                 if os.path.exists(tpath):
-    #
-    #                     if img is None:
-    #                         img = bpy.data.images.load(tpath)
-    #                         img.name = iname
-    #                     else:
-    #                         if img.filepath != tpath:
-    #                             # todo replace imgs reloads with a method that forces unpack for thumbs.
-    #                             if img.packed_file is not None:
-    #                                 img.unpack(method='USE_ORIGINAL')
-    #                             img.filepath = tpath
-    #                             img.reload()
-    #                             img.name = iname
-    #                 else:
-    #                     iname = utils.previmg_name(ui_props.active_index)
-    #                     img = bpy.data.images.get(iname)
-                    # if bpy.app.version < (2, 83, 0):
-                    #     # Needed in old Blender versions so the images are not too dark
-                    #     img.colorspace_settings.name = 'Linear'
-    #
-    #             gimg = None
-    #             atip = ''
-    #             if bpy.context.window_manager.get('bkit authors') is not None:
-    #                 a = bpy.context.window_manager['bkit authors'].get(r['author_id'])
-    #                 if a is not None and a != '':
-    #                     if a.get('gravatarImg') is not None:
-    #                         gimg = utils.get_hidden_image(a['gravatarImg'], a['gravatarHash'])
-    #                     atip = a['tooltip']
-    #
-    #             draw_tooltip(ui_props.mouse_x, ui_props.mouse_y, text=ui_props.tooltip, author=atip, img=img,
-    #                          gravatar=gimg)
+                from os.path import join, splitext
+                import os
 
+                tpath = join(user_preferences.global_dir, ui_props.asset_type, 'preview', 'full',
+                             splitext(asset['url'])[0] + '.jpg')
+
+                if asset['local']:
+                    tooltip = asset['name'] + '\n\nCategory: ' + asset['category']
+                    atip = ''
+
+                gimg = None
+                img = utils.get_thumbnail('thumbnail_notready.jpg')
+
+                if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
+                    img = bpy.data.images.get('.LOL_preview_full')
+                    if img is not None:
+                        bpy.data.images.remove(img)
+                    img = bpy.data.images.load(tpath)
+                    img.name = '.LOL_preview_full'
+
+                draw_tooltip(context, ui_props.mouse_x, ui_props.mouse_y, text=tooltip, author=atip,
+                             img=img, gravatar=gimg)
 
     # Scroll assets with mouse wheel
     if ui_props.dragging and (
@@ -305,127 +250,9 @@ def draw_callback_2d_search(self, context):
                            ui_props.mouse_y - linelength, 2, white)
 
 
-def draw_infobox(self, context):
-    scene = context.scene
-    ui_props = scene.luxcoreOL.ui
-
-    #TODO: Implement
-
-    # rating_possible, rated, asset, asset_data = is_rating_possible()
-
-    # if rating_possible:  # (not rated or ui_props.rating_menu_on):
-    #     bkit_ratings = asset.bkit_ratings
-    #     bgcol = bpy.context.preferences.themes[0].user_interface.wcol_tooltip.inner
-    #     textcol = (1, 1, 1, 1)
-    #
-    #     r = bpy.context.region
-    #     font_size = int(ui.rating_ui_scale * 20)
-    #
-    #     if ui.rating_button_on:
-    #         img = utils.get_thumbnail('star_white.png')
-    #
-    #         ui_bgl.draw_image(ui.rating_x,
-    #                           ui.rating_y - ui.rating_button_width,
-    #                           ui.rating_button_width,
-    #                           ui.rating_button_width,
-    #                           img, 1)
-    #
-    #         # if ui_props.asset_type != 'BRUSH':
-    #         #     thumbnail_image = props.thumbnail
-    #         # else:
-    #         #     b = utils.get_active_brush()
-    #         #     thumbnail_image = b.icon_filepath
-    #
-    #         directory = paths.get_temp_dir('%s_search' % asset_data['asset_type'])
-    #         tpath = os.path.join(directory, asset_data['thumbnail_small'])
-    #
-    #         img = utils.get_hidden_image(tpath, 'rating_preview')
-    #         ui_bgl.draw_image(ui.rating_x + ui.rating_button_width,
-    #                           ui.rating_y - ui.rating_button_width,
-    #                           ui.rating_button_width,
-    #                           ui.rating_button_width,
-    #                           img, 1)
-    #         # ui_bgl.draw_text( 'rate asset %s' % asset_data['name'],r.width - rating_button_width + margin, margin, font_size)
-    #         return
-    #
-    #     ui_bgl.draw_rect(ui.rating_x,
-    #                      ui.rating_y - ui.rating_ui_height - 2 * ui.margin - font_size,
-    #                      ui.rating_ui_width + ui.margin,
-    #                      ui.rating_ui_height + 2 * ui.margin + font_size,
-    #                      bgcol)
-    #     if asset_data['asset_type'] == 'model':
-    #         ui_img_name = 'rating_ui.png'
-    #     else:
-    #         ui_img_name = 'rating_ui_empty.png'
-    #         text = 'Try to estimate how many hours it would take for a professional artist to create this asset:'
-    #         tx = ui.rating_x + ui.workhours_bar_x
-    #         # draw_text_block(x=tx, y=ui.rating_y, width=80, font_size=20, line_height=15, text=text, color=colors.TEXT)
-    #
-    #     img = utils.get_thumbnail(ui_img_name)
-    #     ui_bgl.draw_image(ui.rating_x,
-    #                       ui.rating_y - ui.rating_ui_height - 2 * ui.margin,
-    #                       ui.rating_ui_width,
-    #                       ui.rating_ui_height,
-    #                       img, 1)
-    #     img = utils.get_thumbnail('star_white.png')
-    #
-    #     quality = bkit_ratings.rating_quality
-    #     work_hours = bkit_ratings.rating_work_hours
-    #
-    #     for a in range(0, quality):
-    #         ui_bgl.draw_image(ui.rating_x + ui.quality_stars_x + a * ui.star_size,
-    #                           ui.rating_y - ui.rating_ui_height + ui.quality_stars_y,
-    #                           ui.star_size,
-    #                           ui.star_size,
-    #                           img, 1)
-    #
-    #     img = utils.get_thumbnail('bar_slider.png')
-    #     # for a in range(0,11):
-    #     if work_hours > 0.2:
-    #         if asset_data['asset_type'] == 'model':
-    #             complexity = math.log2(work_hours) + 2  # real complexity
-    #             complexity = (1. / 9.) * (complexity - 1) * ui.workhours_bar_x_max
-    #         else:
-    #             complexity = work_hours / 5 * ui.workhours_bar_x_max
-    #         ui_bgl.draw_image(
-    #             ui.rating_x + ui.workhours_bar_x + int(
-    #                 complexity),
-    #             ui.rating_y - ui.rating_ui_height + ui.workhours_bar_y,
-    #             ui.workhours_bar_slider_size,
-    #             ui.workhours_bar_slider_size, img, 1)
-    #         ui_bgl.draw_text(
-    #             str(round(work_hours, 1)),
-    #             ui.rating_x + ui.workhours_bar_x - 50,
-    #             ui.rating_y - ui.rating_ui_height + ui.workhours_bar_y + 10, font_size)
-    #     # (0.5,1,2,4,8,16,32,64,128,256)
-    #     # ratings have to be different for models and brushes+materials.
-    #
-    #     scalevalues, xs = get_rating_scalevalues(asset_data['asset_type'])
-    #     for v, x in zip(scalevalues, xs):
-    #         ui_bgl.draw_rect(ui.rating_x + ui.workhours_bar_x + int(
-    #             x * ui.workhours_bar_x_max) - 1 + ui.workhours_bar_slider_size / 2,
-    #                          ui.rating_y - ui.rating_ui_height + ui.workhours_bar_y,
-    #                          2,
-    #                          5,
-    #                          textcol)
-    #         ui_bgl.draw_text(str(v),
-    #                          ui.rating_x + ui.workhours_bar_x + int(
-    #                              x * ui.workhours_bar_x_max),
-    #                          ui.rating_y - ui.rating_ui_height + ui.workhours_bar_y - 30,
-    #                          font_size)
-    #     if work_hours > 0.2 and quality > 0.2:
-    #         text = 'Thanks for rating asset %s' % asset_data['name']
-    #     else:
-    #         text = 'Rate asset %s.' % asset_data['name']
-    #     ui_bgl.draw_text(text,
-    #                      ui.rating_x,
-    #                      ui.rating_y - ui.margin - font_size,
-    #                      font_size)
-
-
-def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
-    region = bpy.context.region
-    scale = bpy.context.preferences.view.ui_scale
+def draw_tooltip(context, x, y, text='', author='', img=None, gravatar=None):
+    region = context.region
+    scale = context.preferences.view.ui_scale
 
     ttipmargin = 5
     textmargin = 10
@@ -437,8 +264,8 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
     lines = text.split('\n')
     alines = author.split('\n')
     ncolumns = 2
-    # nlines = math.ceil((len(lines) - 1) / ncolumns)
-    nlines = max(len(lines) - 1, len(alines))  # math.ceil((len(lines) - 1) / ncolumns)
+
+    nlines = max(len(lines) - 1, len(alines))
 
     texth = line_height * nlines + nameline_height
 
@@ -503,8 +330,6 @@ def draw_tooltip(x, y, text='', author='', img=None, gravatar=None):
     # draw gravatar
     gsize = 40
     if gravatar is not None:
-        # ui_bgl.draw_image(x + isizex - gsize - textmargin, y - isizey + texth - gsize - nameline_height - textmargin,
-        #                   gsize, gsize, gravatar, 1)
         ui_bgl.draw_image(x + isizex / 2 + textmargin, y - isizey + texth - gsize - nameline_height - textmargin,
                           gsize, gsize, gravatar, 1)
 
@@ -882,13 +707,7 @@ class LOLAssetBarOperator(Operator):
                 asset_search_index = ui_bgl.get_asset_under_mouse(context, mx, my)
                 ui_props.active_index = asset_search_index
                 if asset_search_index > -1:
-
-                    asset_data = assets[asset_search_index]
                     ui_props.draw_tooltip = True
-
-                    # ui_props.tooltip = asset_data['tooltip']
-                    # bpy.ops.wm.call_menu(name='OBJECT_MT_blenderkit_asset_menu')
-
                 else:
                     ui_props.draw_tooltip = False
 
@@ -971,17 +790,6 @@ class LOLAssetBarOperator(Operator):
 
                 elif ui_props.active_index > -1:
                     if ui_props.asset_type == 'MODEL' or ui_props.asset_type == 'MATERIAL':
-                        # check if asset is locked and let the user know in that case
-                        asset_search_index = ui_props.active_index
-                        asset_data = assets[asset_search_index]
-                        # if not asset_data['can_download']:
-                        #     message = 'Asset locked. Find out how to unlock Everything and ...'
-                        #     link_text = 'support all BlenderKit artists.'
-                        #     url = paths.get_bkit_url() + '/get-blenderkit/' + asset_data['id'] + '/?from_addon'
-                        #     bpy.ops.wm.blenderkit_url_dialog('INVOKE_REGION_WIN', url=url, message=message,
-                        #                                      link_text=link_text)
-                        #     return {'RUNNING_MODAL'}
-                        # go on with drag init
                         ui_props.drag_init = True
                         context.window.cursor_set("NONE")
                         ui_props.draw_tooltip = False
