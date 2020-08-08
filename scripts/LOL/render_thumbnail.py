@@ -143,7 +143,7 @@ argv = argv[argv.index("--") + 1:]
 
 blendfile = argv[0]
 assetname = splitext(basename(argv[0]))[0]
-thumbnail = join(dirname(dirname(argv[0])), "preview", "local", assetname + ".jpg")
+thumbnail = join(dirname(dirname(argv[0])), 'preview', 'full', 'local', assetname + ".jpg")
 samples = argv[1]
 type = argv[2]
 

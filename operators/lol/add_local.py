@@ -190,6 +190,8 @@ class LOLAddLocalOperator(Operator):
             file_handle.write(jsonstr)
 
         if self.asset_index == -1:
+            from shutil import copyfile
+
             if upload_props.autorender:
                 # Render thumnnail image in background
                 from subprocess import Popen
@@ -203,9 +205,22 @@ class LOLAddLocalOperator(Operator):
                                 + ' -b --python ' + script + ' -- ' + blendfilepath + ' ' + str(upload_props.samples)
                                 + ' ' + ui_props.asset_type.lower())
                 process.wait()
+                assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower())
+                thumbnailname = new_asset['name'].replace(' ', '_') + '.jpg'
+                join(assetpath, 'preview', 'local', thumbnailname)
+
+                copyfile(join(assetpath, 'preview', 'full', 'local', thumbnailname),
+                         join(assetpath, 'preview', 'local', thumbnailname))
             else:
-                from shutil import copyfile
-                copyfile(upload_props.thumbnail.filepath, join(user_preferences.global_dir, ui_props.asset_type.lower(), 'preview', new_asset['name'].replace(" ", "_") + ".jpg"))
+                if upload_props.thumbnail.filepath !=  join(user_preferences.global_dir, ui_props.asset_type.lower(), 'preview', 'full', 'local', new_asset['name'].replace(" ", "_") + ".jpg"):
+                    copyfile(upload_props.thumbnail.filepath, join(user_preferences.global_dir, ui_props.asset_type.lower(), 'preview', 'full', 'local', new_asset['name'].replace(" ", "_") + ".jpg"))
+                copyfile(upload_props.thumbnail.filepath, join(user_preferences.global_dir, ui_props.asset_type.lower(), 'preview', 'local', new_asset['name'].replace(" ", "_") + ".jpg"))
+
+            assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower())
+            img = bpy.data.images.load(join(assetpath, 'preview', 'local', new_asset['name'].replace(" ", "_") + ".jpg"))
+            img.scale(128, 128)
+            img.save()
+            bpy.data.images.remove(img)
 
         lol_utils.download_table_of_contents(context)
         lol_utils.load_previews(context, ui_props.asset_type)
