@@ -236,6 +236,9 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     spread_angle: FloatProperty(name="Spread Angle", default=math.pi / 2, min=0, soft_min=math.radians(5),
                                  max=math.pi / 2, subtype="ANGLE", unit="ROTATION",
                                  description=SPREAD_ANGLE_DESCRIPTION)
+    visible: BoolProperty(name="Visible", default=True,
+                          description="Visibility for camera and shadow rays (does not influence "
+                                      "visibility in reflections and refractions)")
 
     @classmethod
     def register(cls):        

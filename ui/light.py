@@ -173,8 +173,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                 col.prop(light, "size", text="Size")
             else:
                 col = layout.column(align=True)
-                if context.object:
-                    col.prop(context.object.luxcore, "visible_to_camera")
+                col.prop(light.luxcore, "visible")
                 col.prop(light.luxcore, "spread_angle", slider=True)
 
                 col = layout.column(align=True)

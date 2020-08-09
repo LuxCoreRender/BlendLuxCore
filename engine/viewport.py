@@ -14,6 +14,9 @@ def start_session(engine):
     try:
         engine.session.Start()
         engine.viewport_start_time = time()
+    except ReferenceError:
+        print("Could not start render session because RenderEngine struct was deleted")
+        return
     except Exception as error:
         del engine.session
         engine.session = None
@@ -33,7 +36,7 @@ def start_session(engine):
 
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
-    if engine.starting_session:
+    if engine.starting_session or engine.viewport_fatal_error:
         # Prevent deadlock
         return
 
@@ -58,6 +61,7 @@ def view_update(engine, context, depsgraph, changes=None):
             engine.session = None
             # Reset the exporter to invalidate all caches
             engine.exporter = None
+            engine.viewport_fatal_error = str(error)
 
             engine.update_stats("Error: ", str(error))
             LuxCoreErrorLog.add_error(error)
@@ -89,6 +93,11 @@ def view_draw(engine, context, depsgraph):
     if engine.starting_session:
         engine.tag_redraw()
         return
+        
+    if engine.viewport_fatal_error:
+        engine.update_stats("Error:", engine.viewport_fatal_error)
+        engine.tag_redraw()
+        return
     
     if engine.session is None:
         config = scene.luxcore.config
@@ -104,17 +113,20 @@ def view_draw(engine, context, depsgraph):
             }
             luxcore_scene.Parse(utils.create_props("", definitions))
             
+            devices = scene.luxcore.devices
             definitions = {
                 "renderengine.type": "RTPATHOCL",
                 "sampler.type": "TILEPATHSAMPLER",
                 "scene.epsilon.min": config.min_epsilon,
                 "scene.epsilon.max": config.max_epsilon,
+                "opencl.devices.select": devices.devices_to_selection_string(),
             }
             config_props = utils.create_props("", definitions)
             renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
             
             if not renderconfig.HasCachedKernels():
-                message = "Compiling OpenCL kernels (just once, takes a few minutes)"
+                gpu_backend = utils.get_addon_preferences(context).gpu_backend
+                message = f"Compiling {gpu_backend} kernels (just once, takes a few minutes)"
         
         engine.update_stats("Starting viewport render", message)
         engine.viewport_starting_message_shown = True
@@ -188,7 +200,7 @@ def view_draw(engine, context, depsgraph):
                 else:
                     status_message = "(Paused, Denoiser Working ...)"
                     engine.tag_redraw()
-            elif context.scene.luxcore.viewport.denoise:
+            elif context.scene.luxcore.viewport.get_denoiser(context) == "OIDN":
                 try:
                     framebuffer.start_denoiser(engine.session)
                     engine.tag_redraw()

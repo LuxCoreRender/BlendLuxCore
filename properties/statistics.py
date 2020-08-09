@@ -179,9 +179,7 @@ class LuxCoreRenderStats:
         categories = []
         categories.append("Statistics")
         self.render_time = Stat("Render Time", categories[-1],
-                                0, greater_is_better, time_to_string, get_rounded)
-        self.convergence = Stat("Convergence", categories[-1],
-                                0, greater_is_better, convergence_to_string)
+                                0, smaller_is_better, time_to_string, get_rounded)
         self.samples = Stat("Samples", categories[-1], 0, greater_is_better)
         categories.append("Performance")
         self.samples_per_sec = Stat("Samples/Sec", categories[-1],
@@ -206,6 +204,7 @@ class LuxCoreRenderStats:
         categories.append("Settings")
         self.render_engine = Stat("Engine", categories[-1], "?")
         self.use_hybridbackforward = Stat("Add Light Tracing", categories[-1], False, string_func=bool_to_string)
+        self.samples_light_tracing = Stat("Light T. Samples", categories[-1], 0, greater_is_better)
         self.sampler = Stat("Sampler", categories[-1], "?")
         self.clamping = Stat("Clamping", categories[-1], 0, string_func=clamping_to_string)
         self.path_depths = Stat("Path Depths", categories[-1], tuple(), string_func=path_depths_to_string)
@@ -230,8 +229,8 @@ class LuxCoreRenderStats:
 
     def update_from_luxcore_stats(self, stat_props):
         self.render_time.value = stat_props.Get("stats.renderengine.time").GetFloat()
-        self.convergence.value = stat_props.Get("stats.renderengine.convergence").GetFloat()
         self.samples.value = stat_props.Get("stats.renderengine.pass").GetInt()
+        self.samples_light_tracing.value = stat_props.Get("stats.renderengine.pass.light").GetInt()
         self.samples_per_sec.value = stat_props.Get("stats.renderengine.total.samplesec").GetFloat()
         self.triangle_count.value = stat_props.Get("stats.dataset.trianglecount").GetUnsignedLongLong()
         self.rays_per_sample.value = get_rays_per_sample(stat_props)

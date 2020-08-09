@@ -703,7 +703,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         "emission.theta": math.degrees(light.luxcore.spread_angle),
         "emission.id": scene.luxcore.lightgroups.get_id_by_name(light.luxcore.lightgroup),
         "emission.importance": importance,
-        # TODO: transparency
+        "transparency.shadow": [0, 0, 0] if light.luxcore.visible else [1, 1, 1],
         # Note: if any of these is disabled, we lose MIS, which can lead to more noise.
         # However, in some rare cases it's needed to disable some of them.
         "visibility.indirect.diffuse.enable": light.luxcore.visibility_indirect_diffuse,
@@ -775,8 +775,9 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
 
     # LuxCore object
     use_instancing = utils.use_instancing(obj, scene, is_viewport_render)
+    visible_to_camera = obj.luxcore.visible_to_camera and light.luxcore.visible
     obj_props, exported_obj = _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name,
-                                                        luxcore_scene, mat_name, obj.luxcore.visible_to_camera)
+                                                        luxcore_scene, mat_name, visible_to_camera)
     props.Set(obj_props)
     return props, exported_obj
 

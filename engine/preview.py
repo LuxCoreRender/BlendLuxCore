@@ -112,7 +112,7 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     for dg_obj_instance in depsgraph.object_instances:
         obj = dg_obj_instance.object
         
-        if not utils.is_instance_visible(dg_obj_instance, obj):
+        if not utils.is_instance_visible(dg_obj_instance, obj, None):
             continue
 
         # Don't export lights and floor from preview scene
@@ -433,7 +433,7 @@ def _get_preview_settings(depsgraph):
     for dg_obj_instance in depsgraph.object_instances:        
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object                
         
-        if not obj.name == 'preview_hair' and not utils.is_instance_visible(dg_obj_instance, obj):
+        if not obj.name == 'preview_hair' and not utils.is_instance_visible(dg_obj_instance, obj, None):
             continue        
 
         if obj.name.startswith("preview"):

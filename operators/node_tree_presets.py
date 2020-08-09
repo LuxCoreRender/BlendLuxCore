@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import bpy
 from bpy.props import StringProperty, IntProperty
-from mathutils import Color
+from mathutils import Color, Vector
 from .. import utils
 from .utils import poll_object, make_nodetree_name, show_nodetree
 
@@ -37,14 +37,40 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         ("Basic", list(basic_mapping.keys())),
         ("Advanced", [
             "Smoke",
+            "Colored Smoke",
             "Fire and Smoke",
             "Colored Glass",
+            "Hybrid Glass",
         ]),
     ])
 
     @classmethod
     def poll(cls, context):
         return poll_object(context)
+        
+    @classmethod
+    def description(cls, context, properties):
+        preset = properties.preset
+        
+        if preset in cls.basic_mapping:
+            return "Add a simple " + preset + " node setup"
+        # Category: Advanced
+        elif preset == "Smoke":
+            return "Add a smoke setup"
+        elif preset == "Colored Smoke":
+            return "Add a setup for colored smoke"
+        elif preset == "Fire and Smoke":
+            return "Add a setup for fire and smoke"
+        elif preset == "Colored Glass":
+            return ("Add a setup for colored glass, using an interior volume for correct "
+                    "coloration based on ray length inside the glass")
+        elif preset == "Hybrid Glass":
+            return ('Add a setup for thin sheets of glass, using white shadow color to '
+                    'allow direct light through the glass while keeping refraction visible '
+                    'to camera rays (which is not the case when using the "Architectural" '
+                    'setting on a glass node)')
+        else:
+            raise Exception("Unknown preset: " + preset)
 
     def _add_node_tree(self, name):
         node_tree = bpy.data.node_groups.new(name=name, type="luxcore_material_nodes")
@@ -130,10 +156,14 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
         # Category: Advanced
         elif self.preset == "Smoke":
             self._preset_smoke(obj, node_tree, output)
+        elif self.preset == "Colored Smoke":
+            self._preset_colored_smoke(obj, node_tree, output)
         elif self.preset == "Fire and Smoke":
             self._preset_fire_and_smoke(obj, node_tree, output)
         elif self.preset == "Colored Glass":
             self._preset_colored_glass(obj, node_tree, output)
+        elif self.preset == "Hybrid Glass":
+            self._preset_hybrid_glass(obj, node_tree, output)
 
         show_nodetree(context, node_tree)
         return {"FINISHED"}
@@ -165,7 +195,47 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
             heterogeneous.auto_step_settings = True
             heterogeneous.domain = obj
 
-        smoke_node.wrap = "black"
+        # Use IOR of air (doesn't really matter)
+        heterogeneous.inputs["IOR"].default_value = 1
+
+        # A smoke material setup only makes sense on the smoke domain object
+        if not is_smoke_domain:
+            self.report({"ERROR"}, 'Object "%s" is not a smoke domain!' % obj.name)
+
+    def _preset_colored_smoke(self, obj, node_tree, output):
+        # If it is not a smoke domain, create the material anyway, but warn the user
+        is_smoke_domain = utils.find_smoke_domain_modifier(obj)
+
+        new_node("LuxCoreNodeMatNull", node_tree, output)
+
+        # We need a volume
+        name = "Smoke Volume"
+        vol_node_tree = bpy.data.node_groups.new(name=name, type="luxcore_volume_nodes")
+        vol_nodes = vol_node_tree.nodes
+        # Attach to output node
+        volume_pointer = new_node("LuxCoreNodeTreePointer", node_tree, output, "Volume", "Interior Volume")
+        volume_pointer.node_tree = vol_node_tree
+        volume_pointer.location.x -= 40
+        volume_pointer.location.y -= 120
+
+        # Add volume nodes
+        vol_output = vol_nodes.new("LuxCoreNodeVolOutput")
+        vol_output.location = 300, 200
+
+        heterogeneous = new_node("LuxCoreNodeVolHeterogeneous", vol_node_tree, vol_output)
+        smoke_node = new_node("LuxCoreNodeTexSmoke", vol_node_tree, heterogeneous, 0, "Scattering")
+        smoke_node.location = heterogeneous.location + Vector((-500, -160))
+        if is_smoke_domain:
+            smoke_node.domain = obj
+            heterogeneous.auto_step_settings = True
+            heterogeneous.domain = obj
+
+        mix_node = new_node("LuxCoreNodeTexColorMix", vol_node_tree, heterogeneous, 0, "Absorption")
+        mix_node.mode = "mix"
+        mix_node.inputs["Color 1"].default_value = (1, 1, 1)
+        vol_node_tree.links.new(smoke_node.outputs["density"], mix_node.inputs["Fac"])
+        vol_node_tree.links.new(smoke_node.outputs["color"], mix_node.inputs["Color 2"])
+
         # Use IOR of air (doesn't really matter)
         heterogeneous.inputs["IOR"].default_value = 1
 
@@ -248,9 +318,22 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
     def _preset_colored_glass(self, obj, node_tree, output):
         glass = new_node("LuxCoreNodeMatGlass", node_tree, output)
         glass.location.y += 40
+        
         clear_vol = new_node("LuxCoreNodeVolClear", node_tree, output, 0, "Interior Volume")
-        clear_vol.location.y -= 260
+        clear_vol.location.y -= 280
         clear_vol.inputs["Absorption"].default_value = (0.9, 0.1, 0.1)
+
+    def _preset_hybrid_glass(self, obj, node_tree, output):
+        output.shadow_color = (1, 1, 1)
+        output.show_advanced = True
+        
+        glass = new_node("LuxCoreNodeMatGlass", node_tree, output)
+        glass.location.y += 40
+        
+        clear_vol = new_node("LuxCoreNodeVolClear", node_tree, output, 0, "Interior Volume")
+        clear_vol.location.y -= 280
+        clear_vol.color_depth = 0.2
+        clear_vol.inputs["Absorption"].default_value = (0.4, 0.8, 0.7)
 
 
 class LUXCORE_MATERIAL_MT_node_tree_preset(bpy.types.Menu):

@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import BoolProperty
 from ..base import LuxCoreNodeMaterial, Roughness
-from .glossytranslucent import IOR_DESCRIPTION
+from .glossytranslucent import IOR_DESCRIPTION, MULTIBOUNCE_DESCRIPTION
 from ...utils import node as utils_node
 
 
@@ -14,7 +14,8 @@ class LuxCoreNodeMatGlossy2(bpy.types.Node, LuxCoreNodeMaterial):
         self.inputs["Specular Color"].enabled = not self.use_ior
         utils_node.force_viewport_update(self, context)
 
-    multibounce: BoolProperty(update=utils_node.force_viewport_update, name="Multibounce", default=False)
+    multibounce: BoolProperty(update=utils_node.force_viewport_update, name="Multibounce", default=False,
+                              description=MULTIBOUNCE_DESCRIPTION)
     use_ior: BoolProperty(name="Use IOR", default=False,
                            update=update_use_ior,
                            description=IOR_DESCRIPTION)

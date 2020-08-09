@@ -1,6 +1,7 @@
 import bpy
 from .node import find_nodes
 from ..nodes import TREE_TYPES
+from ..nodes.base import ThinFilmCoating
 
 
 """
@@ -24,7 +25,8 @@ def run():
         update_smoke_multiple_output_channels(node_tree)
         update_smoke_mantaflow_simulation(node_tree)
         update_mat_output_add_shape_input(node_tree)
-
+        update_glass_disney_add_film_sockets(node_tree)
+        update_invert_add_maximum_input(node_tree)
 
     for scene in bpy.data.scenes:
         config = scene.luxcore.config
@@ -250,3 +252,27 @@ def update_mat_output_add_shape_input(node_tree):
         if "Shape" not in node.inputs:
             node.inputs.new("LuxCoreSocketShape", "Shape")
             print('Updated output node "%s" in tree %s to new version' % (node.name, node_tree.name))
+
+
+def update_glass_disney_add_film_sockets(node_tree):
+    affected_nodes = find_nodes(node_tree, "LuxCoreNodeMatGlass", False)
+    affected_nodes += find_nodes(node_tree, "LuxCoreNodeMatDisney", False)
+    
+    for node in affected_nodes:
+        if ThinFilmCoating.THICKNESS_NAME in node.inputs:
+            continue
+        
+        if node.bl_idname == "LuxCoreNodeMatDisney":
+            node.add_input("LuxCoreSocketFloat0to1", "Film Amount", 1, enabled=False)
+        
+        ThinFilmCoating.init(node)
+        print('Updated node "%s" in tree %s to new version' % (node.name, node_tree.name))
+
+
+def update_invert_add_maximum_input(node_tree):
+    # commit 4fcce04f9c51dce990e2480810265c1f1b13c8c5
+
+    for node in find_nodes(node_tree, "LuxCoreNodeTexInvert", False):
+        if "Maximum" not in node.inputs:
+            node.add_input("LuxCoreSocketFloatPositive", "Maximum", 1)
+            print('Updated invert node "%s" in tree %s to new version' % (node.name, node_tree.name))

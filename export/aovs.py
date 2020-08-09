@@ -41,9 +41,12 @@ def convert(exporter, scene, context=None, engine=None):
         # Can not work without a camera
         if not utils.is_valid_camera(scene.camera):
             # However, viewport denoising should be possible even without camera
-            if not final and scene.luxcore.viewport.denoise:
+            if not final and scene.luxcore.viewport.use_denoiser:
                 _add_output(definitions, "ALBEDO")
-                _add_output(definitions, "AVG_SHADING_NORMAL")
+                # TODO: This AOV is temporarily disabled for OPTIX because of a bug that leads to
+                #  black squares in the result - re-enable when this is fixed in OptiX
+                if scene.luxcore.viewport.get_denoiser(context) == "OIDN":
+                    _add_output(definitions, "AVG_SHADING_NORMAL")
             return utils.create_props(prefix, definitions)
 
         pipeline = scene.camera.data.luxcore.imagepipeline
@@ -70,8 +73,8 @@ def convert(exporter, scene, context=None, engine=None):
             _add_output(definitions, "RGBA_IMAGEPIPELINE", pipeline_index)
 
         pipeline_index += 1
-        add_OIDN_AOVs = ((final and denoiser.enabled and denoiser.type == "OIDN")
-                         or (not final and scene.luxcore.viewport.denoise))
+        add_DENOISER_AOVs = ((final and denoiser.enabled and denoiser.type == "OIDN")
+                         or (not final and scene.luxcore.viewport.use_denoiser))
 
         # AOVs
         if (final and aovs.alpha) or use_transparent_film or use_backgroundimage(context, scene):
@@ -80,10 +83,13 @@ def convert(exporter, scene, context=None, engine=None):
             _add_output(definitions, "DEPTH")
         if (final and aovs.irradiance) or pipeline.contour_lines.enabled:
             _add_output(definitions, "IRRADIANCE")
-        if (final and aovs.albedo) or add_OIDN_AOVs:
+        if (final and aovs.albedo) or add_DENOISER_AOVs:
             _add_output(definitions, "ALBEDO")
-        if (final and aovs.avg_shading_normal) or add_OIDN_AOVs:
-            _add_output(definitions, "AVG_SHADING_NORMAL")
+        if (final and aovs.avg_shading_normal) or add_DENOISER_AOVs:
+            # TODO: This AOV is temporarily disabled for OPTIX because of a bug that leads to
+            #  black squares in the result - re-enable when this is fixed in OptiX
+            if final or (context and scene.luxcore.viewport.get_denoiser(context) == "OIDN"):
+                _add_output(definitions, "AVG_SHADING_NORMAL")
 
         pipeline_props = pyluxcore.Properties()
 
@@ -125,7 +131,7 @@ def convert(exporter, scene, context=None, engine=None):
                                                               pipeline_index, definitions)
                                                               
             config = scene.luxcore.config
-            use_adaptive_sampling = config.sampler in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
+            use_adaptive_sampling = config.get_sampler() in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
 
             if use_adaptive_sampling and not utils.using_filesaver(context, scene):
                 noise_detection_pipeline_index = pipeline_index
@@ -144,20 +150,7 @@ def convert(exporter, scene, context=None, engine=None):
         return pyluxcore.Properties()
 
 
-def count_index(func):
-    """
-    A decorator that increments an index each time the decorated function is called.
-    It also passes the index as a keyword argument to the function.
-    """
-    def wrapper(*args, **kwargs):
-        kwargs["index"] = wrapper.index
-        wrapper.index += 1
-        return func(*args, **kwargs)
-    wrapper.index = 0
-    return wrapper
-
-
-@count_index
+@utils.count_index
 def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, index=0):
     definitions[str(index) + ".type"] = output_type_str
 
@@ -259,6 +252,7 @@ def get_OIDN_props(definitions, scene, index):
     denoiser = scene.luxcore.denoiser
     definitions[str(index) + ".type"] = "INTEL_OIDN"
     definitions[str(index) + ".oidnmemory"] = denoiser.max_memory_MB
+    definitions[str(index) + ".sharpness"] = 0
     return index + 1
 
 

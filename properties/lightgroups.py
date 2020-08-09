@@ -4,6 +4,7 @@ from bpy.props import (
     FloatProperty, FloatVectorProperty, StringProperty
 )
 from bpy.types import PropertyGroup
+from ..utils import node as utils_node
 
 # OpenCL engines support 8 lightgroups
 # However one group is always there (the default group), so 7 can be user-defined
@@ -14,10 +15,60 @@ TEMP_DESC = "Blackbody emission color in Kelvin by which to shift the color of e
 
 
 class LuxCoreLightGroup(PropertyGroup):
+    def name_set(self, value):
+        old_name = self.get("name", "")
+        new_name = value
+        
+        if new_name == old_name:
+            return
+        
+        # Prevent empty name
+        if new_name == "":
+            new_name = "Can't be empty"
+        
+        # Prevent name collisions
+        groups = bpy.context.scene.luxcore.lightgroups.get_all_groups()
+        names = {group.name for group in groups}
+        i = 0
+        new_name_base = new_name
+        while new_name in names:
+            i += 1
+            new_name = new_name_base + ".%03d" % i
+        
+        # Apply change
+        self["name"] = new_name
+        
+        # After a rename, update all occurences of the name automatically
+        relevant_node_types = {
+            "LuxCoreNodeMatEmission",
+            "LuxCoreNodeVolClear",
+            "LuxCoreNodeVolHomogeneous",
+            "LuxCoreNodeVolHeterogeneous",
+        }
+
+        for mat in bpy.data.materials:
+            node_tree = mat.luxcore.node_tree
+            if mat.library or not node_tree:
+                continue
+
+            for node in utils_node.find_nodes_multi(node_tree, relevant_node_types, follow_pointers=True):
+                if node.lightgroup == old_name:
+                    node.lightgroup = new_name
+
+        for obj in bpy.data.objects:
+            if obj.library:
+                continue
+            if obj.type == "LIGHT" and obj.data.luxcore.lightgroup == old_name:
+                obj.data.luxcore.lightgroup = new_name
+                
+    def name_get(self):
+        return self.get("name", "")
+
+    name: StringProperty(name="Name", set=name_set, get=name_get)
+    
     enabled: BoolProperty(default=True, description="Enable/disable this light group. "
                                                      "If disabled, all lights in this group are off")
     show_settings: BoolProperty(default=True)
-    name: StringProperty()
     gain: FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
     use_rgb_gain: BoolProperty(name="Color:", default=True, description="Use RGB color multiplier")
     rgb_gain: FloatVectorProperty(name="", default=(1, 1, 1), min=0, max=1, subtype="COLOR",

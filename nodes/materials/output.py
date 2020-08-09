@@ -24,6 +24,15 @@ MATERIAL_ID_DESC = (
     "(the ID Mask node in the compositor can't handle those numbers)"
 )
 
+SHADOW_COLOR_DESC = (
+    "Black is the physically correct shadow color. Set it to white to "
+    "let light pass through the material unobstructed, while keeping "
+    "the appearance the same for anything but shadow rays (useful e.g. "
+    "for thin sheets of glass as an alternative to architectural glass, "
+    "to have refraction visible but let direct light pass through for "
+    "better performance)"
+)
+
 
 class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
     """
@@ -34,17 +43,21 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
     bl_width_default = 220
 
     active: BoolProperty(name="Active", default=True, update=update_active)
+    show_advanced: BoolProperty(name="Advanced", default=False, description="Show/hide advanced settings")
     id: IntProperty(update=utils_node.force_viewport_update, name="Material ID", default=-1, min=-1, soft_max=32767,
                      description=MATERIAL_ID_DESC)
     use_photongi: BoolProperty(name="Use PhotonGI Cache", default=True,
                                 description="Disable for mirror-like surfaces like "
                                             "metal or glossy with low roughness")
     shadow_color: FloatVectorProperty(name="Shadow Color", subtype="COLOR", default=(0, 0, 0), min=0, max=1,
-                                      update=utils_node.update_opengl_materials)
+                                      update=utils_node.update_opengl_materials,
+                                      description=SHADOW_COLOR_DESC)
     is_shadow_catcher: BoolProperty(update=utils_node.force_viewport_update, name="Shadow Catcher", default=False,
                                      description=SHADOWCATCHER_DESC)
     shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
                                                 description=ONLY_INFINITE_DESC)
+    is_holdout: BoolProperty(update=utils_node.force_viewport_update, name="Holdout", default=False,
+                             description="Make film transparent on pixels where this material is directly visible")
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
@@ -72,25 +85,42 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
                     node_tree.links.new(from_socket, to_socket)
 
     def draw_buttons(self, context, layout):
-        super().draw_buttons(context, layout)
+        icon = icons.EXPANDABLE_OPENED if self.show_advanced else icons.EXPANDABLE_CLOSED
+        row = layout.row()
+        super().draw_buttons(context, row)
+        row.prop(self, "show_advanced", icon=icon, emboss=False)
+
+        if not self.show_advanced:
+            return
+
+        box = layout.box()
 
         # PhotonGI currently only works with Path engine
-        col = layout.column()
+        col = box.column()
         col.active = (context.scene.luxcore.config.photongi.enabled
                       and context.scene.luxcore.config.engine == "PATH")
         col.prop(self, "use_photongi")
 
-        layout.prop(self, "id")
+        box.prop(self, "id")
 
-        row = layout.row()
+        row = box.row()
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
         row.active = not engine_is_bidir
         row.alignment = "LEFT"
         row.prop(self, "shadow_color", text="")
         row.label(text="Shadow Color")
+        
+        row = box.row()
+        row.active = not engine_is_bidir
+        row.prop(self, "is_holdout")
+        if self.is_holdout and utils.is_valid_camera(context.scene.camera):
+            pipeline = context.scene.camera.data.luxcore.imagepipeline
+            if not pipeline.transparent_film:
+                box.prop(pipeline, "transparent_film", text="Enable Transparent Film",
+                            icon=icons.CAMERA, toggle=True)
 
         # Shadow catcher
-        col = layout.column()
+        col = box.column()
         col.active = not engine_is_bidir
         col.prop(self, "is_shadow_catcher")
 
@@ -102,17 +132,17 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
             if utils.is_valid_camera(context.scene.camera):
                 pipeline = context.scene.camera.data.luxcore.imagepipeline
                 if not pipeline.transparent_film:
-                    layout.prop(pipeline, "transparent_film", text="Enable Transparent Film",
-                                icon=icons.CAMERA, toggle=True)
+                    box.prop(pipeline, "transparent_film", text="Enable Transparent Film",
+                             icon=icons.CAMERA, toggle=True)
             if context.scene.world:
                 luxcore_world = context.scene.world.luxcore
                 is_ground_black = luxcore_world.ground_enable and tuple(luxcore_world.ground_color) == (0, 0, 0)
 
                 if luxcore_world.light == "sky2" and not is_ground_black:
-                    layout.operator("luxcore.world_set_ground_black", icon=icons.WORLD)
+                    box.operator("luxcore.world_set_ground_black", icon=icons.WORLD)
                 elif luxcore_world.light == "infinite" and not luxcore_world.sampleupperhemisphereonly:
-                    layout.prop(luxcore_world, "sampleupperhemisphereonly",
-                                icon=icons.WORLD, toggle=True)
+                    box.prop(luxcore_world, "sampleupperhemisphereonly",
+                             icon=icons.WORLD, toggle=True)
 
     def export(self, exporter, depsgraph, props, luxcore_name):
         prefix = "scene.materials." + luxcore_name + "."
@@ -149,6 +179,7 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
         definitions["shadowcatcher.onlyinfinitelights"] = self.shadow_catcher_only_infinite
         definitions["photongi.enable"] = self.use_photongi
         definitions["transparency.shadow"] = list(self.shadow_color)
+        definitions["holdout.enable"] = self.is_holdout
 
         props.Set(utils.create_props(prefix, definitions))
 

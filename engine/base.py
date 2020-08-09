@@ -48,19 +48,22 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def reset(self):
         self.framebuffer = None
         self.exporter = None
-        self.error = None
         self.aov_imagepipelines = {}
         self.viewport_start_time = 0
         self.starting_session = False
         self.viewport_starting_message_shown = False
+        self.viewport_fatal_error = None
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
-        if getattr(self, "session", None):
-            if not self.is_preview:
-                print("[Engine] del: stopping session")
-            self.session.Stop()
-            del self.session
+        try:
+            if getattr(self, "session", None):
+                if not self.is_preview:
+                    print("[Engine] del: stopping session")
+                self.session.Stop()
+                del self.session
+        except ReferenceError:
+            print("[Engine] del: RenderEngine struct was already deleted")
 
     def log_listener(self, msg):
         if "Direct light sampling cache entries" in msg:
@@ -78,6 +81,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             LuxCoreRenderEngine.final_running = True
             LuxCoreDisplaySettings.paused = False
+            LuxCoreDisplaySettings.stop_requested = False
             TileStats.reset()
             LuxCoreLog.add_listener(self.log_listener)
             final.render(self, depsgraph)

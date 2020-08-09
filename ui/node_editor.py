@@ -133,8 +133,12 @@ def lux_node_header_draw(panel, context):
             row = layout.row()
             row.enabled = has_material_slots
 
-            # id_from is the material the node tree is attched to
-            lux_mat_template_ID(row, id_from)
+            # id_from is the material the node tree is attached to
+            mat = id_from if id_from else ob.active_material
+            lux_mat_template_ID(row, mat)
+
+            if mat and (not mat.luxcore.node_tree and not mat.luxcore.use_cycles_nodes):
+                layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use LuxCore Material Nodes")
     # End of specialized LuxCore code
     ###########################################################################################
 

@@ -46,32 +46,33 @@ LINUX_FILES = [
     "libembree3.so.3", "libtbb.so.2", "libtbbmalloc.so.2",
     "pyluxcore.so", "pyluxcoretools.zip",
     "libOpenImageDenoise.so.0",
+    "libnvrtc-builtins.so",
+    "libnvrtc-builtins.so.11.0",
+    "libnvrtc-builtins.so.11.0.194",
+    "libnvrtc.so",
+    "libnvrtc.so.11.0",
+    "libnvrtc.so.11.0.194",
 ]
 
 WINDOWS_FILES = [
     "embree3.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO.dll", "pyluxcore.pyd",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
-    "OpenImageDenoise.dll", "denoise.exe",
+    "OpenImageDenoise.dll", "oidnDenoise.exe",
     "nvrtc64_101_0.dll", "nvrtc-builtins64_101.dll",
 ]
 
 MAC_FILES = [
     "libembree3.3.dylib", "libomp.dylib", 
-    "libOpenImageDenoise.1.2.0.dylib", "libOpenImageIO.1.8.dylib", 
+    "libOpenImageDenoise.1.2.1.dylib", "libOpenImageIO.1.8.dylib",
+    "libcuda.dylib", "libnvrtc.dylib",
     "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
-    "pyluxcore.so", "pyluxcoretools.zip", "denoise"
+    "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
 ]
 
-#OIDN_WIN = "oidn-windows.zip"
+# On Windows and macOS, OIDN is downloaded by the LuxCore build script
 OIDN_LINUX = "oidn-linux.tar.gz"
-#OIDN_MAC = "oidn-macos.tar.gz"
-
-OIDN_urls = {
-    #OIDN_WIN: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x64.vc14.windows.zip",
-    OIDN_LINUX: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.linux.tar.gz",
-    #OIDN_MAC: "https://github.com/OpenImageDenoise/oidn/releases/download/v1.0.0/oidn-1.0.0.x86_64.macos.tar.gz",
-}
+OIDN_LINUX_URL = "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.linux.tar.gz"
 
 
 def print_divider():
@@ -223,12 +224,10 @@ def main():
     prefix = "luxcorerender-"
     suffixes = [
         "-linux64.tar.bz2",
-        "-linux64-opencl.tar.bz2",
+        # "-linux64-opencl.tar.bz2",
+        # "-linux64-cuda.tar.bz2",  # TODO need to find out how to include the necessary CUDA files
         "-win64.zip",
-        "-win64-opencl.zip",
-        "-win64-cuda.zip",
-        "-mac64.dmg",
-        "-mac64-opencl.dmg",
+        "-mac64.dmg"
     ]
 
     # Download LuxCore binaries for all platforms
@@ -324,16 +323,15 @@ def main():
     print("Downloading OIDN binaries")
     print_divider()
 
-    for name, url in OIDN_urls.items():
-        # Check if file already downloaded
-        if name in os.listdir(script_dir):
-            print('File already downloaded: "%s"' % name)
-        else:
-            destination = os.path.join(script_dir, name)
-            try:
-                urllib.request.urlretrieve(url, destination)
-            except urllib.error.HTTPError as error:
-                print(error)
+    # Check if file already downloaded
+    if OIDN_LINUX in os.listdir(script_dir):
+        print('File already downloaded: "%s"' % OIDN_LINUX)
+    else:
+        destination = os.path.join(script_dir, OIDN_LINUX)
+        try:
+            urllib.request.urlretrieve(OIDN_LINUX_URL, destination)
+        except urllib.error.HTTPError as error:
+            print(error)
 
     print("Extracting OIDN standalone denoiser")
 
@@ -341,12 +339,13 @@ def main():
         name = build_zip_name(args.version_string, suffix)
         destination = os.path.join(script_dir, name, "BlendLuxCore", "bin")
 
+        # On Windows and macOS, OIDN is downloaded by the LuxCore build script, so we don't need to do it here
         #if "win64" in suffix:
-        #    extract_files_from_archive(OIDN_WIN, ["denoise.exe"], destination)
+        #    extract_files_from_archive(OIDN_WIN, ["oidnDenoise.exe"], destination)
         if "linux64" in suffix:
-            extract_files_from_archive(OIDN_LINUX, ["denoise"], destination)
+            extract_files_from_archive(OIDN_LINUX, ["oidnDenoise"], destination)
         #elif "mac64" in suffix:
-        #    extract_files_from_archive(OIDN_MAC, ["denoise"], destination)
+        #    extract_files_from_archive(OIDN_MAC, ["oidnDenoise"], destination)
 
     # Linux archives are tar.bz2
     linux_suffixes = [suffix for suffix in suffixes if "-linux" in suffix]
