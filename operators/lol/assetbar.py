@@ -126,8 +126,6 @@ def draw_callback_2d_search(self, context):
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
-    user_preferences = get_addon_preferences(context)
-
     region = self.region
     hcolor = (1, 1, 1, .07)
     grey = (hcolor[0] * .8, hcolor[1] * .8, hcolor[2] * .8, .5)
@@ -208,51 +206,53 @@ def draw_callback_2d_search(self, context):
                     if assets[index]['downloaded'] > 0:
                         ui_bgl.draw_rect(x - assetbar_props.highlight_margin, y - assetbar_props.highlight_margin, int(w * assets[index]['downloaded'] / 100.0), 2, green)
 
+                    if assets[index]['patreon']:
+                        img = utils.get_thumbnail('patreon.png')
+                        ui_bgl.draw_image(x + w - 24 - 2, y + w - 24 - 2, 24, 24, img, 1)
+                        if assets[index]['locked']:
+                            img = utils.get_thumbnail('locked.png')
+                            ui_bgl.draw_image(x + 2, y + 2, 24, 24, img, 1)
+
+            # Show tooltip box with additional asset information
             if -1 < ui_props.active_index < len(assets):
                 asset = assets[ui_props.active_index]
                 tooltip = asset['name'] + '\n\nCategory: ' + asset['category'] + '\nLicence: CC-BY-SA'
                 atip = 'Author:\nCharles Nandeya Ehouman (Sharlybg)\n\nhttps://www.patreon.com/Draviastudio\n\n'
-
-                from os.path import join, splitext
-                import os
-
-                tpath = join(user_preferences.global_dir, ui_props.asset_type, 'preview', 'full',
-                             splitext(asset['url'])[0] + '.jpg')
 
                 if asset['local']:
                     tooltip = asset['name'] + '\n\nCategory: ' + asset['category']
                     atip = ''
 
                 gimg = None
-                img = utils.get_thumbnail('thumbnail_notready.jpg')
-
-                if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
-                    img = bpy.data.images.get('.LOL_preview_full')
-                    if img is not None:
-                        bpy.data.images.remove(img)
-                    img = bpy.data.images.load(tpath)
-                    img.name = '.LOL_preview_full'
 
                 draw_tooltip(context, ui_props.mouse_x, ui_props.mouse_y, text=tooltip, author=atip,
-                             img=img, gravatar=gimg)
+                             asset=asset, gravatar=gimg)
 
     # Scroll assets with mouse wheel
     if ui_props.dragging and (
             ui_props.draw_drag_image or ui_props.draw_snapped_bounds) and ui_props.active_index > -1:
-        img = assets[ui_props.active_index]['thumbnail']
+
+        if assets[ui_props.active_index]['patreon'] and assets[ui_props.active_index]['locked']:
+            img = utils.get_thumbnail('delete.png')
+        else:
+            img = assets[ui_props.active_index]['thumbnail']
+
         if img is None:
             img = utils.get_thumbnail('thumbnail_notready.jpg')
 
         linelength = 35
+
         ui_bgl.draw_image(ui_props.mouse_x + linelength, ui_props.mouse_y - linelength - 50,
                           50, 50, img, 1)
         ui_bgl.draw_line2d(ui_props.mouse_x, ui_props.mouse_y, ui_props.mouse_x + linelength,
                            ui_props.mouse_y - linelength, 2, white)
 
 
-def draw_tooltip(context, x, y, text='', author='', img=None, gravatar=None):
+def draw_tooltip(context, x, y, text='', author='', asset=None, gravatar=None):
     region = context.region
     scale = context.preferences.view.ui_scale
+    ui_props = context.scene.luxcoreOL.ui
+    user_preferences = get_addon_preferences(context)
 
     ttipmargin = 5
     textmargin = 10
@@ -268,6 +268,21 @@ def draw_tooltip(context, x, y, text='', author='', img=None, gravatar=None):
     nlines = max(len(lines) - 1, len(alines))
 
     texth = line_height * nlines + nameline_height
+
+    from os.path import join, splitext
+    import os
+
+    tpath = join(user_preferences.global_dir, ui_props.asset_type, 'preview', 'full',
+                 splitext(asset['url'])[0] + '.jpg')
+    img = utils.get_thumbnail('thumbnail_notready.jpg')
+
+    if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
+        img = bpy.data.images.get('.LOL_preview_full')
+        if img is not None:
+            bpy.data.images.remove(img)
+        img = bpy.data.images.load(tpath)
+        img.name = '.LOL_preview_full'
+
 
     if max(img.size[0], img.size[1]) == 0:
         return;
@@ -313,13 +328,19 @@ def draw_tooltip(context, x, y, text='', author='', img=None, gravatar=None):
     white = (1, 1, 1, .1)
 
     # background
-    ui_bgl.draw_rect(x - ttipmargin,
-                     y - 2 * ttipmargin - isizey,
-                     isizex + ttipmargin * 2,
-                     2 * ttipmargin + isizey,
-                     bgcol)
+    ui_bgl.draw_rect(x - ttipmargin, y - 2 * ttipmargin - isizey,
+                     isizex + ttipmargin * 2, 2 * ttipmargin + isizey, bgcol)
     # main preview image
     ui_bgl.draw_image(x, y - isizey - ttipmargin, isizex, isizey, img, 1)
+
+
+    # draw patreon logo for patreon assets and locked symbol for not purchased assets
+    if asset['patreon']:
+        img = utils.get_thumbnail('patreon.png')
+        ui_bgl.draw_image(x + isizex - 52*scale - 2, y - 52*scale - ttipmargin - 2, 52*scale, 52*scale, img, 1)
+        if asset['locked']:
+            img = utils.get_thumbnail('locked.png')
+            ui_bgl.draw_image(x + 2, y - 52*scale - ttipmargin - 2, 52*scale, 52*scale, img, 1)
 
     # text overlay background
     ui_bgl.draw_rect(x - ttipmargin,
@@ -728,12 +749,12 @@ class LOLAssetBarOperator(Operator):
                     if not ui_props.has_hit and ui_props.asset_type == 'MODEL':
                         ui_props.has_hit, ui_props.snapped_location, ui_props.snapped_normal, ui_props.snapped_rotation, face_index, object, matrix = ui_bgl.floor_raycast(
                             context, mx, my)
-                if ui_props.has_hit and ui_props.asset_type == 'MODEL':
+                active_mod = assets[ui_props.active_index]
+                if ui_props.has_hit and ui_props.asset_type == 'MODEL' and not (active_mod['patreon'] and active_mod['locked']):
                     # this condition is here to fix a bug for a scene submitted by a user, so this situation shouldn't
                     # happen anymore, but there might exists scenes which have this problem for some reason.
                     if ui_props.active_index < len(assets) and ui_props.active_index > -1:
                         ui_props.draw_snapped_bounds = True
-                        active_mod = assets[ui_props.active_index]
                         ui_props.snapped_bbox_min = Vector(active_mod['bbox_min'])
                         ui_props.snapped_bbox_max = Vector(active_mod['bbox_max'])
                 else:
@@ -827,6 +848,13 @@ class LOLAssetBarOperator(Operator):
                 # Drag-drop interaction
                 if ui_props.dragging and ui_bgl.mouse_in_region(region, mx, my):
                     asset_search_index = ui_props.active_index
+                    if assets[ui_props.active_index]['patreon'] and assets[ui_props.active_index]['locked']:
+                        ui_props.dragging = False
+                        ui_props.draw_snapped_bounds = False
+                        ui_props.active_index = -3
+
+                        return {'RUNNING_MODAL'}
+
                     # raycast here
                     ui_props.active_index = -3
 
@@ -886,6 +914,9 @@ class LOLAssetBarOperator(Operator):
                 # Click interaction
                 else:
                     asset_search_index = ui_bgl.get_asset_under_mouse(context, mx, my)
+                    if assets[ui_props.active_index]['patreon'] and assets[ui_props.active_index]['locked']:
+                        return {'RUNNING_MODAL'}
+
                     if ui_props.asset_type in ('MATERIAL',
                                                'MODEL'):  # this was meant for particles, commenting for now or ui_props.asset_type == 'MODEL':
                         ao = bpy.context.active_object

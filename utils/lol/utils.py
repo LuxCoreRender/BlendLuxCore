@@ -63,6 +63,29 @@ def load_local_TOC(context, asset_type):
     for asset in assets:
         asset['downloaded'] = 100.0
         asset['local'] = True
+        asset['patreon'] = False
+        asset['locked'] = False
+
+    return assets
+
+
+def load_patreon_assets(context):
+    name = basename(dirname(dirname(dirname(__file__))))
+    user_preferences = context.preferences.addons[name].preferences
+    # with urllib.request.urlopen(LOL_HOST_URL + "/assets_model_patreon.json", timeout=60) as request:
+    with open(join(r'D:\BUILD_PATH\LuxCoreRender\LoL', 'assets_model_patreon.json')) as json_file:
+        import json
+        assets = json.load(json_file)
+        for asset in assets:
+            asset['downloaded'] = 0.0
+            asset['local'] = False
+            asset['patreon'] = True
+            asset['locked'] = True
+            filename = asset["url"]
+            filepath = join(user_preferences.global_dir, "model", splitext(filename)[0] + '.blend')
+
+            if os.path.exists(filepath):
+                asset['locked'] = False
 
     return assets
 
@@ -86,8 +109,11 @@ def download_table_of_contents(context):
             for asset in assets:
                 asset['downloaded'] = 0.0
                 asset['local'] = False
+                asset['patreon'] = False
+                asset['locked'] = False
 
             assets.extend(load_local_TOC(context, 'model'))
+            assets.extend(load_patreon_assets(context))
             scene.luxcoreOL.model['assets'] = assets
 
         # with urllib.request.urlopen(LOL_HOST_URL + "/assets_scene.json", timeout=60) as request:
@@ -106,6 +132,8 @@ def download_table_of_contents(context):
             for asset in assets:
                 asset['downloaded'] = 0.0
                 asset['local'] = False
+                asset['patreon'] = False
+                asset['locked'] = False
 
             assets.extend(load_local_TOC(context, 'material'))
             scene.luxcoreOL.material['assets'] = assets
@@ -173,7 +201,7 @@ def check_cache(args):
         if stop_check_cache:
             break
         filename = asset["url"]
-        filepath = os.path.join(user_preferences.global_dir, "model", filename[:-3] + 'blend')
+        filepath = join(user_preferences.global_dir, "model", splitext(filename)[0] + '.blend')
 
         if os.path.exists(filepath):
             if calc_hash(filepath) == asset["hash"]:
@@ -182,7 +210,7 @@ def check_cache(args):
     # assets = scene.luxcoreOL.scene['assets']
     # for asset in assets:
     #     filename = asset["url"]
-    #     filepath = os.path.join(user_preferences.global_dir, "scene", filename[:-3] + 'blend')
+    #     filepath = join(user_preferences.global_dir, "scene", splitext(filename)[0] + '.blend')
     #
     #     if os.path.exists(filepath):
     #         if calc_hash(filepath) == asset["hash"]:
@@ -193,7 +221,7 @@ def check_cache(args):
         if stop_check_cache:
             break
         filename = asset["url"]
-        filepath = os.path.join(user_preferences.global_dir, "material", filename[:-3] + 'blend')
+        filepath = join(user_preferences.global_dir, "material", splitext(filename)[0] + '.blend')
 
         if os.path.exists(filepath):
             if calc_hash(filepath) == asset["hash"]:
@@ -278,13 +306,24 @@ class Downloader(threading.Thread):
             # Thumbnail  download
             imagename = splitext(self.asset['url'])[0] + '.jpg'
             thumbnailpath = os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower(), "preview",
-                                         imagename)
+                                         'full', imagename)
             url = LOL_HOST_URL + "/" + tcom.passargs['asset type'].lower() + "/preview/" + imagename
             try:
                 with urllib.request.urlopen(url, timeout=60) as url_handle, open(thumbnailpath, "wb") as file_handle:
                     file_handle.write(url_handle.read())
 
-                self.asset['thumbnail'] = bpy.data.images.load(thumbnailpath)
+                thumbnailpath_low = os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower(),
+                                             "preview", imagename)
+
+                from shutil import copyfile
+                copyfile(thumbnailpath, thumbnailpath_low)
+
+                img = bpy.data.images.load(thumbnailpath_low)
+                img.scale(128, 128)
+                img.save()
+                bpy.data.images.remove(img)
+
+                self.asset['thumbnail'] = bpy.data.images.load(thumbnailpath_low)
                 self.asset['thumbnail'].name = '.LOL_preview'
 
                 img = self.asset['thumbnail']
