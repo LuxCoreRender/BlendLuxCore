@@ -36,7 +36,17 @@ def convert(scene):
         aa = scene.luxcore.config.tile.path_sampling_aa_size
         halt_spp = max(halt_spp, 2 * aa**2)
 
-    definitions["batch.haltspp"] = halt_spp
+    halt_spp_eye = halt_spp
+    halt_spp_light = 0
+
+    # Only use light spp halt condition if no eye samples are rendered at all
+    config = scene.luxcore.config
+    if (config.engine == "PATH" and config.device == "CPU" and config.path.hybridbackforward_enable
+            and config.path.hybridbackforward_lightpartition == 100):
+        halt_spp_eye = 0
+        halt_spp_light = halt_spp
+
+    definitions["batch.haltspp"] = [halt_spp_eye, halt_spp_light]
     definitions["batch.halttime"] = halt_time
 
     return utils.create_props(prefix, definitions)
