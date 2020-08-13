@@ -167,6 +167,19 @@ class LuxCoreNodeVolume(LuxCoreNode):
     suffix = "vol"  # To avoid collisions with material names
     prefix = "scene.volumes."
 
+    INCOMPATIBLE_TEXTURE_NODES = {
+        "LuxCoreNodeTexCheckerboard2D",
+        "LuxCoreNodeTexDots",
+        "LuxCoreNodeTexHitpoint",
+        "LuxCoreNodeTexImagemap",
+        "LuxCoreNodeTexMapping2D",
+        "LuxCoreNodeTexObjectID",
+        "LuxCoreNodeTexPointiness",
+        "LuxCoreNodeTexRandomPerIsland",
+        "LuxCoreNodeTexUV",
+        "LuxCoreNodeTexWireframe",
+    }
+
     # Common properties that every derived class needs to add
     # priority (IntProperty)
     # color_depth (FloatProperty) - for implicit colordepth texture
@@ -184,15 +197,24 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
         layout.prop(self, "color_depth")
 
-        # Warn the user if he tries to use a 2D texture in a volume because it doesn't work
-        has_2D_input = False
-        for socket in self.inputs:
-            node = utils_node.get_linked_node(socket)
-            if node and "2D Mapping" in node.inputs:
-                has_2D_input = True
-                break
-        if has_2D_input:
-            layout.label(text="Can't use 2D textures!", icon=icons.WARNING)
+        # Warn the user if he tries to use e.g. a 2D texture in a volume because it doesn't work
+        def get_incompatible_inputs(node):
+            if node.bl_idname in self.INCOMPATIBLE_TEXTURE_NODES:
+                return node.name
+
+            for socket in node.inputs:
+                next_node = utils_node.get_linked_node(socket)
+                if next_node:
+                    name = get_incompatible_inputs(next_node)
+                    if name:
+                        return name
+            return None
+
+        incompatible_input = get_incompatible_inputs(self)
+        if incompatible_input:
+            col = layout.column()
+            col.label(text="Incompatible texture!", icon=icons.WARNING)
+            col.label(text=f"({incompatible_input})", icon=icons.WARNING)
 
     def add_common_inputs(self):
         """ Call from derived classes (in init method) """
