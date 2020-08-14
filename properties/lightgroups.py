@@ -55,14 +55,16 @@ class LuxCoreLightGroup(PropertyGroup):
                 continue
 
             for node in utils_node.find_nodes_multi(node_tree, relevant_node_types, follow_pointers=True):
-                if node.lightgroup == old_name:
+                if node.lightgroup and node.lightgroup == old_name:
                     node.lightgroup = new_name
 
         for obj in bpy.data.objects:
             if obj.library:
                 continue
-            if obj.type == "LIGHT" and obj.data.luxcore.lightgroup == old_name:
-                obj.data.luxcore.lightgroup = new_name
+            if obj.type == "LIGHT":
+                lux_light = obj.data.luxcore
+                if lux_light.lightgroup and lux_light.lightgroup == old_name:
+                    lux_light.lightgroup = new_name
                 
     def name_get(self):
         return self.get("name", "")
