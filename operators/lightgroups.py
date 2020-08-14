@@ -77,7 +77,6 @@ class LUXCORE_OT_select_objects_in_lightgroup(bpy.types.Operator):
 LUX_EDITOR_MARK = "luxcore_light_group_editor"
 LUX_MIXER_MARK = "luxcore_light_group_mixer"
 LUX_MIXER_INSTANCE_MARK = "luxcore_light_group_mixer_instance"
-LUX_DENOISE_MARK = "luxcore_denoise_mark"
 # Our node tree names
 EDIT_LIGHT_GROUP_NAME = ".LightGroupEditor"
 LIGHT_GROUP_MIXER_NAME = ".LightGroupMixer"
@@ -121,6 +120,8 @@ def create_editor():
     return editor
 
 
+# Index of first lightgroup-related socket after the ALBEDO and AVG_SHADING_NORMAL sockets
+MIXER_SOCKET_INDEX_START = 2
 # Amount of steps from one light group input socket to the next (stepping over gain, color etc.)
 MIXER_SOCKET_INDEX_STEP = 3
 
@@ -135,10 +136,13 @@ def create_mixer(editor):
 
     input_node = mixer.nodes.new("NodeGroupInput")
     output_node = mixer.nodes.new("NodeGroupOutput")
-    mixer.outputs.new("NodeSocketColor", "Image")
+    mixer.inputs.new("NodeSocketColor", "ALBEDO")
+    mixer.inputs.new("NodeSocketVector", "AVG_SHADING_NORMAL")
+    mixer.outputs.new("NodeSocketColor", "Denoised Image")
+    mixer.outputs.new("NodeSocketColor", "Noisy Image")
 
     input_node.location = (-750, -110)
-    output_node.location = (1260, -570)
+    output_node.location = (1455, -930)
 
     x = -330
     y = 250
@@ -147,7 +151,7 @@ def create_mixer(editor):
     last_output = None
 
     for i in range(MAX_LIGHTGROUPS):
-        input_index_offset = i * MIXER_SOCKET_INDEX_STEP
+        input_index_offset = MIXER_SOCKET_INDEX_START + i * MIXER_SOCKET_INDEX_STEP
         # Light Group i
         mixer.inputs.new("NodeSocketColor", f"Light Group {i + 1}")
         light_group_input = input_node.outputs[input_index_offset]
@@ -180,7 +184,15 @@ def create_mixer(editor):
             mixer.links.new(editor_instance.outputs[0], add.inputs[2])
             last_output = add.outputs[0]
 
-    mixer.links.new(last_output, output_node.inputs[0])
+    # Denoise node
+    denoise_node = mixer.nodes.new("CompositorNodeDenoise")
+    denoise_node.location = (1210, -845)
+    mixer.links.new(last_output, denoise_node.inputs["Image"])
+    mixer.links.new(input_node.outputs["ALBEDO"], denoise_node.inputs["Albedo"])
+    mixer.links.new(input_node.outputs["AVG_SHADING_NORMAL"], denoise_node.inputs["Normal"])
+
+    mixer.links.new(denoise_node.outputs[0], output_node.inputs["Denoised Image"])
+    mixer.links.new(last_output, output_node.inputs["Noisy Image"])
     return mixer
 
 
@@ -215,7 +227,6 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
         # Check if the nodes we need already exist
         mixer_node = None
         renderlayer_node = None
-        denoise_node = None
 
         for node in scene.node_tree.nodes:
             if node.bl_idname == "CompositorNodeRLayers":
@@ -229,11 +240,8 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
                 else:
                     # Node has been repurposed, remove our mark
                     del node[LUX_MIXER_INSTANCE_MARK]
-            elif LUX_DENOISE_MARK in node:
-                assert node.bl_idname == "CompositorNodeDenoise"
-                denoise_node = node
 
-            if renderlayer_node and mixer_node and denoise_node:
+            if renderlayer_node and mixer_node:
                 break
 
         if not renderlayer_node:
@@ -266,11 +274,13 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
             mixer_node[LUX_MIXER_INSTANCE_MARK] = True
 
         # Connect render layer outputs to mixer inputs and make sure the names match
+        scene.node_tree.links.new(renderlayer_node.outputs["ALBEDO"], mixer_node.inputs["ALBEDO"])
+        scene.node_tree.links.new(renderlayer_node.outputs["AVG_SHADING_NORMAL"], mixer_node.inputs["AVG_SHADING_NORMAL"])
         lg_index = 0
         for output in renderlayer_node.outputs:
             # Blender does not remove old sockets on the render layer node, they are just disabled
             if output.enabled and is_lightgroup_pass_name(output.name):
-                mixer_input = mixer_node.inputs[lg_index * MIXER_SOCKET_INDEX_STEP]
+                mixer_input = mixer_node.inputs[MIXER_SOCKET_INDEX_START + lg_index * MIXER_SOCKET_INDEX_STEP]
                 scene.node_tree.links.new(output, mixer_input)
                 mixer_input.name = output.name
                 lg_index += 1
@@ -279,30 +289,10 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
         for i in range(MAX_LIGHTGROUPS):
             enabled = i <= len(scene.luxcore.lightgroups.custom)
             for j in range(MIXER_SOCKET_INDEX_STEP):
-                mixer_node.inputs[i * MIXER_SOCKET_INDEX_STEP + j].enabled = enabled
-
-        # Set up denoiser node
-        # TODO integrate into mixer? (add normal and albedo inputs, add denoised output)
-        if not denoise_node:
-            denoise_node = scene.node_tree.nodes.new("CompositorNodeDenoise")
-            denoise_node[LUX_DENOISE_MARK] = True
-            denoise_node.location = (mixer_node.location.x + 250, mixer_node.location.y)
-            scene.node_tree.links.new(mixer_node.outputs[0], denoise_node.inputs["Image"])
-
-            def route_around_mixer(output, input):
-                reroute_left = scene.node_tree.nodes.new("NodeReroute")
-                reroute_left.location = mixer_node.location[:]
-                scene.node_tree.links.new(output, reroute_left.inputs[0])
-                reroute_right = scene.node_tree.nodes.new("NodeReroute")
-                reroute_right.location = (mixer_node.location.x + mixer_node.width, mixer_node.location.y)
-                scene.node_tree.links.new(reroute_left.outputs[0], reroute_right.inputs[0])
-                scene.node_tree.links.new(reroute_right.outputs[0], input)
-
-            route_around_mixer(renderlayer_node.outputs["AVG_SHADING_NORMAL"], denoise_node.inputs["Normal"])
-            route_around_mixer(renderlayer_node.outputs["ALBEDO"], denoise_node.inputs["Albedo"])
+                mixer_node.inputs[MIXER_SOCKET_INDEX_START + i * MIXER_SOCKET_INDEX_STEP + j].enabled = enabled
 
         renderlayer_node_image_output = renderlayer_node.outputs["Image"]
         if renderlayer_node_image_output.is_linked:
-            scene.node_tree.links.new(denoise_node.outputs[0], renderlayer_node_image_output.links[0].to_socket)
+            scene.node_tree.links.new(mixer_node.outputs[0], renderlayer_node_image_output.links[0].to_socket)
 
         return {"FINISHED"}
