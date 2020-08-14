@@ -70,12 +70,11 @@ class LuxCoreLightGroup(PropertyGroup):
         return self.get("name", "")
 
     name: StringProperty(name="Name", set=name_set, get=name_get)
-    
+
+    # These settings are no longer used, TODO: remove?
     enabled: BoolProperty(default=True, name="Enabled",
                           description="Enable/disable this light group. If disabled, all lights "
                                       "in this group are off. Does not affect this lightgroup's AOV")
-
-    # These settings are no longer used, TODO: remove?
     show_settings: BoolProperty(default=True)
     gain: FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
     use_rgb_gain: BoolProperty(name="Color:", default=True, description="Use RGB color multiplier")
