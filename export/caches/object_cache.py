@@ -32,6 +32,28 @@ def uses_random_per_island(node_tree):
     return utils_node.has_nodes(node_tree, "LuxCoreNodeTexRandomPerIsland", True)
 
 
+def uses_displacement(obj):
+    for mat_slot in obj.material_slots:
+        mat = mat_slot.material
+        if (mat and mat.luxcore.node_tree
+                and utils_node.has_nodes_multi(mat.luxcore.node_tree, {"LuxCoreNodeShapeHeightDisplacement",
+                                                                       "LuxCoreNodeShapeVectorDisplacement"}, True)):
+            return True
+    return False
+
+
+def warn_about_subdivision_levels(obj):
+    for modifier in obj.modifiers:
+        if modifier.type == "SUBSURF" and modifier.show_viewport:
+            if not modifier.show_render:
+                LuxCoreErrorLog.add_warning("Subdivision modifier enabled in viewport, but not in final render",
+                                            obj_name=obj.name)
+            elif modifier.render_levels < modifier.levels:
+                LuxCoreErrorLog.add_warning(
+                    f"Final render subdivision level ({modifier.render_levels}) smaller than viewport subdivision level ({modifier.levels})",
+                    obj_name=obj.name)
+
+
 def get_material(obj, material_index, depsgraph):
     material_override = depsgraph.view_layer_eval.material_override
 
@@ -57,6 +79,10 @@ def export_material(obj, material_index, exporter, depsgraph, is_viewport_render
     mat = get_material(obj, material_index, depsgraph)
 
     if mat:
+        # We need the original material, not the evaluated one, otherwise 
+        # Blender gives us "NodeTreeUndefined" as mat.node_tree.bl_idname
+        mat = mat.original
+        
         lux_mat_name, mat_props = material.convert(exporter, depsgraph, mat, is_viewport_render, obj.name)
         node_tree = mat.luxcore.node_tree
         return lux_mat_name, mat_props, node_tree
@@ -291,6 +317,8 @@ class ObjectCache2:
         if obj.data is None:
             return None
 
+        warn_about_subdivision_levels(obj)
+
         obj_key = utils.make_key_from_instance(dg_obj_instance)
         exported_stuff = None
         props = pyluxcore.Properties()
@@ -358,8 +386,9 @@ class ObjectCache2:
                           luxcore_scene, scene_props, is_viewport_render, view_layer):
         transform = dg_obj_instance.matrix_world
 
+        # Objects with displacement in the node tree are instanced to avoid discrepancies between viewport and final render
         use_instancing = is_viewport_render or dg_obj_instance.is_instance or utils.can_share_mesh(obj.original) \
-                         or (exporter.motion_blur_enabled and obj.luxcore.enable_motion_blur)
+                         or (exporter.motion_blur_enabled and obj.luxcore.enable_motion_blur) or uses_displacement(obj)
 
         mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
 

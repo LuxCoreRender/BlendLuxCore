@@ -31,3 +31,16 @@ class LUXCORE_OT_toggle_pause(bpy.types.Operator):
     def execute(self, context):
         LuxCoreDisplaySettings.paused = not LuxCoreDisplaySettings.paused
         return {"FINISHED"}
+
+
+class LUXCORE_OT_stop_render(bpy.types.Operator):
+    bl_idname = "luxcore.stop_render"
+    bl_label = "Stop the render?"
+    bl_description = "Stop the render and run compositing"
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+
+    def execute(self, context):
+        LuxCoreDisplaySettings.stop_requested = True
+        return {"FINISHED"}

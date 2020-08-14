@@ -81,6 +81,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             LuxCoreRenderEngine.final_running = True
             LuxCoreDisplaySettings.paused = False
+            LuxCoreDisplaySettings.stop_requested = False
             TileStats.reset()
             LuxCoreLog.add_listener(self.log_listener)
             final.render(self, depsgraph)

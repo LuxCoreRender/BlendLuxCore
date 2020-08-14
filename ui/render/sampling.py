@@ -51,7 +51,7 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
             # Not tiled, regular sampling
             row = layout.row()
             
-            if config.device == "OCL":
+            if config.device == "OCL" and config.engine == "PATH":
                 row.prop(config, "sampler_gpu")
             else:
                 row.prop(config, "sampler")
@@ -186,6 +186,8 @@ class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
         col.prop(config, "filter_width")
         if config.filter == "GAUSSIAN":
             layout.prop(config, "gaussian_alpha")
+        elif config.filter == "SINC":
+            layout.prop(config, "sinc_tau")
         
         # Tiled path
         if config.engine == "PATH":

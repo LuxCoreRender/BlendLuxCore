@@ -200,7 +200,7 @@ def view_draw(engine, context, depsgraph):
                 else:
                     status_message = "(Paused, Denoiser Working ...)"
                     engine.tag_redraw()
-            elif context.scene.luxcore.viewport.denoise:
+            elif context.scene.luxcore.viewport.get_denoiser(context) == "OIDN":
                 try:
                     framebuffer.start_denoiser(engine.session)
                     engine.tag_redraw()

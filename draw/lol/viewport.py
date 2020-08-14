@@ -256,8 +256,12 @@ def update_ui_size(context, area, region):
     assetbar_props = ui_props.assetbar
 
     assets = utils.get_search_props(context)
+
+    if ui_props.local:
+        assets = [asset for asset in assets if asset['local']]
+
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
     user_preferences = get_addon_preferences(context)
 
@@ -360,8 +364,12 @@ def get_asset_under_mouse(context, mousex, mousey):
     assetbar_props = ui_props.assetbar
 
     assets = utils.get_search_props(context)
+
+    if ui_props.local:
+        assets = [asset for asset in assets if asset['local']]
+
     if scene.luxcoreOL.on_search:
-        assets = [asset for asset in utils.get_search_props(context) if asset['category'] == scene.luxcoreOL.search_category]
+        assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
     if assets is not None:
         h_draw = min(assetbar_props.hcount, math.ceil(len(assets) / assetbar_props.wcount))

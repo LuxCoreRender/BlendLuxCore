@@ -160,9 +160,6 @@ ENVLIGHT_CACHE_DESC = (
     "automatic portals). Note that it might consume a lot of RAM"
 )
 
-# Used in enum callback
-film_opencl_device_items = []
-
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -444,7 +441,7 @@ class LuxCoreConfig(PropertyGroup):
     device: EnumProperty(name="Device", items=devices, default="CPU")
     # A trick so we can show the user that bidir can only be used on the CPU (see UI code)
     bidir_device: EnumProperty(name="Device", items=devices, default="CPU",
-                                description="Bidir only available on CPU")
+                               description="Bidir is only available on CPU. Switch to the Path engine if you want to render on the GPU")
 
     use_tiles: BoolProperty(name="Use Tiled Path (slower)", default=False, description=TILED_DESCRIPTION)
     
@@ -467,6 +464,8 @@ class LuxCoreConfig(PropertyGroup):
         ("BLACKMANHARRIS", "Blackman-Harris", "Default, usually the best option", 0),
         ("MITCHELL_SS", "Mitchell", "Sharp, but can produce black ringing artifacts around bright pixels", 1),
         ("GAUSSIAN", "Gaussian", "Blurry", 2),
+        ("SINC", "Sinc", "", 4),
+        ("CATMULLROM", "Catmull-Rom", "", 5),
         ("NONE", "None", "Disable pixel filtering. Fastest setting when rendering on GPU", 3)
     ]
     filter: EnumProperty(name="Filter", items=filters, default="BLACKMANHARRIS",
@@ -475,6 +474,7 @@ class LuxCoreConfig(PropertyGroup):
                                  description=FILTER_WIDTH_DESC, subtype="PIXEL")
     gaussian_alpha: FloatProperty(name="Gaussian Filter Alpha", default=2, min=0.1, max=10,
                                    description="Gaussian rate of falloff. Lower values give blurrier images")
+    sinc_tau: FloatProperty(name="Sinc Filter Tau", default=1, min=0.01, max=8)
 
     # Light strategy
     light_strategy_items = [
@@ -517,24 +517,3 @@ class LuxCoreConfig(PropertyGroup):
                                 precision=5,
                                 description="Might need adjustment along with the min epsilon to avoid "
                                             "artifacts due to floating point precision issues")
-
-    film_opencl_enable: BoolProperty(name="Use OpenCL", default=True,
-                                      description="Use OpenCL to accelerate tonemapping and other imagepipeline "
-                                                  "operations (applies to viewport and final render). "
-                                                  "Disabling this option will save a bit of RAM, especially if "
-                                                  "the render resolution is large. "
-                                                  "This option is ignored in Non-OpenCL builds")
-
-    def film_opencl_device_items_callback(self, context):
-        devices = context.scene.luxcore.devices.devices
-        items = [("none", "None", "", 0)]
-        items += [(str(i), device.name, "", i + 1) for i, device in enumerate(devices) if device.type == "OPENCL_GPU"]
-        # There is a known bug with using a callback,
-        # Python must keep a reference to the strings
-        # returned or Blender will misbehave or even crash.
-        global film_opencl_device_items
-        film_opencl_device_items = items
-        return items
-
-    film_opencl_device: EnumProperty(name="Device", items=film_opencl_device_items_callback,
-                                      description="Which device to use to compute the imagepipeline")

@@ -32,8 +32,12 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
         display = scene.luxcore.display
         config = scene.luxcore.config
 
+        row = layout.row()
+        row.enabled = LuxCoreRenderEngine.final_running and not LuxCoreDisplaySettings.stop_requested
+        row.operator("luxcore.stop_render", text="Stop", icon=icons.STOP)
+
         text = "Resume" if LuxCoreDisplaySettings.paused else "Pause"
-        icon = "PLAY" if LuxCoreDisplaySettings.paused else "PAUSE"
+        icon = icons.START if LuxCoreDisplaySettings.paused else icons.PAUSE
         row = layout.row()
         row.enabled = LuxCoreRenderEngine.final_running
         row.operator("luxcore.toggle_pause", text=text, icon=icon)

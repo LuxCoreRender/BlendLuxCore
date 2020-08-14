@@ -4,6 +4,7 @@ from ..bin import pyluxcore
 from .. import utils
 from ..nodes.output import get_active_output
 from ..utils.errorlog import LuxCoreErrorLog
+from .image import ImageExporter
 
 
 def convert(exporter, scene, depsgraph, context=None, is_camera_moving=False):
@@ -138,13 +139,14 @@ def _final(scene, definitions):
 
 def _depth_of_field(scene, definitions, context=None):
     camera = scene.camera
+    settings = camera.data.luxcore
 
     if not camera.data.dof.use_dof or utils.in_material_shading_mode(context):
         return
 
     definitions["lensradius"] = (camera.data.lens / 1000) / (2 * camera.data.dof.aperture_fstop)
 
-    if camera.data.luxcore.use_autofocus:
+    if settings.use_autofocus:
         definitions["autofocus.enable"] = True
     else:
         dof_obj = camera.data.dof.focus_object
@@ -161,6 +163,37 @@ def _depth_of_field(scene, definitions, context=None):
             definitions["focaldistance"] = abs(lookat_dir.dot(dof_dir))
         else:
             definitions["focaldistance"] = camera.data.dof.focus_distance
+
+    bokeh = settings.bokeh
+    if bokeh.non_uniform:
+        distribution = bokeh.distribution
+        if distribution == "CUSTOM" and not bokeh.image:
+            distribution = "UNIFORM"
+
+        definitions["bokeh.distribution.type"] = distribution
+        definitions["bokeh.blades"] = bokeh.blades
+        definitions["bokeh.power"] = bokeh.power
+        
+        anisotropy = bokeh.anisotropy
+        if anisotropy > 0:
+            x = 1
+            y = 1 - anisotropy
+        else:
+            x = anisotropy + 1
+            y = 1
+            
+        definitions["bokeh.scale.x"] = x
+        definitions["bokeh.scale.y"] = y
+
+        if distribution == "CUSTOM":
+            try:
+                filepath = ImageExporter.export(bokeh.image,
+                                                bokeh.image_user,
+                                                scene)
+                definitions["bokeh.distribution.image"] = filepath
+            except OSError as error:
+                LuxCoreErrorLog.add_warning("Camera: %s" % error)
+                definitions["bokeh.distribution.type"] = "UNIFORM"
 
 
 def _clipping(scene, definitions):
