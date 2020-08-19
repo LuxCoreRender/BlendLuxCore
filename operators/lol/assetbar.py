@@ -453,9 +453,15 @@ class LOLAssetBarOperator(Operator):
 
         assets = utils.get_search_props(context)
 
-        if not ui_props.thumbnails_loaded:
-            utils.load_previews(context, ui_props.asset_type)
-            ui_props.thumbnails_loaded = True
+        if ui_props.asset_type == 'MODEL':
+            if not scene.luxcoreOL.model.thumbnails_loaded:
+                utils.load_previews(context, ui_props.asset_type)
+                scene.luxcoreOL.model.thumbnails_loaded = True
+
+        elif ui_props.asset_type == 'MATERIAL':
+            if not scene.luxcoreOL.material.thumbnails_loaded:
+                utils.load_previews(context, ui_props.asset_type)
+                scene.luxcoreOL.material.thumbnails_loaded = True
 
         ui_props.scrolloffset = 0
 

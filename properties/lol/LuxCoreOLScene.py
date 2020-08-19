@@ -49,10 +49,19 @@ def switch_search_results(self, context):
 
     if ui_props.asset_type == 'MODEL':
         asset_props = scene.luxcoreOL.model
+        if not scene.luxcoreOL.model.thumbnails_loaded:
+            utils.load_previews(context, ui_props.asset_type)
+            scene.luxcoreOL.model.thumbnails_loaded = True
     if ui_props.asset_type == 'SCENE':
         asset_props = scene.luxcoreOL.scene
+        if not scene.luxcoreOL.scene.thumbnails_loaded:
+            utils.load_previews(context, ui_props.asset_type)
+            scene.luxcoreOL.scene.thumbnails_loaded = True
     if ui_props.asset_type == 'MATERIAL':
         asset_props = scene.luxcoreOL.material
+        if not scene.luxcoreOL.material.thumbnails_loaded:
+            utils.load_previews(context, ui_props.asset_type)
+            scene.luxcoreOL.material.thumbnails_loaded = True
 
     utils.init_categories(context)
 
@@ -138,8 +147,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
     snapped_rotation: FloatVectorProperty(name="Snapped Rotation", default=(0, 0, 0), subtype='QUATERNION')
 
     has_hit: BoolProperty(name="has_hit", default=False)
-    thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
-    ToC_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
+    ToC_loaded: BoolProperty(name="ToC loaded", default=False, options={'SKIP_SAVE'})
     local: BoolProperty(name="Local only", default=False, update=switch_local_free)
     free_only: BoolProperty(name="Free only", default=False, update=switch_local_free)
 
@@ -147,6 +155,7 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
 
 
 class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
+    thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
     free_only: BoolProperty(name="Free only", default=False, update=switch_local_free)
     switched_append_method: BoolProperty(name="Switched Append Method", default=False)
     append_method_items = [
@@ -180,11 +189,11 @@ class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
 
 
 class LuxCoreOnlineLibraryMaterial(bpy.types.PropertyGroup):
-    free_only: BoolProperty(name="Free only", default=False, update=switch_local_free)
+    thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
 
 
 class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
-    free_only: BoolProperty(name="Free only", default=False, update=switch_local_free)
+    thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
 
 
 class LuxCoreOnlineLibraryAsset(bpy.types.PropertyGroup):

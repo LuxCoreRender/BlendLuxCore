@@ -34,7 +34,6 @@ def timer_update():
     running = 0
     for threaddata in utils.download_threads:
         thread, asset, tcom = threaddata
-        scene = bpy.context.scene
 
         asset_type = tcom.passargs['asset type']
 
