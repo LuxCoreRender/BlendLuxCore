@@ -28,7 +28,7 @@ from bpy.props import CollectionProperty, PointerProperty, IntProperty, BoolProp
     FloatProperty, FloatVectorProperty, StringProperty
 from ...utils.lol import utils as utils
 
-def switch_local(self, context):
+def switch_local_free(self, context):
     scene = context.scene
     ui_props = scene.luxcoreOL.ui
 
@@ -140,13 +140,14 @@ class LuxCoreOnlineLibraryUI(bpy.types.PropertyGroup):
     has_hit: BoolProperty(name="has_hit", default=False)
     thumbnails_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
     ToC_loaded: BoolProperty(name="thumbnails_loaded", default=False, options={'SKIP_SAVE'})
-    local: BoolProperty(name="Local only", default=False, update=switch_local)
+    local: BoolProperty(name="Local only", default=False, update=switch_local_free)
+    free_only: BoolProperty(name="Free only", default=False, update=switch_local_free)
 
     assetbar: PointerProperty(type=LuxCoreOnlineLibraryAssetBar)
 
 
 class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
-    free_only: BoolProperty(name="Free only", default=True)
+    free_only: BoolProperty(name="Free only", default=False, update=switch_local_free)
     switched_append_method: BoolProperty(name="Switched Append Method", default=False)
     append_method_items = [
         ('LINK_COLLECTION', 'Link Collection', ''),
@@ -179,11 +180,11 @@ class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
 
 
 class LuxCoreOnlineLibraryMaterial(bpy.types.PropertyGroup):
-    free_only: BoolProperty(name="Free only", default=True)
+    free_only: BoolProperty(name="Free only", default=False, update=switch_local_free)
 
 
 class LuxCoreOnlineLibraryScene(bpy.types.PropertyGroup):
-    free_only: BoolProperty(name="Free only", default=True)
+    free_only: BoolProperty(name="Free only", default=False, update=switch_local_free)
 
 
 class LuxCoreOnlineLibraryAsset(bpy.types.PropertyGroup):

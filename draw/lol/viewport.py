@@ -260,6 +260,9 @@ def update_ui_size(context, area, region):
     if ui_props.local:
         assets = [asset for asset in assets if asset['local']]
 
+    if ui_props.free_only:
+        assets = [asset for asset in assets if not asset['locked']]
+
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
@@ -367,6 +370,9 @@ def get_asset_under_mouse(context, mousex, mousey):
 
     if ui_props.local:
         assets = [asset for asset in assets if asset['local']]
+
+    if ui_props.free_only:
+        assets = [asset for asset in assets if not asset['locked']]
 
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]

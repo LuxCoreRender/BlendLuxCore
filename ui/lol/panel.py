@@ -89,6 +89,8 @@ def draw_panel_model_search(self, context):
 
     col = layout.column(align=True)
     col.prop(ui_props, 'local', expand=True, icon_only=False)
+    col.prop(ui_props, 'free_only', expand=True, icon_only=False)
+
     draw_panel_categories(self, context)
 
     layout.separator()
@@ -120,6 +122,8 @@ def draw_panel_scene_search(self, context):
 
     col = layout.column(align=True)
     col.prop(ui_props, 'local', expand=True, icon_only=False)
+    col.prop(ui_props, 'free_only', expand=True, icon_only=False)
+
 
 def draw_panel_material_search(self, context):
     scene = context.scene
@@ -141,6 +145,7 @@ def draw_panel_material_search(self, context):
 
     col = layout.column(align=True)
     col.prop(ui_props, 'local', expand=True, icon_only=False)
+    col.prop(ui_props, 'free_only', expand=True, icon_only=False)
 
     draw_panel_categories(self, context)
 

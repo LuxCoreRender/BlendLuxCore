@@ -72,10 +72,9 @@ def load_local_TOC(context, asset_type):
 def load_patreon_assets(context):
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
-    # with urllib.request.urlopen(LOL_HOST_URL + "/assets_model_patreon.json", timeout=60) as request:
-    with open(join(r'D:\BUILD_PATH\LuxCoreRender\LoL', 'assets_model_patreon.json')) as json_file:
+    with urllib.request.urlopen(LOL_HOST_URL + "/assets_model_patreon.json", timeout=60) as request:
         import json
-        assets = json.load(json_file)
+        assets = json.load(request)
         for asset in assets:
             asset['downloaded'] = 0.0
             asset['local'] = False
@@ -170,6 +169,9 @@ def init_categories(context):
 
     if ui_props.local:
         assets = [asset for asset in assets if asset['local']]
+
+    if ui_props.free_only:
+        assets = [asset for asset in assets if not asset['locked']]
 
     for asset in assets:
         cat = asset['category']

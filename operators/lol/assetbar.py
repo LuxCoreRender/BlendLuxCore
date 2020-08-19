@@ -123,6 +123,9 @@ def draw_callback_2d_search(self, context):
     if ui_props.local:
         assets = [asset for asset in assets if asset['local']]
 
+    if ui_props.free_only:
+        assets = [asset for asset in assets if not asset['locked']]
+
     if scene.luxcoreOL.on_search:
         assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
 
@@ -458,6 +461,9 @@ class LOLAssetBarOperator(Operator):
         if ui_props.local:
             assets = [asset for asset in assets if asset['local']]
 
+        if ui_props.free_only:
+            assets = [asset for asset in assets if not asset['locked']]
+
         if scene.luxcoreOL.on_search:
             assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
             scene.luxcoreOL.search_category = self.category
@@ -531,6 +537,9 @@ class LOLAssetBarOperator(Operator):
 
         if ui_props.local:
             assets = [asset for asset in assets if asset['local']]
+
+        if ui_props.free_only:
+            assets = [asset for asset in assets if not asset['locked']]
 
         if scene.luxcoreOL.on_search:
             assets = [asset for asset in assets if asset['category'] == scene.luxcoreOL.search_category]
