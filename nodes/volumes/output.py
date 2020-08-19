@@ -1,6 +1,7 @@
 import bpy
-from bpy.props import BoolProperty
+from bpy.props import BoolProperty, IntProperty
 from ..output import LuxCoreNodeOutput, update_active
+from ..materials.output import MATERIAL_ID_DESC
 from ... import utils
 from ...bin import pyluxcore
 from ...utils.errorlog import LuxCoreErrorLog
@@ -16,6 +17,8 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
     bl_width_default = 160
 
     active: BoolProperty(name="Active", default=True, update=update_active)
+    id: IntProperty(name="Volume ID", default=-1, min=-1, soft_max=32767,
+                     description=MATERIAL_ID_DESC)
     use_photongi: BoolProperty(name="Use PhotonGI Cache", default=False,
                                 description="Store PhotonGI entries in this volume. This only affects "
                                             "homogeneous and heterogeneous volumes, entries are never "
@@ -29,6 +32,8 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
 
     def draw_buttons(self, context, layout):
         super().draw_buttons(context, layout)
+
+        layout.prop(self, "id")
 
         # PhotonGI currently only works with Path engine
         if (context.scene.luxcore.config.photongi.enabled
@@ -47,6 +52,8 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
                 col.label(text="lead to VERY long cache computation time!")
 
     def export(self, exporter, depsgraph, props, luxcore_name):
+        prefix = "scene.volumes." + luxcore_name + "."
+        definitions = {}
         # Invalidate node cache
         # TODO have one global properties object so this is no longer necessary
         exporter.node_cache.clear()
@@ -58,12 +65,13 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
             msg = 'Node "%s" in tree "%s": No volume attached' % (self.name, self.id_data.name)
             LuxCoreErrorLog.add_warning(msg)
 
-            helper_prefix = "scene.volumes." + luxcore_name + "."
-            helper_defs = {
-                "type": "clear",
-                "absorption": [100, 100, 100],
-            }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            definitions["type"] = "clear"
+            definitions["absorption"] = [100, 100, 100]
 
-        prefix = "scene.volumes." + luxcore_name + "."
-        props.Set(pyluxcore.Property(prefix + "photongi.enable", self.use_photongi))
+        definitions["photongi.enable"] = self.use_photongi
+
+        if self.id != -1:
+            # LuxCore only assigns a random ID if the ID is not set at all
+            definitions["id"] = self.id
+
+        props.Set(utils.create_props(prefix, definitions))

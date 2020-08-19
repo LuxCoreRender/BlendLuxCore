@@ -6,9 +6,12 @@ from bpy.props import (
 from bpy.types import PropertyGroup
 from ..utils import node as utils_node
 
+import re
+
 # OpenCL engines support 8 lightgroups
+MAX_LIGHTGROUPS = 8
 # However one group is always there (the default group), so 7 can be user-defined
-MAX_LIGHTGROUPS = 8 - 1
+MAX_CUSTOM_LIGHTGROUPS = MAX_LIGHTGROUPS - 1
 
 RGB_GAIN_DESC = "The color of each light in this group is multiplied with this multiplier, if enabled"
 TEMP_DESC = "Blackbody emission color in Kelvin by which to shift the color of each light in this group"
@@ -52,22 +55,26 @@ class LuxCoreLightGroup(PropertyGroup):
                 continue
 
             for node in utils_node.find_nodes_multi(node_tree, relevant_node_types, follow_pointers=True):
-                if node.lightgroup == old_name:
+                if node.lightgroup and node.lightgroup == old_name:
                     node.lightgroup = new_name
 
         for obj in bpy.data.objects:
             if obj.library:
                 continue
-            if obj.type == "LIGHT" and obj.data.luxcore.lightgroup == old_name:
-                obj.data.luxcore.lightgroup = new_name
+            if obj.type == "LIGHT":
+                lux_light = obj.data.luxcore
+                if lux_light.lightgroup and lux_light.lightgroup == old_name:
+                    lux_light.lightgroup = new_name
                 
     def name_get(self):
         return self.get("name", "")
 
     name: StringProperty(name="Name", set=name_set, get=name_get)
-    
-    enabled: BoolProperty(default=True, description="Enable/disable this light group. "
-                                                     "If disabled, all lights in this group are off")
+
+    # These settings are no longer used, TODO: remove?
+    enabled: BoolProperty(default=True, name="Enabled",
+                          description="Enable/disable this light group. If disabled, all lights "
+                                      "in this group are off. Does not affect this lightgroup's AOV")
     show_settings: BoolProperty(default=True)
     gain: FloatProperty(name="Gain", default=1, min=0, description="Brightness multiplier")
     use_rgb_gain: BoolProperty(name="Color:", default=True, description="Use RGB color multiplier")
@@ -85,7 +92,7 @@ class LuxCoreLightGroupSettings(PropertyGroup):
     custom: CollectionProperty(type=LuxCoreLightGroup)
 
     def add(self):
-        if len(self.custom) < MAX_LIGHTGROUPS:
+        if len(self.custom) < MAX_CUSTOM_LIGHTGROUPS:
             new_group = self.custom.add()
             # +1 because the default group is 0
             new_group.name = "Light Group %d" % (len(self.custom) + 1)
@@ -138,3 +145,7 @@ class LuxCoreLightGroupSettings(PropertyGroup):
 
     def get_all_groups(self):
         return [self.default] + [group for group in self.custom]
+
+
+def is_lightgroup_pass_name(string):
+    return re.fullmatch(r"LG \d: \".*\"", string)

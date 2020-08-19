@@ -84,6 +84,7 @@ luxcore_node_categories_material = [
         Separator(),
         # Procedurals
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
+        NodeItem("LuxCoreNodeTexWireframe", label="Wireframe"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
         NodeItem("LuxCoreNodeTexCheckerboard2D", label="2D Checkerboard"),
