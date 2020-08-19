@@ -219,7 +219,8 @@ def draw_callback_2d_search(self, context):
             # Show tooltip box with additional asset information
             if -1 < ui_props.active_index < len(assets):
                 asset = assets[ui_props.active_index]
-                tooltip = asset['name'] + '\n\nCategory: ' + asset['category'] + '\nLicence: CC-BY-SA'
+                licence = '\nLicence: royality free' if asset['patreon'] else '\nLicence: CC-BY-SA'
+                tooltip = asset['name'] + '\n\nCategory: ' + asset['category'] + licence
                 atip = 'Author:\nCharles Nandeya Ehouman (Sharlybg)\n\nhttps://www.patreon.com/Draviastudio\n\n'
 
                 if asset['local']:

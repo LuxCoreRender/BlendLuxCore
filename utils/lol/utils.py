@@ -615,9 +615,11 @@ def load_previews(context, asset_type):
     clean_previmg()
     if assets is not None and len(assets) != 0:
         for asset in assets:
+            tpath_full = join(user_preferences.global_dir, asset_type, 'preview', 'full', splitext(asset['url'])[0] + '.jpg')
             tpath = join(user_preferences.global_dir, asset_type, 'preview', splitext(asset['url'])[0] + '.jpg')
 
-            if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
+            if os.path.exists(tpath_full) and os.path.getsize(tpath_full) > 0 and \
+                    os.path.exists(tpath) and os.path.getsize(tpath) > 0:
                 img = bpy.data.images.load(tpath)
                 img.name = '.LOL_preview'
 
