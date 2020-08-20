@@ -6,17 +6,20 @@ from .imagepipeline import use_backgroundimage
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
 
-# set of channels that don"t use an HDR format
+# Set of channels that don't use an HDR format
 LDR_CHANNELS = {
     "RGB_IMAGEPIPELINE", "RGBA_IMAGEPIPELINE", "ALPHA", "MATERIAL_ID", "MATERIAL_ID_COLOR",
     "OBJECT_ID", "DIRECT_SHADOW_MASK", "INDIRECT_SHADOW_MASK", "MATERIAL_ID_MASK"
 }
 
-# set of channels that should be tonemapped the same way as the RGB_IMAGEPIPELINE
+# Set of channels that should be tonemapped the same way as the RGB_IMAGEPIPELINE
 NEED_TONEMAPPING = {
     "EMISSION", "RADIANCE_GROUP",
-    "DIRECT_DIFFUSE", "DIRECT_GLOSSY",
-    "INDIRECT_DIFFUSE", "INDIRECT_GLOSSY", "INDIRECT_SPECULAR",
+    "DIRECT_DIFFUSE", "DIRECT_DIFFUSE_REFLECT", "DIRECT_DIFFUSE_TRANSMIT",
+    "DIRECT_GLOSSY", "DIRECT_GLOSSY_REFLECT", "DIRECT_GLOSSY_TRANSMIT",
+    "INDIRECT_DIFFUSE", "INDIRECT_DIFFUSE_REFLECT", "INDIRECT_DIFFUSE_TRANSMIT",
+    "INDIRECT_GLOSSY", "INDIRECT_GLOSSY_REFLECT", "INDIRECT_GLOSSY_TRANSMIT",
+    "INDIRECT_SPECULAR", "INDIRECT_SPECULAR_REFLECT", "INDIRECT_SPECULAR_TRANSMIT",
     "BY_MATERIAL_ID", "BY_OBJECT_ID",
 }
 

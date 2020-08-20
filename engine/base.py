@@ -174,14 +174,34 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "EMISSION", 3, "RGB", "COLOR")
         if aovs.direct_diffuse:
             self.register_pass(scene, renderlayer, "DIRECT_DIFFUSE", 3, "RGB", "COLOR")
+        if aovs.direct_diffuse_reflect:
+            self.register_pass(scene, renderlayer, "DIRECT_DIFFUSE_REFLECT", 3, "RGB", "COLOR")
+        if aovs.direct_diffuse_transmit:
+            self.register_pass(scene, renderlayer, "DIRECT_DIFFUSE_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.direct_glossy:
             self.register_pass(scene, renderlayer, "DIRECT_GLOSSY", 3, "RGB", "COLOR")
+        if aovs.direct_glossy_reflect:
+            self.register_pass(scene, renderlayer, "DIRECT_GLOSSY_REFLECT", 3, "RGB", "COLOR")
+        if aovs.direct_glossy_transmit:
+            self.register_pass(scene, renderlayer, "DIRECT_GLOSSY_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.indirect_diffuse:
             self.register_pass(scene, renderlayer, "INDIRECT_DIFFUSE", 3, "RGB", "COLOR")
+        if aovs.indirect_diffuse_reflect:
+            self.register_pass(scene, renderlayer, "INDIRECT_DIFFUSE_REFLECT", 3, "RGB", "COLOR")
+        if aovs.indirect_diffuse_transmit:
+            self.register_pass(scene, renderlayer, "INDIRECT_DIFFUSE_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.indirect_glossy:
             self.register_pass(scene, renderlayer, "INDIRECT_GLOSSY", 3, "RGB", "COLOR")
+        if aovs.indirect_glossy_reflect:
+            self.register_pass(scene, renderlayer, "INDIRECT_GLOSSY_REFLECT", 3, "RGB", "COLOR")
+        if aovs.indirect_glossy_transmit:
+            self.register_pass(scene, renderlayer, "INDIRECT_GLOSSY_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.indirect_specular:
             self.register_pass(scene, renderlayer, "INDIRECT_SPECULAR", 3, "RGB", "COLOR")
+        if aovs.indirect_specular_reflect:
+            self.register_pass(scene, renderlayer, "INDIRECT_SPECULAR_REFLECT", 3, "RGB", "COLOR")
+        if aovs.indirect_specular_transmit:
+            self.register_pass(scene, renderlayer, "INDIRECT_SPECULAR_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.position:
             self.register_pass(scene, renderlayer, "POSITION", 3, "XYZ", "VECTOR")
         if aovs.shading_normal:

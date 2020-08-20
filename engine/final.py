@@ -273,14 +273,34 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("EMISSION", 3, "RGB", layer=layer.name)
     if aovs.direct_diffuse:
         engine.add_pass("DIRECT_DIFFUSE", 3, "RGB", layer=layer.name)
+    if aovs.direct_diffuse_reflect:
+        engine.add_pass("DIRECT_DIFFUSE_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.direct_diffuse_transmit:
+        engine.add_pass("DIRECT_DIFFUSE_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.direct_glossy:
         engine.add_pass("DIRECT_GLOSSY", 3, "RGB", layer=layer.name)
+    if aovs.direct_glossy_reflect:
+        engine.add_pass("DIRECT_GLOSSY_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.direct_glossy_transmit:
+        engine.add_pass("DIRECT_GLOSSY_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.indirect_diffuse:
         engine.add_pass("INDIRECT_DIFFUSE", 3, "RGB", layer=layer.name)
+    if aovs.indirect_diffuse_reflect:
+        engine.add_pass("INDIRECT_DIFFUSE_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.indirect_diffuse_transmit:
+        engine.add_pass("INDIRECT_DIFFUSE_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.indirect_glossy:
         engine.add_pass("INDIRECT_GLOSSY", 3, "RGB", layer=layer.name)
+    if aovs.indirect_glossy_reflect:
+        engine.add_pass("INDIRECT_GLOSSY_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.indirect_glossy_transmit:
+        engine.add_pass("INDIRECT_GLOSSY_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.indirect_specular:
         engine.add_pass("INDIRECT_SPECULAR", 3, "RGB", layer=layer.name)
+    if aovs.indirect_specular_reflect:
+        engine.add_pass("INDIRECT_SPECULAR_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.indirect_specular_transmit:
+        engine.add_pass("INDIRECT_SPECULAR_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.position:
         engine.add_pass("POSITION", 3, "XYZ", layer=layer.name)
     if aovs.shading_normal:
