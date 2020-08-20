@@ -868,6 +868,8 @@ class LOLAssetBarOperator(Operator):
                         ui_props.dragging = False
                         ui_props.draw_snapped_bounds = False
                         ui_props.active_index = -3
+                        import webbrowser
+                        webbrowser.open('https://www.patreon.com/Draviastudio')
 
                         return {'RUNNING_MODAL'}
 
@@ -931,6 +933,8 @@ class LOLAssetBarOperator(Operator):
                 else:
                     asset_search_index = ui_bgl.get_asset_under_mouse(context, mx, my)
                     if assets[ui_props.active_index]['patreon'] and assets[ui_props.active_index]['locked']:
+                        import webbrowser
+                        webbrowser.open('https://www.patreon.com/Draviastudio')
                         return {'RUNNING_MODAL'}
 
                     if ui_props.asset_type in ('MATERIAL',
