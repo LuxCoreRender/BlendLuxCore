@@ -127,6 +127,7 @@ luxcore_node_categories_material = [
         # Possibly confusing, better deactivate (only needed in very rare cases anyway)
         # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
         NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
+        NodeItem("LuxCoreNodeTexDistort", label="Distort"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
