@@ -2,6 +2,7 @@ import bpy
 from bpy.props import FloatProperty
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
+from ...ui import icons
 
 
 class LuxCoreNodeTexDistort(bpy.types.Node, LuxCoreNodeTexture):
@@ -9,7 +10,8 @@ class LuxCoreNodeTexDistort(bpy.types.Node, LuxCoreNodeTexture):
     bl_width_default = 150
     
     strength: FloatProperty(name="Strength", default=1,
-                            update=utils_node.force_viewport_update)
+                            update=utils_node.force_viewport_update,
+                            description="Multiplier to adjust effect strength")
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Color", (1, 1, 1))
@@ -18,6 +20,10 @@ class LuxCoreNodeTexDistort(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketColor", "Color")
         
     def draw_buttons(self, context, layout):
+        obj = context.object
+        if obj and obj.data and obj.type == "MESH" and len(obj.data.uv_layers) > 1:
+            layout.label(text="Only first UV map is distorted", icon=icons.INFO)
+
         layout.prop(self, "strength")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):

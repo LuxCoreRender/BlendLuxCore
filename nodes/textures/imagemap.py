@@ -147,7 +147,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         self.image_user.draw(col, context.scene)
         
         if (not self.inputs["2D Mapping"].is_linked and self.projection == "flat" 
-                and not utils_node.has_valid_uv_map(context.object)):
+                and context.object and not utils_node.has_valid_uv_map(context.object)):
             col.label(text="No UVs, use box projection!", icon=icons.WARNING)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
