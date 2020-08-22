@@ -68,7 +68,8 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
         # Possibly confusing, better deactivate (only needed in very rare cases anyway)
         # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
-        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
+        NodeItem("LuxCoreNodeTexBand", label="ColorRamp"),
+        NodeItem("LuxCoreNodeTexDistort", label="Distort"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
