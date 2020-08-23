@@ -389,27 +389,8 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         # In Cycles, the inputs are converted to float values (e.g. averaged in case of RGB input).
         # The following LuxCore textures would perform RGB operations if we didn't convert the inputs to floats.
         if node.operation in {"ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "ABSOLUTE"}:
-            def convert_to_float(input_tex_name):
-                # This is more or less a hack because we don't have a dedicated "RGB to BW" texture
-                tex_name = input_tex_name + "to_float"
-                helper_prefix = "scene.textures." + tex_name + "."
-                helper_defs = {
-                    "type": "power",
-                    "base": input_tex_name,
-                    "exponent": 1,
-                }
-                props.Set(utils.create_props(helper_prefix, helper_defs))
-                return tex_name
-
-            if _is_textured(tex1):
-                tex1 = convert_to_float(tex1)
-            elif isinstance(tex1, list):
-                tex1 = sum(tex1) / len(tex1)
-
-            if _is_textured(tex2):
-                tex2 = convert_to_float(tex2)
-            elif isinstance(tex2, list):
-                tex2 = sum(tex2) / len(tex2)
+            tex1 = _convert_to_float(tex1, props)
+            tex2 = _convert_to_float(tex2, props)
 
         if node.operation in {"ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "GREATER_THAN", "LESS_THAN"}:
             try:
@@ -692,6 +673,29 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "temperature": temperature_socket.default_value,
             "normalize": True,
         }
+    elif node.bl_idname == "ShaderNodeMapRange":
+        if node.interpolation_type != "LINEAR":
+            LuxCoreErrorLog.add_warning(f"In material {material.name}: Unsupported map range interpolation type: " + node.interpolation_type,
+                                        obj_name=obj_name)
+            return ERROR_VALUE
+
+        if not node.clamp:
+            # TODO: LuxCore's remap texture always clamps, at the moment
+            LuxCoreErrorLog.add_warning(f"In material {material.name}: map range node will be clamped", obj_name=obj_name)
+
+        prefix = "scene.textures."
+
+        value = _socket(node.inputs["Value"], props, material, obj_name, group_node)
+        value = _convert_to_float(value, props)
+
+        definitions = {
+            "type": "remap",
+            "value": value,
+            "sourcemin": _socket(node.inputs["From Min"], props, material, obj_name, group_node),
+            "sourcemax": _socket(node.inputs["From Max"], props, material, obj_name, group_node),
+            "targetmin": _socket(node.inputs["To Min"], props, material, obj_name, group_node),
+            "targetmax": _socket(node.inputs["To Max"], props, material, obj_name, group_node),
+        }
     else:
         LuxCoreErrorLog.add_warning(f"Unsupported node type: {node.name}", obj_name=obj_name)
 
@@ -740,3 +744,19 @@ def _squared_roughness_to_linear(socket, props, material, luxcore_name, obj_name
 
 def _is_textured(value):
     return isinstance(value, str)
+
+
+def _convert_to_float(color_or_texture, props):
+    if _is_textured(color_or_texture):
+        # This is more or less a hack because we don't have a dedicated "RGB to BW" texture
+        tex_name = color_or_texture + "to_float"
+        helper_prefix = "scene.textures." + tex_name + "."
+        helper_defs = {
+            "type": "power",
+            "base": color_or_texture,
+            "exponent": 1,
+        }
+        props.Set(utils.create_props(helper_prefix, helper_defs))
+        return tex_name
+    elif isinstance(color_or_texture, list):
+        return sum(color_or_texture) / len(color_or_texture)
