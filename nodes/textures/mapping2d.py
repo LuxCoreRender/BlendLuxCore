@@ -10,7 +10,8 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
     bl_width_default = 160
 
     def update_uvmap(self, context):
-        self.uvindex = context.object.data.uv_layers.find(self.uvmap)
+        if context.object:
+            self.uvindex = context.object.data.uv_layers.find(self.uvmap)
         utils_node.force_viewport_update(self, context)
 
     def update_uniform_scale(self, context):
@@ -42,7 +43,7 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
         # Info about UV mapping so the user can react if no UV map etc.
         utils_node.draw_uv_info(context, layout)
 
-        if not self.inputs["2D Mapping (optional)"].is_linked:
+        if not self.inputs["2D Mapping (optional)"].is_linked and context.object:
             layout.prop_search(self, "uvmap", context.object.data, "uv_layers", text="UV Map", icon='GROUP_UVS')
         layout.prop(self, "center_map")
         layout.prop(self, "use_uniform_scale")

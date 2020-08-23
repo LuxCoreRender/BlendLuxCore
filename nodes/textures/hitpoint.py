@@ -21,9 +21,10 @@ class LuxCoreNodeTexHitpoint(bpy.types.Node, LuxCoreNodeTexture):
         utils_node.force_viewport_update(self, context)
 
     def update_vcol(self, context):
-        for i, e in enumerate(context.object.data.vertex_colors.keys()):
-            if e == self.vcol:
-                self.vcolindex = i
+        if context.object:
+            for i, e in enumerate(context.object.data.vertex_colors.keys()):
+                if e == self.vcol:
+                    self.vcolindex = i
         utils_node.force_viewport_update(self, context)
 
     mode_items = [
@@ -55,7 +56,8 @@ class LuxCoreNodeTexHitpoint(bpy.types.Node, LuxCoreNodeTexture):
         if self.mode == "hitpointgrey":
             layout.prop(self, "channel", expand=True)
 
-        layout.prop_search(self, "vcol", context.object.data, "vertex_colors", text="Vertex Color", icon='GROUP_VCOL')
+        if context.object:
+            layout.prop_search(self, "vcol", context.object.data, "vertex_colors", text="Vertex Color", icon='GROUP_VCOL')
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
 

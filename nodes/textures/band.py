@@ -35,7 +35,7 @@ class ColorRampItem(PropertyGroup):
 
 
 class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
-    bl_label = "Band"
+    bl_label = "ColorRamp"
     bl_width_default = 200
 
     interpolation_items = [

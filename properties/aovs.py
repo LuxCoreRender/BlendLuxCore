@@ -30,18 +30,38 @@ class LuxCoreAOVSettings(PropertyGroup):
                        description="Emission R, G, B")
 
     # Direct Light Information
-    direct_diffuse: BoolProperty(name="Direct Diffuse", default=False,
-                       description="Diffuse R, G, B")
-    direct_glossy: BoolProperty(name="Direct Glossy", default=False,
-                       description="Glossy R, G, B")
+    direct_diffuse: BoolProperty(name="Combined", default=False,
+                       description="Direct Diffuse R, G, B")
+    direct_diffuse_reflect: BoolProperty(name="Reflect", default=False,
+                       description="")
+    direct_diffuse_transmit: BoolProperty(name="Transmit", default=False,
+                       description="")
+    direct_glossy: BoolProperty(name="Combined", default=False,
+                       description="Direct Glossy R, G, B (e.g. glossy, metal materials)")
+    direct_glossy_reflect: BoolProperty(name="Reflect", default=False,
+                       description="")
+    direct_glossy_transmit: BoolProperty(name="Transmit", default=False,
+                       description="")
 
     # Indirect Light Information
-    indirect_diffuse: BoolProperty(name="Indirect Diffuse", default=False,
+    indirect_diffuse: BoolProperty(name="Combined", default=False,
                        description="Indirect diffuse R, G, B")
-    indirect_glossy: BoolProperty(name="Indirect Glossy", default=False,
-                       description="Indirect glossy R, G, B (e.g. glossy, metal")
-    indirect_specular: BoolProperty(name="Indirect Specular", default=False,
-                       description="Indirect specular R, G, B (e.g. glass, mirror)")
+    indirect_diffuse_reflect: BoolProperty(name="Reflect", default=False,
+                       description="")
+    indirect_diffuse_transmit: BoolProperty(name="Transmit", default=False,
+                       description="")
+    indirect_glossy: BoolProperty(name="Combined", default=False,
+                       description="Indirect glossy R, G, B (e.g. glossy, metal materials)")
+    indirect_glossy_reflect: BoolProperty(name="Reflect", default=False,
+                       description="")
+    indirect_glossy_transmit: BoolProperty(name="Transmit", default=False,
+                       description="")
+    indirect_specular: BoolProperty(name="Combined", default=False,
+                       description="Indirect specular R, G, B (e.g. glass, mirror materials)")
+    indirect_specular_reflect: BoolProperty(name="Reflect", default=False,
+                       description="")
+    indirect_specular_transmit: BoolProperty(name="Transmit", default=False,
+                       description="")
 
     # Geometry Information
     position: BoolProperty(name="Position", default=False,
@@ -56,9 +76,9 @@ class LuxCoreAOVSettings(PropertyGroup):
                        description="Texture coordinates U, V")
 
     # Shadow Information
-    direct_shadow_mask: BoolProperty(name="Direct Shadow Mask", default=False,
+    direct_shadow_mask: BoolProperty(name="Direct", default=False,
                        description="Mask containing shadows by direct light")
-    indirect_shadow_mask: BoolProperty(name="Indirect Shadow Mask", default=False,
+    indirect_shadow_mask: BoolProperty(name="Indirect", default=False,
                        description="Mask containing shadows by indirect light")
 
     # Render Information
