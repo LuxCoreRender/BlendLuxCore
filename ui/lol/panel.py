@@ -343,10 +343,9 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_SCAN_RESULT(Panel):
         #
 
         for idx, asset in enumerate(upload_props.add_list):
-            self.draw_addlist(upload_props, layout, asset, idx)
+            self.draw_addlist(layout, asset, idx)
 
-    @staticmethod
-    def draw_addlist(upload_props, layout, asset, idx):
+    def draw_addlist(self, layout, asset, idx):
         col = layout.column(align=True)
         # Upper row (enable/disable, name, remove)
         box = col.box()
@@ -365,10 +364,6 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_SCAN_RESULT(Panel):
         if asset.show_settings:
             col = box.column(align=True)
             col.prop(asset, "category")
-            # col = box.column(align=True)
-            # col.prop(asset, "bbox_min")
-            # col = box.column(align=True)
-            # col.prop(asset, "bbox_max")
 
             col = box.column(align=True)
             col.label(text="Thumbnail:")
