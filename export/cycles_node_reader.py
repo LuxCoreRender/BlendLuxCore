@@ -333,6 +333,13 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         color = _socket(node.inputs["Color"], props, material, obj_name, group_node_stack)
         if color != 1 and color != [1, 1, 1]:
             definitions["transparency"] = color
+    elif node.bl_idname == "ShaderNodeHoldout":
+        prefix = "scene.materials."
+        definitions = {
+            "type": "matte",
+            "kd": [0, 0, 0],
+            "holdout.enable": True,
+        }
     elif node.bl_idname == "ShaderNodeMixRGB":
         # TODO (in LuxCore):
         #  "DARKEN", "BURN", "LIGHTEN", "SCREEN", "DODGE", "OVERLAY", "SOFT_LIGHT",
