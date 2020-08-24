@@ -57,33 +57,33 @@ def _socket(socket, props, material, obj_name, group_node):
         return socket.default_value
 
 
-def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", group_node=None):
+def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", group_node_stack=None):
     if luxcore_name is None:
         luxcore_name = str(node.as_pointer()) + output_socket.name
-        if group_node:
-            for n in group_node:
+        if group_node_stack:
+            for n in group_node_stack:
                 luxcore_name += str(n.as_pointer())
         luxcore_name = utils.sanitize_luxcore_name(luxcore_name)
 
     if node.bl_idname == "ShaderNodeBsdfPrincipled":
         prefix = "scene.materials."
-        base_color = _socket(node.inputs["Base Color"], props, material, obj_name, group_node)
+        base_color = _socket(node.inputs["Base Color"], props, material, obj_name, group_node_stack)
         metallic_socket = node.inputs["Metallic"]
-        metallic = _socket(metallic_socket, props, material, obj_name, group_node)
+        metallic = _socket(metallic_socket, props, material, obj_name, group_node_stack)
         transmission_socket = node.inputs["Transmission"]
-        transmission = _socket(transmission_socket, props, material, obj_name, group_node)
+        transmission = _socket(transmission_socket, props, material, obj_name, group_node_stack)
         
         if transmission == 1 and metallic == 0:
             # It's effectively glass instead of a disney material.
             # Don't use mix for performance reasons.
             roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
-                                                     luxcore_name, obj_name, group_node)
+                                                     luxcore_name, obj_name, group_node_stack)
 
             definitions = {
                 "type": "glass" if roughness == 0 else "roughglass",
                 "kt": base_color,
                 "kr": [1, 1, 1],
-                "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node),
+                "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node_stack),
             }
 
             if roughness != 0:
@@ -101,14 +101,14 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                 "basecolor": base_color,
                 "subsurface": 0,  # TODO
                 "metallic": metallic,
-                "specular": _socket(node.inputs["Specular"], props, material, obj_name, group_node),
-                "speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node),
+                "specular": _socket(node.inputs["Specular"], props, material, obj_name, group_node_stack),
+                "speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node_stack),
                 # Both LuxCore and Cycles use squared roughness here, no need to convert
-                "roughness": _socket(node.inputs["Roughness"], props, material, obj_name, group_node),
-                "anisotropic": _socket(node.inputs["Anisotropic"], props, material, obj_name, group_node),
-                "sheen": _socket(node.inputs["Sheen"], props, material, obj_name, group_node),
-                "sheentint": _socket(node.inputs["Sheen Tint"], props, material, obj_name, group_node),
-                "clearcoat": _socket(node.inputs["Clearcoat"], props, material, obj_name, group_node),
+                "roughness": _socket(node.inputs["Roughness"], props, material, obj_name, group_node_stack),
+                "anisotropic": _socket(node.inputs["Anisotropic"], props, material, obj_name, group_node_stack),
+                "sheen": _socket(node.inputs["Sheen"], props, material, obj_name, group_node_stack),
+                "sheentint": _socket(node.inputs["Sheen Tint"], props, material, obj_name, group_node_stack),
+                "clearcoat": _socket(node.inputs["Clearcoat"], props, material, obj_name, group_node_stack),
             }
             
             # Metallic values > 0 reduce transmission. At metallic = 1, no transmission happens at all
@@ -119,13 +119,13 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                 # Glass/Roughglass
                 luxcore_name_glass = luxcore_name + "_glass"
                 roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
-                                                        luxcore_name_glass, obj_name, group_node)
+                                                         luxcore_name_glass, obj_name, group_node_stack)
 
                 definitions = {
                     "type": "glass" if roughness == 0 else "roughglass",
                     "kt": base_color,
                     "kr": [1, 1, 1],
-                    "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node),
+                    "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node_stack),
                 }
 
                 if roughness != 0:
@@ -172,22 +172,22 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         
         # Attach these props to the right-most material node (regardless if it's glass, disney or a mix mat)
         definitions.update({
-            "emission": _socket(node.inputs["Emission"], props, material, obj_name, group_node),
-            "transparency": _socket(node.inputs["Alpha"], props, material, obj_name, group_node),
-            "bumptex": _socket(node.inputs["Normal"], props, material, obj_name, group_node),
+            "emission": _socket(node.inputs["Emission"], props, material, obj_name, group_node_stack),
+            "transparency": _socket(node.inputs["Alpha"], props, material, obj_name, group_node_stack),
+            "bumptex": _socket(node.inputs["Normal"], props, material, obj_name, group_node_stack),
         })
     elif node.bl_idname == "ShaderNodeMixShader":
         prefix = "scene.materials."
 
         def convert_mat_socket(index):
-            mat_name = _socket(node.inputs[index], props, material, obj_name, group_node)
+            mat_name = _socket(node.inputs[index], props, material, obj_name, group_node_stack)
             if mat_name == ERROR_VALUE:
                 mat_name, mat_props = black()
                 props.Set(mat_props)
             return mat_name
 
         fac_input = node.inputs["Fac"]
-        amount = _socket(fac_input, props, material, obj_name, group_node)
+        amount = _socket(fac_input, props, material, obj_name, group_node_stack)
         if fac_input.is_linked and amount == ERROR_VALUE:
             amount = 0.5
 
@@ -202,7 +202,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         # TODO roughmatte and roughness -> sigma conversion (if possible)
         definitions = {
             "type": "matte",
-            "kd": _socket(node.inputs["Color"], props, material, obj_name, group_node),
+            "kd": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
         }
     elif node.bl_idname == "ShaderNodeBsdfGlossy":
         prefix = "scene.materials."
@@ -212,12 +212,12 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         helper_prefix = "scene.textures." + tex_name + "."
         helper_defs = {
             "type": "fresnelcolor",
-            "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node),
+            "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
         }
         props.Set(utils.create_props(helper_prefix, helper_defs))
 
         roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
-                                                 luxcore_name, obj_name, group_node)
+                                                 luxcore_name, obj_name, group_node_stack)
 
         definitions = {
             "type": "metal2",
@@ -259,15 +259,15 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             return MISSING_IMAGE_COLOR
     elif node.bl_idname == "ShaderNodeBsdfGlass":
         prefix = "scene.materials."
-        color = _socket(node.inputs["Color"], props, material, obj_name, group_node)
+        color = _socket(node.inputs["Color"], props, material, obj_name, group_node_stack)
         roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
-                                                 luxcore_name, obj_name, group_node)
+                                                 luxcore_name, obj_name, group_node_stack)
 
         definitions = {
             "type": "glass" if roughness == 0 else "roughglass",
             "kt": color,
             "kr": color, # Nonsense, maybe leave white even if it breaks compatibility with Cycles?
-            "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node),
+            "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node_stack),
         }
 
         if roughness != 0:
@@ -275,15 +275,15 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             definitions["vroughness"] = roughness
     elif node.bl_idname == "ShaderNodeBsdfRefraction":
         prefix = "scene.materials."
-        color = _socket(node.inputs["Color"], props, material, obj_name, group_node)
+        color = _socket(node.inputs["Color"], props, material, obj_name, group_node_stack)
         roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
-                                                 luxcore_name, obj_name, group_node)
+                                                 luxcore_name, obj_name, group_node_stack)
 
         definitions = {
             "type": "glass" if roughness == 0 else "roughglass",
             "kt": color,
             "kr": [0, 0, 0],
-            "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node),
+            "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node_stack),
         }
 
         if roughness != 0:
@@ -297,13 +297,13 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         helper_prefix = "scene.textures." + tex_name + "."
         helper_defs = {
             "type": "fresnelcolor",
-            "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node),
+            "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
         }
         props.Set(utils.create_props(helper_prefix, helper_defs))
 
         # TODO emulate actual anisotropy and rotation somehow ...
         roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
-                                                 luxcore_name, obj_name, group_node)
+                                                 luxcore_name, obj_name, group_node_stack)
 
         definitions = {
             "type": "metal2",
@@ -317,14 +317,14 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "type": "mattetranslucent",
             # TODO kt and kr don't really match Cycles result yet
             "kt": [1, 1, 1],
-            "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node),
+            "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
         }
     elif node.bl_idname == "ShaderNodeBsdfTransparent":
         prefix = "scene.materials."
         definitions = {
             "type": "null",
         }
-        color = _socket(node.inputs["Color"], props, material, obj_name, group_node)
+        color = _socket(node.inputs["Color"], props, material, obj_name, group_node_stack)
         if color != 1 and color != [1, 1, 1]:
             definitions["transparency"] = color
     elif node.bl_idname == "ShaderNodeMixRGB":
@@ -336,12 +336,12 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         definitions = {}
 
         fac_input = node.inputs["Fac"]
-        fac = _socket(fac_input, props, material, obj_name, group_node)
+        fac = _socket(fac_input, props, material, obj_name, group_node_stack)
         if fac_input.is_linked and fac == ERROR_VALUE:
             fac = 0.5
 
-        tex1 = _socket(node.inputs["Color1"], props, material, obj_name, group_node)
-        tex2 = _socket(node.inputs["Color2"], props, material, obj_name, group_node)
+        tex1 = _socket(node.inputs["Color1"], props, material, obj_name, group_node_stack)
+        tex2 = _socket(node.inputs["Color2"], props, material, obj_name, group_node_stack)
 
         if fac == 0:
             return tex1
@@ -384,8 +384,8 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         prefix = "scene.textures."
         definitions = {}
 
-        tex1 = _socket(node.inputs[0], props, material, obj_name, group_node)
-        tex2 = _socket(node.inputs[1], props, material, obj_name, group_node)
+        tex1 = _socket(node.inputs[0], props, material, obj_name, group_node_stack)
+        tex2 = _socket(node.inputs[1], props, material, obj_name, group_node_stack)
 
         # In Cycles, the inputs are converted to float values (e.g. averaged in case of RGB input).
         # The following LuxCore textures would perform RGB operations if we didn't convert the inputs to floats.
@@ -421,11 +421,11 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
     elif node.bl_idname == "ShaderNodeHueSaturation":
         prefix = "scene.textures."
 
-        hue = _socket(node.inputs["Hue"], props, material, obj_name, group_node)
-        saturation = _socket(node.inputs["Saturation"], props, material, obj_name, group_node)
-        value = _socket(node.inputs["Value"], props, material, obj_name, group_node)
-        fac = _socket(node.inputs["Fac"], props, material, obj_name, group_node)  # TODO
-        color = _socket(node.inputs["Color"], props, material, obj_name, group_node)
+        hue = _socket(node.inputs["Hue"], props, material, obj_name, group_node_stack)
+        saturation = _socket(node.inputs["Saturation"], props, material, obj_name, group_node_stack)
+        value = _socket(node.inputs["Value"], props, material, obj_name, group_node_stack)
+        fac = _socket(node.inputs["Fac"], props, material, obj_name, group_node_stack)  # TODO
+        color = _socket(node.inputs["Color"], props, material, obj_name, group_node_stack)
 
         definitions = {
             "type": "hsv",
@@ -447,24 +447,24 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         link = utils_node.get_link(current_input)
         
-        if group_node is None:
-            _group_node = []
+        if group_node_stack is None:
+            _group_node_stack = []
         else:
-            _group_node = group_node.copy()
+            _group_node_stack = group_node_stack.copy()
         
-        _group_node.append(node)
+        _group_node_stack.append(node)
         
         # I call _node instead of _socket here because I need to pass the
         # luxcore_name in case the node group is the first node in the tree
-        return _node(link.from_node, link.from_socket, props, material, luxcore_name, obj_name, _group_node)
+        return _node(link.from_node, link.from_socket, props, material, luxcore_name, obj_name, _group_node_stack)
     elif node.bl_idname == "NodeGroupInput":
-        return _socket(group_node[-1].inputs[output_socket.name], props, material, obj_name, group_node[:-1])
+        return _socket(group_node_stack[-1].inputs[output_socket.name], props, material, obj_name, group_node_stack[:-1])
     elif node.bl_idname == "ShaderNodeEmission":
         prefix = "scene.materials."
 
-        color = _socket(node.inputs["Color"], props, material, obj_name, group_node)
+        color = _socket(node.inputs["Color"], props, material, obj_name, group_node_stack)
         # According to the Blender manual, strength is in Watts/m² when the node is used on meshes.
-        strength = _socket(node.inputs["Strength"], props, material, obj_name, group_node)
+        strength = _socket(node.inputs["Strength"], props, material, obj_name, group_node_stack)
 
         emission_col = luxcore_name + "emission_col"
         helper_prefix = "scene.textures." + emission_col + "."
@@ -512,7 +512,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         definitions = {
             "type": "band",
-            "amount": _socket(node.inputs["Fac"], props, material, obj_name, group_node),
+            "amount": _socket(node.inputs["Fac"], props, material, obj_name, group_node_stack),
             "offsets": len(ramp.elements),
             "interpolation": interpolation,
         }
@@ -530,8 +530,8 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         definitions = {
             "type": "checkerboard3d",
-            "texture1": _socket(node.inputs["Color2"], props, material, obj_name, group_node),
-            "texture2": _socket(node.inputs["Color1"], props, material, obj_name, group_node),
+            "texture1": _socket(node.inputs["Color2"], props, material, obj_name, group_node_stack),
+            "texture2": _socket(node.inputs["Color1"], props, material, obj_name, group_node_stack),
             "mapping.type": "localmapping3d",
             "mapping.transformation": utils.matrix_to_list(scale),
         }
@@ -539,11 +539,11 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         prefix = "scene.textures."
 
         fac_input = node.inputs["Fac"]
-        fac = _socket(fac_input, props, material, obj_name, group_node)
+        fac = _socket(fac_input, props, material, obj_name, group_node_stack)
         if fac_input.is_linked and fac == ERROR_VALUE:
             fac = 1
 
-        tex = _socket(node.inputs["Color"], props, material, obj_name, group_node)
+        tex = _socket(node.inputs["Color"], props, material, obj_name, group_node_stack)
 
         if fac == 0:
             return tex
@@ -576,7 +576,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         definitions = {
             "type": "splitfloat3",
-            "texture": _socket(node.inputs[tex_socket_name], props, material, obj_name, group_node),
+            "texture": _socket(node.inputs[tex_socket_name], props, material, obj_name, group_node_stack),
             "channel": channels.index(output_socket.name),
         }
     elif node.bl_idname in {"ShaderNodeCombineRGB", "ShaderNodeCombineXYZ"}:
@@ -584,16 +584,16 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         definitions = {
             "type": "makefloat3",
-            "texture1": _socket(node.inputs[0], props, material, obj_name, group_node),
-            "texture2": _socket(node.inputs[1], props, material, obj_name, group_node),
-            "texture3": _socket(node.inputs[2], props, material, obj_name, group_node),
+            "texture1": _socket(node.inputs[0], props, material, obj_name, group_node_stack),
+            "texture2": _socket(node.inputs[1], props, material, obj_name, group_node_stack),
+            "texture3": _socket(node.inputs[2], props, material, obj_name, group_node_stack),
         }
     elif node.bl_idname == "ShaderNodeRGBToBW":
         prefix = "scene.textures."
 
         definitions = {
             "type": "dotproduct",
-            "texture1": _socket(node.inputs["Color"], props, material, obj_name, group_node),
+            "texture1": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
             # From Cycles source code:
             # intern/cycles/render/shader.cpp:726: float ShaderManager::linear_rgb_to_gray(float3 c)
             "texture2": [0.2126729, 0.7151522, 0.0721750],
@@ -603,9 +603,9 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         definitions = {
             "type": "brightcontrast",
-            "texture": _socket(node.inputs["Color"], props, material, obj_name, group_node),
-            "brightness": _socket(node.inputs["Bright"], props, material, obj_name, group_node),
-            "contrast": _socket(node.inputs["Contrast"], props, material, obj_name, group_node),
+            "texture": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
+            "brightness": _socket(node.inputs["Bright"], props, material, obj_name, group_node_stack),
+            "contrast": _socket(node.inputs["Contrast"], props, material, obj_name, group_node_stack),
         }
     elif node.bl_idname == "ShaderNodeNormalMap":
         if node.space != "TANGENT":
@@ -616,7 +616,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         definitions = {
             "type": "normalmap",
-            "texture": _socket(node.inputs["Color"], props, material, obj_name, group_node),
+            "texture": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
         }
 
         strength_socket = node.inputs["Strength"]
@@ -627,7 +627,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             definitions = {
                 "type": "scale",
                 "texture1": luxcore_name,
-                "texture2": _socket(strength_socket, props, material, obj_name, group_node),
+                "texture2": _socket(strength_socket, props, material, obj_name, group_node_stack),
             }
             luxcore_name = luxcore_name + "strength"
         else:
@@ -686,16 +686,16 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         prefix = "scene.textures."
 
-        value = _socket(node.inputs["Value"], props, material, obj_name, group_node)
+        value = _socket(node.inputs["Value"], props, material, obj_name, group_node_stack)
         value = _convert_to_float(value, props)
 
         definitions = {
             "type": "remap",
             "value": value,
-            "sourcemin": _socket(node.inputs["From Min"], props, material, obj_name, group_node),
-            "sourcemax": _socket(node.inputs["From Max"], props, material, obj_name, group_node),
-            "targetmin": _socket(node.inputs["To Min"], props, material, obj_name, group_node),
-            "targetmax": _socket(node.inputs["To Max"], props, material, obj_name, group_node),
+            "sourcemin": _socket(node.inputs["From Min"], props, material, obj_name, group_node_stack),
+            "sourcemax": _socket(node.inputs["From Max"], props, material, obj_name, group_node_stack),
+            "targetmin": _socket(node.inputs["To Min"], props, material, obj_name, group_node_stack),
+            "targetmax": _socket(node.inputs["To Max"], props, material, obj_name, group_node_stack),
         }
     else:
         LuxCoreErrorLog.add_warning(f"Unsupported node type: {node.name}", obj_name=obj_name)
@@ -707,7 +707,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             if links:
                 link = links[0]
                 print("current node", node.name, "failed, testing next node:", link.from_node.name)
-                return _node(link.from_node, link.from_socket, props, material, luxcore_name, obj_name, group_node)
+                return _node(link.from_node, link.from_socket, props, material, luxcore_name, obj_name, group_node_stack)
 
         return ERROR_VALUE
 
