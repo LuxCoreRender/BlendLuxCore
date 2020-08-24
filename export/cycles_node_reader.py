@@ -203,6 +203,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         definitions = {
             "type": "matte",
             "kd": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
+            "bumptex": _socket(node.inputs["Normal"], props, material, obj_name, group_node_stack),
         }
     elif node.bl_idname == "ShaderNodeBsdfGlossy":
         prefix = "scene.materials."
@@ -224,6 +225,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "fresnel": tex_name,
             "uroughness": roughness,
             "vroughness": roughness,
+            "bumptex": _socket(node.inputs["Normal"], props, material, obj_name, group_node_stack),
         }
     elif node.bl_idname == "ShaderNodeTexImage":
         if node.image:
@@ -268,6 +270,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "kt": color,
             "kr": color, # Nonsense, maybe leave white even if it breaks compatibility with Cycles?
             "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node_stack),
+            "bumptex": _socket(node.inputs["Normal"], props, material, obj_name, group_node_stack),
         }
 
         if roughness != 0:
@@ -284,6 +287,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "kt": color,
             "kr": [0, 0, 0],
             "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node_stack),
+            "bumptex": _socket(node.inputs["Normal"], props, material, obj_name, group_node_stack),
         }
 
         if roughness != 0:
@@ -310,6 +314,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "fresnel": tex_name,
             "uroughness": roughness,
             "vroughness": 0.05,
+            "bumptex": _socket(node.inputs["Normal"], props, material, obj_name, group_node_stack),
         }
     elif node.bl_idname == "ShaderNodeBsdfTranslucent":
         prefix = "scene.materials."
@@ -318,6 +323,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             # TODO kt and kr don't really match Cycles result yet
             "kt": [1, 1, 1],
             "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
+            "bumptex": _socket(node.inputs["Normal"], props, material, obj_name, group_node_stack),
         }
     elif node.bl_idname == "ShaderNodeBsdfTransparent":
         prefix = "scene.materials."
@@ -632,6 +638,28 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             luxcore_name = luxcore_name + "strength"
         else:
             definitions["scale"] = strength_socket.default_value
+    elif node.bl_idname == "ShaderNodeBump":
+        if node.inputs["Distance"].is_linked:
+            LuxCoreErrorLog.add_warning("Bump node Distance socket is not supported", obj_name=obj_name)
+        if node.inputs["Normal"].is_linked:
+            LuxCoreErrorLog.add_warning("Bump node Normal socket is not supported", obj_name=obj_name)
+
+        prefix = "scene.textures."
+
+        definitions = {
+            "type": "scale",
+            "texture1": _socket(node.inputs["Height"], props, material, obj_name, group_node_stack),
+            "texture2": _socket(node.inputs["Strength"], props, material, obj_name, group_node_stack),
+        }
+
+        if node.invert:
+            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            definitions = {
+                "type": "scale",
+                "texture1": luxcore_name,
+                "texture2": -1,
+            }
+            luxcore_name = luxcore_name + "invert"
     elif node.bl_idname == "ShaderNodeNewGeometry":
         prefix = "scene.textures."
         definitions = {}
