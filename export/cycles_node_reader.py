@@ -61,7 +61,8 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
     if luxcore_name is None:
         luxcore_name = str(node.as_pointer()) + output_socket.name
         if group_node:
-            luxcore_name += str(group_node[-1].as_pointer())
+            for n in group_node:
+                luxcore_name += str(n.as_pointer())
         luxcore_name = utils.sanitize_luxcore_name(luxcore_name)
 
     if node.bl_idname == "ShaderNodeBsdfPrincipled":
