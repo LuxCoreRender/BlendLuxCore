@@ -176,7 +176,7 @@ class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
 
 
 class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
-    bl_label = "Image pipeline"
+    bl_label = "Image Pipeline"
     bl_order = 8
     COMPAT_ENGINES = {"LUXCORE"}
     
@@ -515,7 +515,6 @@ class LUXCORE_CAMERA_PT_volume(CameraButtonsPanel, Panel):
 def compatible_panels():
     panels = [
         "DATA_PT_context_camera",
-        "DATA_PT_camera_stereoscopy",
         "DATA_PT_camera",
         "DATA_PT_camera_background_image",
         "DATA_PT_custom_props_camera",
