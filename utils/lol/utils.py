@@ -481,7 +481,8 @@ def append_material(context, asset, target_object, target_slot):
             if bpy.data.objects[target_object].library == None:
                 bpy.data.objects[target_object].material_slots[target_slot].material = data_to.materials[0]
         compatibility.run()
-
+    else:
+        print('Error in material asset file ' + splitext(filename)[0] + '.blend' + ': Asset name does not match material name.')
 
 
 def load_asset(context, asset, location, rotation, target_object, target_slot):
