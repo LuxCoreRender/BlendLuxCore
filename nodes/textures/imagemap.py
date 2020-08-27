@@ -100,6 +100,10 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
     projection: EnumProperty(name="Projection", items=projection_items, default="flat",
                              description="Projection", 
                              update=utils_node.force_viewport_update)
+    
+    randomized_tiling: BoolProperty(name="Randomized Tiling", default=False,
+                                    description="Use histogram-preserving blending to make repetitions irregular",
+                                    update=utils_node.force_viewport_update)
 
     def init(self, context):
         self.show_thumbnail = utils.get_addon_preferences(bpy.context).image_node_thumb_default
@@ -140,6 +144,8 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
 
         col.prop(self, "projection", text="")
         col.prop(self, "wrap", text="")
+        if self.wrap == "repeat":
+            col.prop(self, "randomized_tiling")
             
         if self.image:
             col.prop(self.image, "source", text="")
@@ -173,6 +179,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             "type": "imagemap",
             "file": filepath,
             "wrap": self.wrap,
+            "randomizedtiling.enable": self.wrap == "repeat" and self.randomized_tiling,
             # Mapping
             "mapping.type": "uvmapping2d",
             "mapping.uvscale": uvscale,
