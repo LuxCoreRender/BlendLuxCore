@@ -27,6 +27,7 @@ def run():
         update_mat_output_add_shape_input(node_tree)
         update_glass_disney_add_film_sockets(node_tree)
         update_invert_add_maximum_input(node_tree)
+        update_brick_texture(node_tree)
 
     for scene in bpy.data.scenes:
         config = scene.luxcore.config
@@ -276,3 +277,17 @@ def update_invert_add_maximum_input(node_tree):
         if "Maximum" not in node.inputs:
             node.add_input("LuxCoreSocketFloatPositive", "Maximum", 1)
             print('Updated invert node "%s" in tree %s to new version' % (node.name, node_tree.name))
+
+
+def update_brick_texture(node_tree):
+    # commit a4aff62a1608f95fc7bd7fbbdf19f5ab444e0d6b
+
+    for node in find_nodes(node_tree, "LuxCoreNodeTexBrick", False):
+        if "Brick Color 1" in node.inputs:
+            continue
+
+        node.inputs["bricktex"].name = "Brick Color 1"
+        node.inputs["mortartex"].name = "Mortar Color"
+        node.inputs["brickmodtex"].name = "Brick Color 2"
+
+        print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
