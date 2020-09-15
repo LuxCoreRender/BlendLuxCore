@@ -85,6 +85,7 @@ luxcore_node_categories_material = [
         Separator(),
         # Procedurals
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
+        NodeItem("LuxCoreNodeTexWireframe", label="Wireframe"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
         NodeItem("LuxCoreNodeTexCheckerboard2D", label="2D Checkerboard"),
@@ -106,16 +107,16 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),
         NodeItem("LuxCoreNodeTexBlenderMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexBlenderMusgrave", label="Musgrave"),
-        NodeItem("LuxCoreNodeTexBlenderNoise", label="Noise"),
+        NodeItem("LuxCoreNodeTexBlenderNoise", label="Fully Random Noise"),
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
     ]),
 
-LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
+    LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
+        NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
-        NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),
@@ -126,7 +127,8 @@ LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
         # Possibly confusing, better deactivate (only needed in very rare cases anyway)
         # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
-        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
+        NodeItem("LuxCoreNodeTexBand", label="ColorRamp"),
+        NodeItem("LuxCoreNodeTexDistort", label="Distort"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),
@@ -149,6 +151,7 @@ LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MATH", "Math", items=[
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
         NodeItem("LuxCoreNodeTexTriplanar", label="Triplanar Mapping"),
         NodeItem("LuxCoreNodeTexTriplanarBump", label="Triplanar Bump Mapping"),
+        NodeItem("LuxCoreNodeTexTriplanarNormalmap", label="Triplanar Normal Mapping"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_LIGHT", "Light", items=[

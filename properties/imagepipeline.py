@@ -10,8 +10,10 @@ from .image_user import LuxCoreImageUser
 
 class LuxCoreImagepipelinePlugin:
     def is_enabled(self, context):
-        using_viewport_denoiser = context and context.scene.luxcore.viewport.denoise
-        if using_viewport_denoiser and not self.compatible_with_viewport_denoising:
+        # Note: We don't need this check for the OptiX denoiser because it is
+        # not executed after the whole imagepipeline like OIDN
+        using_OIDN_in_viewport = context and context.scene.luxcore.viewport.get_denoiser(context) == "OIDN"
+        if using_OIDN_in_viewport and not self.compatible_with_viewport_denoising:
             return False
         return self.enabled
 
@@ -105,21 +107,17 @@ class LuxCoreImagepipelineVignetting(PropertyGroup, LuxCoreImagepipelinePlugin):
     scale: FloatProperty(name="Strength", default=40, min=0, soft_max=60, max=100, precision=1,
                           subtype="PERCENTAGE", description="Strength of the vignette")
 
-class LuxCoreImagepipelineWhiteBalance(PropertyGroup, LuxCoreImagepipelinePlugin):
-    NAME = "White Balance"
-    enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
-    compatible_with_viewport_denoising = True
-
-    temperature: FloatProperty(name="Temperature", default=6500, min=1000, max=10000,
-                          description="White point temperature")
 
 class LuxCoreImagepipelineColorAberration(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Color Aberration"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
     compatible_with_viewport_denoising = False
 
+    uniform: BoolProperty(name="Uniform", default=True)
     amount: FloatProperty(name="Strength", default=0.5, min=0, soft_max=10, max=100, precision=1,
-                           subtype="PERCENTAGE", description="Strength of the color aberration effect")
+                          subtype="PERCENTAGE", description="Strength of the color aberration effect")
+    amount_y: FloatProperty(name="Strength (Y)", default=0.5, min=0, soft_max=10, max=100, precision=1,
+                            subtype="PERCENTAGE", description="Strength of the color aberration effect")
 
 
 class LuxCoreImagepipelineBackgroundImage(PropertyGroup, LuxCoreImagepipelinePlugin):
@@ -141,6 +139,15 @@ class LuxCoreImagepipelineBackgroundImage(PropertyGroup, LuxCoreImagepipelinePlu
     storage: EnumProperty(name="Storage", items=storage_items, default="byte")
 
 
+class LuxCoreImagepipelineWhiteBalance(PropertyGroup, LuxCoreImagepipelinePlugin):
+    NAME = "White Balance"
+    enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
+
+    temperature: FloatProperty(name="Temperature", default=6500, min=1000, max=10000,
+                          description="White point temperature")
+
+
 class LuxCoreImagepipelineCameraResponseFunc(PropertyGroup, LuxCoreImagepipelinePlugin):
     NAME = "Analog Film Simulation"
     enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
@@ -154,10 +161,31 @@ class LuxCoreImagepipelineCameraResponseFunc(PropertyGroup, LuxCoreImagepipeline
     type: EnumProperty(name="Type", items=type_items, default="PRESET",
                         description="Source of the CRF data")
 
-    file: StringProperty(name="", subtype="FILE_PATH",
-                          description="Path to the external .crf file")
+    file: StringProperty(name="CRF File", subtype="FILE_PATH",
+                         description="Path to the external .crf file")
     # Internal, not shown to the user (set by operator "luxcore.select_crf")
     preset: StringProperty(name="")
+
+
+class LuxCoreImagepipelineColorLUT(PropertyGroup, LuxCoreImagepipelinePlugin):
+    NAME = "LUT"
+    enabled: BoolProperty(name=NAME, default=False, description="Enable/disable " + NAME)
+    compatible_with_viewport_denoising = True
+
+    input_colorspace_items = [
+        ("SRGB_GAMMA_CORRECTED", "sRGB (gamma corrected)", "sRGB space with gamma correction. Note that Blender's view transform "
+                                                           "has to be set to \"RAW\" to avoid gamma-correcting twice", 0),
+        ("SRGB_LINEAR", "sRGB Linear", "sRGB space without gamma correction", 1),
+    ]
+    input_colorspace: EnumProperty(name="Input Colorspace", items=input_colorspace_items, default="SRGB_GAMMA_CORRECTED",
+                                   description="Choose the color space that is expected by the LUT file")
+
+    # TODO: Support file as Blender text block (similar to IES files)
+    file: StringProperty(name="CUBE File", subtype="FILE_PATH",
+                         description="Path to the .cube file")
+
+    strength: FloatProperty(name="Strength", default=100, min=0, max=100, precision=1, subtype="PERCENTAGE",
+                            description="Mix between input without LUT and result with LUT")
 
 
 class LuxCoreImagepipelineContourLines(PropertyGroup, LuxCoreImagepipelinePlugin):
@@ -191,8 +219,9 @@ class LuxCoreImagepipeline(PropertyGroup):
     bloom: PointerProperty(type=LuxCoreImagepipelineBloom)
     mist: PointerProperty(type=LuxCoreImagepipelineMist)
     vignetting: PointerProperty(type=LuxCoreImagepipelineVignetting)
-    white_balance: PointerProperty(type=LuxCoreImagepipelineWhiteBalance)
     coloraberration: PointerProperty(type=LuxCoreImagepipelineColorAberration)
     backgroundimage: PointerProperty(type=LuxCoreImagepipelineBackgroundImage)
+    white_balance: PointerProperty(type=LuxCoreImagepipelineWhiteBalance)
     camera_response_func: PointerProperty(type=LuxCoreImagepipelineCameraResponseFunc)
+    color_LUT: PointerProperty(type=LuxCoreImagepipelineColorLUT)
     contour_lines: PointerProperty(type=LuxCoreImagepipelineContourLines)

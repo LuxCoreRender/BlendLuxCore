@@ -1,14 +1,7 @@
-import webbrowser
 import bpy
 from bpy.props import StringProperty, BoolProperty
-from .utils import init_vol_node_tree, poll_node
+from .utils import init_vol_node_tree, poll_node, use_cycles_settings, use_cycles_material_nodes
 from ..utils.errorlog import LuxCoreErrorLog
-
-
-def _use_cycles_material_nodes():
-    for mat in bpy.data.materials:
-        if mat.use_nodes and mat.node_tree:
-            mat.luxcore.use_cycles_nodes = True
 
 
 class LUXCORE_OT_use_cycles_settings(bpy.types.Operator):
@@ -22,16 +15,7 @@ class LUXCORE_OT_use_cycles_settings(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        _use_cycles_material_nodes()
-
-        for light in bpy.data.lights:
-            light.luxcore.use_cycles_settings = True
-            light.update_tag()
-
-        for world in bpy.data.worlds:
-            world.luxcore.use_cycles_settings = True
-            world.update_tag()
-
+        use_cycles_settings()
         return {"FINISHED"}
 
 
@@ -46,7 +30,7 @@ class LUXCORE_OT_use_cycles_nodes_everywhere(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        _use_cycles_material_nodes()
+        use_cycles_material_nodes()
         return {"FINISHED"}
 
 
@@ -134,13 +118,12 @@ class LUXCORE_OT_set_suggested_clamping_value(bpy.types.Operator):
 
 class LUXCORE_OT_update_opencl_devices(bpy.types.Operator):
     bl_idname = "luxcore.update_opencl_devices"
-    bl_label = "Update OpenCL device list"
-    bl_description = "Use this button if the OpenCL device list below does not match your computer's devices"
+    bl_label = "Update Device List"
+    bl_description = "Use this button if the device list below does not match your computer's devices"
 
     def execute(self, context):
-        opencl = context.scene.luxcore.opencl
-        device_list = opencl.get_opencl_devices()
-        opencl.init_devices(device_list)
+        devices = context.scene.luxcore.devices
+        devices.init_devices(devices.get_device_props())
         return {"FINISHED"}
 
 
@@ -224,6 +207,7 @@ class LUXCORE_OT_open_website(bpy.types.Operator):
     url: StringProperty()
 
     def execute(self, context):
+        import webbrowser
         webbrowser.open(self.url)
         return {"FINISHED"}
 
@@ -252,6 +236,7 @@ class LUXCORE_OT_open_website_popup(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
+        import webbrowser
         webbrowser.open(self.url)
         return {"FINISHED"}
 

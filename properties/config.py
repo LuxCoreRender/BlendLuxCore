@@ -8,9 +8,34 @@ from math import radians
 from .halt import NOISE_THRESH_WARMUP_DESC, NOISE_THRESH_STEP_DESC
 
 
+PATH_DESC = (
+    'Traces rays from the camera (and from lights, if "Add Light Tracing" or caustics cache are used).\n'
+    'Suited for almost all scene types and lighting scenarios.\n'
+    'Can run on the CPU, GPU or both.\n'
+    'Supports several caches to accelerate indirect light, environment light sampling and many-light sampling.\n'
+    'Can render complex SDS-caustics (e.g. caustics seen in a mirror) efficiently with the caustics cache.\n'
+    'All AOV types and special features like shadow catcher or indirect light visibility flags for lights are supported'
+)
+
+BIDIR_DESC = (
+    "Traces and combines rays from the camera and lights.\n"
+    "Suited for some special edge-case types of scenes that can't be rendered efficiently by the Path engine.\n"
+    "Slower than the Path engine otherwise.\n"
+    'Limited to the CPU, can not run on the GPU.\n'
+    "Can not render complex SDS-caustics (e.g. caustics seen in a mirror) efficiently.\n"
+    "Does not support all AOV types and special features like shadow catcher or indirect light visibility flags for lights"
+)
+
+SOBOL_DESC = "Optimized random noise pattern. Supports noise-aware adaptive sampling"
+METROPOLIS_DESC = "Sampler that focuses samples on brighter parts of the image. Not noise-aware. Suited for rendering caustics"
+RANDOM_DESC = (
+    "Random noise pattern. Supports noise-aware adaptive sampling. "
+    "Recommended only if the BCD denoiser is used (use Sobol otherwise)"
+)
+
 TILED_DESCRIPTION = (
-    "Render the image in quadratic chunks instead of sampling the whole film at once;\n"
-    "Causes lower memory usage; Uses a special sampler"
+    'Use the special "Tiled Path" engine, which is slower than the regular Path engine, but uses less memory. '
+    'Does not support the "Add Light Tracing" option'
 )
 TILE_SIZE_DESC = (
     "Note that OpenCL devices will automatically render multiple tiles if it increases performance"
@@ -26,9 +51,6 @@ THRESH_REDUCT_DESC = (
     "then continue with the lowered noise level"
 )
 THRESH_WARMUP_DESC = "How many samples to render before starting the convergence tests"
-
-SIMPLE_DESC = "Recommended for scenes with simple lighting (outdoors, studio setups, indoors with large windows)"
-COMPLEX_DESC = "Recommended for scenes with difficult lighting (caustics, indoors with small windows)"
 
 FILTER_DESC = (
     "Pixel filtering slightly blurs the image, which reduces noise and \n"
@@ -87,9 +109,9 @@ MAX_CONSECUTIVE_REJECT_DESC = (
 IMAGE_MUTATION_RATE_DESC = "Maximum distance over the image plane for a small mutation"
 
 LOOKUP_RADIUS_DESC = (
-    "Choose this value according to the size of your scene. "
-    "The default value is suited for a room-sized scene. "
-    "Larger values can degrade rendering performance"
+    "Controls the sharpness of the caustics. "
+    "Choose this value according to the size of your scene and the required detail in your caustics. "
+    "Too large values can degrade rendering performance, too small values can lead to non-resolving, noisy caustics"
 )
 
 NORMAL_ANGLE_DESC = (
@@ -101,6 +123,18 @@ PHOTONGI_HALTTHRESH_DESC = (
     "Max. convergence error. Photons are traced until the convergence error is below "
     "this threshold or the photon count is reached. Lower values lead to higher quality "
     "cache, but take longer to compute"
+)
+
+PHOTONGI_GLOSSINESSTHRESH_DESC = (
+    "If a material's roughness is higher than this threshold, indirect cache entries can be stored on it. "
+    "If the roughness is below the threshold, it will be considered in the caustic cache computation"
+)
+
+PHOTONGI_INDIRECT_USAGETHRESHOLDSCALE_DESC = (
+    "In corners and other areas with fine detail, LuxCore uses brute force pathtracing instead of the cache "
+    "entries. This parameter is multiplied with the lookup radius and controls the size of the pathtraced area "
+    "around corners. Smaller values can increase performance, but might lead to splotches and light leaks near "
+    "corners. Use a larger value if you encounter such artifacts"
 )
 
 HYBRID_BACKFORWARD_DESC = (
@@ -120,12 +154,11 @@ HYBRID_BACKFORWARD_GLOSSINESS_DESC = (
 )
 
 ENVLIGHT_CACHE_DESC = (
-    "Compute a cache with multiple visibility maps for the scene (works like "
+    "Enable in scenes where the world environment is only visible through small openings (e.g. a room with small windows). "
+    "Do not use in open scenes, as it can be detrimental to performance in this case. "
+    "Computes a cache with multiple visibility maps (works like "
     "automatic portals). Note that it might consume a lot of RAM"
 )
-
-# Used in enum callback
-film_opencl_device_items = []
 
 
 class LuxCoreConfigPath(PropertyGroup):
@@ -201,7 +234,7 @@ class LuxCoreConfigTile(PropertyGroup):
 
 class LuxCoreConfigDLSCache(PropertyGroup):
     # Overrides other light strategies when enabled
-    enabled: BoolProperty(name="Enabled", default=False, description=DLSC_DESC)
+    enabled: BoolProperty(name="", default=False, description=DLSC_DESC)
 
     entry_radius_auto: BoolProperty(name="Automatic Entry Radius", default=True,
                                      description="Automatically choose a good entry radius")
@@ -240,6 +273,10 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                     description="Max. number of photons traced (value in millions)")
     photon_maxdepth: IntProperty(name="Photon Depth", default=8, min=3, max=64,
                                   description="Max. depth of photon paths. At each bounce, a photon might be stored")
+    # I use 0.049 as default because then glossy materials with default roughness (0.05) are cached
+    glossinessusagethreshold: FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
+                                            description=PHOTONGI_GLOSSINESSTHRESH_DESC)
+    
     # Indirect cache
     indirect_enabled: BoolProperty(name="Use Indirect Cache", default=True,
                                    description="Accelerates rendering of indirect light")
@@ -260,25 +297,14 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                            description=LOOKUP_RADIUS_DESC)
     indirect_normalangle: FloatProperty(name="Normal Angle", default=radians(10), min=0, max=radians(90),
                                          subtype="ANGLE", description=NORMAL_ANGLE_DESC)
-    # I use 0.049 as default because then glossy materials with default roughness (0.05) are cached
-    indirect_glossinessusagethreshold: FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
-                                                      description="Only if a material's roughness is higher than "
-                                                                  "this threshold, cache entries are stored on it")
     indirect_usagethresholdscale: FloatProperty(name="Brute Force Radius Scale", default=8, min=0, precision=1,
-                                                 description="In corners and other areas with fine detail, LuxCore "
-                                                             "uses brute force pathtracing instead of the cache "
-                                                             "entries. This parameter is multiplied with the lookup "
-                                                             "radius and controls the size of the pathtraced area "
-                                                             "around corners. "
-                                                             "Smaller values can increase performance, but might lead "
-                                                             "to splotches and light leaks near corners. Use a larger "
-                                                             "value if you encounter such artifacts")
+                                                 description=PHOTONGI_INDIRECT_USAGETHRESHOLDSCALE_DESC)
 
     # Caustic cache
     caustic_enabled: BoolProperty(name="Use Caustic Cache", default=False,
                                   description="Accelerates rendering of caustics at the cost of blurring them")
-    caustic_maxsize: FloatProperty(name="Max. Size (Millions)", default=1, soft_min=0.1, min=0.01, soft_max=10,
-                                    precision=0, step=1,
+    caustic_maxsize: FloatProperty(name="Max. Size (Millions)", default=0.1, soft_min=0.01, min=0.001, soft_max=10,
+                                    precision=1, step=1,
                                     description="Max. number of photons stored in caustic cache (value in millions)")
     caustic_lookup_radius: FloatProperty(name="Lookup Radius", default=0.075, min=0.00001, subtype="DISTANCE",
                                           description=LOOKUP_RADIUS_DESC)
@@ -289,12 +315,11 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
                                                        "The step samples parameter controls how often the cache is rebuilt")
     caustic_updatespp: IntProperty(name="Step Samples", default=8, min=1,
                                    description="How often to rebuild the cache if periodic update is enabled")
-    # TODO description
     caustic_updatespp_radiusreduction: FloatProperty(name="Radius Reduction", default=96, min=1, soft_min=70,
-                                                     max=99.9, soft_max=99, subtype="PERCENTAGE")
-    # TODO description
+                                                     max=99.9, soft_max=99, subtype="PERCENTAGE",
+                                                     description="Shrinking factor for the lookup radius after each pass")
     caustic_updatespp_minradius: FloatProperty(name="Minimum Radius", default=0.003, min=0.00001,
-                                               subtype="DISTANCE")
+                                               subtype="DISTANCE", description="Radius at which the radius reduction stops")
 
     debug_items = [
         ("off", "Off (Final Render Mode)", "", 0),
@@ -314,7 +339,7 @@ class LuxCoreConfigPhotonGI(PropertyGroup):
 
 
 class LuxCoreConfigEnvLightCache(PropertyGroup):
-    enabled: BoolProperty(name="Enabled", default=False, description=ENVLIGHT_CACHE_DESC)
+    enabled: BoolProperty(name="", default=False, description=ENVLIGHT_CACHE_DESC)
     # TODO description
     quality: FloatProperty(name="Quality", default=0.5, min=0, max=1)
 
@@ -337,22 +362,31 @@ class LuxCoreConfig(PropertyGroup):
     Main config storage class.
     Access (in ui or export) with scene.luxcore.config
     """
-
+    
     # These settings are mostly not directly transferrable to LuxCore properties
     # They need some if/else decisions and aggregation, e.g. to build the engine name from parts
     engines = [
-        ("PATH", "Path", "Unidirectional path tracer; " + SIMPLE_DESC, 0),
-        ("BIDIR", "Bidir", "Bidirectional path tracer; " + COMPLEX_DESC, 1),
+        ("PATH", "Path", PATH_DESC, 0),
+        ("BIDIR", "Bidir", BIDIR_DESC, 1),
     ]
     engine: EnumProperty(name="Engine", items=engines, default="PATH")
 
-    # Only available when tiled rendering is off
+    # Only available when tiled rendering is off (because it uses a special tiled sampler)
     samplers = [
-        ("SOBOL", "Sobol", SIMPLE_DESC, 0),
-        ("METROPOLIS", "Metropolis", COMPLEX_DESC, 1),
-        ("RANDOM", "Random", "Recommended only if the BCD denoiser is used (use Sobol otherwise)", 2),
+        ("SOBOL", "Sobol", SOBOL_DESC, 0),
+        ("METROPOLIS", "Metropolis", METROPOLIS_DESC, 1),
+        ("RANDOM", "Random", RANDOM_DESC, 2),
     ]
     sampler: EnumProperty(name="Sampler", items=samplers, default="SOBOL")
+    
+    samplers_gpu = [
+        ("SOBOL", "Sobol", "Best suited sampler for the GPU. " + SOBOL_DESC, 0),
+        ("RANDOM", "Random", RANDOM_DESC, 1),
+    ]
+    sampler_gpu: EnumProperty(name="Sampler", items=samplers_gpu, default="SOBOL")
+    
+    def get_sampler(self):
+        return self.sampler_gpu if self.device == "OCL" else self.sampler
 
     # SOBOL properties
     sobol_adaptive_strength: FloatProperty(name="Adaptive Strength", default=0.9, min=0, max=0.95,
@@ -360,6 +394,29 @@ class LuxCoreConfig(PropertyGroup):
 
     # Noise estimation (used by adaptive samplers like SOBOL and RANDOM)
     noise_estimation: PointerProperty(type=LuxCoreConfigNoiseEstimation)
+    
+    # Sampler pattern (used by SOBOL and RANDOM)
+    sampler_patterns = [
+        ("PROGRESSIVE", "Progressive", "Optimized for quick feedback, sampling 1 sample per pixel in each pass over the image", 0),
+        ("CACHE_FRIENDLY", "Cache-friendly", "Optimized for faster rendering", 1),
+    ]
+    sampler_pattern: EnumProperty(name="Pattern", items=sampler_patterns, default="PROGRESSIVE")
+    
+    out_of_core_supersampling_items = [
+        ("4", "4", "", 0),
+        ("8", "8", "", 1),
+        ("16", "16", "", 2),
+        ("32", "32", "", 3),
+        ("64", "64", "", 4),
+    ]
+    out_of_core_supersampling: EnumProperty(name="Supersampling", items=out_of_core_supersampling_items, default="16",
+                                            description="Multiplier for the samples per pass")
+    out_of_core: BoolProperty(name="Out of Core", default=False, 
+                              description="Enable storage of image pixels, meshes and other data in CPU RAM if GPU RAM is not sufficient. "
+                                          "Enabling this option causes the scene to use more CPU RAM")
+    
+    def using_out_of_core(self):
+        return self.device == "OCL" and self.out_of_core
 
     # METROPOLIS properties
     # sampler.metropolis.largesteprate
@@ -376,15 +433,20 @@ class LuxCoreConfig(PropertyGroup):
 
     # Only available when engine is PATH (not BIDIR)
     devices = [
-        ("CPU", "CPU", "Use the arithmetic logic units in your central processing unit", 0),
-        ("OCL", "OpenCL", "Use the good ol' pixel cruncher", 1),
+        ("CPU", "CPU", "CPU only", 0),
+        # Still called OCL for historical reasons, currently it means either OpenCL or CUDA, depending on selection in addon preferences
+        ("OCL", "GPU", "Use GPU(s) and optionally the CPU. You can choose between OpenCL and CUDA in the addon preferences. "
+                       "You can enable/disable each device in the Devices panel below", 1),
     ]
     device: EnumProperty(name="Device", items=devices, default="CPU")
     # A trick so we can show the user that bidir can only be used on the CPU (see UI code)
     bidir_device: EnumProperty(name="Device", items=devices, default="CPU",
-                                description="Bidir only available on CPU")
+                               description="Bidir is only available on CPU. Switch to the Path engine if you want to render on the GPU")
 
-    use_tiles: BoolProperty(name="Tiled", default=False, description=TILED_DESCRIPTION)
+    use_tiles: BoolProperty(name="Use Tiled Path (slower)", default=False, description=TILED_DESCRIPTION)
+    
+    def using_tiled_path(self):
+        return self.engine == "PATH" and self.use_tiles
 
     # Special properties of the various engines
     path: PointerProperty(type=LuxCoreConfigPath)
@@ -402,6 +464,8 @@ class LuxCoreConfig(PropertyGroup):
         ("BLACKMANHARRIS", "Blackman-Harris", "Default, usually the best option", 0),
         ("MITCHELL_SS", "Mitchell", "Sharp, but can produce black ringing artifacts around bright pixels", 1),
         ("GAUSSIAN", "Gaussian", "Blurry", 2),
+        ("SINC", "Sinc", "", 4),
+        ("CATMULLROM", "Catmull-Rom", "", 5),
         ("NONE", "None", "Disable pixel filtering. Fastest setting when rendering on GPU", 3)
     ]
     filter: EnumProperty(name="Filter", items=filters, default="BLACKMANHARRIS",
@@ -410,6 +474,7 @@ class LuxCoreConfig(PropertyGroup):
                                  description=FILTER_WIDTH_DESC, subtype="PIXEL")
     gaussian_alpha: FloatProperty(name="Gaussian Filter Alpha", default=2, min=0.1, max=10,
                                    description="Gaussian rate of falloff. Lower values give blurrier images")
+    sinc_tau: FloatProperty(name="Sinc Filter Tau", default=1, min=0.01, max=8)
 
     # Light strategy
     light_strategy_items = [
@@ -452,24 +517,3 @@ class LuxCoreConfig(PropertyGroup):
                                 precision=5,
                                 description="Might need adjustment along with the min epsilon to avoid "
                                             "artifacts due to floating point precision issues")
-
-    film_opencl_enable: BoolProperty(name="Use OpenCL", default=True,
-                                      description="Use OpenCL to accelerate tonemapping and other imagepipeline "
-                                                  "operations (applies to viewport and final render). "
-                                                  "Disabling this option will save a bit of RAM, especially if "
-                                                  "the render resolution is large. "
-                                                  "This option is ignored in Non-OpenCL builds")
-
-    def film_opencl_device_items_callback(self, context):
-        devices = context.scene.luxcore.opencl.devices
-        items = [("none", "None", "", 0)]
-        items += [(str(i), device.name, "", i + 1) for i, device in enumerate(devices) if device.type == "OPENCL_GPU"]
-        # There is a known bug with using a callback,
-        # Python must keep a reference to the strings
-        # returned or Blender will misbehave or even crash.
-        global film_opencl_device_items
-        film_opencl_device_items = items
-        return items
-
-    film_opencl_device: EnumProperty(name="Device", items=film_opencl_device_items_callback,
-                                      description="Which device to use to compute the imagepipeline")

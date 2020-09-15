@@ -45,7 +45,7 @@ luxcore_node_categories_volume = [
         NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),
         NodeItem("LuxCoreNodeTexBlenderMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexBlenderMusgrave", label="Musgrave"),
-        NodeItem("LuxCoreNodeTexBlenderNoise", label="Noise"),
+        NodeItem("LuxCoreNodeTexBlenderNoise", label="Fully Random Noise"),
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
@@ -53,9 +53,9 @@ luxcore_node_categories_volume = [
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_MATH", "Math", items=[
         # Note: 2D textures make no sense for volumes
+        NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
-        NodeItem("LuxCoreNodeTexMath", label="Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),
@@ -64,7 +64,8 @@ luxcore_node_categories_volume = [
 
     LuxCoreNodeCategoryVolume("LUXCORE_VOLUME_UTILS", "Utils", items=[
         # Note: 2D textures make no sense for volumes
-        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
+        NodeItem("LuxCoreNodeTexBand", label="ColorRamp"),
+        NodeItem("LuxCoreNodeTexDistort", label="Distort"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
         NodeItem("LuxCoreNodeTexInvert", label="Invert"),

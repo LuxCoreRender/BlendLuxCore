@@ -6,6 +6,7 @@ NTREE_MATERIAL = "MATERIAL"
 NTREE_TEXTURE = "TEXTURE"
 
 MATERIAL = "MATERIAL"
+NODETREE = "NODETREE"
 OBJECT = "OBJECT_DATAMODE"
 
 INFO = "INFO"
@@ -27,8 +28,12 @@ URL = "URL"
 DOWNLOAD = "IMPORT"
 COPY_TO_CLIPBOARD = "COPYDOWN"
 SHOW_NODETREE = "SCREEN_BACK"
-REFRESH = "FILE_REFRESH"  # used in display/denoiser refresh buttons
 DUPLICATE = "DUPLICATE"
+
+REFRESH = "FILE_REFRESH"  # used in display/denoiser refresh buttons
+START = "PLAY"
+PAUSE = "PAUSE"
+STOP = "QUIT"
 
 CAMERA = "CAMERA_DATA"  # this should show a recognizable camera icon. Might need to be changed for 2.80.
 WORLD = "WORLD"
@@ -39,3 +44,8 @@ EXPANDABLE_OPENED = "TRIA_DOWN"
 
 FAKE_USER_ON = "FAKE_USER_ON"
 FAKE_USER_OFF = "FAKE_USER_OFF"
+
+GREEN_RHOMBUS = "KEYTYPE_JITTER_VEC"  # used to signal "better" in statistics comparison
+RED_RHOMBUS = "KEYTYPE_EXTREME_VEC"  # used to signal "worse" in statistics comparison
+
+ARROW_RIGHT = "FORWARD"

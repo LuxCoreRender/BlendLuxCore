@@ -1,6 +1,7 @@
 import bpy
 from .node import find_nodes
 from ..nodes import TREE_TYPES
+from ..nodes.base import ThinFilmCoating
 
 
 """
@@ -22,7 +23,11 @@ def run():
         update_cloth_remove_repeat_sockets(node_tree)
         update_imagemap_add_alpha_output(node_tree)
         update_smoke_multiple_output_channels(node_tree)
+        update_smoke_mantaflow_simulation(node_tree)
         update_mat_output_add_shape_input(node_tree)
+        update_glass_disney_add_film_sockets(node_tree)
+        update_invert_add_maximum_input(node_tree)
+        update_brick_texture(node_tree)
 
     for scene in bpy.data.scenes:
         config = scene.luxcore.config
@@ -203,6 +208,44 @@ def update_smoke_multiple_output_channels(node_tree):
         print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
 
+def update_smoke_mantaflow_simulation(node_tree):
+    # commit 6184e20b1fe2a5766c7ea89c4588641909bc9454
+    for node in find_nodes(node_tree, "LuxCoreNodeTexSmoke", False):
+        if "flame" in node.outputs:
+            continue
+        # Copy current output sockets for reconnection after update
+        old_sockets = {}
+        for e in node.outputs:
+            links = []
+            for link in e.links:
+                links.append(link.to_socket)
+            if e.name == 'fire':
+                old_sockets['flame'] = links.copy()
+            else:
+                old_sockets[e.name] = links.copy()
+
+        node.outputs.remove(node.outputs["density"])
+        node.outputs.remove(node.outputs["fire"])
+        node.outputs.remove(node.outputs["heat"])
+        node.outputs.remove(node.outputs["color"])
+        node.outputs.remove(node.outputs["velocity"])
+
+        node.outputs.new("LuxCoreSocketFloatPositive", "density")
+        node.outputs.new("LuxCoreSocketFloatPositive", "flame")
+        node.outputs.new("LuxCoreSocketFloatPositive", "heat")
+        node.outputs.new("LuxCoreSocketFloatPositive", "temperature")
+        node.outputs.new("LuxCoreSocketColor", "color")
+        node.outputs.new("LuxCoreSocketColor", "velocity")
+
+        for output in node.outputs:
+            try:
+                for link in old_sockets[output.name]:
+                    node_tree.links.new(output, link)
+            except KeyError:
+                pass
+
+        print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
+
 def update_mat_output_add_shape_input(node_tree):
     # commit e20355a7567b22df4d05e8b303c98dbc697b9c08
 
@@ -210,3 +253,41 @@ def update_mat_output_add_shape_input(node_tree):
         if "Shape" not in node.inputs:
             node.inputs.new("LuxCoreSocketShape", "Shape")
             print('Updated output node "%s" in tree %s to new version' % (node.name, node_tree.name))
+
+
+def update_glass_disney_add_film_sockets(node_tree):
+    affected_nodes = find_nodes(node_tree, "LuxCoreNodeMatGlass", False)
+    affected_nodes += find_nodes(node_tree, "LuxCoreNodeMatDisney", False)
+    
+    for node in affected_nodes:
+        if ThinFilmCoating.THICKNESS_NAME in node.inputs:
+            continue
+        
+        if node.bl_idname == "LuxCoreNodeMatDisney":
+            node.add_input("LuxCoreSocketFloat0to1", "Film Amount", 1, enabled=False)
+        
+        ThinFilmCoating.init(node)
+        print('Updated node "%s" in tree %s to new version' % (node.name, node_tree.name))
+
+
+def update_invert_add_maximum_input(node_tree):
+    # commit 4fcce04f9c51dce990e2480810265c1f1b13c8c5
+
+    for node in find_nodes(node_tree, "LuxCoreNodeTexInvert", False):
+        if "Maximum" not in node.inputs:
+            node.add_input("LuxCoreSocketFloatPositive", "Maximum", 1)
+            print('Updated invert node "%s" in tree %s to new version' % (node.name, node_tree.name))
+
+
+def update_brick_texture(node_tree):
+    # commit a4aff62a1608f95fc7bd7fbbdf19f5ab444e0d6b
+
+    for node in find_nodes(node_tree, "LuxCoreNodeTexBrick", False):
+        if "Brick Color 1" in node.inputs:
+            continue
+
+        node.inputs["bricktex"].name = "Brick Color 1"
+        node.inputs["mortartex"].name = "Mortar Color"
+        node.inputs["brickmodtex"].name = "Brick Color 2"
+
+        print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))

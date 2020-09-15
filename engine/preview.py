@@ -85,7 +85,7 @@ def enable_log_output():
 
 def _export_mat_scene(engine, depsgraph, active_mat):
     from ..export.caches.exported_data import ExportedObject, ExportedMesh
-    from ..export.caches.object_cache import get_material, uses_pointiness, uses_random_per_island
+    from ..export.caches.object_cache import export_material, uses_pointiness, uses_random_per_island
     from ..nodes.output import get_active_output
     from ..nodes.textures.random_per_island import DATAINDEX_RANDOM_PER_ISLAND
 
@@ -109,10 +109,10 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     luxcore_scene.Parse(cam_props)
 
     # Objects
-    for index, dg_obj_instance in enumerate(depsgraph.object_instances, start=1):
+    for dg_obj_instance in depsgraph.object_instances:
         obj = dg_obj_instance.object
         
-        if not utils.is_instance_visible(dg_obj_instance, obj):
+        if not utils.is_instance_visible(dg_obj_instance, obj, None):
             continue
 
         # Don't export lights and floor from preview scene
@@ -138,7 +138,7 @@ def _export_mat_scene(engine, depsgraph, active_mat):
             mat_names = []
             for idx, (shape_name, mat_index) in enumerate(mesh_definitions):
                 shape = shape_name
-                lux_mat_name, mat_props, node_tree = get_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                lux_mat_name, mat_props, node_tree = export_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 
@@ -433,7 +433,7 @@ def _get_preview_settings(depsgraph):
     for dg_obj_instance in depsgraph.object_instances:        
         obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object                
         
-        if not obj.name == 'preview_hair' and not utils.is_instance_visible(dg_obj_instance, obj):
+        if not obj.name == 'preview_hair' and not utils.is_instance_visible(dg_obj_instance, obj, None):
             continue        
 
         if obj.name.startswith("preview"):

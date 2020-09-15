@@ -1,9 +1,10 @@
 import bpy
-from bpy.props import IntProperty, EnumProperty, BoolProperty
+from bpy.props import IntProperty, EnumProperty, BoolProperty, FloatProperty
+from .. import utils
 
 
 class LuxCoreViewportSettings(bpy.types.PropertyGroup):
-    halt_time: IntProperty(name="Viewport Halt Time (s)", default=10, min=1,
+    halt_time: IntProperty(name="Halt Time (s)", default=10, min=1,
                             description="How long to render in the viewport. "
                                         "When this time is reached, the render is paused")
 
@@ -32,16 +33,37 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
                                        description="Size of the startup blocks in pixels. A size of 4 means that "
                                                    "one sample is spread over 4x4 pixels on startup")
 
-    use_bidir: BoolProperty(name="Use Bidir in Viewport", default=True,
+    use_bidir: BoolProperty(name="Use Bidir", default=True,
                              description="Enable if your scene requires Bidir for complex light paths and "
                                          "you need to preview them in the viewport render. If disabled, "
                                          "the RT Path engine is used in the viewport, which is optimized "
                                          "for quick feedback but can't handle complex light paths")
-    add_light_tracing: BoolProperty(name="Add Light Tracing in Viewport", default=True,
+    add_light_tracing: BoolProperty(name="Add Light Tracing", default=True,
                                     description="Add light tracing in viewport. If disabled, "
                                          "the RT Path engine is used in the viewport, which is optimized "
                                          "for quick feedback but can't handle complex light paths")
 
-    denoise: BoolProperty(name="Denoise", default=True,
+    use_denoiser: BoolProperty(name="Denoise", default=True,
                            description="Denoise the viewport render once the halt time is reached. "
                                        "Note that this disables most imagepipeline plugins in the viewport")
+    denoisers = [
+        ("OIDN", "OIDN", "Denoising is only performed once the viewport render pauses", 0),
+        ("OPTIX", "OptiX", "Denoises continuously during viewport rendering", 1),
+    ]
+    denoiser: EnumProperty(name="Denoiser", items=denoisers, default="OPTIX")
+    min_samples: IntProperty(name="Min. Samples", default=1, min=0, 
+                             description="Minimum amount of samples to be rendered before viewport denoiser is enabled")
+
+    @staticmethod
+    def can_use_optix_denoiser(context):
+        preferences = utils.get_addon_preferences(context)
+        return preferences.gpu_backend == "CUDA" and preferences.film_device != "none" and preferences.use_optix_if_available
+
+    def get_denoiser(self, context):
+        if not self.use_denoiser:
+            return None
+        if self.can_use_optix_denoiser(context):
+            # It's possible that either OptiX or OIDN is used, depending on user choice
+            return self.denoiser
+        # OptiX can't be used, so OIDN is the only option left
+        return "OIDN"

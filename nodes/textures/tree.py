@@ -27,6 +27,7 @@ luxcore_node_categories_texture = [
         Separator(),
         # Procedurals
         NodeItem("LuxCoreNodeTexBrick", label="Brick"),
+        NodeItem("LuxCoreNodeTexWireframe", label="Wireframe"),
         NodeItem("LuxCoreNodeTexDots", label="Dots"),
         NodeItem("LuxCoreNodeTexfBM", label="fBM"),
         NodeItem("LuxCoreNodeTexCheckerboard2D", label="2D Checkerboard"),
@@ -47,47 +48,32 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexBlenderMagic", label="Magic"),
         NodeItem("LuxCoreNodeTexBlenderMarble", label="Marble"),
         NodeItem("LuxCoreNodeTexBlenderMusgrave", label="Musgrave"),
-        NodeItem("LuxCoreNodeTexBlenderNoise", label="Noise"),
+        NodeItem("LuxCoreNodeTexBlenderNoise", label="Fully Random Noise"),
         NodeItem("LuxCoreNodeTexBlenderStucci", label="Stucci"),
         NodeItem("LuxCoreNodeTexBlenderWood", label="Wood"),
         NodeItem("LuxCoreNodeTexBlenderVoronoi", label="Voronoi"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MATH", "Math", items=[
-        NodeItem("LuxCoreNodeTexBump", label="Bump"),
-        # Possibly confusing, better deactivate (only needed in very rare cases anyway)
-        # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
-        NodeItem("LuxCoreNodeTexBand", label="Band/ColorRamp"),
-        NodeItem("LuxCoreNodeTexHSV", label="HSV"),
-        NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
-        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
-        Separator(),
-        NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
-        NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
-        NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
-        Separator(),
-        NodeItem("LuxCoreNodeTexHitpointInfo", label="Hitpoint Info"),
-        NodeItem("LuxCoreNodeTexPointiness", label="Pointiness"),
-        NodeItem("LuxCoreNodeTexObjectID", label="Object ID"),
-        NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
-        NodeItem("LuxCoreNodeTexUV", label="UV Test"),
-    ]),
-
-    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
-        NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
         NodeItem("LuxCoreNodeTexMath", label="Math"),
+        NodeItem("LuxCoreNodeTexColorMix", label="Color Math"),
+        NodeItem("LuxCoreNodeTexVectorMath", label="Vector Math"),
         NodeItem("LuxCoreNodeTexDotProduct", label="Dot Product"),
         NodeItem("LuxCoreNodeTexSplitFloat3", label="Split RGB"),
         NodeItem("LuxCoreNodeTexMakeFloat3", label="Combine RGB"),
         NodeItem("LuxCoreNodeTexRemap", label="Remap"),
-        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
-        Separator(),
+    ]),
+
+    LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
         # Possibly confusing, better deactivate (only needed in very rare cases anyway)
         # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
-        NodeItem("LuxCoreNodeTexBand", label="Band"),
+        NodeItem("LuxCoreNodeTexBand", label="ColorRamp"),
+        NodeItem("LuxCoreNodeTexDistort", label="Distort"),
         NodeItem("LuxCoreNodeTexHSV", label="HSV"),
         NodeItem("LuxCoreNodeTexBrightContrast", label="Brightness/Contrast"),
+        NodeItem("LuxCoreNodeTexInvert", label="Invert"),
+        Separator(),
         NodeItem("LuxCoreNodeTexConstfloat1", label="Constant Value"),
         NodeItem("LuxCoreNodeTexConstfloat3", label="Constant Color"),
         NodeItem("LuxCoreNodeTexIORPreset", label="IOR Preset"),
@@ -106,6 +92,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexMapping3D", label="3D Mapping"),
         NodeItem("LuxCoreNodeTexTriplanar", label="Triplanar Mapping"),
         NodeItem("LuxCoreNodeTexTriplanarBump", label="Triplanar Bump Mapping"),
+        NodeItem("LuxCoreNodeTexTriplanarNormalmap", label="Triplanar Normal Mapping"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_LIGHT", "Light", items=[

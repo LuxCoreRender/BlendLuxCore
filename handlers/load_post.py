@@ -21,6 +21,42 @@ def _init_persistent_cache_file_path(settings, suffix):
         settings.file_path = pgi_path
 
 
+def _init_LuxCoreOnlineLibrary():
+    user_preferences = utils.get_addon_preferences(bpy.context)
+    ui_props = bpy.context.scene.luxcoreOL.ui
+
+    bpy.context.scene.luxcoreOL.on_search = False
+    bpy.context.scene.luxcoreOL.search_category = ""
+
+    ui_props.assetbar_on = False
+    ui_props.turn_off = False
+    ui_props.ToC_loaded = False
+    bpy.context.scene.luxcoreOL.model.thumbnails_loaded = False
+    bpy.context.scene.luxcoreOL.scene.thumbnails_loaded = False
+    bpy.context.scene.luxcoreOL.material.thumbnails_loaded = False
+
+    if not os.path.exists(user_preferences.global_dir):
+        os.makedirs(user_preferences.global_dir)
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'model')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'model'))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'model', 'preview')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'model', 'preview'))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'model', 'preview', 'full')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'model', 'preview', 'full'))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'material')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'material'))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'material', 'preview')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'material', 'preview'))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'material', 'preview', 'full')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'material', 'preview', 'full'))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'scene')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'scene'))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'scene', 'preview', 'full')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'scene', 'preview', 'full'))
+    if not os.path.exists(os.path.join(user_preferences.global_dir, 'scene', 'preview')):
+        os.makedirs(os.path.join(user_preferences.global_dir, 'scene', 'preview'))
+
+
 @persistent
 def handler(_):
     """ Note: the only argument Blender passes is always None """
@@ -28,21 +64,7 @@ def handler(_):
     for scene in bpy.data.scenes:
         # Update OpenCL devices if .blend is opened on
         # a different computer than it was saved on
-        updated = scene.luxcore.opencl.update_devices_if_necessary()
-
-        if updated:
-            # Set first GPU as film OpenCL device, or disable film OpenCL if no GPUs found
-            scene.luxcore.config.film_opencl_enable = False
-            scene.luxcore.config.film_opencl_device = "none"
-            for i, device in enumerate(scene.luxcore.opencl.devices):
-                # Intel GPU devices can lead to crashes, so disable them by default
-                if device.type == "OPENCL_GPU" and not "intel" in device.name.lower():
-                    try:
-                        scene.luxcore.config.film_opencl_device = str(i)
-                        scene.luxcore.config.film_opencl_enable = True
-                        break
-                    except TypeError:
-                        pass
+        scene.luxcore.devices.update_devices_if_necessary()
 
         if pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool():
             # OpenCL not available, make sure we are using CPU device
@@ -55,6 +77,8 @@ def handler(_):
         _init_persistent_cache_file_path(scene.luxcore.config.photongi, "pgi")
         _init_persistent_cache_file_path(scene.luxcore.config.envlight_cache, "env")
         _init_persistent_cache_file_path(scene.luxcore.config.dls_cache, "dlsc")
+
+        _init_LuxCoreOnlineLibrary()
 
     # Run converters for backwards compatibility
     compatibility.run()

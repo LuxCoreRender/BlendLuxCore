@@ -1,3 +1,4 @@
+import bpy
 import mathutils
 from ..bin import pyluxcore
 from .errorlog import LuxCoreErrorLog
@@ -151,6 +152,27 @@ def find_nodes(node_tree, bl_idname, follow_pointers):
     return result
 
 
+def find_nodes_multi(node_tree, bl_idname_set, follow_pointers):
+    result = []
+
+    for node in node_tree.nodes:
+        if follow_pointers and node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
+            try:
+                result += find_nodes_multi(node.node_tree, bl_idname_set, follow_pointers)
+            except RecursionError:
+                msg = (f'Pointer nodes in node trees "{node_tree.name}" and "{node.node_tree.name}" '
+                       "create a dependency cycle! Delete one of them.")
+                LuxCoreErrorLog.add_error(msg)
+                # Mark the faulty nodes in red
+                node.use_custom_color = True
+                node.color = (0.9, 0, 0)
+                return result
+        if node.bl_idname in bl_idname_set:
+            result.append(node)
+
+    return result
+
+
 def has_nodes(node_tree, bl_idname, follow_pointers):
     for node in node_tree.nodes:
         if follow_pointers and node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
@@ -214,7 +236,16 @@ def force_viewport_mesh_update(_, context):
             if slot.material == mat:
                 if obj.data:
                     obj.data.update_tag()
-                    continue
+                    break
+
+
+def force_viewport_mesh_update2(node_tree):
+    for obj in bpy.data.objects:
+        for slot in obj.material_slots:
+            if slot.material.luxcore.node_tree == node_tree:
+                if obj.data:
+                    obj.data.update_tag()
+                    break
 
 
 def update_opengl_materials(_, context):

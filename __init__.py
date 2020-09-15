@@ -1,15 +1,11 @@
 import bpy
-import addon_utils
 import platform
+import os
+from shutil import which
 
-_, luxblend_is_enabled = addon_utils.check("luxrender")
-if luxblend_is_enabled:
-    addon_utils.disable("luxrender", default_set=True)
-    print("Disabled the old LuxBlend addon.")
-    raise Exception("\n\nThe old LuxBlend addon causes conflicts, "
-                    "so it was disabled. Save your user preferences "
-                    "and restart Blender before you can enable the "
-                    "new addon.")
+def get_bin_directory():
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(current_dir, "bin")
 
 if platform.system() == "Darwin":
     if bpy.app.version < (2, 82, 7):
@@ -17,6 +13,38 @@ if platform.system() == "Darwin":
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
+        
+if platform.system() == "Windows":
+    # Ensure nvrtc-builtins64_101.dll can be found
+    bin_directory = get_bin_directory()
+
+    try:
+        from ctypes import windll, c_wchar_p
+        from ctypes.wintypes import DWORD
+
+        AddDllDirectory = windll.kernel32.AddDllDirectory
+        AddDllDirectory.restype = DWORD
+        AddDllDirectory.argtypes = [c_wchar_p]
+
+        os.environ["PATH"] = bin_directory + os.pathsep + os.environ["PATH"]
+        AddDllDirectory(bin_directory)
+    except AttributeError:
+        # Windows 7 users might be missing this update
+        raise Exception("\n\nYou need to install this update: "
+                        "https://www.microsoft.com/en-us/download/details.aspx?id=26764") from None
+
+if platform.system() in {"Linux", "Darwin"}:
+    # Required for downloads from the LuxCore Online Library
+    import certifi
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+    os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
+    
+    # Make sure denoiser is executable
+    denoiser_path = which("oidnDenoise", mode=os.F_OK, path=get_bin_directory() + os.pathsep + os.environ["PATH"])
+    if not os.access(denoiser_path, os.X_OK):
+        print("Making LuxCore denoiser executable")
+        os.chmod(denoiser_path, 0o755)
+
 
 try:
     from .bin import pyluxcore
@@ -26,6 +54,10 @@ except ImportError as error:
         msg += ("\nYou probably forgot to install one of the "
                 "redistributable packages.\n"
                 "They are listed in the release announcement post.")
+    elif platform.system() == "Linux":
+        if str(error) == "ImportError: libOpenCL.so.1: cannot open shared object file: No such file or directory":
+            msg += ("\nYour OpenCL installation is probably missing or broken. "
+                    "Look up how to install OpenCL on your system.")
     # Raise from None to suppress the unhelpful
     # "during handling of the above exception, ..."
     raise Exception(msg + "\n\nImportError: %s" % error) from None
@@ -33,7 +65,7 @@ except ImportError as error:
 bl_info = {
     "name": "LuxCore",
     "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Philstix",
-    "version": (2, 4),
+    "version": (2, 5),
     "blender": (2, 80, 0),
     "category": "Render",
     "location": "Info header, render engine menu",

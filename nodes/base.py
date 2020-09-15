@@ -167,6 +167,19 @@ class LuxCoreNodeVolume(LuxCoreNode):
     suffix = "vol"  # To avoid collisions with material names
     prefix = "scene.volumes."
 
+    INCOMPATIBLE_TEXTURE_NODES = {
+        "LuxCoreNodeTexCheckerboard2D",
+        "LuxCoreNodeTexDots",
+        "LuxCoreNodeTexHitpoint",
+        "LuxCoreNodeTexImagemap",
+        "LuxCoreNodeTexMapping2D",
+        "LuxCoreNodeTexObjectID",
+        "LuxCoreNodeTexPointiness",
+        "LuxCoreNodeTexRandomPerIsland",
+        "LuxCoreNodeTexUV",
+        "LuxCoreNodeTexWireframe",
+    }
+
     # Common properties that every derived class needs to add
     # priority (IntProperty)
     # color_depth (FloatProperty) - for implicit colordepth texture
@@ -184,15 +197,24 @@ class LuxCoreNodeVolume(LuxCoreNode):
 
         layout.prop(self, "color_depth")
 
-        # Warn the user if he tries to use a 2D texture in a volume because it doesn't work
-        has_2D_input = False
-        for socket in self.inputs:
-            node = utils_node.get_linked_node(socket)
-            if node and "2D Mapping" in node.inputs:
-                has_2D_input = True
-                break
-        if has_2D_input:
-            layout.label(text="Can't use 2D textures!", icon=icons.WARNING)
+        # Warn the user if he tries to use e.g. a 2D texture in a volume because it doesn't work
+        def get_incompatible_inputs(node):
+            if node.bl_idname in self.INCOMPATIBLE_TEXTURE_NODES:
+                return node.name
+
+            for socket in node.inputs:
+                next_node = utils_node.get_linked_node(socket)
+                if next_node:
+                    name = get_incompatible_inputs(next_node)
+                    if name:
+                        return name
+            return None
+
+        incompatible_input = get_incompatible_inputs(self)
+        if incompatible_input:
+            col = layout.column()
+            col.label(text="Incompatible texture!", icon=icons.WARNING)
+            col.label(text=f"({incompatible_input})", icon=icons.WARNING)
 
     def add_common_inputs(self):
         """ Call from derived classes (in init method) """
@@ -346,11 +368,6 @@ class LuxCoreNodeTreePointer(bpy.types.Node, LuxCoreNode):
             print("ERROR: no active output found in node tree", self.node_tree.name)
             return None
 
-        # Ignore the passed-in luxcore_name here.
-        # Not a shader instance (if we ever support inputs, we will need to make
-        # different shader instances for different sets of input parameters)
-        luxcore_name = utils.get_luxcore_name(self.node_tree)
-
         output.export(exporter, depsgraph, props, luxcore_name)
         return luxcore_name
 
@@ -467,3 +484,28 @@ class Roughness:
 
             definitions["uroughness_bf"] = uroughness
             definitions["vroughness_bf"] = vroughness
+
+
+class ThinFilmCoating:
+    THICKNESS_NAME = "Film Thickness (nm)"
+    IOR_NAME = "Film IOR"
+    
+    @staticmethod
+    def init(node):
+        node.add_input("LuxCoreSocketFilmThickness", ThinFilmCoating.THICKNESS_NAME, 300, enabled=False)
+        node.add_input("LuxCoreSocketFilmIOR", ThinFilmCoating.IOR_NAME, 1.5, enabled=False)
+
+    @staticmethod
+    def toggle(node, context):
+        node.inputs[ThinFilmCoating.THICKNESS_NAME].enabled = node.use_thinfilmcoating
+        node.inputs[ThinFilmCoating.IOR_NAME].enabled = node.use_thinfilmcoating
+        utils_node.force_viewport_update(node, context)
+        
+    @staticmethod
+    def export(node, exporter, depsgraph, props, definitions):
+        thickness_socket = node.inputs[ThinFilmCoating.THICKNESS_NAME]
+        thickness = thickness_socket.export(exporter, depsgraph, props)
+        
+        if thickness_socket.is_linked or thickness > 0:
+            definitions["filmthickness"] = thickness
+            definitions["filmior"] = node.inputs[ThinFilmCoating.IOR_NAME].export(exporter, depsgraph, props)

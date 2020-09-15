@@ -1,8 +1,18 @@
+import bpy
 from contextlib import contextmanager
-import numpy as np
-from .. import utils
 from .caches.exported_data import ExportedMesh
 from time import time
+from .. import utils
+from ..utils.errorlog import LuxCoreErrorLog
+
+
+def custom_normals_supported():
+    version = bpy.app.version
+    if version == (2, 82, 7):
+        return True
+    if version[:2] == (2, 83):
+        return True
+    return False
 
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
@@ -11,6 +21,9 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
+        
+        if mesh.has_custom_normals and not custom_normals_supported():
+            LuxCoreErrorLog.add_warning("Custom normals not supported for this Blender version", obj_name=obj.name)
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
         loopTriCount = len(mesh.loop_triangles)
@@ -42,7 +55,8 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
                                                            vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
-                                                           meshPtr, material_count, mesh_transform)
+                                                           meshPtr, material_count, mesh_transform,
+                                                           bpy.app.version)
         
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time

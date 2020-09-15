@@ -12,7 +12,6 @@ def render(engine, depsgraph):
     print("=" * 50)
     scene = depsgraph.scene_eval
     LuxCoreErrorLog.clear()
-    # scene.luxcore.denoiser_log.clear()  # TODO 2.8 merge denoiser log with statistics
     statistics = scene.luxcore.statistics.get_active()
 
     if utils.is_valid_camera(scene.camera):
@@ -48,7 +47,7 @@ def render(engine, depsgraph):
         _add_passes(engine, layer, scene)
         _render_layer(engine, depsgraph, statistics, layer)
 
-        if engine.test_break():
+        if _stop_requested(engine):
             # Blender skips the rest of the render layers anyway
             return
 
@@ -145,7 +144,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
                 utils_render.update_status_msg(stats, engine, depsgraph.scene, config, time_until_film_refresh)
 
                 # Check if the user cancelled during the expensive stats update
-                if engine.test_break() or engine.session.HasDone():
+                if _stop_requested(engine) or engine.session.HasDone():
                     break
 
                 last_stat_refresh = now
@@ -165,7 +164,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
                 checked_optimal_clamp = True
 
         # Check before we sleep
-        if engine.test_break():
+        if _stop_requested(engine):
             break
 
         # Don't use up too much CPU time for this refresh loop, but stay responsive
@@ -174,7 +173,7 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
         sleep(1 / 5)
 
         # Check after we slept, before the next possible expensive operation
-        if engine.test_break():
+        if _stop_requested(engine):
             break
 
     # User wants to stop or halt condition is reached
@@ -189,6 +188,10 @@ def _render_layer(engine, depsgraph, statistics, view_layer):
     # Clean up
     del engine.session
     engine.session = None
+
+
+def _stop_requested(engine):
+    return engine.test_break() or LuxCoreDisplaySettings.stop_requested
 
 
 def _stat_refresh_interval(start, scene):
@@ -242,7 +245,11 @@ def _add_passes(engine, layer, scene):
 
     # Denoiser
     if scene.luxcore.denoiser.enabled:
-        engine.add_pass("DENOISED", 3, "RGB", layer=layer.name)
+        transparent = scene.camera.data.luxcore.imagepipeline.transparent_film
+        if transparent:
+            engine.add_pass("DENOISED", 4, "RGBA", layer=layer.name)
+        else:
+            engine.add_pass("DENOISED", 3, "RGB", layer=layer.name)
 
     if aovs.rgb:
         engine.add_pass("RGB", 3, "RGB", layer=layer.name)
@@ -266,14 +273,34 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("EMISSION", 3, "RGB", layer=layer.name)
     if aovs.direct_diffuse:
         engine.add_pass("DIRECT_DIFFUSE", 3, "RGB", layer=layer.name)
+    if aovs.direct_diffuse_reflect:
+        engine.add_pass("DIRECT_DIFFUSE_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.direct_diffuse_transmit:
+        engine.add_pass("DIRECT_DIFFUSE_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.direct_glossy:
         engine.add_pass("DIRECT_GLOSSY", 3, "RGB", layer=layer.name)
+    if aovs.direct_glossy_reflect:
+        engine.add_pass("DIRECT_GLOSSY_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.direct_glossy_transmit:
+        engine.add_pass("DIRECT_GLOSSY_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.indirect_diffuse:
         engine.add_pass("INDIRECT_DIFFUSE", 3, "RGB", layer=layer.name)
+    if aovs.indirect_diffuse_reflect:
+        engine.add_pass("INDIRECT_DIFFUSE_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.indirect_diffuse_transmit:
+        engine.add_pass("INDIRECT_DIFFUSE_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.indirect_glossy:
         engine.add_pass("INDIRECT_GLOSSY", 3, "RGB", layer=layer.name)
+    if aovs.indirect_glossy_reflect:
+        engine.add_pass("INDIRECT_GLOSSY_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.indirect_glossy_transmit:
+        engine.add_pass("INDIRECT_GLOSSY_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.indirect_specular:
         engine.add_pass("INDIRECT_SPECULAR", 3, "RGB", layer=layer.name)
+    if aovs.indirect_specular_reflect:
+        engine.add_pass("INDIRECT_SPECULAR_REFLECT", 3, "RGB", layer=layer.name)
+    if aovs.indirect_specular_transmit:
+        engine.add_pass("INDIRECT_SPECULAR_TRANSMIT", 3, "RGB", layer=layer.name)
     if aovs.position:
         engine.add_pass("POSITION", 3, "XYZ", layer=layer.name)
     if aovs.shading_normal:
@@ -309,4 +336,3 @@ def _add_passes(engine, layer, scene):
     if lightgroup_pass_names != [default_group_name]:
         for name in lightgroup_pass_names:
             engine.add_pass(name, 3, "RGB", layer=layer.name)
-

@@ -2,7 +2,6 @@ from time import time, sleep
 from ..bin import pyluxcore
 from .. import utils
 from ..export.aovs import get_denoiser_imgpipeline_props
-from ..properties.denoiser_log import DenoiserLogEntry
 from ..properties.denoiser import LuxCoreDenoiser
 from ..properties.display import LuxCoreDisplaySettings
 from ..utils import view_layer as utils_view_layer
@@ -114,7 +113,12 @@ class FrameBufferFinal(object):
 
         if output_name in engine.aov_imagepipelines:
             index = engine.aov_imagepipelines[output_name]
-            output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+            
+            if output_name == "DENOISED" and self._transparent:
+                output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
+            else:
+                output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+
             convert_func = DEFAULT_AOV_SETTINGS.convert_func
         else:
             convert_func = aov.convert_func
@@ -139,7 +143,11 @@ class FrameBufferFinal(object):
             return
 
         output_name = engine.DENOISED_OUTPUT_NAME
-        output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
+        
+        if self._transparent:
+            output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
+        else:
+            output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
         # Refresh when ending the render (Esc/halt condition) or when the user presses the refresh button
         refresh_denoised = render_stopped or LuxCoreDenoiser.refresh
@@ -191,11 +199,7 @@ class FrameBufferFinal(object):
                 session.Resume()
 
             # Add denoiser log entry
-            rendered_time = stats.Get("stats.renderengine.time").GetFloat()
-            settings = scene.luxcore.denoiser
             elapsed = self.denoiser_last_elapsed_time
-            log_entry = DenoiserLogEntry(samples, rendered_time, elapsed, settings)
-            scene.luxcore.denoiser_log.add(log_entry)
 
             # Reset the refresh button
             LuxCoreDenoiser.refresh = False

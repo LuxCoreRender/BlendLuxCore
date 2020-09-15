@@ -1,3 +1,4 @@
+import bpy
 from time import time
 from .. import utils
 import array
@@ -16,10 +17,12 @@ def convert(smoke_obj, channel, depsgraph):
 
     if channel == "density":
         grid = settings.density_grid
-    elif channel == "fire":
+    elif channel == "flame":
         grid = settings.flame_grid
     elif channel == "heat":
         grid = settings.heat_grid
+    elif channel == "temperature":
+        grid = settings.temperature_grid
     elif channel == "color":
         grid = settings.color_grid
     elif channel == "velocity":
@@ -40,9 +43,12 @@ def convert(smoke_obj, channel, depsgraph):
     resolution = list(settings.domain_resolution)
 
     # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
-    if settings.use_high_resolution and channel not in {"velocity", "heat"}:
-        for i in range(3):
-            resolution[i] *= settings.amplify + 1
+    if bpy.app.version[:2] < (2, 82):
+        if settings.use_high_resolution and channel not in {"velocity", "heat"}:
+            resolution = [res * (settings.amplify + 1) for res in resolution]
+    else:
+        if settings.use_noise:
+            resolution = [res * settings.noise_scale for res in resolution]
 
     print("conversion to array took %.3f s" % (time() - start))
 

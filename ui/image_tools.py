@@ -32,8 +32,12 @@ class LUXCORE_IMAGE_PT_display(Panel, LuxCoreImagePanel):
         display = scene.luxcore.display
         config = scene.luxcore.config
 
+        row = layout.row()
+        row.enabled = LuxCoreRenderEngine.final_running and not LuxCoreDisplaySettings.stop_requested
+        row.operator("luxcore.stop_render", text="Stop", icon=icons.STOP)
+
         text = "Resume" if LuxCoreDisplaySettings.paused else "Pause"
-        icon = "PLAY" if LuxCoreDisplaySettings.paused else "PAUSE"
+        icon = icons.START if LuxCoreDisplaySettings.paused else icons.PAUSE
         row = layout.row()
         row.enabled = LuxCoreRenderEngine.final_running
         row.operator("luxcore.toggle_pause", text=text, icon=icon)
@@ -72,7 +76,7 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
             layout.prop(denoiser, "max_memory_MB")
 
         if denoiser.enabled and denoiser.type == "BCD":
-            if config.sampler == "METROPOLIS" and not config.use_tiles:
+            if config.get_sampler() == "METROPOLIS" and not config.use_tiles:
                 layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
 
         sub = layout.column(align=True)
@@ -86,28 +90,6 @@ class LUXCORE_IMAGE_PT_denoiser(Panel, LuxCoreImagePanel):
         if image:
             iuser = context.space_data.image_user
             col.template_image_layers(image, iuser)
-
-        log_entries = context.scene.luxcore.denoiser_log.entries
-        if log_entries:
-            entry = log_entries[-1]
-            col = layout.column(align=True)
-            box = col.box()
-            box.label(text="Denoised Image Stats", icon="IMAGE_DATA")
-            box = col.box()
-            subcol = box.column()
-            subcol.label(text="Samples: %d" % entry.samples)
-            subcol.label(text="Render Time: " + utils_ui.humanize_time(entry.elapsed_render_time))
-            subcol.label(text="Denoising Duration: " + utils_ui.humanize_time(entry.elapsed_denoiser_time))
-
-            if context.scene.luxcore.denoiser.type == "BCD":
-                box = col.box()
-                subcol = box.column()
-                subcol.label(text="Last Denoiser Settings:", icon="UI")
-                subcol.label(text="Remove Fireflies: " + ("Enabled" if entry.filter_spikes else "Disabled"))
-                subcol.label(text="Histogram Distance Threshold: " + str(entry.hist_dist_thresh))
-                subcol.label(text="Search Window Radius: " + str(entry.search_window_radius))
-                subcol.label(text="Scales: " + str(entry.scales))
-                subcol.label(text="Patch Radius: " + str(entry.patch_radius))
 
 
 class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
@@ -141,17 +123,15 @@ class LUXCORE_IMAGE_PT_statistics(Panel, LuxCoreImagePanel):
 
     @staticmethod
     def icon(stat, other_stat):
-        return "NONE"
-        # TODO 2.8 try to find good icons for better/worse/equal
-        # if not stat.can_compare():
-        #     return "NONE"
-        #
-        # if stat.is_better(other_stat):
-        #     return "COLOR_GREEN"
-        # elif stat.is_equal(other_stat):
-        #     return "COLOR_BLUE"
-        # else:
-        #     return "COLOR_RED"
+        if not stat.can_compare():
+            return icons.NONE
+
+        if stat.is_better(other_stat):
+            return icons.GREEN_RHOMBUS
+        elif stat.is_equal(other_stat):
+            return icons.NONE
+        else:
+            return icons.RED_RHOMBUS
 
     def stat_lists_by_category(self, stats):
         stat_lists = []

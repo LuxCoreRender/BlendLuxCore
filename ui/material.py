@@ -4,6 +4,23 @@ from ..operators.node_tree_presets import LUXCORE_OT_preset_material
 from ..ui import icons
 
 
+def lux_mat_template_ID(layout, material):
+    row = layout.row(align=True)
+    row.operator("luxcore.material_select", icon=icons.MATERIAL, text="")
+
+    if material:
+        row.prop(material, "name", text="")
+        if material.users > 1:
+            # TODO this thing is too wide
+            row.operator("luxcore.material_copy", text=str(material.users))
+        row.prop(material, "use_fake_user", text="")
+        row.operator("luxcore.material_copy", text="", icon=icons.DUPLICATE)
+        row.operator("luxcore.material_unlink", text="", icon=icons.CLEAR)
+    else:
+        row.operator("luxcore.material_new", text="New", icon=icons.ADD)
+    return row
+
+
 class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
     """
     Material UI Panel
@@ -59,20 +76,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
             # Note that we don't use layout.template_ID() because we can't
             # control the copy operator in that template.
             # So we mimic our own template_ID.
-
-            row = layout.row(align=True)
-            row.operator("luxcore.material_select", icon=icons.MATERIAL, text="")
-
-            if obj.active_material:
-                row.prop(obj.active_material, "name", text="")
-                if obj.active_material.users > 1:
-                    # TODO this thing is too wide
-                    row.operator("luxcore.material_copy", text=str(obj.active_material.users))
-                row.prop(obj.active_material, "use_fake_user", text="")
-                row.operator("luxcore.material_copy", text="", icon=icons.DUPLICATE)
-                row.operator("luxcore.material_unlink", text="", icon=icons.CLEAR)
-            else:
-                row.operator("luxcore.material_new", text="New", icon=icons.ADD)
+            row = lux_mat_template_ID(layout, obj.active_material)
 
             if slot:
                 row = row.row()
@@ -88,7 +92,7 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
                 layout.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
 
             if not mat.luxcore.node_tree and not mat.luxcore.use_cycles_nodes:
-                layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use LuxCore Material Nodes")
+                layout.operator("luxcore.mat_nodetree_new", icon=icons.NODETREE, text="Use LuxCore Material Nodes")
 
             if mat.use_nodes and mat.node_tree:
                 layout.prop(mat.luxcore, "use_cycles_nodes")
@@ -137,6 +141,22 @@ class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
         row = layout.row(align=True)
         preview = context.material.luxcore.preview
         row.prop(preview, "zoom")
+        
+        
+class LUXCORE_PT_material_settings(MaterialButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Settings"
+    bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 4
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return context.material and (engine == "LUXCORE") and context.material.luxcore.use_cycles_nodes
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(context.material, "pass_index")
 
 
 # Since we can't disable the original MATERIAL_PT_viewport panel, it makes no sense to add our own

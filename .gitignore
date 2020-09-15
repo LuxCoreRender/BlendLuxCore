@@ -2,9 +2,6 @@
 __pycache__
 **/*.blend1
 
-# Test output
-tests/full_export/log.txt
-
 # Release (ignore everything except the package script)
 release/*
 !release/package_releases.py

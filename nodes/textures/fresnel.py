@@ -64,7 +64,7 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
         elif self.input_type == "preset":
             definitions = {
                 "type": "fresnelpreset",
-                "name": self.preset,
+                "name": self.preset.replace("_", " "),
             }
         else:
             #Fresnel data file

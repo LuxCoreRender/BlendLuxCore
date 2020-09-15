@@ -2,8 +2,9 @@ import bpy
 import mathutils
 import math
 import re
-import os
 import hashlib
+import os
+from os.path import basename, dirname
 from ..bin import pyluxcore
 from . import view_layer
 
@@ -336,12 +337,20 @@ def find_active_vertex_color_layer(vertex_colors):
     return None
 
 
-def is_instance_visible(dg_obj_instance, obj):
-    return (dg_obj_instance.show_self or dg_obj_instance.show_particles) and is_obj_visible(obj)
+def is_instance_visible(dg_obj_instance, obj, context):
+    if not (dg_obj_instance.show_self or dg_obj_instance.show_particles):
+        return False
+    
+    if context:    
+        viewport_vis_obj = dg_obj_instance.parent if dg_obj_instance.parent else obj
+        if not viewport_vis_obj.visible_in_viewport_get(context.space_data):
+            return False
+        
+    return is_obj_visible(obj)
 
 
 def is_obj_visible(obj):
-    if obj.type not in EXPORTABLE_OBJECTS or obj.luxcore.exclude_from_render:
+    if obj.luxcore.exclude_from_render or obj.type not in EXPORTABLE_OBJECTS:
         return False
 
     # Do not export the object if it's made completely invisible through Cycles settings
@@ -445,10 +454,16 @@ def use_instancing(obj, scene, is_viewport_render):
     return False
 
 
-def find_smoke_domain_modifier(obj):    
-    for mod in obj.modifiers:
-        if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
-            return mod
+def find_smoke_domain_modifier(obj):
+    if bpy.app.version[:2] < (2, 82):
+        for mod in obj.modifiers:
+            if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
+                return mod
+    else:
+        for mod in obj.modifiers:
+            if mod.type == "FLUID" and mod.fluid_type == "DOMAIN":
+                return mod
+
     return None
 
 
@@ -520,7 +535,11 @@ def pluralize(format_str, amount):
 
 
 def is_opencl_build():
-    return not pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool()
+    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_OPENCL").GetBool()
+    
+    
+def is_cuda_build():
+    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_CUDA").GetBool()
 
 
 def image_sequence_resolve_all(image):
@@ -563,7 +582,7 @@ def openVDB_sequence_resolve_all(file):
     # A file sequence has a running number at the end of the filename, e.g. name001.ext
     # in case of the Blender cache files the structure is name_frame_index.ext
 
-    #Test if the filename structure matches the Blender nomenclature
+    # Test if the filename structure matches the Blender nomenclature
     matchstr = r'(.*)_([0-9]{6})_([0-9]{2})'
     matchObj = re.match(matchstr, filename_noext)
 
@@ -571,9 +590,6 @@ def openVDB_sequence_resolve_all(file):
         matchstr = r'(\D*)([0-9]+)'
         # Test if the filename structure matches a general sequence structure
         matchObj = re.match(matchstr, filename_noext)
-
-    name = ""
-
 
     if matchObj:
         name = matchObj.group(1)
@@ -623,3 +639,21 @@ def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_ren
 
 def in_material_shading_mode(context):
     return context and context.space_data.shading.type == "MATERIAL"
+
+
+def get_addon_preferences(context):
+    addon_name = basename(dirname(dirname(__file__)))
+    return context.preferences.addons[addon_name].preferences
+
+
+def count_index(func):
+    """
+    A decorator that increments an index each time the decorated function is called.
+    It also passes the index as a keyword argument to the function.
+    """
+    def wrapper(*args, **kwargs):
+        kwargs["index"] = wrapper.index
+        wrapper.index += 1
+        return func(*args, **kwargs)
+    wrapper.index = 0
+    return wrapper

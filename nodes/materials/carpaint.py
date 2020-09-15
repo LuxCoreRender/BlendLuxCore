@@ -94,7 +94,7 @@ class LuxCoreNodeMatCarpaint(bpy.types.Node, LuxCoreNodeMaterial):
         }
 
         if self.preset != "manual":
-            definitions["preset"] = self.preset
+            definitions["preset"] = self.preset.replace("_", " ")
 
         self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

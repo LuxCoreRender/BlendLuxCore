@@ -9,6 +9,13 @@ from . import aovs
 from .imagepipeline import use_backgroundimage
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
+from ..utils import get_addon_preferences
+
+
+class SamplingOverlap:
+    PROGRESSIVE = 1
+    CACHE_FRIENDLY = 32
+    OUT_OF_CORE = 32
 
 
 def convert(exporter, scene, context=None, engine=None):
@@ -25,8 +32,9 @@ def convert(exporter, scene, context=None, engine=None):
         is_viewport_render = context is not None
         in_material_shading_mode = utils.in_material_shading_mode(context)
         denoiser_enabled = ((not is_viewport_render and scene.luxcore.denoiser.enabled)
-                            or (is_viewport_render and scene.luxcore.viewport.denoise
+                            or (is_viewport_render and scene.luxcore.viewport.use_denoiser
                                 and not in_material_shading_mode))
+        preferences = get_addon_preferences(bpy.context)
 
         if is_viewport_render:
             # Viewport render
@@ -62,9 +70,9 @@ def convert(exporter, scene, context=None, engine=None):
             "scene.epsilon.max": config.max_epsilon,
         })
 
-        if config.film_opencl_enable and config.film_opencl_device != "none":
+        if preferences.film_device not in {"", "none"}:
             definitions["film.opencl.enable"] = True
-            definitions["film.opencl.device"] = int(config.film_opencl_device)
+            definitions["film.opencl.device"] = int(preferences.film_device)
         else:
             definitions["film.opencl.enable"] = False
 
@@ -81,6 +89,8 @@ def convert(exporter, scene, context=None, engine=None):
         # Filter
         if config.filter == "GAUSSIAN":
             definitions["film.filter.gaussian.alpha"] = config.gaussian_alpha
+        elif config.filter == "SINC":
+            definitions["film.filter.sinc.tau"] = config.sinc_tau
 
         use_filesaver = utils.using_filesaver(context, scene)
 
@@ -102,6 +112,10 @@ def convert(exporter, scene, context=None, engine=None):
         if scene.render.threads_mode == "FIXED":
             definitions["native.threads.count"] = scene.render.threads
 
+        # Enable/disable OptiX
+        if preferences.gpu_backend == "CUDA":
+            definitions["context.cuda.optix.enable"] = preferences.use_optix_if_available
+
         _convert_seed(scene, definitions)
 
         # Create the properties
@@ -116,6 +130,8 @@ def convert(exporter, scene, context=None, engine=None):
         msg = 'Config: %s' % error
         # Note: Exceptions in the config are critical, we can't render without a config
         LuxCoreErrorLog.add_error(msg)
+        import traceback
+        traceback.print_exc()
         return pyluxcore.Properties()
 
 
@@ -128,7 +144,7 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
         definitions["opencl.gpu.use"] = False
         definitions["opencl.native.threads.count"] = 0
     else:
-        opencl = scene.luxcore.opencl
+        opencl = scene.luxcore.devices
         definitions["opencl.cpu.use"] = False
         definitions["opencl.gpu.use"] = True
         definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
@@ -259,14 +275,47 @@ def _convert_final_engine(scene, definitions, config):
         # TILEPATH needs exactly this sampler
         sampler = "TILEPATHSAMPLER"
     else:
-        sampler = config.sampler
+        sampler = config.get_sampler()
+        
+    if sampler in {"SOBOL", "RANDOM"}:
+        sampler_type = sampler.lower()
+        
+        # Adaptive sampling
         adaptive_strength = config.sobol_adaptive_strength
         if adaptive_strength > 0:
             definitions["film.noiseestimation.warmup"] = config.noise_estimation.warmup
             definitions["film.noiseestimation.step"] = config.noise_estimation.step
-        definitions["sampler.sobol.adaptive.strength"] = adaptive_strength
-        definitions["sampler.random.adaptive.strength"] = adaptive_strength
+        definitions[f"sampler.{sampler_type}.adaptive.strength"] = adaptive_strength
+        
+        # Sampler pattern
+        if config.out_of_core:
+            bucketsize = 1
+            tilesize = 16
+            supersampling = int(config.out_of_core_supersampling)
+            overlapping = SamplingOverlap.OUT_OF_CORE
+        else:
+            if config.sampler_pattern == "PROGRESSIVE":
+                bucketsize = 16
+                tilesize = 16
+                supersampling = 1
+                overlapping = SamplingOverlap.PROGRESSIVE
+            elif config.sampler_pattern == "CACHE_FRIENDLY":
+                bucketsize = 1
+                tilesize = 16
+                supersampling = 1
+                overlapping = SamplingOverlap.CACHE_FRIENDLY
+            else:
+                raise Exception("Unknown sampler pattern")
+        
+        definitions[f"sampler.{sampler_type}.bucketsize"] = bucketsize  # Must be power of 2
+        definitions[f"sampler.{sampler_type}.tilesize"] = tilesize  # Must be power of 2
+        definitions[f"sampler.{sampler_type}.supersampling"] = supersampling
+        definitions[f"sampler.{sampler_type}.overlapping"] = overlapping
+    elif sampler == "METROPOLIS":
         _convert_metropolis_settings(definitions, config)
+    
+    if config.out_of_core:
+        definitions["opencl.outofcore.enable"] = True
 
     return luxcore_engine, sampler
 
@@ -405,13 +454,13 @@ def _convert_photongi_settings(context, scene, definitions, config):
     definitions.update({
         "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000000),
         "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
+        "path.photongi.glossinessusagethreshold": photongi.glossinessusagethreshold,
 
         "path.photongi.indirect.enabled": photongi.indirect_enabled,
         "path.photongi.indirect.maxsize": 0,  # Set to 0 to use haltthreshold stop condition
         "path.photongi.indirect.haltthreshold": indirect_haltthreshold,
         "path.photongi.indirect.lookup.radius": indirect_radius,
         "path.photongi.indirect.lookup.normalangle": degrees(photongi.indirect_normalangle),
-        "path.photongi.indirect.glossinessusagethreshold": photongi.indirect_glossinessusagethreshold,
         "path.photongi.indirect.usagethresholdscale": photongi.indirect_usagethresholdscale,
 
         "path.photongi.caustic.enabled": photongi.caustic_enabled,

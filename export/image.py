@@ -12,7 +12,12 @@ class ImageExporter(object):
 
     @classmethod
     def _save_to_temp_file(cls, image):
-        key = utils.make_key(image)
+        # Note: We can't use utils.make_key(image) here because the memory address
+        # might be re-used on undo, causing a key collision
+        if image.filepath_raw:
+            key = image.filepath_raw
+        else:
+            key = image.name
 
         if key in cls.temp_images:
             # Image was already exported
@@ -40,8 +45,8 @@ class ImageExporter(object):
                 image.filepath_raw = orig_filepath
                 image.source = orig_source
 
-        # Only store the key once we are sure that everything went OK
-        cls.temp_images[key] = temp_image
+            # Only store the key once we are sure that everything went OK
+            cls.temp_images[key] = temp_image
         return temp_image.name
 
     @classmethod

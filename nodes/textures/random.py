@@ -16,6 +16,7 @@ class LuxCoreNodeTexRandom(bpy.types.Node, LuxCoreNodeTexture):
         self.outputs.new("LuxCoreSocketFloatUnbounded", "Value")
 
     def draw_buttons(self, context, layout):
+        layout.label(text="Computationally expensive!")
         layout.prop(self, "seed")
     
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):

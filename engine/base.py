@@ -48,19 +48,22 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def reset(self):
         self.framebuffer = None
         self.exporter = None
-        self.error = None
         self.aov_imagepipelines = {}
         self.viewport_start_time = 0
         self.starting_session = False
         self.viewport_starting_message_shown = False
+        self.viewport_fatal_error = None
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)
-        if getattr(self, "session", None):
-            if not self.is_preview:
-                print("[Engine] del: stopping session")
-            self.session.Stop()
-            del self.session
+        try:
+            if getattr(self, "session", None):
+                if not self.is_preview:
+                    print("[Engine] del: stopping session")
+                self.session.Stop()
+                del self.session
+        except ReferenceError:
+            print("[Engine] del: RenderEngine struct was already deleted")
 
     def log_listener(self, msg):
         if "Direct light sampling cache entries" in msg:
@@ -78,6 +81,7 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         try:
             LuxCoreRenderEngine.final_running = True
             LuxCoreDisplaySettings.paused = False
+            LuxCoreDisplaySettings.stop_requested = False
             TileStats.reset()
             LuxCoreLog.add_listener(self.log_listener)
             final.render(self, depsgraph)
@@ -138,7 +142,11 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
         # Denoiser
         if scene.luxcore.denoiser.enabled:
-            self.register_pass(scene, renderlayer, "DENOISED", 3, "RGB", "COLOR")
+            transparent = scene.camera.data.luxcore.imagepipeline.transparent_film
+            if transparent:
+                self.register_pass(scene, renderlayer, "DENOISED", 4, "RGBA", "COLOR")
+            else:
+                self.register_pass(scene, renderlayer, "DENOISED", 3, "RGB", "COLOR")
 
         aovs = renderlayer.luxcore.aovs
 
@@ -166,14 +174,34 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "EMISSION", 3, "RGB", "COLOR")
         if aovs.direct_diffuse:
             self.register_pass(scene, renderlayer, "DIRECT_DIFFUSE", 3, "RGB", "COLOR")
+        if aovs.direct_diffuse_reflect:
+            self.register_pass(scene, renderlayer, "DIRECT_DIFFUSE_REFLECT", 3, "RGB", "COLOR")
+        if aovs.direct_diffuse_transmit:
+            self.register_pass(scene, renderlayer, "DIRECT_DIFFUSE_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.direct_glossy:
             self.register_pass(scene, renderlayer, "DIRECT_GLOSSY", 3, "RGB", "COLOR")
+        if aovs.direct_glossy_reflect:
+            self.register_pass(scene, renderlayer, "DIRECT_GLOSSY_REFLECT", 3, "RGB", "COLOR")
+        if aovs.direct_glossy_transmit:
+            self.register_pass(scene, renderlayer, "DIRECT_GLOSSY_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.indirect_diffuse:
             self.register_pass(scene, renderlayer, "INDIRECT_DIFFUSE", 3, "RGB", "COLOR")
+        if aovs.indirect_diffuse_reflect:
+            self.register_pass(scene, renderlayer, "INDIRECT_DIFFUSE_REFLECT", 3, "RGB", "COLOR")
+        if aovs.indirect_diffuse_transmit:
+            self.register_pass(scene, renderlayer, "INDIRECT_DIFFUSE_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.indirect_glossy:
             self.register_pass(scene, renderlayer, "INDIRECT_GLOSSY", 3, "RGB", "COLOR")
+        if aovs.indirect_glossy_reflect:
+            self.register_pass(scene, renderlayer, "INDIRECT_GLOSSY_REFLECT", 3, "RGB", "COLOR")
+        if aovs.indirect_glossy_transmit:
+            self.register_pass(scene, renderlayer, "INDIRECT_GLOSSY_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.indirect_specular:
             self.register_pass(scene, renderlayer, "INDIRECT_SPECULAR", 3, "RGB", "COLOR")
+        if aovs.indirect_specular_reflect:
+            self.register_pass(scene, renderlayer, "INDIRECT_SPECULAR_REFLECT", 3, "RGB", "COLOR")
+        if aovs.indirect_specular_transmit:
+            self.register_pass(scene, renderlayer, "INDIRECT_SPECULAR_TRANSMIT", 3, "RGB", "COLOR")
         if aovs.position:
             self.register_pass(scene, renderlayer, "POSITION", 3, "XYZ", "VECTOR")
         if aovs.shading_normal:
