@@ -146,6 +146,7 @@ class LuxCoreImagepipelineWhiteBalance(PropertyGroup, LuxCoreImagepipelinePlugin
 
     temperature: FloatProperty(name="Temperature", default=6500, min=1000, max=10000,
                           description="White point temperature")
+    reverse: BoolProperty(name="Reverse", default=True)
 
 
 class LuxCoreImagepipelineCameraResponseFunc(PropertyGroup, LuxCoreImagepipelinePlugin):

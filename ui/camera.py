@@ -394,6 +394,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_white_balance(CameraButtonsPanel, Panel):
         layout.enabled = white_balance.enabled
 
         layout.prop(white_balance, "temperature", slider=True)
+        layout.prop(white_balance, "reverse")
 
 
 class LUXCORE_CAMERA_PT_image_pipeline_camera_response_function(CameraButtonsPanel, Panel):

@@ -203,6 +203,7 @@ def _vignetting(definitions, index, vignetting):
 def _white_balance(definitions, index, white_balance):
     definitions[str(index) + ".type"] = "WHITE_BALANCE"
     definitions[str(index) + ".temperature"] = white_balance.temperature
+    definitions[str(index) + ".reverse"] = white_balance.reverse
     return index + 1
 
 
