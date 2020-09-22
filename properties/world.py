@@ -59,6 +59,13 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
                                    description=RGB_GAIN_DESC)
     importance: FloatProperty(name="Importance", default=1, min=0, description=IMPORTANCE_DESCRIPTION)
     lightgroup: StringProperty(name="Light Group", description=LIGHTGROUP_DESC)
+    temperature: FloatProperty(name="Temperature", default=6500, min=0, soft_max=13000, step=100, precision=0,
+                               description="Blackbody Temperature in Kelvin")
+    color_modes = [
+        ("rgb", "RGB Color", "", 0),
+        ("temperature", "Temperature", "", 1),
+    ]
+    color_mode: EnumProperty(name="Color Mode", items=color_modes, default="rgb")
 
     # sky2 settings
     def poll_sun(self, obj):

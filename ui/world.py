@@ -48,12 +48,21 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
 
         if world.luxcore.light != "none":
             is_sky = world.luxcore.light == "sky2"
-            col = layout.column(align=True)
             if (is_sky or (world.luxcore.light == "infinite" and world.luxcore.image)):
                 rgb_gain_label = "Tint"
             else:
-                rgb_gain_label = "Color" 
-            col.prop(world.luxcore, "rgb_gain", text=rgb_gain_label)
+                rgb_gain_label = "Color"
+
+            col = layout.column()
+            row = col.row()
+            row.prop(world.luxcore, "color_mode", expand=True)
+
+            if world.luxcore.color_mode == "rgb":
+                col.prop(world.luxcore, "rgb_gain", text=rgb_gain_label)
+            elif world.luxcore.color_mode == "temperature":
+                col.prop(world.luxcore, "temperature", slider=True)
+            else:
+                raise Exception("Unknown color mode")
 
             has_sun = world.luxcore.sun and world.luxcore.sun.type == "LIGHT"
 

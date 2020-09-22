@@ -96,14 +96,22 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        col = layout.column(align=True)
+        col = layout.column()
+        row = col.row()
+        row.prop(light.luxcore, "color_mode", expand=True)
+
         if light.type == "AREA" and light.luxcore.node_tree:
             col.label(text="Light color is defined by emission node", icon=icons.INFO)
         elif light.type == "SUN" and light.luxcore.light_type == "sun":
             col.label(icon="INFO", text="Sun color and brightness are driven by the sun position")
         else:
-            col.prop(light.luxcore, "rgb_gain", text="Color")
-        
+            if light.luxcore.color_mode == "rgb":
+                col.prop(light.luxcore, "rgb_gain", text="Color")
+            elif light.luxcore.color_mode == "temperature":
+                col.prop(light.luxcore, "temperature", slider=True)
+            else:
+                raise Exception("Unknown color mode")
+
         layout.separator()
         
         col = layout.column(align=True)

@@ -227,7 +227,7 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
             # point/sphere
             definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
 
-        _define_brightness(light, definitions)
+        _define_brightness_and_color(light, definitions)
 
         # Position is set by transformation property
         definitions["position"] = [0, 0, 0]
@@ -295,7 +295,7 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
             definitions["coneangle"] = coneangle
             definitions["conedeltaangle"] = conedeltaangle
 
-        _define_brightness(light, definitions)
+        _define_brightness_and_color(light, definitions)
 
         # Position and direction are set by transformation property
         definitions["position"] = [0, 0, 0]
@@ -310,7 +310,7 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
             definitions["type"] = "laser"
             definitions["radius"] = light.size / 2
 
-            _define_brightness(light, definitions)
+            _define_brightness_and_color(light, definitions)
 
             # Position and direction are set by transformation property
             definitions["position"] = [0, 0, 0]
@@ -481,8 +481,15 @@ def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
     definitions["gain"] = apply_exposure(gain, world.luxcore.exposure)
     definitions["importance"] = importance
     definitions["id"] = lightgroup_id
-    
-    tint_color = list(world.luxcore.rgb_gain)
+
+    if world.luxcore.color_mode == "rgb":
+        tint_color = list(world.luxcore.rgb_gain)
+    elif world.luxcore.color_mode == "temperature":
+        tint_color = [1, 1, 1]
+        definitions["temperature"] = world.luxcore.temperature
+        definitions["temperature.normalize"] = True
+    else:
+        raise Exception("Unkown color mode")
 
     light_type = world.luxcore.light
     if light_type == "sky2":
@@ -711,6 +718,15 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         "visibility.indirect.specular.enable": light.luxcore.visibility_indirect_specular,
     }
 
+    if light.luxcore.color_mode == "rgb":
+        mat_definitions["emission"] = list(light.luxcore.rgb_gain)
+    elif light.luxcore.color_mode == "temperature":
+        mat_definitions["emission"] = [1, 1, 1]
+        mat_definitions["emission.temperature"] = light.luxcore.temperature
+        mat_definitions["emission.temperature.normalize"] = True
+    else:
+        raise Exception("Unkown color mode")
+
     if light.luxcore.light_unit == "power":
         mat_definitions["emission.power"] = light.luxcore.power / ( 2 * math.pi * (1 - math.cos(light.luxcore.spread_angle/2) ))
         mat_definitions["emission.efficency"] = light.luxcore.efficacy
@@ -734,7 +750,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
         if light.luxcore.per_square_meter:
             mat_definitions["emission.power"] = 0.0
             mat_definitions["emission.efficency"] = 0.0
-            mat_definitions["emission.gain"] = [light.luxcore.candela]*3
+            mat_definitions["emission.gain"] = [light.luxcore.candela] * 3
             mat_definitions["emission.gain.normalizebycolor"] = light.luxcore.normalizebycolor
         else:
             # Multiply with pi to match brightness with other light types
@@ -813,46 +829,68 @@ def apply_exposure(gain, exposure):
     return [x * pow(2, exposure) for x in gain]
 
 
-def _define_brightness(light, definitions):
-    definitions["color"] = list(light.luxcore.rgb_gain)
-        
+def _define_brightness_and_color(light, definitions):
+    # Brightness
+    normalize_by_color = light.luxcore.normalizebycolor
+    gain = None
+
     if light.luxcore.light_unit == "power":
-        definitions["efficency"] = light.luxcore.efficacy
-        definitions["power"] = light.luxcore.power
-        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+        efficency = light.luxcore.efficacy
+        power = light.luxcore.power
+
         if light.luxcore.efficacy == 0 or light.luxcore.power == 0:
-            definitions["gain"] = [0, 0, 0]
+            gain = [0, 0, 0]
         else:
-            definitions["gain"] = [1, 1, 1]
+            gain = [1, 1, 1]
 
     elif light.luxcore.light_unit == "lumen":
-        definitions["efficency"] = 1.0
+        efficency = 1.0
+
         if light.type == "SPOT":
-            definitions["power"] = light.luxcore.lumen
+            power = light.luxcore.lumen
         else:
-            definitions["power"] = light.luxcore.lumen
-        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+            power = light.luxcore.lumen
+
         if light.luxcore.lumen == 0:
-            definitions["gain"] = [0, 0, 0]
+            gain = [0, 0, 0]
         else:
-            definitions["gain"] = [1, 1, 1]
+            gain = [1, 1, 1]
     
     elif light.luxcore.light_unit == "candela":
-        definitions["efficency"] = 1.0
+        efficency = 1.0
+
         if light.type == "SPOT":
-            definitions["power"] = light.luxcore.candela * 2 * math.pi * (1 - math.cos(light.spot_size/2))
+            power = light.luxcore.candela * 2 * math.pi * (1 - math.cos(light.spot_size/2))
         else:
-            definitions["power"] = light.luxcore.candela * 4 * math.pi
-        definitions["normalizebycolor"] = light.luxcore.normalizebycolor
+            power = light.luxcore.candela * 4 * math.pi
+
         if light.luxcore.candela == 0:
-            definitions["gain"] = [0, 0, 0]
+            gain = [0, 0, 0]
         else:
-            definitions["gain"] = [1, 1, 1]
+            gain = [1, 1, 1]
         
+    elif light.luxcore.light_unit == "artistic":
+        efficency = 0.0
+        power = 0.0
+        normalize_by_color = False
     else:
-        definitions["efficency"] = 0.0
-        definitions["power"] = 0.0
-        definitions["normalizebycolor"] = False
+        raise Exception("Unknown light unit")
+
+    definitions["efficency"] = efficency
+    definitions["power"] = power
+    definitions["normalizebycolor"] = normalize_by_color
+    if gain is not None:
+        definitions["gain"] = gain
+
+    # Color
+    if light.luxcore.color_mode == "rgb":
+        definitions["color"] = list(light.luxcore.rgb_gain)
+    elif light.luxcore.color_mode == "temperature":
+        definitions["color"] = [1, 1, 1]
+        definitions["temperature"] = light.luxcore.temperature
+        definitions["temperature.normalize"] = True
+    else:
+        raise Exception("Unkown color mode")
 
 
 def export_ies(definitions, ies, library, is_meshlight=False):

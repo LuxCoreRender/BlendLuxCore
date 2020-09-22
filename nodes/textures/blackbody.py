@@ -9,7 +9,7 @@ class LuxCoreNodeTexBlackbody(bpy.types.Node, LuxCoreNodeTexture):
     bl_width_default = 200
 
     temperature: FloatProperty(update=utils_node.force_viewport_update, name="Temperature", description="Blackbody Temperature in Kelvin",
-                               default=6500, min=0, soft_min=1000, soft_max=10000, step=10)
+                               default=6500, min=0, soft_max=13000, step=100, precision=0)
 
     normalize: BoolProperty(update=utils_node.force_viewport_update, name="Normalize", default=True,
                             description="Bring output from 0-89159.6 to 0-1 range")
