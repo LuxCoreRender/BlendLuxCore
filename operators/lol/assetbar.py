@@ -194,9 +194,11 @@ def draw_callback_2d_search(self, context):
                     w = int(ui_props.thumb_size * img.size[0] / max(img.size[0], img.size[1]))
                     h = int(ui_props.thumb_size * img.size[1] / max(img.size[0], img.size[1]))
                     crop = (0, 0, 1, 1)
+
                     if img.size[0] > img.size[1]:
                         offset = (1 - img.size[1] / img.size[0]) / 2
                         crop = (offset, 0, 1 - offset, 1)
+
                     if img is not None:
                         ui_bgl.draw_image(x, y, w, w, img, 1, crop=crop)
                         if index == ui_props.active_index:
@@ -287,9 +289,10 @@ def draw_tooltip(context, x, y, text='', author='', asset=None, gravatar=None):
         img = bpy.data.images.load(tpath)
         img.name = '.LOL_preview_full'
 
+    #TODO: Load full preview image if it is not available locally
 
     if max(img.size[0], img.size[1]) == 0:
-        return;
+        return
     isizex = int(512 * scale * img.size[0] / max(img.size[0], img.size[1]))
     isizey = int(512 * scale * img.size[1] / max(img.size[0], img.size[1]))
 

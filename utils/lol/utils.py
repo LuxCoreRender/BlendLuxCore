@@ -638,6 +638,24 @@ def load_previews(context, asset_type):
                     # Needed in old Blender versions so the images are not too dark
                     img.colorspace_settings.name = 'Linear'
             else:
+                if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
+                    print('Copy and downscale: ', splitext(asset['url'])[0] + '.jpg')
+                    img = bpy.data.images.load(tpath)
+                    if img.size == (128, 128):
+                        img.name = '.LOL_preview'
+                    else:
+                        from shutil import copyfile
+                        copyfile(tpath, tpath_full)
+                        img = bpy.data.images.load(tpath)
+                        img.scale(128, 128)
+                        img.save()
+                        bpy.data.images.remove(img)
+
+                        asset['thumbnail'] = bpy.data.images.load(tpath)
+                        asset['thumbnail'].name = '.LOL_preview'
+
+
+
                 rootdir = dirname(dirname(dirname(__file__)))
                 path = join(rootdir, 'thumbnails', 'thumbnail_notready.jpg')
                 img = bpy.data.images.load(path)
