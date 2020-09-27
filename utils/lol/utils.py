@@ -336,8 +336,6 @@ class Downloader(threading.Thread):
                     # Needed in old Blender versions so the images are not too dark
                     img.colorspace_settings.name = 'Linear'
 
-                tcom.finished = True
-
             except ConnectionError as error:
                 print("Connection error: Could not download " + imagename)
                 print(error)
@@ -346,6 +344,7 @@ class Downloader(threading.Thread):
                 print(error)
 
             finally:
+                tcom.finished = True
                 try:
                     url_handle.close()
                 except NameError:
@@ -389,10 +388,12 @@ class Downloader(threading.Thread):
                     with zipfile.ZipFile(temp_zip_path) as zf:
                         print("Extracting zip to", os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
                         zf.extractall(os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
-                    tcom.finished = True
 
                 except urllib.error.URLError as err:
                     print("Could not download: %s" % err)
+
+                finally:
+                    tcom.finished = True
 
 
 class ThreadCom:  # object passed to threads to read background process stdout info
