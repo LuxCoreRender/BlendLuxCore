@@ -386,7 +386,7 @@ class LuxCoreConfig(PropertyGroup):
     sampler_gpu: EnumProperty(name="Sampler", items=samplers_gpu, default="SOBOL")
     
     def get_sampler(self):
-        return self.sampler_gpu if self.device == "OCL" else self.sampler
+        return self.sampler_gpu if (self.engine == "PATH" and self.device == "OCL") else self.sampler
 
     # SOBOL properties
     sobol_adaptive_strength: FloatProperty(name="Adaptive Strength", default=0.9, min=0, max=0.95,

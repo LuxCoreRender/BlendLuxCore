@@ -368,6 +368,11 @@ class LuxCoreNodeTreePointer(bpy.types.Node, LuxCoreNode):
             print("ERROR: no active output found in node tree", self.node_tree.name)
             return None
 
+        # Ignore the passed-in luxcore_name here.
+        # Not a shader instance (if we ever support inputs, we will need to make
+        # different shader instances for different sets of input parameters)
+        luxcore_name = utils.get_luxcore_name(self.node_tree)
+
         output.export(exporter, depsgraph, props, luxcore_name)
         return luxcore_name
 
