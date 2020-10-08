@@ -175,9 +175,9 @@ def convert_viewport_engine(context, scene, definitions, config):
     viewport = scene.luxcore.viewport
     using_hybridbackforward = utils.using_hybridbackforward_in_viewport(scene)
 
-    device = config.device
-    if device == "OCL" and not utils.is_opencl_build():
-        msg = "Config: LuxCore was built without OpenCL support, can't use OpenCL engine in viewport"
+    device = viewport.device
+    if device == "OCL" and not (utils.is_opencl_build() or utils.is_cuda_build()):
+        msg = "Config: LuxCore was built without GPU support, can't use GPU engine in viewport"
         LuxCoreErrorLog.add_warning(msg)
         device = "CPU"
 

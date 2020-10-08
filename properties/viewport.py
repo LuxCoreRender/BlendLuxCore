@@ -8,6 +8,12 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
                             description="How long to render in the viewport. "
                                         "When this time is reached, the render is paused")
 
+    devices = [
+        ("CPU", "CPU", "Low latency, but slower rendering than on GPU", 0),
+        ("OCL", "GPU", "High latency, but faster rendering than on CPU", 1),
+    ]
+    device: EnumProperty(name="Device", items=devices, default="CPU")
+
     pixel_sizes = [
         ("1", "1x", "Use the native resolution of the monitor (1 rendered pixel = 1 displayed pixel)", 0),
         ("2", "2x", "Use half the resolution of the monitor (1 rendered pixel = 2x2 displayed pixels)", 1),

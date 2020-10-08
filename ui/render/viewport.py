@@ -24,6 +24,14 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
         viewport = context.scene.luxcore.viewport
         config = context.scene.luxcore.config
         luxcore_engine = config.engine
+
+        if not (luxcore_engine == "BIDIR" and viewport.use_bidir):
+            col = layout.column(align=True)
+            col.prop(viewport, "device", text="Device", expand=False)
+
+            if viewport.device == "OCL" and not (utils.is_opencl_build() or utils.is_cuda_build()):
+                layout.label(text="No GPU support in this BlendLuxCore version", icon=icons.ERROR)
+                layout.label(text="(Falling back to CPU realtime engine)")
         
         layout.prop(viewport, "halt_time")
 
