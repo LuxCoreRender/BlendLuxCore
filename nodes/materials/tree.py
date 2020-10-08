@@ -144,6 +144,7 @@ luxcore_node_categories_material = [
         NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
         NodeItem("LuxCoreNodeTexRandom", label="Random"),
+        NodeItem("LuxCoreNodeTexBombing", label="Bombing"),
     ]),
 
     LuxCoreNodeCategoryMaterial("LUXCORE_MATERIAL_MAPPING", "Mapping", items=[

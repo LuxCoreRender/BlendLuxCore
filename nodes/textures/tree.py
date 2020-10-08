@@ -85,6 +85,7 @@ luxcore_node_categories_texture = [
         NodeItem("LuxCoreNodeTexTimeInfo", label="Time Info"),
         NodeItem("LuxCoreNodeTexUV", label="UV Test"),
         NodeItem("LuxCoreNodeTexRandom", label="Random"),
+        NodeItem("LuxCoreNodeTexBombing", label="Bombing"),
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_MAPPING", "Mapping", items=[
