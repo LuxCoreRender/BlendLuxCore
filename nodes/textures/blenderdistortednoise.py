@@ -2,7 +2,7 @@ import bpy
 from bpy.props import EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 
-from .. import NOISE_BASIS_ITEMS
+from .. import NOISE_BASIS_ITEMS, MIN_NOISE_SIZE
 
 from ... import utils
 from ...utils import node as utils_node
@@ -17,7 +17,7 @@ class LuxCoreNodeTexBlenderDistortedNoise(bpy.types.Node, LuxCoreNodeTexture):
     noise_type: EnumProperty(update=utils_node.force_viewport_update, name="Type", description="Type of noise used", items=NOISE_BASIS_ITEMS,
                                   default="blender_original")
     dist_amount: FloatProperty(update=utils_node.force_viewport_update, name="Distortion", default=1.00)
-    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
+    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=MIN_NOISE_SIZE)
     bright: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1.0, min=0)
     contrast: FloatProperty(update=utils_node.force_viewport_update, name="Contrast", default=1.0, min=0)
 

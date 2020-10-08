@@ -30,4 +30,6 @@ NOISE_TYPE_ITEMS = [
     ("hard_noise", "Hard", "")
 ]
 
+MIN_NOISE_SIZE = 0.0001
+
 COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color"

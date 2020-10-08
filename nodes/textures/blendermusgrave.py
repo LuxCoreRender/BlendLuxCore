@@ -2,7 +2,7 @@ import bpy
 from bpy.props import EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 
-from .. import NOISE_BASIS_ITEMS
+from .. import NOISE_BASIS_ITEMS, MIN_NOISE_SIZE
 
 from ... import utils
 from ...utils import node as utils_node
@@ -21,7 +21,7 @@ class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
 
     musgrave_type: EnumProperty(update=utils_node.force_viewport_update, name="Noise Type", description="Type of noise used", items=musgrave_type_items, default="multifractal")
     noise_basis: EnumProperty(update=utils_node.force_viewport_update, name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS, default="blender_original")
-    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
+    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=MIN_NOISE_SIZE)
     h: FloatProperty(update=utils_node.force_viewport_update, name="Dimension", default=1.0, min=0)
     lacu: FloatProperty(update=utils_node.force_viewport_update, name="Lacunarity", default=2.0)
     octs: FloatProperty(update=utils_node.force_viewport_update, name="Octaves", default=2.0, min=0)

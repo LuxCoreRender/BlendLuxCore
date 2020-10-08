@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
+from .. import MIN_NOISE_SIZE
 
 from ... import utils
 from ...utils import node as utils_node
@@ -23,7 +24,7 @@ class LuxCoreNodeTexBlenderVoronoi(bpy.types.Node, LuxCoreNodeTexture):
     dist_metric: EnumProperty(update=utils_node.force_viewport_update, name="Distance Metric", description="Algorithm used to calculate distance of sample points to feature points",
                                         items=distance_items, default="actual_distance")
     minkowsky_exp: FloatProperty(update=utils_node.force_viewport_update, name="Exponent", default=1.0)
-    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=0)
+    noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=MIN_NOISE_SIZE)
     w1: FloatProperty(update=utils_node.force_viewport_update, name="Weight 1", default=1.0, min=-2, max=2, subtype="FACTOR")
     w2: FloatProperty(update=utils_node.force_viewport_update, name="Weight 2", default=0.0, min=-2, max=2, subtype="FACTOR")
     w3: FloatProperty(update=utils_node.force_viewport_update, name="Weight 3", default=0.0, min=-2, max=2, subtype="FACTOR")
