@@ -8,7 +8,7 @@ class LuxCoreNodeTexBombing(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Bombing"
     bl_width_default = 200
 
-    random_scale: FloatProperty(name="Random Scale", default=100, min=0, soft_max=500, subtype="PERCENTAGE",
+    random_scale: FloatProperty(name="Scale Randomness", default=0, min=0, soft_max=1,
                                 update=utils_node.force_viewport_update)
     use_random_rotation: BoolProperty(name="Random Rotation", default=True,
                                       update=utils_node.force_viewport_update)
@@ -36,7 +36,7 @@ class LuxCoreNodeTexBombing(bpy.types.Node, LuxCoreNodeTexture):
             "background": self.inputs["Background"].export(exporter, depsgraph, props),
             "bullet": self.inputs["Bullet"].export(exporter, depsgraph, props),
             "bullet.mask": self.inputs["Mask"].export(exporter, depsgraph, props),
-            "bullet.randomscale.range": self.random_scale / 100,
+            "bullet.randomscale.range": self.random_scale * 5,
             "bullet.randomrotation.enable": self.use_random_rotation,
             # Mapping
             "mapping.type": "uvmapping2d",
