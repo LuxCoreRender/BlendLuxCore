@@ -271,6 +271,8 @@ def _add_passes(engine, layer, scene):
         engine.add_pass("OBJECT_ID", 1, "X", layer=layer.name)
     if aovs.emission:
         engine.add_pass("EMISSION", 3, "RGB", layer=layer.name)
+    if aovs.caustic:
+        engine.add_pass("CAUSTIC", 3, "RGB", layer=layer.name)
     if aovs.direct_diffuse:
         engine.add_pass("DIRECT_DIFFUSE", 3, "RGB", layer=layer.name)
     if aovs.direct_diffuse_reflect:

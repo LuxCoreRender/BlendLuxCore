@@ -20,7 +20,7 @@ NEED_TONEMAPPING = {
     "INDIRECT_DIFFUSE", "INDIRECT_DIFFUSE_REFLECT", "INDIRECT_DIFFUSE_TRANSMIT",
     "INDIRECT_GLOSSY", "INDIRECT_GLOSSY_REFLECT", "INDIRECT_GLOSSY_TRANSMIT",
     "INDIRECT_SPECULAR", "INDIRECT_SPECULAR_REFLECT", "INDIRECT_SPECULAR_TRANSMIT",
-    "BY_MATERIAL_ID", "BY_OBJECT_ID",
+    "BY_MATERIAL_ID", "BY_OBJECT_ID", "CAUSTIC",
 }
 
 
@@ -54,6 +54,7 @@ def convert(exporter, scene, context=None, engine=None):
 
         pipeline = scene.camera.data.luxcore.imagepipeline
         denoiser = scene.luxcore.denoiser
+        config = scene.luxcore.config
 
         if final:
             # This is the layer that is currently being exported, not the active layer in the UI!
@@ -132,8 +133,7 @@ def convert(exporter, scene, context=None, engine=None):
             if scene.luxcore.denoiser.enabled:
                 pipeline_index = _make_denoiser_imagepipeline(context, scene, pipeline_props, engine,
                                                               pipeline_index, definitions)
-                                                              
-            config = scene.luxcore.config
+
             use_adaptive_sampling = config.get_sampler() in ["SOBOL", "RANDOM"] and config.sobol_adaptive_strength > 0
 
             if use_adaptive_sampling and not utils.using_filesaver(context, scene):
@@ -173,7 +173,7 @@ def _add_output(definitions, output_type_str, pipeline_index=-1, output_id=-1, i
 
 
 def _make_imagepipeline(props, context, scene, output_name, pipeline_index, output_definitions, engine,
-                        output_id=-1, lightgroup_ids=set()):
+                        output_id=-1, lightgroup_ids=None):
     tonemapper = scene.camera.data.luxcore.imagepipeline.tonemapper
 
     if not tonemapper.enabled:

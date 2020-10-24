@@ -26,8 +26,15 @@ class LuxCoreAOVSettings(PropertyGroup):
     object_id: BoolProperty(name="Object ID", default=False,
                        description="Object ID (1 value per object, use the ID Mask Node "
                                    "in compositing nodes to extract a mask)")
+
+    # Light Information
     emission: BoolProperty(name="Emission", default=False,
                        description="Emission R, G, B")
+    caustic: BoolProperty(name="Caustic", default=False,
+                       description="Light that was refracted/reflected by glossy or specular materials. "
+                                   "This AOV is only available when using Path + Light Tracing. "
+                                   "Note that it only contains light traced caustics, not caustics "
+                                   "computed by the PhotonGI caustics cache")
 
     # Direct Light Information
     direct_diffuse: BoolProperty(name="Combined", default=False,

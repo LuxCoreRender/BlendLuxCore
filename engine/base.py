@@ -172,6 +172,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "OBJECT_ID", 1, "X", "VALUE")
         if aovs.emission:
             self.register_pass(scene, renderlayer, "EMISSION", 3, "RGB", "COLOR")
+        if aovs.caustic:
+            self.register_pass(scene, renderlayer, "CAUSTIC", 3, "RGB", "COLOR")
         if aovs.direct_diffuse:
             self.register_pass(scene, renderlayer, "DIRECT_DIFFUSE", 3, "RGB", "COLOR")
         if aovs.direct_diffuse_reflect:

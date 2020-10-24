@@ -74,6 +74,8 @@ class LUXCORE_RENDERLAYER_PT_aovs_light(ViewLayerButtonsPanel, Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
         active_layer = context.window.view_layer
         aovs = active_layer.luxcore.aovs
@@ -82,40 +84,45 @@ class LUXCORE_RENDERLAYER_PT_aovs_light(ViewLayerButtonsPanel, Panel):
         # Not supported by BIDIR
         layout.active = engine_is_path
 
-        col = layout.column()
-        col.use_property_split = True
-        col.use_property_decorate = False
+        flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
+        col = flow.column()
         col.prop(aovs, "emission")
+        col = flow.column()
+        col.prop(aovs, "caustic")
 
-        layout.label(text="Direct Light")
+        col = layout.column()
+        col.use_property_split = False
+        col.use_property_decorate = False
 
-        row = layout.row(align=True)
+        col.label(text="Direct Light")
+
+        row = col.row(align=True)
         row.label(text="Diffuse")
         row.prop(aovs, "direct_diffuse", toggle=True)
         row.prop(aovs, "direct_diffuse_reflect", toggle=True)
         row.prop(aovs, "direct_diffuse_transmit", toggle=True)
 
-        row = layout.row(align=True)
+        row = col.row(align=True)
         row.label(text="Glossy")
         row.prop(aovs, "direct_glossy", toggle=True)
         row.prop(aovs, "direct_glossy_reflect", toggle=True)
         row.prop(aovs, "direct_glossy_transmit", toggle=True)
 
-        layout.label(text="Indirect Light")
+        col.label(text="Indirect Light")
 
-        row = layout.row(align=True)
+        row = col.row(align=True)
         row.label(text="Diffuse")
         row.prop(aovs, "indirect_diffuse", toggle=True)
         row.prop(aovs, "indirect_diffuse_reflect", toggle=True)
         row.prop(aovs, "indirect_diffuse_transmit", toggle=True)
 
-        row = layout.row(align=True)
+        row = col.row(align=True)
         row.label(text="Glossy")
         row.prop(aovs, "indirect_glossy", toggle=True)
         row.prop(aovs, "indirect_glossy_reflect", toggle=True)
         row.prop(aovs, "indirect_glossy_transmit", toggle=True)
 
-        row = layout.row(align=True)
+        row = col.row(align=True)
         row.label(text="Specular")
         row.prop(aovs, "indirect_specular", toggle=True)
         row.prop(aovs, "indirect_specular_reflect", toggle=True)
