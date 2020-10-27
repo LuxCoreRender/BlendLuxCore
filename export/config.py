@@ -288,7 +288,7 @@ def _convert_final_engine(scene, definitions, config):
         definitions[f"sampler.{sampler_type}.adaptive.strength"] = adaptive_strength
         
         # Sampler pattern
-        if config.out_of_core:
+        if config.using_out_of_core():
             bucketsize = 1
             tilesize = 16
             supersampling = int(config.out_of_core_supersampling)
@@ -314,7 +314,7 @@ def _convert_final_engine(scene, definitions, config):
     elif sampler == "METROPOLIS":
         _convert_metropolis_settings(definitions, config)
     
-    if config.out_of_core:
+    if config.using_out_of_core():
         definitions["opencl.outofcore.enable"] = True
 
     return luxcore_engine, sampler
