@@ -96,7 +96,8 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
     # Update progress bar if we have halt conditions
     halt = utils.get_halt_conditions(scene)
     if halt.enable and (halt.use_time or halt.use_samples or halt.use_noise_thresh):
-        rendered_samples = stats.Get("stats.renderengine.pass").GetInt()
+        samples_eye = stats.Get("stats.renderengine.pass.eye").GetInt()
+        samples_light = stats.Get("stats.renderengine.pass.light").GetInt()
         rendered_time = stats.Get("stats.renderengine.time").GetFloat()
         percent = 0
 
@@ -104,6 +105,10 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
             percent = rendered_time / halt.time
 
         if halt.use_samples:
+            if scene.luxcore.config.using_only_lighttracing():
+                rendered_samples = samples_light
+            else:
+                rendered_samples = samples_eye
             percent_samples = rendered_samples / halt.samples
             percent = max(percent, percent_samples)
 
@@ -156,12 +161,22 @@ def get_pretty_stats(config, stats, scene, context=None):
             pretty.append("Time: %ds/%ds" % (rendered_time, halt.time))
 
         # Samples (aka passes)
-        samples = stats.Get("stats.renderengine.pass").GetInt()
+        samples_eye = stats.Get("stats.renderengine.pass.eye").GetInt()
+        samples_light = stats.Get("stats.renderengine.pass.light").GetInt()
+        only_lighttracing = scene.luxcore.config.using_only_lighttracing()
 
-        if halt.enable and halt.use_samples:
-            pretty.append("%d/%d Samples" % (samples, halt.samples))
+        if halt.enable and halt.use_samples and not only_lighttracing:
+            samples_msg = f"Samples {samples_eye}/{halt.samples}"
         else:
-            pretty.append("%d Samples" % samples)
+            samples_msg = f"Samples {samples_eye}"
+
+        if samples_light > 0:
+            if halt.use_samples and only_lighttracing:
+                samples_msg += f" (+ {samples_light}/{halt.samples} Light Tracing)"
+            else:
+                samples_msg += f" (+ {samples_light} Light Tracing)"
+
+        pretty.append(samples_msg)
 
         # Convergence (how many pixels are converged, in percent)
         convergence = stats.Get("stats.renderengine.convergence").GetFloat()

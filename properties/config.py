@@ -517,3 +517,7 @@ class LuxCoreConfig(PropertyGroup):
                                 precision=5,
                                 description="Might need adjustment along with the min epsilon to avoid "
                                             "artifacts due to floating point precision issues")
+
+    def using_only_lighttracing(self):
+        return (self.engine == "PATH" and self.device == "CPU" and self.path.hybridbackforward_enable
+                and self.path.hybridbackforward_lightpartition == 100)

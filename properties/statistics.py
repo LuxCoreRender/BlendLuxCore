@@ -180,7 +180,7 @@ class LuxCoreRenderStats:
         categories.append("Statistics")
         self.render_time = Stat("Render Time", categories[-1],
                                 0, smaller_is_better, time_to_string, get_rounded)
-        self.samples = Stat("Samples", categories[-1], 0, greater_is_better)
+        self.samples_eye = Stat("Samples", categories[-1], 0, greater_is_better)
         categories.append("Performance")
         self.samples_per_sec = Stat("Samples/Sec", categories[-1],
                                     0, greater_is_better, samples_per_sec_to_string, get_rounded)
@@ -229,7 +229,7 @@ class LuxCoreRenderStats:
 
     def update_from_luxcore_stats(self, stat_props):
         self.render_time.value = stat_props.Get("stats.renderengine.time").GetFloat()
-        self.samples.value = stat_props.Get("stats.renderengine.pass").GetInt()
+        self.samples_eye.value = stat_props.Get("stats.renderengine.pass.eye").GetInt()
         self.samples_light_tracing.value = stat_props.Get("stats.renderengine.pass.light").GetInt()
         self.samples_per_sec.value = stat_props.Get("stats.renderengine.total.samplesec").GetFloat()
         self.triangle_count.value = stat_props.Get("stats.dataset.trianglecount").GetUnsignedLongLong()

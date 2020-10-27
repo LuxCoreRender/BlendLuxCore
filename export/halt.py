@@ -41,8 +41,7 @@ def convert(scene):
 
     # Only use light spp halt condition if no eye samples are rendered at all
     config = scene.luxcore.config
-    if (config.engine == "PATH" and config.device == "CPU" and config.path.hybridbackforward_enable
-            and config.path.hybridbackforward_lightpartition == 100):
+    if config.using_only_lighttracing():
         halt_spp_eye = 0
         halt_spp_light = halt_spp
 
