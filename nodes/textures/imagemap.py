@@ -150,6 +150,9 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         if self.image:
             col.prop(self.image, "source", text="")
 
+            if self.image.source in {"MOVIE", "TILED"}:
+                col.label(text="Unsupported Source!", icon=icons.ERROR)
+
         self.image_user.draw(col, context.scene)
         
         if (not self.inputs["2D Mapping"].is_linked and self.projection == "flat" 
