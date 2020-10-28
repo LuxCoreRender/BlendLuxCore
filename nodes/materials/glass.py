@@ -6,10 +6,11 @@ from ..output import get_active_output
 from ...ui import icons
 from ...utils import node as utils_node
 
-CAUCHYC_DESCRIPTION = (
-    "Dispersion strength (cauchy C coefficient)\n"
+CAUCHYB_DESCRIPTION = (
+    "Dispersion strength (cauchy B coefficient)\n"
     "Realistic values range from 0.00354 to 0.01342\n"
-    "Not supported by architectural and rough glass"
+    "Not supported by architectural and rough glass\n"
+    "Note: This used to be labelled Cauchy C, following a different naming convention."
 )
 
 ARCHGLASS_DESCRIPTION = (
@@ -26,10 +27,13 @@ THIN_FILM_DESCRIPTION = (
     "the film thickness, film IOR and the angle of incidence"
 )
 
-
 class LuxCoreSocketCauchyC(bpy.types.NodeSocket, LuxCoreSocketFloat):
+    """
+    For consistency of renewed variable naming, this class should be called 
+    "LuxCoreSocketCauchyB". However, the name was retained for backward compatibility.
+    """
     default_value: FloatProperty(name="Dispersion", default=0, min=0, soft_max=0.01342,
-                                 step=0.1, precision=5, description=CAUCHYC_DESCRIPTION,
+                                 step=0.1, precision=5, description=CAUCHYB_DESCRIPTION,
                                  update=utils_node.force_viewport_update)
 
     def draw(self, context, layout, node, text):
@@ -114,9 +118,9 @@ class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
         if not self.get_interior_volume():
             definitions["interiorior"] = self.inputs["IOR"].export(exporter, depsgraph, props)
 
-        cauchyc = self.inputs["Dispersion"].export(exporter, depsgraph, props)
-        if self.inputs["Dispersion"].is_linked or cauchyc > 0:
-            definitions["cauchyc"] = cauchyc
+        cauchyb = self.inputs["Dispersion"].export(exporter, depsgraph, props)
+        if self.inputs["Dispersion"].is_linked or cauchyb > 0:
+            definitions["cauchyb"] = cauchyb
 
         if self.use_thinfilmcoating:
             ThinFilmCoating.export(self, exporter, depsgraph, props, definitions)
