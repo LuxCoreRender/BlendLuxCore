@@ -9,8 +9,7 @@ from ...utils import node as utils_node
 CAUCHYB_DESCRIPTION = (
     "Dispersion strength (cauchy B coefficient)\n"
     "Realistic values range from 0.00354 to 0.01342\n"
-    "Not supported by architectural and rough glass\n"
-    "Note: This used to be labelled Cauchy C, following a different naming convention."
+    "Not supported by architectural and rough glass"
 )
 
 ARCHGLASS_DESCRIPTION = (
