@@ -4,7 +4,7 @@ from ..ui import icons
 
 
 class LUXCORE_RENDERLAYER_PT_aovs(ViewLayerButtonsPanel, Panel):
-    bl_label = "LuxCore Arbitrary Output Variables (AOVs)"
+    bl_label = "LuxCore AOVs"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_order = 2
 
