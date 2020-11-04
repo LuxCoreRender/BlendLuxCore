@@ -136,6 +136,7 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
 
 def get_pretty_stats(config, stats, scene, context=None):
     halt = utils.get_halt_conditions(scene)
+    engine = config.GetProperties().Get("renderengine.type").GetString()
 
     # Here we collect strings in a list and later join them
     # so the result will look like: "message 1 | message 2 | ..."
@@ -170,7 +171,9 @@ def get_pretty_stats(config, stats, scene, context=None):
         else:
             samples_msg = f"Samples {samples_eye}"
 
-        if samples_light > 0:
+        # Extra info about the amount of light traced samples.
+        # In Bidir engines, the eye samples already include the light traced samples, so this is not needed.
+        if samples_light > 0 and engine not in {"BIDIRCPU", "BIDIRVMCPU"}:
             if halt.use_samples and only_lighttracing:
                 samples_msg += f" (+ {samples_light}/{halt.samples} Light Tracing)"
             else:
@@ -191,7 +194,6 @@ def get_pretty_stats(config, stats, scene, context=None):
     pretty.append("Rays/Sample " + rays_per_sample_to_string(get_rays_per_sample(stats)))
 
     # Engine + Sampler
-    engine = config.GetProperties().Get("renderengine.type").GetString()
     sampler = config.GetProperties().Get("sampler.type").GetString()
     pretty.append(engine_to_str(engine) + " + " + sampler_to_str(sampler))
 
