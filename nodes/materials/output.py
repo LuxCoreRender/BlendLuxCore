@@ -95,53 +95,53 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
 
         box = layout.box()
 
-        # PhotonGI currently only works with Path engine
-        col = box.column()
-        col.active = (context.scene.luxcore.config.photongi.enabled
-                      and context.scene.luxcore.config.engine == "PATH")
-        col.prop(self, "use_photongi")
-
         box.prop(self, "id")
 
         row = box.row()
-        engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
-        row.active = not engine_is_bidir
         row.alignment = "LEFT"
         row.prop(self, "shadow_color", text="")
         row.label(text="Shadow Color")
-        
-        row = box.row()
-        row.active = not engine_is_bidir
-        row.prop(self, "is_holdout")
-        if self.is_holdout and utils.is_valid_camera(context.scene.camera):
+
+        # All of the options below only work with the Path engine, not with Bidir
+        engine = context.scene.luxcore.config.engine
+        col = box.column()
+        col.active = engine == "PATH"
+        if engine == "BIDIR":
+            col.label(text="Not supported by Bidir engine:", icon=icons.INFO)
+
+        # PhotonGI
+        row = col.row()
+        row.active = (context.scene.luxcore.config.photongi.enabled
+                      and engine == "PATH")
+        row.prop(self, "use_photongi")
+
+        # Holdout
+        col.prop(self, "is_holdout")
+        if self.is_holdout and engine == "PATH" and utils.is_valid_camera(context.scene.camera):
             pipeline = context.scene.camera.data.luxcore.imagepipeline
             if not pipeline.transparent_film:
-                box.prop(pipeline, "transparent_film", text="Enable Transparent Film",
+                col.prop(pipeline, "transparent_film", text="Enable Transparent Film",
                             icon=icons.CAMERA, toggle=True)
 
         # Shadow catcher
-        col = box.column()
-        col.active = not engine_is_bidir
         col.prop(self, "is_shadow_catcher")
 
-        if engine_is_bidir:
-            col.label(text="Not supported by Bidir engine", icon=icons.INFO)
-        elif self.is_shadow_catcher:
+        if engine == "PATH" and self.is_shadow_catcher:
             col.prop(self, "shadow_catcher_only_infinite")
             # Some settings that should be used with shadow catcher
             if utils.is_valid_camera(context.scene.camera):
                 pipeline = context.scene.camera.data.luxcore.imagepipeline
                 if not pipeline.transparent_film:
-                    box.prop(pipeline, "transparent_film", text="Enable Transparent Film",
+                    col.prop(pipeline, "transparent_film", text="Enable Transparent Film",
                              icon=icons.CAMERA, toggle=True)
             if context.scene.world:
                 luxcore_world = context.scene.world.luxcore
                 is_ground_black = luxcore_world.ground_enable and tuple(luxcore_world.ground_color) == (0, 0, 0)
 
                 if luxcore_world.light == "sky2" and not is_ground_black:
-                    box.operator("luxcore.world_set_ground_black", icon=icons.WORLD)
+                    col.operator("luxcore.world_set_ground_black", icon=icons.WORLD)
                 elif luxcore_world.light == "infinite" and not luxcore_world.sampleupperhemisphereonly:
-                    box.prop(luxcore_world, "sampleupperhemisphereonly",
+                    col.prop(luxcore_world, "sampleupperhemisphereonly",
                              icon=icons.WORLD, toggle=True)
 
     def export(self, exporter, depsgraph, props, luxcore_name):
