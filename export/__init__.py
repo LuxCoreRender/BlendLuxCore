@@ -366,9 +366,6 @@ class Exporter(object):
         del session
 
         renderconfig.Parse(config_props)
-        if renderconfig is None:
-            print("[Exporter] ERROR: not a valid luxcore config")
-            return
         session = pyluxcore.RenderSession(renderconfig)
         session.Start()
         return session
