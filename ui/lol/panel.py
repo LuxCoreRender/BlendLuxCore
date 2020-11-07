@@ -221,7 +221,9 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_DOWNLOADS(Panel):
 
     @classmethod
     def poll(cls, context):
-        return len(utils.download_threads) > 0
+        user_preferences = get_addon_preferences(context)
+
+        return len(utils.download_threads) > 0 and user_preferences.use_library
 
     def draw(self, context):
         layout = self.layout
@@ -255,6 +257,11 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_LOCAL(Panel):
     bl_label = "Local"
     bl_order = 2
 
+    @classmethod
+    def poll(cls, context):
+        user_preferences = get_addon_preferences(context)
+
+        return user_preferences.use_library
 
     def draw(self, context):
         layout = self.layout
@@ -327,7 +334,9 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_SCAN_RESULT(Panel):
 
     @classmethod
     def poll(self, context):
-        return len(context.scene.luxcoreOL.upload.add_list) > 0
+        user_preferences = get_addon_preferences(context)
+
+        return len(context.scene.luxcoreOL.upload.add_list) > 0 and user_preferences.use_library
 
     def draw(self, context):
         layout = self.layout
