@@ -463,7 +463,7 @@ def link_asset(context, asset, location, rotation):
 
 
 def append_material(context, asset, target_object, target_slot):
-    if target_object == None:
+    if target_object == '':
         return
 
     user_preferences = get_addon_preferences(context)
