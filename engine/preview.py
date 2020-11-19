@@ -203,7 +203,7 @@ def _export_mat_scene(engine, depsgraph, active_mat):
     luxcore_scene.Parse(scene_props)
 
     # Session
-    config_props = _create_config(scene, is_world_sphere)
+    config_props = _create_config(scene)
     renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
     session = pyluxcore.RenderSession(renderconfig)
     
@@ -375,19 +375,10 @@ def _create_walls(luxcore_scene, props, name, vertices, faces):
     props.Set(pyluxcore.Property("scene.objects." + name + ".material", mat_name))
 
 
-def _create_config(scene, is_world_sphere):
+def _create_config(scene):
     prefix = ""
 
     width, height = utils.calc_filmsize(scene)
-
-    if is_world_sphere:
-        total_depth = 8
-        diffuse_depth = 3
-        specular_depth = 5
-    else:
-        total_depth = 8
-        diffuse_depth = 3
-        specular_depth = 5
 
     definitions = {
         "film.width": width,
@@ -398,10 +389,10 @@ def _create_config(scene, is_world_sphere):
         # Focus as much as possible on the preview object
         "sampler.sobol.adaptive.strength": 0.95,
 
-        "path.pathdepth.total": total_depth,
-        "path.pathdepth.diffuse": diffuse_depth,
+        "path.pathdepth.total": 8,
+        "path.pathdepth.diffuse": 3,
         "path.pathdepth.glossy": 5,
-        "path.pathdepth.specular": specular_depth,
+        "path.pathdepth.specular": 5,
 
         "path.clamping.variance.maxvalue": 3,
 
