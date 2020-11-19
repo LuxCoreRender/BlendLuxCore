@@ -182,7 +182,7 @@ def show_nodetree(context, node_tree):
     for area in context.screen.areas:
         if area.type == "NODE_EDITOR":
             for space in area.spaces:
-                if space.type == "NODE_EDITOR":
+                if space.type == "NODE_EDITOR" and not space.pin:
                     space.tree_type = node_tree.bl_idname
                     space.node_tree = node_tree
                     return True
