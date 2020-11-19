@@ -1,6 +1,9 @@
 import bpy
 from bpy.props import StringProperty, IntProperty
-from .utils import poll_camera, init_vol_node_tree, LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree
+from .utils import (
+    poll_camera, init_vol_node_tree, LUXCORE_OT_set_node_tree, 
+    LUXCORE_MT_node_tree, show_nodetree,
+)
 
 
 class LUXCORE_OT_camera_new_volume_node_tree(bpy.types.Operator):
@@ -90,13 +93,8 @@ class LUXCORE_OT_camera_show_volume_node_tree(bpy.types.Operator):
     def execute(self, context):
         node_tree = context.camera.luxcore.volume
 
-        for area in context.screen.areas:
-            if area.type == "NODE_EDITOR":
-                for space in area.spaces:
-                    if space.type == "NODE_EDITOR":
-                        space.tree_type = node_tree.bl_idname
-                        space.node_tree = node_tree
-                        return {"FINISHED"}
+        if show_nodetree(context, node_tree):
+            return {"FINISHED"}
 
         self.report({"ERROR"}, "Open a node editor first")
         return {"CANCELLED"}

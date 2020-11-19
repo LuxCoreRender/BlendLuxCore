@@ -3,18 +3,8 @@ from .utils import init_tex_node_tree
 from bpy.props import IntProperty
 
 from .utils import (
-    poll_object, LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree
+    poll_object, LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree, show_nodetree
 )
-
-def show_nodetree(context, node_tree):
-    for area in context.screen.areas:
-        if area.type == "NODE_EDITOR":
-            for space in area.spaces:
-                if space.type == "NODE_EDITOR":
-                    space.tree_type = node_tree.bl_idname
-                    space.node_tree = node_tree
-                    return True
-    return False
 
 
 class LUXCORE_OT_texture_show_nodetree(bpy.types.Operator):
