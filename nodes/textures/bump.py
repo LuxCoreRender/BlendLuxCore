@@ -8,7 +8,7 @@ from ...ui import icons
 SAMPLING_DISTANCE_DESC = (
     "Distance to use when picking two points on the surface for bump gradient calculation.\n"
     "Use smaller values if procedural bump textures with very fine details don't show a bump effect.\n"
-    "Note: does not affect bump sampling of image textures"
+    "Does not affect bump sampling of image textures"
 )
 
 
@@ -16,6 +16,7 @@ class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Bump"
     bl_width_default = 200
 
+    # Note: exported in the export_common_inputs() method of material nodes
     sampling_distance: FloatProperty(name="Sampling Distance",
                                      default=0.001, min=0.000001, soft_max=0.001, step=0.00001,
                                      subtype="DISTANCE",
@@ -49,7 +50,6 @@ class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
         col.prop(self, "sampling_distance")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        # Note: sampling_distance is exported in the export_common_inputs() method of material nodes
         definitions = {
             "type": "scale",
             "texture1": self.inputs["Value"].export(exporter, depsgraph, props),

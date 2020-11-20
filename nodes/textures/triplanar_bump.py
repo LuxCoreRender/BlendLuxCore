@@ -1,14 +1,14 @@
 import bpy
-from bpy.props import BoolProperty
-from ..base import LuxCoreNodeTexture
+from bpy.props import BoolProperty, FloatProperty
+from ..base import LuxCoreNodeTexture, LuxCoreNodeMaterial
 from ... import utils
 from ...utils import node as utils_node
-
+from .bump import SAMPLING_DISTANCE_DESC
 
 
 class LuxCoreNodeTexTriplanarBump(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Triplanar Bump Mapping"
-    bl_width_default = 180
+    bl_width_default = 200
 
     def update_multiple_textures(self, context):
         if self.multiple_textures:
@@ -27,6 +27,13 @@ class LuxCoreNodeTexTriplanarBump(bpy.types.Node, LuxCoreNodeTexture):
     multiple_textures: BoolProperty(update=update_multiple_textures, name="Multiple Textures", default=False,
                                     description="Makes it possible to assign textures to each axis individually")
 
+    # Note: exported in the export_common_inputs() method of material nodes
+    sampling_distance: FloatProperty(name="Sampling Distance",
+                                     default=0.001, min=0.000001, soft_max=0.001, step=0.00001,
+                                     subtype="DISTANCE",
+                                     description=SAMPLING_DISTANCE_DESC,
+                                     update=utils_node.force_viewport_update)
+
     def init(self, context):
         self.add_input("LuxCoreSocketFloatUnbounded", "Value", 0)
         self.add_input("LuxCoreSocketBumpHeight", "Bump Height", 0.001)
@@ -40,6 +47,11 @@ class LuxCoreNodeTexTriplanarBump(bpy.types.Node, LuxCoreNodeTexture):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "multiple_textures")
+
+        col = layout.column()
+        output = self.outputs["Bump"]
+        col.active = output.is_linked and isinstance(output.links[0].to_node, LuxCoreNodeMaterial)
+        col.prop(self, "sampling_distance")
 
     def _create_bump_tex(self, suffix, value, height, props):
         tex_name = self.make_name() + suffix

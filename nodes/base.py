@@ -147,7 +147,7 @@ class LuxCoreNodeMaterial(LuxCoreNode):
             definitions["bumptex"] = bump
 
             from_node = bump_socket.links[0].from_node
-            if from_node.bl_idname == "LuxCoreNodeTexBump":
+            if from_node.bl_idname in {"LuxCoreNodeTexBump", "LuxCoreNodeTexTriplanarBump"}:
                 definitions["bumpsamplingdistance"] = from_node.sampling_distance
 
         # The emission socket and node are special cases
