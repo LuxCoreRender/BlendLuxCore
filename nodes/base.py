@@ -141,9 +141,14 @@ class LuxCoreNodeMaterial(LuxCoreNode):
         if transparency != 1.0:
             definitions["transparency"] = transparency
 
-        bump = self.inputs["Bump"].export(exporter, depsgraph, props)
+        bump_socket = self.inputs["Bump"]
+        bump = bump_socket.export(exporter, depsgraph, props)
         if bump:
             definitions["bumptex"] = bump
+
+            from_node = bump_socket.links[0].from_node
+            if from_node.bl_idname == "LuxCoreNodeTexBump":
+                definitions["bumpsamplingdistance"] = from_node.sampling_distance
 
         # The emission socket and node are special cases
         # with special export methods

@@ -205,9 +205,9 @@ class LuxCoreSocketFloat0to2(bpy.types.NodeSocket, LuxCoreSocketFloat):
 class LuxCoreSocketBumpHeight(bpy.types.NodeSocket, LuxCoreSocketFloat):
     # Allow negative values for inverting the bump.
     default_value: FloatProperty(default=0.001, soft_min=-0.01, soft_max=0.01, step=0.001,
-                                  subtype="DISTANCE", description="Bump height",
-                                  update=utils_node.force_viewport_update,
-                                  precision=FLOAT_UI_PRECISION)
+                                 subtype="DISTANCE", description="Scale factor for the height of the bump effect",
+                                 update=utils_node.force_viewport_update,
+                                 precision=FLOAT_UI_PRECISION)
 
 
 class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
