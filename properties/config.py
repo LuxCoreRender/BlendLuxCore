@@ -90,7 +90,8 @@ UNIFORM_DESC = "Sample all lights equally, not according to their brightness"
 
 DLSC_DESC = (
     "Use the DLSC in scenes with many light sources if each of them only "
-    "lights up a small part of the scene (example: a city at night)"
+    "lights up a small part of the scene (example: a city at night). \n"
+    "Only used during final render"
 )
 
 LARGE_STEP_RATE_DESC = (
@@ -157,7 +158,8 @@ ENVLIGHT_CACHE_DESC = (
     "Enable in scenes where the world environment is only visible through small openings (e.g. a room with small windows). "
     "Do not use in open scenes, as it can be detrimental to performance in this case. "
     "Computes a cache with multiple visibility maps (works like "
-    "automatic portals). Note that it might consume a lot of RAM"
+    "automatic portals). Note that it might consume a lot of RAM. \n"
+    "Only used during final render"
 )
 
 
@@ -265,7 +267,8 @@ class LuxCoreConfigDLSCache(PropertyGroup):
 
 
 class LuxCoreConfigPhotonGI(PropertyGroup):
-    enabled: BoolProperty(name="Use PhotonGI cache to accelerate indirect and/or caustic light rendering", default=False)
+    enabled: BoolProperty(name="Use PhotonGI cache to accelerate indirect and/or caustic light rendering. \n"
+                               "Only used during final render", default=False)
 
     # Shared settings
     photon_maxcount: FloatProperty(name="Photon Count (Millions)", default=20, min=1, soft_max=100,
