@@ -28,7 +28,7 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.operator("luxcore.create_lightgroup_nodes", icon=icons.NODETREE)
+        layout.operator("luxcore.create_lightgroup_nodes", icon=icons.COMPOSITOR)
 
         self.draw_lightgroup(layout, groups.default, -1,
                              is_default_group=True)

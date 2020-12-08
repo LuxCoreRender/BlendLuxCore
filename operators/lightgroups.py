@@ -206,7 +206,10 @@ def has_light_group_outputs(renderlayer_node):
 class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
     bl_idname = "luxcore.create_lightgroup_nodes"
     bl_label = "Create/Update Light Group Nodes"
-    bl_description = ""  # TODO
+    bl_description = ("Creates a node group in the compositor which can be used to edit the scene "
+                      "lighting after the render is complete. If one or more mixer nodes already "
+                      "exist, this button can be used to update them after adding or removing "
+                      "light groups")
     bl_options = {"UNDO"}
 
     @classmethod
@@ -225,7 +228,7 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
         mixer_tree = create_mixer(editor_tree)
 
         # Check if the nodes we need already exist
-        mixer_node = None
+        mixer_nodes = []
         renderlayer_node = None
 
         for node in scene.node_tree.nodes:
@@ -236,13 +239,10 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
             if LUX_MIXER_INSTANCE_MARK in node:
                 # Ensure that we have a working mixer instance that hasn't been repurposed to something else by the user
                 if node.bl_idname == "CompositorNodeGroup" and node.node_tree == mixer_tree:
-                    mixer_node = node
+                    mixer_nodes.append(node)
                 else:
                     # Node has been repurposed, remove our mark
                     del node[LUX_MIXER_INSTANCE_MARK]
-
-            if renderlayer_node and mixer_node:
-                break
 
         if not renderlayer_node:
             self.report({"ERROR"}, "Create a render layer node first.")
@@ -261,7 +261,7 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
             self.report({"ERROR"}, "Create at least one custom light group, then press this button again.")
             return {"CANCELLED"}
 
-        if not mixer_node:
+        if len(mixer_nodes) == 0:
             #  Move render layer node to the left to make space for our setup
             renderlayer_node.location.x -= 500
 
@@ -270,29 +270,33 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
             mixer_node.show_options = False  # Hides the node group dropdown
             mixer_node.label = "Light Group Mixer"
             mixer_node.width = 200
-            mixer_node.location = (renderlayer_node.location.x + renderlayer_node.width + 100, renderlayer_node.location.y - 50)
+            mixer_node.location = (renderlayer_node.location.x + renderlayer_node.width + 100,
+                                   renderlayer_node.location.y - 50)
             mixer_node[LUX_MIXER_INSTANCE_MARK] = True
 
-        # Connect render layer outputs to mixer inputs and make sure the names match
-        scene.node_tree.links.new(renderlayer_node.outputs["ALBEDO"], mixer_node.inputs["ALBEDO"])
-        scene.node_tree.links.new(renderlayer_node.outputs["AVG_SHADING_NORMAL"], mixer_node.inputs["AVG_SHADING_NORMAL"])
-        lg_index = 0
-        for output in renderlayer_node.outputs:
-            # Blender does not remove old sockets on the render layer node, they are just disabled
-            if output.enabled and is_lightgroup_pass_name(output.name):
-                mixer_input = mixer_node.inputs[MIXER_SOCKET_INDEX_START + lg_index * MIXER_SOCKET_INDEX_STEP]
-                scene.node_tree.links.new(output, mixer_input)
-                mixer_input.name = output.name
-                lg_index += 1
+            mixer_nodes.append(mixer_node)
 
-        # Disable inputs of unused light groups
-        for i in range(MAX_LIGHTGROUPS):
-            enabled = i <= len(scene.luxcore.lightgroups.custom)
-            for j in range(MIXER_SOCKET_INDEX_STEP):
-                mixer_node.inputs[MIXER_SOCKET_INDEX_START + i * MIXER_SOCKET_INDEX_STEP + j].enabled = enabled
+        for mixer_node in mixer_nodes:
+            # Connect render layer outputs to mixer inputs and make sure the names match
+            scene.node_tree.links.new(renderlayer_node.outputs["ALBEDO"], mixer_node.inputs["ALBEDO"])
+            scene.node_tree.links.new(renderlayer_node.outputs["AVG_SHADING_NORMAL"], mixer_node.inputs["AVG_SHADING_NORMAL"])
+            lg_index = 0
+            for output in renderlayer_node.outputs:
+                # Blender does not remove old sockets on the render layer node, they are just disabled
+                if output.enabled and is_lightgroup_pass_name(output.name):
+                    mixer_input = mixer_node.inputs[MIXER_SOCKET_INDEX_START + lg_index * MIXER_SOCKET_INDEX_STEP]
+                    scene.node_tree.links.new(output, mixer_input)
+                    mixer_input.name = output.name
+                    lg_index += 1
 
-        renderlayer_node_image_output = renderlayer_node.outputs["Image"]
-        if renderlayer_node_image_output.is_linked:
-            scene.node_tree.links.new(mixer_node.outputs[0], renderlayer_node_image_output.links[0].to_socket)
+            # Disable inputs of unused light groups
+            for i in range(MAX_LIGHTGROUPS):
+                enabled = i <= len(scene.luxcore.lightgroups.custom)
+                for j in range(MIXER_SOCKET_INDEX_STEP):
+                    mixer_node.inputs[MIXER_SOCKET_INDEX_START + i * MIXER_SOCKET_INDEX_STEP + j].enabled = enabled
+
+            renderlayer_node_image_output = renderlayer_node.outputs["Image"]
+            if renderlayer_node_image_output.is_linked:
+                scene.node_tree.links.new(mixer_node.outputs[0], renderlayer_node_image_output.links[0].to_socket)
 
         return {"FINISHED"}
