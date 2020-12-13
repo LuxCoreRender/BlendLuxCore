@@ -72,19 +72,42 @@ def load_local_TOC(context, asset_type):
 def load_patreon_assets(context):
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
-    with urllib.request.urlopen(LOL_HOST_URL + "/assets_model_patreon.json", timeout=60) as request:
-        import json
-        assets = json.load(request)
-        for asset in assets:
-            asset['downloaded'] = 0.0
-            asset['local'] = False
-            asset['patreon'] = True
-            asset['locked'] = True
-            filename = asset["url"]
-            filepath = join(user_preferences.global_dir, "model", splitext(filename)[0] + '.blend')
 
-            if os.path.exists(filepath):
-                asset['locked'] = False
+    #check if local file is available
+    filepath = join(user_preferences.global_dir, 'assets_model_patreon.json')
+    if os.path.exists(filepath):
+        with open(filepath) as file_handle:
+            import json
+            assets = json.load(file_handle)
+            for asset in assets:
+                asset['downloaded'] = 0.0
+                asset['local'] = False
+                asset['patreon'] = True
+                asset['locked'] = True
+                filename = asset["url"]
+                filepath = join(user_preferences.global_dir, "model", splitext(filename)[0] + '.blend')
+
+                if os.path.exists(filepath):
+                    asset['locked'] = False
+    else:
+        with urllib.request.urlopen(LOL_HOST_URL + "/assets_model_patreon.json", timeout=60) as request:
+            import json
+            assets = json.load(request)
+
+            #cache file for future offline work
+            with open(filepath, 'w') as file:
+                file.write(json.dumps(assets, indent=2))
+
+            for asset in assets:
+                asset['downloaded'] = 0.0
+                asset['local'] = False
+                asset['patreon'] = True
+                asset['locked'] = True
+                filename = asset["url"]
+                filepath = join(user_preferences.global_dir, 'model', splitext(filename)[0] + '.blend')
+
+                if os.path.exists(filepath):
+                    asset['locked'] = False
 
     return assets
 
@@ -92,6 +115,8 @@ def load_patreon_assets(context):
 def download_table_of_contents(context):
     scene = context.scene
     ui_props = context.scene.luxcoreOL.ui
+    name = basename(dirname(dirname(dirname(__file__))))
+    user_preferences = context.preferences.addons[name].preferences
 
     try:
         for threaddata in bg_threads:
@@ -100,20 +125,38 @@ def download_table_of_contents(context):
                 global stop_check_cache
                 stop_check_cache = True
 
-        import urllib.request
+        # check if local file is available
+        filepath = join(user_preferences.global_dir, 'assets_model.json')
+        if os.path.exists(filepath):
+            with open(filepath) as file_handle:
+                import json
+                assets = json.load(file_handle)
 
-        with urllib.request.urlopen(LOL_HOST_URL + "/assets_model.json", timeout=60) as request:
-            import json
-            assets = json.loads(request.read())
-            for asset in assets:
-                asset['downloaded'] = 0.0
-                asset['local'] = False
-                asset['patreon'] = False
-                asset['locked'] = False
+                for asset in assets:
+                    asset['downloaded'] = 0.0
+                    asset['local'] = False
+                    asset['patreon'] = False
+                    asset['locked'] = False
 
-            assets.extend(load_local_TOC(context, 'model'))
-            assets.extend(load_patreon_assets(context))
-            scene.luxcoreOL.model['assets'] = assets
+        else:
+            import urllib.request
+            with urllib.request.urlopen(LOL_HOST_URL + "/assets_model.json", timeout=60) as request:
+                import json
+                assets = json.load(request)
+                # cache file for future offline work
+                with open(filepath, 'w') as file:
+                    file.write(json.dumps(assets, indent=2))
+
+                for asset in assets:
+                    asset['downloaded'] = 0.0
+                    asset['local'] = False
+                    asset['patreon'] = False
+                    asset['locked'] = False
+
+
+        assets.extend(load_local_TOC(context, 'model'))
+        assets.extend(load_patreon_assets(context))
+        scene.luxcoreOL.model['assets'] = assets
 
         # with urllib.request.urlopen(LOL_HOST_URL + "/assets_scene.json", timeout=60) as request:
         #     import json
@@ -125,18 +168,34 @@ def download_table_of_contents(context):
         #     assets.extend(load_local_TOC(context, 'scene'))
         #     scene.luxcoreOL.scene['assets'] = assets
 
-        with urllib.request.urlopen(LOL_HOST_URL + "/assets_material.json", timeout=60) as request:
-            import json
-            assets = json.loads(request.read())
-            for asset in assets:
-                asset['downloaded'] = 0.0
-                asset['local'] = False
-                asset['patreon'] = False
-                asset['locked'] = False
+        # check if local file is available
+        filepath = join(user_preferences.global_dir, 'assets_material.json')
+        if os.path.exists(filepath):
+            with open(filepath) as file_handle:
+                import json
+                assets = json.load(file_handle)
+                for asset in assets:
+                    asset['downloaded'] = 0.0
+                    asset['local'] = False
+                    asset['patreon'] = False
+                    asset['locked'] = False
+        else:
+            import urllib.request
+            with urllib.request.urlopen(LOL_HOST_URL + "/assets_material.json", timeout=60) as request:
+                import json
+                assets = json.load(request)
+                # cache file for future offline work
+                with open(filepath, 'w') as file:
+                    file.write(json.dumps(assets, indent=2))
 
-            assets.extend(load_local_TOC(context, 'material'))
-            scene.luxcoreOL.material['assets'] = assets
+                for asset in assets:
+                    asset['downloaded'] = 0.0
+                    asset['local'] = False
+                    asset['patreon'] = False
+                    asset['locked'] = False
 
+        assets.extend(load_local_TOC(context, 'material'))
+        scene.luxcoreOL.material['assets'] = assets
 
         ui_props.ToC_loaded = True
         init_categories(context)

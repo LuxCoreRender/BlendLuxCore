@@ -83,6 +83,7 @@ def draw_panel_model_search(self, context):
         tooltip = 'Click to Show Asset Bar'
 
     assetbar_operator = layout.operator('view3d.luxcore_ol_asset_bar', text='Asset Bar', icon=icon)
+
     assetbar_operator.keep_running = False
     assetbar_operator.do_search = False
     assetbar_operator.tooltip = tooltip
@@ -198,6 +199,7 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
             col = layout.column(align=True)
             col.label(text="It's better to save the file first.")
 
+        layout.operator('scene.luxcore_ol_update_toc', text='Update ToC from server')
         if ui_props.asset_type == 'MODEL':
             draw_panel_model_search(self, context)
         elif ui_props.asset_type == 'SCENE':
