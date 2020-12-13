@@ -531,7 +531,8 @@ def append_material(context, asset, target_object, target_slot):
     filepath = os.path.join(user_preferences.global_dir, "material", splitext(filename)[0] + '.blend')
 
     with bpy.data.libraries.load(filepath, link=False) as (data_from, data_to):
-        data_to.materials = [name for name in data_from.materials if name == asset["name"]]
+        data_to.materials = [name for name in data_from.materials if
+                             name == asset["name"] or name == asset["name"].replace(" ", "_")]
 
     if len(data_to.materials) == 1:
         # print(target_object, target_slot, data_to.materials[0].name)
