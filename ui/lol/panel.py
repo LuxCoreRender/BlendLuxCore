@@ -174,8 +174,8 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         col = layout.column(align=True)
         col.scale_x = 1.4
         col.scale_y = 1.4
-        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Patreon)")
-        op.url = "https://www.patreon.com/Draviastudio"
+        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Blendermarket)")
+        op.url = "https://blendermarket.com/creators/draviastudio"
 
         op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Bountysource)")
         op.url = "https://salt.bountysource.com/teams/luxcorerender"
