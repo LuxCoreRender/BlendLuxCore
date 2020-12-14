@@ -112,10 +112,6 @@ def convert(exporter, scene, context=None, engine=None):
         if scene.render.threads_mode == "FIXED":
             definitions["native.threads.count"] = scene.render.threads
 
-        # Enable/disable OptiX
-        if preferences.gpu_backend == "CUDA":
-            definitions["context.cuda.optix.enable"] = preferences.use_optix_if_available
-
         _convert_seed(scene, definitions)
 
         # Create the properties

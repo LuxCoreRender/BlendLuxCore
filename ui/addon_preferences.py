@@ -50,13 +50,6 @@ class LuxCoreAddonPreferences(AddonPreferences):
     film_device: EnumProperty(name="Film Device", items=film_device_items_callback,
                               description="Which device to use to compute the imagepipeline")
 
-    use_optix_if_available: BoolProperty(name="Use OptiX if Available", default=True,
-                                         description="Use the OptiX backend if possible, to speed up ray/triangle "
-                                                     "intersections and BHV building and to save memory. Check the "
-                                                     "console when rendering to see if OptiX is actually used. "
-                                                     "It usually only makes sense to disable this for benchmark "
-                                                     "comparisons between CUDA and OptiX")
-
     image_node_thumb_default: BoolProperty(
         name="Show Thumbnails by Default", default=True,
         description="Decide wether the thumbnail is visible on new image nodes (changes do not affect existing nodes)"
@@ -87,12 +80,6 @@ class LuxCoreAddonPreferences(AddonPreferences):
         
         if utils.is_cuda_build():
             row.prop(self, "gpu_backend", expand=True)
-            
-            if self.gpu_backend == "CUDA":
-                row = layout.row()
-                split = row.split(factor=SPLIT_FACTOR)
-                split.label(text="")
-                split.prop(self, "use_optix_if_available")
             
             row = layout.row()
             split = row.split(factor=SPLIT_FACTOR)

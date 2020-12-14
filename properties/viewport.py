@@ -63,7 +63,8 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
     @staticmethod
     def can_use_optix_denoiser(context):
         preferences = utils.get_addon_preferences(context)
-        return preferences.gpu_backend == "CUDA" and preferences.film_device != "none" and preferences.use_optix_if_available
+        # TODO Do we need to check here if the film device supports OptiX?
+        return preferences.gpu_backend == "CUDA" and preferences.film_device != "none"
 
     def get_denoiser(self, context):
         if not self.use_denoiser:
