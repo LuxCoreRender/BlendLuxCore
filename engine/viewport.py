@@ -8,17 +8,15 @@ from ..utils.errorlog import LuxCoreErrorLog
 from ..export.config import convert_viewport_engine
 
 # Executed in separate thread
-# TODO handle the case that the user cancelled the viewport render (engine will be deleted)
-#  maybe save a reference to this thread in engine and join it in engine.__del__()?
 def start_session(engine):
     try:
         engine.session.Start()
         engine.viewport_start_time = time()
     except ReferenceError:
-        print("Could not start render session because RenderEngine struct was deleted")
+        # Could not start render session because RenderEngine struct was deleted (caused
+        # by the user cancelling the viewport render before this function is called)
         return
     except Exception as error:
-        del engine.session
         engine.session = None
         # Reset the exporter to invalidate all caches
         engine.exporter = None
@@ -29,8 +27,7 @@ def start_session(engine):
         import traceback
         traceback.print_exc()
 
-    # TODO use lock when changing starting_session? Not strictly necessary
-    #  due to CPython implementation details, but might be cleaner
+    # Note: Due to CPython implementation details, it's not necessary to use a lock here (this modification is atomic)
     engine.starting_session = False
 
 
@@ -190,7 +187,7 @@ def view_draw(engine, context, depsgraph):
             if framebuffer.is_denoiser_active():
                 if framebuffer.is_denoiser_done():
                     status_message = "(Paused, Denoiser Done)"
-                    framebuffer.load_denoiser_result(scene) # TODO warning, now scene instead of context!
+                    framebuffer.load_denoiser_result(scene)
                 else:
                     status_message = "(Paused, Denoiser Working ...)"
                     engine.tag_redraw()
