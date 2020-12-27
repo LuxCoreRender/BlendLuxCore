@@ -68,11 +68,6 @@ def draw_panel_model_search(self, context):
     model_props = scene.luxcoreOL.model
     layout = self.layout
 
-    #TODO: Implement non_free models if needed
-    # Currently all available models are free
-
-    # col.prop(model_props, "free_only")
-
     ui_props = scene.luxcoreOL.ui
 
     if ui_props.assetbar_on:
@@ -105,7 +100,6 @@ def draw_panel_model_search(self, context):
 
 def draw_panel_scene_search(self, context):
     scene = context.scene
-    # scene_props = scene.luxcoreOL.scene
     layout = self.layout
     ui_props = scene.luxcoreOL.ui
 

@@ -42,6 +42,9 @@ class LOLUpdateTOC(Operator):
         import urllib.request
         import json
 
+        scene = context.scene
+        ui_props = scene.luxcoreOL.ui
+
         name = basename(dirname(dirname(dirname(__file__))))
         user_preferences = context.preferences.addons[name].preferences
 
@@ -66,4 +69,6 @@ class LOLUpdateTOC(Operator):
             with open(filepath, 'w') as file:
                 file.write(json.dumps(assets, indent=2))
 
+        utils.download_table_of_contents(context)
+        utils.load_previews(context, ui_props.asset_type)
         return {'FINISHED'}
