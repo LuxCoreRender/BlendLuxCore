@@ -62,6 +62,7 @@ class LuxCoreNodeTexBlenderMarble(bpy.types.Node, LuxCoreNodeTexture):
             "type": "blender_marble",
             "noisebasis": self.noise_basis,
             "noisebasis2": self.noise_basis2,
+            "noisedepth": self.noise_depth,
             "noisetype": self.noise_type,
             "noisesize": self.noise_size,
             "turbulence": self.turbulence,
