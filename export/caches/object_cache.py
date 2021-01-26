@@ -23,13 +23,21 @@ MAX_PARTICLES_FOR_LIVE_TRANSFORM = 2000
 
 
 def uses_pointiness(node_tree):
-    # Check if a pointiness node exists, better check would be if the node is linked to the output
+    # TODO better check would be if the node is linked to the output and actually used
     return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness", True)
 
 
 def uses_random_per_island(node_tree):
-    # Check if a random_per_island node exists, better check would be if the node is linked to the output
+    # TODO better check would be if the node is linked to the output and actually used
     return utils_node.has_nodes(node_tree, "LuxCoreNodeTexRandomPerIsland", True)
+
+
+def needs_edge_detector_shape(node_tree):
+    # TODO better check would be if the node is linked to the output and actually used
+    for node in utils_node.find_nodes(node_tree, "LuxCoreNodeTexWireframe", True):
+        if node.hide_planar_edges:
+            return True
+    return False
 
 
 def uses_displacement(obj):
@@ -308,6 +316,13 @@ class ObjectCache2:
             scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", DATAINDEX_RANDOM_PER_ISLAND))
             scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", DATAINDEX_RANDOM_PER_ISLAND))
             shape = random_tri_aov_shape
+
+        if needs_edge_detector_shape(node_tree):
+            edge_detector_shape = input_shape + "_edge_detector"
+            prefix = "scene.shapes." + edge_detector_shape + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "edgedetectoraov"))
+            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+            shape = edge_detector_shape
         
         return shape
 
