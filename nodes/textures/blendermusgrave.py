@@ -62,15 +62,15 @@ class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
-       
+
         definitions = {
             "type": "blender_musgrave",
             "musgravetype": self.musgrave_type,
             "noisebasis": self.noise_basis,
             "noisesize": self.noise_size,
-            "h": self.h,
-            "lacu": self.lacu,
-            "octs": self.octs,
+            "dimension": self.h,
+            "lacunarity": self.lacu,
+            "octaves": self.octs,
             "bright": self.bright,
             "contrast": self.contrast,
             # Mapping
@@ -84,7 +84,7 @@ class LuxCoreNodeTexBlenderMusgrave(bpy.types.Node, LuxCoreNodeTexture):
             definitions["gain"] = self.gain
 
         if self.musgrave_type != 'fbm':
-            definitions["iscale"] = self.iscale            
+            definitions["intensity"] = self.iscale
         
         if mapping_type == "uvmapping3d":
             definitions["mapping.uvindex"] = uvindex
