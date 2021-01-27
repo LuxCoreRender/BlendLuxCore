@@ -239,12 +239,20 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
     elif light.type == "SUN":
         distant_dir = [-sun_dir[0], -sun_dir[1], -sun_dir[2]]
 
+        _define_brightness_and_color(light, definitions)
+
         if light.luxcore.light_type == "sun":
             # sun
             definitions["type"] = "sun"
             definitions["dir"] = sun_dir
             definitions["turbidity"] = light.luxcore.turbidity
             definitions["relsize"] = light.luxcore.relsize
+
+            if light.luxcore.color_mode == "rgb":
+                # The sun doesn't support have a "color" property, but its color can be tinted via the gain
+                tint_color = light.luxcore.rgb_gain
+                for i in range(3):
+                    definitions["gain"][i] *= tint_color[i]
         elif light.luxcore.light_type == "hemi":
             # hemi
             if light.luxcore.image:
@@ -252,18 +260,15 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
             else:
                 # Fallback
                 definitions["type"] = "constantinfinite"
-                definitions["color"] = list(light.luxcore.rgb_gain)
         elif light.luxcore.theta < 0.05:
             # sharpdistant
             definitions["type"] = "sharpdistant"
             definitions["direction"] = distant_dir
-            definitions["color"] = list(light.luxcore.rgb_gain)
         else:
             # distant
             definitions["type"] = "distant"
             definitions["direction"] = distant_dir
             definitions["theta"] = light.luxcore.theta
-            definitions["color"] = list(light.luxcore.rgb_gain)
             if light.luxcore.normalize_distant:
                 normalization_factor = _get_distant_light_normalization_factor(light.luxcore.theta)
                 definitions["gain"] = [normalization_factor * x for x in definitions["gain"]]
@@ -560,6 +565,8 @@ def _convert_common_props(exporter, scene, light_or_world):
             raw_gain = light_or_world.luxcore.gain
 
     gain = [raw_gain] * 3
+
+
     importance = light_or_world.luxcore.importance
     lightgroup_id = scene.luxcore.lightgroups.get_id_by_name(light_or_world.luxcore.lightgroup)
     exporter.lightgroup_cache.add(lightgroup_id)

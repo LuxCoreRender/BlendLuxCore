@@ -92,6 +92,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
     def draw_luxcore_settings(self, context):
         layout = self.layout
         light = context.light
+        is_sunlight = light.type == "SUN" and light.luxcore.light_type == "sun"
 
         layout.use_property_split = True
         layout.use_property_decorate = False
@@ -102,15 +103,21 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
 
         if light.type == "AREA" and light.luxcore.node_tree:
             col.label(text="Light color is defined by emission node", icon=icons.INFO)
-        elif light.type == "SUN" and light.luxcore.light_type == "sun":
-            col.label(icon="INFO", text="Sun color and brightness are driven by the sun position")
         else:
             if light.luxcore.color_mode == "rgb":
-                col.prop(light.luxcore, "rgb_gain", text="Color")
+                col.prop(light.luxcore, "rgb_gain", text="Color Tint" if is_sunlight else "Color")
             elif light.luxcore.color_mode == "temperature":
-                col.prop(light.luxcore, "temperature", slider=True)
+                if is_sunlight:
+                    col.prop(light.luxcore, "temperature", slider=True, text="Temperature Tint")
+                else:
+                    col.prop(light.luxcore, "temperature", slider=True)
             else:
                 raise Exception("Unknown color mode")
+
+        if is_sunlight:
+            col = col.column(align=True)
+            col.label(icon="INFO", text="Sun color and brightness are")
+            col.label(text="influenced by the sun light rotation")
 
         layout.separator()
         
