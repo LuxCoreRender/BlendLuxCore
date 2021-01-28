@@ -10,7 +10,7 @@ class LuxCoreNodeTexBlenderNoise(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "Blender Noise"
     bl_width_default = 200    
 
-    noise_depth: IntProperty(update=utils_node.force_viewport_update, name="Noise Depth", default=2, min=0)
+    noise_depth: IntProperty(update=utils_node.force_viewport_update, name="Noise Depth", default=2, min=0, max=30)
     bright: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1.0, min=0)
     contrast: FloatProperty(update=utils_node.force_viewport_update, name="Contrast", default=1.0, min=0)
 
