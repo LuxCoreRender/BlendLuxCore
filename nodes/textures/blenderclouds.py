@@ -17,7 +17,7 @@ class LuxCoreNodeTexBlenderClouds(bpy.types.Node, LuxCoreNodeTexture):
     noise_basis: EnumProperty(update=utils_node.force_viewport_update, name="Basis", description="Basis of noise used", items=NOISE_BASIS_ITEMS,
                                         default="blender_original")
     noise_size: FloatProperty(update=utils_node.force_viewport_update, name="Noise Size", default=0.25, min=MIN_NOISE_SIZE)
-    noise_depth: IntProperty(update=utils_node.force_viewport_update, name="Noise Depth", default=2, min=0)
+    noise_depth: IntProperty(update=utils_node.force_viewport_update, name="Noise Depth", default=2, min=0, soft_max=10, max=25)
     bright: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1.0, min=0)
     contrast: FloatProperty(update=utils_node.force_viewport_update, name="Contrast", default=1.0, min=0)
 
