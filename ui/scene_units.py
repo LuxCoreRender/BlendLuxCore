@@ -1,13 +1,16 @@
 from bl_ui.properties_scene import SceneButtonsPanel
 from bpy.types import Panel
-import bpy
 from . import icons
 
 class LUXCORE_PT_unit_advanced(SceneButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Advanced LuxCore Settings"
     bl_parent_id ="SCENE_PT_unit"
-    bl_options = {'DEFAULT_CLOSED'}   
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
         layout = self.layout
