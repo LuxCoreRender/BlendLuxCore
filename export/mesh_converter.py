@@ -1,18 +1,44 @@
 import bpy
 from contextlib import contextmanager
-from .caches.exported_data import ExportedMesh
 from time import time
+from .caches.exported_data import ExportedMesh
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
 
 
-def custom_normals_supported():
+def fast_custom_normals_supported():
     version = bpy.app.version
     if version == (2, 82, 7):
         return True
     if version[:2] == (2, 83):
         return True
     return False
+
+
+def get_custom_normals_slow(mesh):
+    """ 
+    Slow fallback that reads custom normals via Python, used if fast 
+    custom normal reading via C++ is not supported for this Blender version
+    """
+    
+    if not mesh.has_custom_normals:
+        return None
+
+    # Flat list of 3-element normal vectors
+    custom_normals = [0] * (len(mesh.loops) * 3)
+
+    for loop_tri in mesh.loop_triangles:
+        loops = loop_tri.loops
+        split_normals = loop_tri.split_normals
+        
+        start = loops[0] * 3
+        custom_normals[start:start + 3] = split_normals[0][:]
+        start = loops[1] * 3
+        custom_normals[start:start + 3] = split_normals[1][:]
+        start = loops[2] * 3
+        custom_normals[start:start + 3] = split_normals[2][:]
+
+    return custom_normals
 
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
@@ -22,8 +48,11 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         if mesh is None:
             return None
         
-        if mesh.has_custom_normals and not custom_normals_supported():
-            LuxCoreErrorLog.add_warning("Custom normals not supported for this Blender version", obj_name=obj.name)
+        custom_normals = None
+        if mesh.has_custom_normals and not fast_custom_normals_supported():
+            print("Using slow Python conversion for custom normals because fast "
+                  "C++ conversion is not implemented for this Blender version")
+            custom_normals = get_custom_normals_slow(mesh)
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
         loopTriCount = len(mesh.loop_triangles)
@@ -56,7 +85,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
                                                            vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
                                                            meshPtr, material_count, mesh_transform,
-                                                           bpy.app.version)
+                                                           bpy.app.version, custom_normals)
         
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time

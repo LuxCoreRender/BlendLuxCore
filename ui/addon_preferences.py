@@ -5,7 +5,6 @@ from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 from ..ui import icons
 from .. import utils
 from ..utils.lol import utils as lol_utils
-from ..export.mesh_converter import custom_normals_supported
 
 
 film_device_items = []
@@ -70,10 +69,6 @@ class LuxCoreAddonPreferences(AddonPreferences):
     def draw(self, context):
         layout = self.layout
         SPLIT_FACTOR = 1/3
-        
-        if not custom_normals_supported():
-            layout.label(text="No official support for this Blender version!", icon=icons.WARNING)
-            layout.label(text="Custom normals will not work, and there might be other problems!", icon=icons.WARNING)
 
         row = layout.row()
         row.label(text="GPU API:")
