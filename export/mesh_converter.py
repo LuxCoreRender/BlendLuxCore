@@ -50,9 +50,12 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         
         custom_normals = None
         if mesh.has_custom_normals and not fast_custom_normals_supported():
-            print("Using slow Python conversion for custom normals because fast "
-                  "C++ conversion is not implemented for this Blender version")
+            start = time()
             custom_normals = get_custom_normals_slow(mesh)
+            elapsed = time() - start
+            if elapsed > 0.3:
+                LuxCoreErrorLog.add_warning("Slow custom normal export in this Blender version (took %.1f s)"
+                                            % elapsed, obj_name=obj.name)
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
         loopTriCount = len(mesh.loop_triangles)
