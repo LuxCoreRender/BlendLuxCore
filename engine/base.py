@@ -43,16 +43,20 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
     def __init__(self):
         self.session = None
         self.DENOISED_OUTPUT_NAME = "DENOISED"
+        self.VIEWPORT_RESIZE_TIMEOUT = 0.3
         self.reset()
 
     def reset(self):
         self.framebuffer = None
         self.exporter = None
         self.aov_imagepipelines = {}
+        self.is_first_viewport_start = True
         self.viewport_start_time = 0
         self.starting_session = False
         self.viewport_starting_message_shown = False
         self.viewport_fatal_error = None
+        self.time_of_last_viewport_resize = 0
+        self.last_viewport_size = (0, 0)
 
     def __del__(self):
         # Note: this method is also called when unregister() is called (for some reason I don't understand)

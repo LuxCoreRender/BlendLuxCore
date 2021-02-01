@@ -361,14 +361,16 @@ class Exporter(object):
             session.Parse(self.halt_cache.props)
 
     def _update_config(self, session, config_props):
-        renderconfig = session.GetRenderConfig()
-        session.Stop()
-        del session
-
-        renderconfig.Parse(config_props)
-        session = pyluxcore.RenderSession(renderconfig)
-        session.Start()
-        return session
+        # Note: Currently not used, see the comment on force_session_restart() in engine/viewport.py
+        raise NotImplementedError("_update_config() currently not supported due to memory leak "
+                                  "(see https://github.com/LuxCoreRender/BlendLuxCore/issues/577)")
+        # renderconfig = session.GetRenderConfig()
+        # session.Stop()
+        #
+        # renderconfig.Parse(config_props)
+        # session = pyluxcore.RenderSession(renderconfig)
+        # session.Start()
+        # return session
 
     def _update_scene(self, depsgraph, context, changes, luxcore_scene):
         props = pyluxcore.Properties()

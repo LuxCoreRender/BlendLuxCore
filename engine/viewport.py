@@ -31,6 +31,19 @@ def start_session(engine):
     engine.starting_session = False
 
 
+def force_session_restart(engine):
+    """
+    https://github.com/LuxCoreRender/BlendLuxCore/issues/577
+    For unknown reasons, the old way of handling changes to the renderconfig, like a viewport resize
+    or renderengine settings edit, now causes a memory leak. I have not been able to track it down.
+    (The original code is in export/__init__.py in the method _update_config())
+    As a workaround, I stop and delete the session to trigger a full re-export of the scene and
+    a fresh restart of the viewport render.
+    """
+    engine.session.Stop()
+    engine.session = None
+
+
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
     if engine.starting_session or engine.viewport_fatal_error:
@@ -43,6 +56,18 @@ def view_update(engine, context, depsgraph, changes=None):
         if not engine.viewport_starting_message_shown:
             # Let one engine.view_draw() happen so it shows a message in the UI
             return
+
+        if not engine.is_first_viewport_start:
+            filmsize = utils.calc_filmsize(depsgraph.scene_eval, context)
+            was_resized = engine.last_viewport_size != filmsize
+            engine.last_viewport_size = filmsize
+
+            if was_resized:
+                engine.time_of_last_viewport_resize = time()
+                return
+            elif time() - engine.time_of_last_viewport_resize < engine.VIEWPORT_RESIZE_TIMEOUT:
+                # Don't re-export the session before the timeout is done, to prevent constant re-exports while resizing
+                return
         
         try:
             print("=" * 50)
@@ -51,6 +76,7 @@ def view_update(engine, context, depsgraph, changes=None):
             engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
             # Start in separate thread to avoid blocking the UI
             engine.starting_session = True
+            engine.is_first_viewport_start = False
             import _thread
             _thread.start_new_thread(start_session, (engine,))
         except Exception as error:
@@ -72,6 +98,9 @@ def view_update(engine, context, depsgraph, changes=None):
     print("view_update(): checking for changes took %.1f ms" % ((time() - s) * 1000))
 
     if changes:
+        if changes & export.Change.REQUIRES_VIEW_UPDATE:
+            force_session_restart(engine)
+
         s = time()
         # We have to re-assign the session because it might have been replaced due to filmsize change
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
@@ -141,7 +170,8 @@ def view_draw(engine, context, depsgraph):
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
         engine.tag_redraw()
-        view_update(engine, context, depsgraph, changes)
+        # view_update(engine, context, depsgraph, changes)  # Disabled, see comment on force_session_restart()
+        force_session_restart(engine)
         return
     elif changes & export.Change.CAMERA:
         # Only update in view_draw if it is a camera update,
