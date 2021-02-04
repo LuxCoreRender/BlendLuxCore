@@ -43,7 +43,9 @@ def convert(exporter, scene, context=None, engine=None):
             # Final render
             luxcore_engine, sampler = _convert_final_engine(scene, definitions, config)
 
-        if (luxcore_engine == "BIDIRCPU" and denoiser_enabled) or in_material_shading_mode:
+        if (not config.filter_enabled
+                or utils.is_pixel_filtering_forced_disabled(scene, denoiser_enabled)
+                or in_material_shading_mode):
             filter_type = "NONE"
         else:
             filter_type = config.filter

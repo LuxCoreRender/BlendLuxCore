@@ -506,6 +506,19 @@ def using_photongi_debug_mode(is_viewport_render, scene):
     return config.photongi.enabled and config.photongi.debug != "off"
 
 
+def is_pixel_filtering_forced_disabled(scene, denoiser_enabled):
+    config = scene.luxcore.config
+
+    if denoiser_enabled:
+        # Bidir renders are not properly denoised with pixel filtering
+        if config.engine == "BIDIR":
+            return True
+        # Light traced caustics are not properly denoised with pixel filtering
+        if config.engine == "PATH" and config.path.hybridbackforward_enable:
+            return True
+    return False
+
+
 def get_halt_conditions(scene):
     render_layer = view_layer.get_current_view_layer(scene)
 

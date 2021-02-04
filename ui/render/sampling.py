@@ -1,4 +1,3 @@
-import bpy
 from .. import icons
 from ... import utils
 from ...export.config import SamplingOverlap
@@ -142,17 +141,61 @@ class LUXCORE_RENDER_PT_sampling_adaptivity(RenderButtonsPanel, Panel):
             col.prop(config.noise_estimation, "step")
 
 
+class LUXCORE_RENDER_PT_sampling_pixel_filtering(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_parent_id = "LUXCORE_RENDER_PT_sampling"
+    lux_predecessor = "LUXCORE_RENDER_PT_sampling_tiled_multipass"
+    bl_label = "Pixel Filtering"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        denoiser_enabled = context.scene.luxcore.denoiser.enabled
+        filter_forced_disabled = utils.is_pixel_filtering_forced_disabled(context.scene, denoiser_enabled)
+
+        if filter_forced_disabled and config.filter_enabled:
+            layout.label(text="", icon=icons.INFO)
+
+        row = layout.row()
+        row.active = not filter_forced_disabled
+        row.prop(config, "filter_enabled", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        denoiser_enabled = context.scene.luxcore.denoiser.enabled
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        filter_forced_disabled = utils.is_pixel_filtering_forced_disabled(context.scene, denoiser_enabled)
+        if filter_forced_disabled:
+            layout.label(text="Filtering disabled (required by denoiser)", icon=icons.INFO)
+
+        col = layout.column(align=True)
+        col.active = config.filter_enabled and not filter_forced_disabled
+        col.prop(config, "filter")
+
+        col = layout.column(align=True)
+        col.active = config.filter_enabled and not filter_forced_disabled
+        col.prop(config, "filter_width")
+        if config.filter == "GAUSSIAN":
+            layout.prop(config, "gaussian_alpha")
+        elif config.filter == "SINC":
+            layout.prop(config, "sinc_tau")
+
+
 class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
-    lux_predecessor = "LUXCORE_RENDER_PT_sampling_adaptivity"
+    lux_predecessor = "LUXCORE_RENDER_PT_sampling_pixel_filtering"
     bl_label = "Advanced"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
         config = context.scene.luxcore.config
-        denoiser = context.scene.luxcore.denoiser
 
         layout.use_property_split = True
         layout.use_property_decorate = False
@@ -171,23 +214,6 @@ class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
             col.active = False
         
         col.prop(config, "light_strategy")
-        
-        # Filter settings
-        filter_forced_none = denoiser.enabled and config.engine == "BIDIR" and config.filter != "NONE"
-        if filter_forced_none:
-            layout.label(text='Filter set to "None" (required by denoiser)', icon=icons.INFO)
-        
-        col = layout.column(align=True)      
-        col.enabled = not filter_forced_none        
-        col.prop(config, "filter")
-
-        col = layout.column(align=True)      
-        col.enabled = config.filter != "NONE"
-        col.prop(config, "filter_width")
-        if config.filter == "GAUSSIAN":
-            layout.prop(config, "gaussian_alpha")
-        elif config.filter == "SINC":
-            layout.prop(config, "sinc_tau")
         
         # Tiled path
         if config.engine == "PATH":

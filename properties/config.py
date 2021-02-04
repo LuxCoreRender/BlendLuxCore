@@ -53,9 +53,9 @@ THRESH_REDUCT_DESC = (
 THRESH_WARMUP_DESC = "How many samples to render before starting the convergence tests"
 
 FILTER_DESC = (
-    "Pixel filtering slightly blurs the image, which reduces noise and \n"
-    "fireflies and leads to a more realistic image impression;\n"
-    "When using OpenCL, disabling this option can increase rendering speed"
+    "Pixel filtering blends pixels with their neighbours according to the chosen filter type. "
+    "This can be used to blur or sharpen the image. Note that it is recommended to disable "
+    "pixel filtering when denoising is used"
 )
 FILTER_WIDTH_DESC = "Filter width in pixels; lower values result in a sharper image, higher values smooth out noise"
 
@@ -463,13 +463,13 @@ class LuxCoreConfig(PropertyGroup):
     bidir_path_maxdepth: IntProperty(name="Eye Depth", default=10, min=1, soft_max=16)
 
     # Pixel filter
+    filter_enabled: BoolProperty(name="Enable Pixel Filtering", default=False, description=FILTER_DESC)
     filters = [
         ("BLACKMANHARRIS", "Blackman-Harris", "Default, usually the best option", 0),
         ("MITCHELL_SS", "Mitchell", "Sharp, but can produce black ringing artifacts around bright pixels", 1),
         ("GAUSSIAN", "Gaussian", "Blurry", 2),
         ("SINC", "Sinc", "", 4),
         ("CATMULLROM", "Catmull-Rom", "", 5),
-        ("NONE", "None", "Disable pixel filtering. Fastest setting when rendering on GPU", 3)
     ]
     filter: EnumProperty(name="Filter", items=filters, default="BLACKMANHARRIS",
                           description=FILTER_DESC)
