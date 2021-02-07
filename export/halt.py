@@ -9,10 +9,13 @@ def convert(scene):
     definitions = {}
 
     halt = utils.get_halt_conditions(scene)
+    config = scene.luxcore.config
 
     if halt.enable:
         halt_time = halt.time if halt.use_time else 0
-        halt_spp = halt.samples if halt.use_samples else 0
+        halt_spp_eye = halt.samples if halt.use_samples else 0
+        halt_spp_light = halt.light_samples if (halt.use_light_samples
+            and not config.using_only_lighttracing()) else 0
 
         if halt.use_noise_thresh:
             if halt.noise_thresh == 0:
@@ -30,20 +33,17 @@ def convert(scene):
         # Note that we have to explicitly set halttime and haltspp to 0 because
         # these properties are not deleted during a session parsing.
         halt_time = 0
-        halt_spp = 0
+        halt_spp_eye = 0
+        halt_spp_light = 0
 
     if utils.use_two_tiled_passes(scene):
         aa = scene.luxcore.config.tile.path_sampling_aa_size
-        halt_spp = max(halt_spp, 2 * aa**2)
+        halt_spp_eye = max(halt_spp_eye, 2 * aa**2)
 
-    halt_spp_eye = halt_spp
-    halt_spp_light = 0
-
-    # Only use light spp halt condition if no eye samples are rendered at all
-    config = scene.luxcore.config
+    # Swap halt condition if no eye samples are rendered at all
     if config.using_only_lighttracing():
+        halt_spp_light = halt_spp_eye
         halt_spp_eye = 0
-        halt_spp_light = halt_spp
 
     definitions["batch.haltspp"] = [halt_spp_eye, halt_spp_light]
     definitions["batch.halttime"] = halt_time

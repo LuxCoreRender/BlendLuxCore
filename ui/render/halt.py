@@ -60,8 +60,14 @@ def draw(layout, context, halt):
             if halt.samples < min_samples:
                 layout.label(text="Use at least %d samples!" % min_samples, icon=icons.WARNING)
 
+    if config.path.hybridbackforward_enable and not config.using_only_lighttracing():
+        layout.prop(halt, "use_light_samples")
+        col = layout.column(align=True)
+        col.active = halt.use_light_samples
+        col.prop(halt, "light_samples")
+
+    layout.prop(halt, "use_noise_thresh")
     col = layout.column(align=True)
-    col.prop(halt, "use_noise_thresh")
     if halt.use_noise_thresh:
         col.prop(halt, "noise_thresh")
         col.prop(halt, "noise_thresh_warmup")
@@ -91,6 +97,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
+        config = context.scene.luxcore.config
         halt = context.scene.luxcore.halt
         draw(layout, context, halt)
 
@@ -116,6 +123,9 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
                     conditions.append("Time (%ds)" % halt.time)
                 if halt.use_samples:
                     conditions.append("Samples (%d)" % halt.samples)
+                if (halt.use_light_samples and config.path.hybridbackforward_enable
+                        and not config.using_only_lighttracing()):
+                    conditions.append("Light Path Samples (%d)" % halt.light_samples)
                 if halt.use_noise_thresh:
                     conditions.append("Noise (%d)" % halt.noise_thresh)
 
