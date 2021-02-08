@@ -94,9 +94,11 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
     engine.update_stats("", pretty_stats + " | " + refresh_message)
 
     # Update progress bar if we have halt conditions
+    using_hybridbackforward = utils.using_hybridbackforward(scene)
     halt = utils.get_halt_conditions(scene)
     if halt.enable and (halt.use_time or halt.use_samples
-            or halt.use_light_samples or halt.use_noise_thresh):
+            or (halt.use_light_samples and using_hybridbackforward)
+            or halt.use_noise_thresh):
         samples_eye = stats.Get("stats.renderengine.pass.eye").GetInt()
         samples_light = stats.Get("stats.renderengine.pass.light").GetInt()
         rendered_time = stats.Get("stats.renderengine.time").GetFloat()
@@ -105,7 +107,8 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
         if halt.use_time:
             percent = rendered_time / halt.time
 
-        if halt.use_samples and halt.use_light_samples:
+        if halt.use_samples and halt.use_light_samples and using_hybridbackforward:
+            # Using both eye pass limit and light pass limit
             # Because both sample limits must be reached for haltspp to trigger,
             # take the smaller (slower) of the two percentages
             percent_eye = samples_eye / halt.samples
@@ -113,13 +116,15 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
             percent_samples = min(percent_eye, percent_light)
             percent = max(percent, percent_samples)
         elif halt.use_samples:
+            # Using only eye pass limit (or not using hybridbackforward)
             if scene.luxcore.config.using_only_lighttracing():
                 rendered_samples = samples_light
             else:
                 rendered_samples = samples_eye
             percent_samples = rendered_samples / halt.samples
             percent = max(percent, percent_samples)
-        elif halt.use_light_samples:
+        elif halt.use_light_samples and using_hybridbackforward:
+            # Using only light pass limit
             percent_samples = samples_light / halt.light_samples
             percent = max(percent, percent_samples)
 
@@ -175,6 +180,7 @@ def get_pretty_stats(config, stats, scene, context=None):
         # Samples (aka passes)
         samples_eye = stats.Get("stats.renderengine.pass.eye").GetInt()
         samples_light = stats.Get("stats.renderengine.pass.light").GetInt()
+        using_hybridbackforward = utils.using_hybridbackforward(scene)
         only_lighttracing = scene.luxcore.config.using_only_lighttracing()
 
         if halt.enable and halt.use_samples and not only_lighttracing:
@@ -187,7 +193,7 @@ def get_pretty_stats(config, stats, scene, context=None):
         if samples_light > 0 and engine not in {"BIDIRCPU", "BIDIRVMCPU"}:
             if halt.use_samples and only_lighttracing:
                 samples_msg += f" (+ {samples_light}/{halt.samples} Light Tracing)"
-            elif halt.use_light_samples:
+            elif halt.use_light_samples and using_hybridbackforward:
                 samples_msg += f" (+ {samples_light}/{halt.light_samples} Light Tracing)"
             else:
                 samples_msg += f" (+ {samples_light} Light Tracing)"

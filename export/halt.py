@@ -10,12 +10,14 @@ def convert(scene):
 
     halt = utils.get_halt_conditions(scene)
     config = scene.luxcore.config
+    using_hybridbackforward = utils.using_hybridbackforward(scene)
+    using_only_lighttracing = config.using_only_lighttracing()
 
     if halt.enable:
         halt_time = halt.time if halt.use_time else 0
         halt_spp_eye = halt.samples if halt.use_samples else 0
         halt_spp_light = halt.light_samples if (halt.use_light_samples
-            and not config.using_only_lighttracing()) else 0
+            and using_hybridbackforward and not using_only_lighttracing) else 0
 
         if halt.use_noise_thresh:
             if halt.noise_thresh == 0:
@@ -41,7 +43,7 @@ def convert(scene):
         halt_spp_eye = max(halt_spp_eye, 2 * aa**2)
 
     # Swap halt condition if no eye samples are rendered at all
-    if config.using_only_lighttracing():
+    if using_only_lighttracing:
         halt_spp_light = halt_spp_eye
         halt_spp_eye = 0
 

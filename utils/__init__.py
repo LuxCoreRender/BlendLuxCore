@@ -491,10 +491,14 @@ def using_bidir_in_viewport(scene):
     return scene.luxcore.config.engine == "BIDIR" and scene.luxcore.viewport.use_bidir
 
 
-def using_hybridbackforward_in_viewport(scene):
+def using_hybridbackforward(scene):
     config = scene.luxcore.config
     return (config.engine == "PATH" and not config.use_tiles
-            and config.path.hybridbackforward_enable and scene.luxcore.viewport.add_light_tracing)
+            and config.path.hybridbackforward_enable)
+
+
+def using_hybridbackforward_in_viewport(scene):
+    return using_hybridbackforward(scene) and scene.luxcore.viewport.add_light_tracing
 
 
 def using_photongi_debug_mode(is_viewport_render, scene):
