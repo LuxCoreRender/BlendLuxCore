@@ -403,8 +403,11 @@ def mouse_raycast(context, mx, my):
 
     vec = ray_target - ray_origin
 
+    # Python API changed in 2.91: https://wiki.blender.org/wiki/Reference/Release_Notes/2.91/Python_API
+    view_layer_or_depsgraph = bpy.context.view_layer if bpy.app.version[:2] < (2, 91) else bpy.context.view_layer.depsgraph
+
     has_hit, snapped_location, snapped_normal, face_index, object, matrix = bpy.context.scene.ray_cast(
-        bpy.context.view_layer, ray_origin, vec)
+        view_layer_or_depsgraph, ray_origin, vec)
 
     randoffset = math.pi
     if has_hit:
