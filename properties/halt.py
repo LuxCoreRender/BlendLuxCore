@@ -1,9 +1,28 @@
 import bpy
 from bpy.props import IntProperty, BoolProperty
 
+USE_SAMPLES_DESC = (
+    "The rendering will stop when the number of samples reaches "
+    "the specified value"
+)
+
+SAMPLES_DESC = (
+    "At least this many samples will be rendered before stopping"
+)
+
+USE_LIGHT_PATH_SAMPLES_DESC = (
+    "The rendering will stop when the number of light path samples reaches "
+    "the specified value"
+)
+
+LIGHT_PATH_SAMPLES_DESC = (
+    "At least this many light path samples will be rendered before stopping"
+)
+
 USE_NOISE_THRESH_DESC = (
     "The rendering will stop when the noise in the image falls "
-    "below the specified threshold")
+    "below the specified threshold"
+)
 
 NOISE_THRESH_DESC = (
     "Value between 0 and 255. If the noise falls below this value, the rendering is stopped. "
@@ -27,8 +46,15 @@ class LuxCoreHaltConditions(bpy.types.PropertyGroup):
     use_time: BoolProperty(name="Use Time", default=False)
     time: IntProperty(name="Time (s)", default=600, min=1)
 
-    use_samples: BoolProperty(name="Use Samples", default=False)
-    samples: IntProperty(name="Samples", default=500, min=1)
+    use_samples: BoolProperty(name="Use Samples", default=False,
+                               description=USE_SAMPLES_DESC)
+    samples: IntProperty(name="Samples", default=500, min=1,
+                          description=SAMPLES_DESC)
+
+    use_light_samples: BoolProperty(name="Use Light Path Samples", default=False,
+                                     description=USE_LIGHT_PATH_SAMPLES_DESC)
+    light_samples: IntProperty(name="Light Path Samples", default=100, min=1,
+                                description=LIGHT_PATH_SAMPLES_DESC)
 
     # Noise threshold
     use_noise_thresh: BoolProperty(name="Use Noise Threshold", default=False,

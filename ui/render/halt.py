@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bl_ui.properties_view_layer import ViewLayerButtonsPanel
 from bpy.types import Panel
+from ... import utils
 from ...utils import ui as utils_ui
 from .. import icons
 from .sampling import calc_samples_per_pass
@@ -27,7 +28,10 @@ def draw(layout, context, halt):
 
     config = context.scene.luxcore.config
     denoiser = context.scene.luxcore.denoiser
-    
+
+    using_hybridbackforward = utils.using_hybridbackforward(context.scene)
+    using_only_lighttracing = config.using_only_lighttracing()
+
     if halt.use_samples:
         samples_per_pass = calc_samples_per_pass(config)
         
@@ -60,8 +64,14 @@ def draw(layout, context, halt):
             if halt.samples < min_samples:
                 layout.label(text="Use at least %d samples!" % min_samples, icon=icons.WARNING)
 
+    if using_hybridbackforward and not using_only_lighttracing:
+        layout.prop(halt, "use_light_samples")
+        col = layout.column(align=True)
+        col.active = halt.use_light_samples
+        col.prop(halt, "light_samples")
+
+    layout.prop(halt, "use_noise_thresh")
     col = layout.column(align=True)
-    col.prop(halt, "use_noise_thresh")
     if halt.use_noise_thresh:
         col.prop(halt, "noise_thresh")
         col.prop(halt, "noise_thresh_warmup")
@@ -91,6 +101,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
+        config = context.scene.luxcore.config
         halt = context.scene.luxcore.halt
         draw(layout, context, halt)
 
@@ -108,6 +119,9 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
                                 text="Show", icon="RENDERLAYERS")
             op.target = "VIEW_LAYER"
 
+            using_hybridbackforward = utils.using_hybridbackforward(context.scene)
+            using_only_lighttracing = config.using_only_lighttracing()
+
             for layer in overriding_layers:
                 halt = layer.luxcore.halt
                 conditions = []
@@ -116,6 +130,9 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
                     conditions.append("Time (%ds)" % halt.time)
                 if halt.use_samples:
                     conditions.append("Samples (%d)" % halt.samples)
+                if (halt.use_light_samples and using_hybridbackforward
+                        and not using_only_lighttracing):
+                    conditions.append("Light Path Samples (%d)" % halt.light_samples)
                 if halt.use_noise_thresh:
                     conditions.append("Noise (%d)" % halt.noise_thresh)
 
