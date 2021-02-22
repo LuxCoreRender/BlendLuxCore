@@ -456,12 +456,13 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             fluidmat = fluidmat @ mathutils.Matrix.Translation(
                 mathutils.Vector((bbox[0]/nx, bbox[1]/ny,bbox[2]/nz)))
 
-        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
-        mapping_type = 'globalmapping3d'
-
+        mapping_definitions = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
+        transformation = utils.list_to_matrix(mapping_definitions["mapping.transformation"])
+        mapping_definitions["mapping.type"] = "globalmapping3d"
         # combine transformations
-        matrix_transformation = utils.matrix_to_list(transformation @ obmat @ fluidmat @ houdini_transform,
-                                                     invert=True)
+        mapping_definitions["mapping.transformation"] = utils.matrix_to_list(transformation @ obmat @ fluidmat @ houdini_transform,
+                                                                             invert=True)
+
         definitions = {
             "type": "densitygrid",
             "wrap": "black",
@@ -471,9 +472,7 @@ class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
             "nz": nz,
             "openvdb.file": bpy.path.abspath(file_path),
             "openvdb.grid": grid_name,
-            # Mapping
-            "mapping.type": mapping_type,
-            "mapping.transformation": matrix_transformation,
         }
+        definitions.update(mapping_definitions)
 
         return self.create_props(props, definitions, luxcore_name)

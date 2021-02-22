@@ -2,6 +2,7 @@ import bpy
 from bpy.props import FloatProperty, BoolProperty, FloatVectorProperty, EnumProperty, StringProperty, IntProperty
 from mathutils import Matrix
 from ..base import LuxCoreNodeTexture
+from ... import utils
 from ...utils import node as utils_node
 
 
@@ -69,12 +70,19 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
         scale_column.prop(self, "use_uniform_scale")
 
     def export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        mapping_type, uvindex, input_mapping = self.inputs["3D Mapping (optional)"].export(exporter, depsgraph, props)
-        # Use the mapping type of this node only when mapping type is not
-        # already set by previous mapping node
-        if not self.inputs["3D Mapping (optional)"].is_linked:
+        input_socket = self.inputs["3D Mapping (optional)"]
+        if utils_node.get_link(input_socket):
+            definitions = input_socket.export(exporter, depsgraph, props)
+            mapping_type = definitions["mapping.type"]
+            uvindex = definitions["mapping.uvindex"]
+            # Needs to be converted back to mathutils.Matrix so we can work with it
+            input_mapping = utils.list_to_matrix(definitions["mapping.transformation"])
+        else:
+            # Use the mapping type of this node only when mapping type is not
+            # already set by previous mapping node
             mapping_type = self.mapping_type
             uvindex = self.uvindex
+            input_mapping = Matrix()
 
         # create a location matrix
         tex_loc = Matrix.Translation(self.translate)
@@ -102,4 +110,9 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
         # Transform input matrix
         output_mapping = input_mapping @ transformation
 
-        return mapping_type, uvindex, output_mapping
+        return {
+            "mapping.type": mapping_type,
+            "mapping.transformation": utils.matrix_to_list(output_mapping),
+            # Only used when mapping.type is uvmapping3d
+            "mapping.uvindex": uvindex,
+        }

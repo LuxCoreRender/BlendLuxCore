@@ -1,9 +1,7 @@
 import bpy
 from bpy.props import BoolProperty
 from ..base import LuxCoreNodeTexture
-from ... import utils
 from ...utils import node as utils_node
-
 
 
 class LuxCoreNodeTexTriplanar(bpy.types.Node, LuxCoreNodeTexture):
@@ -37,8 +35,6 @@ class LuxCoreNodeTexTriplanar(bpy.types.Node, LuxCoreNodeTexture):
         layout.prop(self, "multiple_textures")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
-
         if self.multiple_textures:
             tex1 = self.inputs["Color X"].export(exporter, depsgraph, props)
             tex2 = self.inputs["Color Y"].export(exporter, depsgraph, props)
@@ -51,15 +47,10 @@ class LuxCoreNodeTexTriplanar(bpy.types.Node, LuxCoreNodeTexture):
             "texture1": tex1,
             "texture2": tex2,
             "texture3": tex3,
-            # Mapping
-            "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation),
         }
+        definitions.update(self.inputs["3D Mapping"].export(exporter, depsgraph, props))
 
         if not utils_node.get_link(self.inputs["3D Mapping"]):
             definitions["mapping.type"] = "localmapping3d"
-
-        if mapping_type == "uvmapping3d":
-            definitions["mapping.uvindex"] = uvindex
 
         return self.create_props(props, definitions, luxcore_name)

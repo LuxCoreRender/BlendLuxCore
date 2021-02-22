@@ -2,6 +2,7 @@ import bpy
 import mathutils
 from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty, BoolProperty
 from ..utils import node as utils_node
+from ..utils import matrix_to_list
 from ..utils.errorlog import LuxCoreErrorLog
 from ..ui import icons
 
@@ -329,10 +330,12 @@ class LuxCoreSocketMapping3D(bpy.types.NodeSocket, LuxCoreNodeSocket):
     default_value = None
 
     def export_default(self):
-        uvindex = 0
-        mapping_type = "globalmapping3d"
-        transformation = mathutils.Matrix()
-        return mapping_type, uvindex, transformation
+        return {
+            "mapping.type": "globalmapping3d",
+            "mapping.transformation": matrix_to_list(mathutils.Matrix()),
+            # Only relevant when mapping.type is uvmapping3d
+            "mapping.uvindex": 0,
+        }
 
 
 class LuxCoreSocketShape(bpy.types.NodeSocket, LuxCoreNodeSocket):

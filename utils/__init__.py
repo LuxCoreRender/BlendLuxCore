@@ -141,6 +141,15 @@ def matrix_to_list(matrix, invert=False):
     return pyluxcore.BlenderMatrix4x4ToList(matrix)
 
 
+def list_to_matrix(lst):
+    return mathutils.Matrix([
+        lst[0:4],
+        lst[4:8],
+        lst[8:12],
+        lst[12:16],
+    ])
+
+
 def calc_filmsize_raw(scene, context=None):
     if context:
         # Viewport render

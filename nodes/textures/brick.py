@@ -1,7 +1,6 @@
 import bpy
 from bpy.props import EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
-from ... import utils
 from ...utils import node as utils_node
 
 
@@ -27,9 +26,6 @@ class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
     modulation_bias: FloatProperty(update=utils_node.force_viewport_update, name="Modulation Bias", description="", default=0, min=-1, max=1)
     
     def init(self, context):
-        # self.add_input("LuxCoreSocketColor", "bricktex", (0.7, 0.7, 0.7))     -> "Brick Color 1"
-        # self.add_input("LuxCoreSocketColor", "mortartex", (0.2, 0.2, 0.2))    -> "Mortar Color"
-        # self.add_input("LuxCoreSocketColor", "brickmodtex", (1.0, 1.0, 1.0))  -> "Brick Color 2"
         self.add_input("LuxCoreSocketColor", "Brick Color 1", (0.3, 0.3, 0.3))
         self.add_input("LuxCoreSocketColor", "Brick Color 2", (0.6, 0.6, 0.6))
         self.add_input("LuxCoreSocketColor", "Mortar Color", (0.2, 0.2, 0.2))
@@ -46,8 +42,6 @@ class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
         layout.prop(self, "modulation_bias")
     
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        mapping_type, uvindex, transformation = self.inputs["3D Mapping"].export(exporter, depsgraph, props)
-        
         definitions = {
             "type": "brick",
             "brickbond": self.brickbond.replace("_", " "),
@@ -60,12 +54,6 @@ class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
             "brickdepth": self.brickdepth,
             "mortarsize": self.mortarsize,
             "brickrun": self.brickrun / 100,
-            # Mapping
-            "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(transformation),
-        }       
-
-        if mapping_type == "uvmapping3d":
-            definitions["mapping.uvindex"] = uvindex
-
+        }
+        definitions.update(self.inputs["3D Mapping"].export(exporter, depsgraph, props))
         return self.create_props(props, definitions, luxcore_name)
