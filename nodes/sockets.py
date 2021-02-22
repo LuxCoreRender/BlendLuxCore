@@ -310,11 +310,13 @@ class LuxCoreSocketMapping2D(bpy.types.NodeSocket, LuxCoreNodeSocket):
     def export_default(self):
         # These are not the LuxCore API default values because
         # we have to compensate Blenders mirrored V axis
-        uvindex = 0
-        uvscale = [1, -1]
-        uvrotation = 0
-        uvdelta = [0, 1]
-        return uvindex, uvscale, uvrotation, uvdelta
+        return {
+            "mapping.type": "uvmapping2d",
+            "mapping.uvscale": [1, -1],
+            "mapping.uvindex": 0,
+            "mapping.rotation": 0,
+            "mapping.uvdelta": [0, 1],
+        }
 
 
 class LuxCoreSocketMapping3D(bpy.types.NodeSocket, LuxCoreNodeSocket):

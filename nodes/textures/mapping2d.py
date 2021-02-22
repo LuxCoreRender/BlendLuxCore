@@ -62,10 +62,10 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
         row.prop(self, "udelta")
         row.prop(self, "vdelta")
 
-    def export(self, exporter, despgraph, props, luxcore_name=None, output_socket=None):
+    def export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         input_socket = self.inputs["2D Mapping (optional)"]
         if utils_node.get_link(input_socket):
-            definitions = input_socket.export(exporter, despgraph, props)
+            definitions = input_socket.export(exporter, depsgraph, props)
             uvindex = definitions["mapping.uvindex"]
             input_uvscale = definitions["mapping.uvscale"]
             input_rotation = definitions["mapping.rotation"]
