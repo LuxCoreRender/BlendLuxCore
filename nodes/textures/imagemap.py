@@ -176,20 +176,13 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             LuxCoreErrorLog.add_warning(msg)
             return [1, 0, 1]
 
-        uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
-
         definitions = {
             "type": "imagemap",
             "file": filepath,
             "wrap": self.wrap,
             "randomizedtiling.enable": self.wrap == "repeat" and self.randomized_tiling,
-            # Mapping
-            "mapping.type": "uvmapping2d",
-            "mapping.uvscale": uvscale,
-            "mapping.uvindex": uvindex,
-            "mapping.rotation": uvrotation,
-            "mapping.uvdelta": uvdelta,
         }
+        definitions.update(self.inputs["2D Mapping"].export(exporter, depsgraph, props))
 
         if self.is_normal_map:
             definitions.update({

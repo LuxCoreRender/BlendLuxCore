@@ -28,8 +28,6 @@ class LuxCoreNodeTexBombing(bpy.types.Node, LuxCoreNodeTexture):
         layout.prop(self, "use_random_rotation")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        uvindex, uvscale, uvrotation, uvdelta = self.inputs["2D Mapping"].export(exporter, depsgraph, props)
-
         # TODO support for multiple bullets?
         definitions = {
             "type": "bombing",
@@ -38,11 +36,6 @@ class LuxCoreNodeTexBombing(bpy.types.Node, LuxCoreNodeTexture):
             "bullet.mask": self.inputs["Mask"].export(exporter, depsgraph, props),
             "bullet.randomscale.range": self.random_scale * 5,
             "bullet.randomrotation.enable": self.use_random_rotation,
-            # Mapping
-            "mapping.type": "uvmapping2d",
-            "mapping.uvscale": uvscale,
-            "mapping.uvindex": uvindex,
-            "mapping.rotation": uvrotation,
-            "mapping.uvdelta": uvdelta,
         }
+        definitions.update(self.inputs["2D Mapping"].export(exporter, depsgraph, props))
         return self.create_props(props, definitions, luxcore_name)
