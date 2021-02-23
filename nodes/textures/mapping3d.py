@@ -8,29 +8,6 @@ from ...utils import node as utils_node
 from ...ui import icons
 from ...export.caches.object_cache import TriAOVDataIndices
 
-"""
-scene.textures.140689401127944Color.mapping.type = "localrandommapping3d"
-scene.textures.140689401127944Color.mapping.transformation = 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1
-# Type of seed: "object_id" or "triangle_aov"
-scene.textures.140689401127944Color.mapping.seed.type = object_id
-# If seed type is "triangle_aov", the index of the AOV to use
-#scene.textures.140689401127944Color.mapping.triangleaov.index = 0
-# Rotation Min/Max range
-scene.textures.140689401127944Color.mapping.xrotation = 0 360
-scene.textures.140689401127944Color.mapping.yrotation = 0 360
-scene.textures.140689401127944Color.mapping.zrotation = 0 360
-# Translate Min/Max range
-scene.textures.140689401127944Color.mapping.xtranslate = 0 0
-scene.textures.140689401127944Color.mapping.ytranslate = 0 0
-scene.textures.140689401127944Color.mapping.ztranslate = 0 0
-# Sclae Min/Max range
-scene.textures.140689401127944Color.mapping.xscale = 1 1
-scene.textures.140689401127944Color.mapping.yscale = 0.7 1.3
-scene.textures.140689401127944Color.mapping.zscale = 0.7 1.3
-# If to use the same scale for X, Y and Z or decouple them
-scene.textures.140689401127944Color.mapping.xyzscale.uniform = 1
-"""
-
 
 class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
     bl_label = "3D Mapping"
@@ -272,7 +249,6 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
             definitions["mapping.seed.type"] = "triangle_aov"
             definitions["mapping.triangleaov.index"] = TriAOVDataIndices.RANDOM_PER_ISLAND_INT
 
-        print(definitions)
         return definitions
 
     def export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
