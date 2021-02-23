@@ -223,21 +223,19 @@ class LuxCoreNodeTexMapping3D(bpy.types.Node, LuxCoreNodeTexture):
             "mapping.type": "localrandommapping3d",
             # "mapping.transformation": Unused
 
-            # # Rotation Min/Max range
             "mapping.xrotation": [math.degrees(self.rotate[0]), math.degrees(rotate_max[0])],
             "mapping.yrotation": [math.degrees(self.rotate[1]), math.degrees(rotate_max[1])],
             "mapping.zrotation": [math.degrees(self.rotate[2]), math.degrees(rotate_max[2])],
-            # # Translate Min/Max range
+
             "mapping.xtranslate": [self.translate[0], translate_max[0]],
             "mapping.ytranslate": [self.translate[1], translate_max[1]],
             "mapping.ztranslate": [self.translate[2], translate_max[2]],
-            # # Sclae Min/Max range
+
             "mapping.xyzscale.uniform": self.use_uniform_scale,
             # When uniform scale is enabled, only the xscale property is used, and yscale and zscale are ignored
             "mapping.xscale": [self.uniform_scale, uniform_scale_max] if self.use_uniform_scale else [self.scale[0], scale_max[0]],
             "mapping.yscale": [self.scale[1], scale_max[1]],
             "mapping.zscale": [self.scale[2], scale_max[2]],
-            # # If to use the same scale for X, Y and Z or decouple them
 
             "mapping.uvindex": self.uvindex,
         }
