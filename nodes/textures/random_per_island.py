@@ -1,9 +1,7 @@
 import bpy
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
-
-
-DATAINDEX_RANDOM_PER_ISLAND = 0
+from ...export.caches.object_cache import TriAOVDataIndices
 
 
 class LuxCoreNodeTexRandomPerIsland(bpy.types.Node, LuxCoreNodeTexture):
@@ -20,7 +18,7 @@ class LuxCoreNodeTexRandomPerIsland(bpy.types.Node, LuxCoreNodeTexture):
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "hitpointtriangleaov",
-            "dataindex": DATAINDEX_RANDOM_PER_ISLAND,
+            "dataindex": TriAOVDataIndices.RANDOM_PER_ISLAND_FLOAT,
         }
 
         return self.create_props(props, definitions, luxcore_name)

@@ -16,7 +16,10 @@ from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
 from ...utils import MESH_OBJECTS
 from ...nodes.output import get_active_output
-from ...nodes.textures.random_per_island import DATAINDEX_RANDOM_PER_ISLAND
+
+class TriAOVDataIndices:
+    RANDOM_PER_ISLAND_INT = 0
+    RANDOM_PER_ISLAND_FLOAT = 1
 
 
 MAX_PARTICLES_FOR_LIVE_TRANSFORM = 2000
@@ -27,9 +30,17 @@ def uses_pointiness(node_tree):
     return utils_node.has_nodes(node_tree, "LuxCoreNodeTexPointiness", True)
 
 
-def uses_random_per_island(node_tree):
+def uses_random_per_island_uniform_float(node_tree):
     # TODO better check would be if the node is linked to the output and actually used
     return utils_node.has_nodes(node_tree, "LuxCoreNodeTexRandomPerIsland", True)
+
+
+def uses_random_per_island_int(node_tree):
+    # TODO better check would be if the node is linked to the output and actually used
+    for node in utils_node.find_nodes(node_tree, "LuxCoreNodeTexMapping2D", True):
+        if node.mapping_type == "uvrandommapping2d" and node.seed_type == "mesh_islands":
+            return True
+    return False
 
 
 def needs_edge_detector_shape(node_tree):
@@ -301,21 +312,31 @@ class ObjectCache2:
             scene_props.Set(pyluxcore.Property(prefix + "source", shape))
             shape = pointiness_shape
 
-        if uses_random_per_island(node_tree):
+        _uses_random_per_island_uniform_float = uses_random_per_island_uniform_float(node_tree)
+        _uses_random_per_island_int = uses_random_per_island_int(node_tree)
+        if _uses_random_per_island_uniform_float or _uses_random_per_island_int:
+            island_aov_index = TriAOVDataIndices.RANDOM_PER_ISLAND_INT
+
+            if not _uses_random_per_island_int:
+                # We don't need the int result, so use the float index for it so it gets overwrittten to save memory
+                island_aov_index = TriAOVDataIndices.RANDOM_PER_ISLAND_FLOAT
+
             island_aov_shape = input_shape + "_island_aov"
             prefix = "scene.shapes." + island_aov_shape + "."
             scene_props.Set(pyluxcore.Property(prefix + "type", "islandaov"))
             scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-            scene_props.Set(pyluxcore.Property(prefix + "dataindex", DATAINDEX_RANDOM_PER_ISLAND))
+            scene_props.Set(pyluxcore.Property(prefix + "dataindex", island_aov_index))
             shape = island_aov_shape
 
-            random_tri_aov_shape = input_shape + "_random_tri_aov_shape"
-            prefix = "scene.shapes." + random_tri_aov_shape + "."
-            scene_props.Set(pyluxcore.Property(prefix + "type", "randomtriangleaov"))
-            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-            scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", DATAINDEX_RANDOM_PER_ISLAND))
-            scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", DATAINDEX_RANDOM_PER_ISLAND))
-            shape = random_tri_aov_shape
+            if _uses_random_per_island_uniform_float:
+                # Used to normalize the island indices from ints to floats in 0..1 range
+                random_tri_aov_shape = input_shape + "_random_tri_aov_shape"
+                prefix = "scene.shapes." + random_tri_aov_shape + "."
+                scene_props.Set(pyluxcore.Property(prefix + "type", "randomtriangleaov"))
+                scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+                scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", island_aov_index))
+                scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", TriAOVDataIndices.RANDOM_PER_ISLAND_FLOAT))
+                shape = random_tri_aov_shape
 
         if needs_edge_detector_shape(node_tree):
             edge_detector_shape = input_shape + "_edge_detector"
