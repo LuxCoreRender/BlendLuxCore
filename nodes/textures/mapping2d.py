@@ -23,7 +23,10 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
 
     def update_mapping_type(self, context):
         self.inputs["2D Mapping (optional)"].enabled = self.mapping_type == "uvmapping2d"
-        utils_node.force_viewport_update(self, context)
+        if self.mapping_type == "uvrandommapping2d" and self.seed_type == "mesh_islands":
+            utils_node.force_viewport_mesh_update(self, context)
+        else:
+            utils_node.force_viewport_update(self, context)
 
     mapping_types = [
         ("uvmapping2d", "UV", "Use the UV coordinates of the mesh to map the texture", 0),
@@ -90,10 +93,13 @@ class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
         # Info about UV mapping so the user can react if no UV map etc.
         utils_node.draw_uv_info(context, layout)
 
-        input_mapping_node = utils_node.get_linked_node(self.inputs["2D Mapping (optional)"])
+        if "2D Mapping (optional)" in self.inputs:
+            input_mapping_node = utils_node.get_linked_node(self.inputs["2D Mapping (optional)"])
 
-        if isinstance(input_mapping_node, LuxCoreNodeTexMapping2D) and input_mapping_node.mapping_type == "uvrandommapping2d":
-            layout.label(text="Random not valid as input!", icon=icons.ERROR)
+            if isinstance(input_mapping_node, LuxCoreNodeTexMapping2D) and input_mapping_node.mapping_type == "uvrandommapping2d":
+                layout.label(text="Random not valid as input!", icon=icons.ERROR)
+        else:
+            input_mapping_node = None
 
         if not input_mapping_node and context.object:
             layout.prop_search(self, "uvmap", context.object.data, "uv_layers", text="UV Map", icon='GROUP_UVS')

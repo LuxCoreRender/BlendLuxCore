@@ -37,8 +37,8 @@ def uses_random_per_island_uniform_float(node_tree):
 
 def uses_random_per_island_int(node_tree):
     # TODO better check would be if the node is linked to the output and actually used
-    for node in utils_node.find_nodes(node_tree, "LuxCoreNodeTexMapping2D", True):
-        if node.mapping_type == "uvrandommapping2d" and node.seed_type == "mesh_islands":
+    for node in utils_node.find_nodes_multi(node_tree, {"LuxCoreNodeTexMapping2D", "LuxCoreNodeTexMapping3D"}, True):
+        if node.mapping_type in {"uvrandommapping2d", "localrandommapping3d"} and node.seed_type == "mesh_islands":
             return True
     return False
 
