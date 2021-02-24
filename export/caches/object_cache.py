@@ -60,6 +60,60 @@ def uses_displacement(obj):
             return True
     return False
 
+def define_shapes(input_shape, node_tree, exporter, depsgraph, scene_props):
+    shape = input_shape
+
+    output_node = get_active_output(node_tree)
+    if output_node:
+        # Convert the whole shape stack
+        shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
+
+    # Add some shapes at the end that are required by some nodes in the node tree
+
+    if uses_pointiness(node_tree):
+        # Note: Since Blender still does not make use of the vertex alpha channel
+        # as of 2.82, we use it to store the pointiness information.
+        pointiness_shape = input_shape + "_pointiness"
+        prefix = "scene.shapes." + pointiness_shape + "."
+        scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
+        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+        shape = pointiness_shape
+
+    _uses_random_per_island_uniform_float = uses_random_per_island_uniform_float(node_tree)
+    _uses_random_per_island_int = uses_random_per_island_int(node_tree)
+    if _uses_random_per_island_uniform_float or _uses_random_per_island_int:
+        island_aov_index = TriAOVDataIndices.RANDOM_PER_ISLAND_INT
+
+        if not _uses_random_per_island_int:
+            # We don't need the int result, so use the float index for it so it gets overwrittten to save memory
+            island_aov_index = TriAOVDataIndices.RANDOM_PER_ISLAND_FLOAT
+
+        island_aov_shape = input_shape + "_island_aov"
+        prefix = "scene.shapes." + island_aov_shape + "."
+        scene_props.Set(pyluxcore.Property(prefix + "type", "islandaov"))
+        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+        scene_props.Set(pyluxcore.Property(prefix + "dataindex", island_aov_index))
+        shape = island_aov_shape
+
+        if _uses_random_per_island_uniform_float:
+            # Used to normalize the island indices from ints to floats in 0..1 range
+            random_tri_aov_shape = input_shape + "_random_tri_aov_shape"
+            prefix = "scene.shapes." + random_tri_aov_shape + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "randomtriangleaov"))
+            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+            scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", island_aov_index))
+            scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", TriAOVDataIndices.RANDOM_PER_ISLAND_FLOAT))
+            shape = random_tri_aov_shape
+
+    if needs_edge_detector_shape(node_tree):
+        edge_detector_shape = input_shape + "_edge_detector"
+        prefix = "scene.shapes." + edge_detector_shape + "."
+        scene_props.Set(pyluxcore.Property(prefix + "type", "edgedetectoraov"))
+        scene_props.Set(pyluxcore.Property(prefix + "source", shape))
+        shape = edge_detector_shape
+
+    return shape
+
 
 def warn_about_subdivision_levels(obj):
     for modifier in obj.modifiers:
@@ -292,60 +346,6 @@ class ObjectCache2:
         if use_instancing:
             key += "_instance"
         return key
-        
-    def _define_shapes(self, input_shape, node_tree, exporter, depsgraph, scene_props):
-        shape = input_shape
-        
-        output_node = get_active_output(node_tree)
-        if output_node:
-            # Convert the whole shape stack
-            shape = output_node.inputs["Shape"].export_shape(exporter, depsgraph, scene_props, shape)
-
-        # Add some shapes at the end that are required by some nodes in the node tree
-
-        if uses_pointiness(node_tree):
-            # Note: Since Blender still does not make use of the vertex alpha channel 
-            # as of 2.82, we use it to store the pointiness information.
-            pointiness_shape = input_shape + "_pointiness"
-            prefix = "scene.shapes." + pointiness_shape + "."
-            scene_props.Set(pyluxcore.Property(prefix + "type", "pointiness"))
-            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-            shape = pointiness_shape
-
-        _uses_random_per_island_uniform_float = uses_random_per_island_uniform_float(node_tree)
-        _uses_random_per_island_int = uses_random_per_island_int(node_tree)
-        if _uses_random_per_island_uniform_float or _uses_random_per_island_int:
-            island_aov_index = TriAOVDataIndices.RANDOM_PER_ISLAND_INT
-
-            if not _uses_random_per_island_int:
-                # We don't need the int result, so use the float index for it so it gets overwrittten to save memory
-                island_aov_index = TriAOVDataIndices.RANDOM_PER_ISLAND_FLOAT
-
-            island_aov_shape = input_shape + "_island_aov"
-            prefix = "scene.shapes." + island_aov_shape + "."
-            scene_props.Set(pyluxcore.Property(prefix + "type", "islandaov"))
-            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-            scene_props.Set(pyluxcore.Property(prefix + "dataindex", island_aov_index))
-            shape = island_aov_shape
-
-            if _uses_random_per_island_uniform_float:
-                # Used to normalize the island indices from ints to floats in 0..1 range
-                random_tri_aov_shape = input_shape + "_random_tri_aov_shape"
-                prefix = "scene.shapes." + random_tri_aov_shape + "."
-                scene_props.Set(pyluxcore.Property(prefix + "type", "randomtriangleaov"))
-                scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-                scene_props.Set(pyluxcore.Property(prefix + "srcdataindex", island_aov_index))
-                scene_props.Set(pyluxcore.Property(prefix + "dstdataindex", TriAOVDataIndices.RANDOM_PER_ISLAND_FLOAT))
-                shape = random_tri_aov_shape
-
-        if needs_edge_detector_shape(node_tree):
-            edge_detector_shape = input_shape + "_edge_detector"
-            prefix = "scene.shapes." + edge_detector_shape + "."
-            scene_props.Set(pyluxcore.Property(prefix + "type", "edgedetectoraov"))
-            scene_props.Set(pyluxcore.Property(prefix + "source", shape))
-            shape = edge_detector_shape
-        
-        return shape
 
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
                      scene_props, is_viewport_render, view_layer=None, engine=None):
@@ -393,7 +393,7 @@ class ObjectCache2:
                         if mat:
                             node_tree = mat.luxcore.node_tree
                             if node_tree:
-                                lux_shape = self._define_shapes(lux_shape, node_tree, exporter, depsgraph, scene_props)
+                                lux_shape = define_shapes(lux_shape, node_tree, exporter, depsgraph, scene_props)
                         
                         self.exported_hair[psys_key] = lux_shape
                         
@@ -449,7 +449,7 @@ class ObjectCache2:
                 # (This assumes that the instances use the same materials as the original mesh)
                 if node_tree and not loaded_from_cache:
                     warn_about_missing_uvs(obj, node_tree)
-                    shape = self._define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
+                    shape = define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
 
                 exported_mesh.mesh_definitions[idx] = [shape, mat_index]
 
@@ -496,7 +496,7 @@ class ObjectCache2:
                                 if mat:
                                     node_tree = mat.luxcore.node_tree
                                     if node_tree:
-                                        shape = self._define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
+                                        shape = define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
                                 
                                 exported_mesh.mesh_definitions[i] = shape, mat_index
                         
