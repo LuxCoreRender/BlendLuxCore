@@ -152,7 +152,7 @@ def view_draw(engine, context, depsgraph):
             
             if not renderconfig.HasCachedKernels():
                 gpu_backend = utils.get_addon_preferences(context).gpu_backend
-                message = f"Compiling {gpu_backend} kernels (just once, takes a few minutes)"
+                message = f"Compiling {gpu_backend} kernels (just once, usually takes 15-30 minutes)"
         
         engine.update_stats("Starting viewport render", message)
         engine.viewport_starting_message_shown = True

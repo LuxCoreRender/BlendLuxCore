@@ -201,7 +201,7 @@ class Exporter(object):
         if renderengine_type.endswith("OCL") and not renderconfig.HasCachedKernels():
             if engine:
                 gpu_backend = utils.get_addon_preferences(bpy.context).gpu_backend
-                message = f"Compiling {gpu_backend} kernels (just once, takes a few minutes)"
+                message = f"Compiling {gpu_backend} kernels (just once, usually takes 15-30 minutes)"
                 engine.report({"INFO"}, message)
                 engine.update_stats(message, "")
 
