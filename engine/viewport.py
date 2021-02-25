@@ -100,6 +100,7 @@ def view_update(engine, context, depsgraph, changes=None):
     if changes:
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
             force_session_restart(engine)
+            return
 
         s = time()
         # We have to re-assign the session because it might have been replaced due to filmsize change
