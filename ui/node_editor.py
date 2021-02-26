@@ -5,7 +5,7 @@ from .material import lux_mat_template_ID
 original_draw = None
 
 
-# Copied from bl_ui/space_node.py (Blender 2.82a)
+# Copied from bl_ui/space_node.py (Blender 2.92.0)
 def lux_node_header_draw(panel, context):
     layout = panel.layout
 
@@ -15,13 +15,13 @@ def lux_node_header_draw(panel, context):
     id_from = snode.id_from
     tool_settings = context.tool_settings
     is_compositor = snode.tree_type == 'CompositorNodeTree'
+    types_that_support_material = {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META',
+                                   'GPENCIL', 'VOLUME', 'HAIR', 'POINTCLOUD'}
 
     layout.template_header()
 
     # Now expanded via the 'ui_type'
     # layout.prop(snode, "tree_type", text="")
-
-    types_that_support_material = {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META', 'GPENCIL'}
 
     if snode.tree_type == 'ShaderNodeTree':
         layout.prop(snode, "shader_type", text="")
@@ -39,7 +39,7 @@ def lux_node_header_draw(panel, context):
 
             layout.separator_spacer()
 
-            # disable material slot buttons when pinned, cannot find correct slot within id_from (#36589)
+            # disable material slot buttons when pinned, cannot find correct slot within id_from (T36589)
             # disable also when the selected object does not support materials
             has_material_slots = not snode.pin and ob_type in types_that_support_material
 
@@ -112,6 +112,23 @@ def lux_node_header_draw(panel, context):
         if snode_id:
             layout.prop(snode_id, "use_nodes")
 
+    elif snode.tree_type == 'GeometryNodeTree':
+        NODE_MT_editor_menus.draw_collapsible(context, layout)
+        layout.separator_spacer()
+
+        ob = context.object
+
+        row = layout.row()
+        if snode.pin:
+            row.enabled = False
+            row.template_ID(snode, "node_tree", new="node.new_geometry_node_group_assign")
+        elif ob:
+            active_modifier = ob.modifiers.active
+            if active_modifier and active_modifier.type == "NODES":
+                row.template_ID(active_modifier, "node_group", new="node.new_geometry_node_group_assign")
+            else:
+                row.template_ID(snode, "node_tree", new="node.new_geometry_nodes_modifier")
+
     ###########################################################################################
     # Specialized LuxCore code
     elif snode.tree_type == "luxcore_material_nodes":
@@ -179,7 +196,7 @@ def lux_node_header_draw(panel, context):
 
 
 def lux_draw_switch(panel, context):
-    if context.scene.render.engine == "LUXCORE":
+    if context.scene.render.engine == "LUXCORE" and context.space_data.tree_type == "luxcore_material_nodes":
         lux_node_header_draw(panel, context)
     else:
         original_draw(panel, context)
