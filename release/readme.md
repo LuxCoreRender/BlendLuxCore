@@ -2,8 +2,12 @@
 
 #### Using the Azure build system
 
-1. Change version in `__init__.py` (in the `bl_info` dictionary)
-2. Commit this change (but don't push yet):  
+1. Change version in `__init__.py` (in the `bl_info` dictionary), like so:
+    ```
+    "version": (2, 5),  # Put only the major and minor version numbers here, no suffixes like alpha or beta!
+    "warning": "",      # Empty string for final releases. For other releases, use this scheme: "alpha1", "beta1", "RC1"
+    ```
+3. Commit this change (but don't push yet):  
     `git add -u`  
     `git commit -m "blabla"`
 3. Tag the commit with the usual pattern 
