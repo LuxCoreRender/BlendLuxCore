@@ -1,5 +1,6 @@
 import bpy
 from bpy.props import IntProperty, BoolProperty, FloatProperty, StringProperty
+from .clear import VOLUME_PRIORITY_DESC
 from .. import COLORDEPTH_DESC
 from ..base import LuxCoreNodeVolume
 from ...properties.light import LIGHTGROUP_DESC
@@ -11,7 +12,8 @@ class LuxCoreNodeVolHomogeneous(bpy.types.Node, LuxCoreNodeVolume):
     bl_width_default = 175
 
     # TODO: get name, default, description etc. from super class or something
-    priority: IntProperty(update=utils_node.force_viewport_update, name="Priority", default=0, min=0)
+    priority: IntProperty(update=utils_node.force_viewport_update, name="Priority", default=0, min=0,
+                          description=VOLUME_PRIORITY_DESC)
     color_depth: FloatProperty(update=utils_node.force_viewport_update, name="Absorption Depth", default=1.0, min=0.000001,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
