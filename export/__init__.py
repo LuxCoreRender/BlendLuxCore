@@ -173,7 +173,8 @@ class Exporter(object):
 
         light_count = luxcore_scene.GetLightCount()
         if light_count > 1000:
-            msg = "The scene contains a lot of light sources (%d), performance might suffer" % light_count
+            msg = (f"The scene contains a lot of light sources ({light_count}), performance might suffer "
+                   f"(each triangle of a meshlight counts as a separate light)")
             LuxCoreErrorLog.add_warning(msg)
         if stats:
             stats.light_count.value = light_count
