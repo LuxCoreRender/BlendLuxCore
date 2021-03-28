@@ -5,13 +5,19 @@ from ..base import LuxCoreNodeVolume
 from ...properties.light import LIGHTGROUP_DESC
 from ...utils import node as utils_node
 
+VOLUME_PRIORITY_DESC = (
+    "In areas where two or more volumes overlap, the volume with the highest "
+    "priority number will be chosen and completely replace all other volumes"
+)
+
 
 class LuxCoreNodeVolClear(bpy.types.Node, LuxCoreNodeVolume):
     bl_label = "Clear Volume"
     bl_width_default = 160
 
     # TODO: get name, default, description etc. from super class or something
-    priority: IntProperty(update=utils_node.force_viewport_update, name="Priority", default=0, min=0)
+    priority: IntProperty(update=utils_node.force_viewport_update, name="Priority", default=0, min=0,
+                          description=VOLUME_PRIORITY_DESC)
     color_depth: FloatProperty(update=utils_node.force_viewport_update, name="Absorption Depth", default=1.0, min=0.000001,
                                 subtype="DISTANCE", unit="LENGTH",
                                 description=COLORDEPTH_DESC)
