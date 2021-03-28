@@ -368,7 +368,11 @@ class Downloader(threading.Thread):
 
         if tcom.passargs['thumbnail']:
             # Thumbnail  download
-            imagename = splitext(self.asset['url'])[0] + '.jpg'
+            if tcom.passargs['asset type'] == 'MATERIAL':
+                imagename = self.asset['name'] + '.jpg'
+            else:
+                imagename = splitext(self.asset['url'])[0] + '.jpg'
+
             thumbnailpath = os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower(), 'preview',
                                          'full', imagename)
             url = LOL_HOST_URL + "/" + tcom.passargs['asset type'].lower() + "/preview/" + imagename
@@ -474,7 +478,7 @@ def link_asset(context, asset, location, rotation):
     link_model = (scene.luxcoreOL.model.append_method == 'LINK_COLLECTION')
 
     with bpy.data.libraries.load(filepath, link=link_model) as (data_from, data_to):
-        data_to.objects = [name for name in data_from.objects if name not in ["Plane", "Camera"]]
+        data_to.objects = [name for name in data_from.objects]
 
     bbox_min = asset["bbox_min"]
     bbox_max = asset["bbox_max"]
@@ -685,8 +689,13 @@ def load_previews(context, asset_type):
     clean_previmg()
     if assets is not None and len(assets) != 0:
         for asset in assets:
-            tpath_full = join(user_preferences.global_dir, asset_type, 'preview', 'full', splitext(asset['url'])[0] + '.jpg')
-            tpath = join(user_preferences.global_dir, asset_type, 'preview', splitext(asset['url'])[0] + '.jpg')
+            if asset_type == 'MATERIAL':
+                imagename = asset['name'].replace(" ", "_") + '.jpg'
+            else:
+                imagename = splitext(asset['url'])[0] + '.jpg'
+
+            tpath_full = join(user_preferences.global_dir, asset_type, 'preview', 'full', imagename)
+            tpath = join(user_preferences.global_dir, asset_type, 'preview', imagename)
 
             if os.path.exists(tpath_full) and os.path.getsize(tpath_full) > 0 and \
                     os.path.exists(tpath) and os.path.getsize(tpath) > 0:
@@ -700,7 +709,7 @@ def load_previews(context, asset_type):
                     img.colorspace_settings.name = 'Linear'
             else:
                 if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
-                    print('Copy and downscale: ', splitext(asset['url'])[0] + '.jpg')
+                    print('Copy and downscale: ', imagename)
                     img = bpy.data.images.load(tpath)
                     if img.size == (128, 128):
                         img.name = '.LOL_preview'

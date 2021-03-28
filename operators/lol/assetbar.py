@@ -278,8 +278,14 @@ def draw_tooltip(context, x, y, text='', author='', asset=None, gravatar=None):
     from os.path import join, splitext
     import os
 
+    if ui_props.asset_type == 'MATERIAL':
+        imagename = asset['name'].replace(" ", "_") + '.jpg'
+        print(imagename)
+    else:
+        imagename = splitext(asset['url'])[0] + '.jpg'
+
     tpath = join(user_preferences.global_dir, ui_props.asset_type, 'preview', 'full',
-                 splitext(asset['url'])[0] + '.jpg')
+                 imagename)
     img = utils.get_thumbnail('thumbnail_notready.jpg')
 
     if os.path.exists(tpath) and os.path.getsize(tpath) > 0:
