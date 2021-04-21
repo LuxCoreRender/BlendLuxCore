@@ -43,9 +43,9 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 # These are the same as in BlendLuxCore/bin/get_binaries.py
 # (apart from missing luxcoreui, that's only for developers)
 LINUX_FILES = [
-    "libembree3.so.3", "libtbb.so.2", "libtbbmalloc.so.2",
+    "libembree3.so.3", "libtbb.so.12", "libtbb.so.2", "libtbbmalloc.so.2",
     "pyluxcore.so", "pyluxcoretools.zip",
-    "libOpenImageDenoise.so.0",
+    "libOpenImageDenoise.so.1",
     "libnvrtc-builtins.so",
     "libnvrtc-builtins.so.11.0",
     "libnvrtc-builtins.so.11.0.194",
@@ -55,7 +55,7 @@ LINUX_FILES = [
 ]
 
 WINDOWS_FILES = [
-    "embree3.dll", "tbb.dll", "tbbmalloc.dll",
+    "embree3.dll", "tbb12.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO_LuxCore.dll", "pyluxcore.pyd",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
     "OpenImageDenoise.dll", "oidnDenoise.exe",
@@ -72,7 +72,7 @@ MAC_FILES = [
 
 # On Windows and macOS, OIDN is downloaded by the LuxCore build script
 OIDN_LINUX = "oidn-linux.tar.gz"
-OIDN_LINUX_URL = "https://github.com/OpenImageDenoise/oidn/releases/download/v1.2.1/oidn-1.2.1.x86_64.linux.tar.gz"
+OIDN_LINUX_URL = "https://github.com/OpenImageDenoise/oidn/releases/download/v1.3.0/oidn-1.3.0.x86_64.linux.tar.gz"
 
 
 def print_divider():

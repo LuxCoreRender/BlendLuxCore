@@ -6,9 +6,9 @@ import platform
 import os
 
 LINUX_FILES = [
-    "libembree3.so.3", "libtbb.so.2", "libtbbmalloc.so.2",
+    "libembree3.so.3", "libtbb.so.12", "libtbb.so.2", "libtbbmalloc.so.2",
     "pyluxcore.so", "luxcoreui", "pyluxcoretools.zip",
-    "libOpenImageDenoise.so.0",
+    "libOpenImageDenoise.so.1",
     "libnvrtc-builtins.so",
     "libnvrtc-builtins.so.11.0",
     "libnvrtc-builtins.so.11.0.194",
@@ -18,7 +18,7 @@ LINUX_FILES = [
 ]
 
 WINDOWS_FILES = [
-    "embree3.dll", "tbb.dll", "tbbmalloc.dll",
+    "embree3.dll", "tbb12.dll", "tbb.dll", "tbbmalloc.dll",
     "OpenImageIO_LuxCore.dll", "pyluxcore.pyd", "luxcoreui.exe",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
     "OpenImageDenoise.dll", "oidnDenoise.exe",
