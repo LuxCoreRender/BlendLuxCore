@@ -19,7 +19,7 @@ LINUX_FILES = [
 
 WINDOWS_FILES = [
     "embree3.dll", "tbb12.dll", "tbb.dll", "tbbmalloc.dll",
-    "OpenImageIO_LuxCore.dll", "pyluxcore.pyd", "luxcoreui.exe",
+    "pyluxcore.pyd", "luxcoreui.exe",
     "pyluxcoretool.exe", "pyluxcoretools.zip",
     "OpenImageDenoise.dll", "oidnDenoise.exe",
     "nvrtc64_101_0.dll", "nvrtc-builtins64_101.dll",
