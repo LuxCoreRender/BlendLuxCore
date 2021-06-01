@@ -2,8 +2,8 @@ import bpy
 from bpy.props import IntProperty, FloatProperty, StringProperty
 from .. import COLORDEPTH_DESC
 from ..base import LuxCoreNodeVolume
-from ...properties.light import LIGHTGROUP_DESC
 from ...utils import node as utils_node
+from ...utils.light_descriptions import LIGHTGROUP_DESC
 
 VOLUME_PRIORITY_DESC = (
     "In areas where two or more volumes overlap, the volume with the highest "

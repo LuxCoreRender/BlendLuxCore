@@ -6,7 +6,7 @@ from .. import COLORDEPTH_DESC
 from ..base import LuxCoreNodeVolume
 from ... import utils
 from ...utils import node as utils_node
-from ...properties.light import LIGHTGROUP_DESC
+from ...utils.light_descriptions import LIGHTGROUP_DESC
 from ...ui import icons
 
 

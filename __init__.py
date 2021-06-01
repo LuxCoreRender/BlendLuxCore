@@ -7,6 +7,9 @@ def get_bin_directory():
     current_dir = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(current_dir, "bin")
 
+if bpy.app.version < (2, 93, 0):
+    raise Exception("\n\nUnsupported Blender version. 2.93 or higher is required by BlendLuxCore.")
+
 if platform.system() == "Darwin":
     if bpy.app.version < (2, 82, 7):
         raise Exception("\n\nUnsupported Blender version. 2.82a or higher is required.")
@@ -75,19 +78,16 @@ bl_info = {
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
-from . import auto_load, nodes, properties, handlers
-auto_load.init()
-
-from .operators import keymaps
+from . import properties, engine, handlers, operators, ui, nodes
 
 
 def register():
-    auto_load.register()
-    nodes.materials.register()
-    nodes.textures.register()
-    nodes.volumes.register()
+    engine.register()
     handlers.register()
-    keymaps.register()
+    operators.register()
+    properties.register()
+    ui.register()
+    nodes.register()
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
@@ -96,9 +96,9 @@ def register():
 
 
 def unregister():
-    keymaps.unregister()
+    engine.unregister()
     handlers.unregister()
-    nodes.materials.unregister()
-    nodes.textures.unregister()
-    nodes.volumes.unregister()
-    auto_load.unregister()
+    operators.unregister()
+    properties.unregister()
+    ui.unregister()
+    nodes.unregister()

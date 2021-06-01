@@ -2,8 +2,6 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ... import utils
 from .. import icons
-from ...utils.refresh_button import template_refresh_button
-from ...properties.display import LuxCoreDisplaySettings
 
 
 class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):

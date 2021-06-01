@@ -1,6 +1,5 @@
 import bpy
 from bpy.types import Panel
-from . import icons
 from ..ui import icons
 from bl_ui.properties_particle import ParticleButtonsPanel
 from .. import utils
