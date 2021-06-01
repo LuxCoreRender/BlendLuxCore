@@ -80,7 +80,7 @@ bl_info = {
 
 # from . import auto_load, nodes, properties, handlers
 # auto_load.init()
-from . import properties, engine, handlers
+from . import properties, engine, handlers, ui
 from .nodes import materials as material_nodes
 from .nodes import textures as texture_nodes
 from .nodes import volumes as volume_nodes  # TODO just nodes.register() instead
@@ -96,6 +96,7 @@ def register():
     texture_nodes.register()
     volume_nodes.register()
     handlers.register()
+    ui.register()
     keymaps.register()
 
     from .utils.log import LuxCoreLog
@@ -111,5 +112,6 @@ def unregister():
     texture_nodes.unregister()
     volume_nodes.unregister()
     handlers.unregister()
+    ui.unregister()
     keymaps.unregister()
     # auto_load.unregister()
