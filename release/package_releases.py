@@ -64,7 +64,7 @@ WINDOWS_FILES = [
 
 MAC_FILES = [
     "libembree3.3.dylib", "libomp.dylib",
-    "libOpenImageDenoise.1.3.0.dylib", "libOpenImageIO.2.2.dylib",
+    "libOpenImageDenoise.1.4.0.dylib", "libOpenImageIO.2.2.dylib",
     "libcuda.dylib", "libnvrtc.dylib",
     "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib",
     "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
