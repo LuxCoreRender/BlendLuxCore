@@ -18,6 +18,9 @@ classes = (
     frontbackopacity.LuxCoreNodeMatFrontBackOpacity,
     glass.LuxCoreSocketCauchyC,
     glass.LuxCoreNodeMatGlass,
+    glossy2.LuxCoreNodeMatGlossy2,
+    glossycoating.LuxCoreNodeMatGlossyCoating,
+    glossytranslucent.LuxCoreNodeMatGlossyTranslucent,
     matte.LuxCoreSocketSigma,
     matte.LuxCoreNodeMatMatte,
     mattetranslucent.LuxCoreNodeMatMatteTranslucent,
@@ -27,7 +30,6 @@ classes = (
     null.LuxCoreNodeMatNull,
     output.LuxCoreNodeMatOutput,
     tree.LuxCoreMaterialNodeTree,
-    # TODO tree.LuxCoreNodeCategoryMaterial?
     twosided.LuxCoreNodeMatTwoSided,
     velvet.LuxCoreNodeMatVelvet,
 )
