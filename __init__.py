@@ -84,10 +84,10 @@ from . import properties, engine, handlers, operators, ui, nodes
 def register():
     engine.register()
     handlers.register()
-    nodes.register()
     operators.register()
     properties.register()
     ui.register()
+    nodes.register()
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
@@ -98,7 +98,7 @@ def register():
 def unregister():
     engine.unregister()
     handlers.unregister()
-    nodes.unregister()
     operators.unregister()
     properties.unregister()
     ui.unregister()
+    nodes.unregister()

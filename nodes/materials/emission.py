@@ -5,7 +5,7 @@ from bpy.props import (
     IntProperty, EnumProperty, PointerProperty
 )
 from ..base import LuxCoreNode
-from ...properties.light import (
+from ...utils.light_descriptions import (
     POWER_DESCRIPTION, EFFICACY_DESCRIPTION, NORMALIZEBYCOLOR_DESCRIPTION,
     SPREAD_ANGLE_DESCRIPTION, LIGHTGROUP_DESC, IMPORTANCE_DESCRIPTION,
     LUMEN_DESCRIPTION, CANDELA_DESCRIPTION, PER_SQUARE_METER_DESCRIPTION,
