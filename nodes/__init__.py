@@ -34,7 +34,33 @@ MIN_NOISE_SIZE = 0.0001
 
 COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color"
 
+from . import base, sockets
 from . import materials, shapes, textures, volumes
+from bpy.utils import register_class, unregister_class
+
+classes = (
+    base.LuxCoreNodeTreePointer,
+    sockets.LuxCoreSocketMaterial,
+    sockets.LuxCoreSocketVolume,
+    sockets.LuxCoreSocketFresnel,
+    sockets.LuxCoreSocketMatEmission,
+    sockets.LuxCoreSocketBump,
+    sockets.LuxCoreSocketColor,
+    sockets.LuxCoreSocketFloatUnbounded,
+    sockets.LuxCoreSocketFloatPositive,
+    sockets.LuxCoreSocketFloat0to1,
+    sockets.LuxCoreSocketFloat0to2,
+    sockets.LuxCoreSocketBumpHeight,
+    sockets.LuxCoreSocketVector,
+    sockets.LuxCoreSocketRoughness,
+    sockets.LuxCoreSocketIOR,
+    sockets.LuxCoreSocketFilmThickness,
+    sockets.LuxCoreSocketFilmIOR,
+    sockets.LuxCoreSocketVolumeAsymmetry,
+    sockets.LuxCoreSocketMapping2D,
+    sockets.LuxCoreSocketMapping3D,
+    sockets.LuxCoreSocketShape,
+)
 
 
 def register():
@@ -42,7 +68,13 @@ def register():
     textures.register()
     volumes.register()
 
+    for cls in classes:
+        register_class(cls)
+
 def unregister():
     materials.unregister()
     textures.unregister()
     volumes.unregister()
+
+    for cls in classes:
+        unregister_class(cls)
