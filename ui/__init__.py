@@ -2,7 +2,7 @@ from bpy.utils import register_class, unregister_class
 from . import (
     addon_preferences, blender_object, camera, image_tools, light, material,
     node_editor, output, particle, physics, scene_lightgroups, scene_units,
-    texture, view_layer, view_layer_aovs, volume, world,
+    texture, view_layer, view_layer_aovs, volume, world, lol, render,
 )
 
 classes = (
@@ -63,7 +63,8 @@ classes = (
 )
 
 def register():
-    # lol.register()
+    lol.register()
+    render.register()
 
     blender_object.register()
     camera.register()
@@ -81,7 +82,8 @@ def register():
         register_class(cls)
 
 def unregister():
-    # lol.unregister()
+    lol.unregister()
+    render.unregister()
 
     blender_object.unregister()
     camera.unregister()

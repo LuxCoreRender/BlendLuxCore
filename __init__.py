@@ -89,15 +89,14 @@ from .operators import keymaps
 
 
 def register():
-    # auto_load.register()
-    properties.register()
     engine.register()
-    material_nodes.register()
+    handlers.register()
+    material_nodes.register()  # TODO just nodes.register() instead
     texture_nodes.register()
     volume_nodes.register()
-    handlers.register()
+    # TODO operators
+    properties.register()
     ui.register()
-    keymaps.register()
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
@@ -106,12 +105,11 @@ def register():
 
 
 def unregister():
-    properties.unregister()
     engine.unregister()
-    material_nodes.unregister()
+    handlers.unregister()
+    material_nodes.unregister()  # TODO just nodes.unregister() instead
     texture_nodes.unregister()
     volume_nodes.unregister()
-    handlers.unregister()
+    # TODO operators
+    properties.unregister()
     ui.unregister()
-    keymaps.unregister()
-    # auto_load.unregister()
