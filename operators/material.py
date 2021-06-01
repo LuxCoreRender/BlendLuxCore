@@ -138,7 +138,7 @@ class LUXCORE_MT_material_select(bpy.types.Menu):
             op.material_index = i
 
 
-class LuxCore_OT_material_select(bpy.types.Operator):
+class LUXCORE_OT_material_select(bpy.types.Operator):
     """ Material selection dropdown with search feature """
     bl_idname = "luxcore.material_select"
     bl_label = ""
@@ -157,7 +157,7 @@ class LuxCore_OT_material_select(bpy.types.Operator):
         # There is a known bug with using a callback,
         # Python must keep a reference to the strings
         # returned or Blender will misbehave or even crash.
-        LuxCore_OT_material_select.callback_strings = items
+        LUXCORE_OT_material_select.callback_strings = items
         return items
 
     material: EnumProperty(name="Materials", items=callback)

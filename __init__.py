@@ -78,14 +78,10 @@ bl_info = {
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
-# from . import auto_load, nodes, properties, handlers
-# auto_load.init()
-from . import properties, engine, handlers, ui
+from . import properties, engine, handlers, operators, ui
 from .nodes import materials as material_nodes
 from .nodes import textures as texture_nodes
 from .nodes import volumes as volume_nodes  # TODO just nodes.register() instead
-
-from .operators import keymaps
 
 
 def register():
@@ -94,7 +90,7 @@ def register():
     material_nodes.register()  # TODO just nodes.register() instead
     texture_nodes.register()
     volume_nodes.register()
-    # TODO operators
+    operators.register()
     properties.register()
     ui.register()
 
@@ -110,6 +106,6 @@ def unregister():
     material_nodes.unregister()  # TODO just nodes.unregister() instead
     texture_nodes.unregister()
     volume_nodes.unregister()
-    # TODO operators
+    operators.unregister()
     properties.unregister()
     ui.unregister()
