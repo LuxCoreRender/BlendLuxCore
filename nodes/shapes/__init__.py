@@ -1,7 +1,5 @@
 from bpy.utils import register_class, unregister_class
-from . import (
-    harlequin, heightdisplacement, simplify, subdiv, vectordisplacement
-)
+from . import harlequin, heightdisplacement, simplify, subdiv, vectordisplacement
 
 classes = (
     harlequin.LuxCoreNodeShapeHarlequin,

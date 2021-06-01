@@ -3,8 +3,8 @@ from bpy.props import IntProperty, BoolProperty, FloatProperty, StringProperty
 from .clear import VOLUME_PRIORITY_DESC
 from .. import COLORDEPTH_DESC
 from ..base import LuxCoreNodeVolume
-from ...properties.light import LIGHTGROUP_DESC
 from ...utils import node as utils_node
+from ...utils.light_descriptions import LIGHTGROUP_DESC
 
 
 class LuxCoreNodeVolHomogeneous(bpy.types.Node, LuxCoreNodeVolume):
