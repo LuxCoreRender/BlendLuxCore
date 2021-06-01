@@ -65,6 +65,7 @@ classes = (
 
 def register():
     materials.register()
+    shapes.register()
     textures.register()
     volumes.register()
 
@@ -73,6 +74,7 @@ def register():
 
 def unregister():
     materials.unregister()
+    shapes.unregister()
     textures.unregister()
     volumes.unregister()
 
