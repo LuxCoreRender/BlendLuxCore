@@ -63,10 +63,10 @@ WINDOWS_FILES = [
 ]
 
 MAC_FILES = [
-    "libembree3.3.dylib", "libomp.dylib", 
-    "libOpenImageDenoise.1.2.1.dylib", "libOpenImageIO.1.8.dylib",
+    "libembree3.3.dylib", "libomp.dylib",
+    "libOpenImageDenoise.1.4.0.dylib", "libOpenImageIO.2.2.dylib",
     "libcuda.dylib", "libnvrtc.dylib",
-    "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib", 
+    "libtbb.dylib", "libtbbmalloc.dylib", "libtiff.5.dylib",
     "pyluxcore.so", "pyluxcoretools.zip", "oidnDenoise"
 ]
 
@@ -145,18 +145,18 @@ def extract_files_from_zip(zip_path, files_to_extract, destination):
             shutil.move(src, dst)
 
     rmtree(temp_dir)
-    
-    
+
+
 def extract_files_from_dmg(dmg_path, files_to_extract, destination):
 
     print("Extracting dmg file:", dmg_path)
-    vol_name = dmg_path.replace(".dmg", "") 
+    vol_name = dmg_path.replace(".dmg", "")
     for f in files_to_extract:
         print('Extracting "%s" to "%s"' % (f, destination))
-        cmd = ("7z e -o" + destination + " " + dmg_path + " " + vol_name + "/pyluxcore/" + f)    
+        cmd = ("7z e -o" + destination + " " + dmg_path + " " + vol_name + "/pyluxcore/" + f)
         print(cmd)
         os.system(cmd)
-        
+
 
 def extract_files_from_archive(archive_path, files_to_extract, destination):
     if archive_path.endswith(".zip"):
@@ -181,17 +181,17 @@ def extract_luxcore_tar(prefix, platform_suffixes, file_names, version_string):
 
         tar_name = build_name(prefix, version_string, suffix)
         extract_files_from_archive(tar_name, file_names, destination)
-        
+
 def extract_luxcore_dmg(prefix, platform_suffixes, file_names, version_string):
     for suffix in platform_suffixes:
         dst_name = build_zip_name(version_string, suffix)
         destination = os.path.join(script_dir, dst_name, "BlendLuxCore", "bin")
-        
+
         print()
         print_divider()
         print("Extracting dmg to", dst_name)
         print_divider()
-        
+
         dmg_name = build_name(prefix, version_string, suffix)
         extract_files_from_dmg(dmg_name, file_names, destination)
 
