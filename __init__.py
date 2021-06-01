@@ -7,6 +7,9 @@ def get_bin_directory():
     current_dir = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(current_dir, "bin")
 
+if bpy.app.version < (2, 93, 0):
+    raise Exception("\n\nUnsupported Blender version. 2.93 or higher is required by BlendLuxCore.")
+
 if platform.system() == "Darwin":
     if bpy.app.version < (2, 82, 7):
         raise Exception("\n\nUnsupported Blender version. 2.82a or higher is required.")
@@ -75,17 +78,23 @@ bl_info = {
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
-from . import auto_load, nodes, properties, handlers
-auto_load.init()
+# from . import auto_load, nodes, properties, handlers
+# auto_load.init()
+from . import properties, engine, handlers
+from .nodes import materials as material_nodes
+from .nodes import textures as texture_nodes
+from .nodes import volumes as volume_nodes  # TODO just nodes.register() instead
 
 from .operators import keymaps
 
 
 def register():
-    auto_load.register()
-    nodes.materials.register()
-    nodes.textures.register()
-    nodes.volumes.register()
+    # auto_load.register()
+    properties.register()
+    engine.register()
+    material_nodes.register()
+    texture_nodes.register()
+    volume_nodes.register()
     handlers.register()
     keymaps.register()
 
@@ -96,9 +105,11 @@ def register():
 
 
 def unregister():
-    keymaps.unregister()
+    properties.unregister()
+    engine.unregister()
+    material_nodes.unregister()
+    texture_nodes.unregister()
+    volume_nodes.unregister()
     handlers.unregister()
-    nodes.materials.unregister()
-    nodes.textures.unregister()
-    nodes.volumes.unregister()
-    auto_load.unregister()
+    keymaps.unregister()
+    # auto_load.unregister()
