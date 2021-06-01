@@ -78,18 +78,13 @@ bl_info = {
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
-from . import properties, engine, handlers, operators, ui
-from .nodes import materials as material_nodes
-from .nodes import textures as texture_nodes
-from .nodes import volumes as volume_nodes  # TODO just nodes.register() instead
+from . import properties, engine, handlers, operators, ui, nodes
 
 
 def register():
     engine.register()
     handlers.register()
-    material_nodes.register()  # TODO just nodes.register() instead
-    texture_nodes.register()
-    volume_nodes.register()
+    nodes.register()
     operators.register()
     properties.register()
     ui.register()
@@ -103,9 +98,7 @@ def register():
 def unregister():
     engine.unregister()
     handlers.unregister()
-    material_nodes.unregister()  # TODO just nodes.unregister() instead
-    texture_nodes.unregister()
-    volume_nodes.unregister()
+    nodes.unregister()
     operators.unregister()
     properties.unregister()
     ui.unregister()

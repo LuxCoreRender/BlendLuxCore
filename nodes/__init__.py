@@ -33,3 +33,16 @@ NOISE_TYPE_ITEMS = [
 MIN_NOISE_SIZE = 0.0001
 
 COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color"
+
+from . import materials, shapes, textures, volumes
+
+
+def register():
+    materials.register()
+    textures.register()
+    volumes.register()
+
+def unregister():
+    materials.unregister()
+    textures.unregister()
+    volumes.unregister()
