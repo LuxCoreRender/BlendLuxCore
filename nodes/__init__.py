@@ -35,7 +35,6 @@ MIN_NOISE_SIZE = 0.0001
 COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color"
 
 from . import base, sockets
-from . import materials, shapes, textures, volumes
 from bpy.utils import register_class, unregister_class
 
 classes = (
@@ -64,6 +63,7 @@ classes = (
 
 
 def register():
+    from . import materials, shapes, textures, volumes
     materials.register()
     shapes.register()
     textures.register()
@@ -73,6 +73,7 @@ def register():
         register_class(cls)
 
 def unregister():
+    from . import materials, shapes, textures, volumes
     materials.unregister()
     shapes.unregister()
     textures.unregister()
