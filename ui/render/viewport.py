@@ -81,7 +81,6 @@ class LUXCORE_RENDER_PT_viewport_settings_advanced(RenderButtonsPanel, Panel):
     bl_label = "Advanced"
     bl_options = {"DEFAULT_CLOSED"}
     bl_parent_id = "LUXCORE_RENDER_PT_viewport_settings"
-    lux_predecessor = "LUXCORE_RENDER_PT_viewport_settings_denoiser"
 
     @classmethod
     def poll(cls, context):

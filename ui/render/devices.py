@@ -87,7 +87,6 @@ class LUXCORE_RENDER_PT_cpu_devices(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "CPU Devices"
     bl_parent_id = "LUXCORE_RENDER_PT_devices"
-    lux_predecessor = "LUXCORE_RENDER_PT_gpu_devices"
     bl_options = {"DEFAULT_CLOSED"}
 
     @classmethod

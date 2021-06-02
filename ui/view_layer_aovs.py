@@ -46,8 +46,7 @@ class LUXCORE_RENDERLAYER_PT_aovs_material_object(ViewLayerButtonsPanel, Panel):
     bl_label = "Material/Object Information"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDERLAYER_PT_aovs"
-    lux_predecessor = "LUXCORE_RENDERLAYER_PT_aovs_basic"
-
+    
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -70,8 +69,7 @@ class LUXCORE_RENDERLAYER_PT_aovs_light(ViewLayerButtonsPanel, Panel):
     bl_label = "Light Information"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDERLAYER_PT_aovs"
-    lux_predecessor = "LUXCORE_RENDERLAYER_PT_aovs_material_object"
-
+    
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -140,8 +138,7 @@ class LUXCORE_RENDERLAYER_PT_aovs_shadow(ViewLayerButtonsPanel, Panel):
     bl_label = "Shadow Information"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDERLAYER_PT_aovs"
-    lux_predecessor = "LUXCORE_RENDERLAYER_PT_aovs_light"
-
+    
     def draw(self, context):
         layout = self.layout
 
@@ -162,8 +159,7 @@ class LUXCORE_RENDERLAYER_PT_aovs_geometry(ViewLayerButtonsPanel, Panel):
     bl_label = "Geometry Information"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDERLAYER_PT_aovs"
-    lux_predecessor = "LUXCORE_RENDERLAYER_PT_aovs_shadow"
-
+    
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -188,8 +184,7 @@ class LUXCORE_RENDERLAYER_PT_aovs_render(ViewLayerButtonsPanel, Panel):
     bl_label = "Render Information"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDERLAYER_PT_aovs"
-    lux_predecessor = "LUXCORE_RENDERLAYER_PT_aovs_geometry"
-
+    
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True

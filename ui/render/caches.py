@@ -133,7 +133,6 @@ class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
     bl_parent_id = "LUXCORE_RENDER_PT_caches_photongi"
-    lux_predecessor = "LUXCORE_RENDER_PT_caches_photongi_indirect"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -184,7 +183,6 @@ class LUXCORE_RENDER_PT_caches_photongi_persistence(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
     bl_parent_id = "LUXCORE_RENDER_PT_caches_photongi"
-    lux_predecessor = "LUXCORE_RENDER_PT_caches_photongi_caustic"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -203,7 +201,6 @@ class LUXCORE_RENDER_PT_caches_envlight(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Environment Light Cache"
     bl_parent_id = "LUXCORE_RENDER_PT_caches"
-    lux_predecessor = "LUXCORE_RENDER_PT_caches_photongi"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -244,7 +241,6 @@ class LUXCORE_RENDER_PT_caches_DLSC(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Direct Light Sampling Cache"
     bl_parent_id = "LUXCORE_RENDER_PT_caches"
-    lux_predecessor = "LUXCORE_RENDER_PT_caches_envlight"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -307,7 +303,6 @@ class LUXCORE_RENDER_PT_caches_DLSC_persistence(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = " "  # Label is drawn manually in draw_header() so we can make it inactive
     bl_parent_id = "LUXCORE_RENDER_PT_caches_DLSC"
-    lux_predecessor = "LUXCORE_RENDER_PT_caches_DLSC_advanced"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod

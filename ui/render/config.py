@@ -86,7 +86,6 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Tracing"
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
-    lux_predecessor = "LUXCORE_RENDER_PT_lightpaths_bounces"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -133,7 +132,6 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
 class LUXCORE_RENDER_PT_lightpaths_clamping(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
-    lux_predecessor = "LUXCORE_RENDER_PT_add_light_tracing"
     bl_label = "Clamping"
     bl_options = {'DEFAULT_CLOSED'}
     

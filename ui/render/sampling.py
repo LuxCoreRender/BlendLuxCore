@@ -117,7 +117,6 @@ class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
 class LUXCORE_RENDER_PT_sampling_adaptivity(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
-    lux_predecessor = "LUXCORE_RENDER_PT_sampling_tiled_multipass"
     bl_label = "Adaptive Sampling"
     bl_options = {'DEFAULT_CLOSED'}
     
@@ -144,7 +143,6 @@ class LUXCORE_RENDER_PT_sampling_adaptivity(RenderButtonsPanel, Panel):
 class LUXCORE_RENDER_PT_sampling_pixel_filtering(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
-    lux_predecessor = "LUXCORE_RENDER_PT_sampling_tiled_multipass"
     bl_label = "Pixel Filtering"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -189,7 +187,6 @@ class LUXCORE_RENDER_PT_sampling_pixel_filtering(RenderButtonsPanel, Panel):
 class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
-    lux_predecessor = "LUXCORE_RENDER_PT_sampling_pixel_filtering"
     bl_label = "Advanced"
     bl_options = {'DEFAULT_CLOSED'}
 

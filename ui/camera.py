@@ -236,7 +236,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_bloom(CameraButtonsPanel, Panel):
     bl_label = "Bloom"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_tonemapper"
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):        
@@ -260,7 +259,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_mist(CameraButtonsPanel, Panel):
     bl_label = "Mist"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_bloom"
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):        
@@ -294,7 +292,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_vignetting(CameraButtonsPanel, Panel):
     bl_label = "Vignetting"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_mist"
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):        
@@ -317,7 +314,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_aberration(CameraButtonsPanel, Pane
     bl_label = "Color Aberration"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_vignetting"
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):        
@@ -349,7 +345,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_background_image(CameraButtonsPanel, Pane
     bl_label = "Background Image"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_color_aberration"
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):        
@@ -377,7 +372,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_white_balance(CameraButtonsPanel, Panel):
     bl_label = "White Balance"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_background_image"
     COMPAT_ENGINES = {"LUXCORE"}
 
     def draw_header(self, context):
@@ -401,7 +395,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_camera_response_function(CameraButtonsPan
     bl_label = "Analog Film Simulation"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_white_balance"
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):        
@@ -431,7 +424,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_color_LUT(CameraButtonsPanel, Panel):
     bl_label = "LUT"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_camera_response_function"
     COMPAT_ENGINES = {"LUXCORE"}
 
     def draw_header(self, context):
@@ -462,7 +454,6 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
     bl_label = "Irradiance Contour Lines"
     bl_parent_id = "LUXCORE_CAMERA_PT_image_pipeline"
     bl_options = {'DEFAULT_CLOSED'}
-    lux_predecessor = "LUXCORE_CAMERA_PT_image_pipeline_color_LUT"
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):        
