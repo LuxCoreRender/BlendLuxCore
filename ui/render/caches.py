@@ -61,7 +61,6 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
-        self.layout.active = context.scene.luxcore.config.engine != "BIDIR"
         self.layout.prop(context.scene.luxcore.config.photongi, "enabled", text="")
 
     def draw(self, context):
@@ -69,10 +68,6 @@ class LUXCORE_RENDER_PT_caches_photongi(RenderButtonsPanel, Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-
-        if context.scene.luxcore.config.engine == "BIDIR":
-            layout.label(text="Not supported by Bidir", icon=icons.INFO)
-            return
 
         layout.active = photongi.enabled
 
@@ -100,10 +95,10 @@ class LUXCORE_RENDER_PT_caches_photongi_indirect(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine == "PATH"
+        return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
-        self.layout.active = context.scene.luxcore.config.photongi.enabled
+        self.layout.active = context.scene.luxcore.config.photongi.enabled and context.scene.luxcore.config.engine == "PATH"
         row = self.layout.row(align=True)
         row.prop(context.scene.luxcore.config.photongi, "indirect_enabled", text="")
         row.label(text="Indirect Light Cache")
@@ -115,6 +110,9 @@ class LUXCORE_RENDER_PT_caches_photongi_indirect(RenderButtonsPanel, Panel):
         layout.use_property_decorate = False
 
         engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
+        if engine_is_bidir:
+            layout.label(text="Not supported by Bidir", icon=icons.INFO)
+
         layout.active = photongi.enabled and photongi.indirect_enabled and not engine_is_bidir
 
         col = layout.column(align=True)
@@ -137,7 +135,7 @@ class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.render.engine == "LUXCORE" and context.scene.luxcore.config.engine == "PATH"
+        return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
         self.layout.active = context.scene.luxcore.config.photongi.enabled
@@ -151,8 +149,7 @@ class LUXCORE_RENDER_PT_caches_photongi_caustic(RenderButtonsPanel, Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        engine_is_bidir = context.scene.luxcore.config.engine == "BIDIR"
-        layout.active = photongi.enabled and photongi.caustic_enabled and not engine_is_bidir
+        layout.active = photongi.enabled and photongi.caustic_enabled
 
         col = layout.column(align=True)
         col.enabled = photongi.caustic_enabled
