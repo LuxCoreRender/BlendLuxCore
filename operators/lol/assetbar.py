@@ -212,7 +212,9 @@ def draw_callback_2d_search(self, context):
                         ui_bgl.draw_rect(x - assetbar_props.highlight_margin, y - assetbar_props.highlight_margin, int(w * assets[index]['downloaded'] / 100.0), 2, green)
 
                     if assets[index]['patreon']:
-                        img = utils.get_thumbnail('blender_market.png')
+                        #img = utils.get_thumbnail('blender_market.png')
+                        img = utils.get_thumbnail('cgtrader.png')
+
                         ui_bgl.draw_image(x + w - 24 - 2, y + w - 24 - 2, 24, 24, img, 1)
                         if assets[index]['locked']:
                             img = utils.get_thumbnail('locked.png')
@@ -223,7 +225,8 @@ def draw_callback_2d_search(self, context):
                 asset = assets[ui_props.active_index]
                 licence = '\n\nLicence: royality free' if asset['patreon'] else '\n\nLicence: CC-BY-SA'
                 tooltip = asset['name'] + '\n\nCategory: ' + asset['category'] + licence
-                atip = '\n\nhttps://blendermarket.com/creators/draviastudio\n'
+                atip = '\n\nhttps://blendermarket.com/creators/draviastudio\nhttps://www.cgtrader.com/draviastudio\n'
+
 
                 if asset['local']:
                     tooltip = asset['name'] + '\n\nCategory: ' + asset['category']
@@ -280,7 +283,6 @@ def draw_tooltip(context, x, y, text='', author='', asset=None, gravatar=None):
 
     if ui_props.asset_type == 'MATERIAL':
         imagename = asset['name'].replace(" ", "_") + '.jpg'
-        print(imagename)
     else:
         imagename = splitext(asset['url'])[0] + '.jpg'
 
@@ -349,7 +351,8 @@ def draw_tooltip(context, x, y, text='', author='', asset=None, gravatar=None):
 
     # draw blendermarket logo for purchased assets and locked symbol for not purchased assets
     if asset['patreon']:
-        img = utils.get_thumbnail('blender_market.png')
+        #img = utils.get_thumbnail('blender_market.png')
+        img = utils.get_thumbnail('cgtrader.png')
         ui_bgl.draw_image(x + isizex - 52*scale - 2, y - 52*scale - ttipmargin - 2, 52*scale, 52*scale, img, 1)
         if asset['locked']:
             img = utils.get_thumbnail('locked.png')
@@ -879,7 +882,8 @@ class LOLAssetBarOperator(Operator):
                         ui_props.draw_snapped_bounds = False
                         ui_props.active_index = -3
                         import webbrowser
-                        webbrowser.open('https://blendermarket.com/creators/draviastudio')
+                        #webbrowser.open('https://blendermarket.com/creators/draviastudio')
+                        webbrowser.open('https://www.cgtrader.com/draviastudio')
 
                         return {'RUNNING_MODAL'}
 
@@ -944,7 +948,8 @@ class LOLAssetBarOperator(Operator):
                     asset_search_index = ui_bgl.get_asset_under_mouse(context, mx, my)
                     if assets[ui_props.active_index]['patreon'] and assets[ui_props.active_index]['locked']:
                         import webbrowser
-                        webbrowser.open('https://blendermarket.com/creators/draviastudio')
+                        #webbrowser.open('https://blendermarket.com/creators/draviastudio')
+                        webbrowser.open('https://www.cgtrader.com/draviastudio')
                         return {'RUNNING_MODAL'}
 
                     if ui_props.asset_type in ('MATERIAL',
