@@ -30,6 +30,7 @@ classes = (
     config.LuxCoreConfigPhotonGI,
     config.LuxCoreConfigEnvLightCache,
     config.LuxCoreConfigNoiseEstimation,
+    config.LuxCoreConfigImageResizePolicy,
     config.LuxCoreConfig,
     debug.LuxCoreDebugSettings,
     denoiser.LuxCoreDenoiser,

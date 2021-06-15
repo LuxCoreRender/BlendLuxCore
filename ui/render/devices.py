@@ -22,7 +22,7 @@ def _show_openCL_device_warning(context):
 class LUXCORE_RENDER_PT_devices(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Devices"
-    bl_order = 80
+    bl_order = 85
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw_header(self, context):

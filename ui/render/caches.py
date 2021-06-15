@@ -40,7 +40,7 @@ class LUXCORE_RENDER_PT_caches(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Caches"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_order = 70
+    bl_order = 80
 
     @classmethod
     def poll(cls, context):

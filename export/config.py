@@ -94,6 +94,14 @@ def convert(exporter, scene, context=None, engine=None):
         elif config.filter == "SINC":
             definitions["film.filter.sinc.tau"] = config.sinc_tau
 
+        # Image resize policy
+        if config.image_resize_policy.enabled:
+            definitions["scene.images.resizepolicy.type"] = config.image_resize_policy.type
+            definitions["scene.images.resizepolicy.scale"] = config.image_resize_policy.scale / 100
+            definitions["scene.images.resizepolicy.minsize"] = config.image_resize_policy.min_size
+        else:
+            definitions["scene.images.resizepolicy.type"] = "NONE"
+
         use_filesaver = utils.using_filesaver(context, scene)
 
         # Transparent film settings

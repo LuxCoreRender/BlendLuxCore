@@ -360,6 +360,21 @@ class LuxCoreConfigNoiseEstimation(PropertyGroup):
                        description=NOISE_THRESH_STEP_DESC)
 
 
+class LuxCoreConfigImageResizePolicy(PropertyGroup):
+    # TODO descriptions
+    enabled: BoolProperty(name="", default=False, description="")
+    types = [
+        ("MIPMAPMEM", "Auto-Scale to MipMaps", "", 0),
+        ("MINMEM", "Auto-Scale to Lowest Size", "", 1),
+        ("FIXED", "Uniform Scale", "", 2),
+    ]
+    type: EnumProperty(name="Type", items=types, default="MIPMAPMEM", description="How to resize images")
+    scale: FloatProperty(name="Scale", default=100, min=0, max=100, precision=1, subtype="PERCENTAGE",
+                         description="Scale factor. For example, with scale = 50%, a 3000x2000 pixel image is scaled to 1500x1000")
+    min_size: IntProperty(name="Min. Size (Pixels)", default=64, min=1,
+                          description="Lower limit for the scale. Images will never get scaled smaller than this size")
+
+
 class LuxCoreConfig(PropertyGroup):
     """
     Main config storage class.
@@ -520,6 +535,8 @@ class LuxCoreConfig(PropertyGroup):
                                 precision=5,
                                 description="Might need adjustment along with the min epsilon to avoid "
                                             "artifacts due to floating point precision issues")
+
+    image_resize_policy: PointerProperty(type=LuxCoreConfigImageResizePolicy)
 
     def using_only_lighttracing(self):
         return (self.engine == "PATH" and self.device == "CPU" and self.path.hybridbackforward_enable
