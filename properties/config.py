@@ -1,4 +1,3 @@
-import bpy
 from bpy.types import PropertyGroup
 from bpy.props import (
     EnumProperty, BoolProperty, IntProperty, FloatProperty,
@@ -6,6 +5,7 @@ from bpy.props import (
 )
 from math import radians
 from .halt import NOISE_THRESH_WARMUP_DESC, NOISE_THRESH_STEP_DESC
+from .. import utils
 
 
 PATH_DESC = (
@@ -373,6 +373,19 @@ class LuxCoreConfigImageResizePolicy(PropertyGroup):
                          description="Scale factor. For example, with scale = 50%, a 3000x2000 pixel image is scaled to 1500x1000")
     min_size: IntProperty(name="Min. Size (Pixels)", default=64, min=1,
                           description="Lower limit for the scale. Images will never get scaled smaller than this size")
+
+    def convert(self):
+        prefix = "scene.images.resizepolicy."
+        definitions = {}
+
+        if self.enabled:
+            definitions["type"] = self.type
+            definitions["scale"] = self.scale / 100
+            definitions["minsize"] = self.min_size
+        else:
+            definitions["type"] = "NONE"
+
+        return utils.create_props(prefix, definitions)
 
 
 class LuxCoreConfig(PropertyGroup):

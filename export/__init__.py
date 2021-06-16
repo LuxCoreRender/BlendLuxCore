@@ -90,7 +90,8 @@ class Exporter(object):
         utils_compatibility.run()
 
         # Scene
-        luxcore_scene = pyluxcore.Scene()
+        image_resize_policy_props = scene.luxcore.config.image_resize_policy.convert()
+        luxcore_scene = pyluxcore.Scene(pyluxcore.Properties(), image_resize_policy_props)
         scene_props = pyluxcore.Properties()
 
         # Camera (needs to be parsed first because it is needed for hair tesselation)
