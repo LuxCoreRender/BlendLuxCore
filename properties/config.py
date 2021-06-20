@@ -445,9 +445,15 @@ class LuxCoreConfig(PropertyGroup):
     out_of_core: BoolProperty(name="Out of Core", default=False, 
                               description="Enable storage of image pixels, meshes and other data in CPU RAM if GPU RAM is not sufficient. "
                                           "Enabling this option causes the scene to use more CPU RAM")
-    
+
     def using_out_of_core(self):
         return self.device == "OCL" and self.out_of_core
+
+    film_out_of_core: BoolProperty(name="Film Out of Core", default=False,
+                                   description="")
+
+    def using_film_out_of_core(self):
+        return self.device == "OCL" and self.film_out_of_core
 
     # METROPOLIS properties
     # sampler.metropolis.largesteprate

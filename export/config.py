@@ -311,7 +311,9 @@ def _convert_final_engine(scene, definitions, config):
         definitions[f"sampler.{sampler_type}.overlapping"] = overlapping
     elif sampler == "METROPOLIS":
         _convert_metropolis_settings(definitions, config)
-    
+
+    if config.using_film_out_of_core():
+        definitions["opencl.outofcore.film.enable"] = True
     if config.using_out_of_core():
         definitions["opencl.outofcore.enable"] = True
 
