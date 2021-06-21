@@ -162,6 +162,20 @@ ENVLIGHT_CACHE_DESC = (
     "Only used during final render"
 )
 
+MIPMAPMEM_DESC = (
+    "For each image texture, a .tx mipmap cache with multiple sizes (e.g. 256x256, 128x128, 64x64 etc.) is created. "
+    "When rendering, the smallest possible mipmap resolution is picked automatically. This resize policy saves less "
+    "memory than the \"auto-scale to lowest size\" policy, but needs almost no preprocessing time after the first render"
+)
+MINMEM_DESC = (
+    "Before the rendering starts, LuxCore checks how large each image texture is visible on the film. If the image "
+    "is larger than needed, for example because it is only seen from far away, the image is scaled down. This policy "
+    "saves as much memory as possible without affecting render quality, but needs some preprocessing time for every render"
+)
+FIXED_DESC = (
+    "All images are scaled the same amount (set with the Scale parameter)"
+)
+
 
 class LuxCoreConfigPath(PropertyGroup):
     """
@@ -361,16 +375,16 @@ class LuxCoreConfigNoiseEstimation(PropertyGroup):
 
 
 class LuxCoreConfigImageResizePolicy(PropertyGroup):
-    # TODO descriptions
-    enabled: BoolProperty(name="", default=False, description="")
+    enabled: BoolProperty(name="Use Image Resizing", default=False, description="")
     types = [
-        ("MIPMAPMEM", "Auto-Scale to MipMaps", "", 0),
-        ("MINMEM", "Auto-Scale to Lowest Size", "", 1),
-        ("FIXED", "Uniform Scale", "", 2),
+        ("MIPMAPMEM", "Auto-Scale to MipMaps", MIPMAPMEM_DESC, 0),
+        ("MINMEM", "Auto-Scale to Lowest Size", MINMEM_DESC, 1),
+        ("FIXED", "Uniform Scale", FIXED_DESC, 2),
     ]
     type: EnumProperty(name="Type", items=types, default="MIPMAPMEM", description="How to resize images")
-    scale: FloatProperty(name="Scale", default=100, min=0, max=100, precision=1, subtype="PERCENTAGE",
-                         description="Scale factor. For example, with scale = 50%, a 3000x2000 pixel image is scaled to 1500x1000")
+    scale: FloatProperty(name="Scale", default=100, min=0, soft_max=100, precision=1, subtype="PERCENTAGE",
+                         description="Scale factor. For example, with scale = 50%, a 3000x2000 pixel image is scaled to 1500x1000. "
+                                     "When using auto-scaling, this value acts as a multiplier for the automatic scale")
     min_size: IntProperty(name="Min. Size (Pixels)", default=64, min=1,
                           description="Lower limit for the scale. Images will never get scaled smaller than this size")
 
