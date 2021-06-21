@@ -442,18 +442,17 @@ class LuxCoreConfig(PropertyGroup):
     ]
     out_of_core_supersampling: EnumProperty(name="Supersampling", items=out_of_core_supersampling_items, default="16",
                                             description="Multiplier for the samples per pass")
+    out_of_core_modes = [
+        ("FILM", "Only Film", "Only the film (rendered pixels) is stored in CPU RAM instead of GPU RAM", 0),
+        ("EVERYTHING", "Everything", "The film, image textures, meshes and other data are stored in CPU RAM if GPU RAM is not sufficient", 1),
+    ]
+    out_of_core_mode: EnumProperty(name="Mode", items=out_of_core_modes, default="EVERYTHING")
     out_of_core: BoolProperty(name="Out of Core", default=False, 
                               description="Enable storage of image pixels, meshes and other data in CPU RAM if GPU RAM is not sufficient. "
                                           "Enabling this option causes the scene to use more CPU RAM")
 
     def using_out_of_core(self):
-        return self.device == "OCL" and self.out_of_core
-
-    film_out_of_core: BoolProperty(name="Film Out of Core", default=False,
-                                   description="")
-
-    def using_film_out_of_core(self):
-        return self.device == "OCL" and self.film_out_of_core
+        return self.device == "OCL" and self.out_of_core and self.out_of_core_mode == "EVERYTHING"
 
     # METROPOLIS properties
     # sampler.metropolis.largesteprate

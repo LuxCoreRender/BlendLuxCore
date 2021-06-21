@@ -62,9 +62,10 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
                 
                 if config.device == "OCL":
                     col = layout.column()
-                    col.prop(config, "film_out_of_core")
                     col.prop(config, "out_of_core")
                     if config.out_of_core:
+                        col.prop(config, "out_of_core_mode")
+                    if config.using_out_of_core():
                         col.prop(config, "out_of_core_supersampling")
             elif sampler == "METROPOLIS":
                 if denoiser.enabled and denoiser.type == "BCD":

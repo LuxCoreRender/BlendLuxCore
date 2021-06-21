@@ -312,7 +312,8 @@ def _convert_final_engine(scene, definitions, config):
     elif sampler == "METROPOLIS":
         _convert_metropolis_settings(definitions, config)
 
-    if config.using_film_out_of_core():
+    if config.out_of_core:
+        # Wether out_of_core mode is FILM or EVERYTHING, film is stored out of core
         definitions["opencl.outofcore.film.enable"] = True
     if config.using_out_of_core():
         definitions["opencl.outofcore.enable"] = True
