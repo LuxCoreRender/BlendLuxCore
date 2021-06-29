@@ -256,6 +256,7 @@ def get_OIDN_props(definitions, scene, index):
     definitions[str(index) + ".type"] = "INTEL_OIDN"
     definitions[str(index) + ".oidnmemory"] = denoiser.max_memory_MB
     definitions[str(index) + ".sharpness"] = 0
+    definitions[str(index) + ".prefilter.enable"] = denoiser.prefilter_AOVs
     return index + 1
 
 

@@ -70,6 +70,8 @@ def convert(exporter, scene, context=None, engine=None):
             "lightstrategy.type": light_strategy,
             "scene.epsilon.min": config.min_epsilon,
             "scene.epsilon.max": config.max_epsilon,
+            "path.albedospecular.type": scene.luxcore.denoiser.albedo_specular_passthrough_mode,
+            "path.albedospecular.glossinessthreshold": 0.05,
         })
 
         if preferences.film_device not in {"", "none"}:

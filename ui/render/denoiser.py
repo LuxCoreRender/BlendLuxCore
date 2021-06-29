@@ -29,6 +29,13 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
 
         layout.use_property_split = True
         layout.use_property_decorate = False
+        layout.active = denoiser.enabled
+
+        sub = layout.column(align=True)
+        # The user should not be able to request a refresh when denoiser is disabled
+        sub.enabled = denoiser.enabled
+        template_refresh_button(LuxCoreDenoiser.refresh, "luxcore.request_denoiser_refresh",
+                                sub, "Running denoiser...")
 
         col = layout.column(align=True)
         col.prop(denoiser, "type", expand=False)
@@ -37,12 +44,6 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         if denoiser.enabled and denoiser.type == "BCD":
             if config.get_sampler() == "METROPOLIS" and not config.use_tiles:
                 layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
-
-        sub = layout.column(align=True)
-        # The user should not be able to request a refresh when denoiser is disabled
-        sub.enabled = denoiser.enabled
-        template_refresh_button(LuxCoreDenoiser.refresh, "luxcore.request_denoiser_refresh",
-                                sub, "Running denoiser...")
 
         if denoiser.type == "BCD":
             sub = layout.column(align=True)
@@ -53,7 +54,10 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
             sub = layout.column(align=True)
             sub.prop(denoiser, "search_window_radius")
         elif denoiser.type == "OIDN":
-            col.prop(denoiser, "max_memory_MB")
+            sub = layout.column(align=False)
+            sub.prop(denoiser, "max_memory_MB")
+            sub.prop(denoiser, "albedo_specular_passthrough_mode")
+            sub.prop(denoiser, "prefilter_AOVs")
 
 
 class LUXCORE_RENDER_PT_denoiser_bcd_advanced(RenderButtonsPanel, Panel):
