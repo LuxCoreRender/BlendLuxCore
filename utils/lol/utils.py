@@ -373,7 +373,7 @@ class Downloader(threading.Thread):
         if tcom.passargs['thumbnail']:
             # Thumbnail  download
             if tcom.passargs['asset type'] == 'MATERIAL':
-                imagename = self.asset['name'] + '.jpg'
+                imagename = self.asset['name'].replace(" ", "_") + '.jpg'
             else:
                 imagename = splitext(self.asset['url'])[0] + '.jpg'
 
