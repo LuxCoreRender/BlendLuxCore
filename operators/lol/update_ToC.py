@@ -48,22 +48,25 @@ class LOLUpdateTOC(Operator):
         name = basename(dirname(dirname(dirname(__file__))))
         user_preferences = context.preferences.addons[name].preferences
 
-        filepath = join(user_preferences.global_dir, 'assets_model_patreon.json')
-        with urllib.request.urlopen(utils.LOL_HOST_URL + "/assets_model_patreon.json", timeout=60) as request:
+        filepath = join(user_preferences.global_dir, 'assets_model_blendermarket.json')
+        urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_model_blendermarket.json"
+        with urllib.request.urlopen(urlstr, timeout=60) as request:
             assets = json.load(request)
 
             with open(filepath, 'w') as file:
                 file.write(json.dumps(assets, indent=2))
 
         filepath = join(user_preferences.global_dir, 'assets_model.json')
-        with urllib.request.urlopen(utils.LOL_HOST_URL + "/assets_model.json", timeout=60) as request:
+        urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_model.json"
+        with urllib.request.urlopen(urlstr, timeout=60) as request:
             assets = json.load(request)
 
             with open(filepath, 'w') as file:
                 file.write(json.dumps(assets, indent=2))
 
         filepath = join(user_preferences.global_dir, 'assets_material.json')
-        with urllib.request.urlopen(utils.LOL_HOST_URL + "/assets_material.json", timeout=60) as request:
+        urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_material.json"
+        with urllib.request.urlopen(urlstr, timeout=60) as request:
             assets = json.load(request)
 
             with open(filepath, 'w') as file:

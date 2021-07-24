@@ -42,6 +42,7 @@ from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
+LOL_VERSION = "v2.5"
 
 download_threads = []
 bg_threads = []
@@ -74,7 +75,7 @@ def load_patreon_assets(context):
     user_preferences = context.preferences.addons[name].preferences
 
     #check if local file is available
-    filepath = join(user_preferences.global_dir, 'assets_model_patreon.json')
+    filepath = join(user_preferences.global_dir, 'assets_model_blendermarket.json')
     if os.path.exists(filepath):
         with open(filepath) as file_handle:
             import json
@@ -90,7 +91,8 @@ def load_patreon_assets(context):
                 if os.path.exists(filepath):
                     asset['locked'] = False
     else:
-        with urllib.request.urlopen(LOL_HOST_URL + "/assets_model_patreon.json", timeout=60) as request:
+        urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model_blendermarket.json"
+        with urllib.request.urlopen(urlstr, timeout=60) as request:
             import json
             assets = json.load(request)
 
@@ -140,7 +142,8 @@ def download_table_of_contents(context):
 
         else:
             import urllib.request
-            with urllib.request.urlopen(LOL_HOST_URL + "/assets_model.json", timeout=60) as request:
+            urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model.json"
+            with urllib.request.urlopen(urlstr, timeout=60) as request:
                 import json
                 assets = json.load(request)
                 # cache file for future offline work
@@ -181,7 +184,8 @@ def download_table_of_contents(context):
                     asset['locked'] = False
         else:
             import urllib.request
-            with urllib.request.urlopen(LOL_HOST_URL + "/assets_material.json", timeout=60) as request:
+            urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_material.json"
+            with urllib.request.urlopen(urlstr, timeout=60) as request:
                 import json
                 assets = json.load(request)
                 # cache file for future offline work
@@ -402,6 +406,9 @@ class Downloader(threading.Thread):
             except ConnectionError as error:
                 print("Connection error: Could not download " + imagename)
                 print(error)
+            except TimeoutError as error:
+                print("TimeoutError error: Could not download " + imagename)
+                print(error)
             except urllib.error.HTTPError as error:
                 print("HTTPError error: Could not download " + imagename)
                 print(error)
@@ -452,8 +459,11 @@ class Downloader(threading.Thread):
                         print("Extracting zip to", os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
                         zf.extractall(os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
 
-                except urllib.error.URLError as err:
-                    print("Could not download: %s" % err)
+                except TimeoutError as error:
+                    print("TimeoutError error: Could not download " + filename)
+                    print(error)
+                except urllib.error.URLError as error:
+                    print("Could not download: " + filename)
 
                 finally:
                     tcom.finished = True
