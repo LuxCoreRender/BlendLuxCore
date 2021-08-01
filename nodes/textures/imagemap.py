@@ -107,7 +107,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
         
     filter_items = [
         ("linear", "Linear", "Linear interpolation", 0),
-        ("nearest", "Nearest", "Nearest neighbor interpolation", 1),
+        ("nearest", "Nearest", "Nearest Neighbor interpolation", 1),
     ]
     filter: EnumProperty(name="Interpolation", items=filter_items, default="linear",
                                     description="Interpolation",
