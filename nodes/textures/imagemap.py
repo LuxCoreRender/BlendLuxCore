@@ -104,7 +104,15 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
     randomized_tiling: BoolProperty(name="Randomized Tiling", default=False,
                                     description="Use histogram-preserving blending to make repetitions irregular",
                                     update=utils_node.force_viewport_update)
-
+        
+    filter_items = [
+        ("linear", "Linear", "Linear interpolation", 0),
+        ("nearest", "Nearest", "Nearest Neighbor interpolation", 1),
+    ]
+    filter: EnumProperty(name="Interpolation", items=filter_items, default="linear",
+                                    description="Interpolation",
+                                    update=utils_node.force_viewport_update)
+        
     def init(self, context):
         self.show_thumbnail = utils.get_addon_preferences(bpy.context).image_node_thumb_default
 
@@ -142,6 +150,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             col.prop(self, "brightness")
             col.prop(self, "channel", text="")
 
+        col.prop(self, "filter", text="")
         col.prop(self, "projection", text="")
         col.prop(self, "wrap", text="")
         if self.wrap == "repeat":
@@ -181,6 +190,7 @@ class LuxCoreNodeTexImagemap(bpy.types.Node, LuxCoreNodeTexture):
             "file": filepath,
             "wrap": self.wrap,
             "randomizedtiling.enable": self.wrap == "repeat" and self.randomized_tiling,
+            "filter": self.filter,
         }
         definitions.update(self.inputs["2D Mapping"].export(exporter, depsgraph, props))
 
