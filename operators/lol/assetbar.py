@@ -536,8 +536,6 @@ class LOLAssetBarOperator(Operator):
         try:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_2d, 'WINDOW')
             bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d, 'WINDOW')
-            #bpy.types.SpaceView3D.draw_handler_remove(self._handle_3d_progress, 'WINDOW')
-
         except:
             pass
 
@@ -1030,5 +1028,5 @@ class LOLAssetKillDownloadOperator(bpy.types.Operator):
         for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
             if area.type == 'VIEW_3D':
                 area.tag_redraw()
-                
+
         return {'FINISHED'}
