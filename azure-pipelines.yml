@@ -26,6 +26,11 @@ jobs:
     vmImage: 'ubuntu-20.04'
     
   steps:
+  - task: Bash@3 # Useful for debug only, comment out for normal usage
+    inputs:
+      targetType: 'inline'
+      script: 'env | sort'
+    displayName: Print environment variables
   - script: ./scripts/azurepipeline/detect-release-type.sh
     displayName: Detecting release type (daily, alpha, beta or final)
     name: setvarStep
