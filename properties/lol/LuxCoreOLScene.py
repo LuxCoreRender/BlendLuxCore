@@ -163,7 +163,7 @@ class LuxCoreOnlineLibraryModel(bpy.types.PropertyGroup):
         ('APPEND_OBJECTS', 'Append Objects', ''),
     ]
     append_method: EnumProperty(name="Import Method", items=append_method_items,
-    description="choose if the assets will be linked or appended", default="LINK_COLLECTION")
+    description="choose if the assets will be linked or appended", default="APPEND_OBJECTS")
 
     randomize_rotation: BoolProperty(name='Randomize Rotation',
                                      description="randomize rotation at placement",
