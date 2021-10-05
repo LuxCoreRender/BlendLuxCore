@@ -46,6 +46,12 @@ def poll_camera(context):
     return context.camera and not context.camera.library
 
 
+def poll_light(context):
+    if not hasattr(context, "light"):
+        return False
+    return context.light and not context.light.library
+
+
 def init_mat_node_tree(node_tree):
     # Seems like we still need this.
     # User counting does not work reliably with Python PointerProperty.

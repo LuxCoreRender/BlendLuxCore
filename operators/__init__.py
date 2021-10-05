@@ -10,7 +10,7 @@ if system() == "Darwin":
 
 from bpy.utils import register_class, unregister_class
 from . import (
-    camera, debug, general, imagepipeline, ior_presets, keymaps, lightgroups, manual_compatibility,
+    camera, debug, general, imagepipeline, ior_presets, keymaps, light, lightgroups, manual_compatibility,
     material, multi_image_import, node_editor, node_tree_presets, pointer_node, pyluxcoretools,
     render, render_settings_helper, texture, world, lol,
 )
@@ -41,6 +41,11 @@ classes = (
     imagepipeline.LUXCORE_OT_set_raw_view_transform,
     ior_presets.LUXCORE_OT_ior_preset_names,
     ior_presets.LUXCORE_OT_ior_preset_values,
+    light.LUXCORE_OT_light_new_volume_node_tree,
+    light.LUXCORE_OT_light_unlink_volume_node_tree,
+    light.LUXCORE_OT_light_set_volume_node_tree,
+    light.LUXCORE_VOLUME_MT_light_select_volume_node_tree,
+    light.LUXCORE_OT_light_show_volume_node_tree,
     lightgroups.LUXCORE_OT_add_lightgroup,
     lightgroups.LUXCORE_OT_remove_lightgroup,
     lightgroups.LUXCORE_OT_select_objects_in_lightgroup,

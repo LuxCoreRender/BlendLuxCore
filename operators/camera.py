@@ -84,7 +84,7 @@ class LUXCORE_VOLUME_MT_camera_select_volume_node_tree(bpy.types.Menu, LUXCORE_M
 class LUXCORE_OT_camera_show_volume_node_tree(bpy.types.Operator):
     bl_idname = "luxcore.camera_show_volume_node_tree"
     bl_label = "Show"
-    bl_description = "Switch to the node tree of this world"
+    bl_description = "Switch to the node tree of this camera volume"
 
     @classmethod
     def poll(cls, context):

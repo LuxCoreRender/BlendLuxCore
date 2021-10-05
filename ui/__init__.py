@@ -31,6 +31,7 @@ classes = (
     image_tools.LUXCORE_IMAGE_PT_denoiser,
     image_tools.LUXCORE_IMAGE_PT_statistics,
     light.LUXCORE_LIGHT_PT_context_light,
+    light.LUXCORE_LIGHT_PT_volume,
     light.LUXCORE_LIGHT_PT_performance,
     light.LUXCORE_LIGHT_PT_visibility,
     light.LUXCORE_LIGHT_PT_spot,

@@ -338,6 +338,21 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
         _envlightcache(definitions, light, scene, is_viewport_render)
 
     props = utils.create_props(prefix, definitions)
+
+    # Exterior volume of the light
+    volume_node_tree = light.luxcore.volume
+
+    if volume_node_tree:
+        luxcore_name = utils.get_luxcore_name(volume_node_tree)
+        active_output = get_active_output(volume_node_tree)
+
+        try:
+            active_output.export(exporter, depsgraph, props, luxcore_name)
+            props.Set(pyluxcore.Property(prefix + "volume", luxcore_name))
+        except Exception as error:
+            msg = f'Light "{obj.name}": {error}'
+            LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+
     return props, ExportedLight(luxcore_name)
 
 

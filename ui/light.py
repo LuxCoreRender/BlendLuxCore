@@ -230,6 +230,35 @@ def draw_envlight_cache_ui(layout, scene, light_or_world):
         col.prop(envlight_cache, "enabled", text="Enable cache", toggle=True)
 
 
+class LUXCORE_LIGHT_PT_volume(DataButtonsPanel, Panel):
+    bl_label = "Exterior Volume"
+    bl_options = {"DEFAULT_CLOSED"}
+    bl_order = 3
+    COMPAT_ENGINES = {"LUXCORE"}
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        if engine != "LUXCORE":
+            return False
+
+        light = context.light
+        if not light or light.luxcore.use_cycles_settings:
+            return False
+        return True
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        utils_ui.template_node_tree(layout, context.light.luxcore, "volume", icons.NTREE_VOLUME,
+                                    "LUXCORE_VOLUME_MT_light_select_volume_node_tree",
+                                    "luxcore.light_show_volume_node_tree",
+                                    "luxcore.light_new_volume_node_tree",
+                                    "luxcore.light_unlink_volume_node_tree")
+
+
 class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
     """
     Light UI Panel, shows stuff that affects the performance of the render
@@ -237,7 +266,7 @@ class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Performance"
     bl_options = {"DEFAULT_CLOSED"}
-    bl_order = 3
+    bl_order = 4
 
     @classmethod
     def poll(cls, context):
@@ -262,7 +291,7 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Visibility"
     bl_options = {"DEFAULT_CLOSED"}
-    bl_order = 4
+    bl_order = 5
 
     @classmethod
     def poll(cls, context):

@@ -62,6 +62,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
     ]
     color_mode: EnumProperty(name="Color Mode", items=color_modes, default="rgb")
 
+    volume: PointerProperty(type=bpy.types.NodeTree)
+
     ##############################################
     # Light type specific properties (some are shared by multiple lights, noted in comments)
     # TODO: check min/max, add descriptions

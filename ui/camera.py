@@ -479,7 +479,7 @@ class LUXCORE_CAMERA_PT_image_pipeline_contour_lines(CameraButtonsPanel, Panel):
 
 
 class LUXCORE_CAMERA_PT_volume(CameraButtonsPanel, Panel):
-    bl_label = "Volume"    
+    bl_label = "Exterior Volume"
     bl_order = 8
     COMPAT_ENGINES = {"LUXCORE"}
 
