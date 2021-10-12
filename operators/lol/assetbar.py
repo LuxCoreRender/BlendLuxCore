@@ -69,9 +69,9 @@ def draw_callback_2d_progress(self, context):
 
         asset_data = threaddata[1]
 
-        img = asset_data['thumbnail']
-        if img is None:
-            img = utils.get_thumbnail('thumbnail_notready.jpg')
+        img = utils.get_thumbnail('thumbnail_notready.jpg')
+        if 'thumbnail' in asset_data.keys() and asset_data['thumbnail'] != None and asset_data['thumbnail'].size[0] != 0:
+            img = asset_data['thumbnail']
 
         if tcom.passargs.get('downloaders'):
             for d in tcom.passargs['downloaders']:
@@ -186,10 +186,11 @@ def draw_callback_2d_search(self, context):
                             assetbar_props.margin + ui_props.thumb_size) + assetbar_props.margin + assetbar_props.drawoffset
 
                     index = a + ui_props.scrolloffset + b * assetbar_props.wcount
-                    img = assets[index]['thumbnail']
 
-                    if img is None or img.size[0] == 0:
-                        img = utils.get_thumbnail('thumbnail_notready.jpg')
+                    img = utils.get_thumbnail('thumbnail_notready.jpg')
+                    asset = assets[index]
+                    if 'thumbnail' in asset.keys() and asset['thumbnail'] != None and asset['thumbnail'].size[0] != 0:
+                        img = asset['thumbnail']
 
                     w = int(ui_props.thumb_size * img.size[0] / max(img.size[0], img.size[1]))
                     h = int(ui_props.thumb_size * img.size[1] / max(img.size[0], img.size[1]))
