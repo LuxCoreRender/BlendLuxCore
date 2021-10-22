@@ -92,6 +92,7 @@ def load_patreon_assets(context):
                 if os.path.exists(filepath):
                     asset['locked'] = False
     else:
+        import urllib.request
         urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model_blendermarket.json"
         with urllib.request.urlopen(urlstr, timeout=60) as request:
             import json
