@@ -572,24 +572,6 @@ def get_scene_id():
     bpy.context.scene['uuid'] = bpy.context.scene.get('uuid', str(uuid.uuid4()))
     return bpy.context.scene['uuid']
 
-
-def download_thumbnail(self, context, asset):
-    ui_props = context.scene.luxcoreOL.ui
-
-    tcom = is_downloading(asset)
-    if tcom is None:
-        tcom = ThreadCom()
-        tcom.passargs['thumbnail'] = True
-        tcom.passargs['asset type'] = ui_props.asset_type
-
-        downloadthread = Downloader(asset, tcom)
-
-        download_threads.append([downloadthread, asset, tcom])
-        bpy.app.timers.register(timer_update)
-
-    return True
-
-
 def get_thumbnail(imagename):
     # Prepend a dot so the image is hidden to users, e.g. in Blender's search
     imagename_blender = '.' + imagename

@@ -46,16 +46,15 @@ def timer_update():
 
         if tcom.finished:
             thread.stop()
-            if not tcom.passargs['thumbnail']:
-                for a in assets:
-                    if a['hash'] == asset['hash']:
-                        a['downloaded'] = 100.0
-                        break
-                for d in tcom.passargs['downloaders']:
-                    if tcom.passargs['asset type'] == 'MATERIAL':
-                        utils.append_material(bpy.context, asset, d['target_object'], d['target_slot'])
-                    else:
-                        utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
+            for a in assets:
+                if a['hash'] == asset['hash']:
+                    a['downloaded'] = 100.0
+                    break
+            for d in tcom.passargs['downloaders']:
+                if tcom.passargs['asset type'] == 'MATERIAL':
+                    utils.append_material(bpy.context, asset, d['target_object'], d['target_slot'])
+                else:
+                    utils.link_asset(bpy.context, asset, d['location'], d['rotation'])
 
             utils.download_threads.remove(threaddata)
 
@@ -71,11 +70,10 @@ def timer_update():
                 running = running + 1
                 thread.start()
 
-        if not tcom.passargs['thumbnail']:
-            for a in assets:
-                if a['hash'] == asset['hash']:
-                    a['downloaded'] = tcom.progress
-                    break
+        for a in assets:
+            if a['hash'] == asset['hash']:
+                a['downloaded'] = tcom.progress
+                break
 
         for area in bpy.data.window_managers['WinMan'].windows[0].screen.areas:
             if area.type == 'VIEW_3D':

@@ -64,9 +64,6 @@ def draw_callback_2d_progress(self, context):
     for threaddata in utils.download_threads:
         tcom = threaddata[2]
 
-        if tcom.passargs['thumbnail']:
-            continue
-
         asset_data = threaddata[1]
 
         img = utils.get_thumbnail('thumbnail_notready.jpg')
@@ -85,8 +82,6 @@ def draw_callback_2d_progress(self, context):
 def draw_callback_3d_progress(self, context):
     for threaddata in utils.download_threads:
         tcom = threaddata[2]
-        if tcom.passargs['thumbnail']:
-            continue
 
         asset_data = threaddata[1]
         if tcom.passargs['asset type'] == 'MODEL':
