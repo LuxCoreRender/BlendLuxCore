@@ -521,7 +521,8 @@ def link_asset(context, asset, location, rotation):
     # Objects have to be linked to show up in a scene
     for obj in data_to.objects:
         if not link_model:
-            obj.data.make_local()
+            if obj.data != None:
+                obj.data.make_local()
             parent = obj
             while parent.parent != None:
                 parent = parent.parent
