@@ -22,4 +22,4 @@ class NodeItemMultiImageImport(NodeItemCustom):
     def __init__(self, poll=None, draw=None):
         if draw is None:
             draw = self.draw_operator
-        super().__init__(poll, draw)
+        super().__init__(poll=poll, draw=draw)
