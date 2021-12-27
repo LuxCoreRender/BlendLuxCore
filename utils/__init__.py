@@ -365,9 +365,9 @@ def is_obj_visible(obj):
     # Do not export the object if it's made completely invisible through Cycles settings
     # (some addons like HardOps do this to hide objects)
     if bpy.app.version[:2] < (3, 0):
-        return any((obj.visible_camera, obj.visible_diffuse, obj.visible_glossy, obj.visible_transmission, obj.visible_volume_scatter, obj.visible_shadow))
-    else:
         return is_obj_visible_in_cycles(obj)
+    else:
+        return any((obj.visible_camera, obj.visible_diffuse, obj.visible_glossy, obj.visible_transmission, obj.visible_volume_scatter, obj.visible_shadow))
 
 
 def is_obj_visible_in_cycles(obj):
