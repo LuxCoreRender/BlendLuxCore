@@ -54,7 +54,7 @@ def draw_panel_categories(self, context):
     op.do_search = False
     op.keep_running = True
 
-    for cat in categories:
+    for cat in categories.keys():
         col = layout.column(align=True)
         ctext = '%s (%i)' % (cat, categories[cat])
         op = col.operator('view3d.luxcore_ol_asset_bar', text=ctext)
