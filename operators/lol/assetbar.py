@@ -282,7 +282,7 @@ def draw_tooltip(context, x, y, text='', author='', asset=None, gravatar=None):
     else:
         imagename = splitext(asset['url'])[0] + '.jpg'
 
-    tpath = join(user_preferences.global_dir, ui_props.asset_type, 'preview', 'full',
+    tpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), 'preview', 'full',
                  imagename)
     img = utils.get_thumbnail('thumbnail_notready.jpg')
 
