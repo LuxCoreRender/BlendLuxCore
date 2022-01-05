@@ -57,7 +57,7 @@ def load_local_TOC(context, asset_type):
     name = basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
-    filepath = join(user_preferences.global_dir, 'local_assets_' + asset_type + '.json')
+    filepath = join(user_preferences.global_dir, 'local_assets_' + asset_type.lower() + '.json')
     if isfile(filepath):
         with open(filepath) as file_handle:
             assets = json.loads(file_handle.read())
