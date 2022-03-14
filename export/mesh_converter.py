@@ -61,6 +61,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         loopTriCount = len(mesh.loop_triangles)
         loopPtr = mesh.loops[0].as_pointer()
         vertPtr = mesh.vertices[0].as_pointer()
+        normalPtr = mesh.vertex_normals[0].as_pointer()
         polyPtr = mesh.polygons[0].as_pointer()
         loopUVsPtrList = []
         loopColsPtrList = []
@@ -86,7 +87,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             mesh_transform = utils.matrix_to_list(transform)
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                           vertPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
+                                                           vertPtr, normalPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
                                                            meshPtr, material_count, mesh_transform,
                                                            bpy.app.version, custom_normals)
         
