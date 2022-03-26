@@ -221,8 +221,8 @@ def init_ui_size(context, area, region):
     user_preferences = get_addon_preferences(context)
     ui_scale = bpy.context.preferences.view.ui_scale
 
-    assetbar_props.margin = assetbar_props.bl_rna.properties['margin'].default * ui_scale
-    ui_props.thumb_size = user_preferences.thumb_size * ui_scale
+    assetbar_props.margin = math.floor(assetbar_props.bl_rna.properties['margin'].default * ui_scale)
+    ui_props.thumb_size = math.floor(user_preferences.thumb_size * ui_scale)
 
     reg_multiplier = 1
     if not bpy.context.preferences.system.use_region_overlap:
@@ -231,9 +231,9 @@ def init_ui_size(context, area, region):
     for r in area.regions:
         if r.type == 'TOOLS':
             assetbar_props.start = r.width * reg_multiplier
-            assetbar_props.x = r.width * reg_multiplier + assetbar_props.margin + assetbar_props.x_offset * ui_scale
+            assetbar_props.x = math.floor(r.width * reg_multiplier + assetbar_props.margin + assetbar_props.x_offset * ui_scale)
         elif r.type == 'UI':
-            assetbar_props.end = r.width * reg_multiplier + 100 * ui_scale
+            assetbar_props.end = math.floor(r.width * reg_multiplier + 100 * ui_scale)
 
     assetbar_props.width = region.width - assetbar_props.x - assetbar_props.end
     assetbar_props.wcount = math.floor(
@@ -241,7 +241,7 @@ def init_ui_size(context, area, region):
 
     assetbar_props.hcount = 1
     assetbar_props.height = (ui_props.thumb_size + assetbar_props.margin) * assetbar_props.hcount + assetbar_props.margin
-    assetbar_props.y = region.height - assetbar_props.y_offset * ui_scale
+    assetbar_props.y = math.floor(region.height - assetbar_props.y_offset * ui_scale)
 
     ui_props.reports_y = assetbar_props.y - assetbar_props.height - 100
     ui_props.reports_x = assetbar_props.x
@@ -270,7 +270,7 @@ def update_ui_size(context, area, region):
 
     ui_scale = bpy.context.preferences.view.ui_scale
 
-    assetbar_props.margin = assetbar_props.bl_rna.properties['margin'].default * ui_scale
+    assetbar_props.margin = math.floor(assetbar_props.bl_rna.properties['margin'].default * ui_scale)
 
     reg_multiplier = 1
     if not bpy.context.preferences.system.use_region_overlap:
@@ -279,9 +279,9 @@ def update_ui_size(context, area, region):
     for r in area.regions:
         if r.type == 'TOOLS':
             assetbar_props.start = r.width * reg_multiplier
-            assetbar_props.x = r.width * reg_multiplier + assetbar_props.margin + assetbar_props.x_offset * ui_scale
+            assetbar_props.x = math.floor(r.width * reg_multiplier + assetbar_props.margin + assetbar_props.x_offset * ui_scale)
         elif r.type == 'UI':
-            assetbar_props.end = r.width * reg_multiplier + 100 * ui_scale
+            assetbar_props.end = math.floor(r.width * reg_multiplier + 100 * ui_scale)
 
     if assetbar_props.height < ui_props.thumb_size + 2 * assetbar_props.margin:
         assetbar_props.height = ui_props.thumb_size + 2 * assetbar_props.margin
@@ -299,13 +299,13 @@ def update_ui_size(context, area, region):
             assetbar_props.width = region.width - assetbar_props.end - assetbar_props.start
 
 
-    assetbar_props.y = region.height - assetbar_props.y_offset * ui_scale
+    assetbar_props.y = math.floor(region.height - assetbar_props.y_offset * ui_scale)
 
     assetbar_props.wcount = math.floor(
         (assetbar_props.width - 2 * assetbar_props.drawoffset) / (ui_props.thumb_size + assetbar_props.margin))
 
     if assets != None and assetbar_props.wcount > 0:
-        assetbar_props.hcount = assetbar_props.height / (ui_props.thumb_size + 2*assetbar_props.margin)
+        assetbar_props.hcount = math.floor(assetbar_props.height / (ui_props.thumb_size + 2*assetbar_props.margin))
     else:
         assetbar_props.hcount = 1
 
