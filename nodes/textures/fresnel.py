@@ -47,7 +47,7 @@ class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
     n: FloatVectorProperty(name="n (R,G,B)", subtype="NONE", min=0, max=100,
                            update=utils_node.update_opengl_materials,
                            precision=FLOAT_UI_PRECISION)
-    k: FloatVectorProperty(name="k (R,G,B)", subtype="COORDINATES", min=0, max=100,
+    k: FloatVectorProperty(name="k (R,G,B)", subtype="NONE", min=0, max=100,
                            update=utils_node.update_opengl_materials,
                            precision=FLOAT_UI_PRECISION)
 
