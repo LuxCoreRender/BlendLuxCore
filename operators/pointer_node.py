@@ -42,11 +42,10 @@ class LUXCORE_MT_pointer_select_node_tree(bpy.types.Menu, LUXCORE_MT_node_tree):
     bl_idname = "LUXCORE_MT_pointer_select_node_tree"
     bl_description = "Select a node tree"
 
-    @classmethod
-    def poll(cls, context):
-        return poll_node(context)
-
     def draw(self, context):
+        if not hasattr(context, "node"):
+            # this shouldn't happen, because draw is only called when the menu is open
+            return
         node = context.node
         assert node.bl_idname == "LuxCoreNodeTreePointer"
         self.custom_draw(node.filter, "luxcore.pointer_set_node_tree")
