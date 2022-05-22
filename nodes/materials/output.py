@@ -102,18 +102,23 @@ class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
         row.prop(self, "shadow_color", text="")
         row.label(text="Shadow Color")
 
+        # PhotonGI
+        photongi_enabled = context.scene.luxcore.config.photongi.enabled
+        col = box.column()
+        col.active = photongi_enabled
+        if not photongi_enabled:
+            col.label(text="PhotonGI Cache is not enabled", icon=icons.INFO)
+
+        row = col.row()
+        row.active = photongi_enabled
+        row.prop(self, "use_photongi")
+
         # All of the options below only work with the Path engine, not with Bidir
         engine = context.scene.luxcore.config.engine
         col = box.column()
         col.active = engine == "PATH"
         if engine == "BIDIR":
             col.label(text="Not supported by Bidir engine:", icon=icons.INFO)
-
-        # PhotonGI
-        row = col.row()
-        row.active = (context.scene.luxcore.config.photongi.enabled
-                      and engine == "PATH")
-        row.prop(self, "use_photongi")
 
         # Holdout
         col.prop(self, "is_holdout")
