@@ -411,8 +411,8 @@ class LuxCoreConfig(PropertyGroup):
     # These settings are mostly not directly transferrable to LuxCore properties
     # They need some if/else decisions and aggregation, e.g. to build the engine name from parts
     engines = [
-        ("PATH", "Path", PATH_DESC, 0),
-        ("BIDIR", "Bidir", BIDIR_DESC, 1),
+        ("PATH", "Pathtracing", PATH_DESC, 0),
+        ("BIDIR", "Bidirectional", BIDIR_DESC, 1),
     ]
     engine: EnumProperty(name="Lighting integrator", items=engines, default="PATH")
 
