@@ -19,7 +19,7 @@ PATH_DESC = (
 
 BIDIR_DESC = (
     "Traces and combines rays from the camera and lights.\n"
-    "Suited for some special edge-case types of scenes that can't be rendered efficiently by the Path engine.\n"
+    "Suited for some special edge-case types of scenes that can't be rendered efficiently by the Pathtracing engine.\n"
     "Slower than the Path engine otherwise.\n"
     'Limited to the CPU, can not run on the GPU.\n'
     "Can not render complex SDS-caustics (e.g. caustics seen in a mirror) efficiently.\n"
@@ -514,9 +514,9 @@ class LuxCoreConfig(PropertyGroup):
     filters = [
         ("BLACKMANHARRIS", "Blackman-Harris", "Default, usually the best option", 0),
         ("MITCHELL_SS", "Mitchell", "Sharp, but can produce black ringing artifacts around bright pixels", 1),
-        ("GAUSSIAN", "Gaussian", "Blurry", 2),
-        ("SINC", "Sinc", "", 4),
-        ("CATMULLROM", "Catmull-Rom", "", 5),
+        #("GAUSSIAN", "Gaussian", "Blurry", 2),
+        #("SINC", "Sinc", "", 4),
+        #("CATMULLROM", "Catmull-Rom", "", 5),
     ]
     filter: EnumProperty(name="Filter", items=filters, default="BLACKMANHARRIS",
                           description=FILTER_DESC)
