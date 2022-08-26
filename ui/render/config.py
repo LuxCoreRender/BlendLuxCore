@@ -19,7 +19,7 @@ def luxcore_render_draw(panel, context):
     # Device
     col_device = layout.column(align=True)
     if config.engine == "PATH":
-        col_device.prop(config, "device", text="Compute device:")
+        col_device.prop(config, "device", text="Compute device")
         
         if config.device == "OCL":
             gpu_backend = utils.get_addon_preferences(context).gpu_backend
