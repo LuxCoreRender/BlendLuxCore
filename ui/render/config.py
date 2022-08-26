@@ -19,7 +19,7 @@ def luxcore_render_draw(panel, context):
     # Device
     col_device = layout.column(align=True)
     if config.engine == "PATH":
-        col_device.prop(config, "device", text="Compute device")
+        col_device.prop(config, "device", text="Compute device", icon = 'MEMORY')
         
         if config.device == "OCL":
             gpu_backend = utils.get_addon_preferences(context).gpu_backend
@@ -34,11 +34,14 @@ def luxcore_render_draw(panel, context):
 
     # Engine
     col = layout.column(align=True)
-    col.prop(config, "engine", expand=False)
+    col.prop(config, "engine", expand=False, icon = 'OUTLINER_OB_LIGHT')
 
-    row = layout.row()
-    row.operator("luxcore.use_cycles_settings")
-    row.operator("luxcore.render_settings_helper")
+    #row = layout.row()
+    #row.operator("luxcore.use_cycles_settings")
+    #row.operator("luxcore.render_settings_helper")
+    box = layout.box()
+    box.operator("luxcore.use_cycles_settings", icon = 'RESTRICT_INSTANCED_OFF')
+    box.operator("luxcore.render_settings_helper", icon = 'QUESTION')
 
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
