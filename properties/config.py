@@ -414,7 +414,7 @@ class LuxCoreConfig(PropertyGroup):
         ("PATH", "Path", PATH_DESC, 0),
         ("BIDIR", "Bidir", BIDIR_DESC, 1),
     ]
-    engine: EnumProperty(name="Lighting integrator:", items=engines, default="PATH")
+    engine: EnumProperty(name="Lighting integrator", items=engines, default="PATH")
 
     # Only available when tiled rendering is off (because it uses a special tiled sampler)
     samplers = [
