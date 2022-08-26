@@ -39,9 +39,9 @@ def luxcore_render_draw(panel, context):
     #row = layout.row()
     #row.operator("luxcore.use_cycles_settings")
     #row.operator("luxcore.render_settings_helper")
-    box = layout.box()
-    box.operator("luxcore.use_cycles_settings", icon = 'RESTRICT_INSTANCED_OFF')
-    box.operator("luxcore.render_settings_helper", icon = 'QUESTION')
+    row = layout.row()
+    row.operator("luxcore.use_cycles_settings", icon = 'RESTRICT_INSTANCED_OFF')
+    row.operator("luxcore.render_settings_helper", icon = 'QUESTION')
 
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
