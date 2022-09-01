@@ -55,7 +55,7 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
             else:
                 row.prop(config, "sampler")
 
-            if sampler in {"SOBOL", "RANDOM"}:
+            if sampler in "SOBOL":
                 col = layout.column()
                 col.active = not config.using_out_of_core()
                 col.prop(config, "sampler_pattern")
@@ -68,8 +68,8 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
                     if config.using_out_of_core():
                         col.prop(config, "out_of_core_supersampling")
             elif sampler == "METROPOLIS":
-                if denoiser.enabled and denoiser.type == "BCD":
-                    layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
+                #if denoiser.enabled and denoiser.type == "BCD":
+                    #layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
 
                 col = layout.column(align=True)
                 col.prop(config, "metropolis_largesteprate", slider=True)
@@ -180,9 +180,9 @@ class LUXCORE_RENDER_PT_sampling_pixel_filtering(RenderButtonsPanel, Panel):
         col = layout.column(align=True)
         col.active = config.filter_enabled and not filter_forced_disabled
         col.prop(config, "filter_width")
-        ####if config.filter == "GAUSSIAN":
-            ###layout.prop(config, "gaussian_alpha")
-        ##elif config.filter == "SINC":
+        #if config.filter == "GAUSSIAN":
+            #layout.prop(config, "gaussian_alpha")
+        #elif config.filter == "SINC":
             #layout.prop(config, "sinc_tau")
 
 
