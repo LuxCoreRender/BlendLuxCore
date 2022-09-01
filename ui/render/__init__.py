@@ -31,7 +31,6 @@ classes = (
     sampling.LUXCORE_RENDER_PT_sampling_pixel_filtering,
     sampling.LUXCORE_RENDER_PT_sampling_advanced,
     image_resize_policy.LUXCORE_RENDER_PT_image_resize_policy,
-    tools.LUXCORE_RENDER_PT_filesaver,
     viewport.LUXCORE_RENDER_PT_viewport_settings,
     viewport.LUXCORE_RENDER_PT_viewport_settings_denoiser,
     viewport.LUXCORE_RENDER_PT_viewport_settings_advanced,
