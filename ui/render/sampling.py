@@ -5,7 +5,6 @@ from ...export.config import SamplingOverlap
 from bpy.types import Panel
 from bl_ui.properties_render import RenderButtonsPanel
 
-
 def calc_samples_per_pass(config):
     if config.using_tiled_path():
         return config.tile.path_sampling_aa_size**2
@@ -18,7 +17,6 @@ def calc_samples_per_pass(config):
             elif config.sampler_pattern == "CACHE_FRIENDLY":
                 return SamplingOverlap.CACHE_FRIENDLY
     return -1
-
 
 class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -35,7 +33,11 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
 
         layout.use_property_split = True
         layout.use_property_decorate = False
-
+        
+        # Tiled path
+        if config.engine == "PATH":
+            layout.prop(config, "use_tiles")
+            
         if config.using_tiled_path():
             row = layout.row()
             row.label(text="Tiled path uses special sampler", icon=icons.INFO)
@@ -55,7 +57,7 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
             else:
                 row.prop(config, "sampler")
 
-            if sampler in {"SOBOL", "RANDOM"}:
+            if sampler in "SOBOL":
                 col = layout.column()
                 col.active = not config.using_out_of_core()
                 col.prop(config, "sampler_pattern")
@@ -68,8 +70,8 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
                     if config.using_out_of_core():
                         col.prop(config, "out_of_core_supersampling")
             elif sampler == "METROPOLIS":
-                if denoiser.enabled and denoiser.type == "BCD":
-                    layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
+                #if denoiser.enabled and denoiser.type == "BCD":
+                    #layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
 
                 col = layout.column(align=True)
                 col.prop(config, "metropolis_largesteprate", slider=True)
@@ -83,7 +85,6 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
             row = layout.row()
             row.alignment = "RIGHT"
             row.label(text=f"Samples per Pass: {samples_per_pass}")
-
 
 class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -115,7 +116,6 @@ class LUXCORE_RENDER_PT_sampling_tiled_multipass(RenderButtonsPanel, Panel):
         col.prop(config.tile, "multipass_convtest_threshold_reduction")
         col.prop(config.tile, "multipass_convtest_warmup")
 
-
 class LUXCORE_RENDER_PT_sampling_adaptivity(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_sampling"
@@ -140,7 +140,6 @@ class LUXCORE_RENDER_PT_sampling_adaptivity(RenderButtonsPanel, Panel):
         if config.sobol_adaptive_strength > 0:
             col.prop(config.noise_estimation, "warmup")
             col.prop(config.noise_estimation, "step")
-
 
 class LUXCORE_RENDER_PT_sampling_pixel_filtering(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -180,11 +179,10 @@ class LUXCORE_RENDER_PT_sampling_pixel_filtering(RenderButtonsPanel, Panel):
         col = layout.column(align=True)
         col.active = config.filter_enabled and not filter_forced_disabled
         col.prop(config, "filter_width")
-        if config.filter == "GAUSSIAN":
-            layout.prop(config, "gaussian_alpha")
-        elif config.filter == "SINC":
-            layout.prop(config, "sinc_tau")
-
+        #if config.filter == "GAUSSIAN":
+            #layout.prop(config, "gaussian_alpha")
+        #elif config.filter == "SINC":
+            #layout.prop(config, "sinc_tau")
 
 class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -214,6 +212,4 @@ class LUXCORE_RENDER_PT_sampling_advanced(RenderButtonsPanel, Panel):
         
         col.prop(config, "light_strategy")
         
-        # Tiled path
-        if config.engine == "PATH":
-            layout.prop(config, "use_tiles")
+        
