@@ -28,9 +28,9 @@ BIDIR_DESC = (
 
 SOBOL_DESC = "Optimized random noise pattern. Supports noise-aware adaptive sampling"
 METROPOLIS_DESC = "Sampler that focuses samples on brighter parts of the image. Not noise-aware. Suited for rendering caustics"
-RANDOM_DESC = (
-    "Random noise pattern. Supports noise-aware adaptive sampling. "
-    "Recommended only if the BCD denoiser is used (use Sobol otherwise)"
+#RANDOM_DESC = (
+    #"Random noise pattern. Supports noise-aware adaptive sampling. "
+    #"Recommended only if the BCD denoiser is used (use Sobol otherwise)"
 )
 
 TILED_DESCRIPTION = (
@@ -420,13 +420,13 @@ class LuxCoreConfig(PropertyGroup):
     samplers = [
         ("SOBOL", "Sobol", SOBOL_DESC, 0),
         ("METROPOLIS", "Metropolis", METROPOLIS_DESC, 1),
-        ("RANDOM", "Random", RANDOM_DESC, 2),
+        #("RANDOM", "Random", RANDOM_DESC, 2),
     ]
     sampler: EnumProperty(name="Sampler", items=samplers, default="SOBOL")
     
     samplers_gpu = [
         ("SOBOL", "Sobol", "Best suited sampler for the GPU. " + SOBOL_DESC, 0),
-        ("RANDOM", "Random", RANDOM_DESC, 1),
+        #("RANDOM", "Random", RANDOM_DESC, 1),
     ]
     sampler_gpu: EnumProperty(name="Sampler", items=samplers_gpu, default="SOBOL")
     
