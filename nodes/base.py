@@ -124,7 +124,7 @@ class LuxCoreNode:
                             node_tree.links.new(from_socket, to_socket)
 
 
-class LuxCoreNodeMaterial(LuxCoreNode):
+class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
     """Base class for material nodes"""
     suffix = "mat"  # To avoid collisions with volume names
     prefix = "scene.materials."
@@ -158,7 +158,7 @@ class LuxCoreNodeMaterial(LuxCoreNode):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
-class LuxCoreNodeTexture(LuxCoreNode):
+class LuxCoreNodeTexture(LuxCoreNode, bpy.types.Node):
     """Base class for texture nodes"""
     suffix = ""
     prefix = "scene.textures."
@@ -291,7 +291,7 @@ class LuxCoreNodeVolume(LuxCoreNode):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
-class LuxCoreNodeShape(LuxCoreNode):
+class LuxCoreNodeShape(LuxCoreNode, bpy.types.Node):
     """Base class for shape nodes"""
     suffix = ""
     prefix = "scene.shapes."
@@ -303,7 +303,7 @@ class LuxCoreNodeShape(LuxCoreNode):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
-class LuxCoreNodeTreePointer(bpy.types.Node, LuxCoreNode):
+class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
     """ Pointer to a node tree """
     bl_label = "Pointer"
     bl_width_default = 250
