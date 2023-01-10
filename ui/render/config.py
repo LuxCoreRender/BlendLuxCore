@@ -40,8 +40,8 @@ def luxcore_render_draw(panel, context):
     #row.operator("luxcore.use_cycles_settings")
     #row.operator("luxcore.render_settings_helper")
     row = layout.row()
-    row.operator("luxcore.use_cycles_settings", icon = 'RESTRICT_INSTANCED_OFF')
-    row.operator("luxcore.render_settings_helper", icon = 'QUESTION')
+    row.operator("luxcore.use_cycles_settings", icon_value= icon_manager.get_icon_id("link"))
+    row.operator("luxcore.render_settings_helper", icon_value= icon_manager.get_icon_id("help"))
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
