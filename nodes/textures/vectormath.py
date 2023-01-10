@@ -6,7 +6,7 @@ from .math import MIX_DESCRIPTION
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexVectorMath(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexVectorMath(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Vector Math"
     bl_width_default = 200
 

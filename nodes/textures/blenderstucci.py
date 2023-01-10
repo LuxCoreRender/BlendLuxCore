@@ -6,7 +6,7 @@ from .. import NOISE_BASIS_ITEMS, NOISE_TYPE_ITEMS, MIN_NOISE_SIZE
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexBlenderStucci(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderStucci(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Blender Stucci"
     bl_width_default = 200    
 

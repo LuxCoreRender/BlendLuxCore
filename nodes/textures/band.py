@@ -34,7 +34,7 @@ class ColorRampItem(PropertyGroup):
                                    default=False, update=update_remove_keyframe)
 
 
-class LuxCoreNodeTexBand(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBand(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "ColorRamp"
     bl_width_default = 200
 

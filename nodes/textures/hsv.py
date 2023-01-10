@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexHSV(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexHSV(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Hue Saturation Value"
 
     def init(self, context):

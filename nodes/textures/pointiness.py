@@ -5,7 +5,7 @@ from ... import utils
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexPointiness(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexPointiness(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Pointiness"
     bl_width_default = 180
 

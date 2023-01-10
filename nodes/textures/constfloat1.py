@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexConstfloat1(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexConstfloat1(LuxCoreNodeTexture, bpy.types.Node):
     """ Constant float value """
     bl_label = "Constant Value"
 

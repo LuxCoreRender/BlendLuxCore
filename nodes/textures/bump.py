@@ -12,7 +12,7 @@ SAMPLING_DISTANCE_DESC = (
 )
 
 
-class LuxCoreNodeTexBump(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBump(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Bump"
     bl_width_default = 200
 

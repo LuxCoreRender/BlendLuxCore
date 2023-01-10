@@ -6,7 +6,7 @@ from ...utils import node as utils_node
 from .bump import SAMPLING_DISTANCE_DESC
 
 
-class LuxCoreNodeTexTriplanarBump(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexTriplanarBump(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Triplanar Bump Mapping"
     bl_width_default = 200
 

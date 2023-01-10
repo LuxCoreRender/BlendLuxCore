@@ -5,7 +5,7 @@ from ...utils import node as utils_node
 from ...ui import icons
 
 
-class LuxCoreNodeTexDistort(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexDistort(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Distort"
     bl_width_default = 150
     

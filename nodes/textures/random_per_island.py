@@ -4,7 +4,7 @@ from ...utils import node as utils_node
 from ...export.caches.object_cache import TriAOVDataIndices
 
 
-class LuxCoreNodeTexRandomPerIsland(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexRandomPerIsland(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Random Per Island"
     bl_width_default = 130
 

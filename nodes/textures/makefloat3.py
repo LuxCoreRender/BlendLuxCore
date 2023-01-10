@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexMakeFloat3(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexMakeFloat3(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Combine RGB"
     bl_width_default = 130
 

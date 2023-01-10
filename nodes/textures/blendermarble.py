@@ -6,7 +6,7 @@ from .. import NOISE_BASIS_ITEMS, NOISE_TYPE_ITEMS, MIN_NOISE_SIZE
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexBlenderMarble(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderMarble(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Blender Marble"
     bl_width_default = 200    
 

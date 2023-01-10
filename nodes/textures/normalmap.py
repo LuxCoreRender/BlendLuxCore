@@ -5,7 +5,7 @@ from .imagemap import NORMAL_SCALE_DESC
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexNormalmap(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexNormalmap(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Normalmap"
 
     scale: FloatProperty(update=utils_node.force_viewport_update, name="Height", default=1, min=0, soft_max=5,

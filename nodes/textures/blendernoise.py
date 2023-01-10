@@ -5,7 +5,7 @@ from ...utils import node as utils_node
 from ...ui import icons
 
 
-class LuxCoreNodeTexBlenderNoise(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderNoise(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Blender Noise"
     bl_width_default = 200    
 

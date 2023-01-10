@@ -6,7 +6,7 @@ from .. import NOISE_BASIS_ITEMS, MIN_NOISE_SIZE
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexBlenderDistortedNoise(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderDistortedNoise(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Blender Distorted Noise"
     bl_width_default = 200
 

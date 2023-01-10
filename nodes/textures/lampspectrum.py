@@ -134,7 +134,7 @@ ABSORPTION_ITEMS = [
 ]
 
 
-class LuxCoreNodeTexLampSpectrum(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexLampSpectrum(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Lamp Spectrum"
     bl_width_default = 310
 

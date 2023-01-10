@@ -6,7 +6,7 @@ from ...utils import node as utils_node
 from .imagemap import NORMAL_SCALE_DESC
 
 
-class LuxCoreNodeTexTriplanarNormalmap(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexTriplanarNormalmap(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Triplanar Normal Mapping"
     bl_width_default = 165
 

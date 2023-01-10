@@ -29,7 +29,7 @@ def srgb_to_linear(color):
     return Color([channel_srgb_to_linear(c) for c in color])
 
 
-class LuxCoreNodeTexConstfloat3(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexConstfloat3(LuxCoreNodeTexture, bpy.types.Node):
     """
     Constant color.
     Note that we do not offer a direct hex code input,

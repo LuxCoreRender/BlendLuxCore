@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexMarble(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexMarble(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Marble"
     bl_width_default = 200
 

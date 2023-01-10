@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexBrick(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBrick(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Brick"
     bl_width_default = 200   
 
