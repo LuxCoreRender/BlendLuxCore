@@ -10,7 +10,7 @@ from ..properties.display import LuxCoreDisplaySettings
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
     bl_idname = "LUXCORE"
-    bl_label = "LuxCoreRenderer"
+    bl_label = "LuxCoreRender"
 
     # Apply compositing on render results.
     bl_use_postprocess = True
