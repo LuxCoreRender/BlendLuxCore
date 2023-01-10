@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeShape
 
 
-class LuxCoreNodeShapeHarlequin(bpy.types.Node, LuxCoreNodeShape):
+class LuxCoreNodeShapeHarlequin(LuxCoreNodeShape, bpy.types.Node):
     bl_label = "Harlequin"
     bl_width_default = 200
 
