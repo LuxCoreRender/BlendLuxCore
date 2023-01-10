@@ -2,7 +2,7 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from .. import icons
 from ...utils.errorlog import LuxCoreErrorLog
-
+from .icons import icon_manager
 
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -17,9 +17,9 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
     def draw_header(self, context):
         row = self.layout.row(align=True)
         if LuxCoreErrorLog.errors:
-            row.label(text=str(len(LuxCoreErrorLog.errors)), icon=icons.ERROR)
+            row.label(text=str(len(LuxCoreErrorLog.errors)), icon_value= icon_manager.get_icon_id("logotype"))
         if LuxCoreErrorLog.warnings:
-            row.label(text=str(len(LuxCoreErrorLog.warnings)), icon=icons.WARNING)
+            row.label(text=str(len(LuxCoreErrorLog.warnings)), icon_value= icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         if LuxCoreErrorLog.errors or LuxCoreErrorLog.warnings:

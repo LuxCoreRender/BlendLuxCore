@@ -4,6 +4,7 @@ from ...utils.refresh_button import template_refresh_button
 from ...engine.base import LuxCoreRenderEngine
 from .. import icons
 from ...properties.denoiser import LuxCoreDenoiser
+from .icons import icon_manager
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
@@ -19,7 +20,7 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
     def draw_header(self, context):
         layout = self.layout
         layout.enabled = not LuxCoreRenderEngine.final_running
-        layout.prop(context.scene.luxcore.denoiser, "enabled", text="")
+        layout.prop(context.scene.luxcore.denoiser, "enabled", icon_value= icon_manager.get_icon_id("intel"))
 
     def draw(self, context):
         config = context.scene.luxcore.config

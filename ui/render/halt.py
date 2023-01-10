@@ -5,6 +5,7 @@ from ... import utils
 from ...utils import ui as utils_ui
 from .. import icons
 from .sampling import calc_samples_per_pass
+from .icons import icon_manager
 
 
 def draw(layout, context, halt):
@@ -94,7 +95,7 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
 
     def draw_header(self, context):
         halt = context.scene.luxcore.halt
-        self.layout.prop(halt, "enable", text="")
+        self.layout.prop(halt, "enable", text="", icon_value= icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout

@@ -1,6 +1,7 @@
 from .. import icons
 from ... import utils
 from ...export.config import SamplingOverlap
+from .icons import icon_manager
 
 from bpy.types import Panel
 from bl_ui.properties_render import RenderButtonsPanel
@@ -23,6 +24,10 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
     bl_label = "Sampling"
     bl_options = {'DEFAULT_CLOSED'}
     bl_order = 25
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value= icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
