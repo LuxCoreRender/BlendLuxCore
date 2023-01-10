@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeMaterial, Roughness
 from ... import utils
 from ...utils import node as utils_node
 
-class LuxCoreNodeMatMetal(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatMetal(LuxCoreNodeMaterial, bpy.types.Node):
     """metal material node"""
     bl_label = "Metal Material"
     bl_width_default = 200

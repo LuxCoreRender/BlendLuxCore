@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeMaterial
 from ...utils import node as utils_node
 
-class LuxCoreNodeMatMatteTranslucent(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatMatteTranslucent(LuxCoreNodeMaterial, bpy.types.Node):
     bl_label = "Matte Translucent Material"
     bl_width_default = 160
 

@@ -5,7 +5,7 @@ from .glossytranslucent import IOR_DESCRIPTION, MULTIBOUNCE_DESCRIPTION
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeMatGlossy2(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial, bpy.types.Node):
     bl_label = "Glossy Material"
     bl_width_default = 160
 

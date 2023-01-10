@@ -22,7 +22,7 @@ class LuxCoreSocketRepeatV(bpy.types.NodeSocket, LuxCoreSocketFloat):
     slider = True
 
 
-class LuxCoreNodeMatCloth(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatCloth(LuxCoreNodeMaterial, bpy.types.Node):
     """Cloth material node"""
     bl_label = "Cloth Material"
     bl_width_default = 160

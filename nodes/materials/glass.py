@@ -49,7 +49,7 @@ class LuxCoreSocketCauchyC(bpy.types.NodeSocket, LuxCoreSocketFloat):
         super().draw(context, layout, node, text)
 
 
-class LuxCoreNodeMatGlass(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatGlass(LuxCoreNodeMaterial, bpy.types.Node):
     """ Node for the three LuxCore materials glass, roughglass and archglass """
     bl_label = "Glass Material"
     bl_width_default = 190

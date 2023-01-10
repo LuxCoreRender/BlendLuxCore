@@ -15,7 +15,7 @@ class LuxCoreSocketReflection(bpy.types.NodeSocket, LuxCoreSocketFloat):
     slider = True
 
 
-class LuxCoreNodeMatCarpaint(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial, bpy.types.Node):
     """
     carpaint material node
 
