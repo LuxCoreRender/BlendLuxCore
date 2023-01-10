@@ -19,7 +19,7 @@ def luxcore_render_draw(panel, context):
     # Device
     col_device = layout.column(align=True)
     if config.engine == "PATH":
-        col_device.prop(config, "device", text="Device")
+        col_device.prop(config, "device", text="Compute device", icon = 'MEMORY')
         
         if config.device == "OCL":
             gpu_backend = utils.get_addon_preferences(context).gpu_backend
@@ -34,12 +34,14 @@ def luxcore_render_draw(panel, context):
 
     # Engine
     col = layout.column(align=True)
-    col.prop(config, "engine", expand=False)
+    col.prop(config, "engine", expand=False, icon = 'OUTLINER_OB_LIGHT')
 
+    #row = layout.row()
+    #row.operator("luxcore.use_cycles_settings")
+    #row.operator("luxcore.render_settings_helper")
     row = layout.row()
-    row.operator("luxcore.use_cycles_settings")
-    row.operator("luxcore.render_settings_helper")
-
+    row.operator("luxcore.use_cycles_settings", icon = 'RESTRICT_INSTANCED_OFF')
+    row.operator("luxcore.render_settings_helper", icon = 'QUESTION')
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -48,7 +50,6 @@ class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     
     def draw(self, context):
         pass
-
 
 class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -80,8 +81,7 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
             # Bidir options
             col.prop(config, "bidir_path_maxdepth")
             col.prop(config, "bidir_light_maxdepth")
-
-
+            
 class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Tracing"
@@ -162,6 +162,33 @@ class LUXCORE_RENDER_PT_lightpaths_clamping(RenderButtonsPanel, Panel):
             op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
             layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
 
+class LUXCORE_RENDER_PT_filesaver(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "LuxCore Filesaver"
+    bl_options = {"DEFAULT_CLOSED"}
+    
+    def draw_header(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+        layout.prop(config, "use_filesaver", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = config.use_filesaver
+        layout.label(text="Only write LuxCore scene to disk", icon=icons.INFO)
+
+        col = layout.column(align=True)
+        col.prop(config, "filesaver_format")
+        col.prop(config, "filesaver_path")
+
+classes = (
+    LUXCORE_RENDER_PT_filesaver,
+    )
 
 def compatible_panels():
     panels = [
@@ -173,6 +200,10 @@ def compatible_panels():
 
 
 def register():
+    from bpy.utils import register_class
+    for cls in classes:
+        register_class( cls)
+        
     # We append our draw function to the existing Blender render panel
     RENDER_PT_context.append(luxcore_render_draw)
     for panel in compatible_panels():
@@ -180,6 +211,10 @@ def register():
 
 
 def unregister():
+    from bpy.utils import unregister_class
+    for cls in classes:
+        unregister_class( cls)
+        
     RENDER_PT_context.remove(luxcore_render_draw)
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.remove("LUXCORE")
