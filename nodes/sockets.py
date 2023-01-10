@@ -96,6 +96,7 @@ class Color:
     material = (0.39, 0.78, 0.39, 1.0)
     color_texture = (0.78, 0.78, 0.16, 1.0)
     float_texture = (0.63, 0.63, 0.63, 1.0)
+    bump_texture = (1.0, 0.01, 0.0, 1.0)
     vector_texture = (0.39, 0.39, 0.78, 1.0)
     fresnel_texture = (0.33, 0.6, 0.85, 1.0)
     volume = (1.0, 0.4, 0.216, 1.0)
@@ -148,7 +149,7 @@ class LuxCoreSocketMatEmission(bpy.types.NodeSocket, LuxCoreNodeSocket):
 
 
 class LuxCoreSocketBump(bpy.types.NodeSocket, LuxCoreNodeSocket):
-    color = Color.float_texture
+    color = Color.bump_texture
     # no default value
 
 
