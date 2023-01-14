@@ -3,7 +3,7 @@ from ..base import LuxCoreNodeMaterial
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeMatTwoSided(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatTwoSided(LuxCoreNodeMaterial, bpy.types.Node):
     bl_label = "Two Sided Material"
     bl_width_default = 160
 

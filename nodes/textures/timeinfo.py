@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeTexture
 from ...handlers import frame_change_pre
 
-class LuxCoreNodeTexTimeInfo(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexTimeInfo(LuxCoreNodeTexture, bpy.types.Node):
     """ Access to time and frame information """
     bl_label = "Time Info"
     bl_width_default = 150

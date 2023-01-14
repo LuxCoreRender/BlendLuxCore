@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeMaterial, ThinFilmCoating
 from .glass import THIN_FILM_DESCRIPTION
 
 
-class LuxCoreNodeMatDisney(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatDisney(LuxCoreNodeMaterial, bpy.types.Node):
     bl_label = "Disney Material"
     bl_width_default = 190
     

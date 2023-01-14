@@ -12,7 +12,7 @@ class LuxCoreSocketSigma(bpy.types.NodeSocket, LuxCoreSocketFloat):
     slider = True
 
 
-class LuxCoreNodeMatMatte(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatMatte(LuxCoreNodeMaterial, bpy.types.Node):
     """(Rough) matte material node"""
     bl_label = "Matte Material"
     bl_width_default = 160

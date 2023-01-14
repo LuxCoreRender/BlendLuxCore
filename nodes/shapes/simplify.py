@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeShape
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeShapeSimplify(bpy.types.Node, LuxCoreNodeShape):
+class LuxCoreNodeShapeSimplify(LuxCoreNodeShape, bpy.types.Node):
     bl_label = "Simplify"
     bl_width_default = 150
 

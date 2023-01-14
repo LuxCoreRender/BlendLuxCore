@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeShape
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeShapeSubdiv(bpy.types.Node, LuxCoreNodeShape):
+class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
     bl_label = "Subdivision"
     bl_width_default = 150
 

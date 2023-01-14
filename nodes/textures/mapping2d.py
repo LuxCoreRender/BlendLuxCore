@@ -7,7 +7,7 @@ from ...ui import icons
 from ...export.caches.object_cache import TriAOVDataIndices
 
 
-class LuxCoreNodeTexMapping2D(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "2D Mapping"
     bl_width_default = 160
 

@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexCheckerboard3D(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexCheckerboard3D(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "3D Checkerboard"
     bl_width_default = 160
 

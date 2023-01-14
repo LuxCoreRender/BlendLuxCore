@@ -1,7 +1,7 @@
 import bpy
 from ..base import LuxCoreNodeMaterial
 
-class LuxCoreNodeMatMirror(bpy.types.Node, LuxCoreNodeMaterial):
+class LuxCoreNodeMatMirror(LuxCoreNodeMaterial, bpy.types.Node):
     """mirror material node"""
     bl_label = "Mirror Material"
     bl_width_default = 160

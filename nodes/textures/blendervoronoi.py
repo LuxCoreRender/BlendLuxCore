@@ -5,7 +5,7 @@ from .. import MIN_NOISE_SIZE
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexBlenderVoronoi(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderVoronoi(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Blender Voronoi"
     bl_width_default = 200
 

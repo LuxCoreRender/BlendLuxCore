@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeShape
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeShapeVectorDisplacement(bpy.types.Node, LuxCoreNodeShape):
+class LuxCoreNodeShapeVectorDisplacement(LuxCoreNodeShape, bpy.types.Node):
     bl_label = "Vector Displacement"
     bl_width_default = 150
 

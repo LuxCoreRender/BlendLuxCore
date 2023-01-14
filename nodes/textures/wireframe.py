@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexWireframe(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexWireframe(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Wireframe"
     bl_width_default = 200
 

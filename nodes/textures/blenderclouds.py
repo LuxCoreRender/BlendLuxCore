@@ -6,7 +6,7 @@ from .. import NOISE_BASIS_ITEMS, NOISE_TYPE_ITEMS, MIN_NOISE_SIZE
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexBlenderClouds(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderClouds(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Blender Clouds"
     bl_width_default = 200
 

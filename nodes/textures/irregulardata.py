@@ -10,7 +10,7 @@ def convert(string):
     return [float(elem) for elem in separated]
 
 
-class LuxCoreNodeTexIrregularData(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexIrregularData(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Irregular Data"
 
     equal_length: BoolProperty(update=utils_node.force_viewport_update, default=True)

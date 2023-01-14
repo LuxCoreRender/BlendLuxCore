@@ -7,7 +7,7 @@ from .math import MIX_DESCRIPTION
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexColorMix(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexColorMix(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Color Math"
     bl_width_default = 200
 

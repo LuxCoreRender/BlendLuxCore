@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeShape
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeShapeHeightDisplacement(bpy.types.Node, LuxCoreNodeShape):
+class LuxCoreNodeShapeHeightDisplacement(LuxCoreNodeShape, bpy.types.Node):
     bl_label = "Height Displacement"
     bl_width_default = 150
 

@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexBlenderBlend(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBlenderBlend(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Blender Blend"
     bl_width_default = 200    
 

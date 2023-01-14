@@ -24,7 +24,7 @@ HIGH_RES_DESC= (
     "The high resolution amplification used for generating the smoke data"
 )
 
-class LuxCoreNodeTexOpenVDB(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexOpenVDB(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "OpenVDB File"
     bl_width_default = 200
 

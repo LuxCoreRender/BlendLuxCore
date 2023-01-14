@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexHitpoint(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexHitpoint(LuxCoreNodeTexture, bpy.types.Node):
     """ Node for hitpointcolor and hitpointgrey textures """
     bl_label = "Vertex Color"
     bl_width_default = 150

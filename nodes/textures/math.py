@@ -39,7 +39,7 @@ INPUT_SETTINGS = {
 }
 
 
-class LuxCoreNodeTexMath(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexMath(LuxCoreNodeTexture, bpy.types.Node):
     """Math node with several math operations"""
     bl_label = "Math"
 

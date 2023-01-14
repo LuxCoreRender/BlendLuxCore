@@ -4,7 +4,7 @@ from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexRandom(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexRandom(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Random"
     bl_width_default = 200
 

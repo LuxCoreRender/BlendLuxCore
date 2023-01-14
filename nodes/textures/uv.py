@@ -1,7 +1,7 @@
 import bpy
 from ..base import LuxCoreNodeTexture
 
-class LuxCoreNodeTexUV(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexUV(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "UV Test"
 
     def init(self, context):

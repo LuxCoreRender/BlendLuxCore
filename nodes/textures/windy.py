@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexWindy(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexWindy(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Windy"
     bl_width_default = 200
     

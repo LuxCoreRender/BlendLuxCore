@@ -3,7 +3,7 @@ from bpy.props import EnumProperty, FloatProperty, IntProperty
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
 
-class LuxCoreNodeTexWrinkled(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexWrinkled(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Wrinkled"
     bl_width_default = 200
 

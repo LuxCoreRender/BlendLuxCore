@@ -8,7 +8,7 @@ from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
 
 
-class LuxCoreNodeTexFresnel(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexFresnel(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Fresnel"
     bl_width_default = 180
     

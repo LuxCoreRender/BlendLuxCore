@@ -2,7 +2,7 @@ import bpy
 from ..base import LuxCoreNodeTexture
 
 
-class LuxCoreNodeTexBrightContrast(bpy.types.Node, LuxCoreNodeTexture):
+class LuxCoreNodeTexBrightContrast(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Brightness/Contrast"
 
     def init(self, context):
