@@ -66,13 +66,13 @@ except ImportError as error:
     raise Exception(msg + "\n\nImportError: %s" % error) from None
 
 bl_info = {
-    "name": "LuxCoreRender is a physically based and unbiased rendering engine",
-    "author": "Odilkhan Yakubov (odil24), Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), acasta69, u3dreal, Philstix",
-    "version": (2, 61.1),
-    "blender": (3, 0, 0),
+    "name": "LuxCoreRender",
+    "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Odilkhan Yakubov (odil24), acasta69, u3dreal, Philstix",
+    "version": (2, 61),
+    "blender": (3, 4, 0),
     "category": "Render",
     "description": "LuxCore integration for Blender",
-    "warning": "beta",
+    "warning": "alpha0",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
