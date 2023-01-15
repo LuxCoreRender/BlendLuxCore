@@ -39,22 +39,8 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
                                 sub, "Running denoiser...")
 
         col = layout.column(align=True)
-        #col.prop(denoiser, "type", expand=False)
         col.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
 
-        #if denoiser.enabled and denoiser.type == "BCD":
-            #if config.get_sampler() == "METROPOLIS" and not config.use_tiles:
-                #layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
-
-        #if denoiser.type == "BCD":
-            #sub = layout.column(align=True)
-            # The user should be able to adjust settings even when denoiser is disabled            
-            #sub.prop(denoiser, "filter_spikes")
-            #sub = layout.column(align=True)
-            #sub.prop(denoiser, "hist_dist_thresh")
-            #sub = layout.column(align=True)
-            #sub.prop(denoiser, "search_window_radius")
-        #elif denoiser.type == "OIDN":
         if denoiser.type == "OIDN":
             sub = layout.column(align=False)
             sub.prop(denoiser, "max_memory_MB")
