@@ -71,7 +71,7 @@ bl_info = {
     "version": (2, 61),
     "blender": (3, 4, 0),
     "category": "Render",
-    "description": "LuxCore integration for Blender",
+    "description": "LuxCoreRender integration for Blender",
     "warning": "alpha",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",

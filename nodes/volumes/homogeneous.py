@@ -7,7 +7,7 @@ from ...utils import node as utils_node
 from ...utils.light_descriptions import LIGHTGROUP_DESC
 
 
-class LuxCoreNodeVolHomogeneous(bpy.types.Node, LuxCoreNodeVolume):
+class LuxCoreNodeVolHomogeneous(LuxCoreNodeVolume, bpy.types.Node):
     bl_label = "Homogeneous Volume"
     bl_width_default = 175
 

@@ -11,7 +11,7 @@ VOLUME_PRIORITY_DESC = (
 )
 
 
-class LuxCoreNodeVolClear(bpy.types.Node, LuxCoreNodeVolume):
+class LuxCoreNodeVolClear(LuxCoreNodeVolume, bpy.types.Node):
     bl_label = "Clear Volume"
     bl_width_default = 160
 
