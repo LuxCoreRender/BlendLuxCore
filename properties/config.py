@@ -29,8 +29,7 @@ BIDIR_DESC = (
 SOBOL_DESC = "Optimized random noise pattern. Supports noise-aware adaptive sampling"
 METROPOLIS_DESC = "Sampler that focuses samples on brighter parts of the image. Not noise-aware. Suited for rendering caustics"
 RANDOM_DESC = (
-    "Random noise pattern. Supports noise-aware adaptive sampling. "
-    "Recommended only if the BCD denoiser is used (use Sobol otherwise)"
+    "Random noise pattern. Supports noise-aware adaptive sampling"
 )
 
 TILED_DESCRIPTION = (
