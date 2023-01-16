@@ -416,7 +416,7 @@ class LuxCoreConfig(PropertyGroup):
     samplers = [
         ("SOBOL", "Sobol", SOBOL_DESC, 0),
         ("METROPOLIS", "Metropolis", METROPOLIS_DESC, 1),
-        #("RANDOM", "Random", RANDOM_DESC, 2),
+        ("RANDOM", "Random", RANDOM_DESC, 2),
     ]
     sampler: EnumProperty(name="Sampler", items=samplers, default="SOBOL")
     
@@ -510,9 +510,9 @@ class LuxCoreConfig(PropertyGroup):
     filters = [
         ("BLACKMANHARRIS", "Blackman-Harris", "Default, usually the best option", 0),
         ("MITCHELL_SS", "Mitchell", "Sharp, but can produce black ringing artifacts around bright pixels", 1),
-        #("GAUSSIAN", "Gaussian", "Blurry", 2),
-        #("SINC", "Sinc", "", 4),
-        #("CATMULLROM", "Catmull-Rom", "", 5),
+        ("GAUSSIAN", "Gaussian", "Blurry", 2),
+        ("SINC", "Sinc", "", 4),
+        ("CATMULLROM", "Catmull-Rom", "", 5),
     ]
     filter: EnumProperty(name="Filter", items=filters, default="BLACKMANHARRIS",
                           description=FILTER_DESC)
