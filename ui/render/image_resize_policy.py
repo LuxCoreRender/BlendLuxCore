@@ -1,3 +1,4 @@
+from ..icons import icon_manager
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from .icons import icon_manager
@@ -13,7 +14,14 @@ class LUXCORE_RENDER_PT_image_resize_policy(Panel, RenderButtonsPanel):
         return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
+
         self.layout.prop(context.scene.luxcore.config.image_resize_policy, "enabled", text="", icon_value= icon_manager.get_icon_id("logotype"))
+        layout = self.layout
+        col = layout.column(align=True)
+        col.prop(context.scene.luxcore.config.image_resize_policy, "enabled", text="")
+        col = layout.column(align=True)
+        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
 
     def draw(self, context):
         resize_policy = context.scene.luxcore.config.image_resize_policy

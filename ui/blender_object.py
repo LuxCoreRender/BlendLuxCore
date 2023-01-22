@@ -3,7 +3,7 @@ from bpy.types import Panel
 import bpy
 from .. import utils
 from ..ui import icons
-
+from ..ui.icons import icon_manager
 
 class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -13,6 +13,10 @@ class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         return context.scene.render.engine == "LUXCORE"
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout

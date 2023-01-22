@@ -1,6 +1,8 @@
 import bpy
 from bpy.types import Panel
-from ..ui import icons
+from . import icons
+from .icons import icon_manager
+
 from bl_ui.properties_particle import ParticleButtonsPanel
 from .. import utils
 
@@ -74,6 +76,10 @@ class LUXCORE_HAIR_PT_hair(ParticleButtonsPanel, Panel):
         is_path = psys.settings.render_type == "PATH"
         engine = context.scene.render.engine
         return is_hair and is_path and engine == "LUXCORE"
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout

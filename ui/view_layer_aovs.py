@@ -1,12 +1,16 @@
 from bl_ui.properties_view_layer import ViewLayerButtonsPanel
 from bpy.types import Panel
-from ..ui import icons
-
+from . import icons
+from .icons import icon_manager
 
 class LUXCORE_RENDERLAYER_PT_aovs(ViewLayerButtonsPanel, Panel):
     bl_label = "LuxCore AOVs"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_order = 2
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -46,7 +50,7 @@ class LUXCORE_RENDERLAYER_PT_aovs_material_object(ViewLayerButtonsPanel, Panel):
     bl_label = "Material/Object Information"
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDERLAYER_PT_aovs"
-    
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
