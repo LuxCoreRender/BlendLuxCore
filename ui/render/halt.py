@@ -6,7 +6,6 @@ from ...utils import ui as utils_ui
 from .. import icons
 from ..icons import icon_manager
 from .sampling import calc_samples_per_pass
-from .icons import icon_manager
 
 
 def draw(layout, context, halt):
@@ -96,13 +95,13 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         halt = context.scene.luxcore.halt
-        self.layout.prop(halt, "enable", text="", icon_value= icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(halt, "enable", text="")
         col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
-    
+        #col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -169,10 +168,11 @@ class LUXCORE_RENDERLAYER_PT_halt_conditions(Panel, ViewLayerButtonsPanel):
         vl = context.view_layer
         halt = vl.luxcore.halt
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(halt, "enable", text="")
         col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        #col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         vl = context.view_layer

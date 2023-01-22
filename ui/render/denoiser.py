@@ -2,14 +2,14 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ...utils.refresh_button import template_refresh_button
 from ...engine.base import LuxCoreRenderEngine
-from .. import icons
+from ... import icons
+from ...ui.icons import icon_manager
 from ...properties.denoiser import LuxCoreDenoiser
-from .icons import icon_manager
 
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "Intel Open Image Denoiser"
+    bl_label = "  Denoiser"
     bl_options = {'DEFAULT_CLOSED'}
     bl_order = 60
 
@@ -19,9 +19,10 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         layout.enabled = not LuxCoreRenderEngine.final_running
-        layout.prop(context.scene.luxcore.denoiser, "enabled", icon_value= icon_manager.get_icon_id("intel"))
-
+        layout.prop(context.scene.luxcore.denoiser, "enabled", text="")
+    
     def draw(self, context):
         config = context.scene.luxcore.config
         denoiser = context.scene.luxcore.denoiser
@@ -39,9 +40,22 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
                                 sub, "Running denoiser...")
 
         col = layout.column(align=True)
+        col.prop(denoiser, "type", expand=False)
         col.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
 
-        if denoiser.type == "OIDN":
+        if denoiser.enabled and denoiser.type == "BCD":
+            if config.get_sampler() == "METROPOLIS" and not config.use_tiles:
+                layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
+
+        if denoiser.type == "BCD":
+            sub = layout.column(align=True)
+            # The user should be able to adjust settings even when denoiser is disabled            
+            sub.prop(denoiser, "filter_spikes")
+            sub = layout.column(align=True)
+            sub.prop(denoiser, "hist_dist_thresh")
+            sub = layout.column(align=True)
+            sub.prop(denoiser, "search_window_radius")
+        elif denoiser.type == "OIDN":
             sub = layout.column(align=False)
             sub.prop(denoiser, "max_memory_MB")
             sub.prop(denoiser, "albedo_specular_passthrough_mode")
