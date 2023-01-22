@@ -64,7 +64,10 @@ class LUXCORE_CAMERA_PT_lens(CameraButtonsPanel, Panel):
         sub.active = cam.luxcore.use_clipping
         sub.prop(cam, "clip_start", text="Clip Start")
         sub.prop(cam, "clip_end", text="End")
-
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 class LUXCORE_CAMERA_PT_clipping_plane(CameraButtonsPanel, Panel):
     bl_label = "Clipping Plane"
@@ -74,10 +77,11 @@ class LUXCORE_CAMERA_PT_clipping_plane(CameraButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(context.camera.luxcore, "use_clipping_plane", text="")
         col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        #col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -99,6 +103,7 @@ class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         layout.prop(context.camera.dof, "use_dof", text="")
 
 
@@ -129,10 +134,11 @@ class LUXCORE_CAMERA_PT_bokeh(CameraButtonsPanel, Panel):
     
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(context.camera.luxcore.bokeh, "non_uniform", text="")
         col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        #col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -163,10 +169,11 @@ class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(context.camera.luxcore.motion_blur, "enable", text="")
         col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        #col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout

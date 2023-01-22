@@ -23,6 +23,10 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
     def poll(cls, context):
         engine = context.scene.render.engine
         return context.world and engine == "LUXCORE"
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         self.layout.prop(context.world.luxcore, "use_cycles_settings")
@@ -109,7 +113,7 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
         world = context.world
         return (world and not world.luxcore.use_cycles_settings
                 and engine == "LUXCORE" and world.luxcore.light == "sky2")
-
+    
     def draw(self, context):
         layout = self.layout
         world = context.world
@@ -137,6 +141,9 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
         if world.luxcore.ground_enable:
             layout.prop(world.luxcore, "ground_color")
 
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 class LUXCORE_WORLD_PT_infinite(WorldButtonsPanel, Panel):
     """
@@ -234,7 +241,10 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
         
         layout.prop(world.luxcore, "importance")
         draw_envlight_cache_ui(layout, context.scene, world)
-
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -275,7 +285,10 @@ class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
 
         if not enabled:
             layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
-
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 def compatible_panels():
     panels = [
