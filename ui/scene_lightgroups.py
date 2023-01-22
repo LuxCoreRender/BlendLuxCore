@@ -2,6 +2,7 @@ from bl_ui.properties_scene import SceneButtonsPanel
 from bpy.types import Panel
 from ..properties.lightgroups import MAX_CUSTOM_LIGHTGROUPS
 from . import icons
+from .icons import icon_manager
 
 
 def lightgroup_icon(enabled):
@@ -20,6 +21,10 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
     def poll(cls, context):
         engine = context.scene.render.engine
         return engine == "LUXCORE"
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout

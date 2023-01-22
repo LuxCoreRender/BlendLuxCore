@@ -1,6 +1,7 @@
 import bpy
 from .. import icons
 from ... import utils
+from ..icons import icon_manager
 
 from bpy.types import Panel
 from bl_ui.properties_render import RENDER_PT_context
@@ -45,7 +46,11 @@ class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Paths"
     bl_order = 20
-    
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
     def draw(self, context):
         pass
 

@@ -1,6 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from .. import icons
+from ..icons import icon_manager
 from ...utils.errorlog import LuxCoreErrorLog
 
 
@@ -15,7 +16,10 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
         return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
-        row = self.layout.row(align=True)
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
+        row = layout.row(align=True)
         if LuxCoreErrorLog.errors:
             row.label(text=str(len(LuxCoreErrorLog.errors)), icon=icons.ERROR)
         if LuxCoreErrorLog.warnings:

@@ -4,6 +4,8 @@ from bpy.types import Panel
 from cycles.ui import panel_node_draw
 
 from . import icons
+from .icons import icon_manager
+
 from ..utils import ui as utils_ui
 from .light import draw_envlight_cache_ui
 from ..nodes.output import get_active_output
@@ -183,6 +185,10 @@ class LUXCORE_WORLD_PT_volume(WorldButtonsPanel, Panel):
         engine = context.scene.render.engine
         return context.world and engine == "LUXCORE"
 
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
     def draw(self, context):
         layout = self.layout
         world = context.world
@@ -232,7 +238,7 @@ class LUXCORE_WORLD_PT_performance(WorldButtonsPanel, Panel):
 
 class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "Visibility"
+    bl_label = "Ray Visibility"
     bl_options = {"DEFAULT_CLOSED"}
     bl_order = 5
 

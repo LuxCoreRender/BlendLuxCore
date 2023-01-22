@@ -4,6 +4,7 @@ from bpy.types import Panel
 from bl_ui.utils import PresetPanel
 from ..utils import ui as utils_ui
 from . import icons
+from ..ui.icons import icon_manager
 
 
 class LUXCORE_CAMERA_PT_presets(PresetPanel, Panel):
@@ -72,7 +73,11 @@ class LUXCORE_CAMERA_PT_clipping_plane(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
 
     def draw_header(self, context):
-        self.layout.prop(context.camera.luxcore, "use_clipping_plane", text="")
+        layout = self.layout
+        col = layout.column(align=True)
+        col.prop(context.camera.luxcore, "use_clipping_plane", text="")
+        col = layout.column(align=True)
+        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -93,7 +98,9 @@ class LUXCORE_CAMERA_PT_depth_of_field(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
 
     def draw_header(self, context):
-        self.layout.prop(context.camera.dof, "use_dof", text="")
+        layout = self.layout
+        layout.prop(context.camera.dof, "use_dof", text="")
+
 
     def draw(self, context):
         layout = self.layout
@@ -121,7 +128,11 @@ class LUXCORE_CAMERA_PT_bokeh(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     
     def draw_header(self, context):
-        self.layout.prop(context.camera.luxcore.bokeh, "non_uniform", text="")
+        layout = self.layout
+        col = layout.column(align=True)
+        col.prop(context.camera.luxcore.bokeh, "non_uniform", text="")
+        col = layout.column(align=True)
+        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -151,7 +162,11 @@ class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
 
     def draw_header(self, context):
-        self.layout.prop(context.camera.luxcore.motion_blur, "enable", text="")
+        layout = self.layout
+        col = layout.column(align=True)
+        col.prop(context.camera.luxcore.motion_blur, "enable", text="")
+        col = layout.column(align=True)
+        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -179,7 +194,11 @@ class LUXCORE_CAMERA_PT_image_pipeline(CameraButtonsPanel, Panel):
     bl_label = "Image Pipeline"
     bl_order = 8
     COMPAT_ENGINES = {"LUXCORE"}
-    
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -196,9 +215,11 @@ class LUXCORE_CAMERA_PT_image_pipeline_tonemapper(CameraButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}    
     
     def draw_header(self, context):
+        layout = self.layout
         pipeline = context.camera.luxcore.imagepipeline
-        self.layout.prop(pipeline.tonemapper, "enabled", text="")
-        
+        layout.prop(pipeline.tonemapper, "enabled", text="")
+
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -486,6 +507,10 @@ class LUXCORE_CAMERA_PT_volume(CameraButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         return context.scene.render.engine == "LUXCORE" and context.camera
+
+    def draw_header(self, contxt):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout

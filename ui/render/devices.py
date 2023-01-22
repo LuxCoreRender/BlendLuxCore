@@ -2,7 +2,7 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ... import utils
 from .. import icons
-
+from ..icons import icon_manager
 
 def _show_openCL_device_warning(context):
     config = context.scene.luxcore.config
@@ -26,8 +26,10 @@ class LUXCORE_RENDER_PT_devices(RenderButtonsPanel, Panel):
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         if _show_openCL_device_warning(context):
-            self.layout.label(text="", icon=icons.WARNING)
+            layout.label(text="", icon=icons.WARNING)
 
     def draw(self, context):
         layout = self.layout
@@ -60,6 +62,7 @@ class LUXCORE_RENDER_PT_gpu_devices(RenderButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         if _show_openCL_device_warning(context):
             layout.label(text="", icon=icons.WARNING)            
 

@@ -4,6 +4,7 @@ from bpy.types import Panel
 from ... import utils
 from ...utils import ui as utils_ui
 from .. import icons
+from ..icons import icon_manager
 from .sampling import calc_samples_per_pass
 
 
@@ -93,8 +94,12 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
         return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
+        layout = self.layout
         halt = context.scene.luxcore.halt
-        self.layout.prop(halt, "enable", text="")
+        col = layout.column(align=True)
+        col.prop(halt, "enable", text="")
+        col = layout.column(align=True)
+        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -161,7 +166,11 @@ class LUXCORE_RENDERLAYER_PT_halt_conditions(Panel, ViewLayerButtonsPanel):
     def draw_header(self, context):
         vl = context.view_layer
         halt = vl.luxcore.halt
-        self.layout.prop(halt, "enable", text="")
+        layout = self.layout
+        col = layout.column(align=True)
+        col.prop(halt, "enable", text="")
+        col = layout.column(align=True)
+        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         vl = context.view_layer

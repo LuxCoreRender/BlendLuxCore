@@ -1,6 +1,7 @@
 from bl_ui.properties_data_light import DataButtonsPanel
 import bpy
 from . import icons
+from ..ui.icons import icon_manager
 from bpy.types import Panel
 from ..utils import ui as utils_ui
 from cycles.ui import panel_node_draw
@@ -29,6 +30,10 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
         if light.luxcore.image:
             col.prop(light.luxcore, "gamma")
         light.luxcore.image_user.draw(layout, context.scene)
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -247,6 +252,10 @@ class LUXCORE_LIGHT_PT_volume(DataButtonsPanel, Panel):
             return False
         return True
 
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -272,6 +281,10 @@ class LUXCORE_LIGHT_PT_performance(DataButtonsPanel, Panel):
     def poll(cls, context):
         engine = context.scene.render.engine
         return context.light and engine == "LUXCORE"
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -307,6 +320,10 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
         return ((light.type == "SUN" and light.luxcore.light_type == "sun")
                 or light.type == "HEMI"
                 or (light.type == "AREA" and not light.luxcore.is_laser))
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -346,6 +363,10 @@ class LUXCORE_LIGHT_PT_spot(DataButtonsPanel, Panel):
         light = context.light
         return (light and light.type == 'SPOT') and context.engine == "LUXCORE"
 
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
     def draw(self, context):
         layout = self.layout
         light = context.light
@@ -376,7 +397,11 @@ class LUXCORE_LIGHT_PT_ies_light(DataButtonsPanel, Panel):
         layout = self.layout
         light = context.light
 
-        layout.prop(light.luxcore.ies, "use", text="")
+        col = layout.column(align=True)
+        col.prop(light.luxcore.ies, "use", text="")
+        col = layout.column(align=True)
+        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
 
     def draw(self, context):
         layout = self.layout
@@ -415,6 +440,10 @@ class LUXCORE_LIGHT_PT_nodes(DataButtonsPanel, Panel):
         return (light and not light.luxcore.use_cycles_settings
                 and light.type == "AREA" and context.engine == "LUXCORE")
 
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
     def draw(self, context):
         layout = self.layout
         light = context.light
@@ -440,6 +469,10 @@ class LUXCORE_LIGHT_PT_cycles_nodes(DataButtonsPanel, Panel):
             return False
         is_portal = context.light.type == "AREA" and context.light.cycles.is_portal
         return context.light.luxcore.use_cycles_settings and not is_portal
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
