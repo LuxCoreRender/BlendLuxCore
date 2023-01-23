@@ -29,8 +29,9 @@ class LUXCORE_RENDER_PT_devices(RenderButtonsPanel, Panel):
         layout = self.layout
         layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         if _show_openCL_device_warning(context):
+            self.layout.label(text="", icon_value= icon_manager.get_icon_id("device"))
             layout.label(text="", icon=icons.WARNING)
-
+    
     def draw(self, context):
         layout = self.layout
         config = context.scene.luxcore.config
@@ -41,10 +42,10 @@ class LUXCORE_RENDER_PT_devices(RenderButtonsPanel, Panel):
         if config.engine == "PATH" and config.device == "OCL":
             if not utils.is_opencl_build():
                 # pyluxcore was compiled without OpenCL support
-                layout.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
+                layout.label(text="No OpenCL support in this BlendLuxCore version", icon_value= icon_manager.get_icon_id("device"))
         else:
             # CPU settings for native C++ threads            
-            layout.prop(context.scene.render, "threads_mode", text = "CPU threads", expand=False)
+            layout.prop(context.scene.render, "threads_mode", text = "CPU threads", expand=False, icon_value= icon_manager.get_icon_id("cpu"))
             sub = layout.column(align=True)
             sub.enabled = context.scene.render.threads_mode == 'FIXED'
             sub.prop(context.scene.render, "threads")
@@ -62,9 +63,9 @@ class LUXCORE_RENDER_PT_gpu_devices(RenderButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
-        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        #layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         if _show_openCL_device_warning(context):
-            layout.label(text="", icon=icons.WARNING)            
+            layout.label(text="", icon_value= icon_manager.get_icon_id("device"))           
 
     def draw(self, context):
         layout = self.layout
@@ -100,6 +101,7 @@ class LUXCORE_RENDER_PT_cpu_devices(RenderButtonsPanel, Panel):
     def draw_header(self, context):
         opencl = context.scene.luxcore.devices
         layout = self.layout
+        #layout.prop(opencl, "use_native_cpu", text="", icon_value= icon_manager.get_icon_id("cpu"))
         layout.prop(opencl, "use_native_cpu", text="")
 
     def draw(self, context):

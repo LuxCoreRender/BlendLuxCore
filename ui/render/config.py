@@ -1,8 +1,7 @@
 import bpy
 from .. import icons
-from ... import utils
 from ..icons import icon_manager
-
+from ... import utils
 from bpy.types import Panel
 from bl_ui.properties_render import RENDER_PT_context
 from bl_ui.properties_render import RenderButtonsPanel
@@ -20,7 +19,7 @@ def luxcore_render_draw(panel, context):
     # Device
     col_device = layout.column(align=True)
     if config.engine == "PATH":
-        col_device.prop(config, "device", text="Device")
+        col_device.prop(config, "device", text="Compute device", icon = 'MEMORY')
         
         if config.device == "OCL":
             gpu_backend = utils.get_addon_preferences(context).gpu_backend
@@ -35,25 +34,26 @@ def luxcore_render_draw(panel, context):
 
     # Engine
     col = layout.column(align=True)
-    col.prop(config, "engine", expand=False)
+    col.prop(config, "engine", expand=False, icon = 'OUTLINER_OB_LIGHT')
 
+    #row = layout.row()
+    #row.operator("luxcore.use_cycles_settings")
+    #row.operator("luxcore.render_settings_helper")
     row = layout.row()
-    row.operator("luxcore.use_cycles_settings")
-    row.operator("luxcore.render_settings_helper")
-
+    row.operator("luxcore.use_cycles_settings", icon_value= icon_manager.get_icon_id("link"))
+    row.operator("luxcore.render_settings_helper", icon_value= icon_manager.get_icon_id("help"))
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Paths"
     bl_order = 20
-
+    
     def draw_header(self, context):
         layout = self.layout
         layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
-
+    
     def draw(self, context):
         pass
-
 
 class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -85,8 +85,7 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
             # Bidir options
             col.prop(config, "bidir_path_maxdepth")
             col.prop(config, "bidir_light_maxdepth")
-
-
+            
 class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Tracing"

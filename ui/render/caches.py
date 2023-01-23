@@ -46,6 +46,10 @@ class LUXCORE_RENDER_PT_caches(RenderButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         return context.scene.render.engine == "LUXCORE"
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value= icon_manager.get_icon_id("logotype"))
 
     def draw_header(self, context):
         layout = self.layout

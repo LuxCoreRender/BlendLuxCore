@@ -2,7 +2,8 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ...utils.refresh_button import template_refresh_button
 from ...engine.base import LuxCoreRenderEngine
-from .. import icons
+from ... import icons
+from ...ui.icons import icon_manager
 from ...properties.denoiser import LuxCoreDenoiser
 
 
@@ -18,8 +19,10 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         layout.enabled = not LuxCoreRenderEngine.final_running
-        layout.prop(context.scene.luxcore.denoiser, "enabled", text="")
+        col = layout.column(align=True)
+        col.prop(context.scene.luxcore.denoiser, "enabled", text="")
 
     def draw(self, context):
         config = context.scene.luxcore.config

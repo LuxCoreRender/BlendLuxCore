@@ -4,7 +4,6 @@ from .. import icons
 from ..icons import icon_manager
 from ...utils.errorlog import LuxCoreErrorLog
 
-
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Error Log"

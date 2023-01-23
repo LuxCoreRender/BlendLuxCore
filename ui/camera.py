@@ -74,10 +74,9 @@ class LUXCORE_CAMERA_PT_clipping_plane(CameraButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(context.camera.luxcore, "use_clipping_plane", text="")
-        col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -129,10 +128,7 @@ class LUXCORE_CAMERA_PT_bokeh(CameraButtonsPanel, Panel):
     
     def draw_header(self, context):
         layout = self.layout
-        col = layout.column(align=True)
-        col.prop(context.camera.luxcore.bokeh, "non_uniform", text="")
-        col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        layout.prop(context.camera.luxcore.bokeh, "non_uniform", text="")
 
     def draw(self, context):
         layout = self.layout
@@ -163,10 +159,9 @@ class LUXCORE_CAMERA_PT_motion_blur(CameraButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(context.camera.luxcore.motion_blur, "enable", text="")
-        col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout

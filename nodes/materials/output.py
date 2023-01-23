@@ -34,7 +34,7 @@ SHADOW_COLOR_DESC = (
 )
 
 
-class LuxCoreNodeMatOutput(bpy.types.Node, LuxCoreNodeOutput):
+class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
     """
     Material output node.
     This is where the export starts (if the output is active).

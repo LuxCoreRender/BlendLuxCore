@@ -14,10 +14,9 @@ class LUXCORE_RENDER_PT_image_resize_policy(Panel, RenderButtonsPanel):
 
     def draw_header(self, context):
         layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(context.scene.luxcore.config.image_resize_policy, "enabled", text="")
-        col = layout.column(align=True)
-        col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         resize_policy = context.scene.luxcore.config.image_resize_policy

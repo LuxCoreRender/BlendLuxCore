@@ -2,7 +2,7 @@ from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ... import utils
 from .. import icons
-
+from ..icons import icon_manager
 
 class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -38,7 +38,10 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
 
         if luxcore_engine == "BIDIR":
             layout.prop(viewport, "use_bidir")
-
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 class LUXCORE_RENDER_PT_viewport_settings_denoiser(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}

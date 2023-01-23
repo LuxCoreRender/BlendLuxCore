@@ -303,7 +303,7 @@ class LuxCoreNodeShape(LuxCoreNode, bpy.types.Node):
         raise NotImplementedError("Subclasses have to implement this method!")
 
 
-class LuxCoreNodeTreePointer(bpy.types.Node, LuxCoreNode):
+class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
     """ Pointer to a node tree """
     bl_label = "Pointer"
     bl_width_default = 250

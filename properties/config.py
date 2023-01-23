@@ -19,7 +19,7 @@ PATH_DESC = (
 
 BIDIR_DESC = (
     "Traces and combines rays from the camera and lights.\n"
-    "Suited for some special edge-case types of scenes that can't be rendered efficiently by the Path engine.\n"
+    "Suited for some special edge-case types of scenes that can't be rendered efficiently by the Pathtracing engine.\n"
     "Slower than the Path engine otherwise.\n"
     'Limited to the CPU, can not run on the GPU.\n'
     "Can not render complex SDS-caustics (e.g. caustics seen in a mirror) efficiently.\n"
@@ -29,8 +29,7 @@ BIDIR_DESC = (
 SOBOL_DESC = "Optimized random noise pattern. Supports noise-aware adaptive sampling"
 METROPOLIS_DESC = "Sampler that focuses samples on brighter parts of the image. Not noise-aware. Suited for rendering caustics"
 RANDOM_DESC = (
-    "Random noise pattern. Supports noise-aware adaptive sampling. "
-    "Recommended only if the BCD denoiser is used (use Sobol otherwise)"
+    "Random noise pattern. Supports noise-aware adaptive sampling"
 )
 
 TILED_DESCRIPTION = (
@@ -411,10 +410,10 @@ class LuxCoreConfig(PropertyGroup):
     # These settings are mostly not directly transferrable to LuxCore properties
     # They need some if/else decisions and aggregation, e.g. to build the engine name from parts
     engines = [
-        ("PATH", "Path", PATH_DESC, 0),
-        ("BIDIR", "Bidir", BIDIR_DESC, 1),
+        ("PATH", "Pathtracing", PATH_DESC, 0),
+        ("BIDIR", "Bidirectional", BIDIR_DESC, 1),
     ]
-    engine: EnumProperty(name="Engine", items=engines, default="PATH")
+    engine: EnumProperty(name="Lighting integrator", items=engines, default="PATH")
 
     # Only available when tiled rendering is off (because it uses a special tiled sampler)
     samplers = [
@@ -425,9 +424,9 @@ class LuxCoreConfig(PropertyGroup):
     sampler: EnumProperty(name="Sampler", items=samplers, default="SOBOL")
     
     samplers_gpu = [
-        ("SOBOL", "Sobol", "Best suited sampler for the GPU. " + SOBOL_DESC, 0),
-        ("RANDOM", "Random", RANDOM_DESC, 1),
-    ]
+        ("SOBOL", "Sobol", "Best suited sampler for the GPU. " + SOBOL_DESC, 0),]
+        #("RANDOM", "Random", RANDOM_DESC, 1),
+    #]
     sampler_gpu: EnumProperty(name="Sampler", items=samplers_gpu, default="SOBOL")
     
     def get_sampler(self):

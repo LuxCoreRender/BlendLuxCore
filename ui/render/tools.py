@@ -1,7 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from .. import icons
-
+from ..icons import icon_manager
 
 class LUXCORE_RENDER_PT_tools(Panel, RenderButtonsPanel):
     bl_label = "LuxCore Tools"
@@ -27,7 +27,10 @@ class LUXCORE_RENDER_PT_tools(Panel, RenderButtonsPanel):
         op.url = "https://wiki.luxcorerender.org/BlendLuxCore_Network_Rendering"
 
         layout.operator("luxcore.convert_to_v23")
-
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 class LUXCORE_RENDER_PT_filesaver(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
