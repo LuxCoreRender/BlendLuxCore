@@ -5,7 +5,6 @@ from bpy.types import Panel
 from .. import icons
 from ..icons import icon_manager
 from ... import utils
-from .icons import icon_manager
 
 
 def draw_persistent_file_ui(context, layout, settings):

@@ -3,7 +3,6 @@ from bpy.types import Panel
 from .. import icons
 from ..icons import icon_manager
 from ...utils.errorlog import LuxCoreErrorLog
-from .icons import icon_manager
 
 class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -21,9 +20,9 @@ class LUXCORE_RENDER_PT_error_log(RenderButtonsPanel, Panel):
 
         row = layout.row(align=True)
         if LuxCoreErrorLog.errors:
-            row.label(text=str(len(LuxCoreErrorLog.errors)), icon_value= icon_manager.get_icon_id("logotype"))
+            row.label(text=str(len(LuxCoreErrorLog.errors)), icon=icons.ERROR)
         if LuxCoreErrorLog.warnings:
-            row.label(text=str(len(LuxCoreErrorLog.warnings)), icon_value= icon_manager.get_icon_id("logotype"))
+            row.label(text=str(len(LuxCoreErrorLog.warnings)), icon=icons.WARNING)
 
     def draw(self, context):
         if LuxCoreErrorLog.errors or LuxCoreErrorLog.warnings:

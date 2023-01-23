@@ -9,7 +9,7 @@ from ...properties.denoiser import LuxCoreDenoiser
 
 class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "  Denoiser"
+    bl_label = "Denoiser"
     bl_options = {'DEFAULT_CLOSED'}
     bl_order = 60
 
@@ -21,8 +21,9 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
         layout = self.layout
         layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         layout.enabled = not LuxCoreRenderEngine.final_running
-        layout.prop(context.scene.luxcore.denoiser, "enabled", text="")
-    
+        col = layout.column(align=True)
+        col.prop(context.scene.luxcore.denoiser, "enabled", text="")
+
     def draw(self, context):
         config = context.scene.luxcore.config
         denoiser = context.scene.luxcore.denoiser

@@ -2,7 +2,6 @@ from .. import icons
 from ..icons import icon_manager
 from ... import utils
 from ...export.config import SamplingOverlap
-from .icons import icon_manager
 
 from bpy.types import Panel
 from bl_ui.properties_render import RenderButtonsPanel
@@ -67,7 +66,7 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
             else:
                 row.prop(config, "sampler")
 
-            if sampler in "SOBOL":
+            if sampler in ["SOBOL", "RANDOM"]:
                 col = layout.column()
                 col.active = not config.using_out_of_core()
                 col.prop(config, "sampler_pattern")
@@ -80,8 +79,8 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
                     if config.using_out_of_core():
                         col.prop(config, "out_of_core_supersampling")
             elif sampler == "METROPOLIS":
-                #if denoiser.enabled and denoiser.type == "BCD":
-                    #layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
+                if denoiser.enabled and denoiser.type == "BCD":
+                    layout.label(text="Can lead to artifacts in the denoiser!", icon=icons.WARNING)
 
                 col = layout.column(align=True)
                 col.prop(config, "metropolis_largesteprate", slider=True)

@@ -99,8 +99,6 @@ class LUXCORE_RENDER_PT_halt_conditions(Panel, RenderButtonsPanel):
         halt = context.scene.luxcore.halt
         col = layout.column(align=True)
         col.prop(halt, "enable", text="")
-        col = layout.column(align=True)
-        #col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout
@@ -171,8 +169,6 @@ class LUXCORE_RENDERLAYER_PT_halt_conditions(Panel, ViewLayerButtonsPanel):
         layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         col = layout.column(align=True)
         col.prop(halt, "enable", text="")
-        col = layout.column(align=True)
-        #col.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         vl = context.view_layer

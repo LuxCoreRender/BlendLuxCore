@@ -31,8 +31,8 @@ class LuxCoreDenoiser(PropertyGroup):
 
     enabled: BoolProperty(name="", default=False, description="Enable/disable denoiser")
     type_items = [
-        #("BCD", "BCD", "Bayesian Collaborative Denoiser", 0),
-        ("OIDN", "OpenImageDenoiser", "", 0),
+        ("BCD", "Bayesian Collaborative Denoiser", "", 0),
+        ("OIDN", "Intel Open Image Denoiser", "", 1),
     ]
     type: EnumProperty(name="Type", items=type_items, default="OIDN")
 

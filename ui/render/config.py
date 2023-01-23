@@ -1,5 +1,6 @@
 import bpy
 from .. import icons
+from ..icons import icon_manager
 from ... import utils
 from bpy.types import Panel
 from bl_ui.properties_render import RENDER_PT_context
@@ -165,33 +166,6 @@ class LUXCORE_RENDER_PT_lightpaths_clamping(RenderButtonsPanel, Panel):
             op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
             layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
 
-class LUXCORE_RENDER_PT_filesaver(RenderButtonsPanel, Panel):
-    COMPAT_ENGINES = {"LUXCORE"}
-    bl_label = "LuxCore Filesaver"
-    bl_options = {"DEFAULT_CLOSED"}
-    
-    def draw_header(self, context):
-        layout = self.layout
-        config = context.scene.luxcore.config
-        layout.prop(config, "use_filesaver", text="", icon_value= icon_manager.get_icon_id("logotype"))
-    
-    def draw(self, context):
-        layout = self.layout
-        config = context.scene.luxcore.config
-
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        layout.enabled = config.use_filesaver
-        layout.label(text="Only write LuxCore scene to disk", icon=icons.INFO)
-
-        col = layout.column(align=True)
-        col.prop(config, "filesaver_format")
-        col.prop(config, "filesaver_path")
-
-classes = (
-    LUXCORE_RENDER_PT_filesaver,
-    )
 
 def compatible_panels():
     panels = [
@@ -203,10 +177,6 @@ def compatible_panels():
 
 
 def register():
-    from bpy.utils import register_class
-    for cls in classes:
-        register_class( cls)
-        
     # We append our draw function to the existing Blender render panel
     RENDER_PT_context.append(luxcore_render_draw)
     for panel in compatible_panels():
@@ -214,10 +184,6 @@ def register():
 
 
 def unregister():
-    from bpy.utils import unregister_class
-    for cls in classes:
-        unregister_class( cls)
-        
     RENDER_PT_context.remove(luxcore_render_draw)
     for panel in compatible_panels():
         panel.COMPAT_ENGINES.remove("LUXCORE")

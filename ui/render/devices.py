@@ -63,7 +63,7 @@ class LUXCORE_RENDER_PT_gpu_devices(RenderButtonsPanel, Panel):
 
     def draw_header(self, context):
         layout = self.layout
-        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        #layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
         if _show_openCL_device_warning(context):
             layout.label(text="", icon_value= icon_manager.get_icon_id("device"))           
 
@@ -101,7 +101,8 @@ class LUXCORE_RENDER_PT_cpu_devices(RenderButtonsPanel, Panel):
     def draw_header(self, context):
         opencl = context.scene.luxcore.devices
         layout = self.layout
-        layout.prop(opencl, "use_native_cpu", text="", icon_value= icon_manager.get_icon_id("cpu"))
+        #layout.prop(opencl, "use_native_cpu", text="", icon_value= icon_manager.get_icon_id("cpu"))
+        layout.prop(opencl, "use_native_cpu", text="")
 
     def draw(self, context):
         layout = self.layout
