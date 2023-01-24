@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import IntProperty, EnumProperty, BoolProperty, FloatProperty
 from .. import utils
-
+from ..bin import pyluxcore
 
 class LuxCoreViewportSettings(bpy.types.PropertyGroup):
     halt_time: IntProperty(name="Halt Time (s)", default=10, min=1,
@@ -63,8 +63,15 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
     @staticmethod
     def can_use_optix_denoiser(context):
         preferences = utils.get_addon_preferences(context)
+        optix_available = False
         # TODO Do we need to check here if the film device supports OptiX?
-        return preferences.gpu_backend == "CUDA" and preferences.film_device != "none"
+        data = pyluxcore.GetOpenCLDeviceDescs()
+        prefix = 'opencl.device.' + preferences.film_device
+
+        if data.Get(prefix + ".cuda.compute.major").GetInt() >= 5:
+            optix_available = True
+
+        return preferences.gpu_backend == "CUDA" and preferences.film_device != "none" and optix_available
 
     def get_denoiser(self, context):
         if not self.use_denoiser:
