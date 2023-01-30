@@ -1,8 +1,8 @@
 from bl_ui.properties_material import MaterialButtonsPanel, MATERIAL_PT_viewport
 from bpy.types import Panel, Menu
 from ..operators.node_tree_presets import LUXCORE_OT_preset_material
-from ..ui import icons
-
+from .. import icons
+from ..ui.icons import icon_manager
 original_viewport_draw = None
 
 
@@ -124,7 +124,10 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
             for preset in presets:
                 op = col.operator("luxcore.preset_material", text=preset)
                 op.preset = preset
-
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
