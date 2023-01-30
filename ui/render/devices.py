@@ -42,10 +42,10 @@ class LUXCORE_RENDER_PT_devices(RenderButtonsPanel, Panel):
         if config.engine == "PATH" and config.device == "OCL":
             if not utils.is_opencl_build():
                 # pyluxcore was compiled without OpenCL support
-                layout.label(text="No OpenCL support in this BlendLuxCore version", icon_value= icon_manager.get_icon_id("device"))
+                layout.label(text="No OpenCL support in this BlendLuxCore version")
         else:
             # CPU settings for native C++ threads            
-            layout.prop(context.scene.render, "threads_mode", text = "CPU threads", expand=False, icon_value= icon_manager.get_icon_id("cpu"))
+            layout.prop(context.scene.render, "threads_mode", text = "CPU threads", expand=False)
             sub = layout.column(align=True)
             sub.enabled = context.scene.render.threads_mode == 'FIXED'
             sub.prop(context.scene.render, "threads")
@@ -83,7 +83,8 @@ class LUXCORE_RENDER_PT_gpu_devices(RenderButtonsPanel, Panel):
                 layout.label(text="Select at least one device!", icon=icons.WARNING)
 
             for device in devices.get_gpu_devices(context):
-                layout.prop(device, "enabled", text=device.name)
+                row = layout.row()
+                row.prop(device, "enabled", text=device.name)
 
 
 class LUXCORE_RENDER_PT_cpu_devices(RenderButtonsPanel, Panel):
