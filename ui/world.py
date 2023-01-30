@@ -94,6 +94,9 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
                             lightgroups, "custom",
                             icon=icons.LIGHTGROUP, text="")
 
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
     """
@@ -279,6 +282,10 @@ class LUXCORE_WORLD_PT_visibility(WorldButtonsPanel, Panel):
 
         if not enabled:
             layout.label(text="Only supported by Path engines (not by Bidir)", icon=icons.INFO)
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 def compatible_panels():
     panels = [
