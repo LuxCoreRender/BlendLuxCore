@@ -65,13 +65,15 @@ class LuxCoreViewportSettings(bpy.types.PropertyGroup):
         preferences = utils.get_addon_preferences(context)
         optix_available = False
         # TODO Do we need to check here if the film device supports OptiX?
-        data = pyluxcore.GetOpenCLDeviceDescs()
-        prefix = 'opencl.device.' + preferences.film_device
+        
+        if preferences.gpu_backend == "CUDA" and preferences.film_device != "none":
+            data = pyluxcore.GetOpenCLDeviceDescs()
+            prefix = 'opencl.device.' + preferences.film_device
 
-        if data.Get(prefix + ".cuda.compute.major").GetInt() >= 5:
-            optix_available = True
+            if data.Get(prefix + ".cuda.compute.major").GetInt() >= 5:
+                optix_available = True
 
-        return preferences.gpu_backend == "CUDA" and preferences.film_device != "none" and optix_available
+        return optix_available
 
     def get_denoiser(self, context):
         if not self.use_denoiser:
