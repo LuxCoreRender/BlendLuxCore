@@ -13,13 +13,12 @@ def luxcore_render_draw(panel, context):
 
     if scene.render.engine != "LUXCORE":
         return
-
     config = context.scene.luxcore.config
 
     # Device
     col_device = layout.column(align=True)
     if config.engine == "PATH":
-        col_device.prop(config, "device", text="Compute device", icon = 'MEMORY')
+        col_device.prop(config, "device", text="Compute device", icon_value=icon_manager.get_icon_id("logotype"))
         
         if config.device == "OCL":
             gpu_backend = utils.get_addon_preferences(context).gpu_backend
@@ -34,7 +33,7 @@ def luxcore_render_draw(panel, context):
 
     # Engine
     col = layout.column(align=True)
-    col.prop(config, "engine", expand=False, icon = 'OUTLINER_OB_LIGHT')
+    col.prop(config, "engine", expand=False, icon_value=icon_manager.get_icon_id("lamp"))
 
     #row = layout.row()
     #row.operator("luxcore.use_cycles_settings")
@@ -59,7 +58,7 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
     bl_label = "Max Bounces"
-
+    
     def draw(self, context):
         layout = self.layout
         config = context.scene.luxcore.config
@@ -102,7 +101,7 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
         use_native_cpu = context.scene.luxcore.devices.use_native_cpu
         config = context.scene.luxcore.config
         return config.device == "OCL" and not use_native_cpu
-
+    
     def draw_header(self, context):
         layout = self.layout
         config = context.scene.luxcore.config
