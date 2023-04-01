@@ -1,4 +1,7 @@
 import bgl
+import gpu
+from gpu_extras.batch import batch_for_shader
+
 import math
 import os
 import numpy
@@ -65,8 +68,8 @@ class FrameBuffer(object):
             self._buffertype = bgl.GL_RGB
             self._output_type = pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
 
-        self.buffer = bgl.Buffer(bgl.GL_FLOAT, [self._width * self._height * bufferdepth])
-        self._init_opengl(engine, scene)
+        self.buffer = gpu.types.Buffer('FLOAT', [self._width * self._height * bufferdepth])
+        self._init_opengl()
 
         # Denoiser
         self._noisy_file_path = self._make_denoiser_filepath("noisy")
@@ -80,62 +83,28 @@ class FrameBuffer(object):
         self._denoiser_process = None
         self.denoiser_result_cached = False
 
-    def _init_opengl(self, engine, scene):
-        # Create texture
-        self.texture = bgl.Buffer(bgl.GL_INT, 1)
-        bgl.glGenTextures(1, self.texture)
-        self.texture_id = self.texture[0]
-
-        # Bind shader that converts from scene linear to display space,
-        # use the scene's color management settings.
-        engine.bind_display_space_shader(scene)
-        shader_program = bgl.Buffer(bgl.GL_INT, 1)
-        bgl.glGetIntegerv(bgl.GL_CURRENT_PROGRAM, shader_program)
-
-        # Generate vertex array
-        self.vertex_array = bgl.Buffer(bgl.GL_INT, 1)
-        bgl.glGenVertexArrays(1, self.vertex_array)
-        bgl.glBindVertexArray(self.vertex_array[0])
-
-        texturecoord_location = bgl.glGetAttribLocation(shader_program[0], "texCoord")
-        position_location = bgl.glGetAttribLocation(shader_program[0], "pos")
-
-        bgl.glEnableVertexAttribArray(texturecoord_location)
-        bgl.glEnableVertexAttribArray(position_location)
-
-        # Generate geometry buffers for drawing textured quad
+    def _init_opengl(self):
         width = self._width * self._pixel_size
         height = self._height * self._pixel_size
-        position = [
-            self._offset_x, self._offset_y,
-            self._offset_x + width, self._offset_y,
-            self._offset_x + width, self._offset_y + height,
-            self._offset_x, self._offset_y + height
-        ]
-        position = bgl.Buffer(bgl.GL_FLOAT, len(position), position)
-        texcoord = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
-        texcoord = bgl.Buffer(bgl.GL_FLOAT, len(texcoord), texcoord)
 
-        self.vertex_buffer = bgl.Buffer(bgl.GL_INT, 2)
+        position = (
+            (self._offset_x, self._offset_y),
+            (self._offset_x + width, self._offset_y),
+            (self._offset_x + width, self._offset_y + height),
+            (self._offset_x, self._offset_y + height)
+        )
 
-        bgl.glGenBuffers(2, self.vertex_buffer)
-        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, self.vertex_buffer[0])
-        bgl.glBufferData(bgl.GL_ARRAY_BUFFER, 32, position, bgl.GL_STATIC_DRAW)
-        bgl.glVertexAttribPointer(position_location, 2, bgl.GL_FLOAT, bgl.GL_FALSE, 0, None)
-
-        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, self.vertex_buffer[1])
-        bgl.glBufferData(bgl.GL_ARRAY_BUFFER, 32, texcoord, bgl.GL_STATIC_DRAW)
-        bgl.glVertexAttribPointer(texturecoord_location, 2, bgl.GL_FLOAT, bgl.GL_FALSE, 0, None)
-
-        bgl.glBindBuffer(bgl.GL_ARRAY_BUFFER, NULL)
-        bgl.glBindVertexArray(NULL)
-        engine.unbind_display_space_shader()
+        self.shader = gpu.shader.from_builtin('2D_IMAGE')
+        self.batch = batch_for_shader(
+            self.shader, 'TRI_FAN',
+            {
+                "pos": position,
+                "texCoord": ((0, 0), (1, 0), (1, 1), (0, 1)),
+            },
+        )
 
     def __del__(self):
-        bgl.glDeleteBuffers(2, self.vertex_buffer)
-        bgl.glDeleteVertexArrays(1, self.vertex_array)
-        bgl.glBindTexture(bgl.GL_TEXTURE_2D, 0)
-        bgl.glDeleteTextures(1, self.texture)
+        del self.buffer
 
     def needs_replacement(self, context, scene):
         if (self._width, self._height) != utils.calc_filmsize(scene, context):
@@ -212,7 +181,6 @@ class FrameBuffer(object):
 
         data = numpy.resize(data, shape)
         self.buffer[:] = data
-        self._update_texture(scene)
         self.denoiser_result_cached = True
 
     def reset_denoiser(self):
@@ -227,50 +195,17 @@ class FrameBuffer(object):
 
     def update(self, luxcore_session, scene):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
-        self._update_texture(scene)
 
     def draw(self, engine, context, scene):
         if self._transparent:
-            bgl.glEnable(bgl.GL_BLEND)
-            bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
-
-        engine.bind_display_space_shader(scene)
-
-        bgl.glActiveTexture(bgl.GL_TEXTURE0)
-        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.texture_id)
-        bgl.glBindVertexArray(self.vertex_array[0])
-        bgl.glDrawArrays(bgl.GL_TRIANGLE_FAN, 0, 4)
-        bgl.glBindVertexArray(NULL)
-        bgl.glBindTexture(bgl.GL_TEXTURE_2D, NULL)
-
-        engine.unbind_display_space_shader()
-
-        err = bgl.glGetError()
-        if err != bgl.GL_NO_ERROR:
-            print("GL Error:", err)
-
-        if self._transparent:
-            bgl.glDisable(bgl.GL_BLEND)
-
-    def _update_texture(self, scene):
-        if self._transparent:
-            gl_format = bgl.GL_RGBA
-            internal_format = bgl.GL_RGBA32F
+            format = 'RGBA16F'
         else:
-            gl_format = bgl.GL_RGB
-            internal_format = bgl.GL_RGB32F
+            format = 'RGB16F'
 
-        bgl.glActiveTexture(bgl.GL_TEXTURE0)
-        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.texture_id)
-        bgl.glTexImage2D(bgl.GL_TEXTURE_2D, 0, internal_format, self._width, self._height,
-                         0, gl_format, bgl.GL_FLOAT, self.buffer)
-        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_WRAP_S, bgl.GL_CLAMP_TO_EDGE)
-        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_WRAP_T, bgl.GL_CLAMP_TO_EDGE)
-
-        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MIN_FILTER, bgl.GL_NEAREST)
-        mag_filter = bgl.GL_NEAREST if scene.luxcore.viewport.mag_filter == "NEAREST" else bgl.GL_LINEAR
-        bgl.glTexParameteri(bgl.GL_TEXTURE_2D, bgl.GL_TEXTURE_MAG_FILTER, mag_filter)
-        bgl.glBindTexture(bgl.GL_TEXTURE_2D, NULL)
+        image = gpu.types.GPUTexture(size=(self._width, self._height), layers=0, is_cubemap=False, format=format,
+                                     data=self.buffer)
+        self.shader.uniform_sampler("image", image)
+        self.batch.draw(self.shader)
 
     def _calc_offset(self, context, scene, border):
         region_size = context.region.width, context.region.height
