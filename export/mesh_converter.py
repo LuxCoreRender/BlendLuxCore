@@ -72,7 +72,10 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
 
         if mesh.uv_layers:
             for uv in mesh.uv_layers:
-                loopUVsPtrList.append(uv.data[0].as_pointer())
+                if uv.name in mesh.attributes:
+                    loopUVsPtrList.append(mesh.attributes[uv.name].data[0].as_pointer())
+                else:
+                    loopUVsPtrList.append(uv.data[0].as_pointer())
         else:
             loopUVsPtrList.append(0)
 
