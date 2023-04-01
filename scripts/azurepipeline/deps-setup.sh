@@ -10,7 +10,7 @@ sudo apt-get install -y git zip wget bzip2
 #wget http://neurodebian.ovgu.de/debian/pool/main/p/p7zip/p7zip_16.02+dfsg-1~nd14.04+1_amd64.deb
 #wget http://neurodebian.ovgu.de/debian/pool/main/n/neurodebian/neurodebian-popularity-contest_0.40.1~nd14.04+1_all.deb
 
-wget http://neurodebian.g-node.orgpool/main/p/p7zip/p7zip-full_16.02+dfsg-1~nd14.04+1_amd64.deb
+wget http://neurodebian.g-node.org/pool/main/p/p7zip/p7zip-full_16.02+dfsg-1~nd14.04+1_amd64.deb
 wget http://neurodebian.g-node.org/pool/main/p/p7zip/p7zip_16.02+dfsg-1~nd14.04+1_amd64.deb
 wget http://neurodebian.g-node.org/pool/main/n/neurodebian/neurodebian-popularity-contest_0.40.1~nd14.04+1_all.deb
 wget http://archive.ubuntu.com/ubuntu/pool/main/p/popularity-contest/popularity-contest_1.57ubuntu1_all.deb
