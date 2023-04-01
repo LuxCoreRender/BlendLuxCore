@@ -60,7 +60,11 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
         loopTriCount = len(mesh.loop_triangles)
         loopPtr = mesh.loops[0].as_pointer()
-        vertPtr = mesh.vertices[0].as_pointer()
+        if 'position' in mesh.attributes:
+            vertPtr = mesh.attributes['position'].data[0].as_pointer()
+        else:
+            vertPtr = mesh.vertices[0].as_pointer()
+
         normalPtr = mesh.vertex_normals[0].as_pointer()
         polyPtr = mesh.polygons[0].as_pointer()
         loopUVsPtrList = []
