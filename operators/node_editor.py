@@ -51,7 +51,7 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
         space = context.space_data
         node_tree = space.node_tree
 
-        select_node = bpy.ops.node.select(mouse_x=event.mouse_region_x, mouse_y=event.mouse_region_y, extend=False)
+        select_node = bpy.ops.node.select(location=(event.mouse_region_x, event.mouse_region_y), extend=False)
         if 'FINISHED' not in select_node:
             return {'CANCELLED'}
 
