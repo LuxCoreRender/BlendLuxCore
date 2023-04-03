@@ -81,7 +81,10 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
 
         if mesh.vertex_colors:
             for vcol in mesh.vertex_colors:
-                loopColsPtrList.append(vcol.data[0].as_pointer())
+                if vcol.name in mesh.attributes:
+                    loopColsPtrList.append(mesh.attributes[vcol.name].data[0].as_pointer())
+                else:
+                    loopColsPtrList.append(vcol.data[0].as_pointer())
         else:
             loopColsPtrList.append(0)
 
