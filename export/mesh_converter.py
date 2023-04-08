@@ -89,9 +89,10 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             loopColsPtrList.append(0)
 
         meshPtr = mesh.as_pointer()
-        material_indices = None
         if 'material_index' in  mesh.attributes:
             material_indices = list([i.value for i in mesh.attributes['material_index'].data])
+        else:
+            material_indices = list([p.material_index for p in mesh.polygons])
         
         material_count = max(1, len(mesh.materials))
 
@@ -101,13 +102,12 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             mesh_transform = utils.matrix_to_list(transform)
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                           vertPtr, normalPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
-                                                           meshPtr, material_count, mesh_transform,
-                                                           bpy.app.version, material_indices, custom_normals)
-        
+                                                          vertPtr, normalPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
+                                                          meshPtr, material_count, mesh_transform,
+                                                          bpy.app.version, material_indices, custom_normals)
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time
-        
+
         return ExportedMesh(mesh_definitions)
 
 
