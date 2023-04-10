@@ -122,9 +122,9 @@ class LuxCoreHair(PropertyGroup):
 
 class LuxCoreParticlesProps(PropertyGroup):
     hair: PointerProperty(type=LuxCoreHair)
-    
+
     @classmethod
-    def register(cls):        
+    def register(cls):
         bpy.types.ParticleSettings.luxcore = PointerProperty(
             name="LuxCore Particle Settings",
             description="LuxCore particle settings",
@@ -134,3 +134,4 @@ class LuxCoreParticlesProps(PropertyGroup):
     @classmethod
     def unregister(cls):
         del bpy.types.ParticleSettings.luxcore
+

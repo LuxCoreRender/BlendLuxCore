@@ -8,7 +8,7 @@ from os.path import basename, dirname
 from ..bin import pyluxcore
 from . import view_layer
 
-MESH_OBJECTS = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
+MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
 NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
 
@@ -350,7 +350,7 @@ def is_instance_visible(dg_obj_instance, obj, context):
     if not (dg_obj_instance.show_self or dg_obj_instance.show_particles):
         return False
     
-    if context:    
+    if context:
         viewport_vis_obj = dg_obj_instance.parent if dg_obj_instance.parent else obj
         if not viewport_vis_obj.visible_in_viewport_get(context.space_data):
             return False
@@ -359,7 +359,10 @@ def is_instance_visible(dg_obj_instance, obj, context):
 
 
 def is_obj_visible(obj):
-    if obj.luxcore.exclude_from_render or obj.type not in EXPORTABLE_OBJECTS:
+    if obj.luxcore.exclude_from_render:
+        return False
+
+    if obj.type not in EXPORTABLE_OBJECTS and (obj.data == None or obj.data.rna_type.name != 'Hair Curves'):
         return False
 
     # Do not export the object if it's made completely invisible through Cycles settings

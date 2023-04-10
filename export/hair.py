@@ -1,4 +1,5 @@
 from mathutils import Matrix
+import bpy
 import math
 import numpy as np
 from .. import utils
@@ -44,7 +45,6 @@ def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, 
                       dtype=np.float32,
                       count=(dupli_count - start) * 2)
     return uvs
-
 
 def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, start, dupli_count, mod, num_children):
     failure = np.empty(shape=0, dtype=np.float32)
@@ -240,3 +240,90 @@ def make_hair_shape_name(obj_key, psys):
 def get_hair_material_index(psys):
     # For some reason this index is not starting at 0 but at 1 (Blender is strange)
     return psys.settings.material - 1
+
+
+def get_strand_seg(idx, strand):
+    if idx >= len(strand.points):
+        return [0.0, 0.0, 0.0]
+    else:
+        return strand.points[idx].position
+
+# Code for Hair Curves in Blender 3.5
+def convert_hair_curves(exporter, depsgraph, obj, obj_key, luxcore_scene, is_for_duplication):
+    start_time = time()
+    lux_shape_name = obj_key
+    time_elapsed = time() - start_time
+    scene = depsgraph.scene_eval
+
+    strands = obj.data.curves
+
+    max_strand_length = 0
+    for strand in strands:
+        if strand.points_length > max_strand_length:
+            max_strand_length = strand.points_length
+
+    points = np.fromiter((elem
+                  for strand in strands
+                  for idx in range(0, max_strand_length)
+                  for elem in get_strand_seg(idx, strand)),
+                 dtype=np.float32)
+
+    colors = np.empty(shape=0, dtype=np.float32)
+    uvs = np.empty(shape=0, dtype=np.float32)
+    settings = obj.luxcore.hair
+
+    strand_diameter = settings.hair_size
+    root_width = settings.root_width / 100
+    tip_width = settings.tip_width / 100
+    width_offset = settings.width_offset / 100
+
+    export_color = settings.export_color
+    image = settings.image
+    image_filename = ''
+    uvs_needed = settings.copy_uv_coords
+    copy_uvs = settings.copy_uv_coords
+
+    uvs_needed = False
+
+    if export_color != "none" or uvs_needed:
+        emitter_mesh = obj.parent.to_mesh(depsgraph=depsgraph)
+        vertex_colors = emitter_mesh.vertex_colors
+
+        if export_color == "uv_texture_map" and image:
+            try:
+                image_filename = ImageExporter.export(image, settings.image_user, scene)
+                uvs_needed = True
+            except OSError as error:
+                msg = "%s (Object: %s, Hair Curves: %s)" % (error, obj.name, obj.data.name)
+                LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
+    #     elif settings.export_color == "vertex_color":
+    #         colors = convert_colors(obj, psys, settings, vertex_colors, engine,
+    #                                 strands_count, start, dupli_count, mod, num_children)
+
+        if uvs_needed:
+            uvs = np.fromiter((elem
+                           for uv_coord in obj.data.attributes['surface_uv_coordinate'].data
+                           for elem in uv_coord.vector),
+                          dtype=np.float32)
+
+
+    if len(uvs) == 0:
+        copy_uvs = False
+
+    transformation = None
+
+    success = luxcore_scene.DefineBlenderStrands(lux_shape_name, max_strand_length,
+                                                 points, colors, uvs, image_filename, settings.gamma,
+                                                 copy_uvs, transformation, strand_diameter,
+                                                 root_width, tip_width, width_offset,
+                                                 settings.tesseltype, settings.adaptive_maxdepth,
+                                                 settings.adaptive_error, settings.solid_sidecount,
+                                                 settings.solid_capbottom, settings.solid_captop,
+                                                 list(settings.root_color), list(settings.tip_color))
+
+    if not success:
+        return None
+
+    if exporter.stats:
+        exporter.stats.export_time_hair.value += time_elapsed
+    return lux_shape_name

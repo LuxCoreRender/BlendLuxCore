@@ -8,8 +8,9 @@ from . import (
 
 classes = (
     aovs.LuxCoreAOVSettings,
-    blender_object.LuxCoreObjectProps,
     image_user.LuxCoreImageUser,
+    hair.LuxCoreHair,
+    blender_object.LuxCoreObjectProps,
     imagepipeline.LuxCoreImagepipelineTonemapper,
     imagepipeline.LuxCoreImagepipelineBloom,
     imagepipeline.LuxCoreImagepipelineMist,
@@ -37,7 +38,6 @@ classes = (
     devices.LuxCoreOpenCLDevice,
     devices.LuxCoreDeviceSettings,
     display.LuxCoreDisplaySettings,
-    hair.LuxCoreHair,
     hair.LuxCoreParticlesProps,
     halt.LuxCoreHaltConditions,
     ies.LuxCoreIESProps,

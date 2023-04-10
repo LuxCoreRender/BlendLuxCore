@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
 from bpy.types import PropertyGroup
+from .hair import LuxCoreHair
 
 DESC_VISIBLE_TO_CAM = (
     "If disabled, the object will not be visible to camera rays. "
@@ -23,6 +24,7 @@ class LuxCoreObjectProps(PropertyGroup):
     exclude_from_render: BoolProperty(name="Exclude from Render", default=False, description=DESC_EXCLUDE_FROM_RENDER)
     enable_motion_blur: BoolProperty(name="Motion Blur", default=True, description=DESC_MOTION_BLUR)
     id: IntProperty(name="Object ID", default=-1, min=-1, soft_max=32767, description=DESC_OBJECT_ID)
+    hair: PointerProperty(      name="LuxCore Hair Curve Settings",description="LuxCore hair curve settings",type=LuxCoreHair)
 
     @classmethod
     def register(cls):

@@ -8,7 +8,7 @@ from ...bin import pyluxcore
 from .. import mesh_converter
 from ..hair import (
     convert_hair, warn_about_missing_uvs, set_hair_props, 
-    make_hair_shape_name, get_hair_material_index,
+    make_hair_shape_name, get_hair_material_index,convert_hair_curves,
 )
 from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
@@ -350,9 +350,9 @@ class ObjectCache2:
     def _convert_obj(self, exporter, dg_obj_instance, obj, depsgraph, luxcore_scene,
                      scene_props, is_viewport_render, view_layer=None, engine=None):
         """ Convert one DepsgraphObjectInstance amd keep track of it with self.exported_objects """
+
         if obj.data is None:
             return None
-
         warn_about_subdivision_levels(obj)
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
@@ -361,7 +361,35 @@ class ObjectCache2:
 
         if dg_obj_instance.show_self:
             if obj.type in MESH_OBJECTS:
-                exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
+                if obj.type == 'CURVES' and not obj.data == None:
+                    if obj.data.rna_type.name == 'Hair Curves':
+                        visible_to_cam = utils.visible_to_camera(dg_obj_instance, is_viewport_render, view_layer)
+                        is_for_duplication = is_viewport_render or dg_obj_instance.is_instance
+                        lux_shape = convert_hair_curves(exporter, depsgraph, obj, obj_key, luxcore_scene, is_for_duplication)
+                        if lux_shape:
+                            mat = obj.data.materials[0]
+                            if mat:
+                                node_tree = mat.luxcore.node_tree
+                                if node_tree:
+                                    lux_shape = define_shapes(lux_shape, node_tree, exporter, depsgraph, scene_props)
+
+                            self.exported_hair[obj_key] = lux_shape
+                        if lux_shape:
+                            lux_mat, mat_props, node_tree = export_material(obj, 0, exporter, depsgraph,
+                                                                            is_viewport_render)
+                            scene_props.Set(mat_props)
+                            set_hair_props(scene_props, lux_shape, lux_shape, lux_mat, visible_to_cam,
+                                        is_for_duplication, dg_obj_instance.matrix_world, False)
+
+                        # TODO handle case when exported_stuff is None
+                        #  (we'll have to create a new ExportedObject just for the hair mesh)
+                        if exported_stuff and lux_shape:
+                            # Should always be the case because lights can't have particle systems
+                            assert isinstance(exported_stuff, ExportedObject)
+                            exported_stuff.parts.append(ExportedPart(lux_shape, lux_shape, lux_mat))
+                else:
+
+                    exported_stuff = self._convert_mesh_obj(exporter, dg_obj_instance, obj, obj_key, depsgraph,
                                                         luxcore_scene, scene_props, is_viewport_render, view_layer)
                 if exported_stuff:
                     props = exported_stuff.get_props()
@@ -442,6 +470,7 @@ class ObjectCache2:
             for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
                 shape = shape_name
                 lux_mat_name, mat_props, node_tree = export_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                print(lux_mat_name)
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 
@@ -478,34 +507,39 @@ class ObjectCache2:
                         continue
 
                     if obj.type in MESH_OBJECTS:
-                        mesh_key = self._get_mesh_key(obj, use_instancing)
+                        if obj.type == 'CURVES' and not obj.data == None:
+                            if obj.data.rna_type.name == 'Hair Curves':
+                                obj_key = utils.make_key(obj)
+                                del self.exported_hair[obj_key]
+                        else:
+                            mesh_key = self._get_mesh_key(obj, use_instancing)
 
-                        # if mesh_key not in self.exported_meshes:
-                        # TODO this can happen if a deforming modifier is added
-                        #  to an already-exported object. how to handle this case?
+                            # if mesh_key not in self.exported_meshes:
+                            # TODO this can happen if a deforming modifier is added
+                            #  to an already-exported object. how to handle this case?
 
-                        transform = None  # In viewport render, everything is instanced
-                        exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
-                                                               is_viewport_render, use_instancing, transform)
-                        
-                        if exported_mesh:
-                            for i in range(len(exported_mesh.mesh_definitions)):
-                                shape, mat_index = exported_mesh.mesh_definitions[i]
-                                mat = get_material(obj, mat_index, depsgraph)
-                                
-                                if mat:
-                                    node_tree = mat.luxcore.node_tree
-                                    if node_tree:
-                                        shape = define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
-                                
-                                exported_mesh.mesh_definitions[i] = shape, mat_index
-                        
-                        self.exported_meshes[mesh_key] = exported_mesh
+                            transform = None  # In viewport render, everything is instanced
+                            exported_mesh = mesh_converter.convert(obj, mesh_key, depsgraph, luxcore_scene,
+                                                                   is_viewport_render, use_instancing, transform)
 
-                        # We arrive here not only when the mesh is edited, but also when the material
-                        # of the object is changed in Blender. In this case we have to re-define all
-                        # objects using this mesh (just the properties, the mesh is not re-exported).
-                        redefine_objs_with_these_mesh_keys.append(mesh_key)
+                            if exported_mesh:
+                                for i in range(len(exported_mesh.mesh_definitions)):
+                                    shape, mat_index = exported_mesh.mesh_definitions[i]
+                                    mat = get_material(obj, mat_index, depsgraph)
+
+                                    if mat:
+                                        node_tree = mat.luxcore.node_tree
+                                        if node_tree:
+                                            shape = define_shapes(shape, node_tree, exporter, depsgraph, scene_props)
+
+                                    exported_mesh.mesh_definitions[i] = shape, mat_index
+
+                            self.exported_meshes[mesh_key] = exported_mesh
+
+                            # We arrive here not only when the mesh is edited, but also when the material
+                            # of the object is changed in Blender. In this case we have to re-define all
+                            # objects using this mesh (just the properties, the mesh is not re-exported).
+                            redefine_objs_with_these_mesh_keys.append(mesh_key)
 
                         # Re-export hair systems of objects with updated geometry
                         for psys in obj.particle_systems:

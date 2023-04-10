@@ -1,6 +1,6 @@
 from bpy.utils import register_class, unregister_class
 from . import (
-    addon_preferences, blender_object, camera, image_tools, light, material,
+    addon_preferences, blender_hair_curves, blender_object, camera, image_tools, light, material,
     node_editor, output, particle, physics, scene_lightgroups, scene_units,
     texture, view_layer, view_layer_aovs, volume, world, lol, render,
 )
@@ -8,6 +8,7 @@ from . import (
 classes = (
     addon_preferences.LuxCoreAddonPreferences,
     blender_object.LUXCORE_OBJECT_PT_object,
+    blender_hair_curves.LUXCORE_DATA_PT_curve_hair,
     camera.LUXCORE_CAMERA_PT_presets,
     camera.LUXCORE_SAFE_AREAS_PT_presets,
     camera.LUXCORE_CAMERA_PT_lens,
