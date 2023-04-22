@@ -59,7 +59,12 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
         loopTriCount = len(mesh.loop_triangles)
-        loopPtr = mesh.loops[0].as_pointer()
+
+        if '.corner_vert' in mesh.attributes:
+            loopPtr = mesh.attributes['.corner_vert'].data[0].as_pointer()
+        else:
+            loopPtr = mesh.loops[0].as_pointer()
+
         if 'position' in mesh.attributes:
             vertPtr = mesh.attributes['position'].data[0].as_pointer()
         else:
@@ -89,11 +94,8 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             loopColsPtrList.append(0)
 
         meshPtr = mesh.as_pointer()
-        if 'material_index' in  mesh.attributes:
-            material_indices = list([i.value for i in mesh.attributes['material_index'].data])
-        else:
-            material_indices = list([p.material_index for p in mesh.polygons])
-        
+
+        material_indices = list([p.material_index for p in mesh.polygons])
         material_count = max(1, len(mesh.materials))
 
         if is_viewport_render or use_instancing:
@@ -101,9 +103,17 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         else:
             mesh_transform = utils.matrix_to_list(transform)
 
+        sharp_attr = False
+        sharpPtr = 0
+
+        if 'sharp_face' in mesh.attributes:
+            sharp_attr = True
+            sharpPtr = mesh.attributes['sharp_face'].data[0].as_pointer()
+
+
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                          vertPtr, normalPtr, polyPtr, loopUVsPtrList, loopColsPtrList,
-                                                          meshPtr, material_count, mesh_transform,
+                                                          vertPtr, normalPtr, polyPtr, sharpPtr, sharp_attr, loopUVsPtrList,
+                                                          loopColsPtrList, meshPtr, material_count, mesh_transform,
                                                           bpy.app.version, material_indices, custom_normals)
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time
