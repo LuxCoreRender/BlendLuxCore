@@ -58,6 +58,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
                                             % elapsed, obj_name=obj.name)
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
+        loopTriPolyPtr = mesh.loop_triangle_polygons[0].as_pointer()
         loopTriCount = len(mesh.loop_triangles)
 
         if '.corner_vert' in mesh.attributes:
@@ -71,7 +72,6 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             vertPtr = mesh.vertices[0].as_pointer()
 
         normalPtr = mesh.vertex_normals[0].as_pointer()
-        polyPtr = mesh.polygons[0].as_pointer()
         loopUVsPtrList = []
         loopColsPtrList = []
 
@@ -110,9 +110,8 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             sharp_attr = True
             sharpPtr = mesh.attributes['sharp_face'].data[0].as_pointer()
 
-
-        mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopPtr,
-                                                          vertPtr, normalPtr, polyPtr, sharpPtr, sharp_attr, loopUVsPtrList,
+        mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopTriPolyPtr, loopPtr,
+                                                          vertPtr, normalPtr, sharpPtr, sharp_attr, loopUVsPtrList,
                                                           loopColsPtrList, meshPtr, material_count, mesh_transform,
                                                           bpy.app.version, material_indices, custom_normals)
         if exporter and exporter.stats:
