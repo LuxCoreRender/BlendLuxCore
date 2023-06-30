@@ -1,25 +1,25 @@
 from bl_ui.properties_material import MaterialButtonsPanel, MATERIAL_PT_viewport
 from bpy.types import Panel, Menu
 from ..operators.node_tree_presets import LUXCORE_OT_preset_material
-from ..ui import icons
-
+from .. import icons
+from ..ui.icons import icon_manager
 original_viewport_draw = None
 
 
 def lux_mat_template_ID(layout, material):
     row = layout.row(align=True)
-    row.operator("luxcore.material_select", icon=icons.MATERIAL, text="")
+    row.operator("luxcore.material_select", text="", icon_value=icon_manager.get_icon_id("add"))
 
     if material:
-        row.prop(material, "name", text="")
+        row.prop(material, "name", text="", icon_value=icon_manager.get_icon_id("logotype"))
         if material.users > 1:
             # TODO this thing is too wide
-            row.operator("luxcore.material_copy", text=str(material.users))
-        row.prop(material, "use_fake_user", text="")
-        row.operator("luxcore.material_copy", text="", icon=icons.DUPLICATE)
-        row.operator("luxcore.material_unlink", text="", icon=icons.CLEAR)
+            row.operator("luxcore.material_copy", text=str(material.users), icon_value=icon_manager.get_icon_id("logotype"))
+        row.prop(material, "use_fake_user", text="", icon_value=icon_manager.get_icon_id("fake"))
+        row.operator("luxcore.material_copy", text="", icon_value=icon_manager.get_icon_id("copy"))
+        row.operator("luxcore.material_unlink", text="", icon_value=icon_manager.get_icon_id("unlink"))
     else:
-        row.operator("luxcore.material_new", text="New", icon=icons.ADD)
+        row.operator("luxcore.material_new", text="New", icon_value=icon_manager.get_icon_id("logotype"))
     return row
 
 
@@ -91,10 +91,10 @@ class LUXCORE_PT_context_material(MaterialButtonsPanel, Panel):
 
         if mat:
             if mat.luxcore.node_tree or (mat.use_nodes and mat.node_tree and mat.luxcore.use_cycles_nodes):
-                layout.operator("luxcore.material_show_nodetree", icon=icons.SHOW_NODETREE)
+                layout.operator("luxcore.material_show_nodetree", icon_value=icon_manager.get_icon_id("nodes"))
 
             if not mat.luxcore.node_tree and not mat.luxcore.use_cycles_nodes:
-                layout.operator("luxcore.mat_nodetree_new", icon=icons.NODETREE, text="Use LuxCore Material Nodes")
+                layout.operator("luxcore.mat_nodetree_new", icon_value=icon_manager.get_icon_id("nodes"), text="Use LuxCore Material Nodes")
 
             if mat.use_nodes and mat.node_tree:
                 layout.prop(mat.luxcore, "use_cycles_nodes")
@@ -124,7 +124,10 @@ class LUXCORE_PT_material_presets(MaterialButtonsPanel, Panel):
             for preset in presets:
                 op = col.operator("luxcore.preset_material", text=preset)
                 op.preset = preset
-
+    
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
 class LUXCORE_PT_material_preview(MaterialButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -160,37 +163,6 @@ class LUXCORE_PT_material_settings(MaterialButtonsPanel, Panel):
         layout = self.layout
         layout.prop(context.material, "pass_index")
 
-
-# Since we can't disable the original MATERIAL_PT_viewport panel, it makes no sense to add our own
-# (see register function below)
-
-#class LUXCORE_PT_settings(MaterialButtonsPanel, Panel):
-#    bl_label = "Settings"
-#    bl_context = "material"
-#    bl_options = {'DEFAULT_CLOSED'}
-#
-#    @classmethod
-#    def poll(cls, context):
-#        engine = context.scene.render.engine
-#        return context.material and engine == "LUXCORE"
-#
-#    def draw(self, context):
-#        layout = self.layout
-#        mat = context.material
-#
-#        if mat.luxcore.auto_vp_color:
-#            split = layout.split(factor=0.8)
-#            split.prop(mat.luxcore, "auto_vp_color")
-#            row = split.row()
-#            row.enabled = not mat.luxcore.auto_vp_color
-#            row.prop(mat, "diffuse_color", text="")
-#        else:
-#            layout.prop(mat.luxcore, "auto_vp_color")
-#            layout.prop(mat, "diffuse_color", text="Viewport Color")
-
-
-# The poll method of MATERIAL_PT_viewport does not check the renderengine, so we have to patch
-# the draw method if we want to display stuff differently than other engines
 def lux_viewport_draw(self, context):
     layout = self.layout
 

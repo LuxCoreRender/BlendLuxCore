@@ -4,7 +4,8 @@ from bpy.props import StringProperty, IntProperty
 from mathutils import Color, Vector
 from .. import utils
 from .utils import poll_object, make_nodetree_name, show_nodetree
-
+from .. import icons
+from ..ui.icons import icon_manager
 
 def new_node(bl_idname, node_tree, previous_node, output=0, input=0):
     node = node_tree.nodes.new(bl_idname)
@@ -21,21 +22,24 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
 
     basic_mapping = OrderedDict([
         ("Disney", "LuxCoreNodeMatDisney"),
-        ("Mix", "LuxCoreNodeMatMix"),
         ("Matte", "LuxCoreNodeMatMatte"),
         ("Glossy", "LuxCoreNodeMatGlossy2"),
         ("Glass", "LuxCoreNodeMatGlass"),
-        ("Null (Transparent)", "LuxCoreNodeMatNull"),
         ("Metal", "LuxCoreNodeMatMetal"),
+        ("Cloth", "LuxCoreNodeMatCloth"),
+        ("Velvet", "LuxCoreNodeMatVelvet"),
+        ("Carpaint", "LuxCoreNodeMatCarpaint"),
+        ("Mix", "LuxCoreNodeMatMix"),
+        ("Null (Transparent)", "LuxCoreNodeMatNull"),
         ("Mirror", "LuxCoreNodeMatMirror"),
         ("Glossy Translucent", "LuxCoreNodeMatGlossyTranslucent"),
         ("Matte Translucent", "LuxCoreNodeMatMatteTranslucent"),
     ])
-
+    
     preset: StringProperty()
     categories = OrderedDict([
-        ("Basic", list(basic_mapping.keys())),
-        ("Advanced", [
+        ("- Basic -", list(basic_mapping.keys())),
+        ("- Advanced -", [
             "Smoke",
             "Colored Smoke",
             "Fire and Smoke",

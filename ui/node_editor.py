@@ -1,6 +1,7 @@
 from bl_ui.space_node import NODE_HT_header, NODE_MT_editor_menus
 from .material import lux_mat_template_ID
-
+from .. import icons
+from ..ui.icons import icon_manager
 original_draw = None
 
 
@@ -154,7 +155,7 @@ def lux_node_header_draw(panel, context):
             lux_mat_template_ID(row, mat)
 
             if mat and (not mat.luxcore.node_tree and not mat.luxcore.use_cycles_nodes):
-                layout.operator("luxcore.mat_nodetree_new", icon="NODETREE", text="Use LuxCore Material Nodes")
+                layout.operator("luxcore.mat_nodetree_new", icon_value=icon_manager.get_icon_id("nodes"), text="Use LuxCore Material Nodes")
     # End of specialized LuxCore code
     ###########################################################################################
 
