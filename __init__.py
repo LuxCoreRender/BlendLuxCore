@@ -68,7 +68,7 @@ except ImportError as error:
 bl_info = {
     "name": "LuxCoreRender",
     "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Odilkhan Yakubov (odil24), acasta69, u3dreal, Philstix",
-    "version": (2, 7),
+    "version": (2, 7, 1),
     "blender": (3, 6, 0),
     "category": "Render",
     "description": "LuxCoreRender integration for Blender",
