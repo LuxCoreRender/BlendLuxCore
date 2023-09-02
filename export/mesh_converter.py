@@ -158,7 +158,7 @@ def _prepare_mesh(obj, depsgraph):
             if mesh:
                 if mesh.use_auto_smooth:
                     if not mesh.has_custom_normals:
-                        mesh.calc_normals()
+                        mesh.calc_normals_split()
                     mesh.split_faces()
                 
                 mesh.calc_loop_triangles()
