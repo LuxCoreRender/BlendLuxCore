@@ -58,7 +58,7 @@ def draw_rect(x, y, width, height, color):
               ]
     indices = ((0, 1, 2), (2, 3, 0))
 
-    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'TRIS', {"pos": points}, indices=indices)
 
     shader.bind()
@@ -76,7 +76,7 @@ def draw_line2d(x1, y1, x2, y2, width, color):
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glEnable(bgl.GL_LINE_SMOOTH)
 
-    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'LINES', {"pos": coords}, indices=indices)
     shader.bind()
     shader.uniform_float("color", color)
@@ -160,7 +160,7 @@ def draw_image(x, y, width, height, image, transparency, crop=(0, 0, 1, 1)):
 
     indices = [(0, 1, 2), (2, 1, 3)]
 
-    shader = gpu.shader.from_builtin('2D_IMAGE')
+    shader = gpu.shader.from_builtin('IMAGE')
     batch = batch_for_shader(shader, 'TRIS',
                              {"pos": coords,
                               "texCoord": uvs},
@@ -205,7 +205,7 @@ def draw_text(text, x, y, size, color=(1, 1, 1, 0.5)):
     # bgl.glColor4f(*color)
     blf.color(font_id, color[0], color[1], color[2], color[3])
     blf.position(font_id, x, y, 0)
-    blf.size(font_id, size, 72)
+    blf.size(font_id, size)
     blf.draw(font_id, text)
 
 
