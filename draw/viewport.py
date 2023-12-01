@@ -91,15 +91,17 @@ class FrameBuffer(object):
             (self._offset_x, self._offset_y),
             (self._offset_x + width, self._offset_y),
             (self._offset_x + width, self._offset_y + height),
-            (self._offset_x, self._offset_y + height)
+            (self._offset_x, self._offset_y + height),
+            (self._offset_x, self._offset_y),
+            (self._offset_x + width, self._offset_y + height)
         )
 
-        self.shader = gpu.shader.from_builtin('2D_IMAGE')
+        self.shader = gpu.shader.from_builtin('IMAGE')
         self.batch = batch_for_shader(
-            self.shader, 'TRI_FAN',
+            self.shader, 'TRIS',
             {
                 "pos": position,
-                "texCoord": ((0, 0), (1, 0), (1, 1), (0, 1)),
+                "texCoord": ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 1)),
             },
         )
 
