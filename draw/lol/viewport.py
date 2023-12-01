@@ -75,7 +75,10 @@ def draw_line2d(x1, y1, x2, y2, width, color):
 
     indices = ((0, 1),)
 
+<<<<<<< HEAD
     gpu.state.blend_set('ALPHA')
+=======
+>>>>>>> a5626b2427de4c53c1cd34e9d87a38d9dfe9869f
     shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'LINES', {"pos": coords}, indices=indices)
     shader.bind()

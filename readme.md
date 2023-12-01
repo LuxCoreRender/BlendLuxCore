@@ -6,8 +6,7 @@ This addon integrates the LuxCore render engine into Blender. It offers advanced
 
 ### Supported Blender Versions
 
-* Blender 3.6 alpha is experimentally supported by the for_blender3.6 branch [development release](https://github.com/LuxCoreRender/BlendLuxCore/releases).
-* Blender 3.4 or so is experimentally supported by the latest [development release](https://github.com/LuxCoreRender/BlendLuxCore/releases).
+* Blender 3.6 LTS is experimentally supported by the latest branch [development release](https://github.com/LuxCoreRender/BlendLuxCore/releases).
 * Blender 2.93 is supported by BlendLuxCore v2.6.
 * Blender 2.83-2.92 are supported by BlendLuxCore v2.5.
 * Blender 2.83 is supported by BlendLuxCore v2.4.
