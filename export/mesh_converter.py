@@ -156,15 +156,19 @@ def _prepare_mesh(obj, depsgraph):
                     mesh = None
 
             if mesh:
-                if mesh.use_auto_smooth:
-                    if not mesh.has_custom_normals:
-                        mesh.calc_normals()
-                    mesh.split_faces()
-                
-                mesh.calc_loop_triangles()
-                
-                if mesh.has_custom_normals:
-                    mesh.calc_normals_split()
+                if bpy.app.version > (3, 9, 9):
+                    if 'sharp_face' in mesh.attributes:
+                        mesh.split_faces()
+                else:
+                    if mesh.use_auto_smooth:
+                        if not mesh.has_custom_normals:
+                            mesh.calc_normals()
+                        mesh.split_faces()
+                    
+                    mesh.calc_loop_triangles()
+                    
+                    if mesh.has_custom_normals:
+                        mesh.calc_normals_split()
 
         yield mesh
     finally:
