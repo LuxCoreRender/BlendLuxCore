@@ -444,7 +444,7 @@ class Roughness:
             else:
                 u_roughness_input = node.inputs[u_roughness]
             u_roughness_input.name = u_roughness if node.use_anisotropy else roughness
-            node.inputs[v_roughness].enabled = node.use_anisotropy and extra_check
+            node.inputs["v_roughness"].enabled = node.use_anisotropy and extra_check
 
         update(node, False)
         if Roughness.has_backface(node):
