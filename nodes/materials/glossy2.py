@@ -4,31 +4,42 @@ from ..base import LuxCoreNodeMaterial, Roughness
 from .glossytranslucent import IOR_DESCRIPTION, MULTIBOUNCE_DESCRIPTION
 from ...utils import node as utils_node
 
-
 class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial, bpy.types.Node):
     bl_label = "Glossy Material"
     bl_width_default = 160
 
     def update_use_ior(self, context):
-        self.inputs["IOR"].enabled = self.use_ior
-        self.inputs["Specular Color"].enabled = not self.use_ior
+        ior_input = self.inputs.get("LuxCoreSocketIOR")
+        if ior_input:
+            ior_input.enabled = self.use_ior
+        specular_color_input = self.inputs.get("Specular Color")
+        if specular_color_input:
+            specular_color_input.enabled = not self.use_ior
         utils_node.force_viewport_update(self, context)
 
-    multibounce: BoolProperty(update=utils_node.force_viewport_update, name="Multibounce", default=False,
-                              description=MULTIBOUNCE_DESCRIPTION)
-    use_ior: BoolProperty(name="Use IOR", default=False,
-                           update=update_use_ior,
-                           description=IOR_DESCRIPTION)
-    use_anisotropy: BoolProperty(name=Roughness.aniso_name,
-                                  default=False,
-                                  description=Roughness.aniso_desc,
-                                  update=Roughness.update_anisotropy)
+    multibounce: BoolProperty(
+        update=utils_node.force_viewport_update,
+        name="Multibounce",
+        default=False,
+        description=MULTIBOUNCE_DESCRIPTION
+    )
+    use_ior: BoolProperty(
+        name="Use IOR",
+        default=False,
+        update=update_use_ior,
+        description=IOR_DESCRIPTION
+    )
+    use_anisotropy: BoolProperty(
+        name=Roughness.aniso_name,
+        default=False,
+        description=Roughness.aniso_desc,
+        update=Roughness.update_anisotropy
+    )
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Diffuse Color", [0.7] * 3)
         self.add_input("LuxCoreSocketColor", "Specular Color", [0.05] * 3)
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
-        self.inputs["IOR"].enabled = False
         self.add_input("LuxCoreSocketColor", "Absorption Color", [0] * 3)
         self.add_input("LuxCoreSocketFloatPositive", "Absorption Depth (nm)", 0)
         Roughness.init(self, 0.05)
@@ -50,11 +61,14 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial, bpy.types.Node):
             "multibounce": self.multibounce,
         }
 
-        if self.use_ior:
-            definitions["index"] = self.inputs["IOR"].export(exporter, depsgraph, props)
+        ior_input = self.inputs.get("LuxCoreSocketIOR")
+        if ior_input:
+            definitions["index"] = ior_input.export(exporter, depsgraph, props)
             definitions["ks"] = [1, 1, 1]
         else:
-            definitions["ks"] = self.inputs["Specular Color"].export(exporter, depsgraph, props)
+            specular_color_input = self.inputs.get("Specular Color")
+            if specular_color_input:
+                definitions["ks"] = specular_color_input.export(exporter, depsgraph, props)
 
         Roughness.export(self, exporter, depsgraph, props, definitions)
         self.export_common_inputs(exporter, depsgraph, props, definitions)
