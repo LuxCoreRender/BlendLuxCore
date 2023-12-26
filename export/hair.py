@@ -22,10 +22,7 @@ def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, 
 
     if settings.use_active_uv_map or settings.uv_map_name not in obj.data.uv_layers:
         active_uv = utils.find_active_uv(uv_textures)
-        if active_uv:
-            uv_index = uv_textures.find(active_uv.name)
-        else:
-            uv_index = -1
+        uv_index = uv_textures.find(active_uv.name) if active_uv else -1
     else:
         uv_index = uv_textures.find(settings.uv_map_name)
 
@@ -38,12 +35,12 @@ def convert_uvs(obj, psys, settings, uv_textures, engine, strands_count, start, 
 
     first_particle = psys.particles[0]
     f = psys.uv_on_emitter
-    uvs = np.fromiter((elem
-                       for i in range(start, dupli_count)
-                       for elem in f(mod, particle=psys.particles[i] if num_children == 0 else first_particle,
-                                     particle_no=i, uv_no=uv_index)),
-                      dtype=np.float32,
-                      count=(dupli_count - start) * 2)
+
+    uvs = np.array([elem
+                    for i in range(start, dupli_count)
+                    for elem in f(mod, particle=psys.particles[i] if num_children == 0 else first_particle,
+                                  particle_no=i, uv_no=uv_index)], dtype=np.float32)
+
     return uvs
 
 def convert_colors(obj, psys, settings, vertex_colors, engine, strands_count, start, dupli_count, mod, num_children):
