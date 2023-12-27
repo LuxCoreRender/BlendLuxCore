@@ -22,13 +22,19 @@ class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial, bpy.types.Node):
     bl_width_default = 160
 
     def update_use_ior(self, context):
-        self.inputs["IOR"].enabled = self.use_ior
-        self.inputs["Specular Color"].enabled = not self.use_ior
+        id = self.inputs.find("IOR")
+        self.inputs[id].enabled = self.use_ior
+
+        id = self.inputs.find("Specular Color")
+        self.inputs[id].enabled = not self.use_ior
         utils_node.force_viewport_update(self, context)
 
     def update_use_ior_bf(self, context):
-        self.inputs["BF IOR"].enabled = self.use_ior_bf
-        self.inputs["BF Specular Color"].enabled = not self.use_ior_bf
+        id = self.inputs.find("BF IOR")
+        self.inputs[id].enabled = self.use_ior_bf
+
+        id = self.inputs.find("BF Specular Color")
+        self.inputs[id].enabled = not self.use_ior_bf
         utils_node.force_viewport_update(self, context)
 
     def update_use_backface(self, context):
@@ -36,14 +42,15 @@ class LuxCoreNodeMatGlossyTranslucent(LuxCoreNodeMaterial, bpy.types.Node):
         sockets = [socket for socket in self.inputs.keys() if socket.startswith("BF ")]
 
         for socket in sockets:
+            id = self.inputs.find(socket)
             if socket == "BF V-Roughness":
-                self.inputs[socket].enabled = self.use_backface and self.use_anisotropy
+                self.inputs[id].enabled = self.use_backface and self.use_anisotropy
             elif socket == "BF IOR":
-                self.inputs[socket].enabled = self.use_backface and self.use_ior_bf
+                self.inputs[id].enabled = self.use_backface and self.use_ior_bf
             elif socket == "BF Specular Color":
-                self.inputs[socket].enabled = self.use_backface and not self.use_ior_bf
+                self.inputs[id].enabled = self.use_backface and not self.use_ior_bf
             else:
-                self.inputs[socket].enabled = self.use_backface
+                self.inputs[id].enabled = self.use_backface
 
         if context:
             utils_node.force_viewport_update(self, context)

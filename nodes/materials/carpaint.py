@@ -29,16 +29,13 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial, bpy.types.Node):
     def update_preset(self, context):
         enabled = self.preset == "manual"
 
-        self.inputs['Diffuse Color'].enabled = enabled
-        self.inputs['Specular Color 1'].enabled = enabled
-        self.inputs['Specular Color 2'].enabled = enabled
-        self.inputs['Specular Color 3'].enabled = enabled
-        self.inputs['M1'].enabled = enabled
-        self.inputs['M2'].enabled = enabled
-        self.inputs['M3'].enabled = enabled
-        self.inputs['R1'].enabled = enabled
-        self.inputs['R2'].enabled = enabled
-        self.inputs['R3'].enabled = enabled
+        sockets = ["Diffuse Color", "Specular Color 1", "Specular Color 2", "Specular Color 3",
+                   "M1", "M2", "M3", "R1", "R2", "R3"]
+
+        for socket in sockets:
+            id = self.inputs.find(socket)
+            self.inputs[id].enabled = enabled
+
         utils_node.force_viewport_update(self, context)
 
     preset_items = [

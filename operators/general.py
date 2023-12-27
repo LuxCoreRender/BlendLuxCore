@@ -154,7 +154,8 @@ class LUXCORE_OT_add_node(bpy.types.Operator):
                 output = out.name
                 break
 
-        node_tree.links.new(new_node.outputs[output], node.inputs[self.input_socket])
+        output_id = node.outputs.find(output)
+        node_tree.links.new(new_node.outputs[output_id], node.inputs[self.input_socket])
 
         # Special stuff only needed by material output
         if self.socket_type == "LuxCoreSocketVolume" and self.node_type == "LuxCoreNodeTreePointer":

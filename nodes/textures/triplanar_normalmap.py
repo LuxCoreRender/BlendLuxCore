@@ -12,12 +12,16 @@ class LuxCoreNodeTexTriplanarNormalmap(LuxCoreNodeTexture, bpy.types.Node):
 
     def update_multiple_textures(self, context):
         if self.multiple_textures:
-            self.inputs["Color"].name = "Color X"
+            id = self.inputs.find("Color")
+            self.inputs[id].name = "Color X"
         else:
-            self.inputs["Color X"].name = "Color"
+            id = self.inputs.find("Color X")
+            self.inputs[id].name = "Color"
 
-        self.inputs["Color Y"].enabled = self.multiple_textures
-        self.inputs["Color Z"].enabled = self.multiple_textures
+        self.inputs[id].name = "Color Y"
+        self.inputs[id].enabled = self.multiple_textures
+        self.inputs[id].name = "Color Y"
+        self.inputs[id].enabled = self.multiple_textures
         utils_node.force_viewport_update(self, context)
 
     multiple_textures: BoolProperty(update=update_multiple_textures, name="Multiple Textures", default=False,
