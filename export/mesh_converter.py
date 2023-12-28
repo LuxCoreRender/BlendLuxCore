@@ -164,7 +164,7 @@ def _prepare_mesh(obj, depsgraph):
                         if not mesh.has_custom_normals:
                             mesh.calc_normals()
                         mesh.split_faces()
-                    
+
                     mesh.calc_loop_triangles()
                     
                     if mesh.has_custom_normals:

@@ -22,7 +22,8 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture, bpy.types.Node):
         utils_node.force_viewport_update(self, context)
 
     def update_mapping_type(self, context):
-        self.inputs["2D Mapping (optional)"].enabled = self.mapping_type == "uvmapping2d"
+        id = self.inputs.find("2D Mapping (optional)")
+        self.inputs[id].enabled = self.mapping_type == "uvmapping2d"
         if self.mapping_type == "uvrandommapping2d" and self.seed_type == "mesh_islands":
             utils_node.force_viewport_mesh_update(self, context)
         else:
