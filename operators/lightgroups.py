@@ -92,13 +92,13 @@ def create_editor():
 
     input_node = editor.nodes.new("NodeGroupInput")
     output_node = editor.nodes.new("NodeGroupOutput")
-    editor.inputs.new("NodeSocketColor", "Light Group")
-    gain = editor.inputs.new("NodeSocketFloat", "Gain")
+    editor.interface.new_socket(socket_type="NodeSocketColor", name="Light Group", in_out="INPUT")
+    gain = editor.interface.new_socket(socket_type="NodeSocketFloat", name="Gain", in_out="INPUT")
     gain.default_value = 1
     gain.min_value = 0
-    color = editor.inputs.new("NodeSocketColor", "Color")
+    color = editor.interface.new_socket(socket_type="NodeSocketColor", name="Color", in_out="INPUT")
     color.default_value = (1, 1, 1, 1)
-    editor.outputs.new("NodeSocketColor", "Image")
+    editor.interface.new_socket(socket_type="NodeSocketColor", name="Image", in_out="OUTPUT")
 
     multiply_color = editor.nodes.new("CompositorNodeMixRGB")
     multiply_color.blend_type = "MULTIPLY"
@@ -136,10 +136,10 @@ def create_mixer(editor):
 
     input_node = mixer.nodes.new("NodeGroupInput")
     output_node = mixer.nodes.new("NodeGroupOutput")
-    mixer.inputs.new("NodeSocketColor", "ALBEDO")
-    mixer.inputs.new("NodeSocketVector", "AVG_SHADING_NORMAL")
-    mixer.outputs.new("NodeSocketColor", "Denoised Image")
-    mixer.outputs.new("NodeSocketColor", "Noisy Image")
+    mixer.interface.new_socket(socket_type="NodeSocketColor", name="ALBEDO", in_out="INPUT")
+    mixer.interface.new_socket(socket_type="NodeSocketVector", name="AVG_SHADING_NORMAL", in_out="INPUT")
+    mixer.interface.new_socket(socket_type="NodeSocketColor", name="Denoised Image", in_out="OUTPUT")
+    mixer.interface.new_socket(socket_type="NodeSocketColor", name="Noisy Image", in_out="OUTPUT")
 
     input_node.location = (-750, -110)
     output_node.location = (1455, -930)
@@ -153,14 +153,14 @@ def create_mixer(editor):
     for i in range(MAX_LIGHTGROUPS):
         input_index_offset = MIXER_SOCKET_INDEX_START + i * MIXER_SOCKET_INDEX_STEP
         # Light Group i
-        mixer.inputs.new("NodeSocketColor", f"Light Group {i + 1}")
+        mixer.interface.new_socket(socket_type="NodeSocketColor", name=f"Light Group {i + 1}", in_out="INPUT")
         light_group_input = input_node.outputs[input_index_offset]
         # Gain
-        gain = mixer.inputs.new("NodeSocketFloat", "Gain")
+        gain = mixer.interface.new_socket(socket_type="NodeSocketFloat", name="Gain", in_out="INPUT")
         gain.default_value = 1
         gain.min_value = 0
         # Color
-        color = mixer.inputs.new("NodeSocketColor", "Color")
+        color = mixer.interface.new_socket(socket_type="NodeSocketColor", name="Color", in_out="INPUT")
         color.default_value = (1, 1, 1, 1)
 
         editor_instance = mixer.nodes.new("CompositorNodeGroup")
