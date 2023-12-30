@@ -120,8 +120,7 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
             start = 0
         else:
             # Number of virtual parents reduces the number of exported children
-            num_virtual_parents = math.trunc(0.3 * psys.settings.virtual_parents
-                                             * psys.settings.child_nbr * num_parents)
+            num_virtual_parents = math.trunc(0.3 * psys.settings.virtual_parents * len(psys.child_particles) * num_parents)
             start = num_parents + num_virtual_parents
 
         # Collect point/color/uv information from Blender
