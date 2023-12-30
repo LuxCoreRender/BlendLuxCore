@@ -65,6 +65,20 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                 luxcore_name += str(n.as_pointer())
         luxcore_name = utils.sanitize_luxcore_name(luxcore_name)
 
+    # Handle "Specular" input
+    try:
+        specular_socket = node.inputs["Specular"]
+        specular = _socket(specular_socket, props, material, obj_name, group_node_stack)
+    except KeyError:
+        specular = 0  # Default value or handle appropriately based on your requirements
+
+    # Handle "Transmission" input safely
+    transmission_socket = node.inputs.get("Transmission")
+    if transmission_socket is not None:
+        transmission = _socket(transmission_socket, props, material, obj_name, group_node_stack)
+    else:
+        transmission = 0.0
+
     if node.bl_idname == "ShaderNodeBsdfPrincipled":
         prefix = "scene.materials."
         base_color = _socket(node.inputs["Base Color"], props, material, obj_name, group_node_stack)
@@ -122,10 +136,17 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                                                          luxcore_name_glass, obj_name, group_node_stack)
 
                 definitions = {
-                    "type": "glass" if roughness == 0 else "roughglass",
-                    "kt": base_color,
-                    "kr": [1, 1, 1],
-                    "interiorior": _socket(node.inputs["IOR"], props, material, obj_name, group_node_stack),
+                    "type": "disney",
+                    "basecolor": base_color,
+                    "subsurface": 0,  # TODO
+                    "metallic": metallic,
+                    "specular": specular,
+                    "speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node_stack),
+                    "roughness": _socket(node.inputs["Roughness"], props, material, obj_name, group_node_stack),
+                    "anisotropic": _socket(node.inputs["Anisotropic"], props, material, obj_name, group_node_stack),
+                    "sheen": _socket(node.inputs["Sheen"], props, material, obj_name, group_node_stack),
+                    "sheentint": _socket(node.inputs["Sheen Tint"], props, material, obj_name, group_node_stack),
+                    "clearcoat": _socket(node.inputs["Clearcoat"], props, material, obj_name, group_node_stack),
                 }
 
                 if roughness != 0:
