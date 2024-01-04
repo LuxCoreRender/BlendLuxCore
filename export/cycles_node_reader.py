@@ -96,18 +96,22 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                 #  - clearcoat roughness (we have clearcoat gloss, probably need to invert or something)
                 #  - clearcoat normal (no idea)
                 #  - tangent (no idea)
+                #  - sheen roughness (weird thing, might require rough glass + glossy coating?)
                 #  - transmission roughness (weird thing, might require rough glass + glossy coating?)
+                #  - anisotropic rotation
                 "type": "disney",
                 "basecolor": base_color,
                 "subsurface": 0,  # TODO
                 "metallic": metallic,
                 "specular": _socket(node.inputs["Specular IOR Level"], props, material, obj_name, group_node_stack),
                 "speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node_stack),
+                "speculartint": 0,  # TODO
                 # Both LuxCore and Cycles use squared roughness here, no need to convert
                 "roughness": _socket(node.inputs["Roughness"], props, material, obj_name, group_node_stack),
                 "anisotropic": _socket(node.inputs["Anisotropic"], props, material, obj_name, group_node_stack),
                 "sheen": _socket(node.inputs["Sheen Weight"], props, material, obj_name, group_node_stack),
                 "sheentint": _socket(node.inputs["Sheen Tint"], props, material, obj_name, group_node_stack),
+                "sheentint": 0, # TODO
                 "clearcoat": _socket(node.inputs["Coat Weight"], props, material, obj_name, group_node_stack),
             }
             
