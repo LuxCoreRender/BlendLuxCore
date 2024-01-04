@@ -1,5 +1,6 @@
 import bpy
 import numpy as np
+import concurrent.futures
 from contextlib import contextmanager
 from time import time
 from .caches.exported_data import ExportedMesh
@@ -22,22 +23,40 @@ def get_custom_normals_fast(mesh):
 
     for i, loop_tri in enumerate(mesh.loop_triangles):
         split_normals = loop_tri.split_normals
-        for j in range(NORMALS_ARRAY_SIZE):
-            custom_normals[i, j] = split_normals[j // NORMALS_ELEMENT_SIZE][j % NORMALS_ELEMENT_SIZE]
+        custom_normals[i, :] = split_normals.flatten()
+
+    return custom_normals
+
+def get_custom_normals_parallel(mesh):
+    if not mesh.has_custom_normals:
+        return None
+
+    loop_tri_count = len(mesh.loop_triangles)
+    custom_normals = np.zeros((loop_tri_count, NORMALS_ARRAY_SIZE), dtype=np.float32)
+
+    def process_loop(i, loop_tri):
+        split_normals = loop_tri.split_normals
+        custom_normals[i, :] = split_normals.flatten()
+
+    num_threads = min(8, len(mesh.loop_triangles))  # Adjust the number of threads based on the available CPU cores
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = {executor.submit(process_loop, i, loop_tri): i for i, loop_tri in enumerate(mesh.loop_triangles)}
+        concurrent.futures.wait(futures)
 
     return custom_normals
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
     start_time = time()
-    
+
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
-        
+
         custom_normals = None
         if mesh.has_custom_normals and not fast_custom_normals_supported():
             start = time()
-            custom_normals = get_custom_normals_fast(mesh)
+            custom_normals = get_custom_normals_parallel(mesh)
             elapsed = time() - start
             if elapsed > 0.3:
                 LuxCoreErrorLog.add_warning(
