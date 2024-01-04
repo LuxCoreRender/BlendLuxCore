@@ -65,10 +65,8 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         luxcore_name = utils.sanitize_luxcore_name(luxcore_name)
 
     if node.bl_idname == "ShaderNodeBsdfPrincipled":
-        print("Inputs:", node.inputs.keys())
-        print("LuxCoreRender: Cycles shader read succesfuly!!!")
-
-        prefix = "scene.materials."
+        #print("Inputs:", node.inputs.keys())
+        \prefix = "scene.materials."
         base_color = _socket(node.inputs["Base Color"], props, material, obj_name, group_node_stack)
         metallic_socket = node.inputs["Metallic"]
         metallic = _socket(metallic_socket, props, material, obj_name, group_node_stack)
