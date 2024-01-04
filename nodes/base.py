@@ -137,7 +137,9 @@ class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
 
     def export_common_inputs(self, exporter, depsgraph, props, definitions):
         """ Call from derived classes (in export method) """
-        transparency = self.inputs["Opacity"].export(exporter, depsgraph, props)
+
+        id = self.inputs.find("Opacity")
+        transparency = self.inputs[id].export(exporter, depsgraph, props)
         if transparency != 1.0:
             definitions["transparency"] = transparency
 
