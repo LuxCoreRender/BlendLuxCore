@@ -19,98 +19,75 @@ def get_custom_normals_slow(mesh):
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
     start_time = time()
-    
+
+    # Use Local Variables
+    mesh_attributes = obj.data.attributes
+    mesh_uv_layers = obj.data.uv_layers
+    mesh_vertex_colors = obj.data.vertex_colors
+
+    # Mesh Preparation
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
-        
+
         custom_normals = None
         if mesh.has_custom_normals and not fast_custom_normals_supported():
             start = time()
             custom_normals = get_custom_normals_slow(mesh)
             elapsed = time() - start
             if elapsed > 0.3:
-                LuxCoreErrorLog.add_warning("Slow custom normal export in this Blender version (took %.1f s)"
-                                            % elapsed, obj_name=obj.name)
+                LuxCoreErrorLog.add_warning("Slow custom normal export in this Blender version (took %.1f s)" % elapsed, obj_name=obj.name)
+
+        # Avoid Repeated Data Access
+        loop_count = len(mesh.loop_triangles)
+        polygon_material_indices = [p.material_index for p in mesh.polygons]
+        material_count = max(1, len(mesh.materials))
+
+        # Minimize Dictionary Lookups
+        position_attr = mesh_attributes.get('position')
 
         loopTriPtr = mesh.loop_triangles[0].as_pointer()
         loopTriPolyPtr = mesh.loop_triangle_polygons[0].as_pointer()
-        loopTriCount = len(mesh.loop_triangles)
+        loopTriCount = loop_count
 
-        if '.corner_vert' in mesh.attributes:
-            loopPtr = mesh.attributes['.corner_vert'].data[0].as_pointer()
+        if '.corner_vert' in mesh_attributes:
+            loopPtr = mesh_attributes['.corner_vert'].data[0].as_pointer()
         else:
             loopPtr = mesh.loops[0].as_pointer()
 
-        if 'position' in mesh.attributes:
-            vertPtr = mesh.attributes['position'].data[0].as_pointer()
+        if 'position' in mesh_attributes:
+            vertPtr = position_attr.data[0].as_pointer()
         else:
             vertPtr = mesh.vertices[0].as_pointer()
 
         normalPtr = mesh.vertex_normals[0].as_pointer()
-        loopUVsPtrList = []
-        loopColsPtrList = []
 
-        if mesh.uv_layers:
-            for uv in mesh.uv_layers:
-                if uv.name in mesh.attributes:
-                    loopUVsPtrList.append(mesh.attributes[uv.name].data[0].as_pointer())
-                else:
-                    loopUVsPtrList.append(uv.data[0].as_pointer())
-        else:
-            loopUVsPtrList.append(0)
-
-        if mesh.vertex_colors:
-            for vcol in mesh.vertex_colors:
-                if vcol.name in mesh.attributes:
-                    loopColsPtrList.append(mesh.attributes[vcol.name].data[0].as_pointer())
-                else:
-                    loopColsPtrList.append(vcol.data[0].as_pointer())
-        else:
-            loopColsPtrList.append(0)
+        loopUVsPtrList = [mesh_attributes[uv.name].data[0].as_pointer() if uv.name in mesh_attributes else uv.data[0].as_pointer() for uv in mesh_uv_layers]
+        loopColsPtrList = [mesh_attributes[vcol.name].data[0].as_pointer() if vcol.name in mesh_attributes else vcol.data[0].as_pointer() for vcol in mesh_vertex_colors]
 
         meshPtr = mesh.as_pointer()
 
-        material_indices = list([p.material_index for p in mesh.polygons])
-        material_count = max(1, len(mesh.materials))
-
-        if is_viewport_render or use_instancing:
-            mesh_transform = None
-        else:
-            mesh_transform = utils.matrix_to_list(transform)
-
-        sharp_attr = False
-        sharpPtr = 0
-
-        if 'sharp_face' in mesh.attributes:
+        if 'sharp_face' in mesh_attributes:
             sharp_attr = True
-            sharpPtr = mesh.attributes['sharp_face'].data[0].as_pointer()
+            sharpPtr = mesh_attributes['sharp_face'].data[0].as_pointer()
+        else:
+            sharp_attr = False
+            sharpPtr = 0
+
+        # Reduce Redundant Checks
+        mesh_transform = None if is_viewport_render or use_instancing else utils.matrix_to_list(transform)
 
         mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopTriPolyPtr, loopPtr,
                                                           vertPtr, normalPtr, sharpPtr, sharp_attr, loopUVsPtrList,
                                                           loopColsPtrList, meshPtr, material_count, mesh_transform,
-                                                          bpy.app.version, material_indices, custom_normals)
+                                                          bpy.app.version, polygon_material_indices, custom_normals)
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time
 
         return ExportedMesh(mesh_definitions)
 
-
 @contextmanager
 def _prepare_mesh(obj, depsgraph):
-    """
-    Create a temporary mesh from an object.
-    The mesh is guaranteed to be removed when the calling block ends.
-    Can return None if no mesh could be created from the object (e.g. for empties)
-
-    Use it like this:
-
-    with mesh_converter.convert(obj, depsgraph) as mesh:
-        if mesh:
-            print(mesh.name)
-            ...
-    """
-
     mesh = None
     object_eval = None
 
