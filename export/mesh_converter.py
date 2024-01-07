@@ -20,6 +20,11 @@ def get_custom_normals_slow(mesh):
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
     start_time = time()
 
+    # Check if the object is a mesh
+    if obj.type != 'MESH':
+        print(f"Object {obj.name} is not a mesh. Skipping conversion.")
+        return None
+
     # Use Local Variables
     mesh_attributes = obj.data.attributes
     mesh_uv_layers = obj.data.uv_layers
@@ -86,8 +91,22 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
 
         return ExportedMesh(mesh_definitions)
 
+
 @contextmanager
 def _prepare_mesh(obj, depsgraph):
+    """
+    Create a temporary mesh from an object.
+    The mesh is guaranteed to be removed when the calling block ends.
+    Can return None if no mesh could be created from the object (e.g. for empties)
+
+    Use it like this:
+
+    with mesh_converter.convert(obj, depsgraph) as mesh:
+        if mesh:
+            print(mesh.name)
+            ...
+    """
+
     mesh = None
     object_eval = None
 
