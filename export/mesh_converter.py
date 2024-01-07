@@ -1,133 +1,116 @@
 import bpy
-import numpy as np
-import concurrent.futures
 from contextlib import contextmanager
 from time import time
 from .caches.exported_data import ExportedMesh
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
 
-MIN_SUPPORTED_VERSION = (2, 83)
-NORMALS_ELEMENT_SIZE = 3
-NORMALS_ARRAY_SIZE = NORMALS_ELEMENT_SIZE * 3
 
 def fast_custom_normals_supported():
-    return bpy.app.version >= MIN_SUPPORTED_VERSION
+    return bpy.app.version >= (2, 83)
 
-def get_custom_normals_fast(mesh):
+def get_custom_normals_slow(mesh):
     if not mesh.has_custom_normals:
         return None
 
-    loop_tri_count = len(mesh.loop_triangles)
-    custom_normals = np.zeros((loop_tri_count, NORMALS_ARRAY_SIZE), dtype=np.float32)
-
-    for i, loop_tri in enumerate(mesh.loop_triangles):
-        split_normals = loop_tri.split_normals
-        custom_normals[i, :] = split_normals.flatten()
-
-    return custom_normals
-
-def get_custom_normals_parallel(mesh):
-    if not mesh.has_custom_normals:
-        return None
-
-    loop_tri_count = len(mesh.loop_triangles)
-    custom_normals = np.zeros((loop_tri_count, NORMALS_ARRAY_SIZE), dtype=np.float32)
-
-    def process_loop(i, loop_tri):
-        split_normals = loop_tri.split_normals
-        custom_normals[i, :] = split_normals.flatten()
-
-    num_threads = min(8, len(mesh.loop_triangles))  # Adjust the number of threads based on the available CPU cores
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = {executor.submit(process_loop, i, loop_tri): i for i, loop_tri in enumerate(mesh.loop_triangles)}
-        concurrent.futures.wait(futures)
+    custom_normals = [value for loop_tri in mesh.loop_triangles for split_normals in loop_tri.split_normals for value in split_normals]
 
     return custom_normals
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
     start_time = time()
-
+    
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
-
+        
         custom_normals = None
         if mesh.has_custom_normals and not fast_custom_normals_supported():
             start = time()
-            custom_normals = get_custom_normals_parallel(mesh)
+            custom_normals = get_custom_normals_slow(mesh)
             elapsed = time() - start
             if elapsed > 0.3:
-                LuxCoreErrorLog.add_warning(
-                    f"Slow custom normal export in this Blender version (took {elapsed:.1f} s)",
-                    obj_name=obj.name
-                )
+                LuxCoreErrorLog.add_warning("Slow custom normal export in this Blender version (took %.1f s)"
+                                            % elapsed, obj_name=obj.name)
 
-        loop_tri_ptr = mesh.loop_triangles[0].as_pointer()
-        loop_tri_poly_ptr = mesh.loop_triangle_polygons[0].as_pointer()
-        loop_tri_count = len(mesh.loop_triangles)
+        loopTriPtr = mesh.loop_triangles[0].as_pointer()
+        loopTriPolyPtr = mesh.loop_triangle_polygons[0].as_pointer()
+        loopTriCount = len(mesh.loop_triangles)
 
-        loop_ptr = (
-            mesh.attributes['.corner_vert'].data[0].as_pointer()
-            if '.corner_vert' in mesh.attributes
-            else mesh.loops[0].as_pointer()
-        )
+        if '.corner_vert' in mesh.attributes:
+            loopPtr = mesh.attributes['.corner_vert'].data[0].as_pointer()
+        else:
+            loopPtr = mesh.loops[0].as_pointer()
 
-        vert_ptr = (
-            mesh.attributes['position'].data[0].as_pointer()
-            if 'position' in mesh.attributes
-            else mesh.vertices[0].as_pointer()
-        )
+        if 'position' in mesh.attributes:
+            vertPtr = mesh.attributes['position'].data[0].as_pointer()
+        else:
+            vertPtr = mesh.vertices[0].as_pointer()
 
-        normal_ptr = mesh.vertex_normals[0].as_pointer()
+        normalPtr = mesh.vertex_normals[0].as_pointer()
+        loopUVsPtrList = []
+        loopColsPtrList = []
 
-        loop_uvs_ptr_list = [
-            mesh.attributes[uv.name].data[0].as_pointer()
-            if uv.name in mesh.attributes
-            else uv.data[0].as_pointer()
-            for uv in mesh.uv_layers
-        ] if mesh.uv_layers else [0]
+        if mesh.uv_layers:
+            for uv in mesh.uv_layers:
+                if uv.name in mesh.attributes:
+                    loopUVsPtrList.append(mesh.attributes[uv.name].data[0].as_pointer())
+                else:
+                    loopUVsPtrList.append(uv.data[0].as_pointer())
+        else:
+            loopUVsPtrList.append(0)
 
-        loop_cols_ptr_list = [
-            mesh.attributes[vcol.name].data[0].as_pointer()
-            if vcol.name in mesh.attributes
-            else vcol.data[0].as_pointer()
-            for vcol in mesh.vertex_colors
-        ] if mesh.vertex_colors else [0]
+        if mesh.vertex_colors:
+            for vcol in mesh.vertex_colors:
+                if vcol.name in mesh.attributes:
+                    loopColsPtrList.append(mesh.attributes[vcol.name].data[0].as_pointer())
+                else:
+                    loopColsPtrList.append(vcol.data[0].as_pointer())
+        else:
+            loopColsPtrList.append(0)
 
-        mesh_ptr = mesh.as_pointer()
+        meshPtr = mesh.as_pointer()
 
-        material_indices = [p.material_index for p in mesh.polygons]
+        material_indices = list([p.material_index for p in mesh.polygons])
         material_count = max(1, len(mesh.materials))
 
-        mesh_transform = (
-            None
-            if is_viewport_render or use_instancing
-            else utils.matrix_to_list(transform)
-        )
+        if is_viewport_render or use_instancing:
+            mesh_transform = None
+        else:
+            mesh_transform = utils.matrix_to_list(transform)
 
         sharp_attr = False
-        sharp_ptr = 0
+        sharpPtr = 0
 
         if 'sharp_face' in mesh.attributes:
             sharp_attr = True
-            sharp_ptr = mesh.attributes['sharp_face'].data[0].as_pointer()
+            sharpPtr = mesh.attributes['sharp_face'].data[0].as_pointer()
 
-        mesh_definitions = luxcore_scene.DefineBlenderMesh(
-            mesh_key, loop_tri_count, loop_tri_ptr, loop_tri_poly_ptr, loop_ptr,
-            vert_ptr, normal_ptr, sharp_ptr, sharp_attr, loop_uvs_ptr_list,
-            loop_cols_ptr_list, mesh_ptr, material_count, mesh_transform,
-            bpy.app.version, material_indices, custom_normals
-        )
-        
+        mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopTriPolyPtr, loopPtr,
+                                                          vertPtr, normalPtr, sharpPtr, sharp_attr, loopUVsPtrList,
+                                                          loopColsPtrList, meshPtr, material_count, mesh_transform,
+                                                          bpy.app.version, material_indices, custom_normals)
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time
 
         return ExportedMesh(mesh_definitions)
 
+
 @contextmanager
 def _prepare_mesh(obj, depsgraph):
+    """
+    Create a temporary mesh from an object.
+    The mesh is guaranteed to be removed when the calling block ends.
+    Can return None if no mesh could be created from the object (e.g. for empties)
+
+    Use it like this:
+
+    with mesh_converter.convert(obj, depsgraph) as mesh:
+        if mesh:
+            print(mesh.name)
+            ...
+    """
+
     mesh = None
     object_eval = None
 
@@ -142,6 +125,7 @@ def _prepare_mesh(obj, depsgraph):
                     object_eval.to_mesh_clear()
                     mesh = None
 
+            # Inside the _prepare_mesh function
             if mesh:
                 if bpy.app.version > (3, 9, 9):
                     if 'sharp_face' in mesh.attributes:
@@ -149,13 +133,14 @@ def _prepare_mesh(obj, depsgraph):
                 else:
                     if mesh.use_auto_smooth:
                         if not mesh.has_custom_normals:
-                            mesh.calc_normals()
+                            mesh.create_normals_split()  # Updated line
                         mesh.split_faces()
 
                     mesh.calc_loop_triangles()
 
                     if mesh.has_custom_normals:
-                        mesh.calc_normals_split()
+                        mesh.calc_normals_split_custom()  # Updated line
+
 
         yield mesh
     finally:
