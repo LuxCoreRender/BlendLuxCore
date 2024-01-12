@@ -16,26 +16,16 @@ class LuxCoreSocketReflection(bpy.types.NodeSocket, LuxCoreSocketFloat):
 
 
 class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial, bpy.types.Node):
-    """
-    carpaint material node
-
-    Note about the parameters:
-    R1, R2, R3 seem to be "reflection" values, whatever that means.
-    M1, M2, M3 seem to be roughness values for the reflection values.
-    """
     bl_label = "Carpaint Material"
     bl_width_default = 200
 
     def update_preset(self, context):
         enabled = self.preset == "manual"
 
-        sockets = ["Diffuse Color", "Specular Color 1", "Specular Color 2", "Specular Color 3",
-                   "M1", "M2", "M3", "R1", "R2", "R3"]
-
-        for socket in sockets:
-            id = self.inputs.find(socket)
-            self.inputs[id].enabled = enabled
-
+        self.inputs['LuxCoreSocketColor'].enabled = enabled
+        self.inputs['LuxCoreSocketColor.001'].enabled = enabled
+        self.inputs['LuxCoreSocketReflection'].enabled = enabled
+        self.inputs['LuxCoreSocketRoughness'].enabled = enabled
         utils_node.force_viewport_update(self, context)
 
     preset_items = [
@@ -49,6 +39,7 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial, bpy.types.Node):
         ("polaris_silber", "Polaris Silber", "", 7),
         ("white", "White", "", 8),
     ]
+    
     preset: EnumProperty(name="Preset", items=preset_items, default="manual", update=update_preset)
 
     def init(self, context):
