@@ -137,9 +137,7 @@ class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
 
     def export_common_inputs(self, exporter, depsgraph, props, definitions):
         """ Call from derived classes (in export method) """
-
-        id = self.inputs.find("Opacity")
-        transparency = self.inputs[id].export(exporter, depsgraph, props)
+        transparency = self.inputs["Opacity"].export(exporter, depsgraph, props)
         if transparency != 1.0:
             definitions["transparency"] = transparency
 
@@ -154,7 +152,12 @@ class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
 
         # The emission socket and node are special cases
         # with special export methods
-        self.inputs["Emission"].export_emission(exporter, depsgraph, props, definitions)
+        try:
+            self.inputs["Emission"].export_emission(exporter, depsgraph, props, definitions)
+        except KeyError:
+            # Handle the situation where the "Emission" input is not found
+            pass  # Replace with your default behavior or appropriate handling
+
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
@@ -313,25 +316,13 @@ class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
 
     def update_node_tree(self, context):
         if self.node_tree:
-            id = self.outputs.find("Material")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
-            id = self.outputs.find("Color")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
-            id = self.outputs.find("Volume")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
+            self.outputs["Material"].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
+            self.outputs["Color"].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
+            self.outputs["Volume"].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
         else:
-            id = self.outputs.find("Material")
-            if id:
-                self.outputs[id].enabled = True
-            id = self.outputs.find("Color")
-            if id:
-                self.outputs[id].enabled = True
-            id = self.outputs.find("Volume")
-            if id:
-                self.outputs[id].enabled = True
+            self.outputs["Material"].enabled = False
+            self.outputs["Color"].enabled = False
+            self.outputs["Volume"].enabled = False
 
     node_tree: PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree,
                                 description="Use the output of the selected node tree in this node tree")
@@ -351,8 +342,7 @@ class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
         self.outputs["Color"].enabled = False
         self.outputs.new("LuxCoreSocketVolume", "Volume")
         self.outputs["Volume"].enabled = False
-        self.update_node_tree(context)
-
+        
     def draw_label(self):
         if self.node_tree:
             return 'Pointer to "%s"' % self.node_tree.name
@@ -434,10 +424,10 @@ class Roughness:
             sockets.append("BF " + socket)
 
         for socket in sockets:
-            id = node.inputs.find(socket)
-            if id:
-                node.inputs[id].enabled = node.rough
-
+            try:
+                node.inputs[socket].enabled = node.rough
+            except KeyError:
+                pass
         Roughness.update_anisotropy(node, context)
 
     @staticmethod
@@ -496,8 +486,14 @@ class Roughness:
     @staticmethod
     def export(node, exporter, depsgraph, props, definitions):
         if node.use_anisotropy:
-            uroughness = node.inputs["U-Roughness"].export(exporter, depsgraph, props)
+            uroughness_input = node.inputs.get("U-Roughness")
+            #if uroughness_input:
+                #uroughness = uroughness_input.export(exporter, depsgraph, props)
+            #else:
+                #uroughness = 0.0
+
             vroughness = node.inputs["V-Roughness"].export(exporter, depsgraph, props)
+        
         else:
             uroughness = node.inputs["Roughness"].export(exporter, depsgraph, props)
             vroughness = uroughness
