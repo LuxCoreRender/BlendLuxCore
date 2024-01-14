@@ -34,9 +34,8 @@ class LuxCoreNodeMatGlossyCoating(LuxCoreNodeMaterial, bpy.types.Node):
         self.add_input("LuxCoreSocketColor", "Absorption Color", [0] * 3)
         self.add_input("LuxCoreSocketFloatPositive", "Absorption Depth (nm)", 0)
         Roughness.init(self, 0.05)
-        self.add_common_inputs()
-        # glossycoating does not support the transparency property
-        self.inputs["Opacity"].enabled = False
+        self.add_input("LuxCoreSocketBump", "Bump")
+        self.add_input("LuxCoreSocketMatEmission", "Emission")
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
 
@@ -66,5 +65,4 @@ class LuxCoreNodeMatGlossyCoating(LuxCoreNodeMaterial, bpy.types.Node):
             definitions["ks"] = self.inputs["Specular Color"].export(exporter, depsgraph, props)
 
         Roughness.export(self, exporter, depsgraph, props, definitions)
-        self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

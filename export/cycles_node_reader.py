@@ -56,7 +56,6 @@ def _socket(socket, props, material, obj_name, group_node):
         # Not iterable
         return socket.default_value
 
-
 def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", group_node_stack=None):
     if luxcore_name is None:
         luxcore_name = str(node.as_pointer()) + output_socket.name
@@ -66,7 +65,8 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         luxcore_name = utils.sanitize_luxcore_name(luxcore_name)
 
     if node.bl_idname == "ShaderNodeBsdfPrincipled":
-        prefix = "scene.materials."
+        #print("Inputs:", node.inputs.keys())
+        \prefix = "scene.materials."
         base_color = _socket(node.inputs["Base Color"], props, material, obj_name, group_node_stack)
         metallic_socket = node.inputs["Metallic"]
         metallic = _socket(metallic_socket, props, material, obj_name, group_node_stack)
@@ -104,13 +104,13 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                 "subsurface": 0,  # TODO
                 "metallic": metallic,
                 "specular": _socket(node.inputs["Specular IOR Level"], props, material, obj_name, group_node_stack),
-                #"speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node_stack),
+                "speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node_stack),
                 "speculartint": 0,  # TODO
                 # Both LuxCore and Cycles use squared roughness here, no need to convert
                 "roughness": _socket(node.inputs["Roughness"], props, material, obj_name, group_node_stack),
                 "anisotropic": _socket(node.inputs["Anisotropic"], props, material, obj_name, group_node_stack),
                 "sheen": _socket(node.inputs["Sheen Weight"], props, material, obj_name, group_node_stack),
-                #"sheentint": _socket(node.inputs["Sheen Tint"], props, material, obj_name, group_node_stack),
+                "sheentint": _socket(node.inputs["Sheen Tint"], props, material, obj_name, group_node_stack),
                 "sheentint": 0, # TODO
                 "clearcoat": _socket(node.inputs["Coat Weight"], props, material, obj_name, group_node_stack),
             }
