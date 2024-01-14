@@ -253,7 +253,7 @@ class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
 
 class LuxCoreSocketRoughness(bpy.types.NodeSocket, LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
-    default_value: FloatProperty(min=0.001, soft_max=0.8, max=1.0, precision=4,
+    default_value: FloatProperty(min=0.001, soft_max1.0, max=1.0, default=0.05, precision=4,
                                   description=ROUGHNESS_DESCRIPTION,
                                   update=utils_node.force_viewport_update)
     slider = True
