@@ -39,7 +39,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             return None
 
         custom_normals = None
-        mesh.calc_normals_split()
+        mesh.corner_normals()
         if mesh.has_custom_normals:
             start = time()
             custom_normals = get_custom_normals_slow(mesh)
@@ -150,7 +150,7 @@ def _prepare_mesh(obj, depsgraph):
             if mesh:
                 if mesh.use_auto_smooth:
                     if not mesh.has_custom_normals:
-                        mesh.calc_normals()
+                        mesh.corner_normals()
                     mesh.split_faces()
 
                 mesh.calc_loop_triangles()
