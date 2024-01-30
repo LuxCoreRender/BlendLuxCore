@@ -39,7 +39,6 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
             return None
 
         custom_normals = None
-        mesh.calc_normals_split()
         if mesh.has_custom_normals:
             start = time()
             custom_normals = get_custom_normals_slow(mesh)
@@ -141,26 +140,23 @@ def _prepare_mesh(obj, depsgraph):
                 # if not mesh.has_custom_normals and object_eval.matrix_world.determinant() < 0.0:
                 #     # Does not handle custom normals
                 #     mesh.flip_normals()
-                
+
                 mesh.calc_loop_triangles()
                 if not mesh.loop_triangles:
                     object_eval.to_mesh_clear()
                     mesh = None
 
             if mesh:
-                if bpy.app.version > (3, 9, 9):
-                    if 'sharp_face' in mesh.attributes:
-                        mesh.split_faces()
+                if mesh.has_custom_normals:
+                    mesh.calc_normals_split()
                 else:
                     if mesh.use_auto_smooth:
-                        if not mesh.has_custom_normals:
-                            mesh.calc_normals()
                         mesh.split_faces()
 
-                    mesh.calc_loop_triangles()
+                mesh.calc_loop_triangles()
 
-                    if mesh.has_custom_normals:
-                        mesh.calc_normals_split()
+                if mesh.has_custom_normals:
+                    mesh.calc_normals_split()
 
         yield mesh
     finally:
