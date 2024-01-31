@@ -140,22 +140,34 @@ def _prepare_mesh(obj, depsgraph):
                 # if not mesh.has_custom_normals and object_eval.matrix_world.determinant() < 0.0:
                 #     # Does not handle custom normals
                 #     mesh.flip_normals()
-                
+
                 mesh.calc_loop_triangles()
                 if not mesh.loop_triangles:
                     object_eval.to_mesh_clear()
                     mesh = None
 
             if mesh:
+
                 if mesh.use_auto_smooth:
                     if not mesh.has_custom_normals:
                         mesh.corner_normals()
                     mesh.split_faces()
 
+                if mesh.has_custom_normals:
+                    mesh.calc_normals_split()
+                else:
+                    if mesh.use_auto_smooth:
+                        mesh.split_faces()
+
+
                 mesh.calc_loop_triangles()
 
                 if mesh.has_custom_normals:
+
                     mesh.corner_normals()
+
+                    mesh.calc_normals_split()
+
 
         yield mesh
     finally:
