@@ -5,31 +5,18 @@ from .caches.exported_data import ExportedMesh
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
 
-def get_custom_normals_slow(mesh):
-    """
-    Slow fallback that reads custom normals via Python, used if fast
-    custom normal reading via C++ is not supported for this Blender version
-    """
-
+def get_custom_normals_fast(mesh):
     if not mesh.has_custom_normals:
         return None
 
-    # Flat list of 3-element normal vectors
-    custom_normals = [0] * (len(mesh.loops) * 3)
+    custom_normals = []
 
-    for loop_tri in mesh.loop_triangles:
-        loops = loop_tri.loops
-        split_normals = loop_tri.split_normals
-
-        start = loops[0] * 3
-        custom_normals[start:start + 3] = split_normals[0][:]
-        start = loops[1] * 3
-        custom_normals[start:start + 3] = split_normals[1][:]
-        start = loops[2] * 3
-        custom_normals[start:start + 3] = split_normals[2][:]
+    # Loop through the loop normals directly
+    for loop in mesh.loops:
+        # Extend the custom_normals list with the loop's normal
+        custom_normals.extend(loop.normal)
 
     return custom_normals
-
 
 def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
     start_time = time()
@@ -41,7 +28,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         custom_normals = None
         if mesh.has_custom_normals:
             start = time()
-            custom_normals = get_custom_normals_slow(mesh)
+            custom_normals = get_custom_normals_fast(mesh)
             elapsed = time() - start
 
             if elapsed > 0.3:

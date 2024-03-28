@@ -43,7 +43,6 @@ def force_session_restart(engine):
     engine.session.Stop()
     engine.session = None
 
-
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
     if engine.starting_session or engine.viewport_fatal_error:
@@ -68,10 +67,12 @@ def view_update(engine, context, depsgraph, changes=None):
             elif time() - engine.time_of_last_viewport_resize < engine.VIEWPORT_RESIZE_TIMEOUT:
                 # Don't re-export the session before the timeout is done, to prevent constant re-exports while resizing
                 return
-        
+
         try:
             print("=" * 50)
             print("[Engine/Viewport] New session")
+            if engine.export_start_time is None:
+                engine.export_start_time = time()  # Initialize export start time if not already set
             engine.exporter = export.Exporter()
             engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
             # Start in separate thread to avoid blocking the UI
@@ -93,6 +94,7 @@ def view_update(engine, context, depsgraph, changes=None):
             traceback.print_exc()
         return
 
+    # If the session is already started, update the viewport
     s = time()
     changes = engine.exporter.get_changes(depsgraph, context, changes)
     print("view_update(): checking for changes took %.1f ms" % ((time() - s) * 1000))
@@ -111,7 +113,6 @@ def view_update(engine, context, depsgraph, changes=None):
             engine.framebuffer.reset_denoiser()
         print("view_update(): applying changes took %.1f ms" % ((time() - s) * 1000))
     print("view_update() took %.1f ms" % ((time() - start) * 1000))
-
 
 def view_draw(engine, context, depsgraph):
     scene = depsgraph.scene_eval
@@ -154,8 +155,9 @@ def view_draw(engine, context, depsgraph):
                 gpu_backend = utils.get_addon_preferences(context).gpu_backend
                 message = f"Compiling {gpu_backend} kernels (just once, usually takes 15-30 minutes)"
         
-        engine.update_stats("Starting viewport render", message)
+        engine.update_stats("Scene compilation has started...(waiting)", message)
         engine.viewport_starting_message_shown = True
+        engine.export_start_time = time()  # Record start time for mesh exportation
         engine.tag_update()
         engine.tag_redraw()
         return
@@ -171,7 +173,6 @@ def view_draw(engine, context, depsgraph):
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
         engine.tag_redraw()
-        # view_update(engine, context, depsgraph, changes)  # Disabled, see comment on force_session_restart()
         force_session_restart(engine)
         return
     elif changes & export.Change.CAMERA:
@@ -180,7 +181,7 @@ def view_draw(engine, context, depsgraph):
         # We have to re-assign the session because it might have been
         # replaced due to filmsize change.
         engine.session = engine.exporter.update(depsgraph, context, engine.session, export.Change.CAMERA)
-        engine.viewport_start_time = time()
+        engine.viewport_start_time = time()  # Record start time for this render update
 
     if utils.in_material_shading_mode(context):
         if not engine.session.IsInPause():
@@ -241,8 +242,16 @@ def view_draw(engine, context, depsgraph):
 
     framebuffer.draw(engine, context, scene)
 
-    # Show formatted statistics in Blender UI
+    # Calculate total rendering time
+    total_rendering_time = time() - engine.viewport_start_time
+
+    # Calculate export time
+    export_time = engine.viewport_start_time - engine.export_start_time
+
+    # Display statistics
+    pretty_export_time = f""
+    pretty_total_rendering_time = f"Viewport rendering time: {total_rendering_time:.2f} seconds"
     config = engine.session.GetRenderConfig()
     stats = engine.session.GetStats()
     pretty_stats = utils_render.get_pretty_stats(config, stats, scene, context)
-    engine.update_stats(pretty_stats, status_message)
+    engine.update_stats(pretty_stats, status_message + "\n" + pretty_export_time + "\n" + pretty_total_rendering_time)
