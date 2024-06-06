@@ -146,17 +146,18 @@ def _prepare_mesh(obj, depsgraph):
                     object_eval.to_mesh_clear()
                     mesh = None
 
-            if mesh:
-                if mesh.has_custom_normals:
-                    mesh.calc_normals_split()
-                else:
-                    if mesh.use_auto_smooth:
-                        mesh.split_faces()
-
-                mesh.calc_loop_triangles()
-
-                if mesh.has_custom_normals:
-                    mesh.calc_normals_split()
+            # TODO implement new normals handling
+            # if mesh:
+            #     if mesh.has_custom_normals:
+            #         mesh.calc_normals_split()
+            #     else:
+            #         if mesh.use_auto_smooth:
+            #             mesh.split_faces()
+            #
+            #     mesh.calc_loop_triangles()
+            #
+            #     if mesh.has_custom_normals:
+            #         mesh.calc_normals_split()
 
         yield mesh
     finally:
