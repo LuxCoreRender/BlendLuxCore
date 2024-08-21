@@ -7,7 +7,8 @@ from ..utils import render as utils_render
 from ..utils.errorlog import LuxCoreErrorLog
 from ..export.config import convert_viewport_engine
 
-# Executed in separate thread
+
+# Executed in a separate thread
 def start_session(engine):
     try:
         engine.session.Start()
@@ -27,24 +28,46 @@ def start_session(engine):
         import traceback
         traceback.print_exc()
 
-    # Note: Due to CPython implementation details, it's not necessary to use a lock here (this modification is atomic)
+    # Ensure the flag for starting session is reset
     engine.starting_session = False
 
 
 def force_session_restart(engine):
     """
-    https://github.com/LuxCoreRender/BlendLuxCore/issues/577
-    For unknown reasons, the old way of handling changes to the renderconfig, like a viewport resize
-    or renderengine settings edit, now causes a memory leak. I have not been able to track it down.
-    (The original code is in export/__init__.py in the method _update_config())
-    As a workaround, I stop and delete the session to trigger a full re-export of the scene and
-    a fresh restart of the viewport render.
+    This function restarts the viewport session due to memory leaks caused by changes 
+    like viewport resize or render engine settings edits.
     """
-    engine.session.Stop()
-    engine.session = None
+    if engine.session is not None:
+        engine.session.Stop()
+        engine.session = None
+
+
+def apply_color_management_changes(engine, scene):
+    """
+    Apply changes to Color Management settings (exposure and gamma) without restarting the session.
+    """
+    view_settings = scene.view_settings
+    exposure = view_settings.exposure
+    gamma = view_settings.gamma
+
+    if engine.session is not None:
+        config = engine.session.GetRenderConfig()
+
+        # Update LuxCore settings for color management
+        props = pyluxcore.Properties()
+        props.Set(pyluxcore.Property("film.imagepipeline.0.gamma", gamma))
+        props.Set(pyluxcore.Property("film.imagepipeline.0.exposure", exposure))
+
+        # Apply the new properties
+        config.Parse(props)
+
+        # Notify LuxCore to update the frame buffer without restarting
+        engine.session.UpdateFilmSettings(props)
+
 
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
+
     if engine.starting_session or engine.viewport_fatal_error:
         # Prevent deadlock
         return
@@ -67,12 +90,10 @@ def view_update(engine, context, depsgraph, changes=None):
             elif time() - engine.time_of_last_viewport_resize < engine.VIEWPORT_RESIZE_TIMEOUT:
                 # Don't re-export the session before the timeout is done, to prevent constant re-exports while resizing
                 return
-
+        
         try:
             print("=" * 50)
             print("[Engine/Viewport] New session")
-            if engine.export_start_time is None:
-                engine.export_start_time = time()  # Initialize export start time if not already set
             engine.exporter = export.Exporter()
             engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
             # Start in separate thread to avoid blocking the UI
@@ -81,9 +102,7 @@ def view_update(engine, context, depsgraph, changes=None):
             import _thread
             _thread.start_new_thread(start_session, (engine,))
         except Exception as error:
-            del engine.session
             engine.session = None
-            # Reset the exporter to invalidate all caches
             engine.exporter = None
             engine.viewport_fatal_error = str(error)
 
@@ -94,25 +113,29 @@ def view_update(engine, context, depsgraph, changes=None):
             traceback.print_exc()
         return
 
-    # If the session is already started, update the viewport
-    s = time()
+    # Check for changes
     changes = engine.exporter.get_changes(depsgraph, context, changes)
-    print("view_update(): checking for changes took %.1f ms" % ((time() - s) * 1000))
+
+    # Handle color management changes
+    if changes & export.Change.COLOR_MANAGEMENT:
+        apply_color_management_changes(engine, depsgraph.scene_eval)
+        engine.tag_redraw()
+        return
 
     if changes:
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
             force_session_restart(engine)
             return
 
-        s = time()
-        # We have to re-assign the session because it might have been replaced due to filmsize change
+        # Apply other changes
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
         if engine.framebuffer:
             engine.framebuffer.reset_denoiser()
-        print("view_update(): applying changes took %.1f ms" % ((time() - s) * 1000))
+
     print("view_update() took %.1f ms" % ((time() - start) * 1000))
+
 
 def view_draw(engine, context, depsgraph):
     scene = depsgraph.scene_eval
@@ -120,12 +143,12 @@ def view_draw(engine, context, depsgraph):
     if engine.starting_session:
         engine.tag_redraw()
         return
-        
+
     if engine.viewport_fatal_error:
         engine.update_stats("Error:", engine.viewport_fatal_error)
         engine.tag_redraw()
         return
-    
+
     if engine.session is None:
         config = scene.luxcore.config
         definitions = {}
@@ -133,7 +156,6 @@ def view_draw(engine, context, depsgraph):
         message = ""
         
         if luxcore_engine.endswith("OCL"):
-            # Create dummy renderconfig to check if we have to compile OpenCL kernels
             luxcore_scene = pyluxcore.Scene()
             definitions = {
                 "scene.camera.type": "perspective",
@@ -155,9 +177,8 @@ def view_draw(engine, context, depsgraph):
                 gpu_backend = utils.get_addon_preferences(context).gpu_backend
                 message = f"Compiling {gpu_backend} kernels (just once, usually takes 15-30 minutes)"
         
-        engine.update_stats("Scene compilation has started...(waiting)", message)
+        engine.update_stats("Starting viewport render", message)
         engine.viewport_starting_message_shown = True
-        engine.export_start_time = time()  # Record start time for mesh exportation
         engine.tag_update()
         engine.tag_redraw()
         return
@@ -167,8 +188,7 @@ def view_draw(engine, context, depsgraph):
 
     framebuffer = engine.framebuffer
 
-    # Check for changes because some actions in Blender (e.g. moving the viewport
-    # camera) do not trigger a view_update() call, but only a view_draw() call.
+    # Check for viewport changes
     changes = engine.exporter.get_viewport_changes(depsgraph, context)
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
@@ -176,12 +196,8 @@ def view_draw(engine, context, depsgraph):
         force_session_restart(engine)
         return
     elif changes & export.Change.CAMERA:
-        # Only update in view_draw if it is a camera update,
-        # for everything else we call view_update().
-        # We have to re-assign the session because it might have been
-        # replaced due to filmsize change.
         engine.session = engine.exporter.update(depsgraph, context, engine.session, export.Change.CAMERA)
-        engine.viewport_start_time = time()  # Record start time for this render update
+        engine.viewport_start_time = time()
 
     if utils.in_material_shading_mode(context):
         if not engine.session.IsInPause():
@@ -202,7 +218,6 @@ def view_draw(engine, context, depsgraph):
         return
 
     # Check if we need to pause the viewport render
-    # (note: the LuxCore stat "stats.renderengine.time" is not reliable here)
     rendered_time = time() - engine.viewport_start_time
     halt_time = scene.luxcore.viewport.halt_time
     status_message = ""
@@ -230,28 +245,16 @@ def view_draw(engine, context, depsgraph):
                 except Exception as error:
                     status_message = "Could not start denoiser: %s" % error
     else:
-        # Not in pause yet, keep drawing
         engine.session.WaitNewFrame()
-        try:
-            engine.session.UpdateStats()
-        except RuntimeError as error:
-            print("[Engine/Viewport] Error during UpdateStats():", error)
+        engine.session.UpdateStats()
         framebuffer.update(engine.session, scene)
         framebuffer.reset_denoiser()
         engine.tag_redraw()
 
     framebuffer.draw(engine, context, scene)
 
-    # Calculate total rendering time
-    total_rendering_time = time() - engine.viewport_start_time
-
-    # Calculate export time
-    export_time = engine.viewport_start_time - engine.export_start_time
-
-    # Display statistics
-    pretty_export_time = f""
-    pretty_total_rendering_time = f"Viewport rendering time: {total_rendering_time:.2f} seconds"
+    # Show formatted statistics in Blender UI
     config = engine.session.GetRenderConfig()
     stats = engine.session.GetStats()
     pretty_stats = utils_render.get_pretty_stats(config, stats, scene, context)
-    engine.update_stats(pretty_stats, status_message + "\n" + pretty_export_time + "\n" + pretty_total_rendering_time)
+    engine.update_stats(pretty_stats, status_message)
