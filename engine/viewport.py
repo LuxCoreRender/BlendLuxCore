@@ -7,19 +7,14 @@ from ..utils import render as utils_render
 from ..utils.errorlog import LuxCoreErrorLog
 from ..export.config import convert_viewport_engine
 
-
-# Executed in a separate thread
 def start_session(engine):
     try:
         engine.session.Start()
         engine.viewport_start_time = time()
     except ReferenceError:
-        # Could not start render session because RenderEngine struct was deleted (caused
-        # by the user cancelling the viewport render before this function is called)
         return
     except Exception as error:
         engine.session = None
-        # Reset the exporter to invalidate all caches
         engine.exporter = None
 
         engine.update_stats("Error: ", str(error))
@@ -28,24 +23,14 @@ def start_session(engine):
         import traceback
         traceback.print_exc()
 
-    # Ensure the flag for starting session is reset
     engine.starting_session = False
 
-
 def force_session_restart(engine):
-    """
-    This function restarts the viewport session due to memory leaks caused by changes 
-    like viewport resize or render engine settings edits.
-    """
     if engine.session is not None:
         engine.session.Stop()
         engine.session = None
 
-
-def apply_color_management_changes(engine, scene):
-    """
-    Apply changes to Color Management settings (exposure and gamma) without restarting the session.
-    """
+def apply_color_management_changes(engine, scene, depsgraph, context):
     view_settings = scene.view_settings
     exposure = view_settings.exposure
     gamma = view_settings.gamma
@@ -53,7 +38,6 @@ def apply_color_management_changes(engine, scene):
     if engine.session is not None:
         config = engine.session.GetRenderConfig()
 
-        # Update LuxCore settings for color management
         props = pyluxcore.Properties()
         props.Set(pyluxcore.Property("film.imagepipeline.0.gamma", gamma))
         props.Set(pyluxcore.Property("film.imagepipeline.0.exposure", exposure))
@@ -64,23 +48,40 @@ def apply_color_management_changes(engine, scene):
         # Notify LuxCore to update the frame buffer without restarting
         engine.session.UpdateFilmSettings(props)
 
+def check_color_management_changes(engine, scene):
+    view_settings = scene.view_settings
+
+    # Compare current exposure and gamma to previous values
+    if hasattr(engine, 'last_exposure') and hasattr(engine, 'last_gamma'):
+        if view_settings.exposure != engine.last_exposure or \
+           view_settings.gamma != engine.last_gamma:
+            return True
+    else:
+        # Initialize these attributes if they don't exist yet
+        engine.last_exposure = view_settings.exposure
+        engine.last_gamma = view_settings.gamma
+        return False
+
+    # Update the stored values for the next comparison
+    engine.last_exposure = view_settings.exposure
+    engine.last_gamma = view_settings.gamma
+
+    return False
 
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
 
     if engine.starting_session or engine.viewport_fatal_error:
-        # Prevent deadlock
         return
 
     LuxCoreErrorLog.clear(force_ui_update=False)
 
     if engine.session is None:
         if not engine.viewport_starting_message_shown:
-            # Let one engine.view_draw() happen so it shows a message in the UI
             return
 
         if not engine.is_first_viewport_start:
-            filmsize = utils.calc_filmsize(depsgraph.scene_eval, context)
+            filmsize = utils.calc_filmsize(depsgraph.scene, context)
             was_resized = engine.last_viewport_size != filmsize
             engine.last_viewport_size = filmsize
 
@@ -88,15 +89,13 @@ def view_update(engine, context, depsgraph, changes=None):
                 engine.time_of_last_viewport_resize = time()
                 return
             elif time() - engine.time_of_last_viewport_resize < engine.VIEWPORT_RESIZE_TIMEOUT:
-                # Don't re-export the session before the timeout is done, to prevent constant re-exports while resizing
                 return
-        
+
         try:
             print("=" * 50)
             print("[Engine/Viewport] New session")
             engine.exporter = export.Exporter()
             engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
-            # Start in separate thread to avoid blocking the UI
             engine.starting_session = True
             engine.is_first_viewport_start = False
             import _thread
@@ -113,21 +112,20 @@ def view_update(engine, context, depsgraph, changes=None):
             traceback.print_exc()
         return
 
-    # Check for changes
-    changes = engine.exporter.get_changes(depsgraph, context, changes)
-
-    # Handle color management changes
-    if changes & export.Change.COLOR_MANAGEMENT:
-        apply_color_management_changes(engine, depsgraph.scene_eval)
+    # Check for color management changes
+    if check_color_management_changes(engine, depsgraph.scene):
+        apply_color_management_changes(engine, depsgraph.scene, depsgraph, context)
         engine.tag_redraw()
         return
+
+    # Check for other changes
+    changes = engine.exporter.get_changes(depsgraph, context, changes)
 
     if changes:
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
             force_session_restart(engine)
             return
 
-        # Apply other changes
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
@@ -136,10 +134,9 @@ def view_update(engine, context, depsgraph, changes=None):
 
     print("view_update() took %.1f ms" % ((time() - start) * 1000))
 
-
 def view_draw(engine, context, depsgraph):
-    scene = depsgraph.scene_eval
-    
+    scene = depsgraph.scene
+
     if engine.starting_session:
         engine.tag_redraw()
         return
@@ -154,14 +151,14 @@ def view_draw(engine, context, depsgraph):
         definitions = {}
         luxcore_engine, _ = convert_viewport_engine(context, scene, definitions, config)
         message = ""
-        
+
         if luxcore_engine.endswith("OCL"):
             luxcore_scene = pyluxcore.Scene()
             definitions = {
                 "scene.camera.type": "perspective",
             }
             luxcore_scene.Parse(utils.create_props("", definitions))
-            
+
             devices = scene.luxcore.devices
             definitions = {
                 "renderengine.type": "RTPATHOCL",
@@ -172,11 +169,11 @@ def view_draw(engine, context, depsgraph):
             }
             config_props = utils.create_props("", definitions)
             renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
-            
+
             if not renderconfig.HasCachedKernels():
                 gpu_backend = utils.get_addon_preferences(context).gpu_backend
                 message = f"Compiling {gpu_backend} kernels (just once, usually takes 15-30 minutes)"
-        
+
         engine.update_stats("Starting viewport render", message)
         engine.viewport_starting_message_shown = True
         engine.tag_update()
@@ -188,7 +185,6 @@ def view_draw(engine, context, depsgraph):
 
     framebuffer = engine.framebuffer
 
-    # Check for viewport changes
     changes = engine.exporter.get_viewport_changes(depsgraph, context)
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
