@@ -30,11 +30,10 @@ def force_session_restart(engine):
         engine.session.Stop()
         engine.session = None
 
-def apply_color_management_changes(engine, scene, depsgraph, context):
+def apply_color_management_changes(engine, scene, context):
     view_settings = scene.view_settings
     exposure = view_settings.exposure
     gamma = view_settings.gamma
-    display_device = scene.display_settings.display_device
 
     if engine.session is not None:
         config = engine.session.GetRenderConfig()
@@ -42,44 +41,34 @@ def apply_color_management_changes(engine, scene, depsgraph, context):
         props = pyluxcore.Properties()
         props.Set(pyluxcore.Property("film.imagepipeline.0.gamma", gamma))
         props.Set(pyluxcore.Property("film.imagepipeline.0.exposure", exposure))
-        
-        # Check if display device has changed
-        if display_device != engine.last_display_device:
-            print("Display device changed; restarting session.")
-            force_session_restart(engine)
-            return
 
-        # Apply color management properties
-        props.Set(pyluxcore.Property("film.displaydevice", display_device))
+        # Apply the new properties
+        config.Parse(props)
 
-        try:
-            # Apply properties dynamically
-            config.Parse(props)
-        except Exception as e:
-            print("Could not apply display device settings dynamically:", e)
-            force_session_restart(engine)  # Fallback to full restart
+        # Notify LuxCore to update the frame buffer without restarting
+        if hasattr(engine.session, 'UpdateFilmSettings'):
+            engine.session.UpdateFilmSettings(props)
 
 def check_color_management_changes(engine, scene):
     view_settings = scene.view_settings
-    display_device = scene.display_settings.display_device
 
-    # Compare current settings to previous values
-    if (hasattr(engine, 'last_exposure') and hasattr(engine, 'last_gamma') and hasattr(engine, 'last_display_device')):
-        if (view_settings.exposure != engine.last_exposure or 
+    # Compare current exposure and gamma to previous values
+    if hasattr(engine, 'last_exposure') and hasattr(engine, 'last_gamma') and hasattr(engine, 'last_display_device'):
+        if (view_settings.exposure != engine.last_exposure or
             view_settings.gamma != engine.last_gamma or
-            display_device != engine.last_display_device):
+            view_settings.display_device != engine.last_display_device):
             return True
     else:
         # Initialize these attributes if they don't exist yet
         engine.last_exposure = view_settings.exposure
         engine.last_gamma = view_settings.gamma
-        engine.last_display_device = display_device
+        engine.last_display_device = view_settings.display_device
         return False
 
     # Update the stored values for the next comparison
     engine.last_exposure = view_settings.exposure
     engine.last_gamma = view_settings.gamma
-    engine.last_display_device = display_device
+    engine.last_display_device = view_settings.display_device
 
     return False
 
@@ -129,7 +118,7 @@ def view_update(engine, context, depsgraph, changes=None):
 
     # Check for color management changes
     if check_color_management_changes(engine, depsgraph.scene):
-        apply_color_management_changes(engine, depsgraph.scene, depsgraph, context)
+        apply_color_management_changes(engine, depsgraph.scene, context)
         engine.tag_redraw()
         return
 
@@ -141,6 +130,7 @@ def view_update(engine, context, depsgraph, changes=None):
             force_session_restart(engine)
             return
 
+        # Update session with changes
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
@@ -206,8 +196,9 @@ def view_draw(engine, context, depsgraph):
         engine.tag_redraw()
         force_session_restart(engine)
         return
-    elif changes & export.Change.CAMERA:
-        engine.session = engine.exporter.update(depsgraph, context, engine.session, export.Change.CAMERA)
+    elif changes & (export.Change.CAMERA | export.Change.MATERIAL):
+        # Update session with changes
+        engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
     if utils.in_material_shading_mode(context):
