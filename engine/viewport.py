@@ -53,22 +53,32 @@ def check_color_management_changes(engine, scene):
     view_settings = scene.view_settings
 
     # Compare current exposure and gamma to previous values
-    if hasattr(engine, 'last_exposure') and hasattr(engine, 'last_gamma') and hasattr(engine, 'last_display_device'):
-        if (view_settings.exposure != engine.last_exposure or
-            view_settings.gamma != engine.last_gamma or
-            view_settings.display_device != engine.last_display_device):
+    if hasattr(engine, 'last_exposure') and hasattr(engine, 'last_gamma'):
+        exposure_changed = view_settings.exposure != engine.last_exposure
+        gamma_changed = view_settings.gamma != engine.last_gamma
+
+        # Check for changes in view_transform
+        view_transform_changed = False
+        if hasattr(view_settings, 'view_transform'):
+            view_transform_changed = view_settings.view_transform != engine.last_view_transform
+
+        if exposure_changed or gamma_changed or view_transform_changed:
+            # Check if the view transform is one of the specified ones
+            if view_settings.view_transform in ['AgX', 'Filmic', 'Khronos PBR Neutral']:
+                # Return False if only view transform changed, True otherwise
+                return not view_transform_changed
             return True
     else:
         # Initialize these attributes if they don't exist yet
         engine.last_exposure = view_settings.exposure
         engine.last_gamma = view_settings.gamma
-        engine.last_display_device = view_settings.display_device
+        engine.last_view_transform = getattr(view_settings, 'view_transform', None)
         return False
 
     # Update the stored values for the next comparison
     engine.last_exposure = view_settings.exposure
     engine.last_gamma = view_settings.gamma
-    engine.last_display_device = view_settings.display_device
+    engine.last_view_transform = getattr(view_settings, 'view_transform', None)
 
     return False
 
@@ -127,6 +137,7 @@ def view_update(engine, context, depsgraph, changes=None):
 
     if changes:
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
+            # Only restart the session if the view transform didn't change by itself
             force_session_restart(engine)
             return
 
@@ -138,6 +149,7 @@ def view_update(engine, context, depsgraph, changes=None):
             engine.framebuffer.reset_denoiser()
 
     print("view_update() took %.1f ms" % ((time() - start) * 1000))
+
 
 def view_draw(engine, context, depsgraph):
     scene = depsgraph.scene
