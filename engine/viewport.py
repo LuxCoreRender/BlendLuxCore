@@ -52,33 +52,32 @@ def apply_color_management_changes(engine, scene, context):
 def check_color_management_changes(engine, scene):
     view_settings = scene.view_settings
 
-    # Compare current exposure and gamma to previous values
-    if hasattr(engine, 'last_exposure') and hasattr(engine, 'last_gamma'):
-        exposure_changed = view_settings.exposure != engine.last_exposure
-        gamma_changed = view_settings.gamma != engine.last_gamma
-
-        # Check for changes in view_transform
-        view_transform_changed = False
-        if hasattr(view_settings, 'view_transform'):
-            view_transform_changed = view_settings.view_transform != engine.last_view_transform
-
-        if exposure_changed or gamma_changed or view_transform_changed:
-            # Check if the view transform is one of the specified ones
-            if view_settings.view_transform in ['AgX', 'Filmic', 'Khronos PBR Neutral']:
-                # Return False if only view transform changed, True otherwise
-                return not view_transform_changed
-            return True
-    else:
-        # Initialize these attributes if they don't exist yet
+    # Initialize these attributes if they don't exist yet
+    if not hasattr(engine, 'last_exposure'):
         engine.last_exposure = view_settings.exposure
+    if not hasattr(engine, 'last_gamma'):
         engine.last_gamma = view_settings.gamma
+    if not hasattr(engine, 'last_view_transform'):
         engine.last_view_transform = getattr(view_settings, 'view_transform', None)
-        return False
+
+    # Check if the exposure, gamma, or view transform have changed
+    exposure_changed = view_settings.exposure != engine.last_exposure
+    gamma_changed = view_settings.gamma != engine.last_gamma
+    view_transform_changed = view_settings.view_transform != engine.last_view_transform
 
     # Update the stored values for the next comparison
     engine.last_exposure = view_settings.exposure
     engine.last_gamma = view_settings.gamma
-    engine.last_view_transform = getattr(view_settings, 'view_transform', None)
+    engine.last_view_transform = view_settings.view_transform
+
+    # If any of the values changed, return True
+    if exposure_changed or gamma_changed or view_transform_changed:
+        # Handle view transform changes separately
+        if view_transform_changed:
+            if view_settings.view_transform in ['AgX', 'Filmic', 'Khronos PBR Neutral']:
+                # Return False if only the view transform changed, True otherwise
+                return not (exposure_changed or gamma_changed)
+        return True
 
     return False
 
