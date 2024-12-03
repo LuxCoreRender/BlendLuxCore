@@ -9,10 +9,8 @@ class LuxCoreNodeTexObjectID(LuxCoreNodeTexture, bpy.types.Node):
     bl_width_default = 150
 
     def change_mode(self, context):
-        id = self.outputs.find("Value")
-        value_output = self.outputs[id]
-        id = self.outputs.find("Color")
-        color_output = self.outputs[id]
+        value_output = self.outputs["Value"]
+        color_output = self.outputs["Color"]
         was_value_enabled = value_output.enabled
 
         color_output.enabled = self.mode == "objectidcolor"

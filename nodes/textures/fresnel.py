@@ -13,8 +13,7 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture, bpy.types.Node):
     bl_width_default = 180
     
     def change_input_type(self, context):
-        id = self.inputs.find("Reflection Color")
-        self.inputs[id].enabled = self.input_type == "color"
+        self.inputs["Reflection Color"].enabled = self.input_type == "color"
         utils_node.force_viewport_update(self, context)
 
     input_type_items = [

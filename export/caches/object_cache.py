@@ -470,6 +470,7 @@ class ObjectCache2:
             for idx, (shape_name, mat_index) in enumerate(exported_mesh.mesh_definitions):
                 shape = shape_name
                 lux_mat_name, mat_props, node_tree = export_material(obj, mat_index, exporter, depsgraph, is_viewport_render)
+                print(lux_mat_name)
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
 

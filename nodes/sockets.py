@@ -212,13 +212,6 @@ class LuxCoreSocketBumpHeight(bpy.types.NodeSocket, LuxCoreSocketFloat):
                                  precision=FLOAT_UI_PRECISION)
 
 
-class LuxCoreSocketFloatDisneySheen(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, max=100, soft_max=10.0, description="Sheen value",
-                                 update=utils_node.force_viewport_update,
-                                 precision=FLOAT_UI_PRECISION)
-    slider = True
-
-
 class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.vector_texture
     default_value: FloatVectorProperty(name="", subtype="XYZ",

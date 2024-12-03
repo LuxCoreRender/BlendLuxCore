@@ -50,7 +50,6 @@ classes = (
     sockets.LuxCoreSocketFloat0to1,
     sockets.LuxCoreSocketFloat0to2,
     sockets.LuxCoreSocketBumpHeight,
-    sockets.LuxCoreSocketFloatDisneySheen,
     sockets.LuxCoreSocketVector,
     sockets.LuxCoreSocketRoughness,
     sockets.LuxCoreSocketIOR,

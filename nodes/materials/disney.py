@@ -9,8 +9,7 @@ class LuxCoreNodeMatDisney(LuxCoreNodeMaterial, bpy.types.Node):
     bl_width_default = 190
     
     def update_use_thinfilmcoating(self, context):
-        id = self.inputs.find("Film Amount")
-        self.inputs[id].enabled = self.use_thinfilmcoating
+        self.inputs["Film Amount"].enabled = self.use_thinfilmcoating
         ThinFilmCoating.toggle(self, context)
     
     use_thinfilmcoating: BoolProperty(name="Thin Film Coating", default=False,
@@ -25,7 +24,7 @@ class LuxCoreNodeMatDisney(LuxCoreNodeMaterial, bpy.types.Node):
         self.add_input("LuxCoreSocketFloat0to1", "Specular Tint", 0)
         self.add_input("LuxCoreSocketFloat0to1", "Roughness", 0.2)
         self.add_input("LuxCoreSocketFloat0to1", "Anisotropic", 0)
-        self.add_input("LuxCoreSocketFloatDisneySheen", "Sheen", 0)
+        self.add_input("LuxCoreSocketFloatPositive", "Sheen", 0)
         self.add_input("LuxCoreSocketFloat0to1", "Sheen Tint", 0)
         self.add_input("LuxCoreSocketFloat0to1", "Clearcoat", 0)
         self.add_input("LuxCoreSocketFloat0to1", "Clearcoat Gloss", 1)

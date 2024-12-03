@@ -9,12 +9,9 @@ class LuxCoreNodeMatVelvet(LuxCoreNodeMaterial, bpy.types.Node):
     bl_width_default = 160
 
     def update_advanced(self, context):
-        sockets = ["p1", "p2", "p3"]
-
-        for socket in sockets:
-            id = self.inputs.find(socket)
-            self.inputs[id].enabled = self.advanced
-
+        self.inputs["p1"].enabled = self.advanced
+        self.inputs["p2"].enabled = self.advanced
+        self.inputs["p3"].enabled = self.advanced
         utils_node.force_viewport_update(self, context)
 
     advanced: BoolProperty(name="Advanced Options", description="Advanced Velvet Parameters", default=False, update=update_advanced)

@@ -80,7 +80,6 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial, bpy.types.Node):
         self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
-        Roughness.update_anisotropy(self, context)
 
     def draw_buttons(self, context, layout):
         column = layout.row()

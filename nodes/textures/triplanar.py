@@ -14,10 +14,8 @@ class LuxCoreNodeTexTriplanar(LuxCoreNodeTexture, bpy.types.Node):
         else:
             self.inputs["Color X"].name = "Color"
 
-        id = self.inputs.find("Color Y")
-        self.inputs[id].enabled = self.multiple_textures
-        id = self.inputs.find("Color Z")
-        self.inputs[id].enabled = self.multiple_textures
+        self.inputs["Color Y"].enabled = self.multiple_textures
+        self.inputs["Color Z"].enabled = self.multiple_textures
         utils_node.force_viewport_update(self, context)
 
     multiple_textures: BoolProperty(update=update_multiple_textures, name="Multiple Textures", default=False,
