@@ -1,6 +1,7 @@
 import bgl
 import gpu
 from gpu_extras.batch import batch_for_shader
+
 import math
 import os
 import numpy as np
@@ -42,7 +43,9 @@ class TempfileManager:
             TempfileManager.delete_files(object_id)
 
 
-class FrameBuffer:
+class FrameBuffer(object):
+    """ FrameBuffer used for viewport render """
+
     def __init__(self, engine, context, scene):
         filmsize = utils.calc_filmsize(scene, context)
         self._width, self._height = filmsize
@@ -113,6 +116,7 @@ class FrameBuffer:
             if self._transparent != scene.camera.data.luxcore.imagepipeline.transparent_film:
                 return True
         elif self._transparent:
+            # By default (if no camera is available), the film is not transparent
             return True
         new_border = utils.calc_blender_border(scene, context)
         if self._border != new_border:
@@ -134,7 +138,9 @@ class FrameBuffer:
         border_min_x, border_max_x, border_min_y, border_max_y = border
 
         if context.region_data.view_perspective == "CAMERA" and render.use_border:
+            # Offset is only needed if viewport is in camera mode and uses border rendering
             sensor_fit = scene.camera.data.sensor_fit
+
             aspectratio, aspect_x, aspect_y = utils.calc_aspect(
                 render.resolution_x * render.pixel_aspect_x,
                 render.resolution_y * render.pixel_aspect_y,
@@ -155,6 +161,7 @@ class FrameBuffer:
             offset_x = region_width * border_min_x + 1
             offset_y = region_height * border_min_y + 1
 
+        # offset_x, offset_y are in pixels
         return int(offset_x), int(offset_y)
 
     def _cam_border_offset(self, aspect, base, border_min, region_width, view_camera_offset, zoom):
