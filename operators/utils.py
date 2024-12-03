@@ -136,7 +136,7 @@ class LUXCORE_MT_node_tree:
     bl_idname = "LUXCORE_MT_node_tree"
     bl_label = "Select Node Tree"
     bl_description = "Select a node tree"
-    # bl_options = {"UNDO"}
+    bl_options = {"UNDO"}
 
     def draw(self, context):
         # Has to be present for class registration

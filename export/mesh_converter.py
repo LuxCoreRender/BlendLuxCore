@@ -5,12 +5,22 @@ from .caches.exported_data import ExportedMesh
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
 
+
+def fast_custom_normals_supported():
+    version = bpy.app.version
+    if version == (2, 82, 7):
+        return True
+    if version[:2] == (2, 83):
+        return True
+    return False
+
+
 def get_custom_normals_slow(mesh):
-    """
-    Slow fallback that reads custom normals via Python, used if fast
+    """ 
+    Slow fallback that reads custom normals via Python, used if fast 
     custom normal reading via C++ is not supported for this Blender version
     """
-
+    
     if not mesh.has_custom_normals:
         return None
 
@@ -20,7 +30,7 @@ def get_custom_normals_slow(mesh):
     for loop_tri in mesh.loop_triangles:
         loops = loop_tri.loops
         split_normals = loop_tri.split_normals
-
+        
         start = loops[0] * 3
         custom_normals[start:start + 3] = split_normals[0][:]
         start = loops[1] * 3
@@ -37,13 +47,12 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
-
+        
         custom_normals = None
-        if mesh.has_custom_normals:
+        if mesh.has_custom_normals and not fast_custom_normals_supported():
             start = time()
             custom_normals = get_custom_normals_slow(mesh)
             elapsed = time() - start
-
             if elapsed > 0.3:
                 LuxCoreErrorLog.add_warning("Slow custom normal export in this Blender version (took %.1f s)"
                                             % elapsed, obj_name=obj.name)
@@ -140,24 +149,22 @@ def _prepare_mesh(obj, depsgraph):
                 # if not mesh.has_custom_normals and object_eval.matrix_world.determinant() < 0.0:
                 #     # Does not handle custom normals
                 #     mesh.flip_normals()
-
+                
                 mesh.calc_loop_triangles()
                 if not mesh.loop_triangles:
                     object_eval.to_mesh_clear()
                     mesh = None
 
-            # TODO implement new normals handling
-            # if mesh:
-            #     if mesh.has_custom_normals:
-            #         mesh.calc_normals_split()
-            #     else:
-            #         if mesh.use_auto_smooth:
-            #             mesh.split_faces()
-            #
-            #     mesh.calc_loop_triangles()
-            #
-            #     if mesh.has_custom_normals:
-            #         mesh.calc_normals_split()
+            if mesh:
+                if mesh.use_auto_smooth:
+                    if not mesh.has_custom_normals:
+                        mesh.calc_normals()
+                    mesh.split_faces()
+                
+                mesh.calc_loop_triangles()
+                
+                if mesh.has_custom_normals:
+                    mesh.calc_normals_split()
 
         yield mesh
     finally:

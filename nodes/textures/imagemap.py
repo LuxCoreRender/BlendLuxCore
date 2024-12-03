@@ -66,13 +66,9 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
                               description="Brightness multiplier")
 
     def update_is_normal_map(self, context):
-        id = self.outputs.find("Color")
-        color_output = self.outputs[id]
-        id = self.outputs.find("Bump")
-        bump_output = self.outputs[id]
-        id = self.outputs.find("Alpha")
-        alpha_output = self.outputs[id]
-
+        color_output = self.outputs["Color"]
+        bump_output = self.outputs["Bump"]
+        alpha_output = self.outputs["Alpha"]
         was_color_enabled = color_output.enabled
 
         color_output.enabled = not self.is_normal_map

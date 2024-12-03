@@ -18,15 +18,10 @@ class LuxCoreNodeTexTriplanarBump(LuxCoreNodeTexture, bpy.types.Node):
             self.inputs["Value X"].name = "Value"
             self.inputs["Bump Height X"].name = "Bump Height"
 
-        id = self.inputs.find("Value Y")
-        self.inputs[id].enabled = self.multiple_textures
-        id = self.inputs.find("Bump Height Y")
-        self.inputs[id].enabled = self.multiple_textures
-        id = self.inputs.find("Value Z")
-        self.inputs[id].enabled = self.multiple_textures
-        id = self.inputs.find("Bump Height Z")
-        self.inputs[id].enabled = self.multiple_textures
-
+        self.inputs["Value Y"].enabled = self.multiple_textures
+        self.inputs["Bump Height Y"].enabled = self.multiple_textures
+        self.inputs["Value Z"].enabled = self.multiple_textures
+        self.inputs["Bump Height Z"].enabled = self.multiple_textures
         utils_node.force_viewport_update(self, context)
 
     multiple_textures: BoolProperty(update=update_multiple_textures, name="Multiple Textures", default=False,
