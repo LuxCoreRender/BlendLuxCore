@@ -5,7 +5,7 @@ from ..export.aovs import get_denoiser_imgpipeline_props
 from ..properties.denoiser import LuxCoreDenoiser
 from ..properties.display import LuxCoreDisplaySettings
 from ..utils import view_layer as utils_view_layer
-
+import numpy as np
 
 class AOV:
     """ Storage class for info about an Arbitrary Output Variable """
@@ -47,6 +47,7 @@ class FrameBufferFinal(object):
         pipeline = scene.camera.data.luxcore.imagepipeline
         self._transparent = pipeline.transparent_film
 
+
         if self._transparent:
             self._combined_output_type = pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
             self._convert_combined = pyluxcore.ConvertFilmChannelOutput_4xFloat_To_4xFloatList
@@ -67,8 +68,20 @@ class FrameBufferFinal(object):
         render_layer = result.layers[0]
 
         combined = render_layer.passes["Combined"]
-        self._convert_combined(session.GetFilm(), self._combined_output_type, 0,
-                               self._width, self._height, combined.as_pointer(), False, True)
+        film = session.GetFilm()
+        if self._combined_output_type == pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE:
+            size = self._width * self._height
+            pixels = np.zeros([size, 3], dtype=np.float32)
+            film.GetOutputFloat(self._combined_output_type, pixels)
+            pixels = np.c_[pixels, np.ones(size)]
+            combined.rect = pixels
+        elif self._combined_output_type == pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE:
+            size = self._width * self._height
+            pixels = np.zeros([size, 4], dtype=np.float32)
+            film.GetOutputFloat(self._combined_output_type, pixels)
+            combined.rect = pixels
+        else:
+            raise ValueError(f"Unhandled Output Type {self._combined_output_type}")
 
         # Import AOVs only in final render, not in material preview mode
         if not engine.is_preview:
