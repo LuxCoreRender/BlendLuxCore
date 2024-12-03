@@ -10,8 +10,10 @@ class LuxCoreNodeTexHitpoint(LuxCoreNodeTexture, bpy.types.Node):
     bl_width_default = 150
 
     def change_mode(self, context):
-        value_output = self.outputs["Value"]
-        color_output = self.outputs["Color"]
+        id = self.outputs.find("Value")
+        value_output = self.outputs[id]
+        id = self.outputs.find("Color")
+        color_output = self.outputs[id]
         was_value_enabled = value_output.enabled
 
         color_output.enabled = self.mode == "hitpointcolor"
