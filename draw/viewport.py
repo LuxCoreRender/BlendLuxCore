@@ -7,8 +7,8 @@ import numpy as np
 import subprocess
 import tempfile
 from shutil import which
-from os.path import dirname, join
-from ..bin import pyluxcore
+from os.path import dirname
+import pyluxcore
 from .. import utils
 from ..utils import pfm
 

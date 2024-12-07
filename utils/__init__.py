@@ -5,7 +5,7 @@ import re
 import hashlib
 import os
 from os.path import basename, dirname
-from ..bin import pyluxcore
+import pyluxcore
 from . import view_layer
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}

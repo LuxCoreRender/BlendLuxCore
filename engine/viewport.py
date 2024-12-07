@@ -1,7 +1,7 @@
 import numpy as np
 from time import time
 from concurrent.futures import ThreadPoolExecutor
-from ..bin import pyluxcore
+import pyluxcore
 from .. import export
 from ..draw.viewport import FrameBuffer
 from .. import utils

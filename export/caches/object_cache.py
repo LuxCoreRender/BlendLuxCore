@@ -4,7 +4,7 @@ from functools import lru_cache
 from time import time
 
 from ... import utils
-from ...bin import pyluxcore
+import pyluxcore
 from .. import mesh_converter
 from ..hair import (
     convert_hair, warn_about_missing_uvs, set_hair_props, 

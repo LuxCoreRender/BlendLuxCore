@@ -1,7 +1,7 @@
 import bpy
 from mathutils import Matrix
 import math
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from .caches.exported_data import ExportedObject, ExportedLight
 from .image import ImageExporter
