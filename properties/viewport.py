@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import IntProperty, EnumProperty, BoolProperty, FloatProperty
 from .. import utils
-from ..bin import pyluxcore
+import pyluxcore
 
 class LuxCoreViewportSettings(bpy.types.PropertyGroup):
     halt_time: IntProperty(name="Halt Time (s)", default=10, min=1,

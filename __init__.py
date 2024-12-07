@@ -50,7 +50,7 @@ if platform.system() in {"Linux", "Darwin"}:
 
 
 try:
-    from .bin import pyluxcore
+    import pyluxcore
 except ImportError as error:
     msg = "\n\nCould not import pyluxcore."
     if platform.system() == "Windows":

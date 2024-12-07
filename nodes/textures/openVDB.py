@@ -5,7 +5,7 @@ from math import radians
 from bpy.props import EnumProperty, PointerProperty, StringProperty, IntProperty, BoolProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
-from ...bin import pyluxcore
+import pyluxcore
 
 from ...ui import icons
 from ...utils.errorlog import LuxCoreErrorLog

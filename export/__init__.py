@@ -1,6 +1,6 @@
 import bpy
 from time import time
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from ..utils import render as utils_render
 from ..utils import compatibility as utils_compatibility

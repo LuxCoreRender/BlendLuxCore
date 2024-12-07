@@ -1,4 +1,4 @@
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from ..nodes.output import get_active_output
 from . import light

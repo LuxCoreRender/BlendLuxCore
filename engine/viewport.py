@@ -1,5 +1,5 @@
 from time import time
-from ..bin import pyluxcore
+import pyluxcore
 from .. import export
 from ..draw.viewport import FrameBuffer
 from .. import utils

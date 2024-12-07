@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import StringProperty, CollectionProperty, BoolProperty
 from bpy.types import PropertyGroup
-from ..bin import pyluxcore
+import pyluxcore
 from ..utils import get_addon_preferences
 
 

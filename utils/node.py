@@ -1,6 +1,6 @@
 import bpy
 import mathutils
-from ..bin import pyluxcore
+import pyluxcore
 from .errorlog import LuxCoreErrorLog
 from ..ui import icons
 

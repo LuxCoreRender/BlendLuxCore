@@ -4,7 +4,7 @@ from time import time
 from bpy.props import EnumProperty, PointerProperty, StringProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
-from ...bin import pyluxcore
+import pyluxcore
 from ...export import smoke
 from ...utils import node as utils_node
 from ...ui import icons

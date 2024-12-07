@@ -1,6 +1,6 @@
 import math
 from mathutils import Vector, Matrix
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from ..nodes.output import get_active_output
 from ..utils.errorlog import LuxCoreErrorLog
