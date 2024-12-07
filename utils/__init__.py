@@ -675,7 +675,9 @@ def in_material_shading_mode(context):
 
 
 def get_addon_preferences(context):
-    addon_name = basename(dirname(dirname(__file__)))
+    package_name_components = __package__.split(".")
+    package_name_components.pop()
+    addon_name = ".".join(package_name_components)
     return context.preferences.addons[addon_name].preferences
 
 
