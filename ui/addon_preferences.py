@@ -11,10 +11,8 @@ film_device_items = []
 
 
 class LuxCoreAddonPreferences(AddonPreferences):
-    # Must be the addon directory name
-    # (by default "BlendLuxCore", but a user/dev might change the folder name)
-    # We use dirname() two times to go up one level in the file system
-    bl_idname = basename(dirname(dirname(__file__)))
+    # id name for 4.2
+    bl_idname = "bl_ext.user_default.BlendLuxCore"
 
     gpu_backend_items = [
         ("OPENCL", "OpenCL", "Use OpenCL for GPU acceleration", 0),
