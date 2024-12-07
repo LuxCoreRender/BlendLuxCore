@@ -82,23 +82,7 @@ from . import properties, engine, handlers, operators, ui, nodes
 
 
 def register():
-    engine.register()
-    handlers.register()
-    operators.register()
-    properties.register()
-    ui.register()
-    nodes.register()
-
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
     version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
     print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
-
-
-def unregister():
-    engine.unregister()
-    handlers.unregister()
-    operators.unregister()
-    properties.unregister()
-    ui.unregister()
-    nodes.unregister()
