@@ -77,6 +77,7 @@ bl_info = {
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
+bl_info2 = bl_info
 
 from . import properties, engine, handlers, operators, ui, nodes
 
@@ -84,5 +85,5 @@ from . import properties, engine, handlers, operators, ui, nodes
 def register():
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
-    version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
+    version_string = f'{bl_info2["version"][0]}.{bl_info2["version"][1]}{bl_info2["warning"]}'
     print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
