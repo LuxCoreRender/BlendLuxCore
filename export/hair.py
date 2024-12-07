@@ -4,7 +4,7 @@ import math
 import numpy as np
 from .. import utils
 from ..utils import node as utils_node
-from ..bin import pyluxcore
+import pyluxcore
 from .image import ImageExporter
 from time import time
 from ..utils.errorlog import LuxCoreErrorLog

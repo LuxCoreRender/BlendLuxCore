@@ -1,5 +1,5 @@
 from time import time, sleep
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from ..export.aovs import get_denoiser_imgpipeline_props
 from ..properties.denoiser import LuxCoreDenoiser

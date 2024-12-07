@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import BoolProperty, PointerProperty, IntProperty, FloatVectorProperty
-from ...bin import pyluxcore
+import pyluxcore
 from ... import utils
 from ...utils import node as utils_node
 from ..output import LuxCoreNodeOutput, update_active, get_active_output

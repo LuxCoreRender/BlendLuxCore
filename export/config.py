@@ -3,7 +3,7 @@ import errno
 from math import degrees
 import bpy
 from collections import OrderedDict
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from . import aovs
 from .imagepipeline import use_backgroundimage

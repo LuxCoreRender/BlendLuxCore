@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from .image import ImageExporter
 from ..utils.errorlog import LuxCoreErrorLog

@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from . import imagepipeline
 from .imagepipeline import use_backgroundimage

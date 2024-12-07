@@ -1,4 +1,4 @@
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
 from ..nodes.output import get_active_output
