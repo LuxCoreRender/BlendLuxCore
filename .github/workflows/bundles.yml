@@ -80,3 +80,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ${{ github.workspace }}/BlendLuxCore-*.zip
+          name: blc-${{ matrix.platform }}
