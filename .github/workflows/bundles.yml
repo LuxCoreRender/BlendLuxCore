@@ -29,13 +29,14 @@ jobs:
 
     env:
       WHEELS_VERSION: 2.9a1.post5
+      WORKSPACE: ${{ github.workspace }}/${{ matrix.platform }}
 
     steps:
 
       - name: Checkout main repository
         uses: actions/checkout@v4
         with:
-          path: ${{ matrix.platform }}
+          path: ${{ env.WORKSPACE }}
 
       - name: Prepare Blender install
         run: |
@@ -51,7 +52,7 @@ jobs:
       - name: Retrieve wheel
         shell: bash
         run: |
-          dest=${{ matrix.platform }}/BlendLuxCore/wheels
+          dest=${{ env.WORKSPACE }}/BlendLuxCore/wheels
 
           mkdir -p ${dest}
           pip download "pyluxcore==${WHEELS_VERSION}" \
@@ -77,10 +78,10 @@ jobs:
         run: |
           echo "${{ github.workspace }}"
           blender --command extension build \
-            --source-dir "${{ matrix.platform }}/BlendLuxCore"
+            --source-dir "${{ env.WORKSPACE }}/BlendLuxCore"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          path: ${{ matrix.platform }}/BlendLuxCore-*.zip
+          path: ${{ env.WORKSPACE }}/BlendLuxCore-*.zip
           name: blc-${{ matrix.platform }}
