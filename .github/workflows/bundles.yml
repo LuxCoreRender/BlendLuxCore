@@ -18,6 +18,14 @@ jobs:
   build_bundles:
     name: Build bundles
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [
+          macosx_11_0_arm64,
+          macosx_10_13_x86_64,
+          manylinux_2_28_x86_64,
+          win_amd64
+        ]
 
     env:
       WHEELS_VERSION: 2.9a1.post5
@@ -40,46 +48,35 @@ jobs:
 
       - run: blender --version
 
-      - name: Retrieve wheels
+      - name: Retrieve wheel
         shell: bash
         run: |
-          platforms=(
-            macosx_11_0_arm64
-            macosx_10_13_x86_64
-            manylinux_2_28_x86_64
-            win_amd64
-          )
-          dest="${{ github.workspace }}/BlendLuxCore/wheels"
-          for platform in "${platforms[@]}"
-          do
-            echo "Downloading pyluxcore for ${platform} - Python 3.11"
-            pip download "pyluxcore==${WHEELS_VERSION}" \
-              --no-deps \
-              --dest ${dest} \
-              --only-binary=:all: \
-              --python-version=3.11 \
-              --platform=$platform
-          done
-
-          # This one is for linux distro that would recompile Blender against
-          # 3.12 (like ArchLinux)
-          echo "Downloading pyluxcore for ${platform} - Python 3.12"
           pip download "pyluxcore==${WHEELS_VERSION}" \
             --no-deps \
             --dest ${dest} \
             --only-binary=:all: \
-            --python-version=3.12 \
-            --platform=manylinux_2_28_x86_64
+            --python-version=3.11 \
+            --platform=$platform
+
+          # This one is for linux distro that would recompile Blender against
+          # 3.12 (like ArchLinux)
+          if [[ ${{ matrix.platform }} == 'manylinux_2_28_x86_64' ]]; do
+            pip download "pyluxcore==${WHEELS_VERSION}" \
+              --no-deps \
+              --dest ${dest} \
+              --only-binary=:all: \
+              --python-version=3.12 \
+              --platform=manylinux_2_28_x86_64
+          fi
 
       - name: Package bundles
         shell: bash
         run: |
           echo "${{ github.workspace }}"
           blender --command extension build \
-            --split-platform \
             --source-dir "${{ github.workspace }}/BlendLuxCore"
 
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          path: "${{ github.workspace }}/BlendLuxCore-*.zip"
+          path: ${{ github.workspace }}/BlendLuxCore-*.zip
