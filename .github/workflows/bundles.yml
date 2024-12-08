@@ -51,6 +51,9 @@ jobs:
       - name: Retrieve wheel
         shell: bash
         run: |
+          dest=${{ github.workspace }}/BlendLuxCore/wheels
+
+          mkdir -p ${dest}
           pip download "pyluxcore==${WHEELS_VERSION}" \
             --no-deps \
             --dest ${dest} \
