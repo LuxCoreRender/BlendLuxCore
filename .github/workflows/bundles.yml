@@ -60,7 +60,7 @@ jobs:
 
           # This one is for linux distro that would recompile Blender against
           # 3.12 (like ArchLinux)
-          if [[ ${{ matrix.platform }} == 'manylinux_2_28_x86_64' ]]; do
+          if [[ ${{ matrix.platform }} == 'manylinux_2_28_x86_64' ]]; then
             pip download "pyluxcore==${WHEELS_VERSION}" \
               --no-deps \
               --dest ${dest} \
