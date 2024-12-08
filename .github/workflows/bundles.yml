@@ -56,7 +56,7 @@ jobs:
             --dest ${dest} \
             --only-binary=:all: \
             --python-version=3.11 \
-            --platform=$platform
+            --platform=${{ matrix.platform }}
 
           # This one is for linux distro that would recompile Blender against
           # 3.12 (like ArchLinux)
