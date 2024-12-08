@@ -16,7 +16,7 @@ on:
 
 jobs:
   build_bundles:
-    name: Build bundles
+    name: Build bundle ${{ matrix.platform }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -35,7 +35,7 @@ jobs:
       - name: Checkout main repository
         uses: actions/checkout@v4
         with:
-          path: BlendLuxCore
+          path: ${{ matrix.platform }}
 
       - name: Prepare Blender install
         run: |
@@ -51,7 +51,7 @@ jobs:
       - name: Retrieve wheel
         shell: bash
         run: |
-          dest=${{ github.workspace }}/BlendLuxCore/wheels
+          dest=${{ matrix.platform }}/BlendLuxCore/wheels
 
           mkdir -p ${dest}
           pip download "pyluxcore==${WHEELS_VERSION}" \
@@ -77,10 +77,10 @@ jobs:
         run: |
           echo "${{ github.workspace }}"
           blender --command extension build \
-            --source-dir "${{ github.workspace }}/BlendLuxCore"
+            --source-dir "${{ matrix.platform }}/BlendLuxCore"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          path: ${{ github.workspace }}/BlendLuxCore-*.zip
+          path: ${{ matrix.platform }}/BlendLuxCore-*.zip
           name: blc-${{ matrix.platform }}
