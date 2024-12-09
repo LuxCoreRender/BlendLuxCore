@@ -1,5 +1,7 @@
 ![Watermark](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender-logo_orange_grey-shiny.png)
 
+![Example](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender_caustics_scene.jpg)
+
 <sup> [LuxCoreRender.org](https://luxcorerender.org/) | [Forums](https://forums.luxcorerender.org/) | [Wiki](http://wiki.luxcorerender.org/LuxCoreRender_Wiki) </sup>
 
 ## BlendLuxCore
