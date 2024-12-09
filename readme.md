@@ -28,12 +28,9 @@ This addon integrates the LuxCore render engine into Blender. It offers advanced
  
 * Blender 2.79 is supported by [BlendLuxCore v2.0](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.0), [BlendLuxCore v2.1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.1) and [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2)
 
-### Installation and usage are available here:
-https://wiki.luxcorerender.org/Category:BlendLuxCore
+### [Installation and usage](https://wiki.luxcorerender.org/Category:BlendLuxCore)
 
-### Gallery
-[gallery](https://luxcorerender.org/gallery/).  
+### [Gallery](https://luxcorerender.org/gallery/)  
 
-### Download example test scenes 
-[example scenes](https://luxcorerender.org/example-scenes/).
+### [Download example test scenes](https://luxcorerender.org/example-scenes/)
 
