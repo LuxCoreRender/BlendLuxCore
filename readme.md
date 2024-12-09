@@ -31,9 +31,9 @@ This addon integrates the LuxCore render engine into Blender. It offers advanced
 ### Installation and usage are available here:
 https://wiki.luxcorerender.org/Category:BlendLuxCore
 
-### Examples
+### Gallery
+[gallery](https://luxcorerender.org/gallery/).  
 
-To see what can be achieved with LuxCore, check our [gallery](https://luxcorerender.org/gallery/).  
-
-You can also download complete [example scenes](https://luxcorerender.org/example-scenes/).
+### Download example test scenes 
+[example scenes](https://luxcorerender.org/example-scenes/).
 
