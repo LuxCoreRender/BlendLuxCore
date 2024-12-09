@@ -37,4 +37,3 @@ To see what can be achieved with LuxCore, check our [gallery](https://luxcoreren
 
 You can also download complete [example scenes](https://luxcorerender.org/example-scenes/).
 
-![Example Render](https://luxcorerender.org/wp-content/uploads/2019/10/dark_mode.jpg)
