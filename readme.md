@@ -12,21 +12,25 @@ This addon integrates the LuxCore render engine into Blender. It offers advanced
 
 * Blender 4.0 is supported by [BlendLuxCore v2.8 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.8alpha1)
 
-* Blender 3.6 LTS is experimentally supported by the latest branch [development release](https://github.com/LuxCoreRender/BlendLuxCore/releases).
-* Blender 2.93 is supported by BlendLuxCore v2.6.
-* Blender 2.83-2.92 are supported by BlendLuxCore v2.5.
-* Blender 2.83 is supported by BlendLuxCore v2.4.
-* Blender 2.80, 2.81 and 2.82 are supported by BlendLuxCore v2.2 and v2.3.  
-* Blender 2.79 is supported by BlendLuxCore v2.0, v2.1 and v2.2.  
+* Blender 3.6 LTS is experimentally supported by [BlendLuxCore v2.7 beta1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.7beta1)
 
-### Download
+* Blender 2.93 is supported by [BlendLuxCore v2.6](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.6)
 
-See the [release section](https://github.com/LuxCoreRender/BlendLuxCore/releases) for stable and experimental versions.  
-Information about installation and usage are available [in the manual](https://wiki.luxcorerender.org/Category:BlendLuxCore).
+* Blender 2.83-2.92 are supported by [BlendLuxCore v2.5](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.5)
+
+* Blender 2.83 is supported by [BlendLuxCore v2.4](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.4)
+
+* Blender 2.80, 2.81 and 2.82 are supported by [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2) and [BlendLuxCore v2.3](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.3)
+ 
+* Blender 2.79 is supported by [BlendLuxCore v2.0](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.0), [BlendLuxCore v2.1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.1) and [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2)
+
+### Installation and usage are available here:
+https://wiki.luxcorerender.org/Category:BlendLuxCore
 
 ### Examples
 
 To see what can be achieved with LuxCore, check our [gallery](https://luxcorerender.org/gallery/).  
+
 You can also download complete [example scenes](https://luxcorerender.org/example-scenes/).
 
 ![Example Render](https://luxcorerender.org/wp-content/uploads/2019/10/dark_mode.jpg)
