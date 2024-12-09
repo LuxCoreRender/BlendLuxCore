@@ -1,3 +1,5 @@
+(https://luxcorerender.org/wp-content/uploads/2017/12/luxcorerender-logo_orange_grey-shiny.png)
+
 <sup> [LuxCoreRender.org](https://luxcorerender.org/) | [Forums](https://forums.luxcorerender.org/) | [Wiki](http://wiki.luxcorerender.org/LuxCoreRender_Wiki) </sup>
 
 ## BlendLuxCore
