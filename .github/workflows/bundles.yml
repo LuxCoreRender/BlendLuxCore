@@ -79,7 +79,36 @@ jobs:
             --split-platform \
             --source-dir "${{ github.workspace }}/BlendLuxCore"
 
-      - name: Upload artifacts
+      - name: Separate platforms
+        shell: bash
+        run: |
+          for file_name in ${{ github.workspace }}/BlendLuxCore-*.zip; do
+            base_name=$(basename -- "${file_name}")
+            target_folder=${base_name%.*}
+            echo "Unzipping '${file_name}' into '${target_folder}'"
+            unzip -q ${file_name} -d ${target_folder}
+          done
+
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          path: "${{ github.workspace }}/BlendLuxCore-*.zip"
+          name: "BlendLuxCore-linux_x64"
+          path: "${{ github.workspace }}/BlendLuxCore-*-linux_x64"
+
+      - name: Upload MacOS arm64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "BlendLuxCore-macos_arm64"
+          path: "${{ github.workspace }}/BlendLuxCore-*-macos_arm64"
+
+      - name: Upload MacOS X64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "BlendLuxCore-macos_x64"
+          path: "${{ github.workspace }}/BlendLuxCore-*-macos_x64"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "BlendLuxCore-windows_x64"
+          path: "${{ github.workspace }}/BlendLuxCore-*-windows_x64"
