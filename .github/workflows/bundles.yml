@@ -19,96 +19,42 @@ jobs:
     name: Build bundles
     runs-on: ubuntu-latest
 
-    env:
-      WHEELS_VERSION: 2.9a1.post5
-
     steps:
 
       - name: Checkout main repository
         uses: actions/checkout@v4
-        with:
-          path: BlendLuxCore
 
       - name: Prepare Blender install
+        uses: gerlero/apt-install@v1
+        with:
+          packages: libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libgl1
+
+      - name: Prepare Python
+        run: touch requirements.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Fetch build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libgl1
+          pip install --upgrade pip
+          pip install tomlkit
 
       - uses: moguri/setup-blender@v1
         with:
           blender-version: '4.2.4'
 
+      - uses: ./.github/actions/generate-bundles
+        with:
+          python-version: '3.11'
+
+      - uses: ./.github/actions/generate-bundles
+        with:
+          python-version: '3.12'
+
       - run: blender --version
 
-      - name: Retrieve wheels
-        shell: bash
-        run: |
-          platforms=(
-            macosx_11_0_arm64
-            macosx_10_13_x86_64
-            manylinux_2_28_x86_64
-            win_amd64
-          )
-          dest="${{ github.workspace }}/BlendLuxCore/wheels"
-          for platform in "${platforms[@]}"
-          do
-            echo "Downloading pyluxcore for ${platform} - Python 3.11"
-            pip download "pyluxcore==${WHEELS_VERSION}" \
-              --no-deps \
-              --dest ${dest} \
-              --only-binary=:all: \
-              --python-version=3.11 \
-              --platform=$platform
-          done
 
-          # This one is for linux distro that would recompile Blender against
-          # 3.12 (like ArchLinux)
-          echo "Downloading pyluxcore for ${platform} - Python 3.12"
-          pip download "pyluxcore==${WHEELS_VERSION}" \
-            --no-deps \
-            --dest ${dest} \
-            --only-binary=:all: \
-            --python-version=3.12 \
-            --platform=manylinux_2_28_x86_64
-
-      - name: Package bundles
-        shell: bash
-        run: |
-          echo "${{ github.workspace }}"
-          blender --command extension build \
-            --split-platform \
-            --source-dir "${{ github.workspace }}/BlendLuxCore"
-
-      - name: Separate platforms
-        shell: bash
-        run: |
-          for file_name in ${{ github.workspace }}/BlendLuxCore-*.zip; do
-            base_name=$(basename -- "${file_name}")
-            target_folder=${base_name%.*}
-            echo "Unzipping '${file_name}' into '${target_folder}'"
-            unzip -q ${file_name} -d ${target_folder}
-          done
-
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "BlendLuxCore-linux_x64"
-          path: "${{ github.workspace }}/BlendLuxCore-*-linux_x64"
-
-      - name: Upload MacOS arm64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "BlendLuxCore-macos_arm64"
-          path: "${{ github.workspace }}/BlendLuxCore-*-macos_arm64"
-
-      - name: Upload MacOS X64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "BlendLuxCore-macos_x64"
-          path: "${{ github.workspace }}/BlendLuxCore-*-macos_x64"
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "BlendLuxCore-windows_x64"
-          path: "${{ github.workspace }}/BlendLuxCore-*-windows_x64"

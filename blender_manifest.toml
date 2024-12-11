@@ -1,4 +1,4 @@
-schema_version = "2.9.0"
+schema_version = "1.0.0"
 
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
@@ -25,7 +25,7 @@ blender_version_min = "4.2.0"
 # License conforming to https://spdx.org/licenses/ (use "SPDX: prefix)
 # https://docs.blender.org/manual/en/dev/advanced/extensions/licenses.html
 license = [
-  "SPDX:Apache-2.0"
+  "SPDX:GPL-3.0-or-later",
 ]
 # # Optional: required by some licenses.
 # copyright = [
@@ -44,7 +44,6 @@ wheels = [
   "./wheels/pyluxcore-2.9a1.post5-cp311-cp311-macosx_10_13_x86_64.whl",
   "./wheels/pyluxcore-2.9a1.post5-cp311-cp311-win_amd64.whl",
   "./wheels/pyluxcore-2.9a1.post5-cp311-cp311-manylinux_2_28_x86_64.whl",
-  "./wheels/pyluxcore-2.9a1.post5-cp312-cp312-manylinux_2_28_x86_64.whl",
 ]
 
 # # Optional: add-ons can list which resources they will require:

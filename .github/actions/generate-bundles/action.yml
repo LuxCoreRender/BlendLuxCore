@@ -1,0 +1,120 @@
+name: 'Generate bundles'
+description: 'Generate Blender bundles for particular Python version'
+inputs:
+  python-version:
+    description: 'Python version to target'
+    required: true
+    default: '3.11'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Compute various values
+      shell: bash
+      run: |
+        _short_version=$(echo "${{ inputs.python-version }}" | sed -r 's/\.//g' )
+        _tag=cp${_short_version}
+        echo "Short version: $_short_version"
+        echo "TAG=${_tag}" >> $GITHUB_ENV
+        echo "FOLDER=$(mktemp -d)/${_tag}" >> $GITHUB_ENV
+
+    - name: Copy repo in dedicated folder
+      shell: bash
+      run: |
+        cp -R ${GITHUB_WORKSPACE} ${FOLDER}
+
+    - name: Retrieve wheels
+      shell: bash
+      run: |
+        platforms=(
+          macosx_11_0_arm64
+          macosx_10_13_x86_64
+          manylinux_2_28_x86_64
+          win_amd64
+        )
+        dest="${FOLDER}/wheels"
+        for platform in "${platforms[@]}"
+        do
+          echo "Downloading pyluxcore for ${platform}"
+          pip download pyluxcore \
+            --no-deps \
+            --dest ${dest} \
+            --only-binary=:all: \
+            --python-version=${{ inputs.python-version }} \
+            --platform=$platform
+        done
+
+    - name: Set blender_manifest.toml
+      shell: python
+      run: |
+        import tomlkit
+        import os
+
+        print("Set Blender manifest")
+
+        # Get manifest
+        manifest_path = os.path.join(os.environ["FOLDER"], "blender_manifest.toml")
+        with open(manifest_path, "r") as fp:
+          manifest = tomlkit.load(fp)
+
+        # Get actual wheel list
+        folder = os.path.join(os.environ["FOLDER"], "wheels")
+        files, *_ = os.walk(folder)
+        wheels = [os.path.join(".", "wheels", f) for f in files[2]]
+        print("Wheels: ", wheels)
+
+        # Set wheels list
+        manifest["wheels"] = wheels
+
+        # Get version and set environment
+        version = manifest["version"]
+        env_file = os.getenv('GITHUB_ENV')
+        with open(env_file, "a") as myfile:
+            myfile.write(f"VERSION={version}")
+
+        # Write back to disk
+        with open(manifest_path, "w") as fp:
+            tomlkit.dump(manifest, fp)
+
+    - name: Package bundles
+      shell: bash
+      run: |
+        echo "Packaging ${FOLDER}"
+        blender --command extension build \
+          --split-platform \
+          --source-dir "${FOLDER}" \
+          --output-dir "${FOLDER}"
+
+    - name: Separate platforms
+      shell: bash
+      run: |
+        for file_name in ${FOLDER}/BlendLuxCore-*.zip; do
+          base_name=$(basename -- "${file_name}")
+          target_folder=${FOLDER}/${base_name%.*}
+          echo "Unzipping '${file_name}' into '${target_folder}'"
+          unzip -q ${file_name} -d ${target_folder}
+        done
+
+    - name: Upload Linux artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: "BlendLuxCore-linux_x64-${{ env.TAG }}"
+        path: "${{ env.FOLDER }}/BlendLuxCore-${{ env.VERSION }}-linux_x64"
+
+    - name: Upload MacOS arm64 artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: "BlendLuxCore-macos_arm64-${{ env.TAG }}"
+        path: "${{ env.FOLDER }}/BlendLuxCore-${{ env.VERSION }}-macos_arm64"
+
+    - name: Upload MacOS X64 artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: "BlendLuxCore-macos_x64-${{ env.TAG }}"
+        path: "${{ env.FOLDER }}/BlendLuxCore-${{ env.VERSION }}-macos_x64"
+
+    - name: Upload Windows artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: "BlendLuxCore-windows_x64-${{ env.TAG }}"
+        path: "${{ env.FOLDER }}/BlendLuxCore-${{ env.VERSION }}-windows_x64"
