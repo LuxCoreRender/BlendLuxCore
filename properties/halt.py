@@ -41,14 +41,14 @@ NOISE_THRESH_STEP_DESC = (
 
 # Attached to view layer and scene
 class LuxCoreHaltConditions(bpy.types.PropertyGroup):
-    enable: BoolProperty(name="Enable", default=False)
+    enable: BoolProperty(name="Enable", default=True)
 
     use_time: BoolProperty(name="Use Time", default=False)
     time: IntProperty(name="Time (s)", default=600, min=1)
 
-    use_samples: BoolProperty(name="Use Samples", default=False,
+    use_samples: BoolProperty(name="Use Samples", default=True,
                                description=USE_SAMPLES_DESC)
-    samples: IntProperty(name="Samples", default=500, min=1,
+    samples: IntProperty(name="Samples", default=32, min=2, max=16384, 
                           description=SAMPLES_DESC)
 
     use_light_samples: BoolProperty(name="Use Light Path Samples", default=False,
