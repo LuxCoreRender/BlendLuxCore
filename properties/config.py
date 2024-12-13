@@ -183,13 +183,13 @@ class LuxCoreConfigPath(PropertyGroup):
     """
     # TODO: helpful descriptions
     # path.pathdepth.total
-    depth_total: IntProperty(name="Total Path Depth", default=6, min=1, soft_max=16)
+    depth_total: IntProperty(name="Total Path Depth", default=12, min=1, soft_max=128)
     # path.pathdepth.diffuse
-    depth_diffuse: IntProperty(name="Diffuse", default=4, min=1, soft_max=16)
+    depth_diffuse: IntProperty(name="Diffuse", default=4, min=1, soft_max=128)
     # path.pathdepth.glossy
-    depth_glossy: IntProperty(name="Glossy", default=4, min=1, soft_max=16)
+    depth_glossy: IntProperty(name="Glossy", default=4, min=1, soft_max=128)
     # path.pathdepth.specular
-    depth_specular: IntProperty(name="Specular", default=6, min=1, soft_max=16)
+    depth_specular: IntProperty(name="Specular", default=12, min=1, soft_max=128)
 
     hybridbackforward_enable: BoolProperty(name="Add Light Tracing", default=False,
                                            description=HYBRID_BACKFORWARD_DESC)
@@ -205,7 +205,7 @@ class LuxCoreConfigPath(PropertyGroup):
 
     use_clamping: BoolProperty(name="Clamp Output", default=False, description=CLAMPING_DESC)
     # path.clamping.variance.maxvalue
-    clamping: FloatProperty(name="Max Brightness", default=1000, min=0, description=CLAMPING_DESC)
+    clamping: FloatProperty(name="Max Brightness", default=10, min=0,soft_max=10000,  description=CLAMPING_DESC)
     # This should only be set in the engine code after export. Only show a read-only label to the user.
     suggested_clamping_value: FloatProperty(name="", default=-1)
 
