@@ -203,7 +203,11 @@ class FrameBuffer(object):
             "-nrm", self._normal_file_path,
             "-o", self._denoised_file_path,
         ]
-        self._denoiser_process = subprocess.Popen(args)
+        self._denoiser_process = subprocess.Popen(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
     def is_denoiser_active(self):
         return self._denoiser_process is not None
