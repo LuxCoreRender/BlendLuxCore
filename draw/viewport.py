@@ -83,17 +83,17 @@ class FrameBuffer(object):
         self._normal_file_path = os.path.join(base_path, f"{unique_id}_normal.pfm")
         self._denoised_file_path = os.path.join(base_path, f"{unique_id}_denoised.pfm")
 
-        current_dir = dirname(os.path.realpath(__file__))
-        addon_dir = dirname(current_dir)
+        luxcore_dir = dirname(os.path.realpath(pyluxcore.__file__))
         if os.name != "nt":
             self._denoiser_path = which(
                 "oidnDenoise",
-                path=os.pathsep.join([addon_dir, os.environ["PATH"]])
+                path=luxcore_dir
             )
         else:
+            libs_dir = os.path.join(luxcore_dir, "..", "pyluxcore.libs")
             self._denoiser_path = which(
                 "oidnDenoise.exe",
-                path=os.pathsep.join([os.path.join(addon_dir, "..", "pyluxcore.libs"), os.environ["PATH"]])
+                path=libs_dir,
             )
 
     def _init_opengl(self):
