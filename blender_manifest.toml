@@ -40,10 +40,10 @@ platforms = ["windows-x64", "macos-arm64", "linux-x64", "macos-x64"]
 # # Optional: bundle 3rd party Python modules.
 # # https://docs.blender.org/manual/en/dev/advanced/extensions/python_wheels.html
 wheels = [
-  "./wheels/pyluxcore-2.9a1.post5-cp311-cp311-macosx_11_0_arm64.whl",
-  "./wheels/pyluxcore-2.9a1.post5-cp311-cp311-macosx_10_13_x86_64.whl",
-  "./wheels/pyluxcore-2.9a1.post5-cp311-cp311-win_amd64.whl",
-  "./wheels/pyluxcore-2.9a1.post5-cp311-cp311-manylinux_2_28_x86_64.whl",
+  "./wheels/pyluxcore-2.9a1.post6-cp311-cp311-macosx_11_0_arm64.whl",
+  "./wheels/pyluxcore-2.9a1.post6-cp311-cp311-macosx_10_13_x86_64.whl",
+  "./wheels/pyluxcore-2.9a1.post6-cp311-cp311-win_amd64.whl",
+  "./wheels/pyluxcore-2.9a1.post6-cp311-cp311-manylinux_2_28_x86_64.whl",
 ]
 
 # # Optional: add-ons can list which resources they will require:
