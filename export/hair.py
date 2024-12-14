@@ -120,8 +120,8 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
             start = 0
         else:
             # Number of virtual parents reduces the number of exported children
-            num_virtual_parents = math.trunc(
-                0.3 * psys.settings.virtual_parents * len(psys.child_particles) * num_parents)
+            num_virtual_parents = math.trunc(0.3 * psys.settings.virtual_parents
+                                             * psys.settings.child_nbr * num_parents)
             start = num_parents + num_virtual_parents
 
         # Collect point/color/uv information from Blender
@@ -257,13 +257,16 @@ def convert_hair_curves(exporter, depsgraph, obj, obj_key, luxcore_scene, is_for
 
     strands = obj.data.curves
 
-    points_per_strand = np.fromiter((strand.points_length
-                  for strand in strands), dtype=np.int32)
+    max_strand_length = 0
+    for strand in strands:
+        if strand.points_length > max_strand_length:
+            max_strand_length = strand.points_length
 
     points = np.fromiter((elem
                   for strand in strands
-                  for idx in range(strand.points_length)
-                  for elem in strand.points[idx].position), dtype=np.float32)
+                  for idx in range(0, max_strand_length)
+                  for elem in get_strand_seg(idx, strand)),
+                 dtype=np.float32)
 
     colors = np.empty(shape=0, dtype=np.float32)
     uvs = np.empty(shape=0, dtype=np.float32)
@@ -279,6 +282,8 @@ def convert_hair_curves(exporter, depsgraph, obj, obj_key, luxcore_scene, is_for
     image_filename = ''
     uvs_needed = settings.copy_uv_coords
     copy_uvs = settings.copy_uv_coords
+
+    uvs_needed = False
 
     if export_color != "none" or uvs_needed:
         emitter_mesh = obj.parent.to_mesh(depsgraph=depsgraph)
@@ -301,11 +306,13 @@ def convert_hair_curves(exporter, depsgraph, obj, obj_key, luxcore_scene, is_for
                            for elem in uv_coord.vector),
                           dtype=np.float32)
 
+
     if len(uvs) == 0:
         copy_uvs = False
 
     transformation = None
-    success = luxcore_scene.DefineBlenderCurveStrands(lux_shape_name, points_per_strand,
+
+    success = luxcore_scene.DefineBlenderStrands(lux_shape_name, max_strand_length,
                                                  points, colors, uvs, image_filename, settings.gamma,
                                                  copy_uvs, transformation, strand_diameter,
                                                  root_width, tip_width, width_offset,

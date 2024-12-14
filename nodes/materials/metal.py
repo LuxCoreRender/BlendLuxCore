@@ -16,10 +16,8 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial, bpy.types.Node):
         is_fresnel = self.input_type == "fresnel"
         is_color = self.input_type == "color"
 
-        id = self.inputs.find("Fresnel")
-        self.inputs[id].enabled = is_fresnel
-        id = self.inputs.find("Color")
-        self.inputs[id].enabled = is_color
+        self.inputs["Fresnel"].enabled = is_fresnel
+        self.inputs["Color"].enabled = is_color
 
         # The first time the user switches to "fresnel" mode,
         # add a fresnel texture automatically
@@ -46,7 +44,7 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial, bpy.types.Node):
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Color", (0.7, 0.7, 0.7))
         self.inputs.new("LuxCoreSocketFresnel", "Fresnel")
-        self.inputs["Fresnel"].enabled = False
+        self.inputs["Fresnel"].enabled = False        
         Roughness.init(self, 0.05)
         
         self.add_common_inputs()

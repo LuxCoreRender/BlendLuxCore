@@ -66,7 +66,6 @@ classes = (
     smoke.LuxCoreNodeTexSmoke,
     splitfloat3.LuxCoreNodeTexSplitFloat3,
     timeinfo.LuxCoreNodeTexTimeInfo,
-    tree.LuxCoreTextureNodeTree,
     triplanar.LuxCoreNodeTexTriplanar,
     triplanar_bump.LuxCoreNodeTexTriplanarBump,
     triplanar_normalmap.LuxCoreNodeTexTriplanarNormalmap,

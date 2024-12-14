@@ -137,9 +137,7 @@ class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
 
     def export_common_inputs(self, exporter, depsgraph, props, definitions):
         """ Call from derived classes (in export method) """
-
-        id = self.inputs.find("Opacity")
-        transparency = self.inputs[id].export(exporter, depsgraph, props)
+        transparency = self.inputs["Opacity"].export(exporter, depsgraph, props)
         if transparency != 1.0:
             definitions["transparency"] = transparency
 
@@ -313,25 +311,13 @@ class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
 
     def update_node_tree(self, context):
         if self.node_tree:
-            id = self.outputs.find("Material")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
-            id = self.outputs.find("Color")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
-            id = self.outputs.find("Volume")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
+            self.outputs["Material"].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
+            self.outputs["Color"].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
+            self.outputs["Volume"].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
         else:
-            id = self.outputs.find("Material")
-            if id:
-                self.outputs[id].enabled = True
-            id = self.outputs.find("Color")
-            if id:
-                self.outputs[id].enabled = True
-            id = self.outputs.find("Volume")
-            if id:
-                self.outputs[id].enabled = True
+            self.outputs["Material"].enabled = False
+            self.outputs["Color"].enabled = False
+            self.outputs["Volume"].enabled = False
 
     node_tree: PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree,
                                 description="Use the output of the selected node tree in this node tree")
@@ -351,7 +337,6 @@ class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
         self.outputs["Color"].enabled = False
         self.outputs.new("LuxCoreSocketVolume", "Volume")
         self.outputs["Volume"].enabled = False
-        self.update_node_tree(context)
 
     def draw_label(self):
         if self.node_tree:
@@ -434,10 +419,10 @@ class Roughness:
             sockets.append("BF " + socket)
 
         for socket in sockets:
-            id = node.inputs.find(socket)
-            if id:
-                node.inputs[id].enabled = node.rough
-
+            try:
+                node.inputs[socket].enabled = node.rough
+            except KeyError:
+                pass
         Roughness.update_anisotropy(node, context)
 
     @staticmethod
@@ -454,18 +439,12 @@ class Roughness:
                 v_roughness = "V-Roughness"
                 extra_check = True
 
-
-            if node.use_anisotropy:
-                id = node.inputs.find(roughness)
+            if roughness in node.inputs:
+                u_roughness_input = node.inputs[roughness]
             else:
-                id = node.inputs.find(u_roughness)
-
-            u_roughness_input = node.inputs[id]
+                u_roughness_input = node.inputs[u_roughness]
             u_roughness_input.name = u_roughness if node.use_anisotropy else roughness
-
-            id = node.inputs.find(v_roughness)
-            v_roughness_input = node.inputs[id]
-            v_roughness_input.enabled = node.use_anisotropy and extra_check
+            node.inputs[v_roughness].enabled = node.use_anisotropy and extra_check
 
         update(node, False)
         if Roughness.has_backface(node):
@@ -483,7 +462,7 @@ class Roughness:
         node.add_input("LuxCoreSocketRoughness", "V-Roughness", default, enabled=False)
 
     @staticmethod
-    def init_backface(node, default=0.05, init_enabled=False):
+    def init_backface(node, default=0.05, init_enabled=True):
         node.add_input("LuxCoreSocketRoughness", "BF Roughness", default, enabled=init_enabled)
         node.add_input("LuxCoreSocketRoughness", "BF V-Roughness", default, enabled=False)
 
@@ -528,10 +507,8 @@ class ThinFilmCoating:
 
     @staticmethod
     def toggle(node, context):
-        id = node.inputs.find(ThinFilmCoating.THICKNESS_NAME)
-        node.inputs[id].enabled = node.use_thinfilmcoating
-        id = node.inputs.find(ThinFilmCoating.IOR_NAME)
-        node.inputs[id].enabled = node.use_thinfilmcoating
+        node.inputs[ThinFilmCoating.THICKNESS_NAME].enabled = node.use_thinfilmcoating
+        node.inputs[ThinFilmCoating.IOR_NAME].enabled = node.use_thinfilmcoating
         utils_node.force_viewport_update(node, context)
         
     @staticmethod

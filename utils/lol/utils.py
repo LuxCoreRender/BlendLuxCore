@@ -42,7 +42,7 @@ from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
 
 
-LOL_HOST_URL = "http://luxcorerender.org/lol"
+LOL_HOST_URL = "https://luxcorerender.org/lol"
 LOL_VERSION = "v2.5"
 
 download_threads = []
