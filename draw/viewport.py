@@ -78,17 +78,23 @@ class FrameBuffer(object):
     def _initialize_denoiser_paths(self):
         base_path = tempfile.gettempdir()
         unique_id = id(self)
-        self._noisy_file_path = join(base_path, f"{unique_id}_noisy.pfm")
-        self._albedo_file_path = join(base_path, f"{unique_id}_albedo.pfm")
-        self._normal_file_path = join(base_path, f"{unique_id}_normal.pfm")
-        self._denoised_file_path = join(base_path, f"{unique_id}_denoised.pfm")
+        self._noisy_file_path = os.path.join(base_path, f"{unique_id}_noisy.pfm")
+        self._albedo_file_path = os.path.join(base_path, f"{unique_id}_albedo.pfm")
+        self._normal_file_path = os.path.join(base_path, f"{unique_id}_normal.pfm")
+        self._denoised_file_path = os.path.join(base_path, f"{unique_id}_denoised.pfm")
 
         current_dir = dirname(os.path.realpath(__file__))
         addon_dir = dirname(current_dir)
-        self._denoiser_path = which(
-            "oidnDenoise",
-            path=os.pathsep.join([join(addon_dir, "bin"), os.environ["PATH"]])
-        )
+        if os.name != "nt":
+            self._denoiser_path = which(
+                "oidnDenoise",
+                path=os.pathsep.join([addon_dir, os.environ["PATH"]])
+            )
+        else:
+            self._denoiser_path = which(
+                "oidnDenoise.exe",
+                path=os.pathsep.join([os.path.join(addon_dir, "..", "pyluxcore.libs"), os.environ["PATH"]])
+            )
 
     def _init_opengl(self):
         width, height = self._width * self._pixel_size, self._height * self._pixel_size
