@@ -97,7 +97,10 @@ def register():
     keymaps.register()
 
     for cls in classes:
-        register_class(cls)
+        try:
+            register_class(cls)
+        except Exception as err:
+            print("Warning: Cannot register", cls, err)
 
 def unregister():
     lol.unregister()
