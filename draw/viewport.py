@@ -85,12 +85,16 @@ class FrameBuffer(object):
 
         luxcore_dir = dirname(os.path.realpath(pyluxcore.__file__))
         if os.name != "nt":
+            print(f"Denoiser: looking in {luxcore_dir}")
+            print(f"Looking for oidnDenoise in {luxcore_dir}")
             self._denoiser_path = which(
                 "oidnDenoise",
                 path=luxcore_dir
             )
         else:
             libs_dir = os.path.join(luxcore_dir, "..", "pyluxcore.libs")
+            print(f"Denoiser: looking in {libs_dir}")
+            print(f"Looking for oidnDenoise in {libs_dir}")
             self._denoiser_path = which(
                 "oidnDenoise.exe",
                 path=libs_dir,
@@ -206,7 +210,8 @@ class FrameBuffer(object):
         self._denoiser_process = subprocess.Popen(
             args,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
         )
 
     def is_denoiser_active(self):
@@ -216,6 +221,12 @@ class FrameBuffer(object):
         return self._denoiser_process.poll() is not None
 
     def load_denoiser_result(self, scene):
+        with self._denoiser_process.stdout as d_out:
+            if d_out:
+                print("Denoiser output:")
+                for line in d_out:
+                    print(line, end='')
+        print("Denoiser return code:", self._denoiser_process.returncode)
         self._denoiser_process = None
         shape = (self._height * self._width * 3)
         try:
@@ -241,7 +252,7 @@ class FrameBuffer(object):
         if self._denoiser_process:
             print("Interrupting denoiser")
             self._denoiser_process.terminate()
-            self._denoiser_process.communicate()
+            print("Denoiser outputs: ", self._denoiser_process.stdout)
             self._denoiser_process = None
 
     def update(self, luxcore_session, scene):
