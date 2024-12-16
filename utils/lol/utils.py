@@ -24,7 +24,7 @@
 #
 #  This code is based on the Blenderkit Addon
 #  Homepage: https://www.blenderkit.com/
-#  Sourcecode: https://github.com/blender/blender-addons/tree/master/blenderkit
+#  Sourcecode: http://github.com/blender/blender-addons/tree/master/blenderkit
 #
 # #####
 
