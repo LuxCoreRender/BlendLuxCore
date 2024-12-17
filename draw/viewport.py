@@ -1,15 +1,14 @@
 import bgl
 import gpu
 from gpu_extras.batch import batch_for_shader
-
 import math
 import os
 import numpy as np
 import subprocess
 import tempfile
 from shutil import which
-from os.path import dirname
-import pyluxcore
+from os.path import dirname, join
+from ..bin import pyluxcore
 from .. import utils
 from ..utils import pfm
 
@@ -43,9 +42,7 @@ class TempfileManager:
             TempfileManager.delete_files(object_id)
 
 
-class FrameBuffer(object):
-    """ FrameBuffer used for viewport render """
-
+class FrameBuffer:
     def __init__(self, engine, context, scene):
         filmsize = utils.calc_filmsize(scene, context)
         self._width, self._height = filmsize
@@ -78,27 +75,17 @@ class FrameBuffer(object):
     def _initialize_denoiser_paths(self):
         base_path = tempfile.gettempdir()
         unique_id = id(self)
-        self._noisy_file_path = os.path.join(base_path, f"{unique_id}_noisy.pfm")
-        self._albedo_file_path = os.path.join(base_path, f"{unique_id}_albedo.pfm")
-        self._normal_file_path = os.path.join(base_path, f"{unique_id}_normal.pfm")
-        self._denoised_file_path = os.path.join(base_path, f"{unique_id}_denoised.pfm")
+        self._noisy_file_path = join(base_path, f"{unique_id}_noisy.pfm")
+        self._albedo_file_path = join(base_path, f"{unique_id}_albedo.pfm")
+        self._normal_file_path = join(base_path, f"{unique_id}_normal.pfm")
+        self._denoised_file_path = join(base_path, f"{unique_id}_denoised.pfm")
 
-        luxcore_dir = dirname(os.path.realpath(pyluxcore.__file__))
-        if os.name != "nt":
-            print(f"Denoiser: looking in {luxcore_dir}")
-            print(f"Looking for oidnDenoise in {luxcore_dir}")
-            self._denoiser_path = which(
-                "oidnDenoise",
-                path=luxcore_dir
-            )
-        else:
-            libs_dir = os.path.join(luxcore_dir, "..", "pyluxcore.libs")
-            print(f"Denoiser: looking in {libs_dir}")
-            print(f"Looking for oidnDenoise in {libs_dir}")
-            self._denoiser_path = which(
-                "oidnDenoise.exe",
-                path=libs_dir,
-            )
+        current_dir = dirname(os.path.realpath(__file__))
+        addon_dir = dirname(current_dir)
+        self._denoiser_path = which(
+            "oidnDenoise",
+            path=os.pathsep.join([join(addon_dir, "bin"), os.environ["PATH"]])
+        )
 
     def _init_opengl(self):
         width, height = self._width * self._pixel_size, self._height * self._pixel_size
@@ -126,7 +113,6 @@ class FrameBuffer(object):
             if self._transparent != scene.camera.data.luxcore.imagepipeline.transparent_film:
                 return True
         elif self._transparent:
-            # By default (if no camera is available), the film is not transparent
             return True
         new_border = utils.calc_blender_border(scene, context)
         if self._border != new_border:
@@ -148,9 +134,7 @@ class FrameBuffer(object):
         border_min_x, border_max_x, border_min_y, border_max_y = border
 
         if context.region_data.view_perspective == "CAMERA" and render.use_border:
-            # Offset is only needed if viewport is in camera mode and uses border rendering
             sensor_fit = scene.camera.data.sensor_fit
-
             aspectratio, aspect_x, aspect_y = utils.calc_aspect(
                 render.resolution_x * render.pixel_aspect_x,
                 render.resolution_y * render.pixel_aspect_y,
@@ -171,7 +155,6 @@ class FrameBuffer(object):
             offset_x = region_width * border_min_x + 1
             offset_y = region_height * border_min_y + 1
 
-        # offset_x, offset_y are in pixels
         return int(offset_x), int(offset_y)
 
     def _cam_border_offset(self, aspect, base, border_min, region_width, view_camera_offset, zoom):
@@ -207,12 +190,7 @@ class FrameBuffer(object):
             "-nrm", self._normal_file_path,
             "-o", self._denoised_file_path,
         ]
-        self._denoiser_process = subprocess.Popen(
-            args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
+        self._denoiser_process = subprocess.Popen(args)
 
     def is_denoiser_active(self):
         return self._denoiser_process is not None
@@ -221,12 +199,6 @@ class FrameBuffer(object):
         return self._denoiser_process.poll() is not None
 
     def load_denoiser_result(self, scene):
-        with self._denoiser_process.stdout as d_out:
-            if d_out:
-                print("Denoiser output:")
-                for line in d_out:
-                    print(line, end='')
-        print("Denoiser return code:", self._denoiser_process.returncode)
         self._denoiser_process = None
         shape = (self._height * self._width * 3)
         try:
@@ -252,7 +224,7 @@ class FrameBuffer(object):
         if self._denoiser_process:
             print("Interrupting denoiser")
             self._denoiser_process.terminate()
-            print("Denoiser outputs: ", self._denoiser_process.stdout)
+            self._denoiser_process.communicate()
             self._denoiser_process = None
 
     def update(self, luxcore_session, scene):
