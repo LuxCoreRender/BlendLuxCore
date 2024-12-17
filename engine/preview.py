@@ -2,7 +2,7 @@ from enum import Enum
 from time import sleep
 from os.path import dirname, realpath
 from mathutils import Matrix
-import pyluxcore
+from ..bin import pyluxcore
 from .. import utils
 from .. import export
 from ..draw.final import FrameBufferFinal
