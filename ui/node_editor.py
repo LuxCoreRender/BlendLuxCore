@@ -1,3 +1,4 @@
+import bpy
 from bl_ui.space_node import NODE_HT_header, NODE_MT_editor_menus
 from .material import lux_mat_template_ID
 
@@ -188,9 +189,24 @@ def lux_node_header_draw(panel, context):
 
     # Snap
     row = layout.row(align=True)
+
+    # Blender version check for snap property
+    if bpy.app.version >= (4, 4, 0):  # Blender 4.4 or later
+        snap_property = "snap_anim_element"
+    else:  # Older versions of Blender
+        snap_property = "snap_node_element"
+
+    # Now check if the property exists in ToolSettings and use it
+    if hasattr(tool_settings, snap_property):
+        if getattr(tool_settings, snap_property) != 'GRID':
+            row.prop(tool_settings, "snap_target", text="")
+    else:
+        # Fallback or alternative behavior if the property doesn't exist
+        print(f"Warning: {snap_property} not found in ToolSettings. Check API changes.")
+    
     row.prop(tool_settings, "use_snap", text="")
-    row.prop(tool_settings, "snap_node_element", icon_only=True)
-    if tool_settings.snap_node_element != 'GRID':
+    row.prop(tool_settings, snap_property, icon_only=True)
+    if getattr(tool_settings, snap_property) != 'GRID':
         row.prop(tool_settings, "snap_target", text="")
 
 
