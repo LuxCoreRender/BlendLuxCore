@@ -1,7 +1,7 @@
 import numpy as np
 from time import time
 from concurrent.futures import ThreadPoolExecutor
-import pyluxcore
+from ..bin import pyluxcore
 from .. import export
 from ..draw.viewport import FrameBuffer
 from .. import utils
@@ -21,12 +21,9 @@ def start_session(engine):
         engine.session.Start()
         engine.viewport_start_time = time()
     except ReferenceError:
-        # Could not start render session because RenderEngine struct was deleted (caused
-        # by the user cancelling the viewport render before this function is called)
         return
     except Exception as error:
         engine.session = None
-        # Reset the exporter to invalidate all caches
         engine.exporter = None
 
         engine.update_stats("Error: ", str(error))
@@ -35,7 +32,6 @@ def start_session(engine):
         import traceback
         traceback.print_exc()
 
-    # Note: Due to CPython implementation details, it's not necessary to use a lock here (this modification is atomic)
     engine.starting_session = False
 
 # Function to check color management changes
@@ -103,19 +99,18 @@ def parallel_color_management(engine, scene, context):
 # Modify the `view_update` function to use threading instead of multiprocessing
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
+
     if engine.starting_session or engine.viewport_fatal_error:
-        # Prevent deadlock
         return
 
     LuxCoreErrorLog.clear(force_ui_update=False)
 
     if engine.session is None:
         if not engine.viewport_starting_message_shown:
-            # Let one engine.view_draw() happen so it shows a message in the UI
             return
 
         if not engine.is_first_viewport_start:
-            filmsize = utils.calc_filmsize(depsgraph.scene_eval, context)
+            filmsize = utils.calc_filmsize(depsgraph.scene, context)
             was_resized = engine.last_viewport_size != filmsize
             engine.last_viewport_size = filmsize
 
@@ -123,23 +118,19 @@ def view_update(engine, context, depsgraph, changes=None):
                 engine.time_of_last_viewport_resize = time()
                 return
             elif time() - engine.time_of_last_viewport_resize < engine.VIEWPORT_RESIZE_TIMEOUT:
-                # Don't re-export the session before the timeout is done, to prevent constant re-exports while resizing
                 return
-        
+
         try:
             print("=" * 50)
             print("[Engine/Viewport] New session")
             engine.exporter = export.Exporter()
             engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
-            # Start in separate thread to avoid blocking the UI
             engine.starting_session = True
             engine.is_first_viewport_start = False
             import _thread
             _thread.start_new_thread(start_session, (engine,))  # Call start_session here
         except Exception as error:
-            del engine.session
             engine.session = None
-            # Reset the exporter to invalidate all caches
             engine.exporter = None
             engine.viewport_fatal_error = str(error)
 
@@ -155,50 +146,48 @@ def view_update(engine, context, depsgraph, changes=None):
 
     # Regular session update logic
     changes = engine.exporter.get_changes(depsgraph, context, changes)
-    print("view_update(): checking for changes took %.1f ms" % ((time() - s) * 1000))
 
     if changes:
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
+            # Only restart the session if the view transform didn't change by itself
             force_session_restart(engine)
             return
 
-        s = time()
-        # We have to re-assign the session because it might have been replaced due to filmsize change
+        # Update session with changes
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
         if engine.framebuffer:
             engine.framebuffer.reset_denoiser()
-        print("view_update(): applying changes took %.1f ms" % ((time() - s) * 1000))
+
     print("view_update() took %.1f ms" % ((time() - start) * 1000))
 
 # Main function for drawing the viewport
 def view_draw(engine, context, depsgraph):
-    scene = depsgraph.scene_eval
-    
+    scene = depsgraph.scene
+
     if engine.starting_session:
         engine.tag_redraw()
         return
-        
+
     if engine.viewport_fatal_error:
         engine.update_stats("Error:", engine.viewport_fatal_error)
         engine.tag_redraw()
         return
-    
+
     if engine.session is None:
         config = scene.luxcore.config
         definitions = {}
         luxcore_engine, _ = convert_viewport_engine(context, scene, definitions, config)
         message = ""
-        
+
         if luxcore_engine.endswith("OCL"):
-            # Create dummy renderconfig to check if we have to compile OpenCL kernels
             luxcore_scene = pyluxcore.Scene()
             definitions = {
                 "scene.camera.type": "perspective",
             }
             luxcore_scene.Parse(utils.create_props("", definitions))
-            
+
             devices = scene.luxcore.devices
             definitions = {
                 "renderengine.type": "RTPATHOCL",
@@ -209,11 +198,11 @@ def view_draw(engine, context, depsgraph):
             }
             config_props = utils.create_props("", definitions)
             renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
-            
+
             if not renderconfig.HasCachedKernels():
                 gpu_backend = utils.get_addon_preferences(context).gpu_backend
                 message = f"Compiling {gpu_backend} kernels (just once, usually takes 15-30 minutes)"
-        
+
         engine.update_stats("Starting viewport render", message)
         engine.viewport_starting_message_shown = True
         engine.tag_update()
@@ -225,21 +214,15 @@ def view_draw(engine, context, depsgraph):
 
     framebuffer = engine.framebuffer
 
-    # Check for changes because some actions in Blender (e.g. moving the viewport
-    # camera) do not trigger a view_update() call, but only a view_draw() call.
     changes = engine.exporter.get_viewport_changes(depsgraph, context)
 
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
         engine.tag_redraw()
-        # view_update(engine, context, depsgraph, changes)  # Disabled, see comment on force_session_restart()
         force_session_restart(engine)
         return
-    elif changes & export.Change.CAMERA:
-        # Only update in view_draw if it is a camera update,
-        # for everything else we call view_update().
-        # We have to re-assign the session because it might have been
-        # replaced due to filmsize change.
-        engine.session = engine.exporter.update(depsgraph, context, engine.session, export.Change.CAMERA)
+    elif changes & (export.Change.CAMERA | export.Change.MATERIAL):
+        # Update session with changes
+        engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
     if utils.in_material_shading_mode(context):
@@ -261,7 +244,6 @@ def view_draw(engine, context, depsgraph):
         return
 
     # Check if we need to pause the viewport render
-    # (note: the LuxCore stat "stats.renderengine.time" is not reliable here)
     rendered_time = time() - engine.viewport_start_time
     halt_time = scene.luxcore.viewport.halt_time
     status_message = ""
@@ -289,12 +271,8 @@ def view_draw(engine, context, depsgraph):
                 except Exception as error:
                     status_message = "Could not start denoiser: %s" % error
     else:
-        # Not in pause yet, keep drawing
         engine.session.WaitNewFrame()
-        try:
-            engine.session.UpdateStats()
-        except RuntimeError as error:
-            print("[Engine/Viewport] Error during UpdateStats():", error)
+        engine.session.UpdateStats()
         framebuffer.update(engine.session, scene)
         framebuffer.reset_denoiser()
         engine.tag_redraw()
