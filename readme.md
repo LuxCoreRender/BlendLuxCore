@@ -1,3 +1,7 @@
+![Watermark](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender-logo_orange_grey-shiny.png)
+
+![Example](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender_caustics_scene.jpg)
+
 <sup> [LuxCoreRender.org](https://luxcorerender.org/) | [Forums](https://forums.luxcorerender.org/) | [Wiki](http://wiki.luxcorerender.org/LuxCoreRender_Wiki) </sup>
 
 ## BlendLuxCore
@@ -6,21 +10,29 @@ This addon integrates the LuxCore render engine into Blender. It offers advanced
 
 ### Supported Blender Versions
 
-* Blender 3.6 LTS is experimentally supported by the latest branch [development release](https://github.com/LuxCoreRender/BlendLuxCore/releases).
-* Blender 2.93 is supported by BlendLuxCore v2.6.
-* Blender 2.83-2.92 are supported by BlendLuxCore v2.5.
-* Blender 2.83 is supported by BlendLuxCore v2.4.
-* Blender 2.80, 2.81 and 2.82 are supported by BlendLuxCore v2.2 and v2.3.  
-* Blender 2.79 is supported by BlendLuxCore v2.0, v2.1 and v2.2.  
+* Blender 4.2 is supported by [BlendLuxCore v2.9 beta1 (Windows only)](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.9beta1)
 
-### Download
+* Blender 4.1 is supported by [BlendLuxCore v2.9 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.9alpha1)
 
-See the [release section](https://github.com/LuxCoreRender/BlendLuxCore/releases) for stable and experimental versions.  
-Information about installation and usage are available [in the manual](https://wiki.luxcorerender.org/Category:BlendLuxCore).
+* Blender 4.0 is supported by [BlendLuxCore v2.8 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.8alpha1)
 
-### Examples
+* Blender 3.6 LTS (3.6.x, not 3.6 itself) is experimentally supported by [BlendLuxCore v2.7 beta1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.7beta1)
 
-To see what can be achieved with LuxCore, check our [gallery](https://luxcorerender.org/gallery/).  
-You can also download complete [example scenes](https://luxcorerender.org/example-scenes/).
+* Blender 3.0 - 3.5.1 are supported by [BlendLuxCore v2.6 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.6alpha1)
 
-![Example Render](https://luxcorerender.org/wp-content/uploads/2019/10/dark_mode.jpg)
+* Blender 2.93 is supported by [BlendLuxCore v2.6](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.6)
+
+* Blender 2.83-2.92 are supported by [BlendLuxCore v2.5](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.5)
+
+* Blender 2.83 is supported by [BlendLuxCore v2.4](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.4)
+
+* Blender 2.80, 2.81 and 2.82 are supported by [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2) and [BlendLuxCore v2.3](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.3)
+ 
+* Blender 2.79 is supported by [BlendLuxCore v2.0](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.0), [BlendLuxCore v2.1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.1) and [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2)
+
+### [Installation and usage](https://wiki.luxcorerender.org/Category:BlendLuxCore)
+
+### [Gallery](https://luxcorerender.org/gallery/)  
+
+### [Download example test scenes](https://luxcorerender.org/example-scenes/)
+
