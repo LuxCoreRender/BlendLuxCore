@@ -29,27 +29,14 @@ MAX_MEMORY_DESC = (
 class LuxCoreDenoiser(PropertyGroup):
     refresh = False
 
-    enabled: BoolProperty(name="", default=False, description="Enable/disable denoiser")
+    enabled: BoolProperty(name="", default=True, description="Enable/disable denoiser")
     type_items = [
-        ("BCD", "Bayesian Collaborative Denoiser", "", 0),
-        ("OIDN", "Intel Open Image Denoiser", "", 1),
+        ("OIDN", "OpenImageDenoise", "", 0),
     ]
     type: EnumProperty(name="Type", items=type_items, default="OIDN")
 
-    # BCD settings
-    scales: IntProperty(name="Scales", default=3, min=1, soft_max=5,
-                         description=SCALES_DESC)
-    hist_dist_thresh: FloatProperty(name="Histogram Distance Threshold", default=1, min=0, soft_max=3,
-                                     description=HIST_DIST_THRESH_DESC)
-    # TODO: description for patch radius
-    patch_radius: IntProperty(name="Patch Radius", default=1, min=1, soft_max=3)
-    search_window_radius: IntProperty(name="Search Window Radius", default=6, min=1, soft_max=9,
-                                       description=SEARCH_WINDOW_RADIUS_DESC)
-    filter_spikes: BoolProperty(name="Remove Fireflies", default=False,
-                                 description=FILTER_SPIKES_DESC)
-
     # OIDN settings
-    max_memory_MB: IntProperty(name="Max. Memory (MB)", default=6000, min=100, soft_min=1000,
+    max_memory_MB: IntProperty(name="Max. Memory (MB)", default=6144, min=128, soft_min=1024,
                                description=MAX_MEMORY_DESC)
     albedo_specular_passthrough_modes = [
         ("REFLECT_TRANSMIT", "Reflect and Transmit", "The albedo AOV will contain reflected and transmitted colors from specular materials", 0),
