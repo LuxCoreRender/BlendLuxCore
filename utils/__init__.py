@@ -557,7 +557,7 @@ def use_two_tiled_passes(scene):
     config = scene.luxcore.config
     denoiser = scene.luxcore.denoiser
     using_tilepath = config.engine == "PATH" and config.use_tiles
-    return denoiser.enabled and denoiser.type == "BCD" and using_tilepath and not config.tile.multipass_enable
+    return denoiser.enabled and using_tilepath and not config.tile.multipass_enable
 
 
 def pluralize(format_str, amount):
