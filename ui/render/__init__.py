@@ -18,6 +18,7 @@ classes = (
     config.LUXCORE_RENDER_PT_lightpaths_clamping,
     debug.LUXCORE_RENDER_PT_debug_settings,
     denoiser.LUXCORE_RENDER_PT_denoiser,
+    denoiser.LUXCORE_RENDER_PT_denoiser_bcd_advanced,
     devices.LUXCORE_RENDER_PT_devices,
     devices.LUXCORE_RENDER_PT_gpu_devices,
     devices.LUXCORE_RENDER_PT_cpu_devices,
