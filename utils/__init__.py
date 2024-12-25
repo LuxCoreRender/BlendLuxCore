@@ -5,7 +5,7 @@ import re
 import hashlib
 import os
 from os.path import basename, dirname
-import pyluxcore
+from ..bin import pyluxcore
 from . import view_layer
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
@@ -557,7 +557,7 @@ def use_two_tiled_passes(scene):
     config = scene.luxcore.config
     denoiser = scene.luxcore.denoiser
     using_tilepath = config.engine == "PATH" and config.use_tiles
-    return denoiser.enabled and using_tilepath and not config.tile.multipass_enable
+    return denoiser.enabled and denoiser.type == "BCD" and using_tilepath and not config.tile.multipass_enable
 
 
 def pluralize(format_str, amount):
@@ -675,9 +675,7 @@ def in_material_shading_mode(context):
 
 
 def get_addon_preferences(context):
-    package_name_components = __package__.split(".")
-    package_name_components.pop()
-    addon_name = ".".join(package_name_components)
+    addon_name = basename(dirname(dirname(__file__)))
     return context.preferences.addons[addon_name].preferences
 
 
