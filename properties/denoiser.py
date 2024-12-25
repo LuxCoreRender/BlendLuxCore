@@ -1,50 +1,88 @@
-from bpy.types import PropertyGroup
-from bpy.props import (
-    BoolProperty, IntProperty, FloatProperty, EnumProperty,
-)
-
-REFRESH_DESC = (
-    "Update the denoised image (takes a few seconds to minutes, "
-    "progress is shown in the status bar)"
-)
-SCALES_DESC = (
-    "Try to use more scales if the denoised image shows blotchiness "
-    "(higher values increase computation time and RAM usage)"
-)
-HIST_DIST_THRESH_DESC = (
-    "A lower value will make the output sharper while a value higher "
-    "than 1.0 will make the result more blurry"
-)
-SEARCH_WINDOW_RADIUS_DESC = (
-    "Higher values improve the denoiser result, but lead to longer computation time"
-)
-FILTER_SPIKES_DESC = "Filter outliers from the input samples"
-MAX_MEMORY_DESC = (
-    "Approximate maximum amount of memory to use in megabytes (actual memory usage "
-    "may be higher). Limiting memory usage may cause slower denoising due to internally "
-    "splitting the image into overlapping tiles"
-)
+from bl_ui.properties_render import RenderButtonsPanel
+from bpy.types import Panel
+from ...utils.refresh_button import template_refresh_button
+from ...engine.base import LuxCoreRenderEngine
+from ... import icons
+from ...ui.icons import icon_manager
+from ...properties.denoiser import LuxCoreDenoiser
 
 
-class LuxCoreDenoiser(PropertyGroup):
-    refresh = False
+class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Denoiser"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_order = 60
 
-    enabled: BoolProperty(name="", default=True, description="Enable/disable denoiser")
-    type_items = [
-        ("OIDN", "OpenImageDenoise", "", 0),
-    ]
-    type: EnumProperty(name="Type", items=type_items, default="OIDN")
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine == "LUXCORE"
 
-    # OIDN settings
-    max_memory_MB: IntProperty(name="Max. Memory (MB)", default=6144, min=128, soft_min=1024,
-                               description=MAX_MEMORY_DESC)
-    albedo_specular_passthrough_modes = [
-        ("REFLECT_TRANSMIT", "Reflect and Transmit", "The albedo AOV will contain reflected and transmitted colors from specular materials", 0),
-        ("ONLY_REFLECT", "Reflect", "The albedo AOV will contain only reflected colors from specular materials", 1),
-        ("ONLY_TRANSMIT", "Transmit", "The albedo AOV will contain only transmitted colors from specular materials", 2),
-        ("NO_REFLECT_TRANSMIT", "None", "Specular materials will be a flat white in the albedo AOV", 3),
-    ]
-    albedo_specular_passthrough_mode: EnumProperty(name="Albedo Specular Passthrough", items=albedo_specular_passthrough_modes,
-                                                  default="REFLECT_TRANSMIT", description="How to treat specular materials in the albedo AOV")
-    prefilter_AOVs: BoolProperty(name="Prefilter Auxiliary AOVs", default=True,
-                                 description="Denoise the albedo and avg. shading normal AOVs before using them to denoise the main image")
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        layout.enabled = not LuxCoreRenderEngine.final_running
+        col = layout.column(align=True)
+        col.prop(context.scene.luxcore.denoiser, "enabled", text="")
+
+    def draw(self, context):
+        config = context.scene.luxcore.config
+        denoiser = context.scene.luxcore.denoiser
+        
+        layout = self.layout
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        layout.active = denoiser.enabled
+
+        sub = layout.column(align=True)
+        # The user should not be able to request a refresh when denoiser is disabled
+        sub.enabled = denoiser.enabled
+        template_refresh_button(LuxCoreDenoiser.refresh, "luxcore.request_denoiser_refresh",
+                                sub, "Running denoiser...")
+
+        col = layout.column(align=True)
+        col.prop(denoiser, "type", expand=False)
+        col.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
+
+        if denoiser.enabled and denoiser.type == "BCD":
+            if config.get_sampler() == "METROPOLIS" and not config.use_tiles:
+                layout.label(text="Metropolis sampler can lead to artifacts!", icon=icons.WARNING)
+
+        if denoiser.type == "BCD":
+            sub = layout.column(align=True)
+            # The user should be able to adjust settings even when denoiser is disabled            
+            sub.prop(denoiser, "filter_spikes")
+            sub = layout.column(align=True)
+            sub.prop(denoiser, "hist_dist_thresh")
+            sub = layout.column(align=True)
+            sub.prop(denoiser, "search_window_radius")
+        elif denoiser.type == "OIDN":
+            sub = layout.column(align=False)
+            sub.prop(denoiser, "max_memory_MB")
+            sub.prop(denoiser, "albedo_specular_passthrough_mode")
+            sub.prop(denoiser, "prefilter_AOVs")
+
+
+class LUXCORE_RENDER_PT_denoiser_bcd_advanced(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Advanced"
+    bl_parent_id = "LUXCORE_RENDER_PT_denoiser"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        denoiser = context.scene.luxcore.denoiser
+        return context.scene.render.engine == "LUXCORE" and denoiser.type == "BCD"
+
+    def draw(self, context):
+        denoiser = context.scene.luxcore.denoiser
+        
+        layout = self.layout
+        layout.enabled = denoiser.enabled and not LuxCoreRenderEngine.final_running
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        
+        layout.prop(denoiser, "scales")
+        layout.prop(denoiser, "patch_radius")
+
