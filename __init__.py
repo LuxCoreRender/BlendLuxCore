@@ -16,7 +16,7 @@ if platform.system() == "Darwin":
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
-
+        
 if platform.system() == "Windows":
     # Ensure nvrtc-builtins64_101.dll can be found
     bin_directory = get_bin_directory()
@@ -41,7 +41,7 @@ if platform.system() in {"Linux", "Darwin"}:
     import certifi
     os.environ["SSL_CERT_FILE"] = certifi.where()
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
-
+    
     # Make sure denoiser is executable
     denoiser_path = which("oidnDenoise", mode=os.F_OK, path=get_bin_directory() + os.pathsep + os.environ["PATH"])
     if not os.access(denoiser_path, os.X_OK):
@@ -50,7 +50,7 @@ if platform.system() in {"Linux", "Darwin"}:
 
 
 try:
-    import pyluxcore
+    from .bin import pyluxcore
 except ImportError as error:
     msg = "\n\nCould not import pyluxcore."
     if platform.system() == "Windows":
@@ -72,14 +72,13 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Render",
     "description": "LuxCoreRender integration for Blender",
-    "warning": "beta2",
-
+    "warning": "beta3",
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
-bl_info2 = bl_info  # TODO
 
 from . import properties, engine, handlers, operators, ui, nodes
+
 
 def register():
     engine.register()
@@ -91,8 +90,9 @@ def register():
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
-    version_string = f'{bl_info2["version"][0]}.{bl_info2["version"][1]}{bl_info2["warning"]}'
+    version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
     print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
+
 
 def unregister():
     engine.unregister()
