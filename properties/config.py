@@ -183,13 +183,13 @@ class LuxCoreConfigPath(PropertyGroup):
     """
     # TODO: helpful descriptions
     # path.pathdepth.total
-    depth_total: IntProperty(name="Total Path Depth", default=12, min=1, max=128, soft_max=32)
+    depth_total: IntProperty(name="Total Path Depth", default=12, min=1, soft_max=16)
     # path.pathdepth.diffuse
-    depth_diffuse: IntProperty(name="Diffuse", default=6, min=0, soft_max=16)
+    depth_diffuse: IntProperty(name="Diffuse", default=6, min=1, soft_max=16)
     # path.pathdepth.glossy
-    depth_glossy: IntProperty(name="Glossy", default=4, min=0, soft_max=16)
+    depth_glossy: IntProperty(name="Glossy", default=4, min=1, soft_max=16)
     # path.pathdepth.specular
-    depth_specular: IntProperty(name="Specular", default=12, min=0, soft_max=16)
+    depth_specular: IntProperty(name="Specular", default=12, min=1, soft_max=16)
 
     hybridbackforward_enable: BoolProperty(name="Add Light Tracing", default=False,
                                            description=HYBRID_BACKFORWARD_DESC)
@@ -203,9 +203,9 @@ class LuxCoreConfigPath(PropertyGroup):
     hybridbackforward_glossinessthresh: FloatProperty(name="Glossiness Threshold", default=0.049, min=0, max=1,
                                                       description=HYBRID_BACKFORWARD_GLOSSINESS_DESC)
 
-    use_clamping: BoolProperty(name="Clamp Output", default=True, description=CLAMPING_DESC)
+    use_clamping: BoolProperty(name="Clamp Output", default=False, description=CLAMPING_DESC)
     # path.clamping.variance.maxvalue
-    clamping: FloatProperty(name="Max Brightness", default=10, min=0, description=CLAMPING_DESC)
+    clamping: FloatProperty(name="Max Brightness", default=1000, min=0, description=CLAMPING_DESC)
     # This should only be set in the engine code after export. Only show a read-only label to the user.
     suggested_clamping_value: FloatProperty(name="", default=-1)
 
@@ -221,11 +221,11 @@ class LuxCoreConfigTile(PropertyGroup):
     Stored in LuxCoreConfig, accesss with scene.luxcore.config.tile
     """
     # tilepath.sampling.aa.size
-    path_sampling_aa_size: IntProperty(name="AA Samples", default=3, min=1, soft_max=16,
+    path_sampling_aa_size: IntProperty(name="AA Samples", default=3, min=1, soft_max=13,
                                         description=AA_SAMPLE_DESC)
 
     # tile.size
-    size: IntProperty(name="Tile Size", default=64, min=16, soft_min=32, soft_max=2048, subtype="PIXEL",
+    size: IntProperty(name="Tile Size", default=64, min=16, soft_min=32, soft_max=256, subtype="PIXEL",
                        description=TILE_SIZE_DESC)
 
     # tile.multipass.enable
@@ -433,7 +433,7 @@ class LuxCoreConfig(PropertyGroup):
         return self.sampler_gpu if (self.engine == "PATH" and self.device == "OCL") else self.sampler
 
     # SOBOL properties
-    sobol_adaptive_strength: FloatProperty(name="Adaptive Strength", default=0.95, min=0, max=0.95,
+    sobol_adaptive_strength: FloatProperty(name="Adaptive Strength", default=0.9, min=0, max=0.95,
                                             description=SOBOL_ADAPTIVE_STRENGTH_DESC)
 
     # Noise estimation (used by adaptive samplers like SOBOL and RANDOM)
@@ -447,15 +447,13 @@ class LuxCoreConfig(PropertyGroup):
     sampler_pattern: EnumProperty(name="Pattern", items=sampler_patterns, default="PROGRESSIVE")
     
     out_of_core_supersampling_items = [
-        ("1", "1", "", 0),
-        ("2", "2", "", 1),
-        ("4", "4", "", 2),
-        ("8", "8", "", 3),
-        ("16", "16", "", 4),
-        ("32", "32", "", 5),
-        ("64", "64", "", 6),
+        ("4", "4", "", 0),
+        ("8", "8", "", 1),
+        ("16", "16", "", 2),
+        ("32", "32", "", 3),
+        ("64", "64", "", 4),
     ]
-    out_of_core_supersampling: EnumProperty(name="Supersampling", items=out_of_core_supersampling_items, default="1",
+    out_of_core_supersampling: EnumProperty(name="Supersampling", items=out_of_core_supersampling_items, default="16",
                                             description="Multiplier for the samples per pass")
     out_of_core_modes = [
         ("FILM", "Only Film", "Only the film (rendered pixels) is stored in CPU RAM instead of GPU RAM", 0),
