@@ -77,8 +77,7 @@ def get_link(socket):
     All reroute nodes between this socket and the next non-reroute node are skipped.
     Muted nodes are ignored.
     """
-
-    if not socket.is_linked:
+    if not socket.is_linked or not socket.links:
         return None
 
     link = socket.links[0]
@@ -98,16 +97,12 @@ def get_link(socket):
                 if not link.from_socket.bl_idname.startswith("LuxCoreSocket") or not node.inputs:
                     return None
 
-                # We can't define internal_links, so try to make up a link that makes sense.
-                found_internal_link = False
-
+                # Try to find a valid internal link
                 for input_socket in node.inputs:
                     if input_socket.links and link.from_socket.is_allowed_input(input_socket):
                         link = input_socket.links[0]
-                        found_internal_link = True
                         break
-
-                if not found_internal_link:
+                else:
                     return None
         else:
             # Reroute node
