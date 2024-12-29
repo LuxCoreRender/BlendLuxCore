@@ -5,8 +5,8 @@
 # then recreated at the current commit by the following release pipeline.
 
 TAG=$(git tag -l latest)
-if [[ $TAG == "pre-latest" ]] ; then
+if [[ $TAG == "latest" ]] ; then
     git remote set-url origin git@github.com:LuxCoreRender/BlendLuxCore.git
-    git tag --delete pre-latest
-    git push --delete origin pre-latest
+    git tag --delete latest
+    git push --delete origin latest
 fi
