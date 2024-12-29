@@ -5,39 +5,42 @@
 # One, and only one, tag in the form "blendluxcore_v*" is needed, 
 # otherwise the official release build aborts.
 
-# Get the branch name from the build environment
-BUILD_BRANCH=$(Build.SourceBranchName)
-VERSION_TYPE=""
+echo "Detecting build type..."
+echo "Commit ID: $BUILD_SOURCEVERSION"
+TAGS=$(git tag --points-at $BUILD_SOURCEVERSION)
+for tag in $TAGS
+do
+    if [[ $tag != "latest" ]] && [[ $tag == "blendluxcore_v"* ]] ; then
+        if [[ -z "$VERSION_STRING" ]] ; then
+            VERSION_STRING=$(echo $tag | cut -d'_' -f 2)
+        else
+            echo "Multiple git tags identify different versions, aborting..."
+            exit 1
+        fi
+    fi
+done
 
-# Print the branch name for debugging
-echo "Building branch: $BUILD_BRANCH"
+if [[ -z "$VERSION_STRING" ]] ; then
+    echo "No release git tag found, this is a daily release"
+    VERSION_STRING=latest
+fi
+echo "Detected release type: $VERSION_STRING"
 
-# Determine the release type based on the branch name
-if [[ "$BUILD_BRANCH" == "for_blender_4.2" ]]; then
-  # Mark the for_blender_4.2 branch as a pre-release
-  VERSION_TYPE="pre-release"
-  echo "Release type: Pre-release (for_blender_4.2)"
-elif [[ "$BUILD_BRANCH" == "master" ]]; then
-  # For master branch, it's a final release
-  VERSION_TYPE="final"
-  echo "Release type: Final (master)"
+if [[ $VERSION_STRING == *"alpha"* ]] || \
+   [[ $VERSION_STRING == *"beta"* ]] || \
+   [[ $VERSION_STRING == *"RC"* ]] || \
+   [[ $VERSION_STRING == *"rc"* ]] || \
+   [[ $VERSION_STRING == "pre-latest" ]] ; then
+    FINAL="FALSE"
 else
-  # Handle other branches as daily builds (could be expanded to alpha/beta/RC in the future)
-  VERSION_TYPE="daily"
-  echo "Release type: Daily ($BUILD_BRANCH)"
+    FINAL="TRUE"
 fi
 
-# Check for specific tags (optional)
-# Example: If the commit is tagged with a version string (like 'blendluxcore_v1.0.0'), we can use that tag as a version string
-if [[ "$(Build.SourceVersion)" =~ "blendluxcore_v" ]]; then
-  VERSION_TYPE="official-release"
-  echo "Release type: Official release (tag detected)"
-fi
+# Generate/copy files to be published for release pipeline usage
+echo blendluxcore_$VERSION_STRING > $BUILD_ARTIFACTSTAGINGDIRECTORY/github_release_tag
+cp ./scripts/azurepipeline/read-release-tag.sh $BUILD_ARTIFACTSTAGINGDIRECTORY/read-release-tag.sh
+#cp ./release-notes.txt $BUILD_ARTIFACTSTAGINGDIRECTORY/release-notes.txt
 
-# Set the detected version type as an environment variable for later steps in the pipeline
-echo "##vso[task.setvariable variable=version_string]$VERSION_TYPE"
-echo "Version string set to: $VERSION_TYPE"
-
-# Optionally: If you want to output the version type in a file or use it in subsequent steps, you can add it to a file.
-echo "$VERSION_TYPE" > $(Build.ArtifactStagingDirectory)/version.txt
-
+# make FINAL and VERSION_STRING variables available for other pipeline jobs
+echo "##vso[task.setvariable variable=final;isOutput=true]$FINAL"
+echo "##vso[task.setvariable variable=version_string;isOutput=true]$VERSION_STRING"
