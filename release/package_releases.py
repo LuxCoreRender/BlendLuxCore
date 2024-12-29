@@ -217,7 +217,7 @@ def main():
     args = parser.parse_args()
 
     # Archives we need.
-    if args.version_string == "pre-latest":
+    if args.version_string == "latest":
         url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/"
     else:
         url_prefix = "https://github.com/LuxCoreRender/LuxCore/releases/download/luxcorerender_"
