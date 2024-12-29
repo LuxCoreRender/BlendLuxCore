@@ -86,7 +86,7 @@ jobs:
     (
       eq(variables['System.PullRequest.IsFork'], 'False'),
       eq(variables['Build.SourceBranchName'], 'for_blender_4.2'),
-      eq(dependencies.DetectBuildType.outputs['setvarStep.version_string'], 'pre-latest'),
+      eq(dependencies.DetectBuildType.outputs['setvarStep.version_string'], 'latest'),
       in(dependencies.BlendLuxCoreLinux.result, 'Succeeded', 'SucceededWithIssues')
     )
   timeoutInMinutes: 0
