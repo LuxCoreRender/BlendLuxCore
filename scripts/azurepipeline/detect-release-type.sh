@@ -10,7 +10,7 @@ echo "Commit ID: $BUILD_SOURCEVERSION"
 TAGS=$(git tag --points-at $BUILD_SOURCEVERSION)
 for tag in $TAGS
 do
-    if [[ $tag != "latest" ]] && [[ $tag == "blendluxcore_v"* ]] ; then
+    if [[ $tag != "pre-latest" ]] && [[ $tag == "blendluxcore_v"* ]] ; then
         if [[ -z "$VERSION_STRING" ]] ; then
             VERSION_STRING=$(echo $tag | cut -d'_' -f 2)
         else
@@ -22,7 +22,7 @@ done
 
 if [[ -z "$VERSION_STRING" ]] ; then
     echo "No release git tag found, this is a daily release"
-    VERSION_STRING=latest
+    VERSION_STRING=pre-latest
 fi
 echo "Detected release type: $VERSION_STRING"
 
