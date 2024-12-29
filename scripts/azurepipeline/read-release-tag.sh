@@ -13,9 +13,9 @@ if [[ $RELEASE_TAG == *"alpha"* ]] || \
    [[ $RELEASE_TAG == *"RC"* ]] || \
    [[ $RELEASE_TAG == *"rc"* ]] ; then
     FINAL="FALSE"
-elif [[ $RELEASE_TAG == *"pre-latest"* ]] ; then
+elif [[ $RELEASE_TAG == *"latest"* ]] ; then
     FINAL="FALSE"
-    RELEASE_TAG="pre-latest"
+    RELEASE_TAG="latest"
 else
     FINAL="TRUE"
 fi
