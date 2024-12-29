@@ -8,31 +8,29 @@
 # One, and only one, tag in the form "blendluxcore_v*" is needed, 
 # otherwise the official release build aborts.
 
-variables:
-- group: BuildPipelinesGroup
-
 trigger:
   branches:
     include:
-    - '*'
+    - '*'                # This includes all branches for general builds
+    - 'for_blender_4.2'  # This includes the 'for_blender_4.2' branch to trigger builds
   tags:
     include:
     - 'blendluxcore_v*'
 
 jobs:
+# Job to detect build type (daily, alpha, beta, pre-release, or final)
 - job: DetectBuildType
   timeoutInMinutes: 0
   pool:
     vmImage: 'ubuntu-20.04'
-    
   steps:
-  - task: Bash@3 # Useful for debug only, comment out for normal usage
+  - task: Bash@3
     inputs:
       targetType: 'inline'
       script: 'env | sort'
     displayName: Print environment variables
   - script: ./scripts/azurepipeline/detect-release-type.sh
-    displayName: Detecting release type (daily, alpha, beta or final)
+    displayName: Detecting release type (daily, alpha, beta, or final)
     name: setvarStep
   - task: PublishBuildArtifacts@1
     inputs:
@@ -40,10 +38,8 @@ jobs:
       artifactName: BlendLuxCore
     displayName: 'Upload github_release_title'
     condition: eq(variables['System.PullRequest.IsFork'], 'False')
-    
-#==========================================================================
-# Packaging BlendLuxCore
-#==========================================================================
+
+# Job to package BlendLuxCore for Linux
 - job: BlendLuxCoreLinux
   dependsOn: DetectBuildType
   condition: succeeded()
@@ -52,7 +48,6 @@ jobs:
     vmImage: 'ubuntu-20.04'
   variables:
     version_string: $[ dependencies.DetectBuildType.outputs['setvarStep.version_string'] ]
-
   steps:
   - script: ./scripts/azurepipeline/deps-setup.sh
     displayName: Setting up deps
@@ -65,18 +60,9 @@ jobs:
     displayName: 'Upload BlendLuxCore packages'
     condition: eq(variables['System.PullRequest.IsFork'], 'False')
 
-
-#==========================================================================
-# Preparing for GitHub release
-#==========================================================================
-# This job deletes "latest" tag from BlendLuxCore repo, so that it is then
-# recreated at the current commit by the following release pipeline
-# Runs only if:
-# - this is a daily build
-# - at least one of the build jobs was successful 
-# - the pipeline has been triggered by master branch and not by a pull request
+# Job to delete the 'latest' tag for updating with the current commit
 - job: DeleteLatestTag
-  dependsOn: 
+  dependsOn:
   - DetectBuildType
   - BlendLuxCoreLinux
   variables:
@@ -85,19 +71,41 @@ jobs:
     and
     (
       eq(variables['System.PullRequest.IsFork'], 'False'),
-      eq(variables['Build.SourceBranchName'], 'master'),
+      or(
+        eq(variables['Build.SourceBranchName'], 'master'),
+        eq(variables['Build.SourceBranchName'], 'for_blender_4.2')
+      ),
       eq(dependencies.DetectBuildType.outputs['setvarStep.version_string'], 'latest'),
       in(dependencies.BlendLuxCoreLinux.result, 'Succeeded', 'SucceededWithIssues')
     )
   timeoutInMinutes: 0
   pool:
     vmImage: 'ubuntu-20.04'
-    
   steps:
   - task: InstallSSHKey@0
     inputs:
-      hostName: github.com,140.82.118.3 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+      hostName: github.com
       sshPublicKey: $(PubKey)
       sshKeySecureFile: luxcore_id_rsa
   - script: ./scripts/azurepipeline/delete-latest-tag.sh
     displayName: Deleting tag to update latest build
+
+# Job to publish GitHub release with pre-release flag for the 'for_blender_4.2' branch
+- job: PublishGitHubRelease
+  dependsOn: BlendLuxCoreLinux
+  condition: |
+    and(
+      eq(variables['Build.SourceBranchName'], 'for_blender_4.2'),
+      eq(dependencies.DetectBuildType.outputs['setvarStep.version_string'], 'pre-release')
+    )
+  timeoutInMinutes: 0
+  pool:
+    vmImage: 'ubuntu-20.04'
+  steps:
+  - task: GitHubRelease@0
+    inputs:
+      connection: 'GitHubConnection'  # Configure your GitHub connection
+      repositoryName: 'BlendLuxCore'  # Replace with your repository name
+      tag: '$(Build.BuildId)'  # Use the build ID as the tag
+      releaseNotes: 'Release notes for the pre-release of BlendLuxCore for Blender 4.2'
+      isPreRelease: true  # This marks the release as a pre-release on GitHub
