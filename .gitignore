@@ -7,4 +7,4 @@ release/*
 !release/package_releases.py
 
 # For ignored files in bin/ subdirectory, see the .gitignore file in bin/
-wheels
+wheels/

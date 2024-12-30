@@ -44,6 +44,7 @@ wheels = [
   "./wheels/pyluxcore-2.9a1.post11-cp311-cp311-macosx_10_13_x86_64.whl",
   "./wheels/pyluxcore-2.9a1.post11-cp311-cp311-win_amd64.whl",
   "./wheels/pyluxcore-2.9a1.post11-cp311-cp311-manylinux_2_28_x86_64.whl",
+  "./wheels/pyluxcore-2.9a1.post11-cp312-cp312-manylinux_2_28_x86_64.whl",
 ]
 
 # # Optional: add-ons can list which resources they will require:

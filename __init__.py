@@ -3,9 +3,10 @@ import platform
 import os
 from shutil import which
 
-def get_bin_directory():
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    return os.path.join(current_dir, "bin")
+# TODO
+# def get_bin_directory():
+    # current_dir = os.path.dirname(os.path.realpath(__file__))
+    # return os.path.join(current_dir, "bin")
 
 if bpy.app.version < (2, 93, 0):
     raise Exception("\n\nUnsupported Blender version. 2.93 or higher is required by BlendLuxCore.")
@@ -17,36 +18,11 @@ if platform.system() == "Darwin":
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
 
-if platform.system() == "Windows":
-    # Ensure nvrtc-builtins64_101.dll can be found
-    bin_directory = get_bin_directory()
-
-    try:
-        from ctypes import windll, c_wchar_p
-        from ctypes.wintypes import DWORD
-
-        AddDllDirectory = windll.kernel32.AddDllDirectory
-        AddDllDirectory.restype = DWORD
-        AddDllDirectory.argtypes = [c_wchar_p]
-
-        os.environ["PATH"] = bin_directory + os.pathsep + os.environ["PATH"]
-        AddDllDirectory(bin_directory)
-    except AttributeError:
-        # Windows 7 users might be missing this update
-        raise Exception("\n\nYou need to install this update: "
-                        "https://www.microsoft.com/en-us/download/details.aspx?id=26764") from None
-
 if platform.system() in {"Linux", "Darwin"}:
     # Required for downloads from the LuxCore Online Library
     import certifi
     os.environ["SSL_CERT_FILE"] = certifi.where()
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
-
-    # Make sure denoiser is executable
-    denoiser_path = which("oidnDenoise", mode=os.F_OK, path=get_bin_directory() + os.pathsep + os.environ["PATH"])
-    if not os.access(denoiser_path, os.X_OK):
-        print("Making LuxCore denoiser executable")
-        os.chmod(denoiser_path, 0o755)
 
 
 try:
@@ -77,7 +53,7 @@ bl_info = {
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
-bl_info2 = bl_info  # TODO
+version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
 
 from . import properties, engine, handlers, operators, ui, nodes
 
@@ -91,7 +67,6 @@ def register():
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
-    version_string = f'{bl_info2["version"][0]}.{bl_info2["version"][1]}{bl_info2["warning"]}'
     print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
 
 def unregister():
