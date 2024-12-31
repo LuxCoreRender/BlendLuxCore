@@ -75,6 +75,7 @@ class FrameBuffer:
     def _initialize_denoiser_paths(self):
         base_path = tempfile.gettempdir()
         unique_id = id(self)
+
         self._noisy_file_path = join(base_path, f"{unique_id}_noisy.pfm")
         self._albedo_file_path = join(base_path, f"{unique_id}_albedo.pfm")
         self._normal_file_path = join(base_path, f"{unique_id}_normal.pfm")
@@ -86,6 +87,15 @@ class FrameBuffer:
             "oidnDenoise",
             path=os.pathsep.join([join(addon_dir, "bin"), os.environ["PATH"]])
         )
+
+        self._noisy_file_path = os.path.join(base_path, f"{unique_id}_noisy.pfm")
+        self._albedo_file_path = os.path.join(base_path, f"{unique_id}_albedo.pfm")
+        self._normal_file_path = os.path.join(base_path, f"{unique_id}_normal.pfm")
+        self._denoised_file_path = os.path.join(base_path, f"{unique_id}_denoised.pfm")
+
+        self._denoiser_path = pyluxcore.path_to_oidn()
+        os.chmod(self._denoiser_path, 0o755)
+
 
     def _init_opengl(self):
         width, height = self._width * self._pixel_size, self._height * self._pixel_size
@@ -183,6 +193,7 @@ class FrameBuffer:
         self._save_denoiser_AOV(luxcore_session, pyluxcore.FilmOutputType.AVG_SHADING_NORMAL, self._normal_file_path)
         TempfileManager.track(id(self), self._denoised_file_path)
 
+        print(f"Starting '{self._denoiser_path}'...")
         args = [
             self._denoiser_path,
             "-hdr", self._noisy_file_path,
