@@ -1,13 +1,11 @@
 import bpy
-import bpy
 import platform
 import os
 from shutil import which
 
-# TODO
-# def get_bin_directory():
-    # current_dir = os.path.dirname(os.path.realpath(__file__))
-    # return os.path.join(current_dir, "bin")
+def get_bin_directory():
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(current_dir, "bin")
 
 if bpy.app.version < (2, 93, 0):
     raise Exception("\n\nUnsupported Blender version. 2.93 or higher is required by BlendLuxCore.")
@@ -18,7 +16,6 @@ if platform.system() == "Darwin":
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
-
         
 if platform.system() == "Windows":
     # Ensure nvrtc-builtins64_101.dll can be found
@@ -44,12 +41,13 @@ if platform.system() in {"Linux", "Darwin"}:
     import certifi
     os.environ["SSL_CERT_FILE"] = certifi.where()
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
-
+    
     # Make sure denoiser is executable
     denoiser_path = which("oidnDenoise", mode=os.F_OK, path=get_bin_directory() + os.pathsep + os.environ["PATH"])
     if not os.access(denoiser_path, os.X_OK):
         print("Making LuxCore denoiser executable")
         os.chmod(denoiser_path, 0o755)
+
 
 try:
     from .bin import pyluxcore
@@ -79,8 +77,6 @@ bl_info = {
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
 
-version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
-
 from . import properties, engine, handlers, operators, ui, nodes
 
 
@@ -94,9 +90,7 @@ def register():
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
-
     version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
-
     print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
 
 
@@ -107,4 +101,3 @@ def unregister():
     properties.unregister()
     ui.unregister()
     nodes.unregister()
-

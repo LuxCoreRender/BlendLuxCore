@@ -54,10 +54,6 @@ jobs:
       - uses: ./.github/actions/generate-bundles
         with:
           python-version: '3.12'
-          
-      - uses: ./.github/actions/generate-bundles
-        with:
-          python-version: '3.13'
 
       - run: blender --version
 
