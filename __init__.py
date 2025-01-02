@@ -1,12 +1,14 @@
-import bpy
+import tempfile
 import platform
 import os
+import sys
+import subprocess
 from shutil import which
+import pathlib
+import tomlkit
 
-# TODO
-# def get_bin_directory():
-    # current_dir = os.path.dirname(os.path.realpath(__file__))
-    # return os.path.join(current_dir, "bin")
+import bpy
+import addon_utils
 
 if bpy.app.version < (2, 93, 0):
     raise Exception("\n\nUnsupported Blender version. 2.93 or higher is required by BlendLuxCore.")
@@ -25,21 +27,55 @@ if platform.system() in {"Linux", "Darwin"}:
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
 
+def install_pyluxcore():
+    # We cannot 'pip install' directly, as it would install pyluxcore system-wide
+    # instead of in Blender environment
+    # Blender has got its own logic for wheel installation, we'll rely on it
+
+    # Download wheel
+    root_folder = pathlib.Path(__file__).parent.resolve()
+    wheel_folder =  root_folder / "wheels"
+    args = [
+        sys.executable,
+        '-m',
+        'pip',
+        'download',
+        'pyluxcore',
+        '-d',
+        wheel_folder
+    ]
+    result = subprocess.run(args, capture_output=False)
+
+    if result.returncode != 0:
+        raise RuntimeError(f'Failed to download LuxCore with return code {result.returncode}.') from None
+
+    # Setup manifest with wheel list
+    manifest_path = root_folder / "blender_manifest.toml"
+    with open(manifest_path, "r") as fp:
+      manifest = tomlkit.load(fp)
+    files, *_ = os.walk(wheel_folder)
+    wheels = [os.path.join(".", "wheels", f) for f in files[2]]
+    print("Wheels: ", wheels)
+    manifest["wheels"] = wheels
+    with open(manifest_path, "w") as fp:
+        tomlkit.dump(manifest, fp)
+
+    # Ask Blender to do the install
+    addon_utils.extensions_refresh(ensure_wheels=True)
+
+
+# We'll invoke install_pyluxcore at each init
+# We rely on pip local cache for this call to be transparent, after the wheels
+# have been downloaded once, unless an update is required
+install_pyluxcore()
+
 try:
     import pyluxcore
 except ImportError as error:
     msg = "\n\nCould not import pyluxcore."
-    if platform.system() == "Windows":
-        msg += ("\nYou probably forgot to install one of the "
-                "redistributable packages.\n"
-                "They are listed in the release announcement post.")
-    elif platform.system() == "Linux":
-        if str(error) == "ImportError: libOpenCL.so.1: cannot open shared object file: No such file or directory":
-            msg += ("\nYour OpenCL installation is probably missing or broken. "
-                    "Look up how to install OpenCL on your system.")
     # Raise from None to suppress the unhelpful
     # "during handling of the above exception, ..."
-    raise Exception(msg + "\n\nImportError: %s" % error) from None
+    raise RuntimeError(msg + "\n\nImportError: %s" % error) from None
 
 bl_info = {
     "name": "LuxCoreRender",
