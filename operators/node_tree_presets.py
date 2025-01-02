@@ -17,7 +17,7 @@ class LUXCORE_OT_preset_material(bpy.types.Operator):
     bl_idname = "luxcore.preset_material"
     bl_label = ""
     bl_description = "Add a pre-definied node setup"
-    bl_options = {"UNDO"}
+    
 
     basic_mapping = OrderedDict([
         ("Disney", "LuxCoreNodeMatDisney"),
