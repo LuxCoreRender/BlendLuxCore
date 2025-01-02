@@ -13,7 +13,7 @@ class LUXCORE_OT_convert_to_v23(bpy.types.Operator):
     bl_label = "Convert Scene From v2.2 or Earlier to v2.3"
     bl_description = ("Convert various settings (e.g. light brightness, world settings) so scenes "
                       "created with LuxCore v2.2 or earlier appear the same when rendered in v2.3")
-    bl_options = {"UNDO"}
+    
 
     was_executed = False
 
