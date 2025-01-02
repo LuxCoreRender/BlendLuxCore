@@ -8,7 +8,7 @@ class LUXCORE_OT_add_lightgroup(bpy.types.Operator):
     bl_idname = "luxcore.add_lightgroup"
     bl_label = "Add Light Group"
     bl_description = "Add a light group"
-    bl_options = {"UNDO"}
+    
 
     def execute(self, context):
         groups = context.scene.luxcore.lightgroups
@@ -20,7 +20,7 @@ class LUXCORE_OT_remove_lightgroup(bpy.types.Operator):
     bl_idname = "luxcore.remove_lightgroup"
     bl_label = "Remove Light Group"
     bl_description = "Remove this light group"
-    bl_options = {"UNDO"}
+    
 
     index: IntProperty()
 
@@ -36,7 +36,7 @@ class LUXCORE_OT_select_objects_in_lightgroup(bpy.types.Operator):
     bl_description = ("Select all objects that are affected by this light "
                       "group (lights and meshes with emissive material)\n"
                       "Selection will be added to the current selection")
-    bl_options = {"UNDO"}
+    
 
     index: IntProperty()
 
@@ -210,7 +210,7 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
                       "lighting after the render is complete. If one or more mixer nodes already "
                       "exist, this button can be used to update them after adding or removing "
                       "light groups")
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
