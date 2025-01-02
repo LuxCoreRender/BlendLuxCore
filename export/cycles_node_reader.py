@@ -99,7 +99,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                 #  - transmission roughness (weird thing, might require rough glass + glossy coating?)
                 "type": "disney",
                 "basecolor": base_color,
-                "subsurface": _socket(node.inputs["Subsurface Weight"], props, material, obj_name, group_node_stack)
+                "subsurface": _socket(node.inputs["Subsurface Weight"], props, material, obj_name, group_node_stack),
                 "metallic": metallic,
                 "specular": _socket(node.inputs["Specular IOR Level"], props, material, obj_name, group_node_stack),
                 "speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node_stack),
