@@ -47,18 +47,39 @@ jobs:
         with:
           blender-version: '4.2.4'
 
-      - uses: ./.github/actions/generate-bundles
-        with:
-          python-version: '3.11'
-
-      - uses: ./.github/actions/generate-bundles
-        with:
-          python-version: '3.12'
-          
-      - uses: ./.github/actions/generate-bundles
-        with:
-          python-version: '3.13'
-
       - run: blender --version
 
+      - name: Get BlendLuxCore version (according to blender_manifest.toml)
+        shell: python
+        run: |
+          import tomllib
+          import os
+          from pathlib import Path
+
+          root = Path("${{ github.workspace }}")
+          manifest_path = root / "blender_manifest.toml"
+          with open(manifest_path, "rb") as fp:
+              manifest = tomllib.load(fp)
+          version = manifest["version"]
+
+          # Version is stored in environment variable VERSION
+          env_file = os.getenv('GITHUB_ENV')
+          with open(env_file, "a") as myfile:
+              myfile.write(f"VERSION={version}")
+
+
+      - name: Package bundle
+        shell: bash
+        run: |
+          echo "Packaging ${VERSION}"
+          blender --command extension build \
+            --source-dir "${{ github.workspace }}" \
+            --output-dir "${{ github.workspace }}"
+
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "BlendLuxCore"
+          path: "${{ github.workspace }}/BlendLuxCore-${{ env.VERSION }}.zip"
 
