@@ -16,7 +16,7 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
     bl_idname = "luxcore.render_settings_helper"
     bl_label = "Render Settings Helper"
     bl_description = "Interactive render settings guide"
-    bl_options = {"UNDO"}
+    
 
     yes_no_items = [
         ("NOT_SET", "Please Choose", "", 0),
