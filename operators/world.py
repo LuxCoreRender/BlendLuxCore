@@ -12,7 +12,7 @@ class LUXCORE_OT_world_new_volume_node_tree(bpy.types.Operator):
     bl_idname = "luxcore.world_new_volume_node_tree"
     bl_label = "New"
     bl_description = "Create a volume node tree"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -37,7 +37,7 @@ class LUXCORE_OT_world_unlink_volume_node_tree(bpy.types.Operator):
     bl_idname = "luxcore.world_unlink_volume_node_tree"
     bl_label = "Unlink"
     bl_description = "Unlink this volume node tree"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -104,7 +104,7 @@ class LUXCORE_OT_world_set_ground_black(bpy.types.Operator):
     bl_idname = "luxcore.world_set_ground_black"
     bl_label = "Fix Sky Settings"
     bl_description = "Set the sky ground color in the world settings to black"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -120,7 +120,7 @@ class LUXCORE_OT_create_sun_hemi(bpy.types.Operator):
     bl_idname = "luxcore.create_sun_hemi"
     bl_label = "Create Sun Light"
     bl_description = "Create a sun light and assign the HDRI"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
