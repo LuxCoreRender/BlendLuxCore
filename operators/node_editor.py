@@ -41,7 +41,7 @@ class LUXCORE_OT_node_editor_viewer(bpy.types.Operator):
     bl_idname = "luxcore.node_editor_viewer"
     bl_label = "Insert Viewer"
     bl_description = ""
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -149,7 +149,7 @@ class LUXCORE_OT_mute_node(bpy.types.Operator):
     bl_idname = "luxcore.mute_node"
     bl_label = "Mute Node"
     bl_description = "Toggle mute state of all selected nodes"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -171,7 +171,7 @@ class LUXCORE_OT_node_editor_add_image(bpy.types.Operator):
     bl_idname = "luxcore.node_editor_add_image"
     bl_label = "Add Image"
     bl_description = "Add image and mapping node to selected nodes"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
