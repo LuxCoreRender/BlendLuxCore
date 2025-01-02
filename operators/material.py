@@ -12,7 +12,7 @@ class LUXCORE_OT_material_new(bpy.types.Operator):
     bl_idname = "luxcore.material_new"
     bl_label = "New"
     bl_description = "Create a new material and node tree"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -43,7 +43,7 @@ class LUXCORE_OT_material_unlink(bpy.types.Operator):
     bl_idname = "luxcore.material_unlink"
     bl_label = ""
     bl_description = "Unlink data-block"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -60,7 +60,7 @@ class LUXCORE_OT_material_copy(bpy.types.Operator):
     bl_idname = "luxcore.material_copy"
     bl_label = "Copy"
     bl_description = "Create a copy of the material (also copying the nodetree)"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -91,7 +91,7 @@ class LUXCORE_OT_material_set(bpy.types.Operator):
     bl_idname = "luxcore.material_set"
     bl_label = ""
     bl_description = "Assign this node tree"
-    bl_options = {"UNDO"}
+    
 
     material_index: IntProperty()
 
@@ -216,7 +216,7 @@ class LUXCORE_OT_mat_nodetree_new(bpy.types.Operator):
     bl_idname = "luxcore.mat_nodetree_new"
     bl_label = "New"
     bl_description = "Create a material node tree"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
