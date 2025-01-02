@@ -8,7 +8,7 @@ class LUXCORE_OT_use_cycles_settings(bpy.types.Operator):
     bl_idname = "luxcore.use_cycles_settings"
     bl_label = "Use Cycles Settings"
     bl_description = "Use Cycles material nodes, light settings, world settings etc. wherever possible"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -23,7 +23,7 @@ class LUXCORE_OT_use_cycles_nodes_everywhere(bpy.types.Operator):
     bl_idname = "luxcore.use_cycles_nodes_everywhere"
     bl_label = "Use Cycles nodes on all materials"
     bl_description = 'Enable the "Use Cycles nodes" checkbox on all materials that have a Cycles nodetree'
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -245,7 +245,7 @@ class LUXCORE_OT_select_object(bpy.types.Operator):
     bl_idname = "luxcore.select_object"
     bl_label = "Select Object"
     bl_description = "Select this object"
-    bl_options = {"UNDO"}
+    
 
     obj_name: StringProperty()
 
