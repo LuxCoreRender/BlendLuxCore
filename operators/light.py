@@ -12,7 +12,7 @@ class LUXCORE_OT_light_new_volume_node_tree(bpy.types.Operator):
     bl_idname = "luxcore.light_new_volume_node_tree"
     bl_label = "New"
     bl_description = "Create a volume node tree"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
@@ -37,7 +37,7 @@ class LUXCORE_OT_light_unlink_volume_node_tree(bpy.types.Operator):
     bl_idname = "luxcore.light_unlink_volume_node_tree"
     bl_label = "Unlink"
     bl_description = "Unlink this volume node tree"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
