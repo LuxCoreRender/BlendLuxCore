@@ -1,3 +1,4 @@
+print("here")
 import tempfile
 import platform
 import os
@@ -5,7 +6,6 @@ import sys
 import subprocess
 from shutil import which
 import pathlib
-import tomlkit
 
 import bpy
 import addon_utils
@@ -35,7 +35,7 @@ def install_pyluxcore():
     # Download wheel
     root_folder = pathlib.Path(__file__).parent.resolve()
     wheel_folder =  root_folder / "wheels"
-    args = [
+    command = [
         sys.executable,
         '-m',
         'pip',
@@ -44,21 +44,33 @@ def install_pyluxcore():
         '-d',
         wheel_folder
     ]
-    result = subprocess.run(args, capture_output=False)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    output = stdout.decode()
+    error_output = stderr.decode()
+    if output:
+        print("Output:\n", output)
+    if error_output:
+        print("Errors:\n", error_output)
 
-    if result.returncode != 0:
+    if process.returncode != 0:
         raise RuntimeError(f'Failed to download LuxCore with return code {result.returncode}.') from None
 
     # Setup manifest with wheel list
     manifest_path = root_folder / "blender_manifest.toml"
-    with open(manifest_path, "r") as fp:
-      manifest = tomlkit.load(fp)
     files, *_ = os.walk(wheel_folder)
     wheels = [os.path.join(".", "wheels", f) for f in files[2]]
-    print("Wheels: ", wheels)
-    manifest["wheels"] = wheels
+    wheel_statement = f"\nwheels = {wheels}\n"
+    print(wheel_statement)
+
+    with open(manifest_path, "r") as fp:
+        manifest = list(fp)
     with open(manifest_path, "w") as fp:
-        tomlkit.dump(manifest, fp)
+        for line in manifest:
+            if line.startswith("## WHEELS ##"):
+                fp.write(wheel_statement)
+            else:
+                fp.write(line)
 
     # Ask Blender to do the install
     addon_utils.extensions_refresh(ensure_wheels=True)
