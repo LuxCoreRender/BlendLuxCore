@@ -1,4 +1,3 @@
-print("here")
 import tempfile
 import platform
 import os
@@ -59,7 +58,10 @@ def install_pyluxcore():
     # Setup manifest with wheel list
     manifest_path = root_folder / "blender_manifest.toml"
     files, *_ = os.walk(wheel_folder)
-    wheels = [os.path.join(".", "wheels", f) for f in files[2]]
+    wheels = [
+        pathlib.Path(".", "wheels", f).as_posix()
+        for f in files[2]
+    ]
     wheel_statement = f"\nwheels = {wheels}\n"
     print(wheel_statement)
 
