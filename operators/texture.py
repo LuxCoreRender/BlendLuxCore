@@ -35,7 +35,7 @@ class LUXCORE_OT_tex_nodetree_new(bpy.types.Operator):
     bl_idname = "luxcore.tex_nodetree_new"
     bl_label = "New"
     bl_description = "Create a texture node tree"
-    bl_options = {"UNDO"}
+    
 
     def execute(self, context):
         name = "Nodes_Texture"
@@ -57,7 +57,7 @@ class LUXCORE_OT_texture_unlink(bpy.types.Operator):
     bl_idname = "luxcore.texture_unlink"
     bl_label = ""
     bl_description = "Unlink data-block"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
