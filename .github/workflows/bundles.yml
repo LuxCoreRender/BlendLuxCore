@@ -67,7 +67,6 @@ jobs:
           with open(env_file, "a") as myfile:
               myfile.write(f"VERSION={version}")
 
-
       - name: Package bundle
         shell: bash
         run: |
@@ -75,11 +74,12 @@ jobs:
           blender --command extension build \
             --source-dir "${{ github.workspace }}" \
             --output-dir "${{ github.workspace }}"
+          unzip -q "BlendLuxCore-${VERSION}.zip" -d "${{ github.workspace }}/build"
 
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "BlendLuxCore"
-          path: "${{ github.workspace }}/BlendLuxCore-${{ env.VERSION }}.zip"
+          name: "BlendLuxCore-${{ env.VERSION }}"
+          path: "${{ github.workspace }}/build/*"
 
