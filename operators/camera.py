@@ -37,7 +37,7 @@ class LUXCORE_OT_camera_unlink_volume_node_tree(bpy.types.Operator):
     bl_idname = "luxcore.camera_unlink_volume_node_tree"
     bl_label = "Unlink"
     bl_description = "Unlink this volume node tree"
-    bl_options = {"UNDO"}
+    
 
     @classmethod
     def poll(cls, context):
