@@ -9,7 +9,8 @@ class LuxCoreNodeMatDisney(LuxCoreNodeMaterial, bpy.types.Node):
     bl_width_default = 190
     
     def update_use_thinfilmcoating(self, context):
-        self.inputs["Film Amount"].enabled = self.use_thinfilmcoating
+        id = self.inputs.find("Film Amount")
+        self.inputs[id].enabled = self.use_thinfilmcoating
         ThinFilmCoating.toggle(self, context)
     
     use_thinfilmcoating: BoolProperty(name="Thin Film Coating", default=False,
