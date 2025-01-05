@@ -8,3 +8,10 @@ release/*
 
 # For ignored files in bin/ subdirectory, see the .gitignore file in bin/
 wheels/
+
+# CMake various files
+build/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake

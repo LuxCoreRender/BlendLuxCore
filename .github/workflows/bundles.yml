@@ -38,11 +38,6 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Fetch build dependencies
-        run: |
-          pip install --upgrade pip
-          pip install tomlkit
-
       - uses: moguri/setup-blender@v1
         with:
           blender-version: '4.2.4'
