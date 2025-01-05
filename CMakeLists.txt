@@ -1,6 +1,6 @@
 # To build extension:
-# cmake -B/path/to/my/build/folder -S/path/to/source/folder
-# cd /path/to/my/build/folder && cmake --build .
+# Get out of the tree, for instance in ..
+# cmake -B blc-build -S BlendLuxCore && cmake --build blc-build
 
 cmake_minimum_required(VERSION 3.25)
 
@@ -19,9 +19,9 @@ function(validate_blender_version result blender)
   )
   if (blender_output MATCHES "Blender ([0-9]+\.[0-9]+\.[0-9]+).*")
     set(version ${CMAKE_MATCH_1})
-    message(STATUS "Blender version: ${version}")
+    message(STATUS "Found Blender - version ${version}")
     if (${version} VERSION_LESS "4.2.0")
-      message(FATAL_ERROR "Bad Blender version - expected 4.2.0 or higher")
+      message(FATAL_ERROR "ERROR: Blender version is not suitable - expected 4.2.0 or higher")
       set(${result} FALSE PARENT_SCOPE)
     else()
       message(STATUS "Blender version OK")
@@ -35,6 +35,7 @@ endfunction()
 
 
 # Get BlendLuxCore version
+find_package(Python 3.11 REQUIRED COMPONENTS Interpreter)
 execute_process(
   COMMAND python
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/blendluxcore_version.py
@@ -42,7 +43,7 @@ execute_process(
   OUTPUT_VARIABLE BLC_VERSION
 )
 
-find_program(BLENDER blender NAMES blender.exe VALIDATOR validate_blender_version NO_CACHE)
+find_program(BLENDER blender NAMES blender.exe VALIDATOR validate_blender_version NO_CACHE REQUIRED)
 
 # Add BlendLuxCore target
 add_custom_target(
