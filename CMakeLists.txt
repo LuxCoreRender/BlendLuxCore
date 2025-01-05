@@ -1,7 +1,16 @@
-cmake_minimum_required(VERSION 3.25)
-project(BlendLuxCore LANGUAGES NONE)
+# To build extension:
+# cmake -B/path/to/my/build/folder -S/path/to/source/folder
+# cd /path/to/my/build/folder && cmake --build .
 
-file(MAKE_DIRECTORY build)
+cmake_minimum_required(VERSION 3.25)
+
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+project(BlendLuxCore LANGUAGES NONE)
+if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+   message(SEND_ERROR "In-source builds are not allowed.")
+endif()
 
 function(validate_blender_version result blender)
   execute_process(
@@ -37,10 +46,9 @@ find_program(BLENDER blender NAMES blender.exe VALIDATOR validate_blender_versio
 
 # Add BlendLuxCore target
 add_custom_target(
-  extension ALL
-  COMMAND ${BLENDER}
+  extension ALL ${BLENDER}
     --command extension build
     --source-dir ${CMAKE_CURRENT_SOURCE_DIR}
-    --output-filepath ${CMAKE_CURRENT_BINARY_DIR}/build/BlendLuxCore-${BLC_VERSION}.zip
+    --output-filepath ${CMAKE_CURRENT_BINARY_DIR}/BlendLuxCore-${BLC_VERSION}.zip
   VERBATIM
 )
