@@ -18,9 +18,9 @@ This addon integrates the LuxCore render engine into Blender. It offers advanced
 
 #### From latest release (recommended)
 
-Find latest release of **BlendLuxCore Wheels** (https://github.com/LuxCoreRender/BlendLuxCore/releases) (caveat: do not get confused with plain BlendLuxCore)
-From the release assets, download extension `BlendLuxCore*.zip`
-Open Blender and follow "Install from disk" procedure (https://docs.blender.org/manual/en/latest/editors/preferences/extensions.html)
+- Find latest release of **BlendLuxCore Wheels** (https://github.com/LuxCoreRender/BlendLuxCore/releases). Caveat: do not get confused with plain BlendLuxCore.
+- From the release assets, download extension `BlendLuxCore*.zip`
+- Open Blender and follow "Install from disk" procedure (https://docs.blender.org/manual/en/latest/editors/preferences/extensions.html)
 
 Beforehand, you may want to uninstall previous version of BlendLuxCore: look in "Get Extensions" panel.
 
@@ -31,13 +31,14 @@ Build extension:
 - checkout branch: `git checkout for_blender_4.2_wheels`
 - configure: `cmake -S BlendLuxCore -B blc-build`
 - build: `cmake --build blc-build`
+
 The extension should be in `blc-build` subfolder
 
 Open Blender and follow "Install from disk" procedure (https://docs.blender.org/manual/en/latest/editors/preferences/extensions.html)
 
 Beforehand, you may want to uninstall previous version of BlendLuxCore: see in "Get Extensions" panel.
 
-### [Gallery](https://luxcorerender.org/gallery/)  
+### [Gallery](https://luxcorerender.org/gallery/)
 
 ### [Download example test scenes](https://luxcorerender.org/example-scenes/)
 
