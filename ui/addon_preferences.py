@@ -5,6 +5,7 @@ from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 from ..ui import icons
 from .. import utils
 from ..utils.lol import utils as lol_utils
+from importlib.metadata import version
 
 
 film_device_items = []
@@ -64,30 +65,40 @@ class LuxCoreAddonPreferences(AddonPreferences):
     thumb_size: IntProperty(name="Assetbar Thumbnail Size", default=96, min=-1, max=256)
     use_library: BoolProperty(name="Use LuxCore Online Library", default=True)
 
+    # Read-only string property, returns the current date
+    def get_pyluxcore_version(self):
+        try:
+            pyluxcore_version = version("pyluxcore")
+        except ModuleNotFoundError:
+            pyluxcore_version = "ERROR: could not find pyluxcore"
+        return pyluxcore_version
+
+    pyluxcore_version: StringProperty(name="", get=get_pyluxcore_version)
+
     def draw(self, context):
         layout = self.layout
         SPLIT_FACTOR = 1/3
 
         row = layout.row()
         row.label(text="GPU API:")
-        
+
         if utils.is_cuda_build():
             row.prop(self, "gpu_backend", expand=True)
-            
+
             row = layout.row()
             split = row.split(factor=SPLIT_FACTOR)
             split.label(text="Film Device:")
             split.prop(self, "film_device", text="")
         elif utils.is_opencl_build():
             row.label(text="OpenCL")
-            
+
             row = layout.row()
             split = row.split(factor=SPLIT_FACTOR)
             split.label(text="Film Device:")
             split.prop(self, "film_device", text="")
         else:
             row.label(text="Not available in this build")
-        
+
         row = layout.row()
         split = row.split(factor=SPLIT_FACTOR)
         split.label(text="Image Nodes:")
@@ -115,3 +126,10 @@ class LuxCoreAddonPreferences(AddonPreferences):
         if self.use_library:
             col.prop(self, "global_dir")
             col.prop(self, "thumb_size")
+
+        # pyluxcore version
+        layout.separator()
+        row = layout.row()
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="Pyluxcore version:")
+        split.prop(self, "pyluxcore_version")
