@@ -42,7 +42,9 @@ from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
 
 
-LOL_HOST_URL = "https://luxcorerender.org/lol"
+#LOL_HOST_URL = "https://luxcorerender.org/lol"
+# Temporary alternative host
+LOL_HOST_URL = "https://www.sciencehooligans.de/lol"
 LOL_VERSION = "v2.5"
 
 download_threads = []
@@ -54,7 +56,7 @@ def load_local_TOC(context, asset_type):
 
     assets = []
 
-    name = basename(dirname(dirname(dirname(__file__))))
+    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     filepath = join(user_preferences.global_dir, 'local_assets_' + asset_type.lower() + '.json')
@@ -72,7 +74,7 @@ def load_local_TOC(context, asset_type):
 
 
 def load_patreon_assets(context):
-    name = basename(dirname(dirname(dirname(__file__))))
+    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     #check if local file is available
@@ -120,7 +122,7 @@ def download_table_of_contents(context):
     global bg_threads
     scene = context.scene
     ui_props = context.scene.luxcoreOL.ui
-    name = basename(dirname(dirname(dirname(__file__))))
+    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     try:
@@ -605,10 +607,14 @@ def clean_previmg(fullsize=False):
 
 
 def load_previews(context, asset_type):
+    bg_load_previews(context, asset_type)
+    # The following code did not seem to be thread safe regarding deleting and accessing preview images. Leaving in here for future reference regarding performance optimization
+    """
     global bg_threads
     bg_task = Thread(target=bg_load_previews, args=(context, asset_type))
     bg_threads.append(["bg_load_previews", bg_task])
     bg_task.start()
+    """
 
 
 def bg_load_previews(context, asset_type):
@@ -689,7 +695,7 @@ def bg_download_thumbnails(context, download_queue):
     from requests import Session
     session = Session()
 
-    name = basename(dirname(dirname(dirname(__file__))))
+    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     while not download_queue.empty():

@@ -40,7 +40,7 @@ def calc_bbox(context, objects):
 def render_material_thumbnail(assetname, blendfile, thumbnail, samples):
     context = bpy.context
     scene = context.scene
-    name = basename(dirname(dirname(dirname(__file__))))
+    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
     with bpy.data.libraries.load(blendfile, link=True) as (mat_from, mat_to):
@@ -69,7 +69,7 @@ def render_material_thumbnail(assetname, blendfile, thumbnail, samples):
 def render_model_thumbnail(assetname, blendfile, thumbnail, samples):
     context = bpy.context
     scene = context.scene
-    name = basename(dirname(dirname(dirname(__file__))))
+    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
     
     with bpy.data.libraries.load(blendfile, link=True) as (data_from, data_to):

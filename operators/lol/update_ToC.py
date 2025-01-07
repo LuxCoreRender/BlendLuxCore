@@ -45,7 +45,7 @@ class LOLUpdateTOC(Operator):
         scene = context.scene
         ui_props = scene.luxcoreOL.ui
 
-        name = basename(dirname(dirname(dirname(__file__))))
+        name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
         user_preferences = context.preferences.addons[name].preferences
 
         filepath = join(user_preferences.global_dir, 'assets_model_blendermarket.json')
