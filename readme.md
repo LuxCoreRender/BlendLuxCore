@@ -8,7 +8,7 @@
 
 This addon integrates the LuxCore render engine into Blender. It offers advanced features like accelerated rendering of indirect light and efficient rendering of caustics.
 
-**This is a special version of the add-on, based on LuxCore Python wheels.**
+**This is a special, experimental version of the add-on, based on LuxCore Python wheels.** It may not be suitable for production use.
 
 ### Supported Blender Versions
 
