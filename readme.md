@@ -26,9 +26,10 @@ Beforehand, you may want to uninstall previous version of BlendLuxCore: look in 
 
 #### From last commit
 
+Prerequisites: you need `cmake` and `blender` installed and in your `PATH`
+
 Build extension:
-- clone this repository: `git clone https://github.com/LuxCoreRender/BlendLuxCore.git`
-- checkout branch: `git checkout for_blender_4.2_wheels`
+- clone this repository: `git clone https://github.com/LuxCoreRender/BlendLuxCore.git --branch for_blender_4.2_wheels`
 - configure: `cmake -S BlendLuxCore -B blc-build`
 - build: `cmake --build blc-build`
 
