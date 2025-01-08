@@ -77,7 +77,7 @@ def render_thumbnail(args):
     from ...utils.compatibility import run
     (context, assetfile, asset_type) = args
 
-    name = basename(dirname(dirname(dirname(__file__))))
+    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
 
 
@@ -131,7 +131,7 @@ class LOLAddLocalOperator(Operator):
         ui_props = scene.luxcoreOL.ui
         upload_props = scene.luxcoreOL.upload
 
-        name = basename(dirname(dirname(dirname(__file__))))
+        name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
         user_preferences = context.preferences.addons[name].preferences
 
         if len(context.selected_objects) == 0:
@@ -243,7 +243,7 @@ class LOLScanLocalOperator(Operator):
         ui_props = scene.luxcoreOL.ui
         upload_props = scene.luxcoreOL.upload
 
-        name = basename(dirname(dirname(dirname(__file__))))
+        name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
         user_preferences = context.preferences.addons[name].preferences
         assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), 'local')
 
