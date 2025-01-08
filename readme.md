@@ -1,38 +1,42 @@
-![Watermark](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender-logo_orange_grey-shiny.png)
-
-![Example](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender_caustics_scene.jpg)
+![Example Render](https://luxcorerender.org/wp-content/uploads/2019/10/dark_mode.jpg)
 
 <sup> [LuxCoreRender.org](https://luxcorerender.org/) | [Forums](https://forums.luxcorerender.org/) | [Wiki](http://wiki.luxcorerender.org/LuxCoreRender_Wiki) </sup>
 
-## BlendLuxCore
+## BlendLuxCore Wheels
 
 This addon integrates the LuxCore render engine into Blender. It offers advanced features like accelerated rendering of indirect light and efficient rendering of caustics.
 
+**This is a special, experimental version of the add-on, based on LuxCore Python wheels.** It may not be suitable for production use.
+
 ### Supported Blender Versions
 
-* Blender 4.2 is supported by [BlendLuxCore v2.9 beta1 (Windows only)](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.9beta1)
+* Blender 4.2 is supported for Windows, Linux, MacOS Intel, MacOS ARM
 
-* Blender 4.1 is supported by [BlendLuxCore v2.9 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.9alpha1)
+### Installation
 
-* Blender 4.0 is supported by [BlendLuxCore v2.8 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.8alpha1)
+#### From latest release (recommended)
 
-* Blender 3.6 LTS (3.6.x, not 3.6 itself) is experimentally supported by [BlendLuxCore v2.7 beta1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.7beta1)
+- Find latest release of **BlendLuxCore Wheels** (https://github.com/LuxCoreRender/BlendLuxCore/releases). Caveat: do not get confused with plain BlendLuxCore.
+- From the release assets, download extension `BlendLuxCore*.zip`
+- Open Blender and follow "Install from disk" procedure (https://docs.blender.org/manual/en/latest/editors/preferences/extensions.html)
 
-* Blender 3.0 - 3.5.1 are supported by [BlendLuxCore v2.6 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.6alpha1)
+Beforehand, you may want to uninstall previous version of BlendLuxCore: look in "Get Extensions" panel.
 
-* Blender 2.93 is supported by [BlendLuxCore v2.6](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.6)
+#### From last commit
 
-* Blender 2.83-2.92 are supported by [BlendLuxCore v2.5](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.5)
+Prerequisites: you need `cmake` and `blender` installed and in your `PATH`
 
-* Blender 2.83 is supported by [BlendLuxCore v2.4](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.4)
+Build extension:
+- clone this repository: `git clone https://github.com/LuxCoreRender/BlendLuxCore.git --branch for_blender_4.2_wheels`
+- configure: `cmake -S BlendLuxCore -B blc-build`
+- build: `cmake --build blc-build`
 
-* Blender 2.80, 2.81 and 2.82 are supported by [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2) and [BlendLuxCore v2.3](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.3)
- 
-* Blender 2.79 is supported by [BlendLuxCore v2.0](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.0), [BlendLuxCore v2.1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.1) and [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2)
+The extension should be in `blc-build` subfolder
 
-### [Installation and usage](https://wiki.luxcorerender.org/Category:BlendLuxCore)
+Open Blender and follow "Install from disk" procedure (https://docs.blender.org/manual/en/latest/editors/preferences/extensions.html)
 
-### [Gallery](https://luxcorerender.org/gallery/)  
+Beforehand, you may want to uninstall previous version of BlendLuxCore: see in "Get Extensions" panel.
+
+### [Gallery](https://luxcorerender.org/gallery/)
 
 ### [Download example test scenes](https://luxcorerender.org/example-scenes/)
-
