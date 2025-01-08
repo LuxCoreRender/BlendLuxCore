@@ -29,16 +29,13 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial, bpy.types.Node):
     def update_preset(self, context):
         enabled = self.preset == "manual"
 
-        self.inputs['Diffuse Color'].enabled = enabled
-        self.inputs['Specular Color 1'].enabled = enabled
-        self.inputs['Specular Color 2'].enabled = enabled
-        self.inputs['Specular Color 3'].enabled = enabled
-        self.inputs['M1'].enabled = enabled
-        self.inputs['M2'].enabled = enabled
-        self.inputs['M3'].enabled = enabled
-        self.inputs['R1'].enabled = enabled
-        self.inputs['R2'].enabled = enabled
-        self.inputs['R3'].enabled = enabled
+        sockets = ["Diffuse Color", "Specular Color 1", "Specular Color 2", "Specular Color 3",
+                   "M1", "M2", "M3", "R1", "R2", "R3"]
+
+        for socket in sockets:
+            id = self.inputs.find(socket)
+            self.inputs[id].enabled = enabled
+            
         utils_node.force_viewport_update(self, context)
 
     preset_items = [
@@ -77,24 +74,29 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial, bpy.types.Node):
         layout.prop(self, "preset")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        definitions = {
-            "type": "carpaint",
-            "kd": self.inputs["Diffuse Color"].export(exporter, depsgraph, props),
-            "ka": self.inputs["Absorption Color"].export(exporter, depsgraph, props),
-            "ks1": self.inputs["Specular Color 1"].export(exporter, depsgraph,  props),
-            "ks2": self.inputs["Specular Color 2"].export(exporter, depsgraph, props),
-            "ks3": self.inputs["Specular Color 3"].export(exporter, depsgraph, props),
-            "d": self.inputs["Absorption Depth (nm)"].export(exporter, depsgraph, props),
-            "m1": self.inputs["M1"].export(exporter, depsgraph, props),
-            "m2": self.inputs["M2"].export(exporter, depsgraph, props),
-            "m3": self.inputs["M3"].export(exporter, depsgraph, props),
-            "r1": self.inputs["R1"].export(exporter, depsgraph, props),
-            "r2": self.inputs["R2"].export(exporter, depsgraph, props),
-            "r3": self.inputs["R3"].export(exporter, depsgraph, props),
-        }
-
         if self.preset != "manual":
-            definitions["preset"] = self.preset.replace("_", " ")
+            definitions = {
+                "type": "carpaint",
+                "preset": self.preset.replace("_", " "),
+                "ka": self.inputs["Absorption Color"].export(exporter, depsgraph, props),
+                "d": self.inputs["Absorption Depth (nm)"].export(exporter, depsgraph, props)
+            }
+        else:
+            definitions = {
+                "type": "carpaint",
+                "kd": self.inputs["Diffuse Color"].export(exporter, depsgraph, props),
+                "ka": self.inputs["Absorption Color"].export(exporter, depsgraph, props),
+                "ks1": self.inputs["Specular Color 1"].export(exporter, depsgraph, props),
+                "ks2": self.inputs["Specular Color 2"].export(exporter, depsgraph, props),
+                "ks3": self.inputs["Specular Color 3"].export(exporter, depsgraph, props),
+                "d": self.inputs["Absorption Depth (nm)"].export(exporter, depsgraph, props),
+                "m1": self.inputs["M1"].export(exporter, depsgraph, props),
+                "m2": self.inputs["M2"].export(exporter, depsgraph, props),
+                "m3": self.inputs["M3"].export(exporter, depsgraph, props),
+                "r1": self.inputs["R1"].export(exporter, depsgraph, props),
+                "r2": self.inputs["R2"].export(exporter, depsgraph, props),
+                "r3": self.inputs["R3"].export(exporter, depsgraph, props),
+            }
 
         self.export_common_inputs(exporter, depsgraph, props, definitions)
         return self.create_props(props, definitions, luxcore_name)

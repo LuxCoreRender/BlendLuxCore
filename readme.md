@@ -1,6 +1,4 @@
-![Watermark](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender-logo_orange_grey-shiny.png)
-
-![Example](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender_caustics_scene.jpg)
+![Example Render](https://luxcorerender.org/wp-content/uploads/2019/10/dark_mode.jpg)
 
 <sup> [LuxCoreRender.org](https://luxcorerender.org/) | [Forums](https://forums.luxcorerender.org/) | [Wiki](http://wiki.luxcorerender.org/LuxCoreRender_Wiki) </sup>
 
@@ -42,4 +40,3 @@ Beforehand, you may want to uninstall previous version of BlendLuxCore: see in "
 ### [Gallery](https://luxcorerender.org/gallery/)
 
 ### [Download example test scenes](https://luxcorerender.org/example-scenes/)
-
