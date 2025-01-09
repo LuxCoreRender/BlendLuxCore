@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 from shutil import which
+import shutil
 import pathlib
 import json
 import requests
@@ -84,15 +85,19 @@ def install_pyluxcore():
 
     root_folder = pathlib.Path(__file__).parent.resolve()
     wheel_folder =  root_folder / "wheels"
-    
+
     # check if latest pyluxcore version has already been downloaded.
     # If yes, skip the download to save time
     pyluxcore_downloaded = is_latest_wheel_present('pyluxcore', wheel_folder)
-    if pyluxcore_downloaded:
+
+    if pyluxcore_downloaded and not (blc_wheel_path := os.environ.get("BLC_WHEEL_PATH")):
         print('Download of pyluxcore skipped, latest version was found on system')
-    else:
-        print('Downloading pyluxcore')
-        # Download wheel
+        return
+
+    print('Downloading pyluxcore')
+
+    # Download wheel
+    if not blc_wheel_path:
         command = [
             sys.executable,
             '-m',
@@ -102,17 +107,28 @@ def install_pyluxcore():
             '-d',
             wheel_folder
         ]
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        output = stdout.decode()
-        error_output = stderr.decode()
-        if output:
-            print("Output:\n", output)
-        if error_output:
-            print("Errors:\n", error_output)
+    else:
+        command = [
+            sys.executable,
+            '-m',
+            'pip',
+            'download',
+            blc_wheel_path,
+            '-d',
+            wheel_folder
+        ]
 
-        if process.returncode != 0:
-            raise RuntimeError(f'Failed to download LuxCore with return code {result.returncode}.') from None
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    output = stdout.decode()
+    error_output = stderr.decode()
+    if output:
+        print("Output:\n", output)
+    if error_output:
+        print("Errors:\n", error_output)
+
+    if process.returncode != 0:
+        raise RuntimeError(f'Failed to download LuxCore with return code {process.returncode}.') from None
 
     # Setup manifest with wheel list
     manifest_path = root_folder / "blender_manifest.toml"
