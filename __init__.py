@@ -98,7 +98,7 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Render",
     "description": "LuxCoreRender integration for Blender",
-    "warning": "beta2",
+    "warning": "alpha3",
 
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
@@ -117,7 +117,7 @@ def register():
 
     from .utils.log import LuxCoreLog
     pyluxcore.Init(LuxCoreLog.add)
-    print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
+    print(f"BlendLuxCore (wheels) {version_string} registered (with pyluxcore {pyluxcore.Version()})")
 
 def unregister():
     engine.unregister()

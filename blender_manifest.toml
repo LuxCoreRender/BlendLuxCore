@@ -3,7 +3,10 @@ schema_version = "1.0.0"
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
 id = "BlendLuxCore"
-version = "2.9.0"
+# Recommend versioning like MASTER.MAJOR.MINOR. 
+# E.g.: "2.9.3": master: 2; major: 9; minor: 3.
+# BlendLuxCore Wheels version is 2.9.3 "3 is alpha3 here"
+version = "2.9.3"
 name = "BlendLuxCore"
 tagline = "LuxCore"
 maintainer = "BlendLuxCore team"
