@@ -46,66 +46,56 @@ def convert_defs(context, scene, definitions, plugin_index, define_radiancescale
     definitions[str(index) + ".type"] = "NOP"
     index += 1
 
-    # Use multiprocessing for CPU-bound tasks
-    with multiprocessing.Pool() as pool:
-        results = []
+    if pipeline.tonemapper.enabled:
+        index = convert_tonemapper(definitions, index, pipeline.tonemapper)
 
-        # Parallel tasks
-        if pipeline.tonemapper.enabled:
-            results.append(pool.apply_async(convert_tonemapper, (definitions, index, pipeline.tonemapper)))
-            index += 1
-
-        if context and scene.luxcore.viewport.get_denoiser(context) == "OPTIX":
-            results.append(pool.apply_async(_denoise_effect, (definitions, index, pipeline.denoiser)))
-            index += 1
-
-        # Wait for all results to complete
-        for result in results:
-            result.wait()
+    if context and scene.luxcore.viewport.get_denoiser(context) == "OPTIX":
+        definitions[str(index) + ".type"] = "OPTIX_DENOISER"
+        definitions[str(index) + ".sharpness"] = 0
+        definitions[str(index) + ".minspp"] = scene.luxcore.viewport.min_samples
+        index += 1
 
     if use_backgroundimage(context, scene):
-        # Background image handling (I/O-bound operation, use threading)
+        # Note: Blender expects the alpha to be NOT premultiplied, so we only
+        # premultiply it when the backgroundimage plugin is used
+        index = _premul_alpha(definitions, index)
         index = _backgroundimage(definitions, index, pipeline.backgroundimage, scene)
 
-    # Handle other image effects using multithreading
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
-        if pipeline.mist.is_enabled(context):
-            futures.append(executor.submit(_mist, definitions, index, pipeline.mist))
-            index += 1
-        if pipeline.bloom.is_enabled(context):
-            futures.append(executor.submit(_bloom, definitions, index, pipeline.bloom))
-            index += 1
-        if pipeline.coloraberration.is_enabled(context):
-            futures.append(executor.submit(_coloraberration, definitions, index, pipeline.coloraberration))
-            index += 1
-        if pipeline.vignetting.is_enabled(context):
-            futures.append(executor.submit(_vignetting, definitions, index, pipeline.vignetting))
-            index += 1
-        if pipeline.white_balance.is_enabled(context):
-            futures.append(executor.submit(_white_balance, definitions, index, pipeline.white_balance))
-            index += 1
-        if pipeline.camera_response_func.is_enabled(context):
-            futures.append(executor.submit(_camera_response_func, definitions, index, pipeline.camera_response_func, scene))
-            index += 1
-        if pipeline.color_LUT.is_enabled(context):
-            futures.append(executor.submit(_color_LUT, definitions, index, pipeline.color_LUT, scene))
-            index += 1
-        if pipeline.contour_lines.is_enabled(context):
-            futures.append(executor.submit(_contour_lines, definitions, index, pipeline.contour_lines))
-            index += 1
-        if using_filesaver and not pipeline.color_LUT.is_enabled(context):
-            futures.append(executor.submit(_gamma, definitions, index))
-            index += 1
+    if pipeline.mist.is_enabled(context):
+        index = _mist(definitions, index, pipeline.mist)
 
-        # Wait for all futures to complete
-        for future in futures:
-            future.result()
+    if pipeline.bloom.is_enabled(context):
+        index = _bloom(definitions, index, pipeline.bloom)
+
+    if pipeline.coloraberration.is_enabled(context):
+        index = _coloraberration(definitions, index, pipeline.coloraberration)
+
+    if pipeline.vignetting.is_enabled(context):
+        index = _vignetting(definitions, index, pipeline.vignetting)
+
+    if pipeline.white_balance.is_enabled(context):
+        index = _white_balance(definitions, index, pipeline.white_balance)
+
+    if pipeline.camera_response_func.is_enabled(context):
+        index = _camera_response_func(definitions, index, pipeline.camera_response_func, scene)
+
+    gamma_corrected = False
+    if pipeline.color_LUT.is_enabled(context):
+        index, gamma_corrected = _color_LUT(definitions, index, pipeline.color_LUT, scene)
+
+    if pipeline.contour_lines.is_enabled(context):
+        index = _contour_lines(definitions, index, pipeline.contour_lines)
+
+    if using_filesaver and not gamma_corrected:
+        # Needs gamma correction (Blender applies it for us,
+        # but now we export for luxcoreui)
+        index = _gamma(definitions, index)
 
     if define_radiancescales:
         _lightgroups(definitions, scene)
 
     return index
+
 
 def use_backgroundimage(context, scene):
     viewport_in_camera_view = context and context.region_data.view_perspective == "CAMERA"
