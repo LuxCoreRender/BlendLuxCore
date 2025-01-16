@@ -89,8 +89,9 @@ def install_pyluxcore():
     # check if latest pyluxcore version has already been downloaded.
     # If yes, skip the download to save time
     pyluxcore_downloaded = is_latest_wheel_present('pyluxcore', wheel_folder)
+    blc_wheel_path = os.environ.get("BLC_WHEEL_PATH")
 
-    if pyluxcore_downloaded and not (blc_wheel_path := os.environ.get("BLC_WHEEL_PATH")):
+    if pyluxcore_downloaded and not blc_wheel_path:
         print('Download of pyluxcore skipped, latest version was found on system')
         return
 
@@ -115,7 +116,7 @@ def install_pyluxcore():
             'download',
             blc_wheel_path,
             '-d',
-            wheel_folder
+            wheel_folder,
         ]
 
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -127,8 +128,10 @@ def install_pyluxcore():
     if error_output:
         print("Errors:\n", error_output)
 
-    if process.returncode != 0:
-        raise RuntimeError(f'Failed to download LuxCore with return code {process.returncode}.') from None
+    if process.returncode:
+        raise RuntimeError(
+            f'Failed to download LuxCore with return code {process.returncode}.'
+        ) from None
 
     # Setup manifest with wheel list
     manifest_path = root_folder / "blender_manifest.toml"
