@@ -58,6 +58,9 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
                                                 description=ONLY_INFINITE_DESC)
     is_holdout: BoolProperty(update=utils_node.force_viewport_update, name="Holdout", default=False,
                              description="Make film transparent on pixels where this material is directly visible")
+    override_exclude: BoolProperty(name="Exclude from override",
+                         default=False,
+                         description="If an override material is defined, this will not be replaced.")
 
     def init(self, context):
         self.inputs.new("LuxCoreSocketMaterial", "Material")
@@ -130,6 +133,9 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
 
         # Shadow catcher
         col.prop(self, "is_shadow_catcher")
+
+        # Material override exclude
+        col.prop(self, "override_exclude")
 
         if engine == "PATH" and self.is_shadow_catcher:
             col.prop(self, "shadow_catcher_only_infinite")
