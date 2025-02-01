@@ -9,3 +9,7 @@ release/*
 # For ignored files in bin/ subdirectory, see the .gitignore file in bin/
 wheels/
 
+# Visual studio files
+.vs/
+out/
+
