@@ -678,6 +678,9 @@ def get_addon_preferences(context):
     package_name_components = __package__.split(".")
     package_name_components.pop()
     addon_name = ".".join(package_name_components)
+    am_in_extension = __name__.startswith('bl_ext.')
+    if not am_in_extension:
+        addon_name = 'bl_ext.user_default.' + addon_name
     return context.preferences.addons[addon_name].preferences
 
 
