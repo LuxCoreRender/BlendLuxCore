@@ -70,9 +70,15 @@ if am_in_extension:
 
         # Fetch package metadata from PyPI
         url = f"https://pypi.org/pypi/{package_name}/json"
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise ValueError(f"Failed to fetch metadata for package '{package_name}'")
+        try:
+            response = requests.get(url)
+            if response.status_code != 200:
+                # Other errors
+                return None
+                #raise ValueError(f"Failed to fetch metadata for package '{package_name}'")
+        except:
+            # In case of issues getting the json, e.g. because there is no internet connection
+            return None
 
         # Extract latest version of the package
         metadata = response.json()
