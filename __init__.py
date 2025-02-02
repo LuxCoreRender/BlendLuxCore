@@ -42,9 +42,9 @@ bl_info = {
 }
 version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
 
-# The environment variable BLC_DEV_MODE can be used to store a path
+# The environment variable BLC_DEV_PATH can be used to store a path
 # to a local BlendLuxCore repository, which will then be imported
-blc_dev_path = os.environ.get("BLC_DEV_MODE")
+blc_dev_path = os.environ.get("BLC_DEV_PATH")
 am_in_extension = __name__.startswith('bl_ext.') # the init file in the local dev folder returns only BlendLuxCore
 
 if am_in_extension:
