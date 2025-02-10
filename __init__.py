@@ -16,8 +16,8 @@ if bpy.app.version < (2, 93, 0):
     raise Exception("\n\nUnsupported Blender version. 2.93 or higher is required by BlendLuxCore.")
 
 if platform.system() == "Darwin":
-    if bpy.app.version < (2, 82, 7):
-        raise Exception("\n\nUnsupported Blender version. 2.82a or higher is required.")
+    if bpy.app.version < (4, 2, 0):
+        raise Exception("\n\nUnsupported Blender version. 4.2 or higher is required.")
     mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
     if mac_version < (10, 9, 0):
         raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
@@ -31,7 +31,7 @@ if platform.system() in {"Linux", "Darwin"}:
 bl_info = {
     "name": "LuxCoreRender",
     "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Odilkhan Yakubov (odil24), acasta69, u3dreal, Philstix",
-    "version": (2, 9),
+    "version": (2, 10),
     "blender": (4, 2, 0),
     "category": "Render",
     "description": "LuxCoreRender integration for Blender",
