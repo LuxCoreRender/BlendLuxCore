@@ -27,6 +27,11 @@ from os.path import basename, dirname, join, isfile, splitext
 
 from bpy.types import Operator
 from ...utils.lol import utils as utils
+from ... import bl_info
+
+blc_ver = '.'.join([str(_) for _ in bl_info["version"]])
+useragent = f"BlendLuxCore/{blc_ver}" # user agent for urllib request to LOL
+
 
 
 class LOLUpdateTOC(Operator):
@@ -50,7 +55,11 @@ class LOLUpdateTOC(Operator):
 
         filepath = join(user_preferences.global_dir, 'assets_model_blendermarket.json')
         urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_model_blendermarket.json"
-        with urllib.request.urlopen(urlstr, timeout=60) as request:
+
+        req = urllib.request.Request(
+            urlstr, data=None, headers={'User-Agent': useragent}
+        )
+        with urllib.request.urlopen(req, timeout=60) as request:
             assets = json.load(request)
 
             with open(filepath, 'w') as file:
@@ -58,7 +67,11 @@ class LOLUpdateTOC(Operator):
 
         filepath = join(user_preferences.global_dir, 'assets_model.json')
         urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_model.json"
-        with urllib.request.urlopen(urlstr, timeout=60) as request:
+        
+        req = urllib.request.Request(
+            urlstr, data=None, headers={'User-Agent': useragent}
+        )
+        with urllib.request.urlopen(req, timeout=60) as request:
             assets = json.load(request)
 
             with open(filepath, 'w') as file:
@@ -66,7 +79,11 @@ class LOLUpdateTOC(Operator):
 
         filepath = join(user_preferences.global_dir, 'assets_material.json')
         urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_material.json"
-        with urllib.request.urlopen(urlstr, timeout=60) as request:
+        
+        req = urllib.request.Request(
+            urlstr, data=None, headers={'User-Agent': useragent}
+        )
+        with urllib.request.urlopen(req, timeout=60) as request:
             assets = json.load(request)
 
             with open(filepath, 'w') as file:

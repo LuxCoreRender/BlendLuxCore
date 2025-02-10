@@ -40,12 +40,13 @@ import threading
 from threading import _MainThread, Thread, Lock
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
+from ... import bl_info
 
 
-#LOL_HOST_URL = "https://luxcorerender.org/lol"
-# Temporary alternative host
-LOL_HOST_URL = "https://www.sciencehooligans.de/lol"
+LOL_HOST_URL = "https://luxcorerender.org/lol"
 LOL_VERSION = "v2.5"
+blc_ver = '.'.join([str(_) for _ in bl_info["version"]])
+useragent = f"BlendLuxCore/{blc_ver}" # user agent for urllib request to LOL
 
 download_threads = []
 bg_threads = []
@@ -96,7 +97,10 @@ def load_patreon_assets(context):
     else:
         import urllib.request
         urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model_blendermarket.json"
-        with urllib.request.urlopen(urlstr, timeout=60) as request:
+        req = urllib.request.Request(
+            urlstr, data=None, headers={'User-Agent': useragent}
+        )
+        with urllib.request.urlopen(req, timeout=60) as request:
             import json
             assets = json.load(request)
 
@@ -148,7 +152,10 @@ def download_table_of_contents(context):
         else:
             import urllib.request
             urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model.json"
-            with urllib.request.urlopen(urlstr, timeout=60) as request:
+            req = urllib.request.Request(
+                urlstr, data=None, headers={'User-Agent': useragent}
+            )
+            with urllib.request.urlopen(req, timeout=60) as request:
                 import json
                 assets = json.load(request)
                 # cache file for future offline work
@@ -190,7 +197,10 @@ def download_table_of_contents(context):
         else:
             import urllib.request
             urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_material.json"
-            with urllib.request.urlopen(urlstr, timeout=60) as request:
+            req = urllib.request.Request(
+                urlstr, data=None, headers={'User-Agent': useragent}
+            )
+            with urllib.request.urlopen(req, timeout=60) as request:
                 import json
                 assets = json.load(request)
                 # cache file for future offline work
@@ -364,10 +374,13 @@ class Downloader(threading.Thread):
 
         with tempfile.TemporaryDirectory() as temp_dir_path:
             temp_zip_path = os.path.join(temp_dir_path, filename)
-            url = LOL_HOST_URL + "/" + tcom.passargs['asset type'].lower() + "/" + filename
+            urlstr = LOL_HOST_URL + "/" + tcom.passargs['asset type'].lower() + "/" + filename
             try:
-                print("Downloading:", url)
-                with urllib.request.urlopen(url, timeout=60) as url_handle, \
+                print("Downloading:", urlstr)
+                req = urllib.request.Request(
+                    urlstr, data=None, headers={'User-Agent': useragent}
+                )
+                with urllib.request.urlopen(req, timeout=60) as url_handle, \
                         open(temp_zip_path, "wb") as file_handle:
                     total_length = url_handle.headers.get('Content-Length')
                     tcom.file_size = int(total_length)
