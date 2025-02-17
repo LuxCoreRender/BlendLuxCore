@@ -44,6 +44,7 @@ from ... import bl_info
 
 
 LOL_HOST_URL = "https://luxcorerender.org/lol"
+# LOL_HOST_URL = "https://www.sciencehooligans.de/lol"
 LOL_VERSION = "v2.5"
 blc_ver = '.'.join([str(_) for _ in bl_info["version"]])
 useragent = f"BlendLuxCore/{blc_ver}" # user agent for urllib request to LOL
@@ -224,11 +225,11 @@ def download_table_of_contents(context):
         bg_task.start()
         return True
     except ConnectionError as error:
-        print("Connection error: Could not download table of contents")
+        print("[LOL] Connection error: Could not download table of contents")
         print(error)
         return False
     except urllib.error.URLError as error:
-        print("URL error: Could not download table of contents")
+        print("[LOL] URL error: Could not download table of contents")
         print(error)
         return False
 
@@ -376,23 +377,27 @@ class Downloader(threading.Thread):
             temp_zip_path = os.path.join(temp_dir_path, filename)
             urlstr = LOL_HOST_URL + "/" + tcom.passargs['asset type'].lower() + "/" + filename
             try:
-                print("Downloading:", urlstr)
+                print("[LOL] Downloading:", urlstr)
                 req = urllib.request.Request(
                     urlstr, data=None, headers={'User-Agent': useragent}
                 )
                 with urllib.request.urlopen(req, timeout=60) as url_handle, \
                         open(temp_zip_path, "wb") as file_handle:
-                    total_length = url_handle.headers.get('Content-Length')
-                    tcom.file_size = int(total_length)
+                    if 'Content-Length' in url_handle.headers:
+                        total_length = url_handle.headers.get('Content-Length')
+                        tcom.file_size = int(total_length)
+                    else:
+                        tcom.file_size = None
 
                     dl = 0
                     data = url_handle.read(8192)
                     file_handle.write(data)
                     while len(data) == 8192:
                         data = url_handle.read(8192)
-                        dl += len(data)
-                        tcom.downloaded = dl
-                        tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
+                        if tcom.file_size is not None:
+                            dl += len(data)
+                            tcom.downloaded = dl
+                            tcom.progress = int(100 * tcom.downloaded / tcom.file_size)
 
                         # Stop download if Blender is closed
                         for thread in threading.enumerate():
@@ -404,17 +409,17 @@ class Downloader(threading.Thread):
                         if self.stopped():
                             url_handle.close()
                             return
-                print("Download finished")
+                print("[LOL] Download finished")
                 import zipfile
                 with zipfile.ZipFile(temp_zip_path) as zf:
-                    print("Extracting zip to", os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
+                    print("[LOL] Extracting zip to", os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
                     zf.extractall(os.path.join(user_preferences.global_dir, tcom.passargs['asset type'].lower()))
 
             except TimeoutError as error:
-                print("TimeoutError error: Could not download " + filename)
+                print("[LOL] TimeoutError error: Could not download " + filename)
                 print(error)
             except urllib.error.URLError as error:
-                print("Could not download: " + filename)
+                print("[LOL] Could not download: " + filename)
 
             finally:
                 tcom.finished = True
@@ -509,7 +514,7 @@ def append_material(context, asset, target_object, target_slot):
                 bpy.data.objects[target_object].material_slots[target_slot].material = data_to.materials[0]
         compatibility.run()
     else:
-        print('Error in material asset file ' + splitext(filename)[0] + '.blend' + ': Asset name does not match material name.')
+        print('[LOL] Error in material asset file ' + splitext(filename)[0] + '.blend' + ': Asset name does not match material name.')
 
 
 def load_asset(context, asset, location, rotation, target_object, target_slot):
@@ -532,11 +537,11 @@ def load_asset(context, asset, location, rotation, target_object, target_slot):
     else:
         hash = calc_hash(filepath)
         if hash != asset["hash"]:
-            print("hash number doesn't match: %s" % hash)
+            print("[LOL] hash number doesn't match: %s" % hash)
             download = True
 
     if download:
-        print("Download asset")
+        print("[LOL] Download asset")
         download_file(ui_props.asset_type, asset, location, rotation, target_object, target_slot)
     else:
         if ui_props.asset_type == 'MATERIAL':
@@ -666,7 +671,6 @@ def bg_load_previews(context, asset_type):
                 img.colorspace_settings.name = 'Linear'
         else:
             if exists(tpath) and getsize(tpath) > 0:
-                print('Copy and downscale: ', imagename)
                 img = bpy.data.images.load(tpath)
                 if img.size == (128, 128):
                     img.name = '.LOL_preview'
@@ -676,7 +680,9 @@ def bg_load_previews(context, asset_type):
                     img = bpy.data.images.load(tpath)
                     img.scale(128, 128)
                     img.save()
-                    bpy.data.images.remove(img)
+                    # NOTE: Removed the following line for the same reasons as stated below.
+                    # The case that this else block is invoked should be rare anyways
+                    # bpy.data.images.remove(img)
 
                     asset['thumbnail'] = bpy.data.images.load(tpath)
                     asset['thumbnail'].name = '.LOL_preview'
@@ -723,7 +729,7 @@ def bg_download_thumbnails(context, download_queue):
         tpath_full = join(user_preferences.global_dir, asset_type.lower(), 'preview', 'full', imagename)
         tpath = join(user_preferences.global_dir, asset_type.lower(), 'preview', imagename)
 
-        print("Downloading ", imagename)
+        print("[LOL] Downloading ", imagename)
         url = LOL_HOST_URL + "/"+ asset_type.lower() +"/preview/" + imagename
         with session.get(url) as resp, open(tpath, "wb") as file_handle:
             if resp.status_code == 200:
@@ -734,12 +740,17 @@ def bg_download_thumbnails(context, download_queue):
                 img = bpy.data.images.load(tpath)
                 img.scale(128, 128)
                 img.save()
-                bpy.data.images.remove(img)
+                # NOTE: The following line is commented because if can lead to crashes of Blender
+                # (only when executed as a Thread but that is done here)
+                # There is no console or any visible log entry why this happens
+                # Leads to about 100MB of additonal RAM usage at the moment when the preview images are first downloaded
+                # Hence not considered a problem and not treated further.
+                # bpy.data.images.remove(img)
 
                 asset['thumbnail'] = bpy.data.images.load(tpath)
                 asset['thumbnail'].name = '.LOL_preview'
             else:
-                print("Download error ",resp.status_code, ": ", url)
+                print("[LOL] Download error ",resp.status_code, ": ", url)
 
     for threaddata in bg_threads:
         tag, bg_task = threaddata

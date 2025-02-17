@@ -174,9 +174,6 @@ class VIEW3D_PT_LUXCORE_ONLINE_LIBRARY(Panel):
         op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (CG Trader)")
         op.url = "https://www.cgtrader.com/draviastudio"
 
-        op = col.operator("luxcore.open_website", icon=icons.URL, text="Donation (Bountysource)")
-        op.url = "https://salt.bountysource.com/teams/luxcorerender"
-
         col = layout.column(align=True)
         col.scale_x = 1.4
         col.scale_y = 1.4
