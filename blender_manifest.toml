@@ -4,9 +4,9 @@ schema_version = "1.0.0"
 # Change the values according to your extension
 id = "BlendLuxCore"
 # Recommend versioning like MASTER.MAJOR.MINOR. 
-# E.g.: "2.9.3": master: 2; major: 9; minor: 3.
-# BlendLuxCore Wheels version is 2.9.3 "3 is alpha3 here"
-version = "2.9.3"
+# E.g.: "2.9.4": master: 2; major: 9; minor: 3.
+# BlendLuxCore Wheels version is 2.9.4 "4 is alpha4 here"
+version = "2.9.4"
 name = "BlendLuxCore"
 tagline = "LuxCore"
 maintainer = "BlendLuxCore team"
