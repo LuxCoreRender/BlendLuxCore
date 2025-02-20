@@ -50,8 +50,8 @@ def load_local_TOC(context, asset_type):
 
     assets = []
 
-    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
+    
 
     filepath = join(user_preferences.global_dir, 'local_assets_' + asset_type.lower() + '.json')
     if isfile(filepath):
@@ -68,8 +68,7 @@ def load_local_TOC(context, asset_type):
 
 
 def load_patreon_assets(context):
-    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
     LOL_HOST_URL = user_preferences.lol_host
     LOL_VERSION = user_preferences.lol_version
     LOL_HTTP_HOST = user_preferences.lol_http_host
@@ -123,8 +122,7 @@ def download_table_of_contents(context):
     global bg_threads
     scene = context.scene
     ui_props = context.scene.luxcoreOL.ui
-    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
     LOL_HOST_URL = user_preferences.lol_host
     LOL_VERSION = user_preferences.lol_version
     LOL_HTTP_HOST = user_preferences.lol_http_host
@@ -708,8 +706,7 @@ def bg_load_previews(context, asset_type):
 def bg_download_thumbnails(context, download_queue):
     import urllib.request
 
-    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
+    user_preferences = get_addon_preferences(context)
     LOL_HOST_URL = user_preferences.lol_host
     LOL_VERSION = user_preferences.lol_version
     LOL_HTTP_HOST = user_preferences.lol_http_host

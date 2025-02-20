@@ -27,6 +27,7 @@ from os.path import basename, dirname, join, isfile, splitext
 
 from bpy.types import Operator
 from ...utils.lol import utils as utils
+from ...utils import get_addon_preferences
 
 class LOLUpdateTOC(Operator):
     bl_idname = 'scene.luxcore_ol_update_toc'
@@ -44,8 +45,7 @@ class LOLUpdateTOC(Operator):
         scene = context.scene
         ui_props = scene.luxcoreOL.ui
 
-        name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
-        user_preferences = context.preferences.addons[name].preferences
+        user_preferences = get_addon_preferences(context)
         LOL_HOST_URL = user_preferences.lol_host
         LOL_VERSION = user_preferences.lol_version
         LOL_HTTP_HOST = user_preferences.lol_http_host

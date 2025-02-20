@@ -32,6 +32,7 @@ from bpy.props import BoolProperty, IntProperty, StringProperty, CollectionPrope
 from os import listdir
 from os.path import basename, dirname, isfile, join, splitext, exists
 from ...utils.lol import utils as lol_utils
+from ...utils import get_addon_preferences
 
 from mathutils import Vector
 
@@ -77,9 +78,7 @@ def render_thumbnail(args):
     from ...utils.compatibility import run
     (context, assetfile, asset_type) = args
 
-    name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
-    user_preferences = context.preferences.addons[name].preferences
-
+    user_preferences = get_addon_preferences(context)
 
     if asset_type == 'MODEL':
         luxball = 'material_thumbnail.blend'
@@ -131,8 +130,7 @@ class LOLAddLocalOperator(Operator):
         ui_props = scene.luxcoreOL.ui
         upload_props = scene.luxcoreOL.upload
 
-        name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
-        user_preferences = context.preferences.addons[name].preferences
+        user_preferences = get_addon_preferences(context)
 
         if len(context.selected_objects) == 0:
             return {'CANCELLED'}
@@ -243,8 +241,7 @@ class LOLScanLocalOperator(Operator):
         ui_props = scene.luxcoreOL.ui
         upload_props = scene.luxcoreOL.upload
 
-        name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
-        user_preferences = context.preferences.addons[name].preferences
+        user_preferences = get_addon_preferences(context)
         assetpath = join(user_preferences.global_dir, ui_props.asset_type.lower(), 'local')
 
         files = [f for f in listdir(assetpath) if isfile(join(assetpath, f))]
