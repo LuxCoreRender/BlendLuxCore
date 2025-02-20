@@ -40,14 +40,6 @@ import threading
 from threading import _MainThread, Thread, Lock
 from ...handlers.lol.timer import timer_update
 from ...utils import get_addon_preferences, compatibility
-from ... import bl_info
-
-
-LOL_HOST_URL = "https://luxcorerender.org/lol"
-# LOL_HOST_URL = "https://www.sciencehooligans.de/lol"
-LOL_VERSION = "v2.5"
-blc_ver = '.'.join([str(_) for _ in bl_info["version"]])
-useragent = f"BlendLuxCore/{blc_ver}" # user agent for urllib request to LOL
 
 download_threads = []
 bg_threads = []
@@ -78,6 +70,10 @@ def load_local_TOC(context, asset_type):
 def load_patreon_assets(context):
     name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
+    LOL_HOST_URL = user_preferences.lol_host
+    LOL_VERSION = user_preferences.lol_version
+    LOL_HTTP_HOST = user_preferences.lol_http_host
+    LOL_USERAGENT = user_preferences.lol_useragent
 
     #check if local file is available
     filepath = join(user_preferences.global_dir, 'assets_model_blendermarket.json')
@@ -99,11 +95,11 @@ def load_patreon_assets(context):
         import urllib.request
         urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model_blendermarket.json"
         req = urllib.request.Request(
-            urlstr, data=None, headers={'User-Agent': useragent}
+            urlstr, headers={'User-Agent': LOL_USERAGENT, 'Host': LOL_HTTP_HOST}
         )
-        with urllib.request.urlopen(req, timeout=60) as request:
+        with urllib.request.urlopen(req, timeout=60) as response:
             import json
-            assets = json.load(request)
+            assets = json.load(response)
 
             #cache file for future offline work
             with open(filepath, 'w') as file:
@@ -129,6 +125,10 @@ def download_table_of_contents(context):
     ui_props = context.scene.luxcoreOL.ui
     name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
+    LOL_HOST_URL = user_preferences.lol_host
+    LOL_VERSION = user_preferences.lol_version
+    LOL_HTTP_HOST = user_preferences.lol_http_host
+    LOL_USERAGENT = user_preferences.lol_useragent
 
     try:
         for threaddata in bg_threads:
@@ -154,11 +154,11 @@ def download_table_of_contents(context):
             import urllib.request
             urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model.json"
             req = urllib.request.Request(
-                urlstr, data=None, headers={'User-Agent': useragent}
+                urlstr, headers={'User-Agent': LOL_USERAGENT, 'Host': LOL_HTTP_HOST}
             )
-            with urllib.request.urlopen(req, timeout=60) as request:
+            with urllib.request.urlopen(req, timeout=60) as response:
                 import json
-                assets = json.load(request)
+                assets = json.load(response)
                 # cache file for future offline work
                 with open(filepath, 'w') as file:
                     file.write(json.dumps(assets, indent=2))
@@ -173,16 +173,6 @@ def download_table_of_contents(context):
         assets.extend(load_local_TOC(context, 'model'))
         assets.extend(load_patreon_assets(context))
         scene.luxcoreOL.model['assets'] = assets
-
-        # with urllib.request.urlopen(LOL_HOST_URL + "/assets_scene.json", timeout=60) as request:
-        #     import json
-        #     assets = json.loads(request.read())
-        #     for asset in scene.luxcoreOL.scene['assets']:
-        #         asset['downloaded'] = 0.0
-        #         asset['local'] = False
-        #
-        #     assets.extend(load_local_TOC(context, 'scene'))
-        #     scene.luxcoreOL.scene['assets'] = assets
 
         # check if local file is available
         filepath = join(user_preferences.global_dir, 'assets_material.json')
@@ -199,11 +189,11 @@ def download_table_of_contents(context):
             import urllib.request
             urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_material.json"
             req = urllib.request.Request(
-                urlstr, data=None, headers={'User-Agent': useragent}
+                urlstr, headers={'User-Agent': LOL_USERAGENT, 'Host': LOL_HTTP_HOST}
             )
-            with urllib.request.urlopen(req, timeout=60) as request:
+            with urllib.request.urlopen(req, timeout=60) as response:
                 import json
-                assets = json.load(request)
+                assets = json.load(response)
                 # cache file for future offline work
                 with open(filepath, 'w') as file:
                     file.write(json.dumps(assets, indent=2))
@@ -235,7 +225,7 @@ def download_table_of_contents(context):
 
     finally:
         try:
-            request.close()
+            response.close()
         except NameError:
             pass
 
@@ -369,6 +359,10 @@ class Downloader(threading.Thread):
     def run(self):
         import urllib.request
         user_preferences = get_addon_preferences(bpy.context)
+        LOL_HOST_URL = user_preferences.lol_host
+        LOL_VERSION = user_preferences.lol_version
+        LOL_HTTP_HOST = user_preferences.lol_http_host
+        LOL_USERAGENT = user_preferences.lol_useragent
         tcom = self.tcom
 
         filename = self.asset["url"]
@@ -379,21 +373,21 @@ class Downloader(threading.Thread):
             try:
                 print("[LOL] Downloading:", urlstr)
                 req = urllib.request.Request(
-                    urlstr, data=None, headers={'User-Agent': useragent}
+                    urlstr, headers={'User-Agent': LOL_USERAGENT, 'Host': LOL_HTTP_HOST}
                 )
-                with urllib.request.urlopen(req, timeout=60) as url_handle, \
+                with urllib.request.urlopen(req, timeout=60) as response, \
                         open(temp_zip_path, "wb") as file_handle:
-                    if 'Content-Length' in url_handle.headers:
-                        total_length = url_handle.headers.get('Content-Length')
+                    if 'Content-Length' in response.headers:
+                        total_length = response.headers.get('Content-Length')
                         tcom.file_size = int(total_length)
                     else:
                         tcom.file_size = None
 
                     dl = 0
-                    data = url_handle.read(8192)
+                    data = response.read(8192)
                     file_handle.write(data)
                     while len(data) == 8192:
-                        data = url_handle.read(8192)
+                        data = response.read(8192)
                         if tcom.file_size is not None:
                             dl += len(data)
                             tcom.downloaded = dl
@@ -407,7 +401,7 @@ class Downloader(threading.Thread):
 
                         file_handle.write(data)
                         if self.stopped():
-                            url_handle.close()
+                            response.close()
                             return
                 print("[LOL] Download finished")
                 import zipfile
@@ -420,6 +414,7 @@ class Downloader(threading.Thread):
                 print(error)
             except urllib.error.URLError as error:
                 print("[LOL] Could not download: " + filename)
+                print(error)
 
             finally:
                 tcom.finished = True
@@ -711,11 +706,14 @@ def bg_load_previews(context, asset_type):
 
 
 def bg_download_thumbnails(context, download_queue):
-    from requests import Session
-    session = Session()
+    import urllib.request
 
     name = 'bl_ext.user_default.' + basename(dirname(dirname(dirname(__file__))))
     user_preferences = context.preferences.addons[name].preferences
+    LOL_HOST_URL = user_preferences.lol_host
+    LOL_VERSION = user_preferences.lol_version
+    LOL_HTTP_HOST = user_preferences.lol_http_host
+    LOL_USERAGENT = user_preferences.lol_useragent
 
     while not download_queue.empty():
         # Stop download if Blender is closed
@@ -730,10 +728,13 @@ def bg_download_thumbnails(context, download_queue):
         tpath = join(user_preferences.global_dir, asset_type.lower(), 'preview', imagename)
 
         print("[LOL] Downloading ", imagename)
-        url = LOL_HOST_URL + "/"+ asset_type.lower() +"/preview/" + imagename
-        with session.get(url) as resp, open(tpath, "wb") as file_handle:
-            if resp.status_code == 200:
-                file_handle.write(resp.content)
+        urlstr = LOL_HOST_URL + "/"+ asset_type.lower() +"/preview/" + imagename
+        req = urllib.request.Request(
+            urlstr, headers={'User-Agent': LOL_USERAGENT, 'Host': LOL_HTTP_HOST}
+        )
+        with urllib.request.urlopen(req, timeout=60) as response, open(tpath, "wb") as file_handle:
+            if response.getcode() == 200:
+                file_handle.write(response.read())
 
                 from shutil import copyfile
                 copyfile(tpath, tpath_full)
@@ -750,7 +751,7 @@ def bg_download_thumbnails(context, download_queue):
                 asset['thumbnail'] = bpy.data.images.load(tpath)
                 asset['thumbnail'].name = '.LOL_preview'
             else:
-                print("[LOL] Download error ",resp.status_code, ": ", url)
+                print("[LOL] Download error ", response.status_code, ": ", urlstr)
 
     for threaddata in bg_threads:
         tag, bg_task = threaddata

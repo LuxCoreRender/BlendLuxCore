@@ -1,15 +1,16 @@
 import bpy
-from os.path import basename, dirname
 from bpy.types import AddonPreferences
 from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
+
 from ..ui import icons
 from .. import utils
 from ..utils.lol import utils as lol_utils
 from importlib.metadata import version
+from .. import bl_info
 
+blc_ver = '.'.join([str(_) for _ in bl_info["version"]])
 
 film_device_items = []
-
 
 class LuxCoreAddonPreferences(AddonPreferences):
     # id name for 4.2
@@ -58,6 +59,26 @@ class LuxCoreAddonPreferences(AddonPreferences):
         name="Global Files Directory",
         description="Global storage for your assets, will use subdirectories for the contents",
         subtype='DIR_PATH', default=lol_utils.get_default_directory()
+    )
+    lol_host: StringProperty(
+        name="Host URL",
+        description="Address of the LuxCore Online Library server",
+        default = "https://luxcorerender.org/lol",
+    )
+    lol_http_host: StringProperty(
+        name="HTTP Host",
+        description=" FOR DEVELOPERS ONLY! DO NOT EDIT! Hostname transferred with HTTP(S) request. Needed for technical reasons.",
+        default = "www.luxcorerender.org",
+    )
+    lol_version: StringProperty(
+        name="Library Version",
+        description="Version of the LuxCore Online Library.",
+        default = "v2.5",
+    )
+    lol_useragent: StringProperty(
+        name="HTTP User-Agent",
+        description="User Agent transmitted with requests",
+        default = f"BlendLuxCore/{blc_ver}",
     )
 
     max_assetbar_rows: IntProperty(name="Max Assetbar Rows", description="max rows of assetbar in the 3d view",
@@ -125,6 +146,10 @@ class LuxCoreAddonPreferences(AddonPreferences):
         col.prop(self, "use_library")
         if self.use_library:
             col.prop(self, "global_dir")
+            col.prop(self, "lol_host")
+            col.prop(self, "lol_http_host")
+            # col.prop(self, "lol_version") # unlikely to need change so not even needed for developers
+            # col.prop(self, "lol_useragent") # unlikely to need change so not even needed for developers
             col.prop(self, "thumb_size")
 
         # pyluxcore version
