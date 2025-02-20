@@ -183,7 +183,6 @@ if am_in_extension:
 
         # Step 2: Check if platform information is complete and valid
         architecture, machine, python_version_str = _get_platform_info()
-        print('Platform information:', architecture, machine, python_version_str)
         if architecture is None or machine is None or python_version_str is None:
             # In this case, just hope pyluxcore was previously installed and can be imported. Else error will be raised below so do nothing here at the moment.
             print("WARNING: Platform information is incomplete")
