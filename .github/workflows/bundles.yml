@@ -57,3 +57,9 @@ jobs:
         with:
           name: "BlendLuxCore"
           path: "${{ github.workspace }}/unzip/*"
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: ${{ github.workspace }}/build/BlendLuxCore-*.zip
