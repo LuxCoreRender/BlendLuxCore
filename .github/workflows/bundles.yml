@@ -8,7 +8,7 @@ on:
   pull_request:
   push:
     branches:
-      - for_blender_4.2_wheels
+      - for_v2.10
   workflow_dispatch:
   release:
     types:
@@ -39,7 +39,7 @@ jobs:
 
       - uses: moguri/setup-blender@v1
         with:
-          blender-version: '4.2.4'
+          blender-version: '4.2.7'
 
       - uses: lukka/get-cmake@latest
 
