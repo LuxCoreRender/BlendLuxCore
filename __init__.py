@@ -31,11 +31,11 @@ if platform.system() in {"Linux", "Darwin"}:
 bl_info = {
     "name": "LuxCoreRender",
     "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Odilkhan Yakubov (odil24), acasta69, u3dreal, Philstix",
-    "version": (2, 10),
+    "version": (2, 9),
     "blender": (4, 2, 0),
     "category": "Render",
     "description": "LuxCoreRender integration for Blender",
-    "warning": "alpha3",
+    "warning": "alpha4",
 
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
@@ -183,7 +183,6 @@ if am_in_extension:
 
         # Step 2: Check if platform information is complete and valid
         architecture, machine, python_version_str = _get_platform_info()
-        print('Platform information:', architecture, machine, python_version_str)
         if architecture is None or machine is None or python_version_str is None:
             # In this case, just hope pyluxcore was previously installed and can be imported. Else error will be raised below so do nothing here at the moment.
             print("WARNING: Platform information is incomplete")
