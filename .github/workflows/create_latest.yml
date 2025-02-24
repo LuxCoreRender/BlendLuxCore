@@ -1,0 +1,114 @@
+# SPDX-FileCopyrightText: 2025 Howetuft, Johannes Hinrichs (CodeFHD)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: BlendLuxCore Create Latest Release
+
+on:
+  pull_request:
+    branches:
+      - for_v2.10
+  push:
+    branches:
+      - for_v2.10
+  workflow_dispatch:
+
+jobs:
+  build_bundles:
+    name: Build Latest Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Prepare Blender install
+        uses: gerlero/apt-install@v1
+        with:
+          packages: libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libgl1
+
+      - name: Prepare Python
+        run: touch requirements.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: moguri/setup-blender@v1
+        with:
+          blender-version: '4.2.7'
+
+      - uses: lukka/get-cmake@latest
+
+      - name: Package bundle
+        shell: bash
+        run: |
+          build_dir="${{ github.workspace }}/build"
+          mkdir ${build_dir}
+          cmake -B ${build_dir} -S . -DCMAKE_BUILD_TYPE=Latest
+          cmake --build ${build_dir}
+          unzip -q "${build_dir}/BlendLuxCore-Latest.zip" -d "${{ github.workspace }}/unzip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "BlendLuxCore"
+          path: "${{ github.workspace }}/unzip/*"
+
+      - name: Check if latest release already exists
+        shell: bash
+        run: |
+          echo false > ${{ github.workspace }}/tmp_release_test
+          gh release list --json name > ${{ github.workspace }}/tmp_releases
+          jq -r -c .[].name ${{ github.workspace }}/tmp_releases | while read i; do
+            echo $i
+            if [[ "$i" = "BlendLuxCore Latest" ]]; then
+              echo true > "${{ github.workspace }}/tmp_release_test"
+            fi
+          done
+          TESTRESULT=$(cat ${{ github.workspace }}/tmp_release_test)
+          echo $TESTRESULT
+          echo "ReleaseExists=$TESTRESULT" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: check_release_exists
+
+      - name: Update the "latest" tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old latest release
+        shell: bash
+        run: |
+          gh release delete latest
+        if: |
+          ${{ steps.check-release-exists.outputs.ReleaseExists }} == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create new latest release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: latest
+          release_name: 'BlendLuxCore Latest'
+          draft: false
+          prerelease: true
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: ${{ github.workspace }}/build/BlendLuxCore-Latest.zip
+
+      - name: Add binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: ${{ github.workspace }}/build/BlendLuxCore-Latest.zip

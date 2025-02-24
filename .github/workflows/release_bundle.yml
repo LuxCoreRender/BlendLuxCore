@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2025 Howetuft, Johannes Hinrichs (CodeFHD)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: BlendLuxCore Blender Bundles
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build_bundles:
+    name: Add binaries to release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Release binaries
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: ${{ github.workspace }}/build/BlendLuxCore-*.zip

@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 3.25)
 
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 project(BlendLuxCore LANGUAGES NONE)
 if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
@@ -36,12 +39,16 @@ endfunction()
 
 # Get BlendLuxCore version
 find_package(Python 3.11 REQUIRED COMPONENTS Interpreter)
-execute_process(
-  COMMAND python
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/blendluxcore_version.py
-    ${CMAKE_CURRENT_SOURCE_DIR}/blender_manifest.toml
-  OUTPUT_VARIABLE BLC_VERSION
-)
+if (CMAKE_BUILD_TYPE STREQUAL "Latest")
+  set(BLC_VERSION "Latest")
+else()
+  execute_process(
+    COMMAND python
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/blendluxcore_version.py
+      ${CMAKE_CURRENT_SOURCE_DIR}/blender_manifest.toml
+    OUTPUT_VARIABLE BLC_VERSION
+  )
+endif()
 
 find_program(BLENDER blender NAMES blender.exe VALIDATOR validate_blender_version NO_CACHE REQUIRED)
 
