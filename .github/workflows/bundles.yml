@@ -5,10 +5,6 @@
 name: BlendLuxCore Blender Bundles
 
 on:
-  pull_request:
-  push:
-    branches:
-      - for_v2.10
   workflow_dispatch:
   release:
     types:
