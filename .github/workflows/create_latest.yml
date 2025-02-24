@@ -5,9 +5,6 @@
 name: BlendLuxCore Create Latest Release
 
 on:
-  pull_request:
-    branches:
-      - for_v2.10
   push:
     branches:
       - for_v2.10
@@ -57,7 +54,14 @@ jobs:
           name: "BlendLuxCore"
           path: "${{ github.workspace }}/unzip/*"
 
-      - name: Check if latest release already exists
+      - name: Update the "latest" tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old latest release
         shell: bash
         run: |
           echo false > ${{ github.workspace }}/tmp_release_test
@@ -69,46 +73,17 @@ jobs:
             fi
           done
           TESTRESULT=$(cat ${{ github.workspace }}/tmp_release_test)
-          echo $TESTRESULT
-          echo "ReleaseExists=$TESTRESULT" >> "$GITHUB_OUTPUT"
+          if [[ $TESTRESULT = 'true' ]]; then
+            gh release delete latest
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        id: check_release_exists
-
-      - name: Update the "latest" tag
-        uses: richardsimko/update-tag@v1
-        with:
-          tag_name: latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete old latest release
-        shell: bash
-        run: |
-          gh release delete latest
-        if: |
-          ${{ steps.check-release-exists.outputs.ReleaseExists }} == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create new latest release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: latest
-          release_name: 'BlendLuxCore Latest'
-          draft: false
-          prerelease: true
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release'
-        with:
-          files: ${{ github.workspace }}/build/BlendLuxCore-Latest.zip
 
       - name: Add binaries
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           files: ${{ github.workspace }}/build/BlendLuxCore-Latest.zip
+          draft: false
+          prerelease: true
+          body: "This is the result of automatic compilation of the latest commits.\n\nPlease note that this release may be unstable and is not recommended for production use."
