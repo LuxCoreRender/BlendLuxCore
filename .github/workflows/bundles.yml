@@ -48,7 +48,7 @@ jobs:
         run: |
           build_dir="${{ github.workspace }}/build"
           mkdir ${build_dir}
-          cmake -B ${build_dir} -S .
+          cmake -B ${build_dir} -S . -DCMAKE_BUILD_TYPE=Release
           cmake --build ${build_dir}
           unzip -q "${build_dir}/BlendLuxCore-*.zip" -d "${{ github.workspace }}/unzip"
 
