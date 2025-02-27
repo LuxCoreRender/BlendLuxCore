@@ -14,7 +14,7 @@ This addon integrates the LuxCore render engine into Blender. It offers advanced
 * Blender 4.2+ is supported by the latest version
 Supported platforms are Windows, Linux, MacOS Intel, MacOS ARM
 
-**Old BlendLuxCore releases (for reference):**
+**Old BlendLuxCore releases (non-wheel):**
 * Blender 2.93 is supported by BlendLuxCore v2.6.
 * Blender 2.83-2.92 are supported by BlendLuxCore v2.5.
 * Blender 2.83 is supported by BlendLuxCore v2.4.
@@ -54,10 +54,9 @@ Beforehand, you may want to uninstall previous version of BlendLuxCore: look in 
 
 ## Links
 
-| **Homepage:**       | https://luxcorerender.org/                    |
-| :-----------------: | :-------------------------------------------: |
-| **Forums:**         | **https://forums.luxcorerender.org/**         |
-| **Wiki:**           | **https://wiki.luxcorerender.org/**           |
-| **Discord:**        | **https://discord.com/invite/chPGsKV**        |
-| **Gallery:**        | **https://luxcorerender.org/gallery/**        |
-| **Example Scenes:** | **https://luxcorerender.org/example-scenes/** |
+**Homepage:**        **https://luxcorerender.org/**  
+**Forums:**          **https://forums.luxcorerender.org/**  
+**Wiki:**            **https://wiki.luxcorerender.org/**  
+**Discord:**         **https://discord.com/invite/chPGsKV**  
+**Gallery:**         **https://luxcorerender.org/gallery/**  
+**Example Scenes:**  **https://luxcorerender.org/example-scenes/**
