@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: 2025 Howetuft, Johannes Hinrichs (CodeFHD)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: BlendLuxCore Build Bundle
+
+on:
+  pull_request:
+  workflow_call:
+
+jobs:
+  build_bundle:
+    name: Build bundle
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Prepare Blender install
+        uses: gerlero/apt-install@v1
+        with:
+          packages: libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libgl1
+
+      - name: Prepare Python
+        run: touch requirements.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Blender
+        uses: moguri/setup-blender@v1
+        with:
+          blender-version: '4.2.7'
+
+      - name: Set up cmake
+        uses: lukka/get-cmake@latest
+
+      - name: Package bundle
+        shell: bash
+        run: |
+          build_dir="${{ github.workspace }}/build"
+          mkdir ${build_dir}
+          cmake -B ${build_dir} -S . -DCMAKE_BUILD_TYPE=Release
+          cmake --build ${build_dir}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "BlendLuxCore"
+          path: "${{ github.workspace }}/build/BlendLuxCore-*.zip"
