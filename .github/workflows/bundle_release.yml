@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: BlendLuxCore Blender Bundles
+name: BlendLuxCore Create Release
 
 on:
   release:
@@ -10,51 +10,27 @@ on:
       - published
 
 jobs:
-  build_bundles:
-    name: Build bundles
-    runs-on: ubuntu-latest
+  build_latest:
+    name: Build Latest Bundle
+    uses: ./.github/workflows/build_bundle.yml
 
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: build_latest
     steps:
 
       - name: Checkout main repository
         uses: actions/checkout@v4
 
-      - name: Prepare Blender install
-        uses: gerlero/apt-install@v1
-        with:
-          packages: libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libgl1
-
-      - name: Prepare Python
-        run: touch requirements.txt
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - uses: moguri/setup-blender@v1
-        with:
-          blender-version: '4.2.7'
-
-      - uses: lukka/get-cmake@latest
-
-      - name: Package bundle
-        shell: bash
-        run: |
-          build_dir="${{ github.workspace }}/build"
-          mkdir ${build_dir}
-          cmake -B ${build_dir} -S . -DCMAKE_BUILD_TYPE=Release
-          cmake --build ${build_dir}
-          unzip -q "${build_dir}/BlendLuxCore-*.zip" -d "${{ github.workspace }}/unzip"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Get Bundle
+        uses: actions/download-artifact@v4
         with:
           name: "BlendLuxCore"
-          path: "${{ github.workspace }}/unzip/*"
+          path: "${{ github.workspace }}/download/"
 
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: ${{ github.workspace }}/build/BlendLuxCore-*.zip
+          files: "${{ github.workspace }}/download/BlendLuxCore-*.zip"
