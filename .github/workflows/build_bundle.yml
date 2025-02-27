@@ -6,7 +6,17 @@ name: BlendLuxCore Build Bundle
 
 on:
   pull_request:
+    inputs:
+      build_type:
+        required: false
+        type: string
+        default: "Latest"
   workflow_call:
+    inputs:
+      build_type:
+        required: true
+        type: string
+        default: "Latest"
 
 jobs:
   build_bundle:
@@ -44,7 +54,7 @@ jobs:
         run: |
           build_dir="${{ github.workspace }}/build"
           mkdir ${build_dir}
-          cmake -B ${build_dir} -S . -DCMAKE_BUILD_TYPE=Release
+          cmake -B ${build_dir} -S . -DCMAKE_BUILD_TYPE=${{ inputs.build_type }}
           cmake --build ${build_dir}
 
       - name: Upload artifact
