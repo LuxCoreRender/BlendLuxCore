@@ -1,22 +1,16 @@
-# SPDX-FileCopyrightText: 2024 Howetuft
+# SPDX-FileCopyrightText: 2025 Howetuft, Johannes Hinrichs (CodeFHD)
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: BlendLuxCore Blender Bundles
+name: BlendLuxCore Build Bundle
 
 on:
   pull_request:
-  push:
-    branches:
-      - for_v2.10
-  workflow_dispatch:
-  release:
-    types:
-      - published
+  workflow_call:
 
 jobs:
-  build_bundles:
-    name: Build bundles
+  build_bundle:
+    name: Build bundle
     runs-on: ubuntu-latest
 
     steps:
@@ -37,29 +31,24 @@ jobs:
         with:
           python-version: '3.11'
 
-      - uses: moguri/setup-blender@v1
+      - name: Set up Blender
+        uses: moguri/setup-blender@v1
         with:
           blender-version: '4.2.7'
 
-      - uses: lukka/get-cmake@latest
+      - name: Set up cmake
+        uses: lukka/get-cmake@latest
 
       - name: Package bundle
         shell: bash
         run: |
           build_dir="${{ github.workspace }}/build"
           mkdir ${build_dir}
-          cmake -B ${build_dir} -S .
+          cmake -B ${build_dir} -S . -DCMAKE_BUILD_TYPE=Release
           cmake --build ${build_dir}
-          unzip -q "${build_dir}/BlendLuxCore-*.zip" -d "${{ github.workspace }}/unzip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: "BlendLuxCore"
-          path: "${{ github.workspace }}/unzip/*"
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release'
-        with:
-          files: ${{ github.workspace }}/build/BlendLuxCore-*.zip
+          path: "${{ github.workspace }}/build/BlendLuxCore-*.zip"
