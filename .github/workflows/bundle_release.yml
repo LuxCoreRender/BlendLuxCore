@@ -13,6 +13,8 @@ jobs:
   build_latest:
     name: Build Latest Bundle
     uses: ./.github/workflows/build_bundle.yml
+    with:
+      build_type: "Release"
 
   create_release:
     name: Create release
