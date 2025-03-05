@@ -77,11 +77,11 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial, bpy.types.Node):
         ThinFilmCoating.init(self)
         
         Roughness.init(self, default=0.05, init_enabled=False)
-        Roughness.update_anisotropy(self, context)
 
         self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
+        Roughness.update_anisotropy(self, context)
         
 
     def draw_buttons(self, context, layout):
