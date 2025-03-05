@@ -21,17 +21,19 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture, bpy.types.Node):
     ]
 
     def change_mode(self, context):
+        id = self.inputs.find("Color 2")
         if self.mode in {"clamp", "abs"}:
             self.inputs[1].name = "Color"
-            self.inputs["Color 2"].enabled = False
+            self.inputs[id].enabled = False
         else:
             self.inputs[1].name = "Color 1"
-            self.inputs["Color 2"].enabled = True
+            self.inputs[id].enabled = True
         
+        id = self.inputs.find("Fac")
         if self.mode == "mix":
-            self.inputs["Fac"].enabled = True
+            self.inputs[id].enabled = True
         else:
-            self.inputs["Fac"].enabled = False
+            self.inputs[id].enabled = False
         utils_node.force_viewport_update(self, context)
 
     mode: EnumProperty(name="Mode", items=mode_items, default="mix", update=change_mode)

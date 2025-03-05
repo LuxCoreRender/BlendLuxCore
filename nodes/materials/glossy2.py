@@ -18,11 +18,14 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial, bpy.types.Node):
             self.inputs[id].enabled = not self.use_ior
         utils_node.force_viewport_update(self, context)
 
-    multibounce: BoolProperty(update=utils_node.force_viewport_update, name="Multibounce", default=False,
+    multibounce: BoolProperty(update=utils_node.force_viewport_update,
+                              name="Multibounce",
+                              default=False,
                               description=MULTIBOUNCE_DESCRIPTION)
-    use_ior: BoolProperty(name="Use IOR", default=False,
-                           update=update_use_ior,
-                           description=IOR_DESCRIPTION)
+    use_ior: BoolProperty(name="Use IOR",
+                          default=False,
+                          update=update_use_ior,
+                          description=IOR_DESCRIPTION)
     use_anisotropy: BoolProperty(name=Roughness.aniso_name,
                                   default=False,
                                   description=Roughness.aniso_desc,

@@ -46,7 +46,7 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial, bpy.types.Node):
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Color", (0.7, 0.7, 0.7))
         self.inputs.new("LuxCoreSocketFresnel", "Fresnel")
-        self.inputs["Fresnel"].enabled = False        
+        self.inputs["Fresnel"].enabled = False
         Roughness.init(self, 0.05)
         
         self.add_common_inputs()
