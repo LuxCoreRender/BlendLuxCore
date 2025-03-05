@@ -197,7 +197,7 @@ def get_total_particle_count(particle_system, is_viewport_render):
     if is_viewport_render:
         particle_count *= settings.display_percentage / 100
     if settings.child_type != "NONE":
-        particle_count *= settings.child_nbr if is_viewport_render else settings.rendered_child_count
+        particle_count *= settings.child_percent if is_viewport_render else settings.rendered_child_count
     return particle_count
 
 
