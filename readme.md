@@ -1,38 +1,76 @@
-![Watermark](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender-logo_orange_grey-shiny.png)
+<p align="center">
+<h1 align="center">BlendLuxCore</h1>
+</p>
+<p align="center">
+<b>Blender Addon for LuxCoreRender</b>
+</p>
 
-![Example](https://github.com/LuxCoreRender/BlendLuxCore/blob/master/luxcorerender_caustics_scene.jpg)
 
-<sup> [LuxCoreRender.org](https://luxcorerender.org/) | [Forums](https://forums.luxcorerender.org/) | [Wiki](http://wiki.luxcorerender.org/LuxCoreRender_Wiki) </sup>
+![Example Render](https://luxcorerender.org/wp-content/uploads/2025/02/dark_mode_wide.jpg)
 
-## BlendLuxCore
 
 This addon integrates the LuxCore render engine into Blender. It offers advanced features like accelerated rendering of indirect light and efficient rendering of caustics.
 
-### Supported Blender Versions
+## BlendLuxCore Wheels
 
-* Blender 4.2 is supported by [BlendLuxCore v2.9 beta1 (Windows only)](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.9beta1)
+**As of 2025, the LuxCoreRender codebase is being reworked to support the latest features and integrate with Blender versions 4.2+.**  
 
-* Blender 4.1 is supported by [BlendLuxCore v2.9 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.9alpha1)
+**The current preview-releases are special, experimental versions of the add-on, based on LuxCore Python wheels.**  
 
-* Blender 4.0 is supported by [BlendLuxCore v2.8 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.8alpha1)
+**This version is not recommended for production use.**  
 
-* Blender 3.6 LTS (3.6.x, not 3.6 itself) is experimentally supported by [BlendLuxCore v2.7 beta1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.7beta1)
+**If you want to support the development, or compile the software from source, please observe that the currently active working branch for all active repositories is labelled "for_v2.10"**  
 
-* Blender 3.0 - 3.5.1 are supported by [BlendLuxCore v2.6 alpha1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.6alpha1)
+**In case of questions or support, please open an issue here on GitHub or get in touch on our Discord server: https://discord.com/invite/chPGsKV**
 
-* Blender 2.93 is supported by [BlendLuxCore v2.6](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.6)
+## Supported Blender Versions
 
-* Blender 2.83-2.92 are supported by [BlendLuxCore v2.5](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.5)
+* Blender 4.2+ is supported by the latest version
+Supported platforms are Windows, Linux, MacOS Intel, MacOS ARM
 
-* Blender 2.83 is supported by [BlendLuxCore v2.4](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.4)
+**Old BlendLuxCore releases (non-wheel):**
+* Blender 2.93 is supported by BlendLuxCore v2.6.
+* Blender 2.83-2.92 are supported by BlendLuxCore v2.5.
+* Blender 2.83 is supported by BlendLuxCore v2.4.
+* Blender 2.80, 2.81 and 2.82 are supported by BlendLuxCore v2.2 and v2.3.  
+* Blender 2.79 is supported by BlendLuxCore v2.0, v2.1 and v2.2.
+Supported platforms are Windows, Linux, MacOS Intel
 
-* Blender 2.80, 2.81 and 2.82 are supported by [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2) and [BlendLuxCore v2.3](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.3)
- 
-* Blender 2.79 is supported by [BlendLuxCore v2.0](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.0), [BlendLuxCore v2.1](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.1) and [BlendLuxCore v2.2](https://github.com/LuxCoreRender/BlendLuxCore/releases/tag/blendluxcore_v2.2)
+## Installation
 
-### [Installation and usage](https://wiki.luxcorerender.org/Category:BlendLuxCore)
+### From latest release (recommended)
 
-### [Gallery](https://luxcorerender.org/gallery/)  
+- Find the latest suitable release of **BlendLuxCore Wheels** on the release page:  
+https://github.com/LuxCoreRender/BlendLuxCore/releases  
+(Caveat: do not get confused with plain BlendLuxCore!)
+- Note: the release labelled "latest" is a nightly build and may be particularly unstable even compared to alpha or beta release versions!
+- From the release assets, download extension `BlendLuxCore-*.zip`
+- Open Blender and follow "Install from disk" procedure (https://docs.blender.org/manual/en/latest/editors/preferences/extensions.html)
 
-### [Download example test scenes](https://luxcorerender.org/example-scenes/)
+Beforehand, you may want to uninstall previous version of BlendLuxCore: look in the "Get Extensions" panel.
 
+### Building locally from source
+
+Prerequisites: you need `cmake` and `blender` installed and in your `PATH`
+
+Build extension:
+- clone this repository: `git clone https://github.com/LuxCoreRender/BlendLuxCore.git --branch for_blender_4.2_wheels`
+- configure: `cmake -S BlendLuxCore -B blc-build -DCMAKE_BUILD_TYPE=Release`
+- build: `cmake --build blc-build`
+
+To create a `Latest` release, use the option `-DCMAKE_BUILD_TYPE=Latest` in the step `configure`.
+
+The build script then places the collected zip-file in the `blc-build` subfolder.
+
+Open Blender and follow "Install from disk" procedure (https://docs.blender.org/manual/en/latest/editors/preferences/extensions.html)
+
+Beforehand, you may want to uninstall previous version of BlendLuxCore: look in the "Get Extensions" panel.
+
+## Links
+
+**Homepage:**        **https://luxcorerender.org/**  
+**Forums:**          **https://forums.luxcorerender.org/**  
+**Wiki:**            **https://wiki.luxcorerender.org/**  
+**Discord:**         **https://discord.com/invite/chPGsKV**  
+**Gallery:**         **https://luxcorerender.org/gallery/**  
+**Example Scenes:**  **https://luxcorerender.org/example-scenes/**
