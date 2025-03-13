@@ -19,26 +19,26 @@ class TempfileManager:
 
     @staticmethod
     def track(object_id, file_path):
-        """ Track a temporary file for cleanup """
+        # Track a temporary file for cleanup
         if object_id not in TempfileManager.temp_files:
             TempfileManager.temp_files[object_id] = []
         TempfileManager.temp_files[object_id].append(file_path)
 
     @staticmethod
     def delete_files(object_id):
-        """ Delete all tracked files for a given object """
+        # Delete all tracked files for a given object
         if object_id in TempfileManager.temp_files:
             for file_path in TempfileManager.temp_files[object_id]:
                 try:
                     os.remove(file_path)
                 except Exception as e:
-                    print(f"Error deleting file {file_path}: {e}")
+                    print(f"[TFM] Error deleting file {file_path}: {e}")
             # Clean up the tracking list
             del TempfileManager.temp_files[object_id]
 
     @staticmethod
-    def clear_all():
-        """ Delete all tracked files for all objects """
+    def cleanup():
+        # Delete all tracked files for all objects
         for object_id in list(TempfileManager.temp_files.keys()):
             TempfileManager.delete_files(object_id)
 
