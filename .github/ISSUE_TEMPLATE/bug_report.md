@@ -1,16 +1,19 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
+title: '[Bug Report] '
 labels: ''
 assignees: ''
 
 ---
 
-.blend file: 
+Please describe the differences between the expected and observed results:
 
 
 Steps to reproduce:
+
+
+Please provide a simple test scene as a .blend-file: 
 
 
 Screenshots or rendered images:
@@ -19,6 +22,7 @@ Screenshots or rendered images:
 Error message from Blender console:
 
 
-OS: 
+Operating System: 
 Blender version:
-LuxCore version:
+BlendLuxCore version:
+CPU and GPU model: 
