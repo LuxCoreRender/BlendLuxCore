@@ -1,17 +1,17 @@
-import tempfile
 import platform
 import os
 import sys
 import subprocess
-from shutil import which
 import shutil
 import pathlib
-import json
 import requests
+import hashlib
+import base64
 
 import bpy
 import addon_utils
 
+# Check firts if Blender and OS versions are compatible
 if bpy.app.version < (4, 2, 0):
     raise Exception("\n\nUnsupported Blender version. 4.2 or higher is required by BlendLuxCore.")
 
@@ -40,19 +40,43 @@ bl_info = {
 }
 version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
 
-# The environment variable BLC_WHEEL_PATH can be used to store a path
-# to a local pyluxcore wheel, which will then be installed
-blc_wheel_path = os.environ.get("BLC_WHEEL_PATH")
-# The environment variable BLC_DEV_PATH can be used to store a path
-# to a local BlendLuxCore repository, which will then be imported
-blc_dev_path = os.environ.get("BLC_DEV_PATH")
+_PYLUXCORE_VERSION = '2.9a1.post14' # for a release
+# _PYLUXCORE_VERSION = None # For automatic download of latest from PyPi
+
 # Check the location of this init file. The init file in the local dev folder returns only 'BlendLuxCore'
 am_in_extension = __name__.startswith("bl_ext.")
 
-root_folder = pathlib.Path(__file__).parent.resolve()
-wheel_folder =  root_folder / "wheels"
-
 if am_in_extension:
+    root_folder = pathlib.Path(__file__).parent.resolve()
+    wheel_dl_folder =  root_folder / "wheels" # for wheels download
+    if not os.path.exists(wheel_dl_folder):
+        os.makedirs(wheel_dl_folder)
+    wheel_backup_folder =  root_folder / "wheels_backup" # backup of downloaded wheels
+    if not os.path.exists(wheel_backup_folder):
+        os.makedirs(wheel_backup_folder)
+    wheel_dev_folder =  root_folder / "pyluxcore_custom" # folder where a nightly build pyluxcore wheel can be placed
+    if not os.path.exists(wheel_dev_folder):
+        os.makedirs(wheel_dev_folder)
+
+    # The environment variable BLC_DEV_PATH can be used to store a path
+    # to a local BlendLuxCore repository, which will then be imported
+    blc_dev_path = os.environ.get("BLC_DEV_PATH")
+
+    # The environment variable BLC_WHEEL_PATH can be used to store a path
+    # to a local pyluxcore wheel, which will then be installed
+    blc_wheel_path = os.environ.get("BLC_WHEEL_PATH")
+
+    # As an alterniative for more user_friendly support:
+    # Check for the presence of one(!) development wheel within the BlendLuxCore folder
+    # This takes precedence over the BLC_WHEEL_PATH environment variable
+    files, *_ = os.walk(wheel_dev_folder)
+    if len(files[2]) > 1:
+        print("[BLC] Warning: Content of 'pyluxcore_custom/' is not unique. Please delete all except one wheel file.")
+    elif len(files[2]) == 0:
+        pass
+    else:
+        blc_wheel_path = wheel_dev_folder / files[2][0]
+
     def _get_platform_info():
         # Get the current Python version and architecture
         python_version = sys.version_info
@@ -78,11 +102,13 @@ if am_in_extension:
             response = requests.get(url)
             if response.status_code != 200:
                 # Other errors
-                print("WARNING: Fetching information from PyPi returned non-normal error with error-code", response.status_code)
+                print("[BLC] WARNING: Fetching information from PyPi returned non-normal error with error-code", response.status_code)
+                print("[BLC] pyluxcore installation will be skipped. If pyluxcore is not already installed, import will fail.")
                 return None
         except:
             # In case of issues getting the json, e.g. because there is no internet connection
-            print("WARNING: Failed to fetch information from PyPi. Possibly the result of a missing internet connection.")
+            print("[BLC] WARNING: Failed to fetch information from PyPi. Possibly the result of a missing internet connection.")
+            print("[BLC] pyluxcore installation will be skipped. If pyluxcore is not already installed, import will fail.")
             return None
 
         # Extract latest version of the package
@@ -98,148 +124,202 @@ if am_in_extension:
                     wheel_filename = fname
                     if python_version_str in file["python_version"] and architecture in fname and machine in fname:
                         return wheel_filename
-        print("WARNING: No pyluxcore wheel matching the local platform information was found on PyPi!")
+        print("[BLC] WARNING: No pyluxcore wheel matching the local platform information was found from PyPi docs!")
+        print("[BLC] pyluxcore installation will be skipped. If pyluxcore is not already installed, import will fail.")
         return None
 
-    def _is_wheel_present(wheel_filename):
-        wheel_path = os.path.join(wheel_folder, wheel_filename)
-        if os.path.exists(wheel_path):
-            return True
-        return False
-
-    def _search_manifest_wheels():
-        # Search manifest for statement of last used wheel (or: wheels including dependencies)
-        wheel_list = None
-        manifest_path = root_folder / "blender_manifest.toml"
-        with open(manifest_path, "r") as fp:
-            manifest = list(fp)
-            for line in manifest:
-                if line.strip().startswith("wheels ="):
-                    # extract the pure wheel names
-                    wheel_list = line.split('[')[1].strip().rstrip(']').split(',')
-                    wheel_list = [w.strip().strip().strip('"').strip("'").split('/')[1] for w in wheel_list] # strip both " and ' characters because either may be valid
-        return wheel_list
-
-    def _execute_wheel_install(command):
+    def _execute_wheel_download(command):
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         output = stdout.decode()
         error_output = stderr.decode()
         if output:
-            print("Output:\n", output)
+            print("[BLC] _download_wheel Output:\n", output)
         if error_output:
-            print("Errors:\n", error_output)
+            print("[BLC] _download_wheel Errors:\n", error_output)
 
         if process.returncode:
             raise RuntimeError(
-                f'Failed to download LuxCore with return code {process.returncode}.'
+                f"[BLC] Failed to download LuxCore with return code {process.returncode}."
             ) from None
 
         # Setup manifest with wheel list
-        manifest_path = root_folder / "blender_manifest.toml"
-        files, *_ = os.walk(wheel_folder)
+        manifest_path = root_folder / 'blender_manifest.toml'
+        files, *_ = os.walk(wheel_dl_folder)
         wheels = [
-            pathlib.Path(".", "wheels", f).as_posix()
+            pathlib.Path('.', 'wheels', f).as_posix()
             for f in files[2]
         ]
-        wheel_statement = f"wheels = {wheels}\n"
+        wheel_statement = f'wheels = {wheels}\n'
 
-        with open(manifest_path, "r") as fp:
+        with open(manifest_path, 'r') as fp:
             manifest = list(fp)
-        with open(manifest_path, "w") as fp:
+        with open(manifest_path, 'w') as fp:
             for line in manifest:
-                if line.startswith("## WHEELS ##"):
+                if line.startswith('## WHEELS ##'):
                     fp.write(wheel_statement)
-                elif line.strip().startswith("wheels ="):
+                elif line.strip().startswith('wheels ='):
                     fp.write(wheel_statement)
                 else:
                     fp.write(line)
+
+    def _save_installation_info(whl_hash='None', plc_version='None', pypi_name='None'):
+        # Save the has of the pyluxcore.pyd file for comparison at next startup
+        # Only one of the supplied arguments should be different from 'None'
+        # to ensure that the type of installation is saved implicityly as well
+        info_file = root_folder / 'pyluxcore_installation.txt'
+        with open(info_file, 'w') as f:
+            f.write(whl_hash + '\n')
+            f.write(plc_version + '\n')
+            f.write(pypi_name + '\n')
+
+    def _get_installation_info():
+        # Check if the versio to be installed matches the descritption saved during the last install.
+        # If it matches, installation is skipped for efficiency
+        # read the file
+        info_file = root_folder / 'pyluxcore_installation.txt'
+
+        if not os.path.exists(info_file):
+            return 'None', 'None', 'None'
+        
+        with open(info_file, 'r') as f:
+            old_wheel_hash = f.readline().strip()
+            old_pyluxcore_version = f.readline().strip()
+            old_pypi_wheel_name = f.readline().strip()
+
+        return old_wheel_hash, old_pyluxcore_version, old_pypi_wheel_name
+    
+    def _clear_wheels():
+        files = os.listdir(wheel_dl_folder)
+        for file in files:
+            os.remove(wheel_dl_folder / file)
+    
+    def _backup_wheels():
+        files = os.listdir(wheel_dl_folder)
+        for file in files:
+            shutil.move(wheel_dl_folder / file, wheel_backup_folder / file)
+
+    def _delete_backup_wheels():
+        files = os.listdir(wheel_backup_folder)
+        for file in files:
+            os.remove(wheel_backup_folder / file)
+
+    def _restore_backup_wheels():
+        files = os.listdir(wheel_backup_folder)
+        for file in files:
+            shutil.move(wheel_backup_folder / file, wheel_dl_folder / file)
 
     def install_pyluxcore():
         # We cannot 'pip install' directly, as it would install pyluxcore system-wide
         # instead of in Blender environment
         # Blender has got its own logic for wheel installation, we'll rely on it
 
-        # Step 1: If BLC_WHEEL_PATH is specified, install that and skip the rest
+        # Step 0: Backup wheels
+        _backup_wheels()
+
+        # Step 1: Get PyPi information if needed
+        if not blc_wheel_path and not _PYLUXCORE_VERSION:
+            # Check if platform information is complete and valid
+            architecture, machine, python_version_str = _get_platform_info()
+            if architecture is None or machine is None or python_version_str is None:
+                # In this case, just hope pyluxcore was previously installed and can be imported. Else error will be raised below so do nothing here at the moment.
+                print("[BLC] WARNING: Platform information is incomplete. Installation of pyluxcore is not guaranteed to suceed!")
+                return False
+            # Try to get latest wheel information from PyPi
+            pypi_wheel_name = _get_pypi_latest(architecture, machine, python_version_str)
+            print("[BLC] PyPi latest version found:", pypi_wheel_name)
+        else:
+            pypi_wheel_name = 'None'
+
+        # Step 2: get installation info for comaprison in following steps
+        old_wheel_hash, old_pyluxcore_version, old_pypi_wheel_name = _get_installation_info()
+        
+        # Step 3: If BLC_WHEEL_PATH is specified, install that
         if blc_wheel_path:
-            print()
-            print('~'*43)
-            print('~ USING LOCAL VERSION OF pyluxcore ~')
-            print('~'*43)
-            print()
-            command = [
-                sys.executable,
-                '-m',
-                'pip',
-                'download',
-                blc_wheel_path,
-                '-d',
-                wheel_folder,
-            ]
-            _execute_wheel_install(command)
-            return True
-
-        # Step 2: Check if platform information is complete and valid
-        architecture, machine, python_version_str = _get_platform_info()
-        if architecture is None or machine is None or python_version_str is None:
-            # In this case, just hope pyluxcore was previously installed and can be imported. Else error will be raised below so do nothing here at the moment.
-            print("WARNING: Platform information is incomplete")
-            return False
-
-        # Step 3: Try to get latest wheel information from PyPi
-        wheel_filename = _get_pypi_latest(architecture, machine, python_version_str)
-        print("PyPi Information result:", wheel_filename)
-
-        # Step 4.1: If wheel information available, check if already present, else download
-        if wheel_filename is not None:
-            pyluxcore_downloaded = _is_wheel_present(wheel_filename)
-            if pyluxcore_downloaded:
-                print('Download of pyluxcore skipped, latest version was found on system')
+            wheel_hash = base64.urlsafe_b64encode(hashlib.sha256(open(blc_wheel_path, 'rb').read()).digest()).decode('latin1').rstrip('=')
+            if wheel_hash == old_wheel_hash:
+                print("[BLC] skipping pyluxcore installation. Custom wheel matching hash already installed.")
                 return True
-            else:
-                try:
-                    # Download wheel
-                    print('Downloading pyluxcore')
-                    command = [
+            print('[BLC] Installing local version of pyluxcore')
+            command = [
+                        sys.executable,
+                        '-m',
+                        'pip',
+                        'download',
+                        blc_wheel_path,
+                        '-d',
+                        wheel_dl_folder
+                    ]
+            try:
+                _execute_wheel_download(command)
+                _delete_backup_wheels()
+                _save_installation_info(wheel_hash, 'None', 'None')
+                return True
+            except:
+                _clear_wheels()
+                _restore_backup_wheels()
+                return False
+        
+        # Step 4: If _PYLUXCORE_VERSION is specified, install that
+        elif _PYLUXCORE_VERSION:
+            if _PYLUXCORE_VERSION.strip() == old_pyluxcore_version.strip():
+                print("[BLC] skipping pyluxcore installation. Specified version already installed.")
+                return True
+            print('[BLC] installing pyluxcore version:', _PYLUXCORE_VERSION)
+            command = [
+                        sys.executable,
+                        '-m',
+                        'pip',
+                        'download',
+                        f'pyluxcore=={_PYLUXCORE_VERSION}',
+                        '-d',
+                        wheel_dl_folder
+                    ]
+            try:
+                _execute_wheel_download(command)
+                _delete_backup_wheels()
+                _save_installation_info('None', _PYLUXCORE_VERSION, 'None')
+                return True
+            except:
+                _clear_wheels()
+                _restore_backup_wheels()
+                return False
+
+        # Step 5: last option, install the latest version from PyPi
+        else:
+            if pypi_wheel_name == old_pypi_wheel_name:
+                print("[BLC] Skipping pyluxcore installation. Latest version already installed.")
+                return True
+            print('[BLC] installing latest version of pyluxcore')
+            command = [
                         sys.executable,
                         '-m',
                         'pip',
                         'download',
                         'pyluxcore',
                         '-d',
-                        wheel_folder
+                        wheel_dl_folder
                     ]
-                    _execute_wheel_install(command)
-                    return True
-                except:
-                    print("WARNING: Identified a latest version of pyluxcore from PyPi but could not download!")
-                    print("Attempting to use previously installed version instead...")
-
-        # Step 4+.2: If wheel information missing, check if a version is defined in the manifest and if it is present locally
-        print('Searching manifest...')
-        wheel_list = _search_manifest_wheels()
-        print('wheel list: ')
-        print(wheel_list)
-        if wheel_list is None:
-            print('WARNING: No pyluxcore result in manifest!')
-            # In this case, just hope pyluxcore was previously installed and can be imported. Else error will be raised below so do nothing here at the moment.
-            return False
-        all_wheels_present = True
-        for wheel in wheel_list:
-            all_wheels_present = all_wheels_present and _is_wheel_present(wheel)
-        if all_wheels_present:
-            return True
-
-        # Ultimately:
-        # In this case, just hope pyluxcore was previously installed and can be imported. Else error will be raised below so do nothing here at the moment.
-        return False
+            try:
+                _execute_wheel_download(command)
+                _delete_backup_wheels()
+                _save_installation_info('None', 'None', pypi_wheel_name)
+                return True
+            except:
+                _clear_wheels()
+                _restore_backup_wheels()
+                return False
             
-    # We'll invoke install_pyluxcore at each init
+    # We'll invoke install_pyluxcore at each init, execpt when BLC_WHEEL_PATH == "SKIP"
     # We rely on pip local cache for this call to be transparent, after the wheels
     # have been downloaded once, unless an update is required
-    install_success = install_pyluxcore()
+    if blc_wheel_path == "SKIP":
+        install_success = True
+        print("[BLC] skipping pyluxcore installation...")
+    else:
+        install_success = install_pyluxcore()
     if not install_success:
-        print('WARNING: Check for pyluxcore not successful... Import will be attempted, but may be unsuccessful...')
+        print('[BLC] WARNING: Download of pyluxcore not successful... Import will be attempted, but may be unsuccessful...')
 
     # Ask Blender to do the install
     addon_utils.extensions_refresh(ensure_wheels=True)
@@ -253,11 +333,7 @@ if am_in_extension:
         raise RuntimeError(msg + "\n\nImportError: %s" % error) from None
 
 if blc_dev_path and am_in_extension:
-    print()
-    print('~'*43)
-    print('~ USING LOCAL DEV VERSION OF BlendLuxCore ~')
-    print('~'*43)
-    print()
+    print('[BLC] USING LOCAL DEV VERSION OF BlendLuxCore')
     sys.path.insert(0, blc_dev_path)
     from BlendLuxCore import *
 else:
