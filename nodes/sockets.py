@@ -260,7 +260,7 @@ class LuxCoreSocketRoughness(bpy.types.NodeSocket, LuxCoreSocketFloat):
 
 
 class LuxCoreSocketIOR(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(name="IOR", min=1, soft_max=2.0, max=25, step=0.1,
+    default_value: FloatProperty(name="IOR", min=0.0001, soft_min=1.0, soft_max=2.0, max=25, step=0.1,
                                  precision=FLOAT_UI_PRECISION, description=IOR_DESCRIPTION,
                                  update=utils_node.force_viewport_update)
 
