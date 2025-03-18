@@ -145,26 +145,20 @@ def _prepare_mesh(obj, depsgraph):
 
             if mesh:
                 # TODO test if this makes sense
-                # If negative scaling, we have to invert the normals
-                # if not mesh.has_custom_normals and object_eval.matrix_world.determinant() < 0.0:
-                #     # Does not handle custom normals
+                ## has been tested briefly for_v2.10. Seems to work, also including custom normals now
+                ## but leaving this out on purpose because
+                ## a) users should clean their meshes themselves, and
+                ## b) this will allow some artistic effects
+                #if object_eval.matrix_world.determinant() < 0.0:
                 #     mesh.flip_normals()
                 
-                mesh.calc_loop_triangles()
                 if not mesh.loop_triangles:
                     object_eval.to_mesh_clear()
                     mesh = None
 
             # TODO implement new normals handling
-            # if mesh:
-                # if not mesh.has_custom_normals:
-                    # mesh.calc_normals()
-                # mesh.split_faces()
-                
-                # mesh.calc_loop_triangles()
-                
-                # if mesh.has_custom_normals:
-                    # mesh.calc_normals_split()
+            if mesh:
+                mesh.split_faces() # Applies smooth by angle operator
 
         yield mesh
     finally:
