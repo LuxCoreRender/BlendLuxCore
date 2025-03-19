@@ -42,7 +42,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     final_running = False
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.session = None
         self.DENOISED_OUTPUT_NAME = "DENOISED"
         self.VIEWPORT_RESIZE_TIMEOUT = 0.3
