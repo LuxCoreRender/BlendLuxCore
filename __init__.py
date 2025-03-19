@@ -46,6 +46,14 @@ _PYLUXCORE_VERSION = '2.9a1.post14' # for a release
 # Check the location of this init file. The init file in the local dev folder returns only 'BlendLuxCore'
 am_in_extension = __name__.startswith("bl_ext.")
 
+# The environment variable BLC_DEV_PATH can be used to store a path
+# to a local BlendLuxCore repository, which will then be imported
+blc_dev_path = os.environ.get("BLC_DEV_PATH")
+
+# The environment variable BLC_WHEEL_PATH can be used to store a path
+# to a local pyluxcore wheel, which will then be installed
+blc_wheel_path = os.environ.get("BLC_WHEEL_PATH")
+
 if am_in_extension:
     root_folder = pathlib.Path(__file__).parent.resolve()
     wheel_dl_folder =  root_folder / "wheels" # for wheels download
@@ -57,14 +65,6 @@ if am_in_extension:
     wheel_dev_folder =  root_folder / "pyluxcore_custom" # folder where a nightly build pyluxcore wheel can be placed
     if not os.path.exists(wheel_dev_folder):
         os.makedirs(wheel_dev_folder)
-
-    # The environment variable BLC_DEV_PATH can be used to store a path
-    # to a local BlendLuxCore repository, which will then be imported
-    blc_dev_path = os.environ.get("BLC_DEV_PATH")
-
-    # The environment variable BLC_WHEEL_PATH can be used to store a path
-    # to a local pyluxcore wheel, which will then be installed
-    blc_wheel_path = os.environ.get("BLC_WHEEL_PATH")
 
     # As an alterniative for more user_friendly support:
     # Check for the presence of one(!) development wheel within the BlendLuxCore folder
