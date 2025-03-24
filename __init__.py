@@ -28,12 +28,15 @@ bl_info = {
     "blender": (4, 2, 0),
     "category": "Render",
     "description": "LuxCoreRender integration for Blender",
-    "warning": "alpha1",
+    "warning": "alpha.1",
 
     "wiki_url": "https://wiki.luxcorerender.org/",
     "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
 }
-version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warning"]}'
+
+version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}.{bl_info["version"][2]}'
+if 'warning' in bl_info:
+    version_string = version_string + f'-{bl_info["warning"]}'
 
 PYLUXCORE_VERSION = '2.10.0a1' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
 
@@ -283,7 +286,7 @@ def register():
     nodes.register()
     
     pyluxcore.Init(LuxCoreLog.add)
-    print(f"BlendLuxCore (wheels) {version_string} registered (with pyluxcore {pyluxcore.Version()})")
+    print(f"BlendLuxCore {version_string} registered (with pyluxcore {pyluxcore.Version()})")
 
 def unregister():
     engine.unregister()

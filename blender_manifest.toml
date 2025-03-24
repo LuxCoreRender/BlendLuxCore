@@ -3,10 +3,11 @@ schema_version = "1.0.0"
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
 id = "BlendLuxCore"
-# Recommend versioning like MASTER.MAJOR.MINOR. 
-# E.g.: "2.9.4": master: 2; major: 9; minor: 3.
-# BlendLuxCore Wheels version is 2.9.4 "4 is alpha4 here"
-version = "2.9.4"
+# Versioning should follow the semver standard: https://semver.org/
+# I.e. MAJOR.MINOR.PATCH
+# E.g.: "2.9.4": major: 2; minor: 9; patch: 3.
+# or for pre-release versions: "2.9.4-alpha.1": major: 2; minor: 9; patch: 3; pre-release: alpha.1
+version = "2.10.0-alpha.1"
 name = "BlendLuxCore"
 tagline = "LuxCore"
 maintainer = "BlendLuxCore team"
