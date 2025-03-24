@@ -15,11 +15,6 @@ import addon_utils
 if bpy.app.version < (4, 2, 0):
     raise Exception("\n\nUnsupported Blender version. 4.2 or higher is required by BlendLuxCore.")
 
-if platform.system() == "Darwin":
-    mac_version = tuple(map(int, platform.mac_ver()[0].split(".")))
-    if mac_version < (10, 9, 0):
-        raise Exception("\n\nUnsupported Mac OS version. 10.9 or higher is required.")
-
 if platform.system() in {"Linux", "Darwin"}:
     # Required for downloads from the LuxCore Online Library
     import certifi
