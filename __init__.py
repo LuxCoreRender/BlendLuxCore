@@ -4,9 +4,9 @@ import sys
 import subprocess
 import shutil
 import pathlib
-import requests
 import hashlib
 import base64
+from textwrap import dedent
 
 import bpy
 import addon_utils
@@ -111,18 +111,18 @@ if am_in_extension:
         # Only one of the supplied arguments should be different from 'None'
         # to ensure that the type of installation is saved implicityly as well.
         info_file = root_folder / 'pyluxcore_installation_info.txt'
-        header_text="""# This file is used to store information about the pyluxcore installation.
-        # It is used to determine whether a new installation is necessary at each startup.
-        # Only one entry should be different from 'None', it indicates from which source
-        # the installation was taken.
-        #
-        # The file is automatically generated and should not be edited manually.
-
-        """
+        header_text=dedent("""\
+            # This file is used to store information about the pyluxcore installation.
+            # It is used to determine whether a new installation is necessary at each startup.
+            # Only one entry should be different from 'None', it indicates from which source
+            # the installation was taken.
+            #
+            # The file is automatically generated and should not be edited manually.\n
+        """)
         with open(info_file, 'w') as f:
             f.write(header_text)
-            f.write('wheel-hash:', whl_hash + '\n')
-            f.write('pyluxcore-version:', plc_version + '\n')
+            f.write(f'wheel-hash: {whl_hash}\n')
+            f.write(f'pyluxcore-version: {plc_version}\n')
 
     def _get_installation_info():
         # Check if the versio to be installed matches the descritption saved during the last install.
@@ -134,35 +134,44 @@ if am_in_extension:
             return 'None', 'None'
         
         with open(info_file, 'r') as f:
-            line = f.readline().strip()
-            if line.startswith('#'): # comments
-                pass
-            elif line.startswith('wheel-hash:'):
-                old_wheel_hash = line.split(':')[1].strip()
-            elif line.startswith('pyluxcore-version:'):
-                old_pyluxcore_version = line.split(':')[1].strip()
-            else:
-                pass
+            for line in f.readlines():
+                line = line.strip()
+                if line.startswith('#'): # comments
+                    pass
+                elif line.startswith('wheel-hash:'):
+                    old_wheel_hash = line.split(':')[1].strip()
+                elif line.startswith('pyluxcore-version:'):
+                    old_pyluxcore_version = line.split(':')[1].strip()
+                else:
+                    pass
 
         return old_wheel_hash, old_pyluxcore_version
     
     def _clear_wheels():
         files = os.listdir(wheel_dl_folder)
+        if len(files) == 0:
+            return
         for file in files:
             os.remove(wheel_dl_folder / file)
     
     def _backup_wheels():
         files = os.listdir(wheel_dl_folder)
+        if len(files) == 0:
+            return
         for file in files:
             shutil.move(wheel_dl_folder / file, wheel_backup_folder / file)
 
     def _delete_backup_wheels():
         files = os.listdir(wheel_backup_folder)
+        if len(files) == 0:
+            return
         for file in files:
             os.remove(wheel_backup_folder / file)
 
     def _restore_backup_wheels():
         files = os.listdir(wheel_backup_folder)
+        if len(files) == 0:
+            return
         for file in files:
             shutil.move(wheel_backup_folder / file, wheel_dl_folder / file)
 
