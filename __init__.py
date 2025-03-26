@@ -67,12 +67,13 @@ if am_in_extension:
     # Check for the presence of one(!) development wheel within the BlendLuxCore folder
     # This takes precedence over the BLC_WHEEL_PATH environment variable
     files, *_ = os.walk(wheel_dev_folder)
-    if len(files[2]) > 1:
+    files_filtered = [f for f in files[2] if f.startswith('pyluxcore') and f.endswith('.whl')]
+    if len(files_filtered) > 1:
         print("[BLC] Warning: Content of 'pyluxcore_custom/' is not unique. Please delete all except one wheel file.")
-    elif len(files[2]) == 0:
+    elif len(files_filtered) == 0:
         pass
     else:
-        blc_wheel_path = wheel_dev_folder / files[2][0]
+        blc_wheel_path = wheel_dev_folder / files_filtered[0]
 
     def _execute_wheel_download(command):
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
