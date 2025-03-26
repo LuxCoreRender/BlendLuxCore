@@ -27,7 +27,7 @@ def no_log_output(message):
 
 
 def render(engine, depsgraph):
-    scene = depsgraph.scene_eval    
+    scene = depsgraph.scene_eval
     width, height = utils.calc_filmsize(scene)
 
     if max(width, height) <= 96:
@@ -67,13 +67,16 @@ def render(engine, depsgraph):
         if engine.test_break():
             # Abort as fast as possible, without drawing the framebuffer again
             engine.session.Stop()
-            return enable_log_output()
+            enable_log_output()
+            return
 
     engine.framebuffer.draw(engine, engine.session, scene, True)
     engine.session.Stop()
 
     # Do not hold reference to temporary data
     engine.exporter.scene = None
+    engine.session = None
+    engine.framebuffer = None
     enable_log_output()
 
 
