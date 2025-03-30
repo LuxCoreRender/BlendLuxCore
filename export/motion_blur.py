@@ -78,12 +78,12 @@ def _get_matrices(context, engine, scene, steps, frame_offsets, depsgraph, expor
 
 def _append_object_matrices(depsgraph, exported_objects, matrices, step):
     for dg_obj_instance in depsgraph.object_instances:
-        obj = dg_obj_instance.instance_object if dg_obj_instance.is_instance else dg_obj_instance.object
+        obj = dg_obj_instance.parent if dg_obj_instance.is_instance else dg_obj_instance.object
         if not obj.luxcore.enable_motion_blur:
             continue
 
         obj_key = utils.make_key_from_instance(dg_obj_instance)
-        matrix = obj.matrix_world
+        matrix = dg_obj_instance.matrix_world.copy()
 
         try:
             exported_thing = exported_objects[obj_key]
@@ -102,7 +102,6 @@ def _append_object_matrices(depsgraph, exported_objects, matrices, step):
 
 
 def _append_matrix(matrices, prefix, matrix, step):
-    matrix = matrix.copy()
     if step == 0:
         matrices[prefix] = [matrix]
     else:
