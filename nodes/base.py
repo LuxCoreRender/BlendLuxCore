@@ -138,34 +138,25 @@ class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
     def export_common_inputs(self, exporter, depsgraph, props, definitions):
         """ Call from derived classes (in export method) """
 
-        # Export Opacity if available
-        opacity_id = self.inputs.find("Opacity")
-        if opacity_id != -1:
-            transparency = self.inputs[opacity_id].export(exporter, depsgraph, props)
-            if transparency != 1.0:
-                definitions["transparency"] = transparency
+        id = self.inputs.find("Opacity")
+        transparency = self.inputs[id].export(exporter, depsgraph, props)
+        if transparency != 1.0:
+            definitions["transparency"] = transparency
 
-        # Export Bump if available
-        if "Bump" in self.inputs:
-            bump_socket = self.inputs["Bump"]
-            bump = bump_socket.export(exporter, depsgraph, props)
-            if bump:
-                definitions["bumptex"] = bump
+        id = self.inputs.find("Bump")
+        bump_socket = self.inputs[id]
+        bump = self.inputs[id].export(exporter, depsgraph, props)
+        if bump:
+            definitions["bumptex"] = bump
 
-                # Handle specific bump-related attributes
-                if bump_socket.is_linked:
-                    from_node = bump_socket.links[0].from_node
-                    if from_node.bl_idname in {"LuxCoreNodeTexBump", "LuxCoreNodeTexTriplanarBump"}:
-                        definitions["bumpsamplingdistance"] = from_node.sampling_distance
+            from_node = bump_socket.links[0].from_node
+            if from_node.bl_idname in {"LuxCoreNodeTexBump", "LuxCoreNodeTexTriplanarBump"}:
+                definitions["bumpsamplingdistance"] = from_node.sampling_distance
 
-        # Export Emission if available
-        if "Emission" in self.inputs:
-            try:
-                self.inputs["Emission"].export_emission(exporter, depsgraph, props, definitions)
-            except Exception as e:
-                print(f"Warning: Failed to export 'Emission': {e}")
-        else:
-            print("Info: 'Emission' input not found. Skipping.")
+        # The emission socket and node are special cases
+        # with special export methods
+        id = self.inputs.find("Emission")
+        self.inputs[id].export_emission(exporter, depsgraph, props, definitions)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
