@@ -325,24 +325,18 @@ class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
     def update_node_tree(self, context):
         if self.node_tree:
             id = self.outputs.find("Material")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
+            self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
             id = self.outputs.find("Color")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
+            self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
             id = self.outputs.find("Volume")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
+            self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
         else:
             id = self.outputs.find("Material")
-            if id:
-                self.outputs[id].enabled = True
+            self.outputs[id].enabled = True
             id = self.outputs.find("Color")
-            if id:
-                self.outputs[id].enabled = True
+            self.outputs[id].enabled = True
             id = self.outputs.find("Volume")
-            if id:
-                self.outputs[id].enabled = True
+            self.outputs[id].enabled = True
 
     node_tree: PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree,
                                 description="Use the output of the selected node tree in this node tree")
