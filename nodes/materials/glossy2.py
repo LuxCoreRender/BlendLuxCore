@@ -11,11 +11,9 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial, bpy.types.Node):
 
     def update_use_ior(self, context):
         id = self.inputs.find("IOR")
-        if id:
-            self.inputs[id].enabled = self.use_ior
+        self.inputs[id].enabled = self.use_ior
         id = self.inputs.find("Specular Color")
-        if id:
-            self.inputs[id].enabled = not self.use_ior
+        self.inputs[id].enabled = not self.use_ior
         utils_node.force_viewport_update(self, context)
 
     multibounce: BoolProperty(update=utils_node.force_viewport_update,
