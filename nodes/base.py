@@ -440,7 +440,7 @@ class Roughness:
 
         for socket in sockets:
             id = node.inputs.find(socket)
-            if id:
+            if id != -1:
                 node.inputs[id].enabled = node.rough
 
         Roughness.update_anisotropy(node, context)
@@ -459,18 +459,14 @@ class Roughness:
                 v_roughness = "V-Roughness"
                 extra_check = True
 
-
-            if node.use_anisotropy:
-                id = node.inputs.find(roughness)
-            else:
+            id = node.inputs.find(roughness)
+            if id == -1:
                 id = node.inputs.find(u_roughness)
-
             u_roughness_input = node.inputs[id]
             u_roughness_input.name = u_roughness if node.use_anisotropy else roughness
 
             id = node.inputs.find(v_roughness)
-            v_roughness_input = node.inputs[id]
-            v_roughness_input.enabled = node.use_anisotropy and extra_check
+            node.inputs[id].enabled = node.use_anisotropy and extra_check
 
         update(node, False)
         if Roughness.has_backface(node):
