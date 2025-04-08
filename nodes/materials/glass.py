@@ -97,7 +97,6 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial, bpy.types.Node):
         row.enabled = not self.rough
         row.prop(self, "architectural")
         
-       
         layout.prop(self, "use_thinfilmcoating")
 
         if self.get_interior_volume():
@@ -130,15 +129,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial, bpy.types.Node):
 
         if self.rough:
             Roughness.export(self, exporter, depsgraph, props, definitions)
-
-        # Error handling for missing "Emission" input during common input export
-        try:
-            self.export_common_inputs(exporter, depsgraph, props, definitions)
-        except KeyError as e:
-            if str(e) == "'bpy_prop_collection[key]: key \"Emission\" not found'":
-                print(f"Warning: 'Emission' input not found for material '{luxcore_name}'. Skipping emission export.")
-            else:
-                raise  # Re-raise other KeyErrors
+        self.export_common_inputs(exporter, depsgraph, props, definitions)
 
         return self.create_props(props, definitions, luxcore_name)
 
