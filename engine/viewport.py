@@ -1,9 +1,12 @@
 from time import time
+import bpy
 import pyluxcore
 from .. import export
 from ..draw.viewport import FrameBuffer
 from .. import utils
 from ..utils import render as utils_render
+from ..utils import get_addon_preferences
+from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
 from ..export.config import convert_viewport_engine
 
@@ -123,6 +126,13 @@ def view_update(engine, context, depsgraph, changes=None):
             elif time() - engine.time_of_last_viewport_resize < engine.VIEWPORT_RESIZE_TIMEOUT:
                 # Don't re-export the session before the timeout is done, to prevent constant re-exports while resizing
                 return
+        else:
+            display_luxcore_logs = get_addon_preferences(bpy.context).display_luxcore_logs
+            if display_luxcore_logs:
+                pyluxcore.SetLogHandler(LuxCoreLog.add)
+            else:
+                pyluxcore.SetLogHandler(LuxCoreLog.silent)
+
 
         try:
             print("=" * 50)

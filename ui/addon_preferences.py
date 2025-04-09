@@ -86,6 +86,8 @@ class LuxCoreAddonPreferences(AddonPreferences):
     thumb_size: IntProperty(name="Assetbar Thumbnail Size", default=96, min=-1, max=256)
     use_library: BoolProperty(name="Use LuxCore Online Library", default=True)
 
+    display_luxcore_logs: BoolProperty(name="Show LuxCore Logs", default=True)
+
     # Read-only string property, returns the current date
     def get_pyluxcore_version(self):
         try:
@@ -151,6 +153,11 @@ class LuxCoreAddonPreferences(AddonPreferences):
             # col.prop(self, "lol_version") # unlikely to need change so not even needed for developers
             # col.prop(self, "lol_useragent") # unlikely to need change so not even needed for developers
             col.prop(self, "thumb_size")
+
+        # LuxCore logging
+        layout.separator()
+        row = layout.row()
+        row.prop(self, 'display_luxcore_logs')
 
         # pyluxcore version
         layout.separator()
