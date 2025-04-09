@@ -36,9 +36,6 @@ def luxcore_render_draw(panel, context):
     col = layout.column(align=True)
     col.prop(config, "engine", expand=False, icon = 'OUTLINER_OB_LIGHT')
 
-    #row = layout.row()
-    #row.operator("luxcore.use_cycles_settings")
-    #row.operator("luxcore.render_settings_helper")
     row = layout.row()
     row.operator("luxcore.use_cycles_settings", icon_value= icon_manager.get_icon_id("link"))
     row.operator("luxcore.render_settings_helper", icon_value= icon_manager.get_icon_id("help"))
@@ -85,7 +82,7 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
             # Bidir options
             col.prop(config, "bidir_path_maxdepth")
             col.prop(config, "bidir_light_maxdepth")
-            
+
 class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Tracing"
