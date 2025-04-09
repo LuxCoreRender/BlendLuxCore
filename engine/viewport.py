@@ -10,6 +10,7 @@ from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
 from ..export.config import convert_viewport_engine
 
+# Executed in separate thread
 def start_session(engine):
     try:
         engine.session.Start()
@@ -90,7 +91,7 @@ def view_update(engine, context, depsgraph, changes=None):
             _thread.start_new_thread(start_session, (engine,))
         except Exception as error:
             if engine.session is not None:
-                # in case engine.session was already set in trhe try block before the error
+                # in case engine.session was already set in the try block before the error
                 del engine.session
             engine.session = None
             # Reset the exporter to invalidate all caches
@@ -104,7 +105,6 @@ def view_update(engine, context, depsgraph, changes=None):
             traceback.print_exc()
         return
 
-    # Regular session update logic
     s = time()
     changes = engine.exporter.get_changes(depsgraph, context, changes)
     delta_t = (time() - s) * 1000
