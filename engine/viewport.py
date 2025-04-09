@@ -45,62 +45,6 @@ def force_session_restart(engine):
         engine.session.Stop()
         engine.session = None
 
-def apply_color_management_changes(engine, scene, context):
-    view_settings = scene.view_settings
-    exposure = view_settings.exposure
-    gamma = view_settings.gamma
-
-    if engine.session is not None:
-        config = engine.session.GetRenderConfig()
-
-        props = pyluxcore.Properties()
-        props.Set(pyluxcore.Property("film.imagepipeline.0.gamma", gamma))
-        props.Set(pyluxcore.Property("film.imagepipeline.0.exposure", exposure))
-
-        # Apply the new properties
-        config.Parse(props)
-
-        # Notify LuxCore to update the frame buffer without restarting
-        if hasattr(engine.session, 'UpdateFilmSettings'):
-            engine.session.UpdateFilmSettings(props)
-
-def check_color_management_changes(engine, scene):
-    view_settings = scene.view_settings
-
-    # Initialize these attributes if they don't exist yet
-    if not hasattr(engine, 'last_exposure'):
-        engine.last_exposure = view_settings.exposure
-    if not hasattr(engine, 'last_gamma'):
-        engine.last_gamma = view_settings.gamma
-    if not hasattr(engine, 'last_view_transform'):
-        engine.last_view_transform = getattr(view_settings, 'view_transform', None)
-    if not hasattr(engine, 'last_look'):
-        engine.last_look = getattr(view_settings, 'look', None)
-
-    # Check if the exposure, gamma, view transform, or look have changed
-    exposure_changed = view_settings.exposure != engine.last_exposure
-    gamma_changed = view_settings.gamma != engine.last_gamma
-    view_transform_changed = view_settings.view_transform != engine.last_view_transform
-    look_changed = view_settings.look != engine.last_look
-
-    # Update the stored values for the next comparison
-    engine.last_exposure = view_settings.exposure
-    engine.last_gamma = view_settings.gamma
-    engine.last_view_transform = view_settings.view_transform
-    engine.last_look = view_settings.look
-
-    # If any of the values changed, return True
-    if exposure_changed or gamma_changed or view_transform_changed or look_changed:
-        # Handle view transform and look changes separately if needed
-        if view_transform_changed or look_changed:
-            if view_settings.view_transform in ['AgX', 'Filmic', 'Khronos PBR Neutral']:
-                # Return False if only view transform or look changed and others didn't
-                return not (exposure_changed or gamma_changed)
-        return True
-
-    return False
-
-
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
 
@@ -159,15 +103,6 @@ def view_update(engine, context, depsgraph, changes=None):
             import traceback
             traceback.print_exc()
         return
-
-    # Check for color management changes
-    s = time()
-    if check_color_management_changes(engine, depsgraph.scene_eval):
-        apply_color_management_changes(engine, depsgraph.scene_eval, context)
-        engine.tag_redraw()
-        return
-    delta_t = (time() - s) * 1000
-    print(f"[BLC] view_update(): checking for color management changes took {delta_t:.1f} ms")
 
     # Regular session update logic
     s = time()
