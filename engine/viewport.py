@@ -113,7 +113,7 @@ def view_update(engine, context, depsgraph, changes=None):
             return
 
         if not engine.is_first_viewport_start:
-            filmsize = utils.calc_filmsize(depsgraph.scene, context)
+            filmsize = utils.calc_filmsize(depsgraph.scene_eval, context)
             was_resized = engine.last_viewport_size != filmsize
             engine.last_viewport_size = filmsize
 
@@ -152,8 +152,8 @@ def view_update(engine, context, depsgraph, changes=None):
 
     # Check for color management changes
     s = time()
-    if check_color_management_changes(engine, depsgraph.scene):
-        apply_color_management_changes(engine, depsgraph.scene, context)
+    if check_color_management_changes(engine, depsgraph.scene_eval):
+        apply_color_management_changes(engine, depsgraph.scene_eval, context)
         engine.tag_redraw()
         return
     delta_t = (time() - s) * 1000
@@ -185,7 +185,7 @@ def view_update(engine, context, depsgraph, changes=None):
 
 
 def view_draw(engine, context, depsgraph):
-    scene = depsgraph.scene
+    scene = depsgraph.scene_eval
 
     if engine.starting_session:
         engine.tag_redraw()
