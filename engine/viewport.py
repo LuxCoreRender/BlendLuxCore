@@ -36,7 +36,7 @@ def force_session_restart(engine):
     or renderengine settings edit, now causes a memory leak. I have not been able to track it down.
     (The original code is in export/__init__.py in the method _update_config())
     As a workaround, I stop and delete the session to trigger a full re-export of the scene and
-    a fresh restart of the viewport render."
+    a fresh restart of the viewport render.
     """
     if engine.session is not None:
         engine.session.Stop()
@@ -151,28 +151,37 @@ def view_update(engine, context, depsgraph, changes=None):
         return
 
     # Check for color management changes
+    s = time()
     if check_color_management_changes(engine, depsgraph.scene):
         apply_color_management_changes(engine, depsgraph.scene, context)
         engine.tag_redraw()
         return
+    delta_t = (time() - s) * 1000
+    print(f"[BLC] view_update(): checking for color management changes took {delta_t:.1f} ms")
 
     # Regular session update logic
+    s = time()
     changes = engine.exporter.get_changes(depsgraph, context, changes)
+    delta_t = (time() - s) * 1000
+    print(f"[BLC] view_update(): checking for other changes took {delta_t:.1f} ms")
 
     if changes:
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
             # Only restart the session if the view transform didn't change by itself
             force_session_restart(engine)
             return
-
+        s = time()
         # We have to re-assign the session because it might have been replaced due to filmsize change
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
         if engine.framebuffer:
             engine.framebuffer.reset_denoiser()
+        delta_t = (time() - s) * 1000
+        print(f"[BLC] view_update(): applying changes took {delta_t:.1f} ms")
 
-    print("view_update() took %.1f ms" % ((time() - start) * 1000))
+    delta_t = (time() - start) * 1000
+    print(f"[BLC] view_update() took {delta_t:.1f} ms")
 
 
 def view_draw(engine, context, depsgraph):
@@ -291,6 +300,7 @@ def view_draw(engine, context, depsgraph):
                 except Exception as error:
                     status_message = "Could not start denoiser: %s" % error
     else:
+        # Not in pause yet, keep drawing
         engine.session.WaitNewFrame()
         engine.session.UpdateStats()
         framebuffer.update(engine.session, scene)
