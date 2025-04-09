@@ -302,7 +302,10 @@ def view_draw(engine, context, depsgraph):
     else:
         # Not in pause yet, keep drawing
         engine.session.WaitNewFrame()
-        engine.session.UpdateStats()
+        try:
+            engine.session.UpdateStats()
+        except RuntimeError as error:
+            print("[Engine/Viewport] Error during UpdateStats():", error)
         framebuffer.update(engine.session, scene)
         framebuffer.reset_denoiser()
         engine.tag_redraw()
