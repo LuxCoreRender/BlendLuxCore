@@ -48,7 +48,7 @@ class LuxCoreHaltConditions(bpy.types.PropertyGroup):
 
     use_samples: BoolProperty(name="Use Samples", default=True,
                                description=USE_SAMPLES_DESC)
-    samples: IntProperty(name="Samples", default=32, min=2, max=16384, 
+    samples: IntProperty(name="Samples", default=32, min=2, soft_max=16384, 
                           description=SAMPLES_DESC)
 
     use_light_samples: BoolProperty(name="Use Light Path Samples", default=False,
