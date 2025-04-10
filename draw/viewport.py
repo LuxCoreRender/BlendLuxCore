@@ -163,9 +163,6 @@ class FrameBuffer(object):
     def _cam_border_offset(self, aspect, base, border_min, region_width, view_camera_offset, zoom):
         return (0.5 - 2 * zoom * view_camera_offset) * region_width + aspect * base * (2 * border_min - 1)
 
-    def _make_denoiser_filepath(self, name):
-        return os.path.join(tempfile.gettempdir(), f"{id(self)}_{name}.pfm")
-
     def _save_denoiser_AOV(self, luxcore_session, film_output_type, path):
         np_buffer = np.zeros((self._height, self._width, 3), dtype="float32")
         luxcore_session.GetFilm().GetOutputFloat(film_output_type, np_buffer)
