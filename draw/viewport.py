@@ -14,34 +14,38 @@ from .. import utils
 from ..utils import pfm
 
 # Add the TempfileManager class here
+
 class TempfileManager:
-    temp_files = {}
+    _paths = {}
+    _denoiser_process = None
 
-    @staticmethod
-    def track(object_id, file_path):
-        # Track a temporary file for cleanup
-        if object_id not in TempfileManager.temp_files:
-            TempfileManager.temp_files[object_id] = []
-        TempfileManager.temp_files[object_id].append(file_path)
+    @classmethod
+    def track(cls, key, path):
+        if not key in cls._paths:
+            cls._paths[key] = {path}
+        else:
+            cls._paths[key].add(path)
 
-    @staticmethod
-    def delete_files(object_id):
-        # Delete all tracked files for a given object
-        if object_id in TempfileManager.temp_files:
-            for file_path in TempfileManager.temp_files[object_id]:
-                try:
-                    os.remove(file_path)
-                except Exception as e:
-                    print(f"[TFM] Error deleting file {file_path}: {e}")
-            # Clean up the tracking list
-            del TempfileManager.temp_files[object_id]
+    @classmethod
+    def delete_files(cls, key):
+        if not key in cls._paths:
+            return
+        for path in cls._paths[key]:
+            if os.path.exists(path):
+                os.remove(path)
+        del cls._paths[key]
 
-    @staticmethod
-    def cleanup():
-        # Delete all tracked files for all objects
-        for object_id in list(TempfileManager.temp_files.keys()):
-            TempfileManager.delete_files(object_id)
-
+    @classmethod
+    def cleanup(cls):
+        # interrupt denoiser process inc ase it is still running
+        if cls._denoiser_process:
+            cls._denoiser_process.terminate()
+        # Need to convert dict_keys object to list, otherwise the loop throws:
+        # "RuntimeError: dictionary changed size during iteration"
+        keys = [_ for _ in cls._paths.keys()]
+        for key in keys:
+            cls.delete_files(key)
+        cls._paths.clear()
 
 class FrameBuffer(object):
     """ FrameBuffer used for viewport render """
@@ -67,7 +71,7 @@ class FrameBuffer(object):
 
         # Denoiser initialization
         self._initialize_denoiser_paths()
-        self._denoiser_process = None
+        TempfileManager._denoiser_process = None
         self.denoiser_result_cached = False
 
     def _initialize_transparency(self, scene, context):
@@ -191,7 +195,7 @@ class FrameBuffer(object):
             "-nrm", self._normal_file_path,
             "-o", self._denoised_file_path,
         ]
-        self._denoiser_process = subprocess.Popen(
+        TempfileManager._denoiser_process = subprocess.Popen(
             args,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -199,19 +203,19 @@ class FrameBuffer(object):
         )
 
     def is_denoiser_active(self):
-        return self._denoiser_process is not None
+        return TempfileManager._denoiser_process is not None
 
     def is_denoiser_done(self):
-        return self._denoiser_process.poll() is not None
+        return TempfileManager._denoiser_process.poll() is not None
 
     def load_denoiser_result(self, scene):
-        with self._denoiser_process.stdout as d_out:
+        with TempfileManager._denoiser_process.stdout as d_out:
             if d_out:
                 print("Denoiser output:")
                 for line in d_out:
                     print(line, end='')
-        print("Denoiser return code:", self._denoiser_process.returncode)
-        self._denoiser_process = None
+        print("Denoiser return code:", TempfileManager._denoiser_process.returncode)
+        TempfileManager._denoiser_process = None
         shape = (self._height * self._width * 3)
         try:
             with open(self._denoised_file_path, "rb") as f:
@@ -233,11 +237,12 @@ class FrameBuffer(object):
         """ Denoiser was not started yet or the user has triggered an update """
         self.denoiser_result_cached = False
 
-        if self._denoiser_process:
+        if TempfileManager._denoiser_process:
             print("Interrupting denoiser")
-            self._denoiser_process.terminate()
-            print("Denoiser outputs: ", self._denoiser_process.stdout)
-            self._denoiser_process = None
+            TempfileManager._denoiser_process.terminate()
+            print("Denoiser outputs: ", TempfileManager._denoiser_process.stdout)
+            TempfileManager._denoiser_process = None
+            TempfileManager.delete_files(id(self))
 
     def update(self, luxcore_session, scene):
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
