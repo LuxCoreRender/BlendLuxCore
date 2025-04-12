@@ -187,7 +187,7 @@ if am_in_extension:
         # Step 0: Backup wheels from last successful installation
         _backup_wheels()
 
-        # Step 1: get installation info for comaprison in following steps
+        # Step 1: get installation info for comparison in following steps
         old_wheel_hash, old_pyluxcore_version = _get_installation_info()
         
         # Step 2: If BLC_WHEEL_PATH is specified, install that
@@ -195,6 +195,7 @@ if am_in_extension:
             wheel_hash = base64.urlsafe_b64encode(hashlib.sha256(open(blc_wheel_path, 'rb').read()).digest()).decode('latin1').rstrip('=')
             if wheel_hash == old_wheel_hash:
                 print("[BLC] skipping pyluxcore installation. Custom wheel matching hash already installed.")
+                _restore_backup_wheels()
                 return 2
             print('[BLC] Installing local version of pyluxcore')
             command = [
@@ -220,6 +221,7 @@ if am_in_extension:
         elif PYLUXCORE_VERSION:
             if PYLUXCORE_VERSION.strip() == old_pyluxcore_version.strip():
                 print("[BLC] skipping pyluxcore installation. Specified version already installed.")
+                _restore_backup_wheels()
                 return 2
             print('[BLC] installing pyluxcore version:', PYLUXCORE_VERSION)
             command = [
@@ -243,6 +245,7 @@ if am_in_extension:
 
         # Step 4: Fallback, none of the above specified
         print("[BLC] ERROR: neither blc_wheel_path nor PYLUXCORE_VERSION specified in function download_pyluxcore()!")
+        _restore_backup_wheels()
         return 1
             
     # We'll invoke download_pyluxcore at each init
