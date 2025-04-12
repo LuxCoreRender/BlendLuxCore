@@ -62,20 +62,33 @@ if am_in_extension:
     wheel_dev_folder =  root_folder / "pyluxcore_custom" # folder where a nightly build pyluxcore wheel can be placed
     if not os.path.exists(wheel_dev_folder):
         os.makedirs(wheel_dev_folder)
-
-    # As an alterniative for more user_friendly support:
-    # Check for the presence of one(!) development wheel within the BlendLuxCore folder
-    # This takes precedence over the BLC_WHEEL_PATH environment variable
-    files, *_ = os.walk(wheel_dev_folder)
-    files_filtered = [f for f in files[2] if f.startswith('pyluxcore') and f.endswith('.whl')]
-    if len(files_filtered) > 1:
-        print("[BLC] Warning: Content of 'pyluxcore_custom/' is not unique. Please delete all except one wheel file.")
-    elif len(files_filtered) == 0:
-        pass
+    # For installation on PCs without internet, or in company networks where downloading
+    # with pip is an issue (reported cases), check for the presence of a folder install_offline/
+    # where the pyluxcore wheel, and its dependencies, are placed.
+    # This takes precedence over BLC_WHEEL_PATH, as the latter still requires pip to work
+    # because of the dependencies.
+    install_offline_folder = root_folder / "install_offline"
+    if os.path.exists(install_offline_folder):
+        blc_offline_install = True
+        blc_wheel_path = None
     else:
-        blc_wheel_path = wheel_dev_folder / files_filtered[0]
+        blc_offline_install = False
+        # As an alternative to BLC_WHEEL_PATH as an environment variable, for more user_friendly support:
+        # Check for the presence of one(!) development wheel within the BlendLuxCore folder.
+        # This takes precedence over the BLC_WHEEL_PATH environment variable.
+        files, *_ = os.walk(wheel_dev_folder)
+        files_filtered = [f for f in files[2] if f.startswith('pyluxcore') and f.endswith('.whl')]
+        if len(files_filtered) > 1:
+            print("[BLC] Warning: Content of 'pyluxcore_custom/' is not unique. Please delete all except one wheel file.")
+        elif len(files_filtered) == 0:
+            pass
+        else:
+            blc_wheel_path = wheel_dev_folder / files_filtered[0]        
 
     def _execute_wheel_download(command):
+        if blc_offline_install:
+            # in the offline mode, we don't need to call pip
+            return
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         output = stdout.decode()
@@ -90,6 +103,7 @@ if am_in_extension:
                 f"[BLC] Failed to download LuxCore with return code {process.returncode}."
             ) from None
 
+    def _update_manifest():
         # Setup manifest with wheel list
         manifest_path = root_folder / 'blender_manifest.toml'
         files, *_ = os.walk(wheel_dl_folder)
@@ -152,6 +166,9 @@ if am_in_extension:
         return old_wheel_hash, old_pyluxcore_version
     
     def _clear_wheels():
+        if blc_offline_install:
+            # in the offline mode, user must manually manage folder content
+            return
         files = os.listdir(wheel_dl_folder)
         if len(files) == 0:
             return
@@ -159,6 +176,9 @@ if am_in_extension:
             os.remove(wheel_dl_folder / file)
     
     def _backup_wheels():
+        if blc_offline_install:
+            # in the offline mode, user must manually manage folder content
+            return
         files = os.listdir(wheel_dl_folder)
         if len(files) == 0:
             return
@@ -166,6 +186,9 @@ if am_in_extension:
             shutil.move(wheel_dl_folder / file, wheel_backup_folder / file)
 
     def _delete_backup_wheels():
+        if blc_offline_install:
+            # in the offline mode, user must manually manage folder content
+            return
         files = os.listdir(wheel_backup_folder)
         if len(files) == 0:
             return
@@ -173,24 +196,58 @@ if am_in_extension:
             os.remove(wheel_backup_folder / file)
 
     def _restore_backup_wheels():
+        if blc_offline_install:
+            # in the offline mode, user must manually manage folder content
+            return
         files = os.listdir(wheel_backup_folder)
         if len(files) == 0:
             return
         for file in files:
             shutil.move(wheel_backup_folder / file, wheel_dl_folder / file)
 
+    def _check_offline_content():
+        files = os.listdir(install_offline_folder)
+        if len(files) == 0:
+            raise RuntimeError("BlendLuxCore Installation Error: The install_offline/ directory exists but is empty!")
+        for file in files:
+            if file.startswith('pyluxcore'):
+                pyluxcore_version = file.split('-')[1]
+                return pyluxcore_version
+        return None # no valid file was found
+    
+    def _copy_offline_files():
+        files = os.listdir(install_offline_folder)
+        for file in files:
+            shutil.copy(install_offline_folder / file, wheel_dl_folder / file)
+
+    def _delete_install_offline():
+        files = os.listdir(install_offline_folder)
+        for file in files:
+            os.remove(install_offline_folder / file)
+        os.rmdir(install_offline_folder)
+
     def download_pyluxcore():
         # We cannot 'pip install' directly, as it would install pyluxcore system-wide
         # instead of in Blender environment
         # Blender has got its own logic for wheel installation, we'll rely on it
 
-        # Step 0: Backup wheels from last successful installation
+        # Step 0: for offline install, check content of install_offline/ folder,
+        # derive pyluxcore_version from content,
+        # and copy files to wheels/ folder
+        if blc_offline_install:
+            pyluxcore_version = _check_offline_content()
+            _copy_offline_files()
+        else:
+            pyluxcore_version = PYLUXCORE_VERSION
+
+        # Step 1: Backup wheels from last successful installation
+        # Note: the function is skipped internally when blc_offline_install is True
         _backup_wheels()
 
-        # Step 1: get installation info for comparison in following steps
+        # Step 2: get installation info for comparison in the following steps
         old_wheel_hash, old_pyluxcore_version = _get_installation_info()
         
-        # Step 2: If BLC_WHEEL_PATH is specified, install that
+        # Step 3: If blc_wheel_path is specified, install that
         if blc_wheel_path:
             wheel_hash = base64.urlsafe_b64encode(hashlib.sha256(open(blc_wheel_path, 'rb').read()).digest()).decode('latin1').rstrip('=')
             if wheel_hash == old_wheel_hash:
@@ -209,6 +266,7 @@ if am_in_extension:
                     ]
             try:
                 _execute_wheel_download(command)
+                _update_manifest()
                 _delete_backup_wheels()
                 _save_installation_info(wheel_hash, 'None')
                 return 0
@@ -217,33 +275,34 @@ if am_in_extension:
                 _restore_backup_wheels()
                 return 1
         
-        # Step 3: If PYLUXCORE_VERSION is specified, install that
-        elif PYLUXCORE_VERSION:
-            if PYLUXCORE_VERSION.strip() == old_pyluxcore_version.strip():
+        # Step 4: If pyluxcore_version is specified, install that
+        elif pyluxcore_version:
+            if pyluxcore_version.strip() == old_pyluxcore_version.strip():
                 print("[BLC] skipping pyluxcore installation. Specified version already installed.")
                 _restore_backup_wheels()
                 return 2
-            print('[BLC] installing pyluxcore version:', PYLUXCORE_VERSION)
+            print('[BLC] installing pyluxcore version:', pyluxcore_version)
             command = [
                         sys.executable,
                         '-m',
                         'pip',
                         'download',
-                        f'pyluxcore=={PYLUXCORE_VERSION}',
+                        f'pyluxcore=={pyluxcore_version}',
                         '-d',
                         wheel_dl_folder
                     ]
             try:
                 _execute_wheel_download(command)
+                _update_manifest()
                 _delete_backup_wheels()
-                _save_installation_info('None', PYLUXCORE_VERSION)
+                _save_installation_info('None', pyluxcore_version)
                 return 0
             except:
                 _clear_wheels()
                 _restore_backup_wheels()
                 return 1
 
-        # Step 4: Fallback, none of the above specified
+        # Step 5: Fallback, none of the above specified
         print("[BLC] ERROR: neither blc_wheel_path nor PYLUXCORE_VERSION specified in function download_pyluxcore()!")
         _restore_backup_wheels()
         return 1
@@ -267,6 +326,9 @@ if am_in_extension:
 
     try:
         import pyluxcore
+        if blc_offline_install:
+            # remove the install_offline_folder because we want a normal startup next time
+            _delete_install_offline()
     except ImportError as error:
         msg = "\n\nCould not import pyluxcore."
         # Raise from None to suppress the unhelpful
