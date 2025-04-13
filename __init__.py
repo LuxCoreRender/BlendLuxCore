@@ -52,6 +52,12 @@ blc_dev_path = os.environ.get("BLC_DEV_PATH")
 blc_wheel_path = os.environ.get("BLC_WHEEL_PATH")
 
 if am_in_extension:
+    root_folder = pathlib.Path(bpy.utils.extension_path_user(__package__, path="", create=True))
+    wheel_dl_folder = pathlib.Path(bpy.utils.extension_path_user(__package__, path="wheels", create=True))
+    wheel_backup_folder = pathlib.Path(bpy.utils.extension_path_user(__package__, path="wheels_backup", create=True))
+    wheel_dev_folder = pathlib.Path(bpy.utils.extension_path_user(__package__, path="pyluxcore_custom", create=True))
+
+    """
     root_folder = pathlib.Path(__file__).parent.resolve()
     wheel_dl_folder =  root_folder / "wheels" # for wheels download
     if not os.path.exists(wheel_dl_folder):
@@ -62,6 +68,7 @@ if am_in_extension:
     wheel_dev_folder =  root_folder / "pyluxcore_custom" # folder where a nightly build pyluxcore wheel can be placed
     if not os.path.exists(wheel_dev_folder):
         os.makedirs(wheel_dev_folder)
+    """
     # For installation on PCs without internet, or in company networks where downloading
     # with pip is an issue (reported cases), check for the presence of a folder install_offline/
     # where the pyluxcore wheel, and its dependencies, are placed.
@@ -102,10 +109,10 @@ if am_in_extension:
 
     def _update_manifest():
         # Setup manifest with wheel list
-        manifest_path = root_folder / 'blender_manifest.toml'
+        manifest_path = pathlib.Path('.', 'blender_manifest.toml')
         files, *_ = os.walk(wheel_dl_folder)
         wheels = [
-            pathlib.Path('.', 'wheels', f).as_posix()
+            pathlib.Path(wheel_dl_folder, f).as_posix()
             for f in files[2]
         ]
         wheel_statement = f'wheels = {wheels}\n'
