@@ -12,4 +12,5 @@ wheels/
 # Visual studio files
 .vs/
 out/
+.vscode/
 
