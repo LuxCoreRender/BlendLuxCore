@@ -36,6 +36,11 @@ INPUT_SETTINGS = {
         1: ["Increment", True],
         2: ["", False]
     },
+    "sqrt": {
+        0: ["Value", True],
+        1: ["", False],
+        2: ["", False]
+    },
 }
 
 
@@ -70,6 +75,7 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture, bpy.types.Node):
         ("greaterthan", "Greater Than", "Value 1 > Value 2 (returns 0 if false, 1 if true)", 9),
         ("rounding", "Round", "Round the input to the nearest increment", 10),
         ("modulo", "Modulo", "Return the remainder of the floating point division Value 1 / Value 2", 11),
+        ("sqrt", "Square Root", "Square root", 12),
     ]
     mode: EnumProperty(name="Mode", items=mode_items, default="scale", update=change_mode)
 
@@ -107,9 +113,16 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture, bpy.types.Node):
                 layout.label(text="Min should be smaller than max!", icon=icons.WARNING)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        definitions = {
-            "type": self.mode,
-        }
+        if self.mode == 'sqrt':
+            # Square-root added as explicit option rather than the non-obvious power-0.5 combo.
+            # Export as an alias to power because there is no dedicated implementation in LuxCore (yet).
+            definitions = {
+                "type": "power",
+            }
+        else:
+            definitions = {
+                "type": self.mode,
+            }
 
         if self.mode == "abs":
             definitions["texture"] = self.inputs[0].export(exporter, depsgraph, props)
@@ -130,6 +143,9 @@ class LuxCoreNodeTexMath(LuxCoreNodeTexture, bpy.types.Node):
         elif self.mode == "modulo":
             definitions["texture"] = self.inputs[0].export(exporter, depsgraph, props)
             definitions["modulo"] = self.inputs[1].export(exporter, depsgraph, props)
+        elif self.mode == "sqrt":
+            definitions["base"] = self.inputs[0].export(exporter, depsgraph, props)
+            definitions["exponent"] = 0.5
         else:
             definitions["texture1"] = self.inputs[0].export(exporter, depsgraph, props)
             definitions["texture2"] = self.inputs[1].export(exporter, depsgraph, props)
