@@ -35,8 +35,8 @@ if bpy.app.version < (4, 2, 0):
 
 PYLUXCORE_VERSION = '2.10.1' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
 
-# Take care of PyLuxCore, as other modules may want to import it
-from . import luxloader
+# Check the location of this init file. The init file in the local dev folder returns only 'BlendLuxCore'
+am_in_extension = __package__.startswith("bl_ext.")
 
 if _needs_reload:
     import importlib
