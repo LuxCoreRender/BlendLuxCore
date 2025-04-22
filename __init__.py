@@ -109,7 +109,7 @@ if am_in_extension:
 
     def _update_manifest():
         # Setup manifest with wheel list
-        manifest_path = pathlib.Path('.', 'blender_manifest.toml')
+        manifest_path = pathlib.Path(__file__).parent.resolve() / 'blender_manifest.toml'
         files, *_ = os.walk(wheel_dl_folder)
         wheels = [
             pathlib.Path(wheel_dl_folder, f).as_posix()
