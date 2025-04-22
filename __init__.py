@@ -41,7 +41,7 @@ if 'warning' in bl_info:
 PYLUXCORE_VERSION = '2.10.0' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
 
 # Check the location of this init file. The init file in the local dev folder returns only 'BlendLuxCore'
-am_in_extension = __name__.startswith("bl_ext.")
+am_in_extension = __package__.startswith("bl_ext.")
 
 # The environment variable BLC_DEV_PATH can be used to store a path
 # to a local BlendLuxCore repository, which will then be imported
