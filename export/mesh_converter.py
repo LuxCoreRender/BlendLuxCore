@@ -1,3 +1,5 @@
+import numpy as np
+
 import bpy
 from contextlib import contextmanager
 from time import time
@@ -24,19 +26,14 @@ def get_custom_normals_slow(mesh):
     if not mesh.has_custom_normals:
         return None
 
-    # Flat list of 3-element normal vectors
-    custom_normals = [0] * (len(mesh.loops) * 3)
-
-    for loop_tri in mesh.loop_triangles:
-        loops = loop_tri.loops
-        split_normals = loop_tri.split_normals
-        
-        start = loops[0] * 3
-        custom_normals[start:start + 3] = split_normals[0][:]
-        start = loops[1] * 3
-        custom_normals[start:start + 3] = split_normals[1][:]
-        start = loops[2] * 3
-        custom_normals[start:start + 3] = split_normals[2][:]
+    # Note: for readability, split_normals_array should be of shape (n_loops, 3),
+    # where each row is a normal vector.
+    # However, foreach_get() needs a flat sequence,
+    # so to save two ravel() operations, a flat array is used directly
+    n_loops = len(mesh.loops)
+    split_normals_array = np.empty(n_loops * 3)
+    mesh.loops.foreach_get('normal', split_normals_array)
+    custom_normals = split_normals_array.tolist() # currently, LuxCore is hard-coded to expect a list.
 
     return custom_normals
 
