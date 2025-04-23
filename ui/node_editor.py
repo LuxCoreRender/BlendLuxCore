@@ -189,8 +189,8 @@ def lux_node_header_draw(panel, context):
     # Snap
     row = layout.row(align=True)
     row.prop(tool_settings, "use_snap", text="")
-    row.prop(tool_settings, "snap_node_element", icon_only=True)
-    if tool_settings.snap_node_element != 'GRID':
+    row.prop(tool_settings, "snap_anim_element", icon_only=True)
+    if tool_settings.snap_anim_element != 'GRID':
         row.prop(tool_settings, "snap_target", text="")
 
 
