@@ -26,10 +26,12 @@ def get_custom_normals_slow(mesh):
     if not mesh.has_custom_normals:
         return None
 
-    # Note: for readability, split_normals_array should be of shape (n_loops, 3),
+    # Note: for readability, custom_normals should be of shape (n_loops, 3),
     # where each row is a normal vector.
     # However, foreach_get() needs a flat sequence,
-    # so to save two ravel() operations, a flat array is used directly
+    # so to save two ravel() operations, a flat array is used directly.
+    # dtype=np.float32 is used because this matches Blenders internal data structure
+    # and leads to significantly faster processing.
     n_loops = len(mesh.loops)
     custom_normals = np.empty(n_loops * 3, dtype = np.float32)
     mesh.loops.foreach_get('normal', custom_normals)
