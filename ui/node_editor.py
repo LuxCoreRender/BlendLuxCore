@@ -1,3 +1,4 @@
+import bpy
 from bl_ui.space_node import NODE_HT_header, NODE_MT_editor_menus
 from .material import lux_mat_template_ID
 
@@ -188,10 +189,12 @@ def lux_node_header_draw(panel, context):
 
     # Snap
     row = layout.row(align=True)
-    row.prop(tool_settings, "use_snap", text="")
-    row.prop(tool_settings, "snap_node_element", icon_only=True)
-    if tool_settings.snap_node_element != 'GRID':
-        row.prop(tool_settings, "snap_target", text="")
+    row.prop(tool_settings, "use_snap_node", text="")
+    if bpy.app.version < (4, 4, 0):
+        # snap_node_element was removed in Blender 4.4
+        row.prop(tool_settings, "snap_node_element", icon_only=True)
+        if tool_settings.snap_node_element != 'GRID':
+            row.prop(tool_settings, "snap_target", text="")
 
 
 def lux_draw_switch(panel, context):
