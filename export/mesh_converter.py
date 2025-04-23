@@ -31,9 +31,9 @@ def get_custom_normals_slow(mesh):
     # However, foreach_get() needs a flat sequence,
     # so to save two ravel() operations, a flat array is used directly
     n_loops = len(mesh.loops)
-    split_normals_array = np.empty(n_loops * 3)
-    mesh.loops.foreach_get('normal', split_normals_array)
-    custom_normals = split_normals_array.tolist() # currently, LuxCore is hard-coded to expect a list.
+    custom_normals = np.empty(n_loops * 3, dtype = np.float32)
+    mesh.loops.foreach_get('normal', custom_normals)
+    custom_normals = custom_normals.tolist() # currently, LuxCore is hard-coded to expect a list.
 
     return custom_normals
 
