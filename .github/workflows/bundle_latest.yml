@@ -7,7 +7,7 @@ name: BlendLuxCore Create Latest Release
 on:
   push:
     branches:
-      - for_v2.10
+      - master
   workflow_dispatch:
 
 jobs:
