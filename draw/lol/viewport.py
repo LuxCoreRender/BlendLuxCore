@@ -30,7 +30,6 @@ import random
 from mathutils import Vector
 import mathutils
 
-
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
 from ...utils import get_addon_preferences
@@ -73,8 +72,8 @@ def draw_line2d(x1, y1, x2, y2, width, color):
     coords = (
         (x1, y1), (x2, y2))
 
-    indices = ((0, 1),)
-
+    indices = (
+        (0, 1),)
 
     gpu.state.blend_set('ALPHA')
     shader = gpu.shader.from_builtin('UNIFORM_COLOR')
@@ -94,15 +93,12 @@ def draw_lines(vertices, indices, color):
     batch.draw(shader)
     gpu.state.blend_set('NONE')
 
-
 def draw_rect_3d(coords, color):
     indices = [(0, 1, 2), (2, 3, 0)]
-    gpu.state.blend_set('ALPHA')
     shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'TRIS', {"pos": coords}, indices=indices)
     shader.uniform_float("color", color)
     batch.draw(shader)
-    gpu.state.blend_set('NONE')
 
 
 def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1, 0, 1)):
@@ -131,7 +127,6 @@ def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1
     lines = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5],
              [2, 6], [3, 7], [0, 8], [1, 8]]
     draw_lines(vertices, lines, color)
-
     if progress != None:
         color = (color[0], color[1], color[2], .2)
         progress = progress * .01
@@ -149,7 +144,6 @@ def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1
 
 
 def draw_image(x, y, width, height, image, transparency, crop=(0, 0, 1, 1)):
-
     coords = [
         (x, y), (x + width, y),
         (x, y + height), (x + width, y + height)]
@@ -164,18 +158,17 @@ def draw_image(x, y, width, height, image, transparency, crop=(0, 0, 1, 1)):
 
     gpu.state.blend_set('ALPHA')
     shader = gpu.shader.from_builtin('IMAGE')
-
     batch = batch_for_shader(shader, 'TRIS',
                              {"pos": coords,
                               "texCoord": uvs},
                              indices=indices)
-
 
     texture = gpu.texture.from_image(image)
 
     shader.bind()
     shader.uniform_sampler("image", texture)
     batch.draw(shader)
+
     gpu.state.blend_set('NONE')
 
 

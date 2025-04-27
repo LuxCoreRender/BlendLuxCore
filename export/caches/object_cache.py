@@ -4,7 +4,7 @@ from functools import lru_cache
 from time import time
 
 from ... import utils
-from ...bin import pyluxcore
+import pyluxcore
 from .. import mesh_converter
 from ..hair import (
     convert_hair, warn_about_missing_uvs, set_hair_props, 
@@ -128,12 +128,24 @@ def warn_about_subdivision_levels(obj):
 
 
 def get_material(obj, material_index, depsgraph):
-    material_override = depsgraph.view_layer_eval.material_override
+    material_override = depsgraph.view_layer_eval.material_override # the view layer override material
+    # Evaluate if the override_exclude checkbox is ticked
+    override_exclude = False
+    material = None
+    if material_index < len(obj.material_slots):
+        material = obj.material_slots[material_index].material
+    if material is not None:
+        node_tree = material.luxcore.node_tree
+        if node_tree is not None: # happens e.g. in default cube scene when only cycles nodes are defined
+            output_node = get_active_output(node_tree)
+            override_exclude = output_node.override_exclude
 
-    if material_override:
+    if material_override and material is None:
+        mat = material_override
+    elif material_override and not override_exclude:
         mat = material_override
     elif material_index < len(obj.material_slots):
-        mat = obj.material_slots[material_index].material
+        mat = material
 
         if mat is None:
             # Note: material.convert returns the fallback material in this case
@@ -185,7 +197,7 @@ def get_total_particle_count(particle_system, is_viewport_render):
     if is_viewport_render:
         particle_count *= settings.display_percentage / 100
     if settings.child_type != "NONE":
-        particle_count *= settings.child_nbr if is_viewport_render else settings.rendered_child_count
+        particle_count *= settings.child_percent if is_viewport_render else settings.rendered_child_count
     return particle_count
 
 

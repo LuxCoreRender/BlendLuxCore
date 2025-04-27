@@ -1,6 +1,6 @@
 from ..export.image import ImageExporter
 from ..draw.viewport import TempfileManager
-from ..bin import pyluxcore
+import pyluxcore
 
 
 def handler():

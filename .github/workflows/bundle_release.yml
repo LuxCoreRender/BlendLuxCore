@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2024 Howetuft
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: BlendLuxCore Create Release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build_latest:
+    name: Build Latest Bundle
+    uses: ./.github/workflows/build_bundle.yml
+    with:
+      build_type: "Release"
+
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: build_latest
+    steps:
+
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Get Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: "BlendLuxCore"
+          path: "${{ github.workspace }}/download/"
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: "${{ github.workspace }}/download/BlendLuxCore-*.zip"

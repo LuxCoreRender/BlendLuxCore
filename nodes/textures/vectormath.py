@@ -20,20 +20,18 @@ class LuxCoreNodeTexVectorMath(LuxCoreNodeTexture, bpy.types.Node):
     ]
 
     def change_mode(self, context):
+        id = self.inputs.find("Vector 2")
         if self.mode in {"clamp", "abs"}:
             self.inputs[1].name = "Vector"
-            id = self.inputs.find["Vector 2"]
             self.inputs[id].enabled = False
         else:
             self.inputs[1].name = "Vector 1"
-            id = self.inputs.find["Vector 2"]
             self.inputs[id].enabled = True
         
+        id = self.inputs.find("Fac")
         if self.mode == "mix":
-            id = self.inputs.find["Fac"]
             self.inputs[id].enabled = True
         else:
-            id = self.inputs.find["Fac"]
             self.inputs[id].enabled = False
 
         utils_node.force_viewport_update(self, context)
@@ -51,7 +49,7 @@ class LuxCoreNodeTexVectorMath(LuxCoreNodeTexture, bpy.types.Node):
 
     def init(self, context):
         self.add_input("LuxCoreSocketFloat0to1", "Fac", 1)
-        self.inputs["Fac"].hide = True
+        self.inputs["Fac"].enabled = False
         self.add_input("LuxCoreSocketVector", "Vector 1", (0, 0, 0))
         self.add_input("LuxCoreSocketVector", "Vector 2", (0, 0, 0))
 

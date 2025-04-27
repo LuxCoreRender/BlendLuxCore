@@ -72,9 +72,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
         bump_output = self.outputs[id]
         id = self.outputs.find("Alpha")
         alpha_output = self.outputs[id]
-
         was_color_enabled = color_output.enabled
-
         color_output.enabled = not self.is_normal_map
         alpha_output.enabled = not self.is_normal_map
         bump_output.enabled = self.is_normal_map

@@ -154,7 +154,7 @@ class LUXCORE_OT_add_node(bpy.types.Operator):
                 output = out.name
                 break
 
-        output_id = node.outputs.find(output)
+        output_id = node.outputs.find("output")
         node_tree.links.new(new_node.outputs[output_id], node.inputs[self.input_socket])
 
         # Special stuff only needed by material output

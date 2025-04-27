@@ -13,7 +13,6 @@ class LuxCoreNodeTexTriplanar(LuxCoreNodeTexture, bpy.types.Node):
             self.inputs["Color"].name = "Color X"
         else:
             self.inputs["Color X"].name = "Color"
-
         id = self.inputs.find("Color Y")
         self.inputs[id].enabled = self.multiple_textures
         id = self.inputs.find("Color Z")

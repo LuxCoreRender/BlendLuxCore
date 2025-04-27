@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: 2025 Howetuft, Johannes Hinrichs (CodeFHD)
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: BlendLuxCore Create Latest Release
+
+on:
+  push:
+    branches:
+      - for_v2.10
+  workflow_dispatch:
+
+jobs:
+  build_latest:
+    name: Build Latest Bundle
+    uses: ./.github/workflows/build_bundle.yml
+    with:
+      build_type: "Latest"
+
+  create_release:
+    name: Create Latest Release
+    runs-on: ubuntu-latest
+    needs: build_latest
+    steps:
+
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Get Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: "BlendLuxCore"
+          path: "${{ github.workspace }}/download/"
+
+      - name: Update the "latest" tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old latest release
+        shell: bash
+        run: |
+          echo false > ${{ github.workspace }}/tmp_release_test
+          gh release list --json name > ${{ github.workspace }}/tmp_releases
+          jq -r -c .[].name ${{ github.workspace }}/tmp_releases | while read i; do
+            echo $i
+            if [[ "$i" = "latest" ]]; then
+              echo "FOUND"
+              echo true > "${{ github.workspace }}/tmp_release_test"
+            fi
+          done
+          TESTRESULT=$(cat ${{ github.workspace }}/tmp_release_test)
+          echo RESULT
+          echo $TESTRESULT
+          if [[ $TESTRESULT = 'true' ]]; then
+            echo DELETE
+            gh release delete latest
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create new release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: "${{ github.workspace }}/download/BlendLuxCore-*.zip"
+          draft: false
+          prerelease: true
+          body: "This is the result of automatic compilation of the latest commits.\n\nPlease note that this release may be unstable and is not recommended for production use."

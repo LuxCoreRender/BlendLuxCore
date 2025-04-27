@@ -75,12 +75,14 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial, bpy.types.Node):
         self.add_input("LuxCoreSocketIOR", "IOR", 1.5)
         self.add_input("LuxCoreSocketCauchyC", "Dispersion", 0)
         ThinFilmCoating.init(self)
-
+        
         Roughness.init(self, default=0.05, init_enabled=False)
+
         self.add_common_inputs()
 
         self.outputs.new("LuxCoreSocketMaterial", "Material")
         Roughness.update_anisotropy(self, context)
+        
 
     def draw_buttons(self, context, layout):
         column = layout.row()
@@ -130,6 +132,7 @@ class LuxCoreNodeMatGlass(LuxCoreNodeMaterial, bpy.types.Node):
         self.export_common_inputs(exporter, depsgraph, props, definitions)
 
         return self.create_props(props, definitions, luxcore_name)
+
 
     def get_interior_volume(self):
         node_tree = self.id_data

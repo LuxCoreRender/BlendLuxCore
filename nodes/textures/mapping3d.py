@@ -24,7 +24,6 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture, bpy.types.Node):
     def update_mapping_type(self, context):
         id = self.inputs.find("3D Mapping (optional)")
         self.inputs[id].enabled = self.mapping_type != "localrandommapping3d"
-
         if self.mapping_type == "localrandommapping3d" and self.seed_type == "mesh_islands":
             utils_node.force_viewport_mesh_update(self, context)
         else:

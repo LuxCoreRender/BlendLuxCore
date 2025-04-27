@@ -28,7 +28,7 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture, bpy.types.Node):
         else:
             self.inputs[1].name = "Color 1"
             self.inputs[id].enabled = True
-
+        
         id = self.inputs.find("Fac")
         if self.mode == "mix":
             self.inputs[id].enabled = True

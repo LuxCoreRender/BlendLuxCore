@@ -5,7 +5,7 @@ import re
 import hashlib
 import os
 from os.path import basename, dirname
-from ..bin import pyluxcore
+import pyluxcore
 from . import view_layer
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
@@ -675,7 +675,12 @@ def in_material_shading_mode(context):
 
 
 def get_addon_preferences(context):
-    addon_name = basename(dirname(dirname(__file__)))
+    package_name_components = __package__.split(".")
+    package_name_components.pop()
+    addon_name = ".".join(package_name_components)
+    am_in_extension = __name__.startswith('bl_ext.')
+    if not am_in_extension:
+        addon_name = 'bl_ext.user_default.' + addon_name
     return context.preferences.addons[addon_name].preferences
 
 

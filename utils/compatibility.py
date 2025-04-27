@@ -94,7 +94,8 @@ def update_glossy_ior_change(node_tree):
     affected_nodes += find_nodes(node_tree, "LuxCoreNodeMatGlossyCoating", False)
 
     for node in affected_nodes:
-        if "IOR" not in node.inputs:
+        node_id = node.inputs.find("IOR")
+        if node_id == -1:
             # Note: the IOR input will be at the very bottom, but at least the export works
             node.add_input("LuxCoreSocketIOR", "IOR", 1.5)
             node.inputs["IOR"].enabled = False
@@ -111,7 +112,8 @@ def update_volume_asymmetry_change(node_tree):
     affected_nodes += find_nodes(node_tree, "LuxCoreNodeVolHomogeneous", False)
 
     for node in affected_nodes:
-        asymmetry_socket = node.inputs["Asymmetry"]
+        node_id = node.inputs.find("Asymmetry")
+        asymmetry_socket = node.inputs[node_id]
         if asymmetry_socket.bl_idname == "NodeSocketUndefined":
             node.inputs.remove(asymmetry_socket)
             node.add_input("LuxCoreSocketVolumeAsymmetry", "Asymmetry", (0, 0, 0))
@@ -123,8 +125,10 @@ def update_colormix_remove_min_max_sockets(node_tree):
 
     for node in find_nodes(node_tree, "LuxCoreNodeTexColorMix", False):
         if node.mode == "clamp" and "Min" in node.inputs and "Max" in node.inputs:
-            socket_min = node.inputs["Min"]
-            socket_max = node.inputs["Max"]
+            id_min = node.inputs.find("Min")
+            socket_min = node.inputs[id_min]
+            id_max = node.inputs.find("Max")
+            socket_max = node.inputs[id_max]
             node.mode_clamp_min = socket_min.default_value
             node.mode_clamp_max = socket_max.default_value
             node.inputs.remove(socket_min)
@@ -138,13 +142,15 @@ def update_imagemap_remove_gamma_brightness_sockets(node_tree):
     for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap", False):
         updated = False
         if "Gamma" in node.inputs:
-            socket_gamma = node.inputs["Gamma"]
+            node_id = node.inputs.find("Gamma")
+            socket_gamma = node.inputs[node_id]
             node.gamma = socket_gamma.default_value
             node.inputs.remove(socket_gamma)
             updated = True
 
         if "Brightness" in node.inputs:
-            socket_brightness = node.inputs["Brightness"]
+            node_id = node.inputs.find("Brightness")
+            socket_brightness = node.inputs[node_id]
             node.brightness = socket_brightness.default_value
             node.inputs.remove(socket_brightness)
             updated = True
@@ -158,8 +164,10 @@ def update_cloth_remove_repeat_sockets(node_tree):
 
     for node in find_nodes(node_tree, "LuxCoreNodeMatCloth", False):
         if "Repeat U" in node.inputs and "Repeat V" in node.inputs:
-            socket_repeat_u = node.inputs["Repeat U"]
-            socket_repeat_v = node.inputs["Repeat V"]
+            node_id = node.inputs.find("Repeat U")
+            socket_repeat_u = node.inputs[node_id]
+            node_id = node.inputs.find("Repeat V")
+            socket_repeat_v = node.inputs[node_id]
             node.repeat_u = socket_repeat_u.default_value
             node.repeat_v = socket_repeat_v.default_value
             node.inputs.remove(socket_repeat_u)
@@ -171,7 +179,8 @@ def update_imagemap_add_alpha_output(node_tree):
     # commit 09f23b0d758bce9383a0fa8c64ccbeb73706bccf
 
     for node in find_nodes(node_tree, "LuxCoreNodeTexImagemap", False):
-        if "Alpha" not in node.outputs:
+        node_id = node.outputs.find("Alpha")
+        if node_id == -1:
             node.outputs.new("LuxCoreSocketFloatUnbounded", "Alpha")
             print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
@@ -180,7 +189,8 @@ def update_smoke_multiple_output_channels(node_tree):
     # commit 204c96ec0d7f5d8d0dbdd183da61b69718aa1747
 
     for node in find_nodes(node_tree, "LuxCoreNodeTexSmoke", False):
-        if "density" in node.outputs:
+        node_id = node.outputs.find("density")
+        if node_id != -1:
             continue
 
         node.outputs.new("LuxCoreSocketFloatPositive", "density")
@@ -202,8 +212,10 @@ def update_smoke_multiple_output_channels(node_tree):
         for link in node.outputs[old_output_name].links:
             node_tree.links.new(node.outputs[new_output_name], link.to_socket)
 
-        node.outputs.remove(node.outputs["Color"])
-        node.outputs.remove(node.outputs["Value"])
+        node_id = node.outputs.find("Color")
+        node.outputs.remove(node.outputs[node_id])
+        node_id = node.outputs.find("Value")
+        node.outputs.remove(node.outputs[node_id])
 
         print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))
 
@@ -211,7 +223,8 @@ def update_smoke_multiple_output_channels(node_tree):
 def update_smoke_mantaflow_simulation(node_tree):
     # commit 6184e20b1fe2a5766c7ea89c4588641909bc9454
     for node in find_nodes(node_tree, "LuxCoreNodeTexSmoke", False):
-        if "flame" in node.outputs:
+        node_id = node.outputs.find("flame")
+        if node_id != -1:
             continue
         # Copy current output sockets for reconnection after update
         old_sockets = {}
@@ -224,11 +237,16 @@ def update_smoke_mantaflow_simulation(node_tree):
             else:
                 old_sockets[e.name] = links.copy()
 
-        node.outputs.remove(node.outputs["density"])
-        node.outputs.remove(node.outputs["fire"])
-        node.outputs.remove(node.outputs["heat"])
-        node.outputs.remove(node.outputs["color"])
-        node.outputs.remove(node.outputs["velocity"])
+        node_id = node.outputs.find("density")
+        node.outputs.remove(node.outputs[node_id])
+        node_id = node.outputs.find("fire")
+        node.outputs.remove(node.outputs[node_id])
+        node_id = node.outputs.find("heat")
+        node.outputs.remove(node.outputs[node_id])
+        node_id = node.outputs.find("color")
+        node.outputs.remove(node.outputs[node_id])
+        node_id = node.outputs.find("velocity")
+        node.outputs.remove(node.outputs[node_id])
 
         node.outputs.new("LuxCoreSocketFloatPositive", "density")
         node.outputs.new("LuxCoreSocketFloatPositive", "flame")
@@ -250,7 +268,8 @@ def update_mat_output_add_shape_input(node_tree):
     # commit e20355a7567b22df4d05e8b303c98dbc697b9c08
 
     for node in find_nodes(node_tree, "LuxCoreNodeMatOutput", False):
-        if "Shape" not in node.inputs:
+        node_id = node.inputs.find("Shape")
+        if node_id == -1:
             node.inputs.new("LuxCoreSocketShape", "Shape")
             print('Updated output node "%s" in tree %s to new version' % (node.name, node_tree.name))
 
@@ -260,7 +279,8 @@ def update_glass_disney_add_film_sockets(node_tree):
     affected_nodes += find_nodes(node_tree, "LuxCoreNodeMatDisney", False)
     
     for node in affected_nodes:
-        if ThinFilmCoating.THICKNESS_NAME in node.inputs:
+        node_id = node.inputs.find(ThinFilmCoating.THICKNESS_NAME)
+        if node_id != -1:
             continue
         
         if node.bl_idname == "LuxCoreNodeMatDisney":
@@ -274,7 +294,8 @@ def update_invert_add_maximum_input(node_tree):
     # commit 4fcce04f9c51dce990e2480810265c1f1b13c8c5
 
     for node in find_nodes(node_tree, "LuxCoreNodeTexInvert", False):
-        if "Maximum" not in node.inputs:
+        node_id = node.inputs.find("Maximum")
+        if node_id == -1:
             node.add_input("LuxCoreSocketFloatPositive", "Maximum", 1)
             print('Updated invert node "%s" in tree %s to new version' % (node.name, node_tree.name))
 
@@ -283,11 +304,15 @@ def update_brick_texture(node_tree):
     # commit a4aff62a1608f95fc7bd7fbbdf19f5ab444e0d6b
 
     for node in find_nodes(node_tree, "LuxCoreNodeTexBrick", False):
-        if "Brick Color 1" in node.inputs:
+        node_id = node.inputs.find("Brick Color 1")
+        if node_id != -1:
             continue
 
-        node.inputs["bricktex"].name = "Brick Color 1"
-        node.inputs["mortartex"].name = "Mortar Color"
-        node.inputs["brickmodtex"].name = "Brick Color 2"
+        node_id = node.inputs.find("bricktex")
+        node.inputs[node_id].name = "Brick Color 1"
+        node_id = node.inputs.find("mortartex")
+        node.inputs[node_id].name = "Mortar Color"
+        node_id = node.inputs.find("brickmodtex")
+        node.inputs[node_id].name = "Brick Color 2"
 
         print('Updated %s node "%s" in tree "%s" to new version' % (node.bl_idname, node.name, node_tree.name))

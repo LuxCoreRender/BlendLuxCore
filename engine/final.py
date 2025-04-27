@@ -23,31 +23,32 @@ def render(engine, depsgraph):
 
     _check_halt_conditions(engine, scene)
 
-    for layer_index, layer in enumerate(scene.view_layers):
-        print('[Engine/Final] Rendering layer "%s"' % layer.name)
+    layer = depsgraph.view_layer_eval
 
-        dummy_result = engine.begin_result(0, 0, 1, 1, layer=layer.name)
+    print('[Engine/Final] Rendering layer "%s"' % layer.name)
 
-        # Check if the layer is disabled. Cycles does this the same way,
-        # to be honest I have no idea why they don't just check layer.use
-        if layer.name not in dummy_result.layers:
-            # The layer is disabled
-            engine.end_result(dummy_result, cancel=True, do_merge_results=False)
-            continue
+    dummy_result = engine.begin_result(0, 0, 1, 1, layer=layer.name)
 
+    # Check if the layer is disabled. Cycles does this the same way,
+    # to be honest I have no idea why they don't just check layer.use
+    if layer.name not in dummy_result.layers:
+        # The layer is disabled
         engine.end_result(dummy_result, cancel=True, do_merge_results=False)
+        #continue
 
-        # This property is used during export, e.g. to check for layer visibility
-        utils_view_layer.State.active_view_layer = layer.name
+    engine.end_result(dummy_result, cancel=True, do_merge_results=False)
 
-        _add_passes(engine, layer, scene)
-        _render_layer(engine, depsgraph, statistics, layer)
+    # This property is used during export, e.g. to check for layer visibility
+    utils_view_layer.State.active_view_layer = layer.name
 
-        if _stop_requested(engine):
-            # Blender skips the rest of the render layers anyway
-            return
+    _add_passes(engine, layer, scene)
+    _render_layer(engine, depsgraph, statistics, layer)
 
-        print('[Engine/Final] Finished rendering layer "%s"' % layer.name)
+    if _stop_requested(engine):
+        # Blender skips the rest of the render layers anyway
+        return
+
+    print('[Engine/Final] Finished rendering layer "%s"' % layer.name)
     
 
 def _render_layer(engine, depsgraph, statistics, view_layer):

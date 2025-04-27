@@ -1,9 +1,12 @@
 from time import time
-from ..bin import pyluxcore
+import bpy
+import pyluxcore
 from .. import export
 from ..draw.viewport import FrameBuffer
 from .. import utils
 from ..utils import render as utils_render
+from ..utils import get_addon_preferences
+from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
 from ..export.config import convert_viewport_engine
 
@@ -30,7 +33,6 @@ def start_session(engine):
     # Note: Due to CPython implementation details, it's not necessary to use a lock here (this modification is atomic)
     engine.starting_session = False
 
-
 def force_session_restart(engine):
     """
     https://github.com/LuxCoreRender/BlendLuxCore/issues/577
@@ -40,12 +42,13 @@ def force_session_restart(engine):
     As a workaround, I stop and delete the session to trigger a full re-export of the scene and
     a fresh restart of the viewport render.
     """
-    engine.session.Stop()
-    engine.session = None
-
+    if engine.session is not None:
+        engine.session.Stop()
+        engine.session = None
 
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
+
     if engine.starting_session or engine.viewport_fatal_error:
         # Prevent deadlock
         return
@@ -68,7 +71,14 @@ def view_update(engine, context, depsgraph, changes=None):
             elif time() - engine.time_of_last_viewport_resize < engine.VIEWPORT_RESIZE_TIMEOUT:
                 # Don't re-export the session before the timeout is done, to prevent constant re-exports while resizing
                 return
-        
+        else:
+            display_luxcore_logs = get_addon_preferences(bpy.context).display_luxcore_logs
+            if display_luxcore_logs:
+                pyluxcore.SetLogHandler(LuxCoreLog.add)
+            else:
+                pyluxcore.SetLogHandler(LuxCoreLog.silent)
+
+
         try:
             print("=" * 50)
             print("[Engine/Viewport] New session")
@@ -80,7 +90,9 @@ def view_update(engine, context, depsgraph, changes=None):
             import _thread
             _thread.start_new_thread(start_session, (engine,))
         except Exception as error:
-            del engine.session
+            if engine.session is not None:
+                # in case engine.session was already set in the try block before the error
+                del engine.session
             engine.session = None
             # Reset the exporter to invalidate all caches
             engine.exporter = None
@@ -95,13 +107,14 @@ def view_update(engine, context, depsgraph, changes=None):
 
     s = time()
     changes = engine.exporter.get_changes(depsgraph, context, changes)
-    print("view_update(): checking for changes took %.1f ms" % ((time() - s) * 1000))
+    delta_t = (time() - s) * 1000
+    print(f"[BLC] view_update(): checking for other changes took {delta_t:.1f} ms")
 
     if changes:
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
+            # Only restart the session if the view transform didn't change by itself
             force_session_restart(engine)
             return
-
         s = time()
         # We have to re-assign the session because it might have been replaced due to filmsize change
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
@@ -109,28 +122,31 @@ def view_update(engine, context, depsgraph, changes=None):
 
         if engine.framebuffer:
             engine.framebuffer.reset_denoiser()
-        print("view_update(): applying changes took %.1f ms" % ((time() - s) * 1000))
-    print("view_update() took %.1f ms" % ((time() - start) * 1000))
+        delta_t = (time() - s) * 1000
+        print(f"[BLC] view_update(): applying changes took {delta_t:.1f} ms")
+
+    delta_t = (time() - start) * 1000
+    print(f"[BLC] view_update() took {delta_t:.1f} ms")
 
 
 def view_draw(engine, context, depsgraph):
     scene = depsgraph.scene_eval
-    
+
     if engine.starting_session:
         engine.tag_redraw()
         return
-        
+
     if engine.viewport_fatal_error:
         engine.update_stats("Error:", engine.viewport_fatal_error)
         engine.tag_redraw()
         return
-    
+
     if engine.session is None:
         config = scene.luxcore.config
         definitions = {}
         luxcore_engine, _ = convert_viewport_engine(context, scene, definitions, config)
         message = ""
-        
+
         if luxcore_engine.endswith("OCL"):
             # Create dummy renderconfig to check if we have to compile OpenCL kernels
             luxcore_scene = pyluxcore.Scene()
@@ -138,7 +154,7 @@ def view_draw(engine, context, depsgraph):
                 "scene.camera.type": "perspective",
             }
             luxcore_scene.Parse(utils.create_props("", definitions))
-            
+
             devices = scene.luxcore.devices
             definitions = {
                 "renderengine.type": "RTPATHOCL",
@@ -149,11 +165,11 @@ def view_draw(engine, context, depsgraph):
             }
             config_props = utils.create_props("", definitions)
             renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
-            
+
             if not renderconfig.HasCachedKernels():
                 gpu_backend = utils.get_addon_preferences(context).gpu_backend
                 message = f"Compiling {gpu_backend} kernels (just once, usually takes 15-30 minutes)"
-        
+
         engine.update_stats("Starting viewport render", message)
         engine.viewport_starting_message_shown = True
         engine.tag_update()
@@ -174,12 +190,12 @@ def view_draw(engine, context, depsgraph):
         # view_update(engine, context, depsgraph, changes)  # Disabled, see comment on force_session_restart()
         force_session_restart(engine)
         return
-    elif changes & export.Change.CAMERA:
+    elif changes & (export.Change.CAMERA | export.Change.MATERIAL):
         # Only update in view_draw if it is a camera update,
         # for everything else we call view_update().
         # We have to re-assign the session because it might have been
         # replaced due to filmsize change.
-        engine.session = engine.exporter.update(depsgraph, context, engine.session, export.Change.CAMERA)
+        engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
         engine.viewport_start_time = time()
 
     if utils.in_material_shading_mode(context):

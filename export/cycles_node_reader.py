@@ -1,4 +1,4 @@
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
 from ..utils.errorlog import LuxCoreErrorLog
@@ -96,22 +96,18 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                 #  - clearcoat roughness (we have clearcoat gloss, probably need to invert or something)
                 #  - clearcoat normal (no idea)
                 #  - tangent (no idea)
-                #  - sheen roughness (weird thing, might require rough glass + glossy coating?)
                 #  - transmission roughness (weird thing, might require rough glass + glossy coating?)
-                #  - anisotropic rotation
                 "type": "disney",
                 "basecolor": base_color,
-                "subsurface": 0,  # TODO
+                "subsurface": _socket(node.inputs["Subsurface Weight"], props, material, obj_name, group_node_stack),
                 "metallic": metallic,
                 "specular": _socket(node.inputs["Specular IOR Level"], props, material, obj_name, group_node_stack),
-                #"speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node_stack),
-                "speculartint": 0,  # TODO
+                "speculartint": _socket(node.inputs["Specular Tint"], props, material, obj_name, group_node_stack),
                 # Both LuxCore and Cycles use squared roughness here, no need to convert
                 "roughness": _socket(node.inputs["Roughness"], props, material, obj_name, group_node_stack),
                 "anisotropic": _socket(node.inputs["Anisotropic"], props, material, obj_name, group_node_stack),
                 "sheen": _socket(node.inputs["Sheen Weight"], props, material, obj_name, group_node_stack),
-                #"sheentint": _socket(node.inputs["Sheen Tint"], props, material, obj_name, group_node_stack),
-                "sheentint": 0, # TODO
+                "sheentint": _socket(node.inputs["Sheen Tint"], props, material, obj_name, group_node_stack),
                 "clearcoat": _socket(node.inputs["Coat Weight"], props, material, obj_name, group_node_stack),
             }
             
@@ -624,6 +620,45 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "brightness": _socket(node.inputs["Bright"], props, material, obj_name, group_node_stack),
             "contrast": _socket(node.inputs["Contrast"], props, material, obj_name, group_node_stack),
         }
+    elif node.bl_idname == "ShaderNodeGamma":
+        #print(f"ShaderNodeGamma inputs: {[input.name for input in node.inputs]}")
+
+        prefix = "scene.textures."
+
+        # Check if the Gamma node input is a Texture Image node
+        texture_input = utils_node.get_link(node.inputs["Color"])
+        if texture_input and texture_input.from_node.bl_idname == "ShaderNodeTexImage":
+            tex_node = texture_input.from_node
+        
+            # Extract the image filepath and gamma value
+            gamma_value = _socket(node.inputs["Gamma"], props, material, obj_name, group_node_stack)
+
+            if not gamma_value:
+                gamma_value = 1  # Default to 1 if no value is provided
+        
+            filepath = ImageExporter.export_cycles_node_reader(tex_node.image)
+            extension_map = {
+                "REPEAT": "repeat",
+                "EXTEND": "clamp",
+                "CLIP": "black",
+            }
+        
+            definitions = {
+                "type": "imagemap",
+                "file": filepath,
+                "wrap": extension_map.get(tex_node.extension, "repeat"),
+                "gamma": gamma_value,
+                "gain": 1,  # Adjust as necessary
+                "mapping.type": "uvmapping2d",
+                "mapping.uvscale": [1, -1],
+                "mapping.rotation": 0,
+                "mapping.uvdelta": [0, 1],
+            }
+        
+            # Define the LuxCore texture node
+            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            return luxcore_name
+
     elif node.bl_idname == "ShaderNodeNormalMap":
         if node.space != "TANGENT":
             LuxCoreErrorLog.add_warning(f"Unsupported normal map space: {node.space}", obj_name=obj_name)

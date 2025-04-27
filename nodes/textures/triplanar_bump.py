@@ -26,7 +26,7 @@ class LuxCoreNodeTexTriplanarBump(LuxCoreNodeTexture, bpy.types.Node):
         self.inputs[id].enabled = self.multiple_textures
         id = self.inputs.find("Bump Height Z")
         self.inputs[id].enabled = self.multiple_textures
-
+        
         utils_node.force_viewport_update(self, context)
 
     multiple_textures: BoolProperty(update=update_multiple_textures, name="Multiple Textures", default=False,

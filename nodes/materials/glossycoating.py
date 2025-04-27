@@ -16,6 +16,7 @@ class LuxCoreNodeMatGlossyCoating(LuxCoreNodeMaterial, bpy.types.Node):
 
         id = self.inputs.find("Specular Color")
         self.inputs[id].enabled = not self.use_ior
+
         utils_node.force_viewport_update(self, context)
 
     multibounce: BoolProperty(update=utils_node.force_viewport_update, name="Multibounce", default=False)

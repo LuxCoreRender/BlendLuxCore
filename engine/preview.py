@@ -2,11 +2,10 @@ from enum import Enum
 from time import sleep
 from os.path import dirname, realpath
 from mathutils import Matrix
-from ..bin import pyluxcore
+import pyluxcore
 from .. import utils
 from .. import export
 from ..draw.final import FrameBufferFinal
-from ..utils.log import LuxCoreLog
 
 """
 Note: you can find the Blender preview scene in the sources at this path:
@@ -20,21 +19,14 @@ class PreviewType(Enum):
     NONE = 0
     MATERIAL = 1
 
-
-# We use this as pyluxcore log handler to avoid spamming the console
-def no_log_output(message):
-    pass
-
-
 def render(engine, depsgraph):
-    scene = depsgraph.scene_eval    
+    scene = depsgraph.scene_eval
     width, height = utils.calc_filmsize(scene)
 
     if max(width, height) <= 96:
         # We do not render thumbnails
         return
 
-    pyluxcore.SetLogHandler(no_log_output)
     engine.exporter = export.Exporter()
     engine.exporter.scene = scene
     preview_type, active_mat = _get_preview_settings(depsgraph)
@@ -43,7 +35,7 @@ def render(engine, depsgraph):
         engine.session = _export_mat_scene(engine, depsgraph, active_mat)
     else:
         print("Unsupported preview type")
-        return enable_log_output()
+        return 
 
 
     engine.framebuffer = FrameBufferFinal(scene)
@@ -67,20 +59,15 @@ def render(engine, depsgraph):
         if engine.test_break():
             # Abort as fast as possible, without drawing the framebuffer again
             engine.session.Stop()
-            return enable_log_output()
+            return
 
     engine.framebuffer.draw(engine, engine.session, scene, True)
     engine.session.Stop()
 
     # Do not hold reference to temporary data
     engine.exporter.scene = None
-    enable_log_output()
-
-
-def enable_log_output():
-    # Re-enable the log output
-    pyluxcore.SetLogHandler(LuxCoreLog.add)
-
+    engine.session = None
+    engine.framebuffer = None
 
 def _export_mat_scene(engine, depsgraph, active_mat):
     from ..export.caches.exported_data import ExportedObject

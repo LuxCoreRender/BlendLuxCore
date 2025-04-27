@@ -35,7 +35,7 @@ class LuxCoreNodeMatCarpaint(LuxCoreNodeMaterial, bpy.types.Node):
         for socket in sockets:
             id = self.inputs.find(socket)
             self.inputs[id].enabled = enabled
-
+            
         utils_node.force_viewport_update(self, context)
 
     preset_items = [

@@ -1,10 +1,12 @@
 import bpy
 from time import sleep
+import pyluxcore
 from . import final, preview, viewport
 from ..handlers.draw_imageeditor import TileStats
 from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
+from ..utils import get_addon_preferences
 from ..properties.display import LuxCoreDisplaySettings
 
 
@@ -40,7 +42,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
 
     final_running = False
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.session = None
         self.DENOISED_OUTPUT_NAME = "DENOISED"
         self.VIEWPORT_RESIZE_TIMEOUT = 0.3
@@ -76,7 +79,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             sleep(0.01)
 
     def render(self, depsgraph):
-        if self.is_preview:            
+        display_luxcore_logs = get_addon_preferences(bpy.context).display_luxcore_logs
+        if display_luxcore_logs:
+            pyluxcore.SetLogHandler(LuxCoreLog.add)
+        else:
+            pyluxcore.SetLogHandler(LuxCoreLog.silent)
+        if self.is_preview:
             self.render_preview(depsgraph)
         else:
             self.render_final(depsgraph)

@@ -1,6 +1,6 @@
 import bpy
 import mathutils
-from ..bin import pyluxcore
+import pyluxcore
 from .errorlog import LuxCoreErrorLog
 from ..ui import icons
 
@@ -79,6 +79,9 @@ def get_link(socket):
     """
 
     if not socket.is_linked:
+        return None
+    
+    if len(socket.links) < 1:
         return None
 
     link = socket.links[0]

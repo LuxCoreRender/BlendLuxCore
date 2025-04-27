@@ -27,7 +27,7 @@ from os.path import basename, dirname, join, isfile, splitext
 
 from bpy.types import Operator
 from ...utils.lol import utils as utils
-
+from ...utils import get_addon_preferences
 
 class LOLUpdateTOC(Operator):
     bl_idname = 'scene.luxcore_ol_update_toc'
@@ -45,29 +45,45 @@ class LOLUpdateTOC(Operator):
         scene = context.scene
         ui_props = scene.luxcoreOL.ui
 
-        name = basename(dirname(dirname(dirname(__file__))))
-        user_preferences = context.preferences.addons[name].preferences
+        user_preferences = get_addon_preferences(context)
+        LOL_HOST_URL = user_preferences.lol_host
+        LOL_VERSION = user_preferences.lol_version
+        LOL_HTTP_HOST = user_preferences.lol_http_host
+        LOL_USERAGENT = user_preferences.lol_useragent
+
 
         filepath = join(user_preferences.global_dir, 'assets_model_blendermarket.json')
-        urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_model_blendermarket.json"
-        with urllib.request.urlopen(urlstr, timeout=60) as request:
-            assets = json.load(request)
+        urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model_blendermarket.json"
+
+        req = urllib.request.Request(
+            urlstr, headers={'User-Agent': LOL_USERAGENT, 'Host': LOL_HTTP_HOST}
+        )
+        with urllib.request.urlopen(req, timeout=60) as response:
+            assets = json.load(response)
 
             with open(filepath, 'w') as file:
                 file.write(json.dumps(assets, indent=2))
 
         filepath = join(user_preferences.global_dir, 'assets_model.json')
-        urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_model.json"
-        with urllib.request.urlopen(urlstr, timeout=60) as request:
-            assets = json.load(request)
+        urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_model.json"
+        
+        req = urllib.request.Request(
+            urlstr, headers={'User-Agent': LOL_USERAGENT, 'Host': LOL_HTTP_HOST}
+        )
+        with urllib.request.urlopen(req, timeout=60) as response:
+            assets = json.load(response)
 
             with open(filepath, 'w') as file:
                 file.write(json.dumps(assets, indent=2))
 
         filepath = join(user_preferences.global_dir, 'assets_material.json')
-        urlstr = utils.LOL_HOST_URL + "/" + utils.LOL_VERSION + "/assets_material.json"
-        with urllib.request.urlopen(urlstr, timeout=60) as request:
-            assets = json.load(request)
+        urlstr = LOL_HOST_URL + "/" + LOL_VERSION + "/assets_material.json"
+        
+        req = urllib.request.Request(
+            urlstr, headers={'User-Agent': LOL_USERAGENT, 'Host': LOL_HTTP_HOST}
+        )
+        with urllib.request.urlopen(req, timeout=60) as response:
+            assets = json.load(response)
 
             with open(filepath, 'w') as file:
                 file.write(json.dumps(assets, indent=2))

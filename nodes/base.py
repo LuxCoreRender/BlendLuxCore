@@ -124,7 +124,7 @@ class LuxCoreNode:
                             node_tree.links.new(from_socket, to_socket)
 
 
-class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
+class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node): 
     """Base class for material nodes"""
     suffix = "mat"  # To avoid collisions with volume names
     prefix = "scene.materials."
@@ -143,8 +143,9 @@ class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
         if transparency != 1.0:
             definitions["transparency"] = transparency
 
-        bump_socket = self.inputs["Bump"]
-        bump = bump_socket.export(exporter, depsgraph, props)
+        id = self.inputs.find("Bump")
+        bump_socket = self.inputs[id]
+        bump = self.inputs[id].export(exporter, depsgraph, props)
         if bump:
             definitions["bumptex"] = bump
 
@@ -154,7 +155,8 @@ class LuxCoreNodeMaterial(LuxCoreNode, bpy.types.Node):
 
         # The emission socket and node are special cases
         # with special export methods
-        self.inputs["Emission"].export_emission(exporter, depsgraph, props, definitions)
+        id = self.inputs.find("Emission")
+        self.inputs[id].export_emission(exporter, depsgraph, props, definitions)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         raise NotImplementedError("Subclasses have to implement this method!")
@@ -314,24 +316,18 @@ class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
     def update_node_tree(self, context):
         if self.node_tree:
             id = self.outputs.find("Material")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
+            self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_material_nodes"
             id = self.outputs.find("Color")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
+            self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_texture_nodes"
             id = self.outputs.find("Volume")
-            if id:
-                self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
+            self.outputs[id].enabled = self.node_tree.bl_idname == "luxcore_volume_nodes"
         else:
             id = self.outputs.find("Material")
-            if id:
-                self.outputs[id].enabled = True
+            self.outputs[id].enabled = True
             id = self.outputs.find("Color")
-            if id:
-                self.outputs[id].enabled = True
+            self.outputs[id].enabled = True
             id = self.outputs.find("Volume")
-            if id:
-                self.outputs[id].enabled = True
+            self.outputs[id].enabled = True
 
     node_tree: PointerProperty(name="Node Tree", type=bpy.types.NodeTree, update=update_node_tree,
                                 description="Use the output of the selected node tree in this node tree")
@@ -435,7 +431,7 @@ class Roughness:
 
         for socket in sockets:
             id = node.inputs.find(socket)
-            if id:
+            if id != -1:
                 node.inputs[id].enabled = node.rough
 
         Roughness.update_anisotropy(node, context)
@@ -454,18 +450,14 @@ class Roughness:
                 v_roughness = "V-Roughness"
                 extra_check = True
 
-
-            if node.use_anisotropy:
-                id = node.inputs.find(roughness)
-            else:
+            id = node.inputs.find(roughness)
+            if id == -1:
                 id = node.inputs.find(u_roughness)
-
             u_roughness_input = node.inputs[id]
             u_roughness_input.name = u_roughness if node.use_anisotropy else roughness
 
             id = node.inputs.find(v_roughness)
-            v_roughness_input = node.inputs[id]
-            v_roughness_input.enabled = node.use_anisotropy and extra_check
+            node.inputs[id].enabled = node.use_anisotropy and extra_check
 
         update(node, False)
         if Roughness.has_backface(node):

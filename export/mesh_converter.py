@@ -1,3 +1,5 @@
+import numpy as np
+
 import bpy
 from contextlib import contextmanager
 from time import time
@@ -5,28 +7,33 @@ from .caches.exported_data import ExportedMesh
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
 
+
+def fast_custom_normals_supported():
+    version = bpy.app.version
+    if version == (2, 82, 7):
+        return True
+    if version[:2] == (2, 83):
+        return True
+    return False
+
+
 def get_custom_normals_slow(mesh):
-    """
-    Slow fallback that reads custom normals via Python, used if fast
+    """ 
+    Slow fallback that reads custom normals via Python, used if fast 
     custom normal reading via C++ is not supported for this Blender version
     """
-
+    
     if not mesh.has_custom_normals:
         return None
 
-    # Flat list of 3-element normal vectors
-    custom_normals = [0] * (len(mesh.loops) * 3)
-
-    for loop_tri in mesh.loop_triangles:
-        loops = loop_tri.loops
-        split_normals = loop_tri.split_normals
-
-        start = loops[0] * 3
-        custom_normals[start:start + 3] = split_normals[0][:]
-        start = loops[1] * 3
-        custom_normals[start:start + 3] = split_normals[1][:]
-        start = loops[2] * 3
-        custom_normals[start:start + 3] = split_normals[2][:]
+    # Note: for readability, split_normals_array should be of shape (n_loops, 3),
+    # where each row is a normal vector.
+    # However, foreach_get() needs a flat sequence,
+    # so to save two ravel() operations, a flat array is used directly
+    n_loops = len(mesh.loops)
+    custom_normals = np.empty(n_loops * 3, dtype = np.float32)
+    mesh.loops.foreach_get('normal', custom_normals)
+    custom_normals = custom_normals.tolist() # currently, LuxCore is hard-coded to expect a list.
 
     return custom_normals
 
@@ -37,13 +44,12 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
-
+        
         custom_normals = None
-        if mesh.has_custom_normals:
+        if mesh.has_custom_normals and not fast_custom_normals_supported():
             start = time()
             custom_normals = get_custom_normals_slow(mesh)
             elapsed = time() - start
-
             if elapsed > 0.3:
                 LuxCoreErrorLog.add_warning("Slow custom normal export in this Blender version (took %.1f s)"
                                             % elapsed, obj_name=obj.name)
@@ -136,28 +142,20 @@ def _prepare_mesh(obj, depsgraph):
 
             if mesh:
                 # TODO test if this makes sense
-                # If negative scaling, we have to invert the normals
-                # if not mesh.has_custom_normals and object_eval.matrix_world.determinant() < 0.0:
-                #     # Does not handle custom normals
+                ## has been tested briefly for_v2.10. Seems to work, also including custom normals now
+                ## but leaving this out on purpose because
+                ## a) users should clean their meshes themselves, and
+                ## b) this will allow some artistic effects
+                #if object_eval.matrix_world.determinant() < 0.0:
                 #     mesh.flip_normals()
-
-                mesh.calc_loop_triangles()
+                
                 if not mesh.loop_triangles:
                     object_eval.to_mesh_clear()
                     mesh = None
 
             # TODO implement new normals handling
-            # if mesh:
-            #     if mesh.has_custom_normals:
-            #         mesh.calc_normals_split()
-            #     else:
-            #         if mesh.use_auto_smooth:
-            #             mesh.split_faces()
-            #
-            #     mesh.calc_loop_triangles()
-            #
-            #     if mesh.has_custom_normals:
-            #         mesh.calc_normals_split()
+            if mesh:
+                mesh.split_faces() # Applies smooth by angle operator
 
         yield mesh
     finally:

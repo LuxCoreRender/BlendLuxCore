@@ -11,32 +11,23 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial, bpy.types.Node):
 
     def update_use_ior(self, context):
         id = self.inputs.find("IOR")
-        if id:
-            self.inputs[id].enabled = self.use_ior
+        self.inputs[id].enabled = self.use_ior
         id = self.inputs.find("Specular Color")
-        if id:
-            self.inputs[id].enabled = not self.use_ior
-
+        self.inputs[id].enabled = not self.use_ior
         utils_node.force_viewport_update(self, context)
 
-    multibounce: BoolProperty(
-        update=utils_node.force_viewport_update,
-        name="Multibounce",
-        default=False,
-        description=MULTIBOUNCE_DESCRIPTION
-    )
-    use_ior: BoolProperty(
-        name="Use IOR",
-        default=False,
-        update=update_use_ior,
-        description=IOR_DESCRIPTION
-    )
-    use_anisotropy: BoolProperty(
-        name=Roughness.aniso_name,
-        default=False,
-        description=Roughness.aniso_desc,
-        update=Roughness.update_anisotropy
-    )
+    multibounce: BoolProperty(update=utils_node.force_viewport_update,
+                              name="Multibounce",
+                              default=False,
+                              description=MULTIBOUNCE_DESCRIPTION)
+    use_ior: BoolProperty(name="Use IOR",
+                          default=False,
+                          update=update_use_ior,
+                          description=IOR_DESCRIPTION)
+    use_anisotropy: BoolProperty(name=Roughness.aniso_name,
+                                  default=False,
+                                  description=Roughness.aniso_desc,
+                                  update=Roughness.update_anisotropy)
 
     def init(self, context):
         self.add_input("LuxCoreSocketColor", "Diffuse Color", [0.7] * 3)
@@ -69,7 +60,6 @@ class LuxCoreNodeMatGlossy2(LuxCoreNodeMaterial, bpy.types.Node):
             definitions["ks"] = [1, 1, 1]
         else:
             definitions["ks"] = self.inputs["Specular Color"].export(exporter, depsgraph, props)
-
 
         Roughness.export(self, exporter, depsgraph, props, definitions)
         self.export_common_inputs(exporter, depsgraph, props, definitions)
