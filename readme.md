@@ -11,23 +11,14 @@
 
 This addon integrates the LuxCore render engine into Blender. It offers advanced features like accelerated rendering of indirect light and efficient rendering of caustics.
 
-## BlendLuxCore Wheels
-
-**As of 2025, the LuxCoreRender codebase is being reworked to support the latest features and integrate with Blender versions 4.2+.**  
-
-**The current version is a release-candidate, based on LuxCore Python wheels.**  
-
-**This version is not recommended for production use.**  
-
-**In case of questions or support, please open an issue here on GitHub or get in touch on our Discord server: https://discord.com/invite/chPGsKV**
 
 ## Supported Blender Versions
 
-* Blender versions 4.2LTS and 4.3 are supported by the latest version.
-* Support for Blender 4.4+ is experimental and not currently recommended!
+* BlendLuxCore v2.10.x supports Blender versions 4.2LTS and 4.3.
+* Support for Blender 4.4+ is experimental and not recommended for production use!
 * Supported platforms are Windows, Linux, MacOS Intel, MacOS ARM
 
-**Old BlendLuxCore releases (non-wheel):**
+**Previous BlendLuxCore releases:**
 * Blender 2.93 is supported by BlendLuxCore v2.6.
 * Blender 2.83-2.92 are supported by BlendLuxCore v2.5.
 * Blender 2.83 is supported by BlendLuxCore v2.4.
@@ -71,8 +62,10 @@ Beforehand, you may want to uninstall previous version of BlendLuxCore: look in 
 ## Important Links
 
 **Homepage:**        **https://luxcorerender.org/**  
-**Forums:**          **https://forums.luxcorerender.org/**  
 **Wiki:**            **https://wiki.luxcorerender.org/**  
+**Forums:**          **https://forums.luxcorerender.org/**  
 **Discord:**         **https://discord.com/invite/chPGsKV**  
 **Gallery:**         **https://luxcorerender.org/gallery/**  
-**Example Scenes:**  **https://luxcorerender.org/example-scenes/**
+**Example Scenes:**  **https://luxcorerender.org/example-scenes/**  
+
+**In case of questions or support, please open an issue here on GitHub, or get in touch via the Forums or our Discord server.**

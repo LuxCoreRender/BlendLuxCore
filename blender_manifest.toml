@@ -7,7 +7,7 @@ id = "BlendLuxCore"
 # I.e. MAJOR.MINOR.PATCH
 # E.g.: "2.9.4": major: 2; minor: 9; patch: 3.
 # or for pre-release versions: "2.9.4-alpha.1": major: 2; minor: 9; patch: 3; pre-release: alpha.1
-version = "2.10.0-rc.1"
+version = "2.10.0"
 name = "BlendLuxCore"
 tagline = "LuxCore"
 maintainer = "BlendLuxCore team"
