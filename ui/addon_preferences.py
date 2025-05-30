@@ -18,7 +18,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     gpu_backend_items = [
         ("OPENCL", "OpenCL", "Use OpenCL for GPU acceleration", 0),
-        ("CUDA", "CUDA", "Use CUDA for GPU acceleration", 1),
+        ("CUDA", "CUDA/OptiX", "Use CUDA/OptiX for GPU acceleration. OptiX acceleration is used only when supported hardware is detected", 1),
     ]
     gpu_backend: EnumProperty(items=gpu_backend_items, default="OPENCL")
 
