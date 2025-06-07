@@ -10,7 +10,7 @@ from ...utils import node as utils_node
 
 class LuxCoreNodeTexFresnel(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Fresnel"
-    bl_width_default = 180
+    bl_width_default = 250
     
     def change_input_type(self, context):
         id = self.inputs.find("Reflection Color")
@@ -45,10 +45,14 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture, bpy.types.Node):
 
     filepath: StringProperty(update=utils_node.force_viewport_update, name="Nk File", description="Nk file path", subtype="FILE_PATH")
 
-    n: FloatVectorProperty(name="n", subtype="COLOR", min=0, max=1,
+    n: FloatVectorProperty(name="n", min=0, soft_max=100,
+                           default = [1.0, 0.7, 0.5],
+                           description="Refractive index. Left to right: RGB",
                            update=utils_node.update_opengl_materials,
                            precision=FLOAT_UI_PRECISION)
-    k: FloatVectorProperty(name="k", subtype="COLOR", min=0, max=1,
+    k: FloatVectorProperty(name="k", min=0, soft_max=100,
+                           default = [10.0, 7.0, 5.0],
+                           description="Extinction coefficient. Left to right: RGB",
                            update=utils_node.update_opengl_materials,
                            precision=FLOAT_UI_PRECISION)
 
