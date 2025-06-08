@@ -33,7 +33,7 @@ if bpy.app.version < (4, 2, 0):
         "4.2 or higher is required by BlendLuxCore."
     )
 
-PYLUXCORE_VERSION = '2.10.1' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
+PYLUXCORE_VERSION = '2.11.0-dev0' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
 
 # Check the location of this init file. The init file in the local dev folder returns only 'BlendLuxCore'
 am_in_extension = __package__.startswith("bl_ext.")
