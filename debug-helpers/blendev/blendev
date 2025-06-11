@@ -1,0 +1,166 @@
+# need this variable for rusticl driver to not cause an Exception
+# export RUSTICL_ENABLE=radeonsi
+
+
+
+# configuration for this machine
+PYMAJOR=3                                   # Python major version against which Blender is compiled
+PYMINOR=11                                  # Python minor version against which Blender is compiled
+BVER_DEFAULT=4.3                            # Default version for Blender
+HOME_PATH=/home/jojo                        # Home directory. Please check if $BLENDER_BINARY_FOLDER below is really under ~/.config
+REPO_PATH=/home/jojo/swdev/LUXCORERENDER    # The working (git) repositories LuxCore/ and BlendLuxCore/ are assumed rooted under this.
+BLENDER_PROGRAM_PATH=/home/jojo/Blender     # Where different Blender versions live. I use the protable versions in this custom folder.
+
+
+
+# defaults for options
+export BLC_DEV_PATH=
+export BLC_WHEEL_PATH=
+USE_WHEEL_PATH=false
+COPY_RELEASE=false
+COPY_DEBUG=false
+RESTORE_ORIGINAL=false
+DISPLAY_HELP=false
+
+# get options
+BVER=""
+for i in "$@"; do
+  case $i in 
+    -b|--blcpath)
+      export BLC_DEV_PATH="$REPO_PATH"
+      ;;
+    -p=*|--pyluxcore=*)
+      export BLC_WHEEL_PATH="${i#*=}"
+      USE_WHEEL_PATH=true
+      ;;
+    -r|--copyrelease)
+      COPY_RELEASE=true
+      ;;
+    -d|--copydebug)
+      COPY_DEBUG=true
+      ;;
+    -o|--original)
+      RESTORE_ORIGINAL=true
+      ;;
+    -h|--help)
+      DISPLAY_HELP=true
+      ;;
+    -*)
+      echo "Invalid option: $i. Exiting..."
+      exit 1
+      ;;
+    *)
+      BVER="$i"
+      ;;
+  esac
+done
+
+# Default Blender Version
+if [[ -z $BVER ]]; then
+  BVER=$BVER_DEFAULT
+fi
+
+if $DISPLAY_HELP; then
+  echo ""
+  echo "Usage: blendev [version] [options]"
+  echo ""
+  echo "Version:"
+  echo "  Specify a MAJOR.MINOR version of Blender."
+  echo "  The latest patch version is automatically selected."
+  echo "  E.g.: version 4.2 is specified, 4.2.5 and 4.2.8 are installed --> 4.2.8 is loaded."
+  echo ""
+  echo "Options:"
+  echo "  -b or --blcpath                      Use local repository of BlendLuxCore. Sets the BLC_DEV_PATH environment variable"
+  echo "  -r or --copyrelease                  Copy the latest compiled release binary to the extensions folder"
+  echo "  -d or --copydebug                    Copy the latest compiled debug binary to the extensions folder"
+  echo "  -o or --original                     Restore the original binary (created when option -r or -d was used)"
+  echo "  -p or --pyluxcore=/path/to/wheel     Path to a local pyluxcore wheel. Sets the BLC_WHEEL_PATH environment variable."
+  echo "  -h or --help                         Display this help text"
+  echo ""
+  echo "Note: Options -c, -d, -r, and -p=* are mutually exclusive!"
+  echo ""
+  echo "Examples:"
+  echo "  blendev                                                        --> Opens the defined default version of Blender"
+  echo "  blendev 4.4                                                    --> Opens a non-default version of Blender"
+  echo "  blendev 4.2 -p=/home/LuxCoreRender/local_wheels/mywheel.whl    --> Opens Blender 4.2 and sets BLC_WHEEL_PATH to the specified path"
+  echo ""
+
+  exit
+fi
+
+#derived folders - may need to change depending on distro or installation specifics
+COMPILE_FOLDER=$REPO_PATH/LuxCore/out/install
+COMPILE_PATH_R=$COMPILE_FOLDER/Release/pyluxcore/pyluxcore.cpython-$PYMAJOR$PYMINOR-x86_64-linux-gnu.so
+COMPILE_PATH_D=$COMPILE_FOLDER/Debug/pyluxcore/pyluxcore.cpython-$PYMAJOR$PYMINOR-x86_64-linux-gnu.so
+BLENDER_BINARY_FOLDER=$HOME_PATH/.config/blender/$BVER/extensions/.local/lib/python$PYMAJOR.$PYMINOR/site-packages/pyluxcore
+
+# check if more than one pyluxcore-related options is specified
+plc_count=0
+$USE_WHEEL_PATH && ((plc_count++))
+$COPY_RELEASE && ((plc_count++))
+$COPY_DEBUG && ((plc_count++))
+$RESTORE_ORIGINAL && ((plc_count++))
+
+if (( plc_count > 1 )); then
+  echo "ERROR: Only one option of [-r, -d, -o, or -p=*] can be selected. Exiting..."
+  exit 1
+fi
+
+# search for the blender program path of the specified version
+folder_candidates=$(find "$BLENDER_PROGRAM_PATH" -maxdepth 1 -type d -name "blender-$BVER*")
+
+if [ -z "$folder_candidates" ]; then
+  echo "No blender version $BVER found! Exiting..."
+  exit 1
+fi
+
+# get the folder with highest patch number
+max_patch="-1"
+blender_selected_folder=""
+for folder in $folder_candidates; do
+  folder_name=$(basename "$folder")
+  version=$(echo "$folder_name" | sed -E 's/^blender-([0-9]+\.[0-9]+\.[0-9]+)-linux-x64/\1/')
+  IFS='.' read -r major minor patch <<< "$version"
+  if [ "$major.$minor" == "$BVER" ]; then
+    if [ "$patch" -gt "$max_patch" ]; then
+      max_patch=$patch
+      blender_selected_folder=$folder
+    fi
+  fi
+done
+
+if [[ $RESTORE_ORIGINAL == true ]]; then
+  n_backup=$(ls $BLENDER_BINARY_FOLDER/pyluxcore*.so.original 2>/dev/null | wc -l)
+  if [ "$n_backup" -eq 0 ]; then
+    echo "ERROR: No backup of pyluxcore to restore. Exiting..."
+    exit 1
+  fi
+  binary_original=$(find "$BLENDER_BINARY_FOLDER" -name pyluxcore*.so.original)
+  binary_new=$(find "$BLENDER_BINARY_FOLDER" -name pyluxcore*.so)
+  rm $binary_new
+  mv $binary_original $binary_new
+fi
+
+if [[ $COPY_RELEASE == true ]]; then
+  n_backup=$(ls $BLENDER_BINARY_FOLDER/pyluxcore*.so.original 2>/dev/null | wc -l)
+  if [ "$n_backup" -eq 0 ]; then
+    binary_original=$(find "$BLENDER_BINARY_FOLDER" -name pyluxcore*.so)
+    cp $binary_original $binary_original.original
+  fi
+  binary_new=$(find $COMPILE_PATH_R -name pyluxcore*.so)
+  cp $binary_new $BLENDER_BINARY_FOLDER
+fi
+
+if [[ $COPY_DEBUG == true ]]; then
+  n_backup=$(ls $BLENDER_BINARY_FOLDER/pyluxcore*.so.original 2>/dev/null | wc -l)
+  if [ "$n_backup" -eq 0 ]; then
+    binary_original=$(find "$BLENDER_BINARY_FOLDER" -name pyluxcore*.so)
+    cp $binary_original $binary_original.original
+  fi
+  binary_new=$(find $COMPILE_PATH_D -name pyluxcore*.so)
+  cp $binary_new $BLENDER_BINARY_FOLDER
+fi
+
+cd $blender_selected_folder
+echo $blender_selected_folder
+./blender
