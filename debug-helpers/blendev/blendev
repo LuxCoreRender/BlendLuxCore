@@ -19,6 +19,7 @@ export BLC_WHEEL_PATH=
 USE_WHEEL_PATH=false
 COPY_RELEASE=false
 COPY_DEBUG=false
+COPY_WHEEL=false
 RESTORE_ORIGINAL=false
 DISPLAY_HELP=false
 
@@ -38,6 +39,9 @@ for i in "$@"; do
       ;;
     -d|--copydebug)
       COPY_DEBUG=true
+      ;;
+    -w|--copywheel)
+      COPY_WHEEL=true
       ;;
     -o|--original)
       RESTORE_ORIGINAL=true
@@ -73,7 +77,8 @@ if $DISPLAY_HELP; then
   echo "  -b or --blcpath                      Use local repository of BlendLuxCore. Sets the BLC_DEV_PATH environment variable"
   echo "  -r or --copyrelease                  Copy the latest compiled release binary to the extensions folder"
   echo "  -d or --copydebug                    Copy the latest compiled debug binary to the extensions folder"
-  echo "  -o or --original                     Restore the original binary (created when option -r or -d was used)"
+  echo "  -w or --copywheel                    Copy the latest compiled wheel from the command 'make wheel-test' to the extensions folder"
+  echo "  -o or --original                     Restore the original binary (created when option -r or -d was used) and delete content of pyluxcore_custom/ (created e.g. when option -w was used)"
   echo "  -p or --pyluxcore=/path/to/wheel     Path to a local pyluxcore wheel. Sets the BLC_WHEEL_PATH environment variable."
   echo "  -h or --help                         Display this help text"
   echo ""
@@ -92,7 +97,9 @@ fi
 COMPILE_FOLDER=$REPO_PATH/LuxCore/out/install
 COMPILE_PATH_R=$COMPILE_FOLDER/Release/pyluxcore/pyluxcore.cpython-$PYMAJOR$PYMINOR-x86_64-linux-gnu.so
 COMPILE_PATH_D=$COMPILE_FOLDER/Debug/pyluxcore/pyluxcore.cpython-$PYMAJOR$PYMINOR-x86_64-linux-gnu.so
+COMPILE_PATH_W=$COMPILE_FOLDER/Release/wheel
 BLENDER_BINARY_FOLDER=$HOME_PATH/.config/blender/$BVER/extensions/.local/lib/python$PYMAJOR.$PYMINOR/site-packages/pyluxcore
+BLENDER_WHEEL_FOLDER=$HOME_PATH/.config/blender/$BVER/extensions/user_default/BlendLuxCore/pyluxcore_custom
 
 # check if more than one pyluxcore-related options is specified
 plc_count=0
@@ -130,15 +137,19 @@ for folder in $folder_candidates; do
 done
 
 if [[ $RESTORE_ORIGINAL == true ]]; then
+  # restore pyluxcore.so if applicable
   n_backup=$(ls $BLENDER_BINARY_FOLDER/pyluxcore*.so.original 2>/dev/null | wc -l)
-  if [ "$n_backup" -eq 0 ]; then
-    echo "ERROR: No backup of pyluxcore to restore. Exiting..."
-    exit 1
+  if [ "$n_backup" -ne 0 ]; then
+    binary_original=$(find "$BLENDER_BINARY_FOLDER" -name pyluxcore*.so.original)
+    binary_new=$(find "$BLENDER_BINARY_FOLDER" -name pyluxcore*.so)
+    rm $binary_new
+    mv $binary_original $binary_new
   fi
-  binary_original=$(find "$BLENDER_BINARY_FOLDER" -name pyluxcore*.so.original)
-  binary_new=$(find "$BLENDER_BINARY_FOLDER" -name pyluxcore*.so)
-  rm $binary_new
-  mv $binary_original $binary_new
+  # remove wheels in pyluxcore_custom/
+  n_wheels_inblender=$(ls $BLENDER_WHEEL_FOLDER/*.whl 2>/dev/null | wc -l)
+  if [ "$n_wheels_inblender" -ne 0 ]; then
+    rm $BLENDER_WHEEL_FOLDER/*.whl
+  fi
 fi
 
 if [[ $COPY_RELEASE == true ]]; then
@@ -159,6 +170,19 @@ if [[ $COPY_DEBUG == true ]]; then
   fi
   binary_new=$(find $COMPILE_PATH_D -name pyluxcore*.so)
   cp $binary_new $BLENDER_BINARY_FOLDER
+fi
+
+if [[ $COPY_WHEEL == true ]]; then
+  n_wheels_compiled=$(ls $COMPILE_PATH_W 2>/dev/null | wc -l)
+  if [ "$n_wheels_compiled" -ne 1 ]; then
+    echo "ERROR: Not exactly one wheel in the compilation folder. Please make sure there is exactly one wheel. Exiting..."
+    exit 1
+  fi
+  n_wheels_inblender=$(ls $BLENDER_WHEEL_FOLDER/*.whl 2>/dev/null | wc -l)
+  if [ "$n_wheels_inblender" -ne 0 ]; then
+    rm $BLENDER_WHEEL_FOLDER/*.whl
+  fi
+  cp $COMPILE_PATH_W/*.whl $BLENDER_WHEEL_FOLDER
 fi
 
 cd $blender_selected_folder
