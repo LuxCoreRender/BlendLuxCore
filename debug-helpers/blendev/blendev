@@ -1,17 +1,17 @@
 # need this variable for rusticl driver to not cause an Exception
 # export RUSTICL_ENABLE=radeonsi
 
+# check if customized configuration file exists,
+# else exit
+thisscript=$(realpath $BASH_SOURCE) # resolve symlink
+cfgfile="${thisscript%/*}/blendev-config.cfg"
+if ! test -f $cfgfile; then
+  echo "Could not find local configuration for blendev: ${cfgfile}"
+  exit 1
+fi
 
-
-# configuration for this machine
-PYMAJOR=3                                   # Python major version against which Blender is compiled
-PYMINOR=11                                  # Python minor version against which Blender is compiled
-BVER_DEFAULT=4.3                            # Default version for Blender
-HOME_PATH=/home/jojo                        # Home directory. Please check if $BLENDER_BINARY_FOLDER below is really under ~/.config
-REPO_PATH=/home/jojo/swdev/LUXCORERENDER    # The working (git) repositories LuxCore/ and BlendLuxCore/ are assumed rooted under this.
-BLENDER_PROGRAM_PATH=/home/jojo/Blender     # Where different Blender versions live. I use the protable versions in this custom folder.
-
-
+# import customized configuration file
+source $cfgfile
 
 # defaults for options
 export BLC_DEV_PATH=
