@@ -7,6 +7,7 @@ import pathlib
 import hashlib
 import base64
 from textwrap import dedent
+import tomllib
 
 import bpy
 import addon_utils
@@ -21,22 +22,12 @@ if platform.system() in {"Linux", "Darwin"}:
     os.environ["SSL_CERT_FILE"] = certifi.where()
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
-bl_info = {
-    "name": "LuxCoreRender",
-    "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Johannes Hinrichs (CodeHD), Howetuft, Odilkhan Yakubov (odil24), acasta69, u3dreal, Philstix",
-    "version": (2, 10, 0),
-    "blender": (4, 2, 0),
-    "category": "Render",
-    "description": "LuxCoreRender integration for Blender",
-    #"warning": "rc.1",
-
-    "wiki_url": "https://wiki.luxcorerender.org/",
-    "tracker_url": "https://github.com/LuxCoreRender/BlendLuxCore/issues/new",
-}
-
-version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}.{bl_info["version"][2]}'
-if 'warning' in bl_info:
-    version_string = version_string + f'-{bl_info["warning"]}'
+# Load version information from blender_manifest.toml.
+# Replaced the old "bl_info" dictionary.
+manifest_path = pathlib.Path(__file__).parent.resolve() / 'blender_manifest.toml'
+with open(manifest_path, "rb") as f:
+    manifest_data = tomllib.load(f)
+version_string = manifest_data['version']
 
 # The variable PYLUXCORE_VERSION specifies the release version of pyluxcore
 # that will be downloaded from PyPi during the standard installation of BlendLuxCore.

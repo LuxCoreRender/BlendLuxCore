@@ -1,0 +1,12 @@
+Authors:
+
+Simon "B.Y.O.B." Wendsche <>
+Michael "neo2068" Klemm <>
+Johannes "CodeHD" Hinrichs <joho.hini.at.gmail.com>
+Howetuft <howetuft.at.gmail.com>
+Odilkhan "odil24" Yakubov <>
+acasta69 <>
+u3dreal <>
+Philstix <>
+
+Complete list available at https://github.com/LuxCoreRender/BlendLuxCore/graphs/contributors

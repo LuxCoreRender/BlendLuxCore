@@ -6,9 +6,7 @@ from ..ui import icons
 from .. import utils
 from ..utils.lol import utils as lol_utils
 from importlib.metadata import version
-from .. import bl_info
-
-blc_ver = '.'.join([str(_) for _ in bl_info["version"]])
+from .. import version_string
 
 film_device_items = []
 
@@ -78,7 +76,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
     lol_useragent: StringProperty(
         name="HTTP User-Agent",
         description="User Agent transmitted with requests",
-        default = f"BlendLuxCore/{blc_ver}",
+        default = f"BlendLuxCore/{version_string}",
     )
 
     max_assetbar_rows: IntProperty(name="Max Assetbar Rows", description="max rows of assetbar in the 3d view",
