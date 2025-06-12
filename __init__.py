@@ -38,7 +38,10 @@ version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}.{bl_info["ver
 if 'warning' in bl_info:
     version_string = version_string + f'-{bl_info["warning"]}'
 
-PYLUXCORE_VERSION = '2.10.0' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
+# The variable PYLUXCORE_VERSION specifies the release version of pyluxcore
+# that will be downloaded from PyPi during the standard installation of BlendLuxCore.
+# Only update this variable after the targeted version of pyluxcore has been released on PyPi.
+PYLUXCORE_VERSION = '2.10.0'
 
 # Check the location of this init file. The init file in the local dev folder returns only 'BlendLuxCore'
 am_in_extension = __package__.startswith("bl_ext.")
