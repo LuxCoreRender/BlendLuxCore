@@ -60,18 +60,6 @@ if am_in_extension:
     wheel_backup_folder = pathlib.Path(bpy.utils.extension_path_user(__package__, path="wheels_backup", create=True))
     wheel_dev_folder = pathlib.Path(bpy.utils.extension_path_user(__package__, path="pyluxcore_custom", create=True))
 
-    """
-    root_folder = pathlib.Path(__file__).parent.resolve()
-    wheel_dl_folder =  root_folder / "wheels" # for wheels download
-    if not os.path.exists(wheel_dl_folder):
-        os.makedirs(wheel_dl_folder)
-    wheel_backup_folder =  root_folder / "wheels_backup" # backup of downloaded wheels
-    if not os.path.exists(wheel_backup_folder):
-        os.makedirs(wheel_backup_folder)
-    wheel_dev_folder =  root_folder / "pyluxcore_custom" # folder where a nightly build pyluxcore wheel can be placed
-    if not os.path.exists(wheel_dev_folder):
-        os.makedirs(wheel_dev_folder)
-    """
     # For installation on PCs without internet, or in company networks where downloading
     # with pip is an issue (reported cases), check for the presence of a folder install_offline/
     # where the pyluxcore wheel, and its dependencies, are placed.
