@@ -144,7 +144,11 @@ class LuxCoreAddonPreferences(AddonPreferences):
     lol_useragent: StringProperty(
         name="HTTP User-Agent",
         description="User Agent transmitted with requests",
+<<<<<<< HEAD
         default=f"BlendLuxCore/{utils.get_version_string()}",
+=======
+        default = f"BlendLuxCore/{version_string}",
+>>>>>>> e1282839 (Remove obsolete bl_info dictionary, merge information into blender_manifest.toml and AUTHORS.txt)
     )
 
     max_assetbar_rows: IntProperty(

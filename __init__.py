@@ -12,26 +12,12 @@ if platform.system() in {"Linux", "Darwin"}:
     os.environ["SSL_CERT_FILE"] = certifi.where()
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
-bl_info = {
-    "name": "LuxCoreRender",
-    "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Johannes Hinrichs (CodeHD), Howetuft, Odilkhan Yakubov (odil24), acasta69, u3dreal, Philstix",
-    "version": (2, 10, 1),
-    "blender": (4, 2, 0),
-    "category": "Render",
-    "description": "LuxCoreRender integration for Blender",
-    #"warning": "rc.1",
-
-# Import Blender packages
-import bpy
-import addon_utils
-import nodeitems_utils
-
-# Check if Blender and OS versions are compatible
-if bpy.app.version < (4, 2, 0):
-    raise RuntimeError(
-        "\n\nUnsupported Blender version. "
-        "4.2 or higher is required by BlendLuxCore."
-    )
+# Load version information from blender_manifest.toml.
+# Replaced the old "bl_info" dictionary.
+manifest_path = pathlib.Path(__file__).parent.resolve() / 'blender_manifest.toml'
+with open(manifest_path, "rb") as f:
+    manifest_data = tomllib.load(f)
+version_string = manifest_data['version']
 
 PYLUXCORE_VERSION = '2.11.0-dev0' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
 
