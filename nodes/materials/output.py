@@ -34,6 +34,16 @@ SHADOW_COLOR_DESC = (
     "better performance)"
 )
 
+SHADOW_COLOR_OVERRIDE_DESC = (
+    "When this checkbox is not active, and shadow color is non-black, "
+    "light tracing rays through this material are blocked. "
+    "This also applies to BiDir. "
+    "Allowing such rays will lead to false total brightness, "
+    "which may appear wrong, for exampe whith windows as an alternative "
+    "to architectural glass. In other cases, with strong caustics, however, "
+    "this may be a desired artistic effect."
+)
+
 
 class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
     """
@@ -53,6 +63,9 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
     shadow_color: FloatVectorProperty(name="Shadow Color", subtype="COLOR", default=(0, 0, 0), min=0, max=1,
                                       update=utils_node.update_opengl_materials,
                                       description=SHADOW_COLOR_DESC)
+    shadow_color_override: BoolProperty(name="Shadow Color Light Override", default=False,
+                                      update=utils_node.update_opengl_materials,
+                                      description=SHADOW_COLOR_OVERRIDE_DESC)
     is_shadow_catcher: BoolProperty(update=utils_node.force_viewport_update, name="Shadow Catcher", default=False,
                                      description=SHADOWCATCHER_DESC)
     shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
@@ -101,10 +114,13 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
 
         box.prop(self, "id")
 
-        row = box.row()
+        box2 = box.box()
+        row = box2.row()
         row.alignment = "LEFT"
         row.prop(self, "shadow_color", text="")
         row.label(text="Shadow Color")
+        row = box2.row()
+        row.prop(self, "shadow_color_override", text="Allow extra light rays")
 
         # PhotonGI
         photongi_enabled = context.scene.luxcore.config.photongi.enabled
@@ -191,6 +207,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
         definitions["shadowcatcher.onlyinfinitelights"] = self.shadow_catcher_only_infinite
         definitions["photongi.enable"] = self.use_photongi
         definitions["transparency.shadow"] = list(self.shadow_color)
+        definitions["transparency.shadowoverride"] = self.shadow_color_override
         definitions["holdout.enable"] = self.is_holdout
 
         props.Set(utils.luxutils.create_props(prefix, definitions))
