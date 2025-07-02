@@ -255,6 +255,7 @@ def update_opengl_materials(_, context):
     if (not hasattr(context, "object")
             or not context.object
             or not context.object.active_material
+            or not hasattr(context.object.active_material, "luxcore") # workaround for https://projects.blender.org/blender/blender/issues/140488
             or not context.object.active_material.luxcore.auto_vp_color):
         return
 

@@ -35,7 +35,8 @@ class LuxCoreMaterialNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
 
         # Force viewport update of the corresponding material
         for mat in bpy.data.materials:
-            if mat.luxcore.node_tree == self:
+            if (hasattr(mat, "luxcore") # workaround for https://projects.blender.org/blender/blender/issues/140488
+                    and mat.luxcore.node_tree == self):
                 mat.diffuse_color = mat.diffuse_color
                 break
 
