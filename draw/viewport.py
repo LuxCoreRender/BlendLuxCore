@@ -66,7 +66,7 @@ class FrameBuffer(object):
             pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
         )
 
-        self.buffer = gpu.types.Buffer('FLOAT', [self._width * self._height * bufferdepth])
+        self.buffer = gpu.types.Buffer('FLOAT', [self._width * self._height * bufferdepth]) # Attention: This is a 16-bit float!
         self._init_opengl()
 
         # Denoiser initialization
@@ -230,6 +230,7 @@ class FrameBuffer(object):
             data = np.concatenate((data, self._alpha), axis=2)
 
         data = np.resize(data, shape)
+        data[data > 65519] = 65519 # The gpu buffer uses 16-bit float. Values >= 65520 get cast to infinty, leading to a black viewport.
         self.buffer[:] = data
         self.denoiser_result_cached = True
 
@@ -245,7 +246,14 @@ class FrameBuffer(object):
             TempfileManager.delete_files(id(self))
 
     def update(self, luxcore_session, scene):
-        luxcore_session.GetFilm().GetOutputFloat(self._output_type, self.buffer)
+        # The gpu buffer uses 16-bit float. Values >= 65520 get cast to infinty, leading to a black viewport.
+        # Here, I need to get the data into a separate numpy array to handle the clamping.
+        bufferdepth = 4 if self._transparent else 3
+        size = self._width * self._height * bufferdepth
+        data = np.zeros(size, dtype=np.float32)
+        luxcore_session.GetFilm().GetOutputFloat(self._output_type, data)
+        data[data > 65519] = 65519
+        self.buffer[:] = data
 
     def draw(self, engine, context, scene):
         format = 'RGBA16F' if self._transparent else 'RGB16F'
