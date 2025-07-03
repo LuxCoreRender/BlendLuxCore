@@ -66,7 +66,7 @@ class FrameBuffer(object):
             pyluxcore.FilmOutputType.RGB_IMAGEPIPELINE
         )
 
-        self.buffer = gpu.types.Buffer('FLOAT', [self._width * self._height * bufferdepth]) # Attention: This is a 16-bit float!
+        self.buffer = gpu.types.Buffer('FLOAT', [self._width * self._height * bufferdepth])
         self._init_opengl()
 
         # Denoiser initialization
@@ -229,9 +229,10 @@ class FrameBuffer(object):
             shape = (self._height * self._width * 4)
             data = np.concatenate((data, self._alpha), axis=2)
 
+        bufferdepth = 4 if self._transparent else 3
         data = np.resize(data, shape)
         data[data > 65519] = 65519 # The gpu buffer uses 16-bit float. Values >= 65520 get cast to infinty, leading to a black viewport.
-        self.buffer[:] = data
+        self.buffer = gpu.types.Buffer('FLOAT', [self._width * self._height * bufferdepth], data)
         self.denoiser_result_cached = True
 
     def reset_denoiser(self):
@@ -253,7 +254,7 @@ class FrameBuffer(object):
         data = np.zeros(size, dtype=np.float32)
         luxcore_session.GetFilm().GetOutputFloat(self._output_type, data)
         data[data > 65519] = 65519
-        self.buffer[:] = data
+        self.buffer = gpu.types.Buffer('FLOAT', [self._width * self._height * bufferdepth], data)
 
     def draw(self, engine, context, scene):
         format = 'RGBA16F' if self._transparent else 'RGB16F'
