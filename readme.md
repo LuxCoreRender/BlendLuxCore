@@ -14,8 +14,7 @@ This addon integrates the LuxCore render engine into Blender. It offers advanced
 
 ## Supported Blender Versions
 
-* BlendLuxCore v2.10.x supports Blender versions 4.2LTS and 4.3.
-* Support for Blender 4.4+ is experimental and not recommended for production use!
+* BlendLuxCore v2.10.1 supports Blender versions from 4.2LTS up to 4.5LTS.
 * Supported platforms are Windows, Linux, MacOS Intel, MacOS ARM
 
 **Previous BlendLuxCore releases:**
