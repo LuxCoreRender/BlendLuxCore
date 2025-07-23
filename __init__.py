@@ -12,9 +12,14 @@ if platform.system() in {"Linux", "Darwin"}:
     os.environ["SSL_CERT_FILE"] = certifi.where()
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
-# Support reloading
-# https://developer.blender.org/docs/handbook/extensions/addon_dev_setup/#reloading-scripts
-_needs_reload = "bpy" in locals()
+bl_info = {
+    "name": "LuxCoreRender",
+    "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Johannes Hinrichs (CodeHD), Howetuft, Odilkhan Yakubov (odil24), acasta69, u3dreal, Philstix",
+    "version": (2, 10, 1),
+    "blender": (4, 2, 0),
+    "category": "Render",
+    "description": "LuxCoreRender integration for Blender",
+    #"warning": "rc.1",
 
 # Import Blender packages
 import bpy
@@ -28,6 +33,7 @@ if bpy.app.version < (4, 2, 0):
         "4.2 or higher is required by BlendLuxCore."
     )
 
+PYLUXCORE_VERSION = '2.10.1' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
 
 # Take care of PyLuxCore, as other modules may want to import it
 from . import luxloader
