@@ -24,7 +24,7 @@ if platform.system() in {"Linux", "Darwin"}:
 bl_info = {
     "name": "LuxCoreRender",
     "author": "Simon Wendsche (B.Y.O.B.), Michael Klemm (neo2068), Johannes Hinrichs (CodeHD), Howetuft, Odilkhan Yakubov (odil24), acasta69, u3dreal, Philstix",
-    "version": (2, 10, 0),
+    "version": (2, 10, 1),
     "blender": (4, 2, 0),
     "category": "Render",
     "description": "LuxCoreRender integration for Blender",
@@ -38,7 +38,7 @@ version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}.{bl_info["ver
 if 'warning' in bl_info:
     version_string = version_string + f'-{bl_info["warning"]}'
 
-PYLUXCORE_VERSION = '2.10.0' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
+PYLUXCORE_VERSION = '2.10.1' # specifies the version of pyluxcore that corresponds to this version of BlendLuxCore
 
 # Check the location of this init file. The init file in the local dev folder returns only 'BlendLuxCore'
 am_in_extension = __name__.startswith("bl_ext.")
