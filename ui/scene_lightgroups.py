@@ -48,6 +48,25 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
     def draw_lightgroup(layout, group, index, is_default_group=False):
         col = layout.column(align=True)
 
+        # Upper row (enable/disable, name, remove)
+        box = col.box()
+        row = box.row()
+        col = row.column()
+        
+        col.prop(group, "show_settings",
+                 icon=settings_toggle_icon(group.show_settings),
+                 icon_only=True, emboss=False)
+        
+        col = row.column()
+        col.prop(group, "enabled",
+                 icon=lightgroup_icon(group.enabled),
+                 icon_only=True, toggle=True)
+        
+        col = row.column()
+        col.enabled = group.enabled
+        
+        # Select object linked to Lightgroup
+        
         box = col.box()
         row = box.row()
         
@@ -58,7 +77,7 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
 
         col = row.column()
         col.enabled = group.enabled
-
+        
         if is_default_group:
             col.label(text="All lights without a group are in the default light group.", icon=icons.INFO)
         else:
@@ -69,3 +88,22 @@ class LUXCORE_SCENE_PT_lightgroups(SceneButtonsPanel, Panel):
             op = row.operator("luxcore.remove_lightgroup",
                               text="", icon=icons.CLEAR, emboss=False)
             op.index = index
+        if group.show_settings:
+            # Lower row (gain settings, RGB gain, temperature)
+            box = col.box()
+            box.enabled = group.enabled
+
+            row = box.row()
+            row.prop(group, 'gain')
+
+            row = box.row()
+            row.prop(group, 'use_rgb_gain')
+            sub = row.split()
+            sub.active = group.use_rgb_gain
+            sub.prop(group, 'rgb_gain')
+
+            row = box.row()
+            row.prop(group, 'use_temperature', text="Temperature (K)")
+            sub = row.split()
+            sub.active = group.use_temperature
+            sub.prop(group, 'temperature', slider=True, text="")
