@@ -115,6 +115,20 @@ def view_update(engine, context, depsgraph, changes=None):
             # Only restart the session if the view transform didn't change by itself
             force_session_restart(engine)
             return
+
+        # New logic to handle color management changes
+        if changes & export.Change.VIEW_TRANSFORM:
+            # Do not restart the session for view transform changes,
+            # just update the framebuffer.
+            if engine.framebuffer:
+                engine.framebuffer.update_color_management(context)
+            # Reset exporter's change flag for this specific change type to prevent a full restart.
+            changes &= ~export.Change.VIEW_TRANSFORM
+            if not changes:
+                # If only color management changed, we can return now.
+                print("[BLC] view_update(): only color management changed. No session restart.")
+                return
+                
         s = time()
         # We have to re-assign the session because it might have been replaced due to filmsize change
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
@@ -185,6 +199,12 @@ def view_draw(engine, context, depsgraph):
     # camera) do not trigger a view_update() call, but only a view_draw() call.
     changes = engine.exporter.get_viewport_changes(depsgraph, context)
 
+    # New logic to handle color management changes in view_draw
+    if changes & export.Change.VIEW_TRANSFORM:
+        if framebuffer:
+            framebuffer.update_color_management(context)
+        changes &= ~export.Change.VIEW_TRANSFORM
+        
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
         engine.tag_redraw()
         # view_update(engine, context, depsgraph, changes)  # Disabled, see comment on force_session_restart()
