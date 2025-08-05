@@ -25,7 +25,7 @@ class Change:
     WORLD = 1 << 5
     IMAGEPIPELINE = 1 << 6
     HALT = 1 << 7
-
+    VIEW_TRANSFORM = 1 << 8
     REQUIRES_SCENE_EDIT = CAMERA | OBJECT | MATERIAL | VISIBILITY | WORLD
     REQUIRES_VIEW_UPDATE = CONFIG
     REQUIRES_SESSION_PARSE = IMAGEPIPELINE | HALT
@@ -446,3 +446,4 @@ class Exporter(object):
         
         stats.use_hybridbackforward.value = (config_props.Get("path.hybridbackforward.enable", [False]).GetBool()
                                              and render_engine != "BIDIRCPU")
+
