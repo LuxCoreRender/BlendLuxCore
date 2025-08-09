@@ -107,7 +107,7 @@ def view_update(engine, context, depsgraph, changes=None):
 
     # Check for color management changes first
     current_display_device = depsgraph.scene_eval.display_settings.display_device
-    if current_display_device != engine.last_display_device:
+    if not hasattr(engine, 'last_display_device') or current_display_device != engine.last_display_device:
         engine.last_display_device = current_display_device
         # Don't trigger a full re-export, just redraw to apply the new settings
         engine.tag_redraw()
