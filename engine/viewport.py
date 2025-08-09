@@ -105,6 +105,14 @@ def view_update(engine, context, depsgraph, changes=None):
             traceback.print_exc()
         return
 
+    # Check for color management changes first
+    current_display_device = depsgraph.scene_eval.display_settings.display_device
+    if current_display_device != engine.last_display_device:
+        engine.last_display_device = current_display_device
+        # Don't trigger a full re-export, just redraw to apply the new settings
+        engine.tag_redraw()
+        return
+        
     s = time()
     changes = engine.exporter.get_changes(depsgraph, context, changes)
     delta_t = (time() - s) * 1000
@@ -116,19 +124,6 @@ def view_update(engine, context, depsgraph, changes=None):
             force_session_restart(engine)
             return
 
-        # New logic to handle color management changes
-        if changes & export.Change.VIEW_TRANSFORM:
-            # Do not restart the session for view transform changes,
-            # just update the framebuffer.
-            if engine.framebuffer:
-                engine.framebuffer.update_color_management(context)
-            # Reset exporter's change flag for this specific change type to prevent a full restart.
-            changes &= ~export.Change.VIEW_TRANSFORM
-            if not changes:
-                # If only color management changed, we can return now.
-                print("[BLC] view_update(): only color management changed. No session restart.")
-                return
-                
         s = time()
         # We have to re-assign the session because it might have been replaced due to filmsize change
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
@@ -200,7 +195,7 @@ def view_draw(engine, context, depsgraph):
     changes = engine.exporter.get_viewport_changes(depsgraph, context)
 
     # New logic to handle color management changes in view_draw
-    if changes & export.Change.VIEW_TRANSFORM:
+    if changes & export.Change.REQUIRES_VIEW_UPDATE:
         if framebuffer:
             framebuffer.update_color_management(context)
         changes &= ~export.Change.VIEW_TRANSFORM
