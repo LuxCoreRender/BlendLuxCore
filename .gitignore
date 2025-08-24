@@ -17,3 +17,9 @@ out/
 # blendev utility script, exclude custom local config
 debug-helpers/blendev/blendev-config.txt
 debug-helpers/blendev/blendev-config.cfg
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
