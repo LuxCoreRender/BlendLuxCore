@@ -60,3 +60,15 @@ add_custom_target(
     --output-filepath ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/BlendLuxCore-${BLC_VERSION}.zip
   VERBATIM
 )
+
+# Add install
+# cmake --install .
+install(CODE "
+  execute_process(
+    COMMAND ${BLENDER} --command extension install-file -r user_default ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/BlendLuxCore-${BLC_VERSION}.zip
+    OUTPUT_VARIABLE INSTALL_OUTPUT
+    ERROR_VARIABLE INSTALL_OUTPUT
+  )
+  message(STATUS ${INSTALL_OUTPUT})
+
+")
