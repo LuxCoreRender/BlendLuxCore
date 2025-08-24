@@ -10,6 +10,10 @@ endif()
 project(BlendLuxCore LANGUAGES NONE)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/out)
 
+# Create output directory (otherwise Blender complains)
+file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+
 function(validate_blender_version result blender)
   execute_process(
     COMMAND ${blender} --version
@@ -48,6 +52,7 @@ endif()
 find_program(BLENDER blender NAMES blender.exe VALIDATOR validate_blender_version NO_CACHE REQUIRED)
 
 # Add BlendLuxCore target
+# https://docs.blender.org/manual/en/latest/advanced/command_line/extension_arguments.html
 add_custom_target(
   extension ALL ${BLENDER}
     --command extension build

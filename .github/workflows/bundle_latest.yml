@@ -39,6 +39,7 @@ jobs:
       - name: Delete old latest release
         shell: bash
         run: |
+          echo "Delete old latest release"
           echo false > ${{ github.workspace }}/tmp_release_test
           gh release list --json name > ${{ github.workspace }}/tmp_releases
           jq -r -c .[].name ${{ github.workspace }}/tmp_releases | while read i; do
