@@ -61,4 +61,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: "BlendLuxCore"
-          path: "${{ github.workspace }}/build/BlendLuxCore-*.zip"
+          path: "${{ github.workspace }}/build/out/BlendLuxCore-*.zip"
