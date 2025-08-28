@@ -23,7 +23,7 @@ from .. import utils
 # that will be downloaded from PyPi during the standard installation of
 # BlendLuxCore. Please update this variable ONLY after the targeted version of
 # pyluxcore has been released on PyPi.
-PYLUXCORE_VERSION = "2.10.1"
+PYLUXCORE_VERSION = "2.11.0-dev0"
 
 # User folders
 ROOT_FOLDER = utils.get_user_dir("")
