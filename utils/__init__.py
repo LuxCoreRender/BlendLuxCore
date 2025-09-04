@@ -4,8 +4,14 @@ import math
 import re
 import hashlib
 import os
+import itertools
 from os.path import basename, dirname
-import pyluxcore
+
+try:
+    import pyluxcore
+except ModuleNotFoundError:
+    pyluxcore = None
+
 from . import view_layer
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
@@ -569,8 +575,8 @@ def pluralize(format_str, amount):
 
 def is_opencl_build():
     return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_OPENCL").GetBool()
-    
-    
+
+
 def is_cuda_build():
     return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_CUDA").GetBool()
 
@@ -675,15 +681,18 @@ def in_material_shading_mode(context):
 
 
 def get_addon_preferences(context):
-    am_in_extension = __package__.startswith("bl_ext.")
-    if am_in_extension:
-        from .. import __package__ as base_package
-        addon_name = base_package
-    else:
-        # For development purposes when using the BLC_DEV_PATH environment variable
-        # Currently assuming the addon is installed with REPO='user_default',
-        # else would need a mechanism to get the actual REPO here.
-        addon_name = 'bl_ext.user_default.' + __package__.split('.')[0]
+    addon_name = utils.get_bl_idname()
+    print("Addon name: ", addon_name)
+    # TODO
+    # am_in_extension = __package__.startswith("bl_ext.")
+    # if am_in_extension:
+        # from .. import __package__ as base_package
+        # addon_name = base_package
+    # else:
+        # # For development purposes when using the BLC_DEV_PATH environment variable
+        # # Currently assuming the addon is installed with REPO='user_default',
+        # # else would need a mechanism to get the actual REPO here.
+        # addon_name = get_addon_preferences()
     return context.preferences.addons[addon_name].preferences
 
 
@@ -698,3 +707,13 @@ def count_index(func):
         return func(*args, **kwargs)
     wrapper.index = 0
     return wrapper
+
+
+ADDON_NAME = "BlendLuxCore"
+
+def get_bl_idname():
+    """Get bl_idname for current addon."""
+    components = __package__.split('.')
+    prefix = list(itertools.takewhile(lambda x: x != ADDON_NAME, components))
+    prefix.append(ADDON_NAME)
+    return '.'.join(prefix)

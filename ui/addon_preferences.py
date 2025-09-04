@@ -7,12 +7,13 @@ from .. import utils
 from ..utils.lol import utils as lol_utils
 from importlib.metadata import version
 from .. import version_string
+from .. import utils
 
 film_device_items = []
 
 class LuxCoreAddonPreferences(AddonPreferences):
     # id name for 4.2
-    bl_idname = "bl_ext.user_default.BlendLuxCore"
+    bl_idname = utils.get_bl_idname()
 
     gpu_backend_items = [
         ("OPENCL", "OpenCL", "Use OpenCL for GPU acceleration", 0),
