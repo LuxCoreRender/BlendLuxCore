@@ -2,38 +2,35 @@ import platform
 import os
 import sys
 import pathlib
-import tomllib
 
+if platform.system() in {"Linux", "Darwin"}:
+    # Required for downloads from the LuxCore Online Library
+    import certifi
+
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+    os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
+
+# Support reloading
+# https://developer.blender.org/docs/handbook/extensions/addon_dev_setup/#reloading-scripts
 _needs_reload = "bpy" in locals()
 
 import bpy
 import addon_utils
 
-from . import luxloader
-
-if _needs_reload:
-    import importlib
-    luxloader = importlib.reload(luxloader)
-
-# Check first if Blender and OS versions are compatible
+# Before all, check if Blender and OS versions are compatible
 if bpy.app.version < (4, 2, 0):
     raise RuntimeError(
         "\n\nUnsupported Blender version. "
         "4.2 or higher is required by BlendLuxCore."
     )
 
-if platform.system() in {"Linux", "Darwin"}:
-    # Required for downloads from the LuxCore Online Library
-    import certifi
-    os.environ["SSL_CERT_FILE"] = certifi.where()
-    os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
+# Then, take care of ensuring PyLuxCore, as other modules may want to import it
+from . import luxloader
 
-# Load version information from blender_manifest.toml.
-# Replaced the old "bl_info" dictionary.
-manifest_path = pathlib.Path(__file__).parent.resolve() / 'blender_manifest.toml'
-with open(manifest_path, "rb") as f:
-    manifest_data = tomllib.load(f)
-version_string = manifest_data['version']
+if _needs_reload:
+    import importlib
+
+    luxloader = importlib.reload(luxloader)
 
 luxloader.ensure_pyluxcore()
 
@@ -45,22 +42,21 @@ except ImportError as error:
     # "during handling of the above exception, ..."
     raise RuntimeError(msg) from None
 
-if luxloader.BLC_OFFLINE_INSTALL:
-    # remove the install_offline_folder because we want a normal startup next time
-    luxloader.delete_install_offline()
+# Then import other modules (and deal with reloading)
+from . import properties, engine, handlers, operators, ui, nodes, utils
+from .utils.log import LuxCoreLog
 
-if luxloader.BLC_DEV_PATH and luxloader.AM_IN_EXTENSION:
-    # TODO This code is problematic:
-    # - BlendLuxCore imports itself
-    # - engine, handlers etc. are not guaranteed to be set, which can make `register`
-    #   raise
-    # - it defines `unregister`, making below declaration redefine
-    print('[BLC] USING LOCAL DEV VERSION OF BlendLuxCore')
-    sys.path.insert(0, luxloader.BLC_DEV_PATH)
-    from BlendLuxCore import *
-else:
-    from . import properties, engine, handlers, operators, ui, nodes, utils
-    from .utils.log import LuxCoreLog
+if _needs_reload:
+    import importlib
+
+    properties = importlib.reload(properties)
+    engine = importlib.reload(engine)
+    handlers = importlib.reload(handlers)
+    operators = importlib.reload(operators)
+    ui = importlib.reload(ui)
+    nodes = importlib.reload(nodes)
+    utils = importlib.reload(utils)
+
 
 def register():
     engine.register()
@@ -72,9 +68,10 @@ def register():
 
     pyluxcore.Init(LuxCoreLog.add)
     print(
-        f"BlendLuxCore {version_string} registered "
+        f"BlendLuxCore {utils.get_version_string()} registered "
         f"(with pyluxcore {pyluxcore.Version()})"
     )
+
 
 def unregister():
     engine.unregister()

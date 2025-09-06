@@ -20,14 +20,6 @@ import addon_utils
 # pyluxcore has been released on PyPi.
 PYLUXCORE_VERSION = "2.10.0"
 
-# Check the location of this init file. The init file in the local dev folder
-# returns only 'BlendLuxCore'
-AM_IN_EXTENSION = __package__.startswith("bl_ext.")
-
-# The environment variable BLC_DEV_PATH can be used to store a path to a local
-# BlendLuxCore repository, which will then be imported
-BLC_DEV_PATH = os.environ.get("BLC_DEV_PATH")
-
 # The environment variable BLC_WHEEL_PATH can be used to store a path to a
 # local pyluxcore wheel, which will then be installed
 BLC_WHEEL_PATH = os.environ.get("BLC_WHEEL_PATH")
@@ -221,7 +213,7 @@ def _copy_offline_files():
         shutil.copy(install_offline_folder / file, wheel_dl_folder / file)
 
 
-def delete_install_offline():
+def _delete_install_offline():
     """Clear offline folder content."""
     files = os.listdir(install_offline_folder)
     for file in files:
@@ -330,7 +322,7 @@ def _download_pyluxcore():
 def _install_wheels():
     """Install wheels in Blender from download folder."""
     extensions_directory = pathlib.Path(bpy.utils.user_resource("EXTENSIONS"))
-    wheel_list = [("blendluxcore", list(wheel_dl_folder.iterdir()))]  # `list[tuple[str, list[str]]]`
+    wheel_list = [("blendluxcore", list(wheel_dl_folder.iterdir()))]
     addon_utils._initialize_extensions_compat_ensure_up_to_date_wheels(
         extensions_directory,
         wheel_list,
@@ -342,26 +334,30 @@ def _install_wheels():
 def ensure_pyluxcore():
     """Ensure that pyluxcore is installed."""
     # Load/download pyluxcore
-    if AM_IN_EXTENSION:
-        # We'll invoke download_pyluxcore at each init
-        # We rely on pip local cache for this call to be transparent,
-        # after the wheels have been downloaded once, unless an update is required
-        download_status = _download_pyluxcore()
-        if download_status == 0:
-            # Install downloaded wheels
-            _install_wheels()
-        elif download_status == 1:
-            # There was an error during download
-            print(
-                "[BLC] WARNING: Download of pyluxcore not successful... "
-                "Import will be attempted, but may be unsuccessful..."
-            )
-        elif download_status == 2:
-            # The version to be downloaded was already installed. Nothing to do.
-            pass
-        else:
-            # Unknown error
-            print(
-                "[BLC] WARNING: Unknown return code received from download_pyluxcore()... "
-                "Import will be attempted, but may be unsuccessful..."
-            )
+    # We'll invoke download_pyluxcore at each init
+    # We rely on pip local cache for this call to be transparent,
+    # after the wheels have been downloaded once, unless an update is required
+    download_status = _download_pyluxcore()
+    if download_status == 0:
+        # Install downloaded wheels
+        _install_wheels()
+    elif download_status == 1:
+        # There was an error during download
+        print(
+            "[BLC] WARNING: Download of pyluxcore not successful... "
+            "Import will be attempted, but may be unsuccessful..."
+        )
+    elif download_status == 2:
+        # The version to be downloaded was already installed. Nothing to do.
+        pass
+    else:
+        # Unknown error
+        print(
+            "[BLC] WARNING: Unknown return code received from download_pyluxcore()... "
+            "Import will be attempted, but may be unsuccessful..."
+        )
+
+    if BLC_OFFLINE_INSTALL:
+        # remove the install_offline_folder because we want a normal startup next time
+        _delete_install_offline()
+

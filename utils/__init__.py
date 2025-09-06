@@ -1,4 +1,4 @@
-import bpy
+import pathlib
 import mathutils
 import math
 import re
@@ -6,6 +6,9 @@ import hashlib
 import os
 import itertools
 from os.path import basename, dirname
+import tomllib
+
+import bpy
 
 try:
     import pyluxcore
@@ -707,3 +710,17 @@ def get_bl_idname():
     prefix = list(itertools.takewhile(lambda x: x != ADDON_NAME, components))
     prefix.append(ADDON_NAME)
     return '.'.join(prefix)
+
+def get_version_string():
+    """Get BlendLuxCore version string.
+
+    Load version information from blender_manifest.toml, which replaces the old
+    "bl_info" dictionary.
+    """
+    root_path = pathlib.Path(__file__).parent.parent.resolve()
+    manifest_path =  root_path / "blender_manifest.toml"
+    with open(manifest_path, "rb") as f:
+        manifest_data = tomllib.load(f)
+    version_string = manifest_data["version"]
+    return version_string
+
