@@ -681,18 +681,8 @@ def in_material_shading_mode(context):
 
 
 def get_addon_preferences(context):
-    addon_name = utils.get_bl_idname()
-    print("Addon name: ", addon_name)
-    # TODO
-    # am_in_extension = __package__.startswith("bl_ext.")
-    # if am_in_extension:
-        # from .. import __package__ as base_package
-        # addon_name = base_package
-    # else:
-        # # For development purposes when using the BLC_DEV_PATH environment variable
-        # # Currently assuming the addon is installed with REPO='user_default',
-        # # else would need a mechanism to get the actual REPO here.
-        # addon_name = get_addon_preferences()
+    """Get addon_preferences handle."""
+    addon_name = get_bl_idname()
     return context.preferences.addons[addon_name].preferences
 
 

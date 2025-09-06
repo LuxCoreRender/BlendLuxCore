@@ -93,8 +93,6 @@ def _execute_wheel_download(command):
     process = subprocess.run(
         command,
         capture_output=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
         check=True,
     )
     stdout = process.stdout
@@ -110,28 +108,6 @@ def _execute_wheel_download(command):
         raise RuntimeError(
             f"[BLC] Failed to download LuxCore with return code {process.returncode}."
         ) from None
-
-
-def _update_manifest():
-    """Update blender_manifest, in order to make Blender download wheels."""
-    # Setup manifest with wheel list
-    manifest_path = (
-        pathlib.Path(__file__).parent.parent.resolve() / "blender_manifest.toml"
-    )
-    manifest_files, *_ = os.walk(wheel_dl_folder)
-    wheels = [pathlib.Path(wheel_dl_folder, f).as_posix() for f in manifest_files[2]]
-    wheel_statement = f"wheels = {wheels}\n"
-
-    with open(manifest_path, "r", encoding="utf-8") as file_handler:
-        manifest = list(file_handler)
-    with open(manifest_path, "w", encoding="utf-8") as file_handler:
-        for line in manifest:
-            if line.startswith("## WHEELS ##"):
-                file_handler.write(wheel_statement)
-            elif line.strip().startswith("wheels ="):
-                file_handler.write(wheel_statement)
-            else:
-                file_handler.write(line)
 
 
 def _save_installation_info(whl_hash="None", plc_version="None"):
@@ -158,14 +134,14 @@ def _save_installation_info(whl_hash="None", plc_version="None"):
 
 
 def _get_installation_info():
-    """Check if the version to be installed matches the descritption saved during
+    """Check if the version to be installed matches the description saved during
     the last install.
 
     If it matches, installation is skipped for efficiency.
     """
     # read the file
     info_file = root_folder / "pyluxcore_installation_info.txt"
-    print(f"[BLC] Checking {info_file}")
+    print(f"[BLC] Checking installation info ('{info_file}')")
 
     if not os.path.exists(info_file):
         return "None", "None"
@@ -188,7 +164,7 @@ def _get_installation_info():
 
 
 def _clear_wheels():
-    """Remove wheel files from wheel folder."""
+    """Remove wheel files from wheel download folder."""
     files = os.listdir(wheel_dl_folder)
     if len(files) == 0:
         return
@@ -253,7 +229,7 @@ def delete_install_offline():
     os.rmdir(install_offline_folder)
 
 
-def download_pyluxcore():
+def _download_pyluxcore():
     """Download and install pyluxcore wheel and dependencies."""
     # We cannot 'pip install' directly, as it would install pyluxcore system-wide
     # instead of in Blender environment
@@ -304,7 +280,6 @@ def download_pyluxcore():
         try:
             _backup_wheels()
             _execute_wheel_download(command)
-            _update_manifest()
             _delete_backup_wheels()
             _save_installation_info(wheel_hash, "None")
             return 0
@@ -335,7 +310,6 @@ def download_pyluxcore():
         try:
             _backup_wheels()
             _execute_wheel_download(command)
-            _update_manifest()
             _delete_backup_wheels()
             _save_installation_info("None", pyluxcore_version)
             return 0
@@ -353,6 +327,18 @@ def download_pyluxcore():
     return 1
 
 
+def _install_wheels():
+    """Install wheels in Blender from download folder."""
+    extensions_directory = pathlib.Path(bpy.utils.user_resource("EXTENSIONS"))
+    wheel_list = [("blendluxcore", list(wheel_dl_folder.iterdir()))]  # `list[tuple[str, list[str]]]`
+    addon_utils._initialize_extensions_compat_ensure_up_to_date_wheels(
+        extensions_directory,
+        wheel_list,
+        bpy.app.debug_python,
+        error_fn=lambda ex: print("Error:", str(ex)),
+    )
+
+
 def ensure_pyluxcore():
     """Ensure that pyluxcore is installed."""
     # Load/download pyluxcore
@@ -360,10 +346,10 @@ def ensure_pyluxcore():
         # We'll invoke download_pyluxcore at each init
         # We rely on pip local cache for this call to be transparent,
         # after the wheels have been downloaded once, unless an update is required
-        download_status = download_pyluxcore()
+        download_status = _download_pyluxcore()
         if download_status == 0:
-            # Ask Blender to do the install
-            addon_utils.extensions_refresh(ensure_wheels=True)
+            # Install downloaded wheels
+            _install_wheels()
         elif download_status == 1:
             # There was an error during download
             print(
