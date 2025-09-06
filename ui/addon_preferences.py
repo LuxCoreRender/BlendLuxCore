@@ -1,3 +1,7 @@
+from importlib.metadata import version
+
+_needs_reload = "bpy" in locals()
+
 import bpy
 from bpy.types import AddonPreferences
 from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
@@ -5,9 +9,12 @@ from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 from ..ui import icons
 from .. import utils
 from ..utils.lol import utils as lol_utils
-from importlib.metadata import version
-from .. import version_string
-from .. import utils
+
+
+if _needs_reload:
+    import importlib
+    ui = importlib.reload(ui)
+    utils = importlib.reload(utils)
 
 film_device_items = []
 
@@ -77,7 +84,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
     lol_useragent: StringProperty(
         name="HTTP User-Agent",
         description="User Agent transmitted with requests",
-        default = f"BlendLuxCore/{version_string}",
+        default = f"BlendLuxCore/{utils.get_version_string()}",
     )
 
     max_assetbar_rows: IntProperty(name="Max Assetbar Rows", description="max rows of assetbar in the 3d view",
