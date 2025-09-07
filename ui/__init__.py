@@ -1,5 +1,7 @@
 _needs_reload = "bpy" in locals()
 
+import bpy
+
 from bpy.utils import register_class, unregister_class
 
 
