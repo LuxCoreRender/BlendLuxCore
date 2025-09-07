@@ -24,6 +24,20 @@ SPLIT_FACTOR = 1 / 3
 
 film_device_items = []
 
+enum_wheel_sources = (
+    ("PyPI", "PyPI (default)", "Get PyLuxCore from Python Package Index (PyPI)"),
+    (
+        "LocalWheel",
+        "Local Wheel",
+        "Get PyLuxCore from a local wheel file, not including dependencies",
+    ),
+    (
+        "LocalFolder",
+        "Local Wheel + dependencies",
+        "Get PyLuxCore from a local folder, containing PyLuxCore wheel "
+        "and all its dependencies",
+    ),
+)
 
 class LuxCoreAddonPreferences(AddonPreferences):
     """Addon Preference panel."""
@@ -139,6 +153,40 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     display_luxcore_logs: BoolProperty(name="Show LuxCore Logs", default=True)
 
+    show_advanced_settings: BoolProperty(
+        name="Advanced Settings",
+        description=(
+            "Development and Debugging settings."
+            "WARNING! May cause BlendLuxCore to become unusable. "
+            "Do not modify unless you know what you are doing"
+        ),
+        default=False
+    )
+
+    wheel_source: bpy.props.EnumProperty(
+        name="Source",
+        description="PyLuxCore source",
+        items=enum_wheel_sources,
+        default="PyPI",
+    )
+
+    path_to_wheel: bpy.props.StringProperty(
+        name="Path to File",
+        description="Path to PyLuxCore Wheel file",
+        subtype="FILE_PATH",
+    )
+
+    path_to_folder: bpy.props.StringProperty(
+        name="Path to Folder",
+        description="Path to Folder containing PyLuxCore Wheel + the other dependencies",
+        subtype="DIR_PATH",
+    )
+
+    reinstall_upon_reloading: bpy.props.BoolProperty(
+        name="Reinstall upon reloading",
+        description="Reinstall every time BlendLuxCore is reloaded",
+    )
+
     # Read-only string property, returns the current date
     def get_pyluxcore_version(self):
         """Provide pyluxcore version."""
@@ -222,3 +270,43 @@ class LuxCoreAddonPreferences(AddonPreferences):
         split = row.split(factor=SPLIT_FACTOR)
         split.label(text="Pyluxcore version:")
         split.prop(self, "pyluxcore_version")
+
+
+        # Advanced settings panel
+        layout.separator()
+        row = layout.row()
+        row.prop(self, "show_advanced_settings")
+
+        if self.show_advanced_settings:
+            col = layout.row()
+            col.label(text=(
+                "WARNING! THE FOLLOWING SETTINGS MAY CAUSE BLENDLUXCORE "
+                "TO BECOME UNUSABLE. "
+                "*** DO NOT MODIFY UNLESS YOU KNOW WHAT YOU ARE DOING. ***"
+            ))
+            # Source selector
+            layout.separator()
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Wheel source (advanced):")
+            split.prop(self, "wheel_source", expand=False, text="")
+
+            if self.wheel_source == "PyPI":
+                pass
+            elif self.wheel_source == "LocalWheel":
+                # File
+                row = layout.row()
+                split = row.split(factor=SPLIT_FACTOR)
+                split.label(text="Path to File:")
+                split.prop(self, "path_to_wheel", text="")
+            elif self.wheel_source == "LocalFolder":
+                # Folder
+                row = layout.row()
+                split = row.split(factor=SPLIT_FACTOR)
+                split.label(text="Path to Folder:")
+                split.prop(self, "path_to_folder", text="")
+            else:
+                raise RuntimeError(f"Unhandled wheel source: {wheel_source}")
+
+            row = layout.row()
+            row.prop(self, "reinstall_upon_reloading")
