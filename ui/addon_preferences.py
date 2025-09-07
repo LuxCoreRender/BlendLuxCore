@@ -154,7 +154,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
     display_luxcore_logs: BoolProperty(name="Show LuxCore Logs", default=True)
 
     show_advanced_settings: BoolProperty(
-        name="Advanced Settings",
+        name="Use Advanced Settings",
         description=(
             "Development and Debugging settings."
             "WARNING! May cause BlendLuxCore to become unusable. "
@@ -200,6 +200,10 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+
+        # General settings
+        row = layout.row()
+        row.label(text="General settings:")
 
         row = layout.row()
         row.label(text="GPU API:")
@@ -247,35 +251,56 @@ class LuxCoreAddonPreferences(AddonPreferences):
         op.url = "https://github.com/LuxCoreRender/BlendLuxCore/releases"
         row.label(text="")
 
-        layout.separator()
-        col = layout.column()
-        col.label(text="LuxCore Online Library (LOL) Preferences:")
-        col = layout.column()
-
-        col.prop(self, "use_library")
-        if self.use_library:
-            col.prop(self, "global_dir")
-            col.prop(self, "lol_host")
-            col.prop(self, "lol_http_host")
-            col.prop(self, "thumb_size")
-
         # LuxCore logging
-        layout.separator()
         row = layout.row()
-        row.prop(self, "display_luxcore_logs")
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="LuxCore Logs:")
+        split.prop(self, "display_luxcore_logs")
 
         # pyluxcore version
-        layout.separator()
         row = layout.row()
         split = row.split(factor=SPLIT_FACTOR)
         split.label(text="Pyluxcore version:")
         split.prop(self, "pyluxcore_version")
 
 
+        # LuxCore Online Library
+        layout.separator()
+
+        row = layout.row()
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="LuxCore Online Library (LOL):")
+        split.prop(self, "use_library")
+
+        if self.use_library:
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Global Files Directory:")
+            split.prop(self, "global_dir", text="")
+
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Host URL:")
+            split.prop(self, "lol_host", text="")
+
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="HTTP Host:")
+            split.prop(self, "lol_http_host", text="")
+
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Thumb Size:")
+            split.prop(self, "thumb_size", text="")
+
+
         # Advanced settings panel
         layout.separator()
+
         row = layout.row()
-        row.prop(self, "show_advanced_settings")
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="Advanced Settings:")
+        split.prop(self, "show_advanced_settings")
 
         if self.show_advanced_settings:
             col = layout.row()
@@ -285,10 +310,9 @@ class LuxCoreAddonPreferences(AddonPreferences):
                 "*** DO NOT MODIFY UNLESS YOU KNOW WHAT YOU ARE DOING. ***"
             ))
             # Source selector
-            layout.separator()
             row = layout.row()
             split = row.split(factor=SPLIT_FACTOR)
-            split.label(text="Wheel source (advanced):")
+            split.label(text="Wheel source:")
             split.prop(self, "wheel_source", expand=False, text="")
 
             if self.wheel_source == "PyPI":
