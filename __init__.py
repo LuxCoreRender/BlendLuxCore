@@ -41,6 +41,10 @@ except ImportError as error:
     # Raise from None to suppress the unhelpful
     # "during handling of the above exception, ..."
     raise RuntimeError(msg) from None
+if _needs_reload:
+    import importlib
+
+    pyluxcore = importlib.reload(pyluxcore)
 
 # Then import other modules (and deal with reloading)
 from . import properties, engine, handlers, operators, ui, nodes, utils
