@@ -47,7 +47,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture, bpy.types.Node):
                 "type": "abs",
                 "texture": luxcore_name,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
             luxcore_name = name_abs
 
@@ -61,7 +61,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture, bpy.types.Node):
                 "min": 0,
                 "max": 1,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
             luxcore_name = name_clamp
 
@@ -74,7 +74,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture, bpy.types.Node):
                 "texture1": luxcore_name,
                 "texture2": -1,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
             name_clamp = luxcore_name + "_clamp"
             helper_prefix = "scene.textures." + name_clamp + "."
@@ -84,7 +84,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture, bpy.types.Node):
                 "min": 0,
                 "max": 1,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
             luxcore_name = name_clamp
 
@@ -98,7 +98,7 @@ class LuxCoreNodeTexPointiness(LuxCoreNodeTexture, bpy.types.Node):
                 "texture1": luxcore_name,
                 "texture2": multiplier,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
             luxcore_name = multiplier_name
 

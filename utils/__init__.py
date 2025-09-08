@@ -1,5 +1,14 @@
+"""Various utilities, NOT REQUIRING PYLUXCORE."""
+
+
+# DO NOT IMPORT PYLUXCORE IN THIS MODULE AND ITS IMPORTED SUBMODULES
+#
+# This module is imported before pyluxcore is loaded, therefore it must not
+# contain any call to pyluxcore. For utilities that rely on pyluxcore, please
+# use `luxutils` submodule
+
+
 import pathlib
-import mathutils
 import math
 import re
 import hashlib
@@ -9,11 +18,7 @@ from os.path import basename, dirname
 import tomllib
 
 import bpy
-
-try:
-    import pyluxcore
-except ModuleNotFoundError:
-    pyluxcore = None
+import mathutils
 
 from . import view_layer
 
@@ -118,36 +123,6 @@ def make_object_id(dg_obj_instance):
     # Truncate to 4 bytes because LuxCore uses unsigned int for the object ID.
     # Make sure it's not exactly 0xffffffff because that's LuxCore's Null index for object IDs.
     return min(as_int & 0xffffffff, 0xffffffff - 1)
-
-
-def create_props(prefix, definitions):
-    """
-    :param prefix: string, will be prepended to each key part of the definitions.
-                   Example: "scene.camera." (note the trailing dot)
-    :param definitions: dictionary of definition pairs. Example: {"fieldofview", 45}
-    :return: pyluxcore.Properties() object, initialized with the given definitions.
-    """
-    props = pyluxcore.Properties()
-
-    for k, v in definitions.items():
-        props.Set(pyluxcore.Property(prefix + k, v))
-
-    return props
-
-
-def matrix_to_list(matrix, invert=False):
-    """
-    Flatten a 4x4 matrix into a list
-    Returns list[16]
-    """
-    # Copy required for BlenderMatrix4x4ToList(), not sure why, but if we don't
-    # make a copy, we only get an identity matrix in C++
-    matrix = matrix.copy()
-
-    if invert:
-        matrix.invert_safe()
-
-    return pyluxcore.BlenderMatrix4x4ToList(matrix)
 
 
 def list_to_matrix(lst):
@@ -574,14 +549,6 @@ def pluralize(format_str, amount):
     if amount != 1:
         formatted += "s"
     return formatted
-
-
-def is_opencl_build():
-    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_OPENCL").GetBool()
-
-
-def is_cuda_build():
-    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_CUDA").GetBool()
 
 
 def image_sequence_resolve_all(image):

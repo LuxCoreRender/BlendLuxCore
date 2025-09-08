@@ -105,7 +105,7 @@ class LuxCoreNode:
 
     def create_props(self, props, definitions, luxcore_name):
         prefix = self.prefix + luxcore_name + "."
-        props.Set(utils.create_props(prefix, definitions))
+        props.Set(utils.luxutils.create_props(prefix, definitions))
         return luxcore_name
 
     def free(self):
@@ -248,7 +248,7 @@ class LuxCoreNodeVolume(LuxCoreNode, bpy.types.Node):
                 "kt": abs_col,
                 "depth": abs_depth,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
             abs_col = tex_name
         else:
             # Do not occur the overhead of the colordepth texture
@@ -282,7 +282,7 @@ class LuxCoreNodeVolume(LuxCoreNode, bpy.types.Node):
                 "texture1": scattering_scale,
                 "texture2": scattering_col,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
             scattering_col = tex_name
         else:
             # We do not have to use a texture - improves performance

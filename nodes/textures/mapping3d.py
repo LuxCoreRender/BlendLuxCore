@@ -209,7 +209,7 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture, bpy.types.Node):
 
         return {
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(output_mapping),
+            "mapping.transformation": utils.luxutils.matrix_to_list(output_mapping),
             # Only used when mapping.type is uvmapping3d
             "mapping.uvindex": uvindex,
         }

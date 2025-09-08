@@ -72,7 +72,7 @@ class LuxCoreNodeMatMetal(LuxCoreNodeMaterial, bpy.types.Node):
                 "type": "fresnelcolor",
                 "kr": self.inputs["Color"].export(exporter, depsgraph, props),
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
             definitions["fresnel"] = tex_name
             

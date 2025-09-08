@@ -31,21 +31,33 @@ def convert(exporter, scene, context=None, engine=None):
         width, height = utils.calc_filmsize(scene, context)
         is_viewport_render = context is not None
         in_material_shading_mode = utils.in_material_shading_mode(context)
-        denoiser_enabled = ((not is_viewport_render and scene.luxcore.denoiser.enabled)
-                            or (is_viewport_render and scene.luxcore.viewport.use_denoiser
-                                and not in_material_shading_mode))
+        denoiser_enabled = (
+            not is_viewport_render and scene.luxcore.denoiser.enabled
+        ) or (
+            is_viewport_render
+            and scene.luxcore.viewport.use_denoiser
+            and not in_material_shading_mode
+        )
         preferences = get_addon_preferences(bpy.context)
 
         if is_viewport_render:
             # Viewport render
-            luxcore_engine, sampler = convert_viewport_engine(context, scene, definitions, config)
+            luxcore_engine, sampler = convert_viewport_engine(
+                context, scene, definitions, config
+            )
         else:
             # Final render
-            luxcore_engine, sampler = _convert_final_engine(scene, definitions, config)
+            luxcore_engine, sampler = _convert_final_engine(
+                scene, definitions, config
+            )
 
-        if (not config.filter_enabled
-                or utils.is_pixel_filtering_forced_disabled(scene, denoiser_enabled)
-                or in_material_shading_mode):
+        if (
+            not config.filter_enabled
+            or utils.is_pixel_filtering_forced_disabled(
+                scene, denoiser_enabled
+            )
+            or in_material_shading_mode
+        ):
             filter_type = "NONE"
         else:
             filter_type = config.filter
@@ -60,19 +72,21 @@ def convert(exporter, scene, context=None, engine=None):
             light_strategy = config.light_strategy
 
         # Common properties that should be set regardless of engine configuration.
-        definitions.update({
-            "renderengine.type": luxcore_engine,
-            "sampler.type": sampler,
-            "film.width": width,
-            "film.height": height,
-            "film.filter.type": filter_type,
-            "film.filter.width": config.filter_width,
-            "lightstrategy.type": light_strategy,
-            "scene.epsilon.min": config.min_epsilon,
-            "scene.epsilon.max": config.max_epsilon,
-            "path.albedospecular.type": scene.luxcore.denoiser.albedo_specular_passthrough_mode,
-            "path.albedospecular.glossinessthreshold": 0.05,
-        })
+        definitions.update(
+            {
+                "renderengine.type": luxcore_engine,
+                "sampler.type": sampler,
+                "film.width": width,
+                "film.height": height,
+                "film.filter.type": filter_type,
+                "film.filter.width": config.filter_width,
+                "lightstrategy.type": light_strategy,
+                "scene.epsilon.min": config.min_epsilon,
+                "scene.epsilon.max": config.max_epsilon,
+                "path.albedospecular.type": scene.luxcore.denoiser.albedo_specular_passthrough_mode,
+                "path.albedospecular.glossinessthreshold": 0.05,
+            }
+        )
 
         if preferences.film_device not in {"", "none"}:
             definitions["film.opencl.enable"] = True
@@ -81,14 +95,21 @@ def convert(exporter, scene, context=None, engine=None):
             definitions["film.opencl.enable"] = False
 
         if light_strategy == "DLS_CACHE":
-            _convert_dlscache_settings(scene, definitions, config, is_viewport_render)
+            _convert_dlscache_settings(
+                scene, definitions, config, is_viewport_render
+            )
 
         if config.photongi.enabled and not is_viewport_render:
             _convert_photongi_settings(context, scene, definitions, config)
 
-        if (config.path.use_clamping and not in_material_shading_mode
-                and not utils.using_photongi_debug_mode(is_viewport_render, scene)):
-            definitions["path.clamping.variance.maxvalue"] = config.path.clamping
+        if (
+            config.path.use_clamping
+            and not in_material_shading_mode
+            and not utils.using_photongi_debug_mode(is_viewport_render, scene)
+        ):
+            definitions["path.clamping.variance.maxvalue"] = (
+                config.path.clamping
+            )
 
         # Filter
         if config.filter == "GAUSSIAN":
@@ -103,7 +124,10 @@ def convert(exporter, scene, context=None, engine=None):
         if utils.is_valid_camera(scene.camera):
             pipeline = scene.camera.data.luxcore.imagepipeline
 
-            if (pipeline.transparent_film or use_backgroundimage(context, scene)) and not use_filesaver:
+            if (
+                pipeline.transparent_film
+                or use_backgroundimage(context, scene)
+            ) and not use_filesaver:
                 # This avoids issues with transparent film in Blender
                 black_background = True
         definitions["path.forceblackbackground.enable"] = black_background
@@ -119,7 +143,7 @@ def convert(exporter, scene, context=None, engine=None):
         _convert_seed(scene, definitions)
 
         # Create the properties
-        config_props = utils.create_props(prefix, definitions)
+        config_props = utils.luxutils.create_props(prefix, definitions)
 
         # Convert AOVs
         aov_props = aovs.convert(exporter, scene, context, engine)
@@ -127,10 +151,11 @@ def convert(exporter, scene, context=None, engine=None):
 
         return config_props
     except Exception as error:
-        msg = 'Config: %s' % error
+        msg = "Config: %s" % error
         # Note: Exceptions in the config are critical, we can't render without a config
         LuxCoreErrorLog.add_error(msg)
         import traceback
+
         traceback.print_exc()
         return pyluxcore.Properties()
 
@@ -147,14 +172,18 @@ def _convert_opencl_settings(scene, definitions, is_final_render):
         opencl = scene.luxcore.devices
         definitions["opencl.cpu.use"] = False
         definitions["opencl.gpu.use"] = True
-        definitions["opencl.devices.select"] = opencl.devices_to_selection_string()
+        definitions["opencl.devices.select"] = (
+            opencl.devices_to_selection_string()
+        )
 
         # OpenCL CPU (hybrid render) thread settings. Only enabled in final render.
         if opencl.use_native_cpu and is_final_render:
             # We use the properties from Blender here
             if scene.render.threads_mode == "FIXED":
                 # Explicitly set the number of threads
-                definitions["opencl.native.threads.count"] = scene.render.threads
+                definitions["opencl.native.threads.count"] = (
+                    scene.render.threads
+                )
             # If no thread count is specified, LuxCore automatically uses all available cores
         else:
             # Disable hybrid rendering
@@ -176,13 +205,21 @@ def convert_viewport_engine(context, scene, definitions, config):
     using_hybridbackforward = utils.using_hybridbackforward_in_viewport(scene)
 
     device = viewport.device
-    if device == "OCL" and not (utils.is_opencl_build() or utils.is_cuda_build()):
+    if device == "OCL" and not (
+        utils.luxutils.is_opencl_build() or utils.luxutils.is_cuda_build()
+    ):
         msg = "Config: LuxCore was built without GPU support, can't use GPU engine in viewport"
         LuxCoreErrorLog.add_warning(msg)
         device = "CPU"
 
-    _convert_path(config, definitions, using_hybridbackforward, device, True, scene)
-    resolutionreduction = viewport.resolution_reduction if viewport.reduce_resolution_on_edit else 1
+    _convert_path(
+        config, definitions, using_hybridbackforward, device, True, scene
+    )
+    resolutionreduction = (
+        viewport.resolution_reduction
+        if viewport.reduce_resolution_on_edit
+        else 1
+    )
 
     if utils.using_bidir_in_viewport(scene):
         luxcore_engine = "BIDIRCPU"
@@ -227,7 +264,9 @@ def convert_viewport_engine(context, scene, definitions, config):
 
             # TODO figure out good settings
             # 4, 2, 2 seems to be quite ok for now. Maybe make resolutionreduction dependent on film size later.
-            definitions["rtpath.resolutionreduction.preview"] = resolutionreduction
+            definitions["rtpath.resolutionreduction.preview"] = (
+                resolutionreduction
+            )
             definitions["rtpath.resolutionreduction.preview.step"] = 2
             definitions["rtpath.resolutionreduction"] = 2
 
@@ -239,20 +278,33 @@ def convert_viewport_engine(context, scene, definitions, config):
 def _convert_final_engine(scene, definitions, config):
     if config.engine == "PATH":
         # Specific settings for PATH and TILEPATH
-        _convert_path(config, definitions, config.path.hybridbackforward_enable, config.device, False, scene)
+        _convert_path(
+            config,
+            definitions,
+            config.path.hybridbackforward_enable,
+            config.device,
+            False,
+            scene,
+        )
 
         if config.use_tiles:
             luxcore_engine = "TILEPATH"
             # Tile specific settings
             tile = config.tile
 
-            definitions["tilepath.sampling.aa.size"] = tile.path_sampling_aa_size
+            definitions["tilepath.sampling.aa.size"] = (
+                tile.path_sampling_aa_size
+            )
             definitions["tile.size"] = tile.size
-            definitions["tile.multipass.enable"] = tile.multipass_enable or utils.use_two_tiled_passes(scene)
+            definitions["tile.multipass.enable"] = (
+                tile.multipass_enable or utils.use_two_tiled_passes(scene)
+            )
             thresh = tile.multipass_convtest_threshold
             definitions["tile.multipass.convergencetest.threshold"] = thresh
             thresh_reduct = tile.multipass_convtest_threshold_reduction
-            definitions["tile.multipass.convergencetest.threshold.reduction"] = thresh_reduct
+            definitions[
+                "tile.multipass.convergencetest.threshold.reduction"
+            ] = thresh_reduct
             warmup = tile.multipass_convtest_warmup
             definitions["tile.multipass.convergencetest.warmup.count"] = warmup
         else:
@@ -276,17 +328,23 @@ def _convert_final_engine(scene, definitions, config):
         sampler = "TILEPATHSAMPLER"
     else:
         sampler = config.get_sampler()
-        
+
     if sampler in {"SOBOL", "RANDOM"}:
         sampler_type = sampler.lower()
-        
+
         # Adaptive sampling
         adaptive_strength = config.sobol_adaptive_strength
         if adaptive_strength > 0:
-            definitions["film.noiseestimation.warmup"] = config.noise_estimation.warmup
-            definitions["film.noiseestimation.step"] = config.noise_estimation.step
-        definitions[f"sampler.{sampler_type}.adaptive.strength"] = adaptive_strength
-        
+            definitions["film.noiseestimation.warmup"] = (
+                config.noise_estimation.warmup
+            )
+            definitions["film.noiseestimation.step"] = (
+                config.noise_estimation.step
+            )
+        definitions[f"sampler.{sampler_type}.adaptive.strength"] = (
+            adaptive_strength
+        )
+
         # Sampler pattern
         if config.using_out_of_core():
             bucketsize = 1
@@ -306,9 +364,13 @@ def _convert_final_engine(scene, definitions, config):
                 overlapping = SamplingOverlap.CACHE_FRIENDLY
             else:
                 raise Exception("Unknown sampler pattern")
-        
-        definitions[f"sampler.{sampler_type}.bucketsize"] = bucketsize  # Must be power of 2
-        definitions[f"sampler.{sampler_type}.tilesize"] = tilesize  # Must be power of 2
+
+        definitions[f"sampler.{sampler_type}.bucketsize"] = (
+            bucketsize  # Must be power of 2
+        )
+        definitions[f"sampler.{sampler_type}.tilesize"] = (
+            tilesize  # Must be power of 2
+        )
         definitions[f"sampler.{sampler_type}.supersampling"] = supersampling
         definitions[f"sampler.{sampler_type}.overlapping"] = overlapping
     elif sampler == "METROPOLIS":
@@ -323,7 +385,14 @@ def _convert_final_engine(scene, definitions, config):
     return luxcore_engine, sampler
 
 
-def _convert_path(config, definitions, use_hybridbackforward, device, is_viewport_render, scene):
+def _convert_path(
+    config,
+    definitions,
+    use_hybridbackforward,
+    device,
+    is_viewport_render,
+    scene,
+):
     path = config.path
     # Note that for non-specular paths +1 is added to the path depth in order to have behaviour
     # that feels intuitive for the user. LuxCore does only MIS on the last path bounce, but no
@@ -344,14 +413,18 @@ def _convert_path(config, definitions, use_hybridbackforward, device, is_viewpor
         partition = 1 - partition_raw / 100
         definitions["path.hybridbackforward.enable"] = use_hybridbackforward
         definitions["path.hybridbackforward.partition"] = partition
-        definitions["path.hybridbackforward.glossinessthreshold"] = path.hybridbackforward_glossinessthresh
+        definitions["path.hybridbackforward.glossinessthreshold"] = (
+            path.hybridbackforward_glossinessthresh
+        )
 
 
 def _convert_filesaver(scene, definitions, luxcore_engine):
     config = scene.luxcore.config
 
     filesaver_path = config.filesaver_path
-    output_path = utils.get_abspath(filesaver_path, must_exist=True, must_be_existing_dir=True)
+    output_path = utils.get_abspath(
+        filesaver_path, must_exist=True, must_be_existing_dir=True
+    )
 
     blend_name = utils.get_blendfile_name()
     if not blend_name:
@@ -383,7 +456,9 @@ def _convert_filesaver(scene, definitions, luxcore_engine):
                 raise
 
     if config.filesaver_format == "BIN":
-        definitions["filesaver.filename"] = os.path.join(output_path, frame_name)
+        definitions["filesaver.filename"] = os.path.join(
+            output_path, frame_name
+        )
     else:
         # Text format
         definitions["filesaver.directory"] = output_path
@@ -406,30 +481,46 @@ def _convert_seed(scene, definitions):
 
 
 def _convert_metropolis_settings(definitions, config):
-    definitions["sampler.metropolis.largesteprate"] = config.metropolis_largesteprate / 100
-    definitions["sampler.metropolis.maxconsecutivereject"] = config.metropolis_maxconsecutivereject
-    definitions["sampler.metropolis.imagemutationrate"] = config.metropolis_imagemutationrate / 100
+    definitions["sampler.metropolis.largesteprate"] = (
+        config.metropolis_largesteprate / 100
+    )
+    definitions["sampler.metropolis.maxconsecutivereject"] = (
+        config.metropolis_maxconsecutivereject
+    )
+    definitions["sampler.metropolis.imagemutationrate"] = (
+        config.metropolis_imagemutationrate / 100
+    )
 
 
 def _convert_dlscache_settings(scene, definitions, config, is_viewport_render):
     dls_cache = config.dls_cache
-    file_path = utils.get_persistent_cache_file_path(dls_cache.file_path, dls_cache.save_or_overwrite,
-                                                     is_viewport_render, scene)
-    definitions.update({
-        "lightstrategy.entry.radius": 0 if dls_cache.entry_radius_auto else dls_cache.entry_radius,
-        "lightstrategy.entry.normalangle": degrees(dls_cache.entry_normalangle),
-        "lightstrategy.entry.maxpasses": dls_cache.entry_maxpasses,
-        "lightstrategy.entry.convergencethreshold": dls_cache.entry_convergencethreshold / 100,
-        "lightstrategy.entry.warmupsamples": dls_cache.entry_warmupsamples,
-        "lightstrategy.entry.volumes.enable": dls_cache.entry_volumes_enable,
-
-        "lightstrategy.lightthreshold": dls_cache.lightthreshold / 100,
-        "lightstrategy.targetcachehitratio": dls_cache.targetcachehitratio / 100,
-        "lightstrategy.maxdepth": dls_cache.maxdepth,
-        "lightstrategy.maxsamplescount": dls_cache.maxsamplescount,
-
-        "lightstrategy.persistent.file": file_path,
-    })
+    file_path = utils.get_persistent_cache_file_path(
+        dls_cache.file_path,
+        dls_cache.save_or_overwrite,
+        is_viewport_render,
+        scene,
+    )
+    definitions.update(
+        {
+            "lightstrategy.entry.radius": (
+                0 if dls_cache.entry_radius_auto else dls_cache.entry_radius
+            ),
+            "lightstrategy.entry.normalangle": degrees(
+                dls_cache.entry_normalangle
+            ),
+            "lightstrategy.entry.maxpasses": dls_cache.entry_maxpasses,
+            "lightstrategy.entry.convergencethreshold": dls_cache.entry_convergencethreshold
+            / 100,
+            "lightstrategy.entry.warmupsamples": dls_cache.entry_warmupsamples,
+            "lightstrategy.entry.volumes.enable": dls_cache.entry_volumes_enable,
+            "lightstrategy.lightthreshold": dls_cache.lightthreshold / 100,
+            "lightstrategy.targetcachehitratio": dls_cache.targetcachehitratio
+            / 100,
+            "lightstrategy.maxdepth": dls_cache.maxdepth,
+            "lightstrategy.maxsamplescount": dls_cache.maxsamplescount,
+            "lightstrategy.persistent.file": file_path,
+        }
+    )
 
 
 def _convert_photongi_settings(context, scene, definitions, config):
@@ -450,32 +541,44 @@ def _convert_photongi_settings(context, scene, definitions, config):
         raise Exception("Unknown preset mode")
 
     caustic_radius = photongi.caustic_lookup_radius
-    caustic_updatespp = photongi.caustic_updatespp if photongi.caustic_periodic_update else 0
+    caustic_updatespp = (
+        photongi.caustic_updatespp if photongi.caustic_periodic_update else 0
+    )
 
-    file_path = utils.get_persistent_cache_file_path(photongi.file_path, photongi.save_or_overwrite, context, scene)
+    file_path = utils.get_persistent_cache_file_path(
+        photongi.file_path, photongi.save_or_overwrite, context, scene
+    )
 
-    definitions.update({
-        "path.photongi.photon.maxcount": round(photongi.photon_maxcount * 1000000),
-        "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
-        "path.photongi.glossinessusagethreshold": photongi.glossinessusagethreshold,
-
-        "path.photongi.indirect.enabled": photongi.indirect_enabled,
-        "path.photongi.indirect.maxsize": 0,  # Set to 0 to use haltthreshold stop condition
-        "path.photongi.indirect.haltthreshold": indirect_haltthreshold,
-        "path.photongi.indirect.lookup.radius": indirect_radius,
-        "path.photongi.indirect.lookup.normalangle": degrees(photongi.indirect_normalangle),
-        "path.photongi.indirect.usagethresholdscale": photongi.indirect_usagethresholdscale,
-
-        "path.photongi.caustic.enabled": photongi.caustic_enabled,
-        "path.photongi.caustic.maxsize": round(photongi.caustic_maxsize * 1000000),
-        "path.photongi.caustic.lookup.radius": caustic_radius,
-        "path.photongi.caustic.lookup.normalangle": degrees(photongi.caustic_normalangle),
-        "path.photongi.caustic.updatespp": caustic_updatespp,
-        "path.photongi.caustic.updatespp.radiusreduction": photongi.caustic_updatespp_radiusreduction / 100,
-        "path.photongi.caustic.updatespp.minradius": photongi.caustic_updatespp_minradius,
-
-        "path.photongi.persistent.file": file_path
-    })
+    definitions.update(
+        {
+            "path.photongi.photon.maxcount": round(
+                photongi.photon_maxcount * 1000000
+            ),
+            "path.photongi.photon.maxdepth": photongi.photon_maxdepth,
+            "path.photongi.glossinessusagethreshold": photongi.glossinessusagethreshold,
+            "path.photongi.indirect.enabled": photongi.indirect_enabled,
+            "path.photongi.indirect.maxsize": 0,  # Set to 0 to use haltthreshold stop condition
+            "path.photongi.indirect.haltthreshold": indirect_haltthreshold,
+            "path.photongi.indirect.lookup.radius": indirect_radius,
+            "path.photongi.indirect.lookup.normalangle": degrees(
+                photongi.indirect_normalangle
+            ),
+            "path.photongi.indirect.usagethresholdscale": photongi.indirect_usagethresholdscale,
+            "path.photongi.caustic.enabled": photongi.caustic_enabled,
+            "path.photongi.caustic.maxsize": round(
+                photongi.caustic_maxsize * 1000000
+            ),
+            "path.photongi.caustic.lookup.radius": caustic_radius,
+            "path.photongi.caustic.lookup.normalangle": degrees(
+                photongi.caustic_normalangle
+            ),
+            "path.photongi.caustic.updatespp": caustic_updatespp,
+            "path.photongi.caustic.updatespp.radiusreduction": photongi.caustic_updatespp_radiusreduction
+            / 100,
+            "path.photongi.caustic.updatespp.minradius": photongi.caustic_updatespp_minradius,
+            "path.photongi.persistent.file": file_path,
+        }
+    )
 
     if photongi.debug != "off":
         definitions["path.photongi.debug.type"] = photongi.debug

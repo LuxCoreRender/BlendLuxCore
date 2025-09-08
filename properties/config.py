@@ -399,7 +399,7 @@ class LuxCoreConfigImageResizePolicy(PropertyGroup):
         else:
             definitions["type"] = "NONE"
 
-        return utils.create_props(prefix, definitions)
+        return utils.luxutils.create_props(prefix, definitions)
 
 
 class LuxCoreConfig(PropertyGroup):

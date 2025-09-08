@@ -35,7 +35,7 @@ def convert(exporter, scene, context=None, engine=None):
 
         if utils.in_material_shading_mode(context):
             _add_output(definitions, "ALBEDO")
-            return utils.create_props(prefix, definitions)
+            return utils.luxutils.create_props(prefix, definitions)
 
         # If we have a context, we are in viewport render.
         # If engine.is_preview, we are in material preview. Both don't need AOVs.
@@ -50,7 +50,7 @@ def convert(exporter, scene, context=None, engine=None):
                 #  black squares in the result - re-enable when this is fixed in OptiX
                 if scene.luxcore.viewport.get_denoiser(context) == "OIDN":
                     _add_output(definitions, "AVG_SHADING_NORMAL")
-            return utils.create_props(prefix, definitions)
+            return utils.luxutils.create_props(prefix, definitions)
 
         pipeline = scene.camera.data.luxcore.imagepipeline
         denoiser = scene.luxcore.denoiser
@@ -142,7 +142,7 @@ def convert(exporter, scene, context=None, engine=None):
                                                                      pipeline_index, definitions)
                 pipeline_props.Set(pyluxcore.Property("film.noiseestimation.index", noise_detection_pipeline_index))
 
-        props = utils.create_props(prefix, definitions)
+        props = utils.luxutils.create_props(prefix, definitions)
         props.Set(pipeline_props)
 
         return props
@@ -205,7 +205,7 @@ def _make_imagepipeline(props, context, scene, output_name, pipeline_index, outp
     define_radiancescales = not lightgroup_ids
     index = imagepipeline.convert_defs(context, scene, definitions, index, define_radiancescales)
 
-    props.Set(utils.create_props(prefix, definitions))
+    props.Set(utils.luxutils.create_props(prefix, definitions))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
 
     # Register in the engine so we know the correct index
@@ -230,7 +230,7 @@ def get_denoiser_imgpipeline_props(context, scene, pipeline_index):
 
     index = imagepipeline.convert_defs(context, scene, definitions, index)
 
-    return utils.create_props(prefix, definitions)
+    return utils.luxutils.create_props(prefix, definitions)
 
 
 def get_BCD_props(definitions, scene, index):
@@ -276,7 +276,7 @@ def _make_noise_detection_imagepipeline(context, scene, props, pipeline_index, o
     definitions[f"{index}.type"] = "GAMMA_CORRECTION"
     definitions[f"{index}.value"] = 2.2
 
-    props.Set(utils.create_props(prefix, definitions))
+    props.Set(utils.luxutils.create_props(prefix, definitions))
     _add_output(output_definitions, "RGB_IMAGEPIPELINE", pipeline_index)
 
     return pipeline_index + 1

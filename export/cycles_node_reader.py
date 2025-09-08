@@ -114,7 +114,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             # Metallic values > 0 reduce transmission. At metallic = 1, no transmission happens at all
             if metallic != 1 and (transmission_socket.is_linked or transmission_socket.default_value > 0):
                 luxcore_name_disney = luxcore_name + "_disney"
-                props.Set(utils.create_props(prefix + luxcore_name_disney + ".", definitions))
+                props.Set(utils.luxutils.create_props(prefix + luxcore_name_disney + ".", definitions))
                 
                 # Glass/Roughglass
                 luxcore_name_glass = luxcore_name + "_glass"
@@ -132,7 +132,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                     definitions["uroughness"] = roughness
                     definitions["vroughness"] = roughness
                 
-                props.Set(utils.create_props(prefix + luxcore_name_glass + ".", definitions))
+                props.Set(utils.luxutils.create_props(prefix + luxcore_name_glass + ".", definitions))
                 
                 # Calculate mix amount
                 # metallic 1, transmission whatever -> mix_amount = 0
@@ -147,7 +147,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                             "texture1": 1,
                             "texture2": metallic,
                         }
-                        props.Set(utils.create_props(tex_prefix, tex_definitions))
+                        props.Set(utils.luxutils.create_props(tex_prefix, tex_definitions))
                     else:
                         inverted_metallic = 1 - metallic
                         
@@ -158,7 +158,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
                         "texture1": inverted_metallic,
                         "texture2": transmission,
                     }
-                    props.Set(utils.create_props(tex_prefix, tex_definitions))
+                    props.Set(utils.luxutils.create_props(tex_prefix, tex_definitions))
                 else:
                     mix_amount = transmission * (1 - metallic)
                 
@@ -215,7 +215,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "type": "fresnelcolor",
             "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
         }
-        props.Set(utils.create_props(helper_prefix, helper_defs))
+        props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
         roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
                                                  luxcore_name, obj_name, group_node_stack)
@@ -303,7 +303,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "type": "fresnelcolor",
             "kr": _socket(node.inputs["Color"], props, material, obj_name, group_node_stack),
         }
-        props.Set(utils.create_props(helper_prefix, helper_defs))
+        props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
         # TODO emulate actual anisotropy and rotation somehow ...
         roughness = _squared_roughness_to_linear(node.inputs["Roughness"], props, material,
@@ -380,7 +380,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         if (_is_textured(fac) or (fac > 0 and fac < 1)) and blend_type != "MIX":
             # Here we need to insert a helper texture *after* the current texture
-            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            props.Set(utils.luxutils.create_props(prefix + luxcore_name + ".", definitions))
             definitions = {
                 "type": "mix",
                 "texture1": tex1,
@@ -486,7 +486,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "texture1": strength,
             "texture2": color,
         }
-        props.Set(utils.create_props(helper_prefix, helper_defs))
+        props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
         definitions = {
             "type": "matte",
@@ -546,7 +546,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             "texture1": _socket(node.inputs["Color2"], props, material, obj_name, group_node_stack),
             "texture2": _socket(node.inputs["Color1"], props, material, obj_name, group_node_stack),
             "mapping.type": "localmapping3d",
-            "mapping.transformation": utils.matrix_to_list(scale),
+            "mapping.transformation": utils.luxutils.matrix_to_list(scale),
         }
     elif node.bl_idname == "ShaderNodeInvert":
         prefix = "scene.textures."
@@ -569,7 +569,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
         if _is_textured(fac) or (fac > 0 and fac < 1):
             # Here we need to insert a helper texture *after* the current texture
-            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            props.Set(utils.luxutils.create_props(prefix + luxcore_name + ".", definitions))
             definitions = {
                 "type": "mix",
                 "texture1": tex,
@@ -656,7 +656,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
             }
         
             # Define the LuxCore texture node
-            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            props.Set(utils.luxutils.create_props(prefix + luxcore_name + ".", definitions))
             return luxcore_name
 
     elif node.bl_idname == "ShaderNodeNormalMap":
@@ -675,7 +675,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         if strength_socket.is_linked:
             # Use scale texture because normalmap scale can't be textured
             # Here we need to insert a helper texture *after* the current texture
-            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            props.Set(utils.luxutils.create_props(prefix + luxcore_name + ".", definitions))
             definitions = {
                 "type": "scale",
                 "texture1": luxcore_name,
@@ -699,7 +699,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         }
 
         if node.invert:
-            props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+            props.Set(utils.luxutils.create_props(prefix + luxcore_name + ".", definitions))
             definitions = {
                 "type": "scale",
                 "texture1": luxcore_name,
@@ -787,7 +787,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
 
     if node.bl_idname in {"ShaderNodeMixRGB", "ShaderNodeMath"} and node.use_clamp:
         # Here we need to insert a helper texture *after* the current texture
-        props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+        props.Set(utils.luxutils.create_props(prefix + luxcore_name + ".", definitions))
         definitions = {
             "type": "clamp",
             "texture": luxcore_name,
@@ -796,7 +796,7 @@ def _node(node, output_socket, props, material, luxcore_name=None, obj_name="", 
         }
         luxcore_name = luxcore_name + "clamp"
 
-    props.Set(utils.create_props(prefix + luxcore_name + ".", definitions))
+    props.Set(utils.luxutils.create_props(prefix + luxcore_name + ".", definitions))
     return luxcore_name
 
 
@@ -811,7 +811,7 @@ def _squared_roughness_to_linear(socket, props, material, luxcore_name, obj_name
             "base": roughness,
             "exponent": 2,
         }
-        props.Set(utils.create_props(helper_prefix, helper_defs))
+        props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
         return tex_name
     else:
         return roughness ** 2
@@ -831,7 +831,7 @@ def _convert_to_float(color_or_texture, props):
             "base": color_or_texture,
             "exponent": 1,
         }
-        props.Set(utils.create_props(helper_prefix, helper_defs))
+        props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
         return tex_name
     elif isinstance(color_or_texture, list):
         return sum(color_or_texture) / len(color_or_texture)

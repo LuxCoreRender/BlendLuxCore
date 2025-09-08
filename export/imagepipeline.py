@@ -13,20 +13,20 @@ def convert(scene, context=None, index=0):
         if utils.in_material_shading_mode(context):
             index = _output_switcher(definitions, 0, "ALBEDO")
             _exposure_compensated_tonemapper(definitions, index, scene)
-            return utils.create_props(prefix, definitions)
+            return utils.luxutils.create_props(prefix, definitions)
 
         if utils.using_photongi_debug_mode(context, scene):
             _exposure_compensated_tonemapper(definitions, 0, scene)
-            return utils.create_props(prefix, definitions)
+            return utils.luxutils.create_props(prefix, definitions)
 
         if not utils.is_valid_camera(scene.camera):
             # Can not work without a camera
             _fallback(definitions)
-            return utils.create_props(prefix, definitions)
+            return utils.luxutils.create_props(prefix, definitions)
 
         convert_defs(context, scene, definitions, 0)
 
-        return utils.create_props(prefix, definitions)
+        return utils.luxutils.create_props(prefix, definitions)
     except Exception as error:
         import traceback
         traceback.print_exc()
