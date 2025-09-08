@@ -153,7 +153,7 @@ def view_draw(engine, context, depsgraph):
             definitions = {
                 "scene.camera.type": "perspective",
             }
-            luxcore_scene.Parse(utils.create_props("", definitions))
+            luxcore_scene.Parse(utils.luxutils.create_props("", definitions))
 
             devices = scene.luxcore.devices
             definitions = {
@@ -163,7 +163,7 @@ def view_draw(engine, context, depsgraph):
                 "scene.epsilon.max": config.max_epsilon,
                 "opencl.devices.select": devices.devices_to_selection_string(),
             }
-            config_props = utils.create_props("", definitions)
+            config_props = utils.luxutils.create_props("", definitions)
             renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
             if not renderconfig.HasCachedKernels():

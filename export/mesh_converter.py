@@ -100,7 +100,7 @@ def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_ins
         if is_viewport_render or use_instancing:
             mesh_transform = None
         else:
-            mesh_transform = utils.matrix_to_list(transform)
+            mesh_transform = utils.luxutils.matrix_to_list(transform)
 
         sharp_attr = False
         sharpPtr = 0

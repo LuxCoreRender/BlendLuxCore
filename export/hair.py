@@ -183,7 +183,7 @@ def convert_hair(exporter, obj, obj_key, psys, depsgraph, luxcore_scene, scene_p
 
         if is_for_duplication:
             # We have to unapply the transformation which is baked into the Blender hair coordinates
-            transformation = utils.matrix_to_list(obj.matrix_world, invert=True)
+            transformation = utils.luxutils.matrix_to_list(obj.matrix_world, invert=True)
         else:
             transformation = None
 
@@ -224,10 +224,10 @@ def set_hair_props(scene_props, lux_obj, lux_shape, lux_mat, visible_to_camera,
     scene_props.Set(pyluxcore.Property(prefix + "camerainvisible", not visible_to_camera))
 
     if is_for_duplication:
-        scene_props.Set(pyluxcore.Property(prefix + "transformation", utils.matrix_to_list(instance_matrix_world)))
+        scene_props.Set(pyluxcore.Property(prefix + "transformation", utils.luxutils.matrix_to_list(instance_matrix_world)))
     elif use_instancing:
         # We don't actually need to transform anything, just set an identity matrix so the mesh is instanced
-        identity_matrix = utils.matrix_to_list(Matrix.Identity(4))
+        identity_matrix = utils.luxutils.matrix_to_list(Matrix.Identity(4))
         scene_props.Set(pyluxcore.Property(prefix + "transformation", identity_matrix))
 
 

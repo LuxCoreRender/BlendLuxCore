@@ -192,7 +192,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
         definitions["transparency.shadow"] = list(self.shadow_color)
         definitions["holdout.enable"] = self.is_holdout
 
-        props.Set(utils.create_props(prefix, definitions))
+        props.Set(utils.luxutils.create_props(prefix, definitions))
 
     def _convert_volume(self, exporter, depsgraph, node_tree, props):
         if node_tree is None:

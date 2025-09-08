@@ -19,38 +19,52 @@ def luxcore_render_draw(panel, context):
     # Device
     col_device = layout.column(align=True)
     if config.engine == "PATH":
-        col_device.prop(config, "device", text="Compute device", icon = 'MEMORY')
-        
+        col_device.prop(config, "device", text="Compute device", icon="MEMORY")
+
         if config.device == "OCL":
             gpu_backend = utils.get_addon_preferences(context).gpu_backend
-            
-            if gpu_backend == "OPENCL" and not utils.is_opencl_build():
-                col_device.label(text="No OpenCL support in this BlendLuxCore version", icon=icons.ERROR)
-            if gpu_backend == "CUDA" and not utils.is_cuda_build():
-                col_device.label(text="No CUDA support in this BlendLuxCore version", icon=icons.ERROR)
+
+            if gpu_backend == "OPENCL" and not utils.luxutils.is_opencl_build():
+                col_device.label(
+                    text="No OpenCL support in this BlendLuxCore version",
+                    icon=icons.ERROR,
+                )
+            if gpu_backend == "CUDA" and not utils.luxutils.is_cuda_build():
+                col_device.label(
+                    text="No CUDA support in this BlendLuxCore version",
+                    icon=icons.ERROR,
+                )
     else:
         col_device.enabled = False
         col_device.prop(config, "bidir_device", text="Device")
 
     # Engine
     col = layout.column(align=True)
-    col.prop(config, "engine", expand=False, icon = 'OUTLINER_OB_LIGHT')
+    col.prop(config, "engine", expand=False, icon="OUTLINER_OB_LIGHT")
 
     row = layout.row()
-    row.operator("luxcore.use_cycles_settings", icon_value= icon_manager.get_icon_id("link"))
-    row.operator("luxcore.render_settings_helper", icon_value= icon_manager.get_icon_id("help"))
+    row.operator(
+        "luxcore.use_cycles_settings",
+        icon_value=icon_manager.get_icon_id("link"),
+    )
+    row.operator(
+        "luxcore.render_settings_helper",
+        icon_value=icon_manager.get_icon_id("help"),
+    )
+
 
 class LUXCORE_RENDER_PT_lightpaths(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Paths"
     bl_order = 20
-    
+
     def draw_header(self, context):
         layout = self.layout
         layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
-    
+
     def draw(self, context):
         pass
+
 
 class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -71,7 +85,9 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
 
             def draw_bounce_prop(layout, name):
                 row = layout.row(align=True)
-                row.alert = getattr(config.path, name) > config.path.depth_total
+                row.alert = (
+                    getattr(config.path, name) > config.path.depth_total
+                )
                 row.prop(config.path, name)
 
             col = layout.column(align=True)
@@ -83,17 +99,22 @@ class LUXCORE_RENDER_PT_lightpaths_bounces(RenderButtonsPanel, Panel):
             col.prop(config, "bidir_path_maxdepth")
             col.prop(config, "bidir_light_maxdepth")
 
+
 class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Light Tracing"
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {"DEFAULT_CLOSED"}
 
     @classmethod
     def poll(cls, context):
         config = context.scene.luxcore.config
         engine = context.scene.render.engine
-        return config.engine == "PATH" and not config.use_tiles and engine == 'LUXCORE'
+        return (
+            config.engine == "PATH"
+            and not config.use_tiles
+            and engine == "LUXCORE"
+        )
 
     def error(self, context):
         use_native_cpu = context.scene.luxcore.devices.use_native_cpu
@@ -123,31 +144,39 @@ class LUXCORE_RENDER_PT_add_light_tracing(RenderButtonsPanel, Panel):
         layout.prop(config.path, "hybridbackforward_glossinessthresh")
 
         if self.error(context):
-            layout.label(text='Enable "Use CPUs" in LuxCore device settings', icon=icons.WARNING)
+            layout.label(
+                text='Enable "Use CPUs" in LuxCore device settings',
+                icon=icons.WARNING,
+            )
 
             col = layout.column(align=True)
             col.use_property_split = False
-            col.prop(context.scene.luxcore.devices, "use_native_cpu", toggle=True, text="Fix this problem")
+            col.prop(
+                context.scene.luxcore.devices,
+                "use_native_cpu",
+                toggle=True,
+                text="Fix this problem",
+            )
 
 
 class LUXCORE_RENDER_PT_lightpaths_clamping(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_parent_id = "LUXCORE_RENDER_PT_lightpaths"
     bl_label = "Clamping"
-    bl_options = {'DEFAULT_CLOSED'}
-    
+    bl_options = {"DEFAULT_CLOSED"}
+
     def draw_header(self, context):
         layout = self.layout
-        config = context.scene.luxcore.config        
+        config = context.scene.luxcore.config
         layout.prop(config.path, "use_clamping", text="")
-      
+
     def draw(self, context):
         layout = self.layout
         config = context.scene.luxcore.config
 
         layout.use_property_split = True
-        layout.use_property_decorate = False      
-      
+        layout.use_property_decorate = False
+
         layout.active = config.path.use_clamping
         layout.prop(config.path, "clamping")
 
@@ -155,13 +184,24 @@ class LUXCORE_RENDER_PT_lightpaths_clamping(RenderButtonsPanel, Panel):
             # Optimal clamp value not yet found, need to start a render first
             if config.path.use_clamping:
                 # Can't compute optimal value if clamping is enabled
-                layout.label(text="Render without clamping to get suggested clamp value", icon=icons.INFO)
+                layout.label(
+                    text="Render without clamping to get suggested clamp value",
+                    icon=icons.INFO,
+                )
             else:
-                layout.label(text="Start a render to get a suggested clamp value", icon=icons.INFO)
+                layout.label(
+                    text="Start a render to get a suggested clamp value",
+                    icon=icons.INFO,
+                )
         else:
             # Show a button that can be used to set the optimal clamp value
-            op_text = "Set Suggested Value: %f" % config.path.suggested_clamping_value
-            layout.operator("luxcore.set_suggested_clamping_value", text=op_text)
+            op_text = (
+                "Set Suggested Value: %f"
+                % config.path.suggested_clamping_value
+            )
+            layout.operator(
+                "luxcore.set_suggested_clamping_value", text=op_text
+            )
 
 
 def compatible_panels():

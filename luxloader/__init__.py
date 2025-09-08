@@ -9,6 +9,8 @@ import shutil
 from textwrap import dedent
 import base64
 import hashlib
+from enum import Enum
+import types
 
 import bpy
 import addon_utils
@@ -35,6 +37,13 @@ def _get_module_name():
     prefix = list(itertools.takewhile(lambda x: x != ADDON_NAME, components))
     prefix.append(ADDON_NAME)
     return '.'.join(prefix)
+
+# TODO Move and merge to utils
+def _get_addon_preferences():
+    """Get handle to BlendLuxCore preferences."""
+    addon_name = _get_module_name()
+    prefs = bpy.context.preferences.addons[addon_name].preferences
+    return prefs
 
 def _get_user_dir(name):
     """Get a user writeable directory, create it if not existing."""
@@ -68,7 +77,7 @@ else:
     offline_files, *_ = os.walk(wheel_dev_folder)
     files_filtered = [
         f for f in offline_files[2] if f.startswith("pyluxcore") and f.endswith(".whl")
-    ]  # TODO Why offline_files[2]? It is not iterable...
+    ]
     if len(files_filtered) > 1:
         print(
             "[BLC] Warning: Content of 'pyluxcore_custom/' is not unique. "
@@ -230,6 +239,7 @@ def _download_pyluxcore():
     # Step 0: for offline install, check content of install_offline/ folder,
     # derive pyluxcore_version from content, copy files to wheels/ folder
     # and skip the rest.
+
     if BLC_OFFLINE_INSTALL:
         pyluxcore_version = _check_offline_content()
         _clear_wheels()

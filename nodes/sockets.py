@@ -1,8 +1,13 @@
 import bpy
 import mathutils
-from bpy.props import EnumProperty, FloatProperty, FloatVectorProperty, BoolProperty
+from bpy.props import (
+    EnumProperty,
+    FloatProperty,
+    FloatVectorProperty,
+    BoolProperty,
+)
 from ..utils import node as utils_node
-from ..utils import matrix_to_list
+from ..utils.luxutils import matrix_to_list
 from ..utils.errorlog import LuxCoreErrorLog
 from ..ui import icons
 
@@ -16,8 +21,12 @@ from ..ui import icons
 
 
 FLOAT_UI_PRECISION = 3
-ROUGHNESS_DESCRIPTION = "Microfacet roughness; higher values lead to more blurry reflections"
-IOR_DESCRIPTION = "Index of refraction; typical values: 1.0 (air), 1.3 (water), 1.5 (glass)"
+ROUGHNESS_DESCRIPTION = (
+    "Microfacet roughness; higher values lead to more blurry reflections"
+)
+IOR_DESCRIPTION = (
+    "Index of refraction; typical values: 1.0 (air), 1.3 (water), 1.5 (glass)"
+)
 
 
 class LuxCoreNodeSocket:
@@ -49,16 +58,25 @@ class LuxCoreNodeSocket:
                 layout.label(text="Wrong Input!", icon=icons.ERROR)
                 return
 
-        has_default = hasattr(self, "default_value") and self.default_value is not None
+        has_default = (
+            hasattr(self, "default_value") and self.default_value is not None
+        )
 
         if self.is_output or self.is_linked or not has_default:
             layout.label(text=text)
 
             # Show a button that lets the user add a node for this socket instantly.
             # Sockets that only accept one node (e.g. volume, emission, fresnel) should have a default_node member
-            show_operator = not self.is_output and not self.is_linked and hasattr(self, "default_node")
+            show_operator = (
+                not self.is_output
+                and not self.is_linked
+                and hasattr(self, "default_node")
+            )
             # Don't show for volume sockets on volume output
-            if self.bl_idname == "LuxCoreSocketVolume" and node.bl_idname == "LuxCoreNodeVolOutput":
+            if (
+                self.bl_idname == "LuxCoreSocketVolume"
+                and node.bl_idname == "LuxCoreNodeVolOutput"
+            ):
                 show_operator = False
 
             if show_operator:
@@ -85,7 +103,9 @@ class LuxCoreNodeSocket:
         link = utils_node.get_link(self)
 
         if link:
-            return link.from_node.export(exporter, depsgraph, props, luxcore_name, link.from_socket)
+            return link.from_node.export(
+                exporter, depsgraph, props, luxcore_name, link.from_socket
+            )
         elif hasattr(self, "default_value"):
             return self.export_default()
         else:
@@ -128,7 +148,8 @@ class LuxCoreSocketFresnel(bpy.types.NodeSocket, LuxCoreNodeSocket):
 
 
 class LuxCoreSocketMatEmission(bpy.types.NodeSocket, LuxCoreNodeSocket):
-    """ Special socket for material emission """
+    """Special socket for material emission"""
+
     color = Color.mat_emission
     # The node type that can be instantly added to this node
     # (via operator drawn in LuxCoreNodeSocket)
@@ -143,7 +164,9 @@ class LuxCoreSocketMatEmission(bpy.types.NodeSocket, LuxCoreNodeSocket):
                 return
 
             if linked_node.bl_idname == "LuxCoreNodeMatEmission":
-                linked_node.export_emission(exporter, depsgraph, props, definitions)
+                linked_node.export_emission(
+                    exporter, depsgraph, props, definitions
+                )
             else:
                 print("ERROR: can't export emission; not an emission node")
 
@@ -155,9 +178,13 @@ class LuxCoreSocketBump(bpy.types.NodeSocket, LuxCoreNodeSocket):
 
 class LuxCoreSocketColor(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.color_texture
-    default_value: FloatVectorProperty(subtype="COLOR", soft_min=0, soft_max=1,
-                                       update=utils_node.update_opengl_materials,
-                                       precision=FLOAT_UI_PRECISION)
+    default_value: FloatVectorProperty(
+        subtype="COLOR",
+        soft_min=0,
+        soft_max=1,
+        update=utils_node.update_opengl_materials,
+        precision=FLOAT_UI_PRECISION,
+    )
 
     def draw_prop(self, context, layout, node, text):
         split = layout.split(factor=0.7)
@@ -179,58 +206,86 @@ class LuxCoreSocketFloat(LuxCoreNodeSocket):
 # Use this socket for normal float values without min/max bounds.
 # For some unkown reason, we can't use the LuxCoreSocketFloat directly.
 class LuxCoreSocketFloatUnbounded(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(description="Float value",
-                                 update=utils_node.force_viewport_update)
+    default_value: FloatProperty(
+        description="Float value", update=utils_node.force_viewport_update
+    )
 
 
 class LuxCoreSocketFloatPositive(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, description="Positive float value",
-                                 update=utils_node.force_viewport_update,
-                                 precision=FLOAT_UI_PRECISION)
+    default_value: FloatProperty(
+        min=0,
+        description="Positive float value",
+        update=utils_node.force_viewport_update,
+        precision=FLOAT_UI_PRECISION,
+    )
 
 
 class LuxCoreSocketFloat0to1(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, max=1, description="Float value between 0 and 1",
-                                 update=utils_node.force_viewport_update,
-                                 precision=FLOAT_UI_PRECISION)
+    default_value: FloatProperty(
+        min=0,
+        max=1,
+        description="Float value between 0 and 1",
+        update=utils_node.force_viewport_update,
+        precision=FLOAT_UI_PRECISION,
+    )
     slider = True
 
 
 class LuxCoreSocketFloat0to2(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, max=2, description="Float value between 0 and 2",
-                                 update=utils_node.force_viewport_update,
-                                 precision=FLOAT_UI_PRECISION)
+    default_value: FloatProperty(
+        min=0,
+        max=2,
+        description="Float value between 0 and 2",
+        update=utils_node.force_viewport_update,
+        precision=FLOAT_UI_PRECISION,
+    )
     slider = True
 
 
 # Just another float socket with different defaults and finer controls
 class LuxCoreSocketBumpHeight(bpy.types.NodeSocket, LuxCoreSocketFloat):
     # Allow negative values for inverting the bump.
-    default_value: FloatProperty(default=0.001, soft_min=-0.01, soft_max=0.01, step=0.001,
-                                 subtype="DISTANCE", description="Scale factor for the height of the bump effect",
-                                 update=utils_node.force_viewport_update,
-                                 precision=FLOAT_UI_PRECISION)
+    default_value: FloatProperty(
+        default=0.001,
+        soft_min=-0.01,
+        soft_max=0.01,
+        step=0.001,
+        subtype="DISTANCE",
+        description="Scale factor for the height of the bump effect",
+        update=utils_node.force_viewport_update,
+        precision=FLOAT_UI_PRECISION,
+    )
 
 
 class LuxCoreSocketFloatDisneySheen(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, max=100, soft_max=10.0, description="Sheen value",
-                                 update=utils_node.force_viewport_update,
-                                 precision=FLOAT_UI_PRECISION)
+    default_value: FloatProperty(
+        min=0,
+        max=100,
+        soft_max=10.0,
+        description="Sheen value",
+        update=utils_node.force_viewport_update,
+        precision=FLOAT_UI_PRECISION,
+    )
     slider = True
 
 
 class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.vector_texture
-    default_value: FloatVectorProperty(name="", subtype="XYZ",
-                                       update=utils_node.force_viewport_update,
-                                       precision=FLOAT_UI_PRECISION)
+    default_value: FloatVectorProperty(
+        name="",
+        subtype="XYZ",
+        update=utils_node.force_viewport_update,
+        precision=FLOAT_UI_PRECISION,
+    )
     expand: BoolProperty(default=False)
 
     def draw_prop(self, context, layout, node, text):
         split = layout.split(factor=0.1)
 
         col = split.column()
-        icon = icons.EXPANDABLE_OPENED if self.expand else icons.EXPANDABLE_CLOSED
+        icon = (
+            icons.EXPANDABLE_OPENED if self.expand else icons.EXPANDABLE_CLOSED
+        )
         col.prop(self, "expand", text="", icon=icon)
 
         if self.expand:
@@ -244,7 +299,9 @@ class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
             col.label(text="")
         else:
             # Show the value of the vector even in collapsed form
-            text += " (%s)" % (", ".join(str(round(x, 2)) for x in self.default_value))
+            text += " (%s)" % (
+                ", ".join(str(round(x, 2)) for x in self.default_value)
+            )
         col.label(text=text)
 
     def export_default(self):
@@ -253,16 +310,29 @@ class LuxCoreSocketVector(bpy.types.NodeSocket, LuxCoreNodeSocket):
 
 class LuxCoreSocketRoughness(bpy.types.NodeSocket, LuxCoreSocketFloat):
     # Reflections look weird when roughness gets too small
-    default_value: FloatProperty(min=0.001, soft_max=0.8, max=1.0, precision=4,
-                                  description=ROUGHNESS_DESCRIPTION,
-                                  update=utils_node.force_viewport_update)
+    default_value: FloatProperty(
+        min=0.001,
+        soft_max=0.8,
+        max=1.0,
+        precision=4,
+        description=ROUGHNESS_DESCRIPTION,
+        update=utils_node.force_viewport_update,
+    )
     slider = True
 
 
 class LuxCoreSocketIOR(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(name="IOR", min=0.0001, soft_min=1.0, soft_max=2.0, max=25, step=0.1,
-                                 precision=FLOAT_UI_PRECISION, description=IOR_DESCRIPTION,
-                                 update=utils_node.force_viewport_update)
+    default_value: FloatProperty(
+        name="IOR",
+        min=0.0001,
+        soft_min=1.0,
+        soft_max=2.0,
+        max=25,
+        step=0.1,
+        precision=FLOAT_UI_PRECISION,
+        description=IOR_DESCRIPTION,
+        update=utils_node.force_viewport_update,
+    )
 
     def draw(self, context, layout, node, text):
         if hasattr(node, "get_interior_volume") and node.get_interior_volume():
@@ -271,27 +341,43 @@ class LuxCoreSocketIOR(bpy.types.NodeSocket, LuxCoreSocketFloat):
             layout.active = False
 
         super().draw(context, layout, node, text)
-        
-        
+
+
 class LuxCoreSocketFilmThickness(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=0, precision=1, step=10, soft_max=4000,
-                                  description="Thickness of the film in nanometers",
-                                  update=utils_node.force_viewport_update)
-    
-    
+    default_value: FloatProperty(
+        min=0,
+        precision=1,
+        step=10,
+        soft_max=4000,
+        description="Thickness of the film in nanometers",
+        update=utils_node.force_viewport_update,
+    )
+
+
 class LuxCoreSocketFilmIOR(bpy.types.NodeSocket, LuxCoreSocketFloat):
-    default_value: FloatProperty(min=1, soft_max=4.0, max=25, step=0.1,
-                                 precision=FLOAT_UI_PRECISION, 
-                                 description="Index of refraction of the film",
-                                 update=utils_node.force_viewport_update)
+    default_value: FloatProperty(
+        min=1,
+        soft_max=4.0,
+        max=25,
+        step=0.1,
+        precision=FLOAT_UI_PRECISION,
+        description="Index of refraction of the film",
+        update=utils_node.force_viewport_update,
+    )
 
 
 class LuxCoreSocketVolumeAsymmetry(bpy.types.NodeSocket, LuxCoreNodeSocket):
     color = Color.vector_texture
-    default_value: FloatVectorProperty(name="", default=(0, 0, 0), min=-1, max=1, subtype="COLOR",
-                                       description="Scattering asymmetry. -1 means back scatter, "
-                                                   "0 is isotropic, 1 is forwards scattering",
-                                       update=utils_node.force_viewport_update)
+    default_value: FloatVectorProperty(
+        name="",
+        default=(0, 0, 0),
+        min=-1,
+        max=1,
+        subtype="COLOR",
+        description="Scattering asymmetry. -1 means back scatter, "
+        "0 is isotropic, 1 is forwards scattering",
+        update=utils_node.force_viewport_update,
+    )
 
     def draw_prop(self, context, layout, node, text):
         split = layout.split()
@@ -359,9 +445,13 @@ class LuxCoreSocketShape(bpy.types.NodeSocket, LuxCoreNodeSocket):
 
         if link:
             try:
-                return link.from_node.export_shape(exporter, depsgraph, props, base_shape_name)
+                return link.from_node.export_shape(
+                    exporter, depsgraph, props, base_shape_name
+                )
             except Exception as error:
-                LuxCoreErrorLog.add_warning("Error during shape export:", str(error))
+                LuxCoreErrorLog.add_warning(
+                    "Error during shape export:", str(error)
+                )
 
         return base_shape_name
 
@@ -372,11 +462,27 @@ LuxCoreSocketMaterial.allowed_inputs = {LuxCoreSocketMaterial}
 LuxCoreSocketVolume.allowed_inputs = {LuxCoreSocketVolume}
 LuxCoreSocketFresnel.allowed_inputs = {LuxCoreSocketFresnel}
 LuxCoreSocketMatEmission.allowed_inputs = {LuxCoreSocketMatEmission}
-LuxCoreSocketBump.allowed_inputs = {LuxCoreSocketBump, LuxCoreSocketColor, LuxCoreSocketFloat}
-LuxCoreSocketColor.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketVector}
+LuxCoreSocketBump.allowed_inputs = {
+    LuxCoreSocketBump,
+    LuxCoreSocketColor,
+    LuxCoreSocketFloat,
+}
+LuxCoreSocketColor.allowed_inputs = {
+    LuxCoreSocketColor,
+    LuxCoreSocketFloat,
+    LuxCoreSocketVector,
+}
 # Note: Utility nodes like "math" can be used to add bumpmaps together, so we allow Bump input here
-LuxCoreSocketFloat.allowed_inputs = {LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketBump}
-LuxCoreSocketVector.allowed_inputs = {LuxCoreSocketVector, LuxCoreSocketColor, LuxCoreSocketFloat}
+LuxCoreSocketFloat.allowed_inputs = {
+    LuxCoreSocketColor,
+    LuxCoreSocketFloat,
+    LuxCoreSocketBump,
+}
+LuxCoreSocketVector.allowed_inputs = {
+    LuxCoreSocketVector,
+    LuxCoreSocketColor,
+    LuxCoreSocketFloat,
+}
 LuxCoreSocketMapping2D.allowed_inputs = {LuxCoreSocketMapping2D}
 LuxCoreSocketMapping3D.allowed_inputs = {LuxCoreSocketMapping3D}
 LuxCoreSocketShape.allowed_inputs = {LuxCoreSocketShape}

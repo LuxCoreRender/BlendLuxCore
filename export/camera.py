@@ -32,7 +32,7 @@ def convert(exporter, scene, depsgraph, context=None, is_camera_moving=False):
     _clipping_plane(scene, definitions)
     _motion_blur(scene, definitions, context, is_camera_moving)
 
-    cam_props = utils.create_props(prefix, definitions)
+    cam_props = utils.luxutils.create_props(prefix, definitions)
     cam_props.Set(_get_volume_props(exporter, scene, depsgraph))
     return cam_props
 

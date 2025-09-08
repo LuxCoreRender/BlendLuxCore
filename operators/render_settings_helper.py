@@ -7,6 +7,7 @@ from .utils import use_cycles_settings
 
 TOTAL_QUESTIONS = 3
 
+
 @utils.count_index
 def question(layout, text, index=1):
     layout.label(text=f"({index}/{TOTAL_QUESTIONS}) {text}")
@@ -28,8 +29,18 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
 
     env_visibility_items = [
         ("NOT_SET", "Please Choose", "", 0),
-        ("INDOORS", "Indoors", "Choose this if the world background is only visible through small openings like windows", 1),
-        ("OUTDOORS", "Outdoors or Studio", "Choose this if the world background is unobstructed", 2),
+        (
+            "INDOORS",
+            "Indoors",
+            "Choose this if the world background is only visible through small openings like windows",
+            1,
+        ),
+        (
+            "OUTDOORS",
+            "Outdoors or Studio",
+            "Choose this if the world background is unobstructed",
+            2,
+        ),
     ]
     env_visibility: EnumProperty(items=env_visibility_items)
 
@@ -37,7 +48,9 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
     has_SDS_caustics: EnumProperty(items=yes_no_items)
 
     def _use_GPU(self):
-        return utils.is_opencl_build() or utils.is_cuda_build()
+        return (
+            utils.luxutils.is_opencl_build() or utils.luxutils.is_cuda_build()
+        )
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=450)
@@ -77,7 +90,9 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
             config.photongi.enabled = True
             config.photongi.caustic_enabled = True
             # Disable radius shrinking
-            config.photongi.caustic_updatespp_minradius = config.photongi.caustic_lookup_radius
+            config.photongi.caustic_updatespp_minradius = (
+                config.photongi.caustic_lookup_radius
+            )
 
         utils_ui.tag_region_for_redraw(context, "PROPERTIES", "WINDOW")
         return {"FINISHED"}
@@ -103,7 +118,9 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
             return
 
         if self.use_cycles_settings == "YES":
-            self._show_result("Will use Cycles settings for materials, lights and world")
+            self._show_result(
+                "Will use Cycles settings for materials, lights and world"
+            )
 
         # Is the environment light obscured or not, is indirect light likely noisy or not?
         question(layout, "Is your scene indoors or outdoors?")
@@ -117,7 +134,9 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
             self._show_result("Will enable PhotonGI Indirect Cache")
             self._show_result("Will enable Environment Light Cache")
         else:
-            self._show_result("Indirect and environment light caches not needed")
+            self._show_result(
+                "Indirect and environment light caches not needed"
+            )
 
         # Caustics
         question(layout, "Are there caustics in your scene?")
@@ -134,7 +153,9 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
 
         if self.has_caustics == "YES":
             # SDS caustics
-            layout.label(text="Are the caustics visible in a mirror, or are the viewed through glass (e.g. in a pool)?")
+            layout.label(
+                text="Are the caustics visible in a mirror, or are the viewed through glass (e.g. in a pool)?"
+            )
             layout.prop(self, "has_SDS_caustics", expand=True)
 
             if self.has_SDS_caustics == "NOT_SET":
@@ -142,13 +163,17 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
                 return
 
             if self.has_SDS_caustics == "YES":
-                self._show_result('Will enable PhotonGI Caustic Cache')
+                self._show_result("Will enable PhotonGI Caustic Cache")
                 col = layout.column(align=True)
-                col.label(text="What would be a good photon radius for your scene size? (in meters)")
-                col.label(text="(Too large values will look blurred, too small values will create noise)")
+                col.label(
+                    text="What would be a good photon radius for your scene size? (in meters)"
+                )
+                col.label(
+                    text="(Too large values will look blurred, too small values will create noise)"
+                )
                 col.prop(config.photongi, "caustic_lookup_radius")
             else:
-                self._show_result('Caustic cache not needed')
+                self._show_result("Caustic cache not needed")
 
         # Show general settings that will be used
         layout.separator()

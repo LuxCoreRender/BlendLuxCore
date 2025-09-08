@@ -221,7 +221,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
                 "texture3": luxcore_name,
                 "mapping.type": "localmapping3d",
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
             luxcore_name = tex_name
 
         if self.is_normal_map:
@@ -232,7 +232,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
                 "texture": luxcore_name,
                 "scale": self.normal_map_scale,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
             luxcore_name = tex_name
         
         return luxcore_name

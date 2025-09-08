@@ -460,7 +460,7 @@ class LuxCoreNodeTexOpenVDB(LuxCoreNodeTexture, bpy.types.Node):
         transformation = utils.list_to_matrix(mapping_definitions["mapping.transformation"])
         mapping_definitions["mapping.type"] = "globalmapping3d"
         # combine transformations
-        mapping_definitions["mapping.transformation"] = utils.matrix_to_list(transformation @ obmat @ fluidmat @ houdini_transform,
+        mapping_definitions["mapping.transformation"] = utils.luxutils.matrix_to_list(transformation @ obmat @ fluidmat @ houdini_transform,
                                                                              invert=True)
 
         definitions = {

@@ -66,7 +66,7 @@ class LuxCoreNodeTexTriplanarBump(LuxCoreNodeTexture, bpy.types.Node):
             "texture1": value,
             "texture2": height,
         }
-        props.Set(utils.create_props(prefix, defs))
+        props.Set(utils.luxutils.create_props(prefix, defs))
         return tex_name
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):

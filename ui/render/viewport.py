@@ -4,6 +4,7 @@ from ... import utils
 from .. import icons
 from ..icons import icon_manager
 
+
 class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
     bl_label = "Viewport Render"
@@ -12,12 +13,12 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-         return context.scene.render.engine == "LUXCORE"
+        return context.scene.render.engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-        layout.use_property_decorate = False      
+        layout.use_property_decorate = False
 
         viewport = context.scene.luxcore.viewport
         config = context.scene.luxcore.config
@@ -27,21 +28,32 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
             col = layout.column(align=True)
             col.prop(viewport, "device", text="Device", expand=False)
 
-            if viewport.device == "OCL" and not (utils.is_opencl_build() or utils.is_cuda_build()):
-                layout.label(text="No GPU support in this BlendLuxCore version", icon=icons.ERROR)
+            if viewport.device == "OCL" and not (
+                utils.luxutils.is_opencl_build()
+                or utils.luxutils.is_cuda_build()
+            ):
+                layout.label(
+                    text="No GPU support in this BlendLuxCore version",
+                    icon=icons.ERROR,
+                )
                 layout.label(text="(Falling back to CPU realtime engine)")
-        
+
         layout.prop(viewport, "halt_time")
 
-        if luxcore_engine == "PATH" and not config.use_tiles and config.path.hybridbackforward_enable:
+        if (
+            luxcore_engine == "PATH"
+            and not config.use_tiles
+            and config.path.hybridbackforward_enable
+        ):
             layout.prop(viewport, "add_light_tracing")
 
         if luxcore_engine == "BIDIR":
             layout.prop(viewport, "use_bidir")
-    
+
     def draw_header(self, context):
         layout = self.layout
         layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+
 
 class LUXCORE_RENDER_PT_viewport_settings_denoiser(RenderButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}
@@ -51,7 +63,7 @@ class LUXCORE_RENDER_PT_viewport_settings_denoiser(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-         return context.scene.render.engine == "LUXCORE"
+        return context.scene.render.engine == "LUXCORE"
 
     def draw_header(self, context):
         layout = self.layout
@@ -68,15 +80,16 @@ class LUXCORE_RENDER_PT_viewport_settings_denoiser(RenderButtonsPanel, Panel):
         can_use_optix = viewport.can_use_optix_denoiser(context)
 
         if not can_use_optix:
-            layout.label(text="OptiX not available, using OIDN", icon=icons.INFO)
+            layout.label(
+                text="OptiX not available, using OIDN", icon=icons.INFO
+            )
 
         col = layout.column()
         col.active = can_use_optix
         col.prop(viewport, "denoiser")
-        
+
         if viewport.get_denoiser(context) == "OPTIX":
             col.prop(viewport, "min_samples")
-
 
 
 class LUXCORE_RENDER_PT_viewport_settings_advanced(RenderButtonsPanel, Panel):
@@ -87,7 +100,7 @@ class LUXCORE_RENDER_PT_viewport_settings_advanced(RenderButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-         return context.scene.render.engine == "LUXCORE"
+        return context.scene.render.engine == "LUXCORE"
 
     def draw(self, context):
         layout = self.layout
@@ -96,14 +109,19 @@ class LUXCORE_RENDER_PT_viewport_settings_advanced(RenderButtonsPanel, Panel):
 
         viewport = context.scene.luxcore.viewport
 
-        resolution_reduction_supported = not (utils.using_bidir_in_viewport(context.scene)
-                                              or utils.using_hybridbackforward_in_viewport(context.scene))
+        resolution_reduction_supported = not (
+            utils.using_bidir_in_viewport(context.scene)
+            or utils.using_hybridbackforward_in_viewport(context.scene)
+        )
         col = layout.column(align=True)
         col.enabled = resolution_reduction_supported
         col.prop(viewport, "reduce_resolution_on_edit")
 
         col = layout.column(align=True)
-        col.enabled = viewport.reduce_resolution_on_edit and resolution_reduction_supported
+        col.enabled = (
+            viewport.reduce_resolution_on_edit
+            and resolution_reduction_supported
+        )
         col.prop(viewport, "resolution_reduction")
 
         col = layout.column(align=True)

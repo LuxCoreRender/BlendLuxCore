@@ -98,7 +98,7 @@ class LuxCoreNodeTexColorMix(LuxCoreNodeTexture, bpy.types.Node):
                 "min": 0,
                 "max": 1,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
             # The helper texture gets linked in front of this node
             return tex_name

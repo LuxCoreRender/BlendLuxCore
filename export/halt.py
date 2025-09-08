@@ -50,4 +50,4 @@ def convert(scene):
     definitions["batch.haltspp"] = [halt_spp_eye, halt_spp_light]
     definitions["batch.halttime"] = halt_time
 
-    return utils.create_props(prefix, definitions)
+    return utils.luxutils.create_props(prefix, definitions)

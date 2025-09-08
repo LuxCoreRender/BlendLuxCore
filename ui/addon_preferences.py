@@ -1,5 +1,8 @@
 """Addon Preferences user interface."""
 
+# AddonPreferences provides settings to load PyLuxCore, so it should not depends
+# on PyLuxCore in any way (neither directly nor indirectly)
+
 from importlib.metadata import version
 
 _needs_reload = "bpy" in locals()
@@ -208,14 +211,14 @@ class LuxCoreAddonPreferences(AddonPreferences):
         row = layout.row()
         row.label(text="GPU API:")
 
-        if utils.is_cuda_build():
+        if utils.luxutils.is_cuda_build():
             row.prop(self, "gpu_backend", expand=True)
 
             row = layout.row()
             split = row.split(factor=SPLIT_FACTOR)
             split.label(text="Film Device:")
             split.prop(self, "film_device", text="")
-        elif utils.is_opencl_build():
+        elif utils.luxutils.is_opencl_build():
             row.label(text="OpenCL")
 
             row = layout.row()

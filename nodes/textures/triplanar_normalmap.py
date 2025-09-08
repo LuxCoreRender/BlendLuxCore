@@ -73,7 +73,7 @@ class LuxCoreNodeTexTriplanarNormalmap(LuxCoreNodeTexture, bpy.types.Node):
             "texture": luxcore_name,
             "scale": self.scale,
         }
-        props.Set(utils.create_props(helper_prefix, helper_defs))
+        props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))
 
         # The helper texture gets linked in front of this node
         return tex_name
