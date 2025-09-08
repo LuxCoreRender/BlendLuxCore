@@ -201,10 +201,11 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     pyluxcore_version: StringProperty(name="", get=get_pyluxcore_version)
 
-    def draw(self, context):
+    def _draw_general(self):
+        """Draw general settings."""
+
         layout = self.layout
 
-        # General settings
         row = layout.row()
         row.label(text="General settings:")
 
@@ -266,9 +267,13 @@ class LuxCoreAddonPreferences(AddonPreferences):
         split.label(text="Pyluxcore version:")
         split.prop(self, "pyluxcore_version")
 
-
-        # LuxCore Online Library
+        # Final separator (keep at the end)
         layout.separator()
+
+    def _draw_lol(self):
+        """Draw LuxCore Online Library (lol)."""
+
+        layout = self.layout
 
         row = layout.row()
         split = row.split(factor=SPLIT_FACTOR)
@@ -296,9 +301,11 @@ class LuxCoreAddonPreferences(AddonPreferences):
             split.label(text="Thumb Size:")
             split.prop(self, "thumb_size", text="")
 
-
-        # Advanced settings panel
         layout.separator()
+
+    def _draw_advanced(self):
+        """Draw advanced settings panel."""
+        layout = self.layout
 
         row = layout.row()
         split = row.split(factor=SPLIT_FACTOR)
@@ -337,3 +344,16 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
             row = layout.row()
             row.prop(self, "reinstall_upon_reloading")
+
+    def draw(self, context):
+        """Draw addon preferences panel (callback)."""
+
+        # General settings
+        self._draw_general()
+
+        # LuxCore Online Library
+        self._draw_lol()
+
+        # Advanced settings panel
+        self._draw_advanced()
+
