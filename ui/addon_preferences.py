@@ -163,40 +163,6 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     display_luxcore_logs: BoolProperty(name="Show LuxCore Logs", default=True)
 
-    show_advanced_settings: BoolProperty(
-        name="Use Advanced Settings",
-        description=(
-            "Development and Debugging settings."
-            "WARNING! May cause BlendLuxCore to become unusable. "
-            "Do not modify unless you know what you are doing"
-        ),
-        default=False,
-    )
-
-    wheel_source: bpy.props.EnumProperty(
-        name="Source",
-        description="PyLuxCore source",
-        items=enum_wheel_sources,
-        default="PyPI",
-    )
-
-    path_to_wheel: bpy.props.StringProperty(
-        name="Path to File",
-        description="Path to PyLuxCore Wheel file",
-        subtype="FILE_PATH",
-    )
-
-    path_to_folder: bpy.props.StringProperty(
-        name="Path to Folder",
-        description="Path to Folder containing PyLuxCore Wheel + the other dependencies",
-        subtype="DIR_PATH",
-    )
-
-    reinstall_upon_reloading: bpy.props.BoolProperty(
-        name="Reinstall upon reloading",
-        description="Reinstall every time BlendLuxCore is reloaded",
-    )
-
     # Read-only string property, returns the current date
     def get_pyluxcore_version(self):
         """Provide pyluxcore version."""
@@ -310,49 +276,6 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         layout.separator()
 
-    def _draw_advanced(self):
-        """Draw advanced settings panel."""
-        layout = self.layout
-
-        row = layout.row()
-        split = row.split(factor=SPLIT_FACTOR)
-        split.label(text="Advanced Settings:")
-        split.prop(self, "show_advanced_settings")
-
-        if self.show_advanced_settings:
-            col = layout.row()
-            col.label(
-                text=(
-                    "WARNING! THE FOLLOWING SETTINGS MAY CAUSE BLENDLUXCORE "
-                    "TO BECOME UNUSABLE. "
-                    "*** DO NOT MODIFY UNLESS YOU KNOW WHAT YOU ARE DOING. ***"
-                )
-            )
-            # Source selector
-            row = layout.row()
-            split = row.split(factor=SPLIT_FACTOR)
-            split.label(text="Wheel source:")
-            split.prop(self, "wheel_source", expand=False, text="")
-
-            if self.wheel_source == "PyPI":
-                pass
-            elif self.wheel_source == "LocalWheel":
-                # File
-                row = layout.row()
-                split = row.split(factor=SPLIT_FACTOR)
-                split.label(text="Path to File:")
-                split.prop(self, "path_to_wheel", text="")
-            elif self.wheel_source == "LocalFolder":
-                # Folder
-                row = layout.row()
-                split = row.split(factor=SPLIT_FACTOR)
-                split.label(text="Path to Folder:")
-                split.prop(self, "path_to_folder", text="")
-            else:
-                raise RuntimeError(f"Unhandled wheel source: {wheel_source}")
-
-            row = layout.row()
-            row.prop(self, "reinstall_upon_reloading")
 
     def draw(self, context):
         """Draw addon preferences panel (callback)."""
@@ -362,6 +285,3 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         # LuxCore Online Library
         self._draw_lol()
-
-        # Advanced settings panel
-        self._draw_advanced()
