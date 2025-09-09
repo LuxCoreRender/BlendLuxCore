@@ -1,8 +1,5 @@
 """Addon Preferences user interface."""
 
-# AddonPreferences provides settings to load PyLuxCore, so it should not depends
-# on PyLuxCore in any way (neither directly nor indirectly)
-
 from importlib.metadata import version
 
 _needs_reload = "bpy" in locals()
@@ -14,6 +11,7 @@ from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 from .. import ui
 from ..ui import icons
 from .. import utils
+from ..utils import luxutils
 from ..utils.lol import utils as lol_utils
 
 
@@ -22,13 +20,20 @@ if _needs_reload:
 
     ui = importlib.reload(ui)
     utils = importlib.reload(utils)
+    luxutils = importlib.reload(luxutils)
+    lol_utils = importlib.reload(lol_utils)
+
 
 SPLIT_FACTOR = 1 / 3
 
 film_device_items = []
 
 enum_wheel_sources = (
-    ("PyPI", "PyPI (default)", "Get PyLuxCore from Python Package Index (PyPI)"),
+    (
+        "PyPI",
+        "PyPI (default)",
+        "Get PyLuxCore from Python Package Index (PyPI)",
+    ),
     (
         "LocalWheel",
         "Local Wheel",
@@ -42,10 +47,12 @@ enum_wheel_sources = (
     ),
 )
 
+
 class LuxCoreAddonPreferences(AddonPreferences):
     """Addon Preference panel."""
+
     # id name for 4.2
-    bl_idname = utils.get_bl_idname()
+    bl_idname = utils.get_module_name()
 
     gpu_backend_items = [
         ("OPENCL", "OpenCL", "Use OpenCL for GPU acceleration", 0),
@@ -163,7 +170,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
             "WARNING! May cause BlendLuxCore to become unusable. "
             "Do not modify unless you know what you are doing"
         ),
-        default=False
+        default=False,
     )
 
     wheel_source: bpy.props.EnumProperty(
@@ -314,11 +321,13 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         if self.show_advanced_settings:
             col = layout.row()
-            col.label(text=(
-                "WARNING! THE FOLLOWING SETTINGS MAY CAUSE BLENDLUXCORE "
-                "TO BECOME UNUSABLE. "
-                "*** DO NOT MODIFY UNLESS YOU KNOW WHAT YOU ARE DOING. ***"
-            ))
+            col.label(
+                text=(
+                    "WARNING! THE FOLLOWING SETTINGS MAY CAUSE BLENDLUXCORE "
+                    "TO BECOME UNUSABLE. "
+                    "*** DO NOT MODIFY UNLESS YOU KNOW WHAT YOU ARE DOING. ***"
+                )
+            )
             # Source selector
             row = layout.row()
             split = row.split(factor=SPLIT_FACTOR)
@@ -356,4 +365,3 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         # Advanced settings panel
         self._draw_advanced()
-

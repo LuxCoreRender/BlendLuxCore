@@ -17,12 +17,13 @@ _needs_reload = "bpy" in locals()
 import bpy
 import addon_utils
 
-# Before all, check if Blender and OS versions are compatible
+# First, check if Blender and OS versions are compatible
 if bpy.app.version < (4, 2, 0):
     raise RuntimeError(
         "\n\nUnsupported Blender version. "
         "4.2 or higher is required by BlendLuxCore."
     )
+
 
 # Then, take care of ensuring PyLuxCore, as other modules may want to import it
 from . import luxloader

@@ -15,6 +15,8 @@ import types
 import bpy
 import addon_utils
 
+from .. import utils
+from .. import ui
 
 # The variable PYLUXCORE_VERSION specifies the release version of pyluxcore
 # that will be downloaded from PyPi during the standard installation of
@@ -26,37 +28,11 @@ PYLUXCORE_VERSION = "2.10.0"
 # local pyluxcore wheel, which will then be installed
 BLC_WHEEL_PATH = os.environ.get("BLC_WHEEL_PATH")
 
-# TODO This is duplicated code with `utils` (but I could not import utils, because utils
-# imports pyluxcore, which needs to be loaded by this module etc.
-# Must break the circular ref...
-ADDON_NAME = "BlendLuxCore"
-
-def _get_module_name():
-    """Get bl_idname for current addon."""
-    components = __package__.split('.')
-    prefix = list(itertools.takewhile(lambda x: x != ADDON_NAME, components))
-    prefix.append(ADDON_NAME)
-    return '.'.join(prefix)
-
-# TODO Move and merge to utils
-def _get_addon_preferences():
-    """Get handle to BlendLuxCore preferences."""
-    addon_name = _get_module_name()
-    prefs = bpy.context.preferences.addons[addon_name].preferences
-    return prefs
-
-def _get_user_dir(name):
-    """Get a user writeable directory, create it if not existing."""
-    return pathlib.Path(
-        bpy.utils.extension_path_user(_get_module_name(), path=name, create=True)
-    )
-
-
-root_folder = _get_user_dir("")
-assert(root_folder)
-wheel_dl_folder = _get_user_dir("wheels")
-wheel_backup_folder = _get_user_dir("wheels_backup")
-wheel_dev_folder = _get_user_dir("pyluxcore_custom")
+# User folders
+root_folder = utils.get_user_dir("")
+wheel_dl_folder = utils.get_user_dir("wheels")
+wheel_backup_folder = utils.get_user_dir("wheels_backup")
+wheel_dev_folder = utils.get_user_dir("pyluxcore_custom")
 
 # For installation on PCs without internet, or in company networks where
 # downloading with pip is an issue (reported cases), check for the presence of
@@ -370,4 +346,3 @@ def ensure_pyluxcore():
     if BLC_OFFLINE_INSTALL:
         # remove the install_offline_folder because we want a normal startup next time
         _delete_install_offline()
-
