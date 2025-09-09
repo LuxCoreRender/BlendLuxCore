@@ -650,12 +650,6 @@ def in_material_shading_mode(context):
     return context and context.space_data.shading.type == "MATERIAL"
 
 
-def get_addon_preferences(context):
-    """Get addon_preferences handle."""
-    addon_name = get_bl_idname()
-    return context.preferences.addons[addon_name].preferences
-
-
 def count_index(func):
     """
     A decorator that increments an index each time the decorated function is called.
@@ -671,12 +665,19 @@ def count_index(func):
 
 ADDON_NAME = "BlendLuxCore"
 
-def get_bl_idname():
-    """Get bl_idname for current addon."""
+def get_module_name():
+    """Get module name (bl_idname) for current addon."""
     components = __package__.split('.')
     prefix = list(itertools.takewhile(lambda x: x != ADDON_NAME, components))
     prefix.append(ADDON_NAME)
     return '.'.join(prefix)
+
+
+def get_addon_preferences(context):
+    """Get addon_preferences handle."""
+    addon_name = get_module_name()
+    return context.preferences.addons[addon_name].preferences
+
 
 def get_version_string():
     """Get BlendLuxCore version string.
@@ -691,3 +692,8 @@ def get_version_string():
     version_string = manifest_data["version"]
     return version_string
 
+def get_user_dir(name):
+    """Get a user writeable directory, create it if not existing."""
+    return pathlib.Path(
+        bpy.utils.extension_path_user(get_module_name(), path=name, create=True)
+    )
