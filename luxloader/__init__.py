@@ -16,7 +16,6 @@ import bpy
 import addon_utils
 
 from .. import utils
-from .. import ui
 
 # The variable PYLUXCORE_VERSION specifies the release version of pyluxcore
 # that will be downloaded from PyPi during the standard installation of
@@ -30,6 +29,7 @@ BLC_WHEEL_PATH = os.environ.get("BLC_WHEEL_PATH")
 
 # User folders
 root_folder = utils.get_user_dir("")
+wheel_settings_folder = utils.get_user_dir("wheel_settings")
 wheel_dl_folder = utils.get_user_dir("wheels")
 wheel_backup_folder = utils.get_user_dir("wheels_backup")
 wheel_dev_folder = utils.get_user_dir("pyluxcore_custom")
@@ -216,6 +216,7 @@ def _download_pyluxcore():
     # derive pyluxcore_version from content, copy files to wheels/ folder
     # and skip the rest.
 
+
     if BLC_OFFLINE_INSTALL:
         pyluxcore_version = _check_offline_content()
         _clear_wheels()
@@ -323,6 +324,7 @@ def ensure_pyluxcore():
     # We'll invoke download_pyluxcore at each init
     # We rely on pip local cache for this call to be transparent,
     # after the wheels have been downloaded once, unless an update is required
+    print("[BLC] Ensuring pyluxcore")
     download_status = _download_pyluxcore()
     if download_status == 0:
         # Install downloaded wheels
