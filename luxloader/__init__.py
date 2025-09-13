@@ -58,6 +58,7 @@ def _hash_wheels(wheels):
             raise TypeError("Unhandled Wheel requirement type")
     return wheel_hash.hexdigest()
 
+
 # TODO Implement "no-deps"
 def _download_wheels(wheel_requirements):
     """Download wheels from wheel requirements."""
@@ -106,7 +107,7 @@ def _save_installation_info(whl_hash):
     Only one of the supplied arguments should be different from 'None'
     to ensure that the type of installation is saved implicitly as well.
     """
-    assert(whl_hash)
+    assert whl_hash
     info_file = ROOT_FOLDER / "pyluxcore_installation_info.txt"
     config = configparser.ConfigParser()
     config["WHEELS"] = {"hash": whl_hash}
@@ -293,6 +294,7 @@ def _fetch_wheels():
     settings = _get_settings()
 
     wheel_source = settings["wheel_source"]
+    reinstall_upon_reloading = bool(settings["reinstall_upon_reloading"])
 
     # Get installation info for comparison in the following steps
     old_wheel_hash = _get_installation_info()
@@ -330,15 +332,15 @@ def _fetch_wheels():
             return FetchWheelStatus.ERROR, None
 
         # Get wheel list
-        wheels = path_to_folder.glob("*.whl")
+        wheels = list(path_to_folder.glob("*.whl"))
 
     # No other case
     else:
         raise ValueError(f"Unhandled wheel source setting ({wheel_source})")
 
     # Check cache (hash and compare)
-    # TODO take `reinstall_upon_reloading` into account
-    if (wheel_hash := _hash_wheels(wheels)) == old_wheel_hash:
+    wheel_hash = _hash_wheels(wheels)
+    if not reinstall_upon_reloading and wheel_hash == old_wheel_hash:
         print(
             "[BLC] Skipping pyluxcore installation. Similar wheel(s) already "
             "installed."
@@ -350,7 +352,7 @@ def _fetch_wheels():
     try:
         _download_wheels(wheels)
     except Exception as err:
-        print(f"[BLC] Unexpected {err=}, {type(err)=}")
+        print(f"[BLC] Unexpected {err=}, {type(err)=}")  # TODO Debug
         _clear_wheels()
         _restore_backup_wheels()
         result = FetchWheelStatus.ERROR, None
