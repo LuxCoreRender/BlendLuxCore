@@ -32,12 +32,12 @@ def convert(context, engine, scene, depsgraph, exported_objects):
         for step in range(steps):
             time = frame_offsets[step]
             matrix = matrix_steps[step]
-            transformation = utils.matrix_to_list(matrix)
+            transformation = utils.luxutils.matrix_to_list(matrix)
             definitions = {
                 "motion.%d.time" % step: time,
                 "motion.%d.transformation" % step: transformation,
             }
-            props.Set(utils.create_props(prefix, definitions))
+            props.Set(utils.luxutils.create_props(prefix, definitions))
 
     # We need this information outside
     is_camera_moving = "scene.camera." in matrices

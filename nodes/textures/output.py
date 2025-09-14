@@ -33,4 +33,4 @@ class LuxCoreNodeTexOutput(bpy.types.Node, LuxCoreNodeOutput):
                 "type": "constfloat3",
                 "value": color,
             }
-            props.Set(utils.create_props(helper_prefix, helper_defs))
+            props.Set(utils.luxutils.create_props(helper_prefix, helper_defs))

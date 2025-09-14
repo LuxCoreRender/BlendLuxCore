@@ -1,11 +1,25 @@
-import bpy
-import mathutils
+"""Various utilities, NOT REQUIRING PYLUXCORE."""
+
+
+# DO NOT IMPORT PYLUXCORE IN THIS MODULE AND ITS IMPORTED SUBMODULES
+#
+# This module is imported before pyluxcore is loaded, therefore it must not
+# contain any call to pyluxcore. For utilities that rely on pyluxcore, please
+# use `luxutils` submodule
+
+
+import pathlib
 import math
 import re
 import hashlib
 import os
+import itertools
 from os.path import basename, dirname
-import pyluxcore
+import tomllib
+
+import bpy
+import mathutils
+
 from . import view_layer
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
@@ -109,36 +123,6 @@ def make_object_id(dg_obj_instance):
     # Truncate to 4 bytes because LuxCore uses unsigned int for the object ID.
     # Make sure it's not exactly 0xffffffff because that's LuxCore's Null index for object IDs.
     return min(as_int & 0xffffffff, 0xffffffff - 1)
-
-
-def create_props(prefix, definitions):
-    """
-    :param prefix: string, will be prepended to each key part of the definitions.
-                   Example: "scene.camera." (note the trailing dot)
-    :param definitions: dictionary of definition pairs. Example: {"fieldofview", 45}
-    :return: pyluxcore.Properties() object, initialized with the given definitions.
-    """
-    props = pyluxcore.Properties()
-
-    for k, v in definitions.items():
-        props.Set(pyluxcore.Property(prefix + k, v))
-
-    return props
-
-
-def matrix_to_list(matrix, invert=False):
-    """
-    Flatten a 4x4 matrix into a list
-    Returns list[16]
-    """
-    # Copy required for BlenderMatrix4x4ToList(), not sure why, but if we don't
-    # make a copy, we only get an identity matrix in C++
-    matrix = matrix.copy()
-
-    if invert:
-        matrix.invert_safe()
-
-    return pyluxcore.BlenderMatrix4x4ToList(matrix)
 
 
 def list_to_matrix(lst):
@@ -567,14 +551,6 @@ def pluralize(format_str, amount):
     return formatted
 
 
-def is_opencl_build():
-    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_OPENCL").GetBool()
-    
-    
-def is_cuda_build():
-    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_CUDA").GetBool()
-
-
 def image_sequence_resolve_all(image):
     """
     From https://blender.stackexchange.com/a/21093/29401
@@ -674,19 +650,6 @@ def in_material_shading_mode(context):
     return context and context.space_data.shading.type == "MATERIAL"
 
 
-def get_addon_preferences(context):
-    am_in_extension = __package__.startswith("bl_ext.")
-    if am_in_extension:
-        from .. import __package__ as base_package
-        addon_name = base_package
-    else:
-        # For development purposes when using the BLC_DEV_PATH environment variable
-        # Currently assuming the addon is installed with REPO='user_default',
-        # else would need a mechanism to get the actual REPO here.
-        addon_name = 'bl_ext.user_default.' + __package__.split('.')[0]
-    return context.preferences.addons[addon_name].preferences
-
-
 def count_index(func):
     """
     A decorator that increments an index each time the decorated function is called.
@@ -698,3 +661,39 @@ def count_index(func):
         return func(*args, **kwargs)
     wrapper.index = 0
     return wrapper
+
+
+ADDON_NAME = "BlendLuxCore"
+
+def get_module_name():
+    """Get module name (bl_idname) for current addon."""
+    components = __package__.split('.')
+    prefix = list(itertools.takewhile(lambda x: x != ADDON_NAME, components))
+    prefix.append(ADDON_NAME)
+    return '.'.join(prefix)
+
+
+def get_addon_preferences(context):
+    """Get addon_preferences handle."""
+    addon_name = get_module_name()
+    return context.preferences.addons[addon_name].preferences
+
+
+def get_version_string():
+    """Get BlendLuxCore version string.
+
+    Load version information from blender_manifest.toml, which replaces the old
+    "bl_info" dictionary.
+    """
+    root_path = pathlib.Path(__file__).parent.parent.resolve()
+    manifest_path =  root_path / "blender_manifest.toml"
+    with open(manifest_path, "rb") as f:
+        manifest_data = tomllib.load(f)
+    version_string = manifest_data["version"]
+    return version_string
+
+def get_user_dir(name):
+    """Get a user writeable directory, create it if not existing."""
+    return pathlib.Path(
+        bpy.utils.extension_path_user(get_module_name(), path=name, create=True)
+    )

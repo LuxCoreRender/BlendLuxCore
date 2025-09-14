@@ -1,26 +1,73 @@
+"""Addon Preferences user interface."""
+
+from importlib.metadata import version
+
+_needs_reload = "bpy" in locals()
+
 import bpy
 from bpy.types import AddonPreferences
 from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 
+from .. import ui
 from ..ui import icons
 from .. import utils
+from ..utils import luxutils
 from ..utils.lol import utils as lol_utils
-from importlib.metadata import version
-from .. import version_string
+
+
+if _needs_reload:
+    import importlib
+
+    ui = importlib.reload(ui)
+    utils = importlib.reload(utils)
+    luxutils = importlib.reload(luxutils)
+    lol_utils = importlib.reload(lol_utils)
+
+
+SPLIT_FACTOR = 1 / 3
 
 film_device_items = []
 
+enum_wheel_sources = (
+    (
+        "PyPI",
+        "PyPI (default)",
+        "Get PyLuxCore from Python Package Index (PyPI)",
+    ),
+    (
+        "LocalWheel",
+        "Local Wheel",
+        "Get PyLuxCore from a local wheel file, not including dependencies",
+    ),
+    (
+        "LocalFolder",
+        "Local Wheel + dependencies",
+        "Get PyLuxCore from a local folder, containing PyLuxCore wheel "
+        "and all its dependencies",
+    ),
+)
+
+
 class LuxCoreAddonPreferences(AddonPreferences):
+    """Addon Preference panel."""
+
     # id name for 4.2
-    bl_idname = "bl_ext.user_default.BlendLuxCore"
+    bl_idname = utils.get_module_name()
 
     gpu_backend_items = [
         ("OPENCL", "OpenCL", "Use OpenCL for GPU acceleration", 0),
-        ("CUDA", "CUDA/OptiX", "Use CUDA/OptiX for GPU acceleration. OptiX acceleration is used only when supported hardware is detected", 1),
+        (
+            "CUDA",
+            "CUDA/OptiX",
+            "Use CUDA/OptiX for GPU acceleration. "
+            "OptiX acceleration is used only when supported hardware is detected",
+            1,
+        ),
     ]
     gpu_backend: EnumProperty(items=gpu_backend_items, default="OPENCL")
 
     def film_device_items_callback(self, context):
+        """List items for Film Device property (callback)."""
         backend_to_type = {
             "OPENCL": "OPENCL_GPU",
             "CUDA": "CUDA_GPU",
@@ -29,12 +76,21 @@ class LuxCoreAddonPreferences(AddonPreferences):
         devices = context.scene.luxcore.devices.devices
         device_type_filter = backend_to_type[self.gpu_backend]
         # Omit Intel GPU devices because they can lead to crashes
-        gpu_devices = [(index, device) for (index, device) in enumerate(devices)
-                       if (device.type == device_type_filter and not "intel" in device.name.lower())]
+        gpu_devices = [
+            (index, device)
+            for (index, device) in enumerate(devices)
+            if (
+                device.type == device_type_filter
+                and not "intel" in device.name.lower()
+            )
+        ]
 
-        items = [(str(index), f"{device.name} ({self.gpu_backend})", "", i)
-                 for i, (index, device) in enumerate(gpu_devices)]
-        # The first item in the list is the default, so we append the CPU fallback at the end
+        items = [
+            (str(index), f"{device.name} ({self.gpu_backend})", "", i)
+            for i, (index, device) in enumerate(gpu_devices)
+        ]
+        # The first item in the list is the default, so we append the CPU
+        # fallback at the end
         items += [("none", "CPU", "", len(items))]
 
         # There is a known bug with using a callback,
@@ -44,50 +100,72 @@ class LuxCoreAddonPreferences(AddonPreferences):
         film_device_items = items
         return items
 
-    film_device: EnumProperty(name="Film Device", items=film_device_items_callback,
-                              description="Which device to use to compute the imagepipeline")
+    film_device: EnumProperty(
+        name="Film Device",
+        items=film_device_items_callback,
+        description="Which device to use to compute the imagepipeline",
+    )
 
     image_node_thumb_default: BoolProperty(
-        name="Show Thumbnails by Default", default=True,
-        description="Decide wether the thumbnail is visible on new image nodes (changes do not affect existing nodes)"
+        name="Show Thumbnails by Default",
+        default=True,
+        description=(
+            "Decide wether the thumbnail is visible on new image nodes "
+            "(changes do not affect existing nodes)"
+        ),
     )
 
     # LuxCore online library properties
     global_dir: StringProperty(
         name="Global Files Directory",
-        description="Global storage for your assets, will use subdirectories for the contents",
-        subtype='DIR_PATH', default=lol_utils.get_default_directory()
+        description=(
+            "Global storage for your assets, "
+            "will use subdirectories for the contents"
+        ),
+        subtype="DIR_PATH",
+        default=lol_utils.get_default_directory(),
     )
     lol_host: StringProperty(
         name="Host URL",
         description="Address of the LuxCore Online Library server",
-        default = "https://luxcorerender.org/lol",
+        default="https://luxcorerender.org/lol",
     )
     lol_http_host: StringProperty(
         name="HTTP Host",
-        description=" FOR DEVELOPERS ONLY! DO NOT EDIT! Hostname transferred with HTTP(S) request. Needed for technical reasons.",
-        default = "www.luxcorerender.org",
+        description=(
+            " FOR DEVELOPERS ONLY! DO NOT EDIT! "
+            "Hostname transferred with HTTP(s) request. Needed for technical reasons."
+        ),
+        default="www.luxcorerender.org",
     )
     lol_version: StringProperty(
         name="Library Version",
         description="Version of the LuxCore Online Library.",
-        default = "v2.5",
+        default="v2.5",
     )
     lol_useragent: StringProperty(
         name="HTTP User-Agent",
         description="User Agent transmitted with requests",
-        default = f"BlendLuxCore/{version_string}",
+        default=f"BlendLuxCore/{utils.get_version_string()}",
     )
 
-    max_assetbar_rows: IntProperty(name="Max Assetbar Rows", description="max rows of assetbar in the 3d view",
-                                   default=1, min=0, max=20)
-    thumb_size: IntProperty(name="Assetbar Thumbnail Size", default=96, min=-1, max=256)
+    max_assetbar_rows: IntProperty(
+        name="Max Assetbar Rows",
+        description="max rows of assetbar in the 3d view",
+        default=1,
+        min=0,
+        max=20,
+    )
+    thumb_size: IntProperty(
+        name="Assetbar Thumbnail Size", default=96, min=-1, max=256
+    )
     use_library: BoolProperty(name="Use LuxCore Online Library", default=True)
 
     display_luxcore_logs: BoolProperty(name="Show LuxCore Logs", default=True)
 
     # Read-only string property, returns the current date
     def get_pyluxcore_version(self):
+        """Provide pyluxcore version."""
         try:
             pyluxcore_version = version("pyluxcore")
         except ModuleNotFoundError:
@@ -96,21 +174,25 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     pyluxcore_version: StringProperty(name="", get=get_pyluxcore_version)
 
-    def draw(self, context):
+    def _draw_general(self):
+        """Draw general settings."""
+
         layout = self.layout
-        SPLIT_FACTOR = 1/3
+
+        row = layout.row()
+        row.label(text="General settings:")
 
         row = layout.row()
         row.label(text="GPU API:")
 
-        if utils.is_cuda_build():
+        if utils.luxutils.is_cuda_build():
             row.prop(self, "gpu_backend", expand=True)
 
             row = layout.row()
             split = row.split(factor=SPLIT_FACTOR)
             split.label(text="Film Device:")
             split.prop(self, "film_device", text="")
-        elif utils.is_opencl_build():
+        elif utils.luxutils.is_opencl_build():
             row.label(text="OpenCL")
 
             row = layout.row()
@@ -127,39 +209,79 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         row = layout.row()
         row.label(text="Community:")
-        op = row.operator("luxcore.open_website", text="Forums", icon=icons.URL)
+        op = row.operator(
+            "luxcore.open_website", text="Forums", icon=icons.URL
+        )
         op.url = "https://forums.luxcorerender.org/"
-        op = row.operator("luxcore.open_website", text="Discord", icon=icons.URL)
+        op = row.operator(
+            "luxcore.open_website", text="Discord", icon=icons.URL
+        )
         op.url = "https://discord.gg/chPGsKV"
 
         row = layout.row()
         row.label(text="Download:")
-        op = row.operator("luxcore.open_website", text="BlendLuxCore Releases", icon=icons.URL)
+        op = row.operator(
+            "luxcore.open_website",
+            text="BlendLuxCore Releases",
+            icon=icons.URL,
+        )
         op.url = "https://github.com/LuxCoreRender/BlendLuxCore/releases"
         row.label(text="")
 
-        layout.separator()
-        col = layout.column()
-        col.label(text="LuxCore Online Library (LOL) Preferences:")
-        col = layout.column()
-
-        col.prop(self, "use_library")
-        if self.use_library:
-            col.prop(self, "global_dir")
-            col.prop(self, "lol_host")
-            col.prop(self, "lol_http_host")
-            # col.prop(self, "lol_version") # unlikely to need change so not even needed for developers
-            # col.prop(self, "lol_useragent") # unlikely to need change so not even needed for developers
-            col.prop(self, "thumb_size")
-
         # LuxCore logging
-        layout.separator()
         row = layout.row()
-        row.prop(self, 'display_luxcore_logs')
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="LuxCore Logs:")
+        split.prop(self, "display_luxcore_logs")
 
         # pyluxcore version
-        layout.separator()
         row = layout.row()
         split = row.split(factor=SPLIT_FACTOR)
         split.label(text="Pyluxcore version:")
         split.prop(self, "pyluxcore_version")
+
+        # Final separator (keep at the end)
+        layout.separator()
+
+    def _draw_lol(self):
+        """Draw LuxCore Online Library (lol)."""
+
+        layout = self.layout
+
+        row = layout.row()
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="LuxCore Online Library (LOL):")
+        split.prop(self, "use_library")
+
+        if self.use_library:
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Global Files Directory:")
+            split.prop(self, "global_dir", text="")
+
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Host URL:")
+            split.prop(self, "lol_host", text="")
+
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="HTTP Host:")
+            split.prop(self, "lol_http_host", text="")
+
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Thumb Size:")
+            split.prop(self, "thumb_size", text="")
+
+        layout.separator()
+
+
+    def draw(self, context):
+        """Draw addon preferences panel (callback)."""
+
+        # General settings
+        self._draw_general()
+
+        # LuxCore Online Library
+        self._draw_lol()
