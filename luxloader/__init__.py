@@ -326,9 +326,12 @@ def _fetch_wheels():
 
         # Get optional folder with dependencies
         additional_deps = []
-        if (path_to_wheel_deps_setting := settings["path_to_wheel_deps"]):
+        if path_to_wheel_deps_setting := settings["path_to_wheel_deps"]:
             path_to_wheel_deps = pathlib.Path(path_to_wheel_deps_setting)
-            if path_to_wheel_deps.is_dir() and path_to_wheel_deps.is_absolute():
+            if (
+                path_to_wheel_deps.is_dir()
+                and path_to_wheel_deps.is_absolute()
+            ):
                 additional_deps = list(path_to_wheel_deps.glob("*.whl"))
             else:
                 print(
@@ -361,10 +364,6 @@ def _fetch_wheels():
     # Check cache (hash and compare)
     wheel_hash = _hash_wheels(wheels)
     if not reinstall_upon_reloading and wheel_hash == old_wheel_hash:
-        print(
-            "[BLC] Skipping pyluxcore installation. Similar wheel(s) already "
-            "installed."
-        )
         return FetchWheelStatus.CACHE, wheel_hash
 
     # Download
@@ -372,7 +371,7 @@ def _fetch_wheels():
     try:
         _download_wheels(wheels, no_deps, no_index)
     except Exception as err:
-        print(f"[BLC] Unexpected {err=}, {type(err)=}")  # TODO Debug
+        print(f"[BLC] Unexpected {err=}, {type(err)=}")
         _clear_wheels()
         _restore_backup_wheels()
         result = FetchWheelStatus.ERROR, None
@@ -413,6 +412,9 @@ def ensure_pyluxcore():
     elif fetch_result == FetchWheelStatus.CACHE:
         # Wheels have been found in cache and thus are already installed:
         # => Nothing to do
-        pass
+        print(
+            "[BLC] Skipping pyluxcore installation. Similar wheel(s) already "
+            "installed."
+        )
     elif fetch_result == FetchWheelStatus.ERROR:
         print(ENSURE_ERROR_MSG)
