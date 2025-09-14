@@ -59,9 +59,11 @@ def _hash_wheels(wheels):
     return wheel_hash.hexdigest()
 
 
-# TODO Implement "no-deps"
-def _download_wheels(wheel_requirements):
+def _download_wheels(wheel_requirements, no_deps, no_index):
     """Download wheels from wheel requirements."""
+    no_deps = bool(no_deps)
+    no_index = bool(no_index)
+
     for wheel_requirement in wheel_requirements:
         command = [
             sys.executable,
@@ -72,6 +74,10 @@ def _download_wheels(wheel_requirements):
             "-d",
             WHEEL_DL_FOLDER,
         ]
+        if no_deps:
+            command.append("--no-deps")
+        if no_index:
+            command.append("--no-index")
 
         process = subprocess.run(
             command,
@@ -295,6 +301,8 @@ def _fetch_wheels():
 
     wheel_source = settings["wheel_source"]
     reinstall_upon_reloading = bool(settings["reinstall_upon_reloading"])
+    no_deps = bool(settings["no_deps"])
+    no_index = bool(settings["no_index"])
 
     # Get installation info for comparison in the following steps
     old_wheel_hash = _get_installation_info()
@@ -316,8 +324,20 @@ def _fetch_wheels():
             print(f"[BLC] Wheel file not found ('{path_to_wheel}')")
             return FetchWheelStatus.ERROR, None
 
+        # Get optional folder with dependencies
+        additional_deps = []
+        if (path_to_wheel_deps_setting := settings["path_to_wheel_deps"]):
+            path_to_wheel_deps = pathlib.Path(path_to_wheel_deps_setting)
+            if path_to_wheel_deps.is_dir() and path_to_wheel_deps.is_absolute():
+                additional_deps = list(path_to_wheel_deps.glob("*.whl"))
+            else:
+                print(
+                    "[BLC] Additional deps folder is not valid "
+                    f"('{path_to_wheel_deps}') - Skipping"
+                )
+
         # Set wheel list
-        wheels = [path_to_wheel]
+        wheels = additional_deps + [path_to_wheel]
 
         print(
             f"[BLC] Installing local version of pyluxcore ('{path_to_wheel}')"
@@ -350,7 +370,7 @@ def _fetch_wheels():
     # Download
     _backup_wheels()
     try:
-        _download_wheels(wheels)
+        _download_wheels(wheels, no_deps, no_index)
     except Exception as err:
         print(f"[BLC] Unexpected {err=}, {type(err)=}")  # TODO Debug
         _clear_wheels()

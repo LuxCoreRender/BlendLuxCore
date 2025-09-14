@@ -2,6 +2,7 @@ import platform
 import os
 import sys
 import pathlib
+from importlib.metadata import version
 
 if platform.system() in {"Linux", "Darwin"}:
     # Required for downloads from the LuxCore Online Library
@@ -42,6 +43,7 @@ except ImportError as error:
     # Raise from None to suppress the unhelpful
     # "during handling of the above exception, ..."
     raise RuntimeError(msg) from None
+
 if _needs_reload:
     import importlib
 
@@ -74,7 +76,7 @@ def register():
     pyluxcore.Init(LuxCoreLog.add)
     print(
         f"BlendLuxCore {utils.get_version_string()} registered "
-        f"(with pyluxcore {pyluxcore.Version()})"
+        f"(with pyluxcore {version('pyluxcore')})"
     )
 
 
