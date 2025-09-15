@@ -299,10 +299,10 @@ def _fetch_wheels():
     # Get settings
     settings = _get_settings()
 
-    wheel_source = settings["wheel_source"]
-    reinstall_upon_reloading = bool(settings["reinstall_upon_reloading"])
-    no_deps = bool(settings["no_deps"])
-    no_index = bool(settings["no_index"])
+    wheel_source = settings.get("wheel_source", 0)
+    reinstall_upon_reloading = bool(settings.get("reinstall_upon_reloading", False))
+    no_deps = bool(settings.get("no_deps", False))
+    no_index = bool(settings.get("no_index", False))
 
     # Get installation info for comparison in the following steps
     old_wheel_hash = _get_installation_info()
@@ -310,7 +310,7 @@ def _fetch_wheels():
     # Case #1 (standard case): Get wheel from PyPI
     if wheel_source == WheelSource.PYPI:
         # Compute required version
-        pyluxcore_version = settings["wheel_version"] or PYLUXCORE_VERSION
+        pyluxcore_version = settings.get("wheel_version") or PYLUXCORE_VERSION
 
         wheels = [f"pyluxcore=={pyluxcore_version}"]
 
@@ -319,14 +319,14 @@ def _fetch_wheels():
     # Case #2: Get from local source (1 file)
     elif wheel_source == WheelSource.LOCAL:
         # Get path to wheel and check consistency
-        path_to_wheel = pathlib.Path(settings["path_to_wheel"])
+        path_to_wheel = pathlib.Path(settings.get("path_to_wheel", ""))
         if not (path_to_wheel.is_file() and path_to_wheel.is_absolute()):
             print(f"[BLC] Wheel file not found ('{path_to_wheel}')")
             return FetchWheelStatus.ERROR, None
 
         # Get optional folder with dependencies
         additional_deps = []
-        if path_to_wheel_deps_setting := settings["path_to_wheel_deps"]:
+        if path_to_wheel_deps_setting := settings.get("path_to_wheel_deps", ""):
             path_to_wheel_deps = pathlib.Path(path_to_wheel_deps_setting)
             if (
                 path_to_wheel_deps.is_dir()
@@ -349,7 +349,7 @@ def _fetch_wheels():
     # Case #3: Get multiple wheels from local folder
     elif wheel_source == WheelSource.LOCALDEPS:
         # Check whether folder is valid
-        path_to_folder = pathlib.Path(settings["path_to_folder"])
+        path_to_folder = pathlib.Path(settings.get("path_to_folder", ""))
         if not (path_to_folder.is_dir() and path_to_folder.is_absolute()):
             print(f"[BLC] No valid folder ('{path_to_folder}')")
             return FetchWheelStatus.ERROR, None
