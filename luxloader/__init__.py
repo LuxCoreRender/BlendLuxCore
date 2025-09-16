@@ -346,17 +346,6 @@ def _fetch_wheels():
             f"[BLC] Installing local version of pyluxcore ('{path_to_wheel}')"
         )
 
-    # Case #3: Get multiple wheels from local folder
-    elif wheel_source == WheelSource.LOCALDEPS:
-        # Check whether folder is valid
-        path_to_folder = pathlib.Path(settings.get("path_to_folder", ""))
-        if not (path_to_folder.is_dir() and path_to_folder.is_absolute()):
-            print(f"[BLC] No valid folder ('{path_to_folder}')")
-            return FetchWheelStatus.ERROR, None
-
-        # Get wheel list
-        wheels = list(path_to_folder.glob("*.whl"))
-
     # No other case
     else:
         raise ValueError(f"Unhandled wheel source setting ({wheel_source})")
