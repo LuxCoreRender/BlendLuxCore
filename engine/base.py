@@ -1,13 +1,24 @@
-import bpy
 from time import sleep
+_needs_reload = "bpy" in locals()
+
+import bpy
 import pyluxcore
 from . import final, preview, viewport
+from .. import handlers, utils, properties
 from ..handlers.draw_imageeditor import TileStats
 from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
 from ..utils import get_addon_preferences
 from ..properties.display import LuxCoreDisplaySettings
+
+
+if _needs_reload:
+    import importlib
+
+    modules = (final, preview, viewport, handlers, utils, properties)
+    for module in modules:
+        importlib.reload(module)
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):

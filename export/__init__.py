@@ -1,5 +1,8 @@
-import bpy
 from time import time
+
+_needs_reload = "bpy" in locals()
+
+import bpy
 import pyluxcore
 from .. import utils
 from ..utils import render as utils_render
@@ -12,6 +15,24 @@ from . import (
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from .caches.object_cache import supports_live_transform
+
+if _needs_reload:
+    import importlib
+    modules = (
+        caches,
+        camera,
+        config,
+        imagepipeline,
+        light,
+        material,
+        motion_blur,
+        hair,
+        halt,
+        world,
+        utils,
+    )
+    for module in modules:
+        importlib.reload(module)
 
 
 class Change:

@@ -1,11 +1,24 @@
 from time import time, sleep
-from .. import export, utils
+
+_needs_reload = "bpy" in locals()
+
+import bpy
+
+from .. import export, utils, draw, properties
 from ..draw.final import FrameBufferFinal
 from ..utils import render as utils_render
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
 from ..properties.denoiser import LuxCoreDenoiser
 from ..properties.display import LuxCoreDisplaySettings
+
+if _needs_reload:
+    import importlib
+
+    importlib.reload(export)
+    importlib.reload(utils)
+    importlib.reload(draw)
+    importlib.reload(properties)
 
 
 def render(engine, depsgraph):

@@ -1,11 +1,25 @@
 from enum import Enum
 from time import sleep
 from os.path import dirname, realpath
+
+_needs_reload = "bpy" in locals()
+
+import bpy
 from mathutils import Matrix
+
 import pyluxcore
 from .. import utils
 from .. import export
+from .. import draw
 from ..draw.final import FrameBufferFinal
+
+
+if _needs_reload:
+    import importlib
+
+    importlib.reload(export)
+    importlib.reload(utils)
+    importlib.reload(draw)
 
 """
 Note: you can find the Blender preview scene in the sources at this path:

@@ -1,11 +1,20 @@
-import numpy as np
-
-import bpy
 from contextlib import contextmanager
 from time import time
+import numpy as np
+
+_needs_reload = "bpy" in locals()
+
+import bpy
+
+from . import caches
 from .caches.exported_data import ExportedMesh
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
+
+if _needs_reload:
+    import importlib
+    importlib.reload(caches)
+    importlib.reload(utils)
 
 
 def fast_custom_normals_supported():

@@ -1,7 +1,11 @@
 from time import time
+
+_needs_reload = "bpy" in locals()
+
 import bpy
 import pyluxcore
 from .. import export
+from .. import draw
 from ..draw.viewport import FrameBuffer
 from .. import utils
 from ..utils import render as utils_render
@@ -9,6 +13,13 @@ from ..utils import get_addon_preferences
 from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
 from ..export.config import convert_viewport_engine
+
+if _needs_reload:
+    import importlib
+
+    importlib.reload(export)
+    importlib.reload(utils)
+    importlib.reload(draw)
 
 # Executed in separate thread
 def start_session(engine):
