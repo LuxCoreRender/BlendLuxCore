@@ -1,4 +1,13 @@
+_needs_reload = "bpy" in locals()
+
+import bpy
+
+from .. import ui
 from ..ui import icons
+
+if _needs_reload:
+    import importlib
+    importlib.reload(ui)
 
 TREE_TYPES = {
     "luxcore_material_nodes",

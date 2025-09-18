@@ -1,9 +1,25 @@
+_needs_reload = "bpy" in locals()
+
 import bpy
+
 from bpy.types import SpaceView3D, SpaceImageEditor
+
 from . import (
     depsgraph_update_post, draw_imageeditor,
     exit, frame_change_pre, load_post,
 )
+
+if _needs_reload:
+    import importlib
+    modules = (
+        depsgraph_update_post,
+        draw_imageeditor,
+        exit,
+        frame_change_pre,
+        load_post,
+    )
+    for module in modules:
+        importlib.reload(module)
 
 
 def register():

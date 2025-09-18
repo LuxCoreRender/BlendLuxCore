@@ -694,6 +694,7 @@ def get_version_string():
 
 def get_user_dir(name):
     """Get a user writeable directory, create it if not existing."""
+    print(f"[BLC] Module name: {get_module_name()}")
     return pathlib.Path(
         bpy.utils.extension_path_user(get_module_name(), path=name, create=True)
     )

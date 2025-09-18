@@ -1,14 +1,26 @@
+_needs_reload = "bpy" in locals()
+
 import os
 import tempfile
 import bpy
 from bpy.app.handlers import persistent
+
 import pyluxcore
-from .. import utils
+from .. import utils, operators
 from ..utils import compatibility
 from . import frame_change_pre
 from ..utils.errorlog import LuxCoreErrorLog
 from ..operators.manual_compatibility import LUXCORE_OT_convert_to_v23
 
+if _needs_reload:
+    import importlib
+    modules = (
+        utils,
+        operators,
+        frame_change_pre,
+    )
+    for module in modules:
+        importlib.reload(module)
 
 def _init_persistent_cache_file_path(settings, suffix):
     if not settings.file_path:

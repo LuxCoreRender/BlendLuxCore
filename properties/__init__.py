@@ -1,3 +1,6 @@
+_needs_reload = "bpy" in locals()
+
+import bpy
 from bpy.utils import register_class, unregister_class
 from . import (
     aovs, blender_object, image_user, imagepipeline, camera,
@@ -5,6 +8,18 @@ from . import (
     ies, light, lightgroups, material, scene, statistics,
     view_layer, viewport, world, lol,
 )
+
+if _needs_reload:
+    import importlib
+    modules = (
+        aovs, blender_object, image_user, imagepipeline, camera,
+        config, debug, denoiser, devices, display, hair, halt,
+        ies, light, lightgroups, material, scene, statistics,
+        view_layer, viewport, world, lol,
+    )
+    for module in modules:
+        importlib.reload(module)
+
 
 classes = (
     aovs.LuxCoreAOVSettings,
