@@ -33,9 +33,6 @@ class LuxCoreDeviceSettings(PropertyGroup):
             new.name = device_props.Get(prefix + ".name").GetString()
             new.type = device_props.Get(prefix + ".type").GetString()
             
-            # Intel GPU devices can lead to crashes, so disable them by default
-            if "intel" in new.name.lower():
-                new.enabled = False
 
     def update_devices_if_necessary(self):
         device_props = self.get_device_props()

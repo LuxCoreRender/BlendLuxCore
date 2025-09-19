@@ -75,13 +75,11 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
         devices = context.scene.luxcore.devices.devices
         device_type_filter = backend_to_type[self.gpu_backend]
-        # Omit Intel GPU devices because they can lead to crashes
         gpu_devices = [
             (index, device)
             for (index, device) in enumerate(devices)
             if (
                 device.type == device_type_filter
-                and not "intel" in device.name.lower()
             )
         ]
 
