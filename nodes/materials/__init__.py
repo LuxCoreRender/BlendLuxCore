@@ -5,9 +5,25 @@ from ... import properties
 from ... import utils
 
 from . import (
-    carpaint, cloth, disney, emission, frontbackopacity, glass, glossy2, glossycoating,
-    glossytranslucent, matte, mattetranslucent, metal, mirror, mix, null, output, tree,
-    twosided, velvet,
+    carpaint,
+    cloth,
+    disney,
+    emission,
+    frontbackopacity,
+    glass,
+    glossy2,
+    glossycoating,
+    glossytranslucent,
+    matte,
+    mattetranslucent,
+    metal,
+    mirror,
+    mix,
+    null,
+    output,
+    tree,
+    twosided,
+    velvet,
 )
 import nodeitems_utils
 from . import tree
@@ -69,10 +85,14 @@ classes = (
     emission.LuxCoreNodeMatEmission,
 )
 
+
 def register():
-    nodeitems_utils.register_node_categories("LUXCORE_MATERIAL_TREE", luxcore_node_categories_material)
+    nodeitems_utils.register_node_categories(
+        "LUXCORE_MATERIAL_TREE", luxcore_node_categories_material
+    )
 
     utils.register_module("Materials", classes)
+
 
 def unregister():
     utils.unregister_module("Materials", classes)
