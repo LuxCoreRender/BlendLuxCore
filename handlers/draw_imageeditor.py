@@ -7,21 +7,6 @@ from gpu_extras.batch import batch_for_shader
 handle = None
 
 
-class TileStats:
-    @classmethod
-    def reset(cls):
-        cls.width = 0
-        cls.height = 0
-        cls.film_width = 0
-        cls.film_height = 0
-        cls.pending_coords = []
-        cls.pending_passcounts = []
-        cls.converged_coords = []
-        cls.converged_passcounts = []
-        cls.notconverged_coords = []
-        cls.notconverged_passcounts = []
-
-
 def handler():
     context = bpy.context
 

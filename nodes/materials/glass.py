@@ -1,10 +1,11 @@
 import bpy
 from bpy.props import FloatProperty, BoolProperty
-from ..base import LuxCoreNodeMaterial, Roughness, ThinFilmCoating
+from ..base import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
-from ..output import get_active_output
-from ...ui import icons
+from ...utils.node import get_active_output
+from ... import icons
 from ...utils import node as utils_node
+from ...utils.node import Roughness, ThinFilmCoating
 
 CAUCHYB_DESCRIPTION = (
     "Dispersion strength (cauchy B coefficient)\n"

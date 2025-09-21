@@ -2,12 +2,11 @@ import math
 import bpy
 from bpy.props import IntProperty, BoolProperty, FloatProperty, PointerProperty, StringProperty
 from .clear import VOLUME_PRIORITY_DESC
-from .. import COLORDEPTH_DESC
-from ..base import LuxCoreNodeVolume
+from ..base import LuxCoreNodeVolume, COLORDEPTH_DESC
 from ... import utils
 from ...utils import node as utils_node
 from ...utils.light_descriptions import LIGHTGROUP_DESC
-from ...ui import icons
+from ... import icons
 
 
 STEP_SIZE_DESCRIPTION = (

@@ -2,8 +2,7 @@ _needs_reload = "bpy" in locals()
 
 import bpy
 
-from bpy.utils import register_class, unregister_class
-
+from .. import utils
 
 from . import (
     addon_preferences,
@@ -112,42 +111,26 @@ classes = (
     world.LUXCORE_WORLD_PT_visibility,
 )
 
+submodules = (
+    lol,
+    render,
+    blender_object,
+    camera,
+    light,
+    material,
+    node_editor,
+    output,
+    particle,
+    physics,
+    texture,
+    volume,
+    world
+)
+
 
 def register():
-    lol.register()
-    render.register()
-
-    blender_object.register()
-    camera.register()
-    light.register()
-    material.register()
-    node_editor.register()
-    output.register()
-    particle.register()
-    physics.register()
-    texture.register()
-    volume.register()
-    world.register()
-
-    for cls in classes:
-        register_class(cls)
+    utils.register_module("UI", classes, submodules)
 
 
 def unregister():
-    lol.unregister()
-    render.unregister()
-
-    blender_object.unregister()
-    camera.unregister()
-    light.unregister()
-    material.unregister()
-    node_editor.unregister()
-    output.unregister()
-    particle.unregister()
-    physics.unregister()
-    texture.unregister()
-    volume.unregister()
-    world.unregister()
-
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("UI", classes, submodules)

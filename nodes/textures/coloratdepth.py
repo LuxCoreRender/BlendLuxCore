@@ -2,7 +2,7 @@ import bpy
 from bpy.props import FloatProperty
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
-from .. import COLORDEPTH_DESC
+from ..base import COLORDEPTH_DESC
 
 class LuxCoreNodeTexColorAtDepth(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Color at depth"

@@ -5,7 +5,7 @@ import math
 from ..base import LuxCoreNodeTexture
 from ... import utils
 from ...utils import node as utils_node
-from ...ui import icons
+from ... import icons
 from ...export.caches.object_cache import TriAOVDataIndices
 
 

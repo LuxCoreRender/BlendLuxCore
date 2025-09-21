@@ -3,7 +3,7 @@ import math
 from bpy.props import FloatVectorProperty, BoolProperty, EnumProperty, StringProperty
 from ..base import LuxCoreNodeTexture
 from mathutils import Color
-from ...ui import icons
+from ... import icons
 from ...utils import node as utils_node
 
 

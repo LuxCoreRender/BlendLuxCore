@@ -3,7 +3,7 @@ import bpy
 from bpy.types import PropertyGroup
 from bpy.props import IntProperty, BoolProperty, PointerProperty, EnumProperty
 from .. import utils
-from ..ui import icons
+from .. import icons
 
 
 FIRST_FRAME_DESC = (

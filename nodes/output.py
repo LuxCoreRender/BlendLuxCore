@@ -3,35 +3,6 @@ from .base import LuxCoreNode
 from .. import utils
 from ..utils import node as utils_node
 
-OUTPUT_MAP = {
-    "luxcore_material_nodes": "LuxCoreNodeMatOutput",
-    "luxcore_texture_nodes": "LuxCoreNodeTexOutput",
-    "luxcore_volume_nodes": "LuxCoreNodeVolOutput",
-}
-
-
-def get_active_output(node_tree):
-    output_type = OUTPUT_MAP[node_tree.bl_idname]
-
-    for node in node_tree.nodes:
-        node_type = getattr(node, "bl_idname", None)
-
-        if node_type == output_type and node.active:
-            return node
-
-
-def get_output_nodes(node_tree):
-    """ Return a list with all output nodes in a node tree """
-    output_type = OUTPUT_MAP[node_tree.bl_idname]
-    nodes = []
-
-    for node in node_tree.nodes:
-        node_type = getattr(node, "bl_idname", None)
-        if node_type == output_type:
-            nodes.append(node)
-    return nodes
-
-
 def update_active(output_node, context):
     output_node.set_active(output_node.active)
     if not output_node.active:

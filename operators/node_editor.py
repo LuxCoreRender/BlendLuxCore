@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 from .. import utils
 from ..utils import node as utils_node
-from ..nodes.output import get_active_output, OUTPUT_MAP
+from ..utils.node import get_active_output, OUTPUT_MAP
 from ..nodes.sockets import (
     LuxCoreSocketColor, LuxCoreSocketFloat, LuxCoreSocketVector,
     LuxCoreSocketMapping2D, LuxCoreSocketMapping3D,

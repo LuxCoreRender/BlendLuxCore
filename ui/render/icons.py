@@ -1,4 +1,4 @@
-mport typing
+import typing
 import os
 import bpy
 

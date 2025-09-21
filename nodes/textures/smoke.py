@@ -7,7 +7,7 @@ from ... import utils
 import pyluxcore
 from ...export import smoke
 from ...utils import node as utils_node
-from ...ui import icons
+from ... import icons
 from ...utils.errorlog import LuxCoreErrorLog
 
 class LuxCoreNodeTexSmoke(LuxCoreNodeTexture, bpy.types.Node):

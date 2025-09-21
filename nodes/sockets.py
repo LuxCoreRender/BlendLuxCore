@@ -9,7 +9,7 @@ from bpy.props import (
 from ..utils import node as utils_node
 from ..utils.luxutils import matrix_to_list
 from ..utils.errorlog import LuxCoreErrorLog
-from ..ui import icons
+from .. import icons
 
 # The rules for socket classes are these:
 # - If it is a socket that's used by more than one node, put it in this file

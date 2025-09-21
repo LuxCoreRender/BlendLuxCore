@@ -5,7 +5,7 @@ from ..materials.output import MATERIAL_ID_DESC
 from ... import utils
 import pyluxcore
 from ...utils.errorlog import LuxCoreErrorLog
-from ...ui import icons
+from ... import icons
 
 
 class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):

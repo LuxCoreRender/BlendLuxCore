@@ -1,5 +1,5 @@
-from .. import icons
-from ..icons import icon_manager
+from ... import icons
+from ...icons import icon_manager
 from ... import utils
 from ...export.config import SamplingOverlap
 
@@ -28,10 +28,6 @@ class LUXCORE_RENDER_PT_sampling(RenderButtonsPanel, Panel):
     def draw_header(self, context):
         layout = self.layout
         layout.label(text="", icon_value= icon_manager.get_icon_id("logotype"))
-
-    def draw_header(self, context):
-        layout = self.layout
-        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         layout = self.layout

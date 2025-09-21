@@ -1,11 +1,46 @@
-from bpy.utils import register_class, unregister_class
+_needs_reload = "bpy" in locals()
+
+import bpy
+from ... import properties
+from ... import utils
+
 from . import (
     carpaint, cloth, disney, emission, frontbackopacity, glass, glossy2, glossycoating,
     glossytranslucent, matte, mattetranslucent, metal, mirror, mix, null, output, tree,
     twosided, velvet,
 )
 import nodeitems_utils
+from . import tree
 from .tree import luxcore_node_categories_material
+
+if _needs_reload:
+    import importlib
+
+    # Caveat: module order matters (due to PointerProperty and PropertyGroup)
+    modules = (
+        carpaint,
+        cloth,
+        disney,
+        emission,
+        frontbackopacity,
+        glass,
+        glossy2,
+        glossycoating,
+        glossytranslucent,
+        matte,
+        mattetranslucent,
+        metal,
+        mirror,
+        mix,
+        null,
+        output,
+        tree,
+        twosided,
+        velvet,
+        nodeitems_utils,
+    )
+    for module in modules:
+        importlib.reload(module)
 
 classes = (
     carpaint.LuxCoreNodeMatCarpaint,
@@ -14,7 +49,6 @@ classes = (
     cloth.LuxCoreSocketRepeatV,
     cloth.LuxCoreNodeMatCloth,
     disney.LuxCoreNodeMatDisney,
-    emission.LuxCoreNodeMatEmission,
     frontbackopacity.LuxCoreNodeMatFrontBackOpacity,
     glass.LuxCoreSocketCauchyC,
     glass.LuxCoreNodeMatGlass,
@@ -32,16 +66,14 @@ classes = (
     tree.LuxCoreMaterialNodeTree,
     twosided.LuxCoreNodeMatTwoSided,
     velvet.LuxCoreNodeMatVelvet,
+    emission.LuxCoreNodeMatEmission,
 )
 
 def register():
     nodeitems_utils.register_node_categories("LUXCORE_MATERIAL_TREE", luxcore_node_categories_material)
 
-    for cls in classes:
-        register_class(cls)
+    utils.register_module("Materials", classes)
 
 def unregister():
+    utils.unregister_module("Materials", classes)
     nodeitems_utils.unregister_node_categories("LUXCORE_MATERIAL_TREE")
-
-    for cls in classes:
-        unregister_class(cls)

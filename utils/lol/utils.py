@@ -38,7 +38,7 @@ import urllib.error
 from mathutils import Vector, Matrix
 import threading
 from threading import _MainThread, Thread, Lock
-from ...handlers.lol.timer import timer_update
+from .timer import timer_update
 from ...utils import get_addon_preferences, compatibility
 
 download_threads = []

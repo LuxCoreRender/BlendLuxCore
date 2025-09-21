@@ -1,9 +1,10 @@
 import bpy
 from bpy.props import BoolProperty
-from ..base import LuxCoreNodeMaterial, Roughness
+from ..base import LuxCoreNodeMaterial
 from ...utils import node as utils_node
 from .glossytranslucent import IOR_DESCRIPTION
-from ...ui import icons
+from ... import icons
+from ...utils.node import Roughness
 
 
 class LuxCoreNodeMatGlossyCoating(LuxCoreNodeMaterial, bpy.types.Node):

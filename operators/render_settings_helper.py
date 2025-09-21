@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import EnumProperty
-from ..ui import icons
+from .. import icons
 from .. import utils
 from ..utils import ui as utils_ui
 from .utils import use_cycles_settings

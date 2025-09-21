@@ -3,7 +3,7 @@ import math
 from bpy.props import FloatProperty, FloatVectorProperty, BoolProperty, StringProperty, IntProperty, EnumProperty
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
-from ...ui import icons
+from ... import icons
 from ...export.caches.object_cache import TriAOVDataIndices
 
 
@@ -162,6 +162,8 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture, bpy.types.Node):
     def export_uvmapping2d(self, exporter, depsgraph, props):
         input_socket = self.inputs["2D Mapping (optional)"]
         use_fallback = True
+        uvindex = 0  # Avoid using before assignment
+        input_rotation = 0 # Avoid using before assignement
         if utils_node.get_link(input_socket):
             definitions = input_socket.export(exporter, depsgraph, props)
             if definitions["mapping.type"] == "uvmapping2d":

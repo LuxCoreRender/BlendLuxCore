@@ -1,11 +1,14 @@
-"""Various utilities, NOT REQUIRING PYLUXCORE."""
+"""Various utilities, NOT REQUIRING OTHER SUBMODULES."""
 
 
-# DO NOT IMPORT PYLUXCORE IN THIS MODULE AND ITS IMPORTED SUBMODULES
+# DO NOT IMPORT ANY OF OTHER MODULES IN THIS MODULE AND ITS SUBMODULES
 #
-# This module is imported before pyluxcore is loaded, therefore it must not
-# contain any call to pyluxcore. For utilities that rely on pyluxcore, please
-# use `luxutils` submodule
+# This module should be importable without further dependence to other
+# modules of BlendLuxCore (
+#
+# Please note this module is imported before pyluxcore is loaded, therefore it
+# must not contain any call to pyluxcore. For utilities that rely on pyluxcore,
+# please use `luxutils` submodule
 
 
 import pathlib
@@ -17,10 +20,16 @@ import itertools
 from os.path import basename, dirname
 import tomllib
 
+_needs_reload = "bpy" in locals()
 import bpy
 import mathutils
 
 from . import view_layer
+
+if _needs_reload:
+    import importlib
+
+    view_layer = importlib.reload(view_layer)
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
@@ -698,3 +707,35 @@ def get_user_dir(name):
     return pathlib.Path(
         bpy.utils.extension_path_user(get_module_name(), path=name, create=True)
     )
+
+
+def register_module(module_name, classes, submodules=[]):
+    """Register a module in Blender.
+
+    The registration encompasses 2 collections:
+    - A collection of classes, registered with bpy.utils.classes
+    - A collection of submodules (optional), for which 'register' method is called
+    """
+    for mod in submodules:
+        mod.register()
+
+    for cls in classes:
+        print(f"[BLC] Registering {module_name}.{cls.__name__}")
+        try:
+            bpy.utils.register_class(cls)
+        except Exception as err:
+            print(err, "\n")
+
+
+def unregister_module(module_name, classes, submodules=[]):
+    """Unregister a module in Blender.
+
+    The registration encompasses 2 collections, see register_module.
+    The registration is operated in reverse order.
+    """
+    for cls in reversed(classes):
+        print(f"[BLC] Unregistering {module_name}.{cls.__name__}")
+        bpy.utils.unregister_class(cls)
+
+    for mod in reversed(submodules):
+        mod.unregister()

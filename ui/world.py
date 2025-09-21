@@ -3,12 +3,12 @@ from bl_ui.properties_world import WorldButtonsPanel
 from bpy.types import Panel
 from cycles.ui import panel_node_draw
 
-from . import icons
-from .icons import icon_manager
+from .. import icons
+from ..icons import icon_manager
 
 from ..utils import ui as utils_ui
 from .light import draw_envlight_cache_ui
-from ..nodes.output import get_active_output
+from ..utils.node import get_active_output
 
 
 class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):

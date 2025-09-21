@@ -3,8 +3,8 @@ from bl_ui.properties_view_layer import ViewLayerButtonsPanel
 from bpy.types import Panel
 from ... import utils
 from ...utils import ui as utils_ui
-from .. import icons
-from ..icons import icon_manager
+from ... import icons
+from ...icons import icon_manager
 from .sampling import calc_samples_per_pass
 
 
