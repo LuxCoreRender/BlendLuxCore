@@ -7,7 +7,7 @@ from bpy_extras.io_utils import ImportHelper
 from bpy_extras.image_utils import load_image
 from mathutils import Vector
 
-from ..nodes import TREE_TYPES
+from ..utils.node import TREE_TYPES
 
 # Blender images always include an alpha channel
 IMAGE_CHANNEL_COUNT = 4

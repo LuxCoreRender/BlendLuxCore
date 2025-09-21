@@ -1,9 +1,8 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from ...utils.refresh_button import template_refresh_button
-from ...engine.base import LuxCoreRenderEngine
+from ...icons import icon_manager
+from ...engine.base import LuxCoreRenderEngine, template_refresh_button
 from ... import icons
-from ...ui.icons import icon_manager
 from ...properties.denoiser import LuxCoreDenoiser
 
 

@@ -1,4 +1,4 @@
-from bpy.utils import register_class, unregister_class
+from ... import utils
 from . import caches, config, debug, denoiser, devices, errorlog, halt, image_resize_policy, sampling, tools, viewport
 
 classes = (
@@ -38,14 +38,10 @@ classes = (
     viewport.LUXCORE_RENDER_PT_viewport_settings_advanced,
 )
 
-def register():
-    config.register()
+submodules = (config,)
 
-    for cls in classes:
-        register_class(cls)
+def register():
+    utils.register_module("UI.Render", classes, submodules)
 
 def unregister():
-    config.unregister()
-
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("UI.Render", classes, submodules)

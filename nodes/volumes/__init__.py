@@ -3,13 +3,13 @@ from . import clear, heterogeneous, homogeneous, output, tree
 import nodeitems_utils
 from .tree import luxcore_node_categories_volume
 
-classes = (
+classes = [
     clear.LuxCoreNodeVolClear,
     heterogeneous.LuxCoreNodeVolHeterogeneous,
     homogeneous.LuxCoreNodeVolHomogeneous,
     output.LuxCoreNodeVolOutput,
     tree.LuxCoreVolumeNodeTree,
-)
+]
 
 def register():
     nodeitems_utils.register_node_categories("LUXCORE_VOLUME_TREE", luxcore_node_categories_volume)

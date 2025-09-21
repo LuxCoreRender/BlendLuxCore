@@ -7,7 +7,7 @@ from ..base import LuxCoreNodeTexture
 from ... import utils
 import pyluxcore
 
-from ...ui import icons
+from ... import icons
 from ...utils.errorlog import LuxCoreErrorLog
 from ...handlers import frame_change_pre
 

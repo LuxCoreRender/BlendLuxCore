@@ -1,7 +1,5 @@
 import bpy
-from .node import find_nodes
-from ..nodes import TREE_TYPES
-from ..nodes.base import ThinFilmCoating
+from ..utils.node import find_nodes, TREE_TYPES, ThinFilmCoating
 
 
 """

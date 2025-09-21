@@ -2,8 +2,8 @@ import os
 import math
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from .. import icons
-from ..icons import icon_manager
+from ... import icons
+from ...icons import icon_manager
 from ... import utils
 
 
@@ -46,14 +46,10 @@ class LUXCORE_RENDER_PT_caches(RenderButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         return context.scene.render.engine == "LUXCORE"
-    
-    def draw_header(self, context):
-        layout = self.layout
-        layout.label(text="", icon_value= icon_manager.get_icon_id("logotype"))
 
     def draw_header(self, context):
         layout = self.layout
-        layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))
+        layout.label(text="", icon_value= icon_manager.get_icon_id("logotype"))
 
     def draw(self, context):
         pass

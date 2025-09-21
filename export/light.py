@@ -7,7 +7,7 @@ from .caches.exported_data import ExportedObject, ExportedLight
 from .image import ImageExporter
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import node as utils_node
-from ..nodes.output import get_active_output
+from ..utils.node import get_active_output
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]

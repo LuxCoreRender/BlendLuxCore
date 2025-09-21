@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import StringProperty, BoolProperty
 from ..base import LuxCoreNodeTexture
-from ...ui import icons
+from ... import icons
 from ...utils import node as utils_node
 
 

@@ -1,7 +1,7 @@
 from bl_ui.properties_data_light import DataButtonsPanel
 import bpy
-from . import icons
-from ..ui.icons import icon_manager
+from .. import icons
+from ..icons import icon_manager
 from bpy.types import Panel
 from ..utils import ui as utils_ui
 from cycles.ui import panel_node_draw

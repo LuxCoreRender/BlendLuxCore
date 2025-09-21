@@ -26,7 +26,7 @@ import bpy
 from bpy.types import Panel
 from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
-from .. import icons
+from ... import icons
 
 
 def draw_panel_categories(self, context):
@@ -35,10 +35,12 @@ def draw_panel_categories(self, context):
 
     if ui_props.asset_type == 'MODEL':
         asset_props = scene.luxcoreOL.model
-    if ui_props.asset_type == 'SCENE':
+    elif ui_props.asset_type == 'SCENE':
         asset_props = scene.luxcoreOL.scene
-    if ui_props.asset_type == 'MATERIAL':
+    elif ui_props.asset_type == 'MATERIAL':
         asset_props = scene.luxcoreOL.material
+    else:
+        raise ValueError(f"Unhandled asset type {ui_props.asset_type}")
 
     if not 'categories' in asset_props.keys():
         return

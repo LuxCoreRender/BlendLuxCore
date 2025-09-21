@@ -1,5 +1,5 @@
-from bpy.utils import register_class, unregister_class
 from . import harlequin, heightdisplacement, simplify, subdiv, vectordisplacement
+from ... import utils
 
 classes = (
     harlequin.LuxCoreNodeShapeHarlequin,
@@ -10,9 +10,7 @@ classes = (
 )
 
 def register():
-    for cls in classes:
-        register_class(cls)
+    utils.register_module("Shapes", classes)
 
 def unregister():
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("Shapes", classes)

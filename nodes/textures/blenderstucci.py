@@ -2,7 +2,7 @@ import bpy
 from bpy.props import EnumProperty, FloatProperty, IntProperty
 from ..base import LuxCoreNodeTexture
 
-from .. import NOISE_BASIS_ITEMS, NOISE_TYPE_ITEMS, MIN_NOISE_SIZE
+from ..base import NOISE_BASIS_ITEMS, NOISE_TYPE_ITEMS, MIN_NOISE_SIZE
 from ...utils import node as utils_node
 
 

@@ -3,9 +3,10 @@ from bpy.props import BoolProperty, PointerProperty, IntProperty, FloatVectorPro
 import pyluxcore
 from ... import utils
 from ...utils import node as utils_node
-from ..output import LuxCoreNodeOutput, update_active, get_active_output
-from ...ui import icons
+from ... import icons
 from ...utils.errorlog import LuxCoreErrorLog
+from ...utils.node import get_active_output
+from ..output import update_active, LuxCoreNodeOutput
 
 SHADOWCATCHER_DESC = (
     "Make this material transparent and only catch shadows on it. "

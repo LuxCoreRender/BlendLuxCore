@@ -2,7 +2,7 @@ import bpy
 from bpy.props import PointerProperty, EnumProperty, StringProperty, FloatVectorProperty
 from ..base import LuxCoreNodeTexture
 from ..sockets import FLOAT_UI_PRECISION
-from ...ui import icons
+from ... import icons
 from ... import utils
 from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node

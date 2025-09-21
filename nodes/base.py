@@ -4,8 +4,31 @@ from mathutils import Color
 from .. import utils
 from ..utils import node as utils_node
 from ..utils import ui as utils_ui
-from ..ui import icons
-from . import TREE_TYPES, TREE_ICONS
+from .. import icons
+from ..utils.node import TREE_TYPES, TREE_ICONS, get_active_output
+
+NOISE_BASIS_ITEMS = [
+    ("blender_original", "Blender Original", ""),
+    ("original_perlin", "Original Perlin", ""),
+    ("improved_perlin", "Improved Perlin", ""),
+    ("voronoi_f1", "Voronoi F1", ""),
+    ("voronoi_f2", "Voronoi F2", ""),
+    ("voronoi_f3", "Voronoi F3", ""),
+    ("voronoi_f4", "Voronoi F4", ""),
+    ("voronoi_f2f1", "Voronoi F2-F1", ""),
+    ("voronoi_crackle", "Voronoi Crackle", ""),
+    ("cell_noise", "Cell Noise", ""),
+]
+
+NOISE_TYPE_ITEMS = [
+    ("soft_noise", "Soft", ""),
+    ("hard_noise", "Hard", "")
+]
+
+MIN_NOISE_SIZE = 0.0001
+
+COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color"
+
 
 class LuxCoreNodeTree:
     """Base class for LuxCore node trees"""
@@ -376,8 +399,6 @@ class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
         if self.node_tree == self.id_data:
             raise Exception("Recursion (pointer referencing its own node tree)")
 
-        # Import statement here to prevent circular imports
-        from .output import get_active_output
         output = get_active_output(self.node_tree)
 
         if output is None:
@@ -391,146 +412,3 @@ class LuxCoreNodeTreePointer(LuxCoreNode, bpy.types.Node):
 
         output.export(exporter, depsgraph, props, luxcore_name)
         return luxcore_name
-
-
-class Roughness:
-    """
-    How to use this class:
-    Declare a use_anisotropy property like this:
-    use_anisotropy: BoolProperty(name=Roughness.aniso_name,
-                                  default=False,
-                                  description=Roughness.aniso_desc,
-                                  update=Roughness.update_anisotropy)
-
-    Call Roughness.init(self, default=0.1) in the init method of the material node
-
-    Draw the use_anisotropy property in the draw_buttons method:
-    layout.prop(self, "use_anisotropy")
-
-    For an example, see the glossy2 node
-    """
-
-    @staticmethod
-    def has_backface(node):
-        return "BF Roughness" in node.inputs or "BF U-Roughness" in node.inputs
-
-    @staticmethod
-    def toggle_roughness(node, context):
-        """
-        Enable/disable all roughness inputs.
-        Currently only used by glass node.
-
-        Strictly speaking we don't need backface support here,
-        but add it anyway in case we have a material in the
-        future that has backface and needs roughness on/off switch.
-        """
-        sockets = ["U-Roughness", "V-Roughness", "Roughness"]
-        # Back face variants
-        for socket in sockets.copy():
-            sockets.append("BF " + socket)
-
-        for socket in sockets:
-            id = node.inputs.find(socket)
-            if id != -1:
-                node.inputs[id].enabled = node.rough
-
-        Roughness.update_anisotropy(node, context)
-
-    @staticmethod
-    def update_anisotropy(node, context):
-        def update(node, is_backface):
-            if is_backface:
-                roughness = "BF Roughness"
-                u_roughness = "BF U-Roughness"
-                v_roughness = "BF V-Roughness"
-                extra_check = node.use_backface
-            else:
-                roughness = "Roughness"
-                u_roughness = "U-Roughness"
-                v_roughness = "V-Roughness"
-                extra_check = True
-
-            id = node.inputs.find(roughness)
-            if id == -1:
-                id = node.inputs.find(u_roughness)
-            u_roughness_input = node.inputs[id]
-            u_roughness_input.name = u_roughness if node.use_anisotropy else roughness
-
-            id = node.inputs.find(v_roughness)
-            node.inputs[id].enabled = node.use_anisotropy and extra_check
-
-        update(node, False)
-        if Roughness.has_backface(node):
-            update(node, True)
-
-        utils_node.force_viewport_update(node, context)
-
-    aniso_name = "Anisotropic Roughness"
-    aniso_desc = ("Use different roughness values for "
-                  "U- and V-directions (needs UV mapping)")
-
-    @staticmethod
-    def init(node, default=0.05, init_enabled=True):
-        node.add_input("LuxCoreSocketRoughness", "Roughness", default, enabled=init_enabled)
-        node.add_input("LuxCoreSocketRoughness", "V-Roughness", default, enabled=False)
-
-    @staticmethod
-    def init_backface(node, default=0.05, init_enabled=False):
-        node.add_input("LuxCoreSocketRoughness", "BF Roughness", default, enabled=init_enabled)
-        node.add_input("LuxCoreSocketRoughness", "BF V-Roughness", default, enabled=False)
-
-    @staticmethod
-    def draw(node, context, layout):
-        layout.prop(node, "use_anisotropy")
-        if node.use_anisotropy:
-            utils_node.draw_uv_info(context, layout)
-
-    @staticmethod
-    def export(node, exporter, depsgraph, props, definitions):
-        if node.use_anisotropy:
-            uroughness = node.inputs["U-Roughness"].export(exporter, depsgraph, props)
-            vroughness = node.inputs["V-Roughness"].export(exporter, depsgraph, props)
-        else:
-            uroughness = node.inputs["Roughness"].export(exporter, depsgraph, props)
-            vroughness = uroughness
-
-        definitions["uroughness"] = uroughness
-        definitions["vroughness"] = vroughness
-
-        if Roughness.has_backface(node):
-            if node.use_anisotropy:
-                uroughness = node.inputs["BF U-Roughness"].export(exporter, depsgraph, props)
-                vroughness = node.inputs["BF V-Roughness"].export(exporter, depsgraph, props)
-            else:
-                uroughness = node.inputs["BF Roughness"].export(exporter, depsgraph, props)
-                vroughness = uroughness
-
-            definitions["uroughness_bf"] = uroughness
-            definitions["vroughness_bf"] = vroughness
-
-
-class ThinFilmCoating:
-    THICKNESS_NAME = "Film Thickness (nm)"
-    IOR_NAME = "Film IOR"
-    
-    @staticmethod
-    def init(node):
-        node.add_input("LuxCoreSocketFilmThickness", ThinFilmCoating.THICKNESS_NAME, 300, enabled=False)
-        node.add_input("LuxCoreSocketFilmIOR", ThinFilmCoating.IOR_NAME, 1.5, enabled=False)
-
-    @staticmethod
-    def toggle(node, context):
-        id = node.inputs.find(ThinFilmCoating.THICKNESS_NAME)
-        node.inputs[id].enabled = node.use_thinfilmcoating
-        id = node.inputs.find(ThinFilmCoating.IOR_NAME)
-        node.inputs[id].enabled = node.use_thinfilmcoating
-        utils_node.force_viewport_update(node, context)
-        
-    @staticmethod
-    def export(node, exporter, depsgraph, props, definitions):
-        thickness_socket = node.inputs[ThinFilmCoating.THICKNESS_NAME]
-        thickness = thickness_socket.export(exporter, depsgraph, props)
-        
-        if thickness_socket.is_linked or thickness > 0:
-            definitions["filmthickness"] = thickness
-            definitions["filmior"] = node.inputs[ThinFilmCoating.IOR_NAME].export(exporter, depsgraph, props)

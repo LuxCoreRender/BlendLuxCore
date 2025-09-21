@@ -3,8 +3,8 @@ import bpy
 from bpy.types import Panel
 from bl_ui.utils import PresetPanel
 from ..utils import ui as utils_ui
-from . import icons
-from ..ui.icons import icon_manager
+from .. import icons
+from ..icons import icon_manager
 
 
 class LUXCORE_CAMERA_PT_presets(PresetPanel, Panel):

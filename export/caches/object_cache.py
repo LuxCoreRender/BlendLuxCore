@@ -15,7 +15,7 @@ from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
 from ...utils import MESH_OBJECTS
-from ...nodes.output import get_active_output
+from ...utils.node import get_active_output
 
 class TriAOVDataIndices:
     RANDOM_PER_ISLAND_INT = 0

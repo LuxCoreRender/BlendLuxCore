@@ -1,16 +1,20 @@
+_needs_reload = "bpy" in locals()
+
 import bpy
+
 from bpy.props import (
     PointerProperty, EnumProperty, StringProperty, IntProperty,
     BoolProperty, FloatProperty,
 )
-from ..base import LuxCoreNodeTexture
-from ...export.image import ImageExporter
-from ...properties.image_user import LuxCoreImageUser
-from ... import utils
-from ...utils import node as utils_node
-from ...utils.errorlog import LuxCoreErrorLog
-from ...ui import icons
-from ...handlers import frame_change_pre
+
+from .. import base
+from ... import (icons, utils, export, properties, handlers)
+
+if _needs_reload:
+    import importlib
+    modules = (icons, utils, base, export, properties, handlers)
+    for module in modules:
+        importlib.reload(module)
 
 
 NORMAL_MAP_DESC = (
@@ -20,7 +24,7 @@ NORMAL_MAP_DESC = (
 NORMAL_SCALE_DESC = "Height multiplier, used to adjust the baked-in height of the normal map"
 
 
-class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
+class LuxCoreNodeTexImagemap(base.LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Imagemap"
     bl_width_default = 200
 
@@ -31,10 +35,10 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
             # User counting does not work reliably with Python PointerProperty.
             # Sometimes, this node is not counted as user.
             self.image.use_fake_user = True
-        utils_node.force_viewport_update(self, context)
+        utils.node.force_viewport_update(self, context)
 
     image: PointerProperty(name="Image", type=bpy.types.Image, update=update_image)
-    image_user: PointerProperty(update=utils_node.force_viewport_update, type=LuxCoreImageUser)
+    image_user: PointerProperty(update=utils.node.force_viewport_update, type=properties.image_user.LuxCoreImageUser)
 
     channel_items = [
         ("default", "Default Channels", "Use the image channels as they are in the file", 0),
@@ -46,7 +50,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
         ("mean", "Mean (Average)", "Greyscale", 6),
         ("colored_mean", "Mean (Luminance)", "Greyscale", 7),
     ]
-    channel: EnumProperty(update=utils_node.force_viewport_update, name="Channel", 
+    channel: EnumProperty(update=utils.node.force_viewport_update, name="Channel", 
                           items=channel_items, default="default", description="Channel")
 
     wrap_items = [
@@ -55,14 +59,14 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
         ("black", "Black", "Clip to image size and use black outside of the image", 1),
         ("white", "White", "Clip to image size and use white outside of the image", 2),
     ]
-    wrap: EnumProperty(update=utils_node.force_viewport_update, name="Wrap", items=wrap_items, default="repeat",
+    wrap: EnumProperty(update=utils.node.force_viewport_update, name="Wrap", items=wrap_items, default="repeat",
                        description="Wrap")
 
-    gamma: FloatProperty(update=utils_node.force_viewport_update, name="Gamma", default=2.2, soft_min=0, soft_max=5,
+    gamma: FloatProperty(update=utils.node.force_viewport_update, name="Gamma", default=2.2, soft_min=0, soft_max=5,
                          description="Use gamma 2.2 for images with color information (e.g. diffuse maps).\n"
                                      "Use gamma 1.0 for images with other information (e.g. bump maps, "
                                      "roughness maps, metallic maps etc.)")
-    brightness: FloatProperty(update=utils_node.force_viewport_update, name="Brightness", default=1,
+    brightness: FloatProperty(update=utils.node.force_viewport_update, name="Brightness", default=1,
                               description="Brightness multiplier")
 
     def update_is_normal_map(self, context):
@@ -77,19 +81,19 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
         alpha_output.enabled = not self.is_normal_map
         bump_output.enabled = self.is_normal_map
 
-        utils_node.copy_links_after_socket_swap(color_output, bump_output, was_color_enabled)
-        utils_node.force_viewport_update(self, context)
+        utils.node.copy_links_after_socket_swap(color_output, bump_output, was_color_enabled)
+        utils.node.force_viewport_update(self, context)
 
     is_normal_map: BoolProperty(name="Normalmap", default=False, update=update_is_normal_map,
                                 description=NORMAL_MAP_DESC)
-    normal_map_scale: FloatProperty(update=utils_node.force_viewport_update, 
+    normal_map_scale: FloatProperty(update=utils.node.force_viewport_update, 
                                     name="Height", default=1, min=0, soft_max=5,
                                     description=NORMAL_SCALE_DESC)
     normal_map_orientation_items = [
         ("opengl", "OpenGL", "Select if the image is a left-handed normal map", 0),
         ("directx", "DirectX", "Select if the image is a right-handed normal map (inverted green channel)", 1),
     ]
-    normal_map_orientation: EnumProperty(update=utils_node.force_viewport_update, name="Orientation", 
+    normal_map_orientation: EnumProperty(update=utils.node.force_viewport_update, name="Orientation", 
                                          description="Normal Map Orientation",
                                          items=normal_map_orientation_items, default="opengl")
 
@@ -101,11 +105,11 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
     ]
     projection: EnumProperty(name="Projection", items=projection_items, default="flat",
                              description="Projection", 
-                             update=utils_node.force_viewport_update)
+                             update=utils.node.force_viewport_update)
     
     randomized_tiling: BoolProperty(name="Randomized Tiling", default=False,
                                     description="Use histogram-preserving blending to make repetitions irregular",
-                                    update=utils_node.force_viewport_update)
+                                    update=utils.node.force_viewport_update)
         
     filter_items = [
         ("linear", "Linear", "Linear interpolation", 0),
@@ -113,7 +117,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
     ]
     filter: EnumProperty(name="Interpolation", items=filter_items, default="linear",
                                     description="Interpolation",
-                                    update=utils_node.force_viewport_update)
+                                    update=utils.node.force_viewport_update)
         
     def init(self, context):
         self.show_thumbnail = utils.get_addon_preferences(bpy.context).image_node_thumb_default
@@ -167,7 +171,7 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
         self.image_user.draw(col, context.scene)
         
         if (not self.inputs["2D Mapping"].is_linked and self.projection == "flat" 
-                and context.object and not utils_node.has_valid_uv_map(context.object)):
+                and context.object and not utils.node.has_valid_uv_map(context.object)):
             col.label(text="No UVs, use box projection!", icon=icons.WARNING)
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
@@ -178,13 +182,13 @@ class LuxCoreNodeTexImagemap(LuxCoreNodeTexture, bpy.types.Node):
                 return [0, 0, 0]
 
         if self.image.source == "SEQUENCE":
-            frame_change_pre.have_to_check_node_trees = True
+            handlers.frame_change_pre.have_to_check_node_trees = True
 
         try:
-            filepath = ImageExporter.export(self.image, self.image_user, exporter.scene)
+            filepath = export.image.ImageExporter.export(self.image, self.image_user, exporter.scene)
         except OSError as error:
             msg = 'Node "%s" in tree "%s": %s' % (self.name, self.id_data.name, error)
-            LuxCoreErrorLog.add_warning(msg)
+            utils.errorlog.LuxCoreErrorLog.add_warning(msg)
             return [1, 0, 1]
 
         definitions = {

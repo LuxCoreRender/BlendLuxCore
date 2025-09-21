@@ -1,7 +1,7 @@
 from bl_ui.properties_data_curves import DataButtonsPanel
 from bpy.types import Panel
-from ..ui import icons
-from ..ui.icons import icon_manager
+from .. import icons
+from ..icons import icon_manager
 
 class LUXCORE_DATA_PT_curve_hair(DataButtonsPanel, Panel):
     bl_label = "LuxCore Hair Settings"

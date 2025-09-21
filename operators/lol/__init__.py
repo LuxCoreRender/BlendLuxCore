@@ -1,4 +1,4 @@
-from bpy.utils import register_class, unregister_class
+from ... import utils
 from . import add_local, assetbar, update_ToC
 
 classes = (
@@ -10,9 +10,7 @@ classes = (
 )
 
 def register():
-    for cls in classes:
-        register_class(cls)
+    utils.register_module("Operators.Lol", classes)
 
 def unregister():
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("Operators.Lol", classes)

@@ -2,7 +2,49 @@ import bpy
 import mathutils
 import pyluxcore
 from .errorlog import LuxCoreErrorLog
-from ..ui import icons
+from .. import icons
+
+
+OUTPUT_MAP = {
+    "luxcore_material_nodes": "LuxCoreNodeMatOutput",
+    "luxcore_texture_nodes": "LuxCoreNodeTexOutput",
+    "luxcore_volume_nodes": "LuxCoreNodeVolOutput",
+}
+
+TREE_TYPES = {
+    "luxcore_material_nodes",
+    "luxcore_texture_nodes",
+    "luxcore_volume_nodes",
+}
+
+TREE_ICONS = {
+    "luxcore_material_nodes": icons.NTREE_MATERIAL,
+    "luxcore_texture_nodes": icons.NTREE_TEXTURE,
+    "luxcore_volume_nodes": icons.NTREE_VOLUME,
+}
+
+
+def get_active_output(node_tree):
+    output_type = OUTPUT_MAP[node_tree.bl_idname]
+
+    for node in node_tree.nodes:
+        node_type = getattr(node, "bl_idname", None)
+
+        if node_type == output_type and node.active:
+            return node
+
+
+def get_output_nodes(node_tree):
+    """ Return a list with all output nodes in a node tree """
+    output_type = OUTPUT_MAP[node_tree.bl_idname]
+    nodes = []
+
+    for node in node_tree.nodes:
+        node_type = getattr(node, "bl_idname", None)
+        if node_type == output_type:
+            nodes.append(node)
+    return nodes
+
 
 
 def draw_uv_info(context, layout):
@@ -268,7 +310,7 @@ def update_opengl_materials(_, context):
         mat.diffuse_color = (0.5, 0.5, 0.5, alpha)
         return
 
-    from ..nodes.output import get_active_output
+    from ..utils.node import get_active_output
     output = get_active_output(node_tree)
 
     if output:
@@ -329,3 +371,158 @@ def is_allowed_input(socket, input_socket):
         if isinstance(input_socket, allowed_class):
             return True
     return False
+
+
+def show_nodetree(context, node_tree):
+    for area in context.screen.areas:
+        if area.type == "NODE_EDITOR":
+            for space in area.spaces:
+                if space.type == "NODE_EDITOR" and not space.pin:
+                    space.tree_type = node_tree.bl_idname
+                    space.node_tree = node_tree
+                    return True
+    return False
+
+
+class ThinFilmCoating:
+    THICKNESS_NAME = "Film Thickness (nm)"
+    IOR_NAME = "Film IOR"
+    
+    @staticmethod
+    def init(node):
+        node.add_input("LuxCoreSocketFilmThickness", ThinFilmCoating.THICKNESS_NAME, 300, enabled=False)
+        node.add_input("LuxCoreSocketFilmIOR", ThinFilmCoating.IOR_NAME, 1.5, enabled=False)
+
+    @staticmethod
+    def toggle(node, context):
+        id = node.inputs.find(ThinFilmCoating.THICKNESS_NAME)
+        node.inputs[id].enabled = node.use_thinfilmcoating
+        id = node.inputs.find(ThinFilmCoating.IOR_NAME)
+        node.inputs[id].enabled = node.use_thinfilmcoating
+        force_viewport_update(node, context)
+        
+    @staticmethod
+    def export(node, exporter, depsgraph, props, definitions):
+        thickness_socket = node.inputs[ThinFilmCoating.THICKNESS_NAME]
+        thickness = thickness_socket.export(exporter, depsgraph, props)
+        
+        if thickness_socket.is_linked or thickness > 0:
+            definitions["filmthickness"] = thickness
+            definitions["filmior"] = node.inputs[ThinFilmCoating.IOR_NAME].export(exporter, depsgraph, props)
+
+
+class Roughness:
+    """
+    How to use this class:
+    Declare a use_anisotropy property like this:
+    use_anisotropy: BoolProperty(name=Roughness.aniso_name,
+                                  default=False,
+                                  description=Roughness.aniso_desc,
+                                  update=Roughness.update_anisotropy)
+
+    Call Roughness.init(self, default=0.1) in the init method of the material node
+
+    Draw the use_anisotropy property in the draw_buttons method:
+    layout.prop(self, "use_anisotropy")
+
+    For an example, see the glossy2 node
+    """
+
+    @staticmethod
+    def has_backface(node):
+        return "BF Roughness" in node.inputs or "BF U-Roughness" in node.inputs
+
+    @staticmethod
+    def toggle_roughness(node, context):
+        """
+        Enable/disable all roughness inputs.
+        Currently only used by glass node.
+
+        Strictly speaking we don't need backface support here,
+        but add it anyway in case we have a material in the
+        future that has backface and needs roughness on/off switch.
+        """
+        sockets = ["U-Roughness", "V-Roughness", "Roughness"]
+        # Back face variants
+        for socket in sockets.copy():
+            sockets.append("BF " + socket)
+
+        for socket in sockets:
+            id = node.inputs.find(socket)
+            if id != -1:
+                node.inputs[id].enabled = node.rough
+
+        Roughness.update_anisotropy(node, context)
+
+    @staticmethod
+    def update_anisotropy(node, context):
+        def update(node, is_backface):
+            if is_backface:
+                roughness = "BF Roughness"
+                u_roughness = "BF U-Roughness"
+                v_roughness = "BF V-Roughness"
+                extra_check = node.use_backface
+            else:
+                roughness = "Roughness"
+                u_roughness = "U-Roughness"
+                v_roughness = "V-Roughness"
+                extra_check = True
+
+            id = node.inputs.find(roughness)
+            if id == -1:
+                id = node.inputs.find(u_roughness)
+            u_roughness_input = node.inputs[id]
+            u_roughness_input.name = u_roughness if node.use_anisotropy else roughness
+
+            id = node.inputs.find(v_roughness)
+            node.inputs[id].enabled = node.use_anisotropy and extra_check
+
+        update(node, False)
+        if Roughness.has_backface(node):
+            update(node, True)
+
+        force_viewport_update(node, context)
+
+    aniso_name = "Anisotropic Roughness"
+    aniso_desc = ("Use different roughness values for "
+                  "U- and V-directions (needs UV mapping)")
+
+    @staticmethod
+    def init(node, default=0.05, init_enabled=True):
+        node.add_input("LuxCoreSocketRoughness", "Roughness", default, enabled=init_enabled)
+        node.add_input("LuxCoreSocketRoughness", "V-Roughness", default, enabled=False)
+
+    @staticmethod
+    def init_backface(node, default=0.05, init_enabled=False):
+        node.add_input("LuxCoreSocketRoughness", "BF Roughness", default, enabled=init_enabled)
+        node.add_input("LuxCoreSocketRoughness", "BF V-Roughness", default, enabled=False)
+
+    @staticmethod
+    def draw(node, context, layout):
+        layout.prop(node, "use_anisotropy")
+        if node.use_anisotropy:
+            draw_uv_info(context, layout)
+
+    @staticmethod
+    def export(node, exporter, depsgraph, props, definitions):
+        if node.use_anisotropy:
+            uroughness = node.inputs["U-Roughness"].export(exporter, depsgraph, props)
+            vroughness = node.inputs["V-Roughness"].export(exporter, depsgraph, props)
+        else:
+            uroughness = node.inputs["Roughness"].export(exporter, depsgraph, props)
+            vroughness = uroughness
+
+        definitions["uroughness"] = uroughness
+        definitions["vroughness"] = vroughness
+
+        if Roughness.has_backface(node):
+            if node.use_anisotropy:
+                uroughness = node.inputs["BF U-Roughness"].export(exporter, depsgraph, props)
+                vroughness = node.inputs["BF V-Roughness"].export(exporter, depsgraph, props)
+            else:
+                uroughness = node.inputs["BF Roughness"].export(exporter, depsgraph, props)
+                vroughness = uroughness
+
+            definitions["uroughness_bf"] = uroughness
+            definitions["vroughness_bf"] = vroughness
+

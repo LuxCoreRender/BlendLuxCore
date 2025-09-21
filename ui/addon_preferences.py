@@ -9,7 +9,7 @@ from bpy.types import AddonPreferences
 from bpy.props import IntProperty, StringProperty, EnumProperty, BoolProperty
 
 from .. import ui
-from ..ui import icons
+from .. import icons
 from .. import utils
 from ..utils import luxutils
 from ..utils.lol import utils as lol_utils

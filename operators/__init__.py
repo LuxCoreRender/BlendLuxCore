@@ -12,8 +12,10 @@ _needs_reload = "bpy" in locals()
 
 import bpy
 
-from bpy.utils import register_class, unregister_class
+from .. import utils as blc_utils
+
 from . import (
+    lol,
     camera,
     debug,
     general,
@@ -33,7 +35,6 @@ from . import (
     render_settings_helper,
     texture,
     world,
-    lol,
 )
 
 
@@ -141,19 +142,11 @@ classes = (
     world.LUXCORE_OT_create_sun_hemi,
 )
 
-def register():
-    lol.register()
-    keymaps.register()
+submodules = (lol, keymaps)
 
-    for cls in classes:
-        try:
-            register_class(cls)
-        except Exception as err:
-            print("Warning: Cannot register", cls, err)
+def register():
+    blc_utils.register_module("Operators", classes, submodules)
+
 
 def unregister():
-    lol.unregister()
-    keymaps.unregister()
-
-    for cls in classes:
-        unregister_class(cls)
+    blc_utils.unregister_module("Operators", classes, submodules)

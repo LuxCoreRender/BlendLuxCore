@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel
-from . import icons
-from .icons import icon_manager
+from .. import icons
+from ..icons import icon_manager
 
 from bl_ui.properties_particle import ParticleButtonsPanel
 from .. import utils

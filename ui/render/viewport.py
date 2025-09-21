@@ -1,8 +1,8 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ... import utils
-from .. import icons
-from ..icons import icon_manager
+from ... import icons
+from ...icons import icon_manager
 
 
 class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):

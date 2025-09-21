@@ -1,7 +1,7 @@
 import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
-from ..nodes.output import get_active_output
+from ..utils.node import get_active_output
 from ..utils.errorlog import LuxCoreErrorLog
 from . import cycles_node_reader
 

@@ -1,4 +1,4 @@
-from bpy.utils import register_class, unregister_class
+from ... import utils
 from . import LuxCoreOLScene
 
 classes = (
@@ -13,9 +13,7 @@ classes = (
 )
 
 def register():
-    for cls in classes:
-        register_class(cls)
+    utils.register_module("Properties.Lol", classes)
 
 def unregister():
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("Properties.Lol", classes)

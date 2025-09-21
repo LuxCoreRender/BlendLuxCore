@@ -1,4 +1,4 @@
-from ..icons import icon_manager
+from ...icons import icon_manager
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 

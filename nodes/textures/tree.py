@@ -1,6 +1,6 @@
 import bpy
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
-from ...ui import icons
+from ... import icons
 from ..nodeitems import Separator, NodeItemMultiImageImport
 from ..base import LuxCoreNodeTree
 

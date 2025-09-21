@@ -1,26 +1,68 @@
 _needs_reload = "bpy" in locals()
 
 import bpy
-from bpy.utils import register_class, unregister_class
+from .. import utils
 from . import (
-    aovs, blender_object, image_user, imagepipeline, camera,
-    config, debug, denoiser, devices, display, hair, halt,
-    ies, light, lightgroups, material, scene, statistics,
-    view_layer, viewport, world, lol,
+    aovs,
+    image_user,
+    hair,
+    blender_object,
+    imagepipeline,
+    camera,
+    config,
+    debug,
+    denoiser,
+    devices,
+    display,
+    halt,
+    ies,
+    light,
+    lightgroups,
+    material,
+    viewport,
+    statistics,
+    scene,
+    view_layer,
+    world,
+    lol,
 )
+
+# TODO
+from .ies import LuxCoreIESProps
 
 if _needs_reload:
     import importlib
+
+    # Caveat: module order matters (due to PointerProperty and PropertyGroup)
     modules = (
-        aovs, blender_object, image_user, imagepipeline, camera,
-        config, debug, denoiser, devices, display, hair, halt,
-        ies, light, lightgroups, material, scene, statistics,
-        view_layer, viewport, world, lol,
+        aovs,
+        image_user,
+        hair,
+        blender_object,
+        imagepipeline,
+        camera,
+        config,
+        debug,
+        denoiser,
+        devices,
+        display,
+        halt,
+        ies,
+        light,
+        lightgroups,
+        material,
+        viewport,
+        statistics,
+        scene,
+        view_layer,
+        world,
+        lol,
     )
     for module in modules:
         importlib.reload(module)
 
 
+# Warning: order matters, for correct loading and reloading
 classes = (
     aovs.LuxCoreAOVSettings,
     image_user.LuxCoreImageUser,
@@ -65,17 +107,15 @@ classes = (
     statistics.LuxCoreRenderStatsCollection,
     scene.LuxCoreScene,
     view_layer.LuxCoreViewLayer,
-    world.LuxCoreWorldProps
+    world.LuxCoreWorldProps,
 )
 
-def register():
-    lol.register()
+submodules = (lol,)
 
-    for cls in classes:
-        register_class(cls)
+
+def register():
+    utils.register_module("Properties", classes, submodules)
+
 
 def unregister():
-    lol.unregister()
-
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("Properties", classes, submodules)

@@ -1,7 +1,7 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
-from .. import icons
-from ..icons import icon_manager
+from ... import icons
+from ...icons import icon_manager
 
 class LUXCORE_RENDER_PT_tools(Panel, RenderButtonsPanel):
     bl_label = "LuxCore Tools"

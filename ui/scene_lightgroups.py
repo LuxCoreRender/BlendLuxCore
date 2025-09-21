@@ -1,8 +1,8 @@
 from bl_ui.properties_scene import SceneButtonsPanel
 from bpy.types import Panel
 from ..properties.lightgroups import MAX_CUSTOM_LIGHTGROUPS
-from . import icons
-from .icons import icon_manager
+from .. import icons
+from ..icons import icon_manager
 
 
 def lightgroup_icon(enabled):

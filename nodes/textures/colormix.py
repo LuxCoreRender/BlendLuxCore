@@ -2,7 +2,7 @@ import bpy
 from bpy.props import BoolProperty, EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 from ... import utils
-from ...ui import icons
+from ... import icons
 from .math import MIX_DESCRIPTION
 from ...utils import node as utils_node
 

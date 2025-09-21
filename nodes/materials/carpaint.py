@@ -2,7 +2,7 @@ import bpy
 from bpy.props import FloatProperty, EnumProperty
 from ..base import LuxCoreNodeMaterial
 from ..sockets import LuxCoreSocketFloat
-from ...ui import icons
+from ... import icons
 from ...utils import node as utils_node
 
 REFLECTION_DESCRIPTION = "Glossy layer reflection value"

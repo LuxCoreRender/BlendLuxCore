@@ -1,7 +1,6 @@
 import bpy
 import math
-from ..nodes import TREE_TYPES
-from ..utils.node import find_nodes
+from ..utils.node import find_nodes, TREE_TYPES
 
 
 def calc_power_correction_factor(spread_angle):

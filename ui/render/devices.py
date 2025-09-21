@@ -1,8 +1,8 @@
 from bl_ui.properties_render import RenderButtonsPanel
 from bpy.types import Panel
 from ... import utils
-from .. import icons
-from ..icons import icon_manager
+from ... import icons
+from ...icons import icon_manager
 
 
 def _show_openCL_device_warning(context):

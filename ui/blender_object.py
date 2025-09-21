@@ -2,8 +2,8 @@ from bl_ui.properties_object import ObjectButtonsPanel
 from bpy.types import Panel
 import bpy
 from .. import utils
-from ..ui import icons
-from ..ui.icons import icon_manager
+from .. import icons
+from ..icons import icon_manager
 
 class LUXCORE_OBJECT_PT_object(ObjectButtonsPanel, Panel):
     COMPAT_ENGINES = {"LUXCORE"}

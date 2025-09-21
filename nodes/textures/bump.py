@@ -2,7 +2,7 @@ import bpy
 from bpy.props import FloatProperty
 from ..base import LuxCoreNodeTexture, LuxCoreNodeMaterial
 from ...utils import node as utils_node
-from ...ui import icons
+from ... import icons
 
 
 SAMPLING_DISTANCE_DESC = (

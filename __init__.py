@@ -1,3 +1,4 @@
+# Import standard modules
 import platform
 import os
 import sys
@@ -15,10 +16,12 @@ if platform.system() in {"Linux", "Darwin"}:
 # https://developer.blender.org/docs/handbook/extensions/addon_dev_setup/#reloading-scripts
 _needs_reload = "bpy" in locals()
 
+# Import Blender packages
 import bpy
 import addon_utils
+import nodeitems_utils
 
-# First, check if Blender and OS versions are compatible
+# Check if Blender and OS versions are compatible
 if bpy.app.version < (4, 2, 0):
     raise RuntimeError(
         "\n\nUnsupported Blender version. "
@@ -26,7 +29,7 @@ if bpy.app.version < (4, 2, 0):
     )
 
 
-# Then, take care of ensuring PyLuxCore, as other modules may want to import it
+# Take care of PyLuxCore, as other modules may want to import it
 from . import luxloader
 
 if _needs_reload:
@@ -36,6 +39,7 @@ if _needs_reload:
 
 luxloader.ensure_pyluxcore()
 
+# Import pyluxcore
 try:
     import pyluxcore
 except ImportError as error:
@@ -44,36 +48,32 @@ except ImportError as error:
     # "during handling of the above exception, ..."
     raise RuntimeError(msg) from None
 
+
+# Import other modules
+from . import utils, properties, export, nodes, operators, engine, handlers, ui
+
 if _needs_reload:
     import importlib
 
     pyluxcore = importlib.reload(pyluxcore)
-
-# Then import other modules (and deal with reloading)
-from . import properties, engine, handlers, operators, ui, nodes, utils
-from .utils.log import LuxCoreLog
-
-if _needs_reload:
-    import importlib
-
-    properties = importlib.reload(properties)
-    engine = importlib.reload(engine)
-    handlers = importlib.reload(handlers)
-    operators = importlib.reload(operators)
-    ui = importlib.reload(ui)
-    nodes = importlib.reload(nodes)
     utils = importlib.reload(utils)
+    properties = importlib.reload(properties)
+    export = importlib.reload(export)
+    nodes = importlib.reload(nodes)
+    operators = importlib.reload(operators)
+    handlers = importlib.reload(handlers)
+    engine = importlib.reload(engine)
+    ui = importlib.reload(ui)
 
+
+# Handle registering and unregistering
+# Warning: submodule order matters (for reloading, in particular)
+submodules = (properties, nodes, operators, handlers, engine, ui)
 
 def register():
-    engine.register()
-    handlers.register()
-    operators.register()
-    properties.register()
-    ui.register()
-    nodes.register()
+    utils.register_module("Main", [], submodules)
 
-    pyluxcore.Init(LuxCoreLog.add)
+    pyluxcore.Init(utils.log.LuxCoreLog.add)
     print(
         f"BlendLuxCore {utils.get_version_string()} registered "
         f"(with pyluxcore {version('pyluxcore')})"
@@ -81,9 +81,4 @@ def register():
 
 
 def unregister():
-    engine.unregister()
-    handlers.unregister()
-    operators.unregister()
-    properties.unregister()
-    ui.unregister()
-    nodes.unregister()
+    utils.unregister_module("Main", [], submodules)

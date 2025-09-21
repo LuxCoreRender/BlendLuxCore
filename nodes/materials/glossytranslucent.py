@@ -1,7 +1,8 @@
 import bpy
 from bpy.props import BoolProperty
-from ..base import LuxCoreNodeMaterial, Roughness
+from ..base import LuxCoreNodeMaterial
 from ...utils import node as utils_node
+from ...utils.node import Roughness
 
 
 IOR_DESCRIPTION = (

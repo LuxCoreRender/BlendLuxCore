@@ -1,15 +1,19 @@
 import math
-from . import calc_filmsize
-from .. import utils
-from ..handlers.draw_imageeditor import TileStats
-from ..properties.statistics import (
+from . import (
+    calc_filmsize,
+    get_halt_conditions,
+    using_hybridbackforward as utils_using_hybridbackforward,
+    pluralize,
+)
+from .statistics import (
+    TileStats,
     samples_per_sec_to_string,
     triangle_count_to_string,
     convergence_to_string,
     rays_per_sample_to_string,
     get_rays_per_sample,
 )
-from ..utils.errorlog import LuxCoreErrorLog
+from .errorlog import LuxCoreErrorLog
 from . import view_layer
 
 ENGINE_TO_STR = {
@@ -94,8 +98,8 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
     engine.update_stats("", pretty_stats + " | " + refresh_message)
 
     # Update progress bar if we have halt conditions
-    using_hybridbackforward = utils.using_hybridbackforward(scene)
-    halt = utils.get_halt_conditions(scene)
+    using_hybridbackforward = utils_using_hybridbackforward(scene)
+    halt = get_halt_conditions(scene)
     if halt.enable and (halt.use_time or halt.use_samples
             or (halt.use_light_samples and using_hybridbackforward)
             or halt.use_noise_thresh):
@@ -138,7 +142,7 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
         engine.update_progress(0)
 
     if "TILE" in config.GetProperties().Get("renderengine.type").GetString():
-        TileStats.film_width, TileStats.film_height = utils.calc_filmsize(scene)
+        TileStats.film_width, TileStats.film_height = calc_filmsize(scene)
         tile_w = stats.Get("stats.tilepath.tiles.size.x").GetInt()
         tile_h = stats.Get("stats.tilepath.tiles.size.y").GetInt()
         TileStats.width, TileStats.height = tile_w, tile_h
@@ -151,7 +155,7 @@ def update_status_msg(stats, engine, scene, config, time_until_film_refresh):
 
 
 def get_pretty_stats(config, stats, scene, context=None):
-    halt = utils.get_halt_conditions(scene)
+    halt = get_halt_conditions(scene)
     engine = config.GetProperties().Get("renderengine.type").GetString()
 
     # Here we collect strings in a list and later join them
@@ -180,7 +184,7 @@ def get_pretty_stats(config, stats, scene, context=None):
         # Samples (aka passes)
         samples_eye = stats.Get("stats.renderengine.pass.eye").GetInt()
         samples_light = stats.Get("stats.renderengine.pass.light").GetInt()
-        using_hybridbackforward = utils.using_hybridbackforward(scene)
+        using_hybridbackforward = utils_using_hybridbackforward(scene)
         only_lighttracing = scene.luxcore.config.using_only_lighttracing()
 
         if halt.enable and halt.use_samples and not only_lighttracing:
@@ -224,12 +228,12 @@ def get_pretty_stats(config, stats, scene, context=None):
     error_str = ""
 
     if LuxCoreErrorLog.errors:
-        error_str += utils.pluralize("%d Error", len(LuxCoreErrorLog.errors))
+        error_str += pluralize("%d Error", len(LuxCoreErrorLog.errors))
 
     if LuxCoreErrorLog.warnings:
         if error_str:
             error_str += ", "
-        error_str += utils.pluralize("%d Warning", len(LuxCoreErrorLog.warnings))
+        error_str += pluralize("%d Warning", len(LuxCoreErrorLog.warnings))
 
     if error_str:
         pretty.append(error_str)

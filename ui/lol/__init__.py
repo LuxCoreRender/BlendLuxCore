@@ -1,4 +1,4 @@
-from bpy.utils import register_class, unregister_class
+from ... import utils
 from . import assetmenu, panel
 
 classes = (
@@ -9,10 +9,10 @@ classes = (
     panel.VIEW3D_PT_LUXCORE_ONLINE_LIBRARY_SCAN_RESULT,
 )
 
+
 def register():
-    for cls in classes:
-        register_class(cls)
+    utils.register_module("UI.Lol", classes)
+
 
 def unregister():
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("UI.Lol", classes)

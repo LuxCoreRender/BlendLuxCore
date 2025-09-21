@@ -1,6 +1,6 @@
 from . import get_name_with_lib
 from . import pluralize
-from ..ui import icons
+from .. import icons
 
 
 def template_node_tree(layout, data, property, icon,
