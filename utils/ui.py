@@ -1,5 +1,4 @@
-from . import get_name_with_lib
-from . import pluralize
+from .misc import get_name_with_lib, pluralize
 from .. import icons
 
 

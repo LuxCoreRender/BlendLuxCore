@@ -24,13 +24,16 @@ _needs_reload = "bpy" in locals()
 import bpy
 import mathutils
 
-from . import view_layer, errorlog
+from . import view_layer, errorlog, misc
+
+from .misc import get_name_with_lib, pluralize
 
 if _needs_reload:
     import importlib
 
     view_layer = importlib.reload(view_layer)
     errorlog = importlib.reload(errorlog)
+    misc = importlib.reload(misc)
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
@@ -477,18 +480,6 @@ def find_smoke_domain_modifier(obj):
     return None
 
 
-def get_name_with_lib(datablock):
-    """
-    Format the name for display similar to Blender,
-    with an "L" as prefix if from a library
-    """
-    text = datablock.name
-    if datablock.library:
-        # text += ' (Lib: "%s")' % datablock.library.name
-        text = "L " + text
-    return text
-
-
 def clamp(value, _min=0, _max=1):
     return max(_min, min(_max, value))
 
@@ -552,13 +543,6 @@ def use_two_tiled_passes(scene):
     denoiser = scene.luxcore.denoiser
     using_tilepath = config.engine == "PATH" and config.use_tiles
     return denoiser.enabled and denoiser.type == "BCD" and using_tilepath and not config.tile.multipass_enable
-
-
-def pluralize(format_str, amount):
-    formatted = format_str % amount
-    if amount != 1:
-        formatted += "s"
-    return formatted
 
 
 def image_sequence_resolve_all(image):
