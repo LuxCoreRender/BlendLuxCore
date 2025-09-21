@@ -24,12 +24,13 @@ _needs_reload = "bpy" in locals()
 import bpy
 import mathutils
 
-from . import view_layer
+from . import view_layer, errorlog
 
 if _needs_reload:
     import importlib
 
     view_layer = importlib.reload(view_layer)
+    errorlog = importlib.reload(errorlog)
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
@@ -708,6 +709,7 @@ def get_user_dir(name):
         bpy.utils.extension_path_user(get_module_name(), path=name, create=True)
     )
 
+VERBOSE_REGISTER = False  # Set to true to see per-class info
 
 def register_module(module_name, classes, submodules=[]):
     """Register a module in Blender.
@@ -716,15 +718,17 @@ def register_module(module_name, classes, submodules=[]):
     - A collection of classes, registered with bpy.utils.classes
     - A collection of submodules (optional), for which 'register' method is called
     """
+    print(f"[BLC] Registering '{module_name}'")
     for mod in submodules:
         mod.register()
 
     for cls in classes:
-        print(f"[BLC] Registering {module_name}.{cls.__name__}")
+        if VERBOSE_REGISTER:
+            print(f"[BLC] Registering {module_name}.{cls.__name__}")
         try:
             bpy.utils.register_class(cls)
         except Exception as err:
-            print(err, "\n")
+            errorlog.LuxCoreErrorLog.add_warning(err, "\n")
 
 
 def unregister_module(module_name, classes, submodules=[]):
@@ -733,8 +737,10 @@ def unregister_module(module_name, classes, submodules=[]):
     The registration encompasses 2 collections, see register_module.
     The registration is operated in reverse order.
     """
+    print(f"[BLC] Unregistering '{module_name}'")
     for cls in reversed(classes):
-        print(f"[BLC] Unregistering {module_name}.{cls.__name__}")
+        if VERBOSE_REGISTER:
+            print(f"[BLC] Unregistering {module_name}.{cls.__name__}")
         bpy.utils.unregister_class(cls)
 
     for mod in reversed(submodules):
