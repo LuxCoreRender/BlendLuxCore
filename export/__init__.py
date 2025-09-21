@@ -12,6 +12,7 @@ from . import (
     caches, camera, config,
     imagepipeline, light, material,
     motion_blur, hair, halt, world,
+    mesh_converter,
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from .caches.object_cache import supports_live_transform
@@ -30,6 +31,7 @@ if _needs_reload:
         halt,
         world,
         utils,
+        mesh_converter,
     )
     for module in modules:
         importlib.reload(module)
