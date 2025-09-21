@@ -55,7 +55,6 @@ from . import utils, properties, export, nodes, operators, engine, handlers, ui
 if _needs_reload:
     import importlib
 
-    pyluxcore = importlib.reload(pyluxcore)
     utils = importlib.reload(utils)
     properties = importlib.reload(properties)
     export = importlib.reload(export)
