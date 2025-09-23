@@ -96,8 +96,8 @@ class IconManager:
         return self.icon_previews[icon_name].icon_id
 
     def __del__(self):
-        print("Delete previews")
-        bpy.utils.previews.remove(self.icon_previews)
+        if bpy:
+            bpy.utils.previews.remove(self.icon_previews)
 
 
 icon_manager = IconManager()
