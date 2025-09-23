@@ -16,6 +16,7 @@ import configparser
 
 import bpy
 import addon_utils
+from _bpy_internal.extensions import wheel_manager
 
 from .. import utils
 
@@ -259,14 +260,28 @@ def _install_wheels():
     if not (wheel_list := [("blendluxcore", list(WHEEL_DL_FOLDER.iterdir()))]):
         raise ValueError("[BLC] ERROR - No wheel to install.")
 
+    local_dir = extensions_directory / ".local"
+    pyver = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    site_packages = local_dir / "lib" / pyver / "site-packages"
+
     # We use Blender internal feature to install the wheels
-    # pylint: disable=protected-access
-    addon_utils._initialize_extensions_compat_ensure_up_to_date_wheels(
-        extensions_directory,
-        wheel_list,
-        bpy.app.debug_python,
-        error_fn=lambda ex: print("Error:", str(ex)),
-    )
+    def apply(p_wheel_list):
+        wheel_manager.apply_action(
+            local_dir=str(local_dir),
+            local_dir_site_packages=str(site_packages),
+            wheel_list=p_wheel_list,
+            error_fn=lambda ex: print("Error:", ex),
+            remove_error_fn=lambda filepath, ex: print(
+                "Error removing file:", filepath, ex
+            ),
+            debug=True,
+        )
+
+    # First, remove previous wheels
+    apply([("blendluxcore", [])])
+
+    # Second, add new wheels
+    apply(wheel_list)
 
 
 class WheelSource(IntEnum):
@@ -300,7 +315,9 @@ def _fetch_wheels():
     settings = _get_settings()
 
     wheel_source = settings.get("wheel_source", 0)
-    reinstall_upon_reloading = bool(settings.get("reinstall_upon_reloading", False))
+    reinstall_upon_reloading = bool(
+        settings.get("reinstall_upon_reloading", False)
+    )
     no_deps = bool(settings.get("no_deps", False))
     no_index = bool(settings.get("no_index", False))
 
@@ -326,7 +343,9 @@ def _fetch_wheels():
 
         # Get optional folder with dependencies
         additional_deps = []
-        if path_to_wheel_deps_setting := settings.get("path_to_wheel_deps", ""):
+        if path_to_wheel_deps_setting := settings.get(
+            "path_to_wheel_deps", ""
+        ):
             path_to_wheel_deps = pathlib.Path(path_to_wheel_deps_setting)
             if (
                 path_to_wheel_deps.is_dir()
