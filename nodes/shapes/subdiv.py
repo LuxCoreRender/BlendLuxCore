@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import IntProperty, FloatProperty
+from bpy.props import IntProperty, FloatProperty, BoolProperty
 from ..base import LuxCoreNodeShape
 from ...utils import node as utils_node
 
@@ -20,6 +20,11 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
         min=0,
         update=utils_node.force_viewport_mesh_update,
     )
+    enhanced: BoolProperty(
+        name="Enhanced",
+        default=False,
+        update=utils_node.force_viewport_mesh_update,
+    )
 
     def init(self, context):
         self.add_input("LuxCoreSocketShape", "Shape")
@@ -28,6 +33,7 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
     def draw_buttons(self, context, layout):
         layout.prop(self, "max_level")
         layout.prop(self, "max_edge_screen_size")
+        layout.prop(self, "enhanced")
 
     def export_shape(self, exporter, depsgraph, props, base_shape_name):
         definitions = {
@@ -37,6 +43,7 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
             ),
             "maxlevel": self.max_level,
             "maxedgescreensize": self.max_edge_screen_size,
+            "enhanced": self.enhanced,
         }
         return self.create_props(
             props, definitions, self.make_shape_name(base_shape_name)
