@@ -90,7 +90,9 @@ def convert_new(
         loop_vertices = vertices[loop_vertex_indices]
 
         # Loop triangles
-        loop_triangles = get_ndarray(mesh.loop_triangles, "loops", 3, np.uint32)
+        loop_triangles = get_ndarray(
+            mesh.loop_triangles, "loops", 3, np.uint32
+        )
 
         # Material slot index for each triangle
         loop_triangle_materials = get_ndarray(
@@ -102,6 +104,34 @@ def convert_new(
         # TODO Custom normals
         loop_normals = get_ndarray(mesh.loops, "normal", 3, np.float32)
 
+        # UV
+        uvs = [
+            get_ndarray(uv_layer.uv, "vector", 2, np.float32)
+            for uv_layer in mesh.uv_layers
+        ]
+
+        # Colors
+        rgba_colors = [
+            get_ndarray(color_attribute.data, "color_srgb", 4, np.float32)
+            for color_attribute in mesh.color_attributes
+        ]
+        rgb_colors = [rgba[:, :3] for rgba in rgba_colors]
+        alphas = [rgba[:, 3] for rgba in rgba_colors]
+
+        # Transformation
+        if is_viewport_render or use_instancing:
+            mesh_transform = None
+        else:
+            mesh_transform = np.array(
+                [
+                    transform[0][0:4],
+                    transform[1][0:4],
+                    transform[2][0:4],
+                    transform[3][0:4],
+                ],
+                dtype=np.float32,
+            )
+
         mesh_definitions = []
         for mat in unique_mats:
             mat_triangles = loop_triangles[loop_triangle_materials == mat]
@@ -110,12 +140,12 @@ def convert_new(
             luxcore_scene.DefineMeshExt(
                 name=name,
                 points=loop_vertices,
-                triangles=loop_triangles,
+                triangles=mat_triangles,
                 normals=loop_normals,
-                uvs=np.empty(shape=(3, 3), dtype=np.float32),
-                colors=np.empty(shape=(3, 3), dtype=np.float32),
-                alphas=np.empty(shape=(3, 3), dtype=np.float32),
-                transformation=np.empty(shape=(3, 3), dtype=np.float32),
+                uvs=uvs,
+                colors=rgb_colors,
+                alphas=alphas,
+                transformation=mesh_transform,
             )
             mesh_definitions.append((name, mat))
 
