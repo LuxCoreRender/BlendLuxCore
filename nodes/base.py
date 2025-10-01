@@ -34,6 +34,15 @@ class LuxCoreNodeTree:
     """Base class for LuxCore node trees"""
     requested_links = set()
 
+    def acknowledge_connection(self, context):
+        # Set refresh to False without triggering acknowledge_connection again
+        self.refresh = False
+
+    refresh: bpy.props.BoolProperty(
+        default=False,
+        update=acknowledge_connection
+    )
+
     @classmethod
     def poll(cls, context):
         return context.scene.render.engine == "LUXCORE"
@@ -51,12 +60,6 @@ class LuxCoreNodeTree:
         # TODO it looks like in Blender's new depsgraph, this workaround doesn't work anymore
         self.refresh = True
 
-    def acknowledge_connection(self, context):
-        # Set refresh to False without triggering acknowledge_connection again
-        self["refresh"] = False
-
-    refresh: bpy.props.BoolProperty(default=False,
-                                    update=acknowledge_connection)
 
 
 class LuxCoreNode:
