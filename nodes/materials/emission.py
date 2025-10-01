@@ -309,7 +309,7 @@ class LuxCoreNodeMatEmission(base.LuxCoreNode, bpy.types.Node):
 
         if self.ies.use:
             try:
-                light.export.export_ies(
+                export.light.export_ies(
                     definitions,
                     self.ies,
                     self.id_data.library,

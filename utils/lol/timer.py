@@ -42,6 +42,8 @@ def timer_update():
             assets = bpy.context.scene.luxcoreOL.scene['assets']
         elif asset_type == 'MATERIAL':
             assets = bpy.context.scene.luxcoreOL.material['assets']
+        else:
+            raise ValueError(f"Unhandled asset properties '{asset_type}'")
 
         if tcom.finished:
             thread.stop()

@@ -41,7 +41,7 @@ class LuxCoreNodeOutput(LuxCoreNode):
 
         node_tree = self.id_data
 
-        for node in get_output_nodes(node_tree):
+        for node in utils_node.get_output_nodes(node_tree):
             if node == self:
                 continue
             node.set_active(True)
@@ -71,7 +71,7 @@ class LuxCoreNodeOutput(LuxCoreNode):
         node_tree = self.id_data
         if node_tree is None:
             return
-        for node in get_output_nodes(node_tree):
+        for node in utils_node.get_output_nodes(node_tree):
             if node == self:
                 continue
 
