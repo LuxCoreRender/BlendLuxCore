@@ -36,18 +36,6 @@ from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
 
 
-def draw_downloader(x, y, percent=0, img=None):
-    if img is not None:
-        draw_image(x, y, 50, 50, img, .5)
-    draw_rect(x, y, 50, int(0.5 * percent), (.2, 1, .2, .3))
-    draw_rect(x - 3, y - 3, 6, 6, (1, 0, 0, .3))
-
-
-def draw_progress(x, y, text='', percent=None, color=(0, 1, 0, 1)):
-    draw_rect(x, y, percent, 5, color)
-    draw_text(text, x, y + 8, 16, color)
-
-
 def draw_rect(x, y, width, height, color):
     gpu.state.blend_set('ALPHA')
     xmax = x + width
@@ -448,5 +436,10 @@ def floor_raycast(context, mx, my):
             randoffset = props.offset_rotation_amount + math.pi
 
         snapped_rotation.rotate_axis('Z', randoffset)
+    else:
+        has_hit = False
+        face_index = None
+        matrix = None
+
 
     return has_hit, snapped_location, snapped_normal, snapped_rotation, face_index, object, matrix

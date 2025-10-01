@@ -249,6 +249,8 @@ class ObjectCache2:
 
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
+        else:
+            obj_count_estimate = 0
 
         # Particle system counts might have changed
         supports_live_transform.cache_clear()
