@@ -1,62 +1,34 @@
+"""Final rendering."""
+
 from time import time, sleep
+import numpy as np
 import pyluxcore as plc
 from .. import utils
 from ..export.aovs import get_denoiser_imgpipeline_props
 from ..properties.denoiser import LuxCoreDenoiser
 from ..properties.display import LuxCoreDisplaySettings
 from ..utils import view_layer as utils_view_layer
-import numpy as np
-
-
-class AOV:
-    """Storage class for info about an Arbitrary Output Variable"""
-
-    def __init__(self, channel_count, convert_func, normalize):
-        self.channel_count = channel_count
-        self.convert_func = convert_func
-        self.normalize = normalize
+from .utils import ConvertFilmChannelOutput
 
 
 # Note: RGB_IMAGEPIPELINE and RGBA_IMAGEPIPELINE are missing here because they
 # are not imported along with the other AOVs (they have a special code path)
 # Note: AOVs with the default settings are not included in the aovs dictionary.
+
 AOVS = {
-    "RGBA": AOV(4, plc.ConvertFilmChannelOutput_4xFloat_To_4xFloatList, False),
-    "ALPHA": AOV(
-        1, plc.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False
-    ),
-    "DEPTH": AOV(
-        1, plc.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False
-    ),
-    "DIRECT_SHADOW_MASK": AOV(
-        1, plc.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False
-    ),
-    "INDIRECT_SHADOW_MASK": AOV(
-        1, plc.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False
-    ),
-    "UV": AOV(2, plc.ConvertFilmChannelOutput_UV_to_Blender_UV, False),
-    "RAYCOUNT": AOV(
-        1, plc.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, True
-    ),
-    "MATERIAL_ID": AOV(
-        1, plc.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False
-    ),
-    "OBJECT_ID": AOV(
-        1, plc.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, False
-    ),
-    "SAMPLECOUNT": AOV(
-        1, plc.ConvertFilmChannelOutput_1xUInt_To_1xFloatList, True
-    ),
-    "CONVERGENCE": AOV(
-        1, plc.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False
-    ),
-    "NOISE": AOV(
-        1, plc.ConvertFilmChannelOutput_1xFloat_To_1xFloatList, False
-    ),
+    "RGBA": ConvertFilmChannelOutput(4, np.float32),
+    "ALPHA": ConvertFilmChannelOutput(1, np.float32),
+    "DEPTH": ConvertFilmChannelOutput(1, np.float32),
+    "DIRECT_SHADOW_MASK": ConvertFilmChannelOutput(1, np.float32),
+    "INDIRECT_SHADOW_MASK": ConvertFilmChannelOutput(1, np.float32),
+    "UV": ConvertFilmChannelOutput(2, np.float32, dst_depth=3),
+    "RAYCOUNT": ConvertFilmChannelOutput(1, np.float32, normalize=True),
+    "MATERIAL_ID": ConvertFilmChannelOutput(1, np.uint32),
+    "OBJECT_ID": ConvertFilmChannelOutput(1, np.uint32),
+    "SAMPLECOUNT": ConvertFilmChannelOutput(1, np.uint32, normalize=True),
+    "CONVERGENCE": ConvertFilmChannelOutput(1, np.float32),
+    "NOISE": ConvertFilmChannelOutput(1, np.float32),
 }
-DEFAULT_AOV_SETTINGS = AOV(
-    3, plc.ConvertFilmChannelOutput_3xFloat_To_3xFloatList, False
-)
 
 AOVS_WITH_ID = {
     "RADIANCE_GROUP",
@@ -66,9 +38,11 @@ AOVS_WITH_ID = {
     "OBJECT_ID_MASK",
 }
 
+DEFAULT_AOV_SETTINGS = ConvertFilmChannelOutput(3, np.float32)
 
-class FrameBufferFinal(object):
-    """FrameBuffer for final render"""
+
+class FrameBufferFinal:
+    """FrameBuffer for final render."""
 
     def __init__(self, scene):
         filmsize = utils.calc_filmsize(scene)
@@ -94,6 +68,7 @@ class FrameBufferFinal(object):
         self.denoiser_last_samples = 0
 
     def draw(self, engine, session, scene, render_stopped):
+        """Draw rendering (callback)."""
         active_layer = utils_view_layer.State.active_view_layer
         try:
             scene_layer_name = scene.view_layers[active_layer].name
@@ -103,14 +78,15 @@ class FrameBufferFinal(object):
         result = engine.begin_result(
             0, 0, self._width, self._height, layer=scene_layer_name
         )
-        # Regardless of the scene render layers, the result always only contains one layer
+        # Regardless of the scene render layers, the result always only
+        # contains one layer
         render_layer = result.layers[0]
 
         combined = render_layer.passes["Combined"]
         film = session.GetFilm()
         if self._combined_output_type == plc.FilmOutputType.RGB_IMAGEPIPELINE:
             size = self._width * self._height
-            pixels = np.zeros([size, 3], dtype=np.float32)
+            pixels = np.empty([size, 3], dtype=np.float32)
             film.GetOutputFloat(self._combined_output_type, pixels)
             pixels = np.c_[pixels, np.ones(size)]
             combined.rect = pixels
@@ -118,7 +94,7 @@ class FrameBufferFinal(object):
             self._combined_output_type == plc.FilmOutputType.RGBA_IMAGEPIPELINE
         ):
             size = self._width * self._height
-            pixels = np.zeros([size, 4], dtype=np.float32)
+            pixels = np.empty([size, 4], dtype=np.float32)
             film.GetOutputFloat(self._combined_output_type, pixels)
             combined.rect = pixels
         else:
@@ -126,7 +102,7 @@ class FrameBufferFinal(object):
                 f"Unhandled Output Type {self._combined_output_type}"
             )
 
-        # Import AOVs and light groups, and trigger denoiser,
+        # Import AOVs, import light groups and trigger denoiser,
         # but only in final render, not in material preview mode
         if not engine.is_preview:
             # AOVs
@@ -135,7 +111,7 @@ class FrameBufferFinal(object):
                 item
                 for item in plc.FilmOutputType.names.items()
                 # Check if this AOV is enabled on this render layer:
-                if getattr(scene_layer_aovs, output_name.lower(), False)
+                if getattr(scene_layer_aovs, item[0].lower(), False)
             )
             for output_name, output_type in enabled_aov_outputs:
                 try:
@@ -153,12 +129,11 @@ class FrameBufferFinal(object):
             lightgroup_pass_names = scene.luxcore.lightgroups.get_pass_names()
             enabled_lightgroups = (
                 (i, name)
-                for i, name in lightgroup_pass_names
-                # light group not in cache is not used by any lights in the
+                for i, name in enumerate(lightgroup_pass_names)
+                # A light group not in cache is not used by any lights in the
                 # scene, so it was not defined:
                 if i in engine.exporter.lightgroup_cache
             )
-
             for i, name in enabled_lightgroups:
                 output_name = "RADIANCE_GROUP"
                 output_type = plc.FilmOutputType.RADIANCE_GROUP
@@ -198,10 +173,8 @@ class FrameBufferFinal(object):
         index=0,
         lightgroup_name="",
     ):
-        if output_name in AOVS:
-            aov = AOVS[output_name]
-        else:
-            aov = DEFAULT_AOV_SETTINGS
+        """Import AOV into render layer."""
+        aov = AOVS.get(output_name, DEFAULT_AOV_SETTINGS)
 
         if output_name in AOVS_WITH_ID:
             # Add the index so we can differentiate between the outputs with id
@@ -210,16 +183,18 @@ class FrameBufferFinal(object):
         if output_name in engine.aov_imagepipelines:
             index = engine.aov_imagepipelines[output_name]
 
-            if output_name == "DENOISED" and self._transparent:
-                output_type = plc.FilmOutputType.RGBA_IMAGEPIPELINE
-            else:
-                output_type = plc.FilmOutputType.RGB_IMAGEPIPELINE
+            output_type = (
+                plc.FilmOutputType.RGBA_IMAGEPIPELINE
+                if output_name == "DENOISED" and self._transparent
+                else plc.FilmOutputType.RGB_IMAGEPIPELINE
+            )
 
-            convert_func = DEFAULT_AOV_SETTINGS.convert_func
+            convert_func = DEFAULT_AOV_SETTINGS
         else:
-            convert_func = aov.convert_func
+            convert_func = aov
 
-        # Depth needs special treatment because it's pre-defined by Blender and not uppercase
+        # Depth needs special treatment because it's pre-defined by Blender and
+        # not uppercase
         if output_name == "DEPTH":
             pass_name = "Depth"
         elif output_name.startswith("RADIANCE_GROUP"):
@@ -236,25 +211,27 @@ class FrameBufferFinal(object):
             index,
             self._width,
             self._height,
-            blender_pass.as_pointer(),
-            aov.normalize,
+            blender_pass,
             execute_imagepipeline,
         )
 
     def _refresh_denoiser(
         self, engine, session, scene, render_layer, render_stopped
     ):
+        """Refresh denoiser, taking aov into account."""
         if not engine.has_denoiser():
             return
 
         output_name = engine.DENOISED_OUTPUT_NAME
 
-        if self._transparent:
-            output_type = plc.FilmOutputType.RGBA_IMAGEPIPELINE
-        else:
-            output_type = plc.FilmOutputType.RGB_IMAGEPIPELINE
+        output_type = (
+            plc.FilmOutputType.RGBA_IMAGEPIPELINE
+            if self._transparent
+            else plc.FilmOutputType.RGB_IMAGEPIPELINE
+        )
 
-        # Refresh when ending the render (Esc/halt condition) or when the user presses the refresh button
+        # Refresh when ending the render (Esc/halt condition) or when the user
+        # presses the refresh button
         refresh_denoised = render_stopped or LuxCoreDenoiser.refresh
 
         stats = engine.session.GetStats()
@@ -279,12 +256,12 @@ class FrameBufferFinal(object):
             )
             session.Parse(denoiser_pipeline_props)
 
-            was_paused = session.IsInPause()
-            if not was_paused:
+            if not (was_paused := session.IsInPause()):
                 session.Pause()
 
             try:
-                # Start the denoiser imagepipeline asynchronous (so it does not lock Blender)
+                # Start the denoiser imagepipeline asynchronous (so it does not
+                # lock Blender)
                 session.GetFilm().AsyncExecuteImagePipeline(
                     denoiser_pipeline_index
                 )
@@ -300,7 +277,8 @@ class FrameBufferFinal(object):
 
                 self.denoiser_last_elapsed_time = round(time() - start)
 
-                # Import the denoised image without executing the imagepipeline again
+                # Import the denoised image without executing the imagepipeline
+                # again
                 self._import_aov(
                     output_name,
                     output_type,
@@ -310,7 +288,7 @@ class FrameBufferFinal(object):
                     execute_imagepipeline=False,
                 )
             except RuntimeError as error:
-                print("Error on import of denoised result: %s" % error)
+                print(f"Error on import of denoised result: {error}")
 
             if not was_paused and session.IsInPause():
                 session.Resume()
@@ -320,11 +298,10 @@ class FrameBufferFinal(object):
 
             # Reset the refresh button
             LuxCoreDenoiser.refresh = False
-            engine.update_stats(
-                "Denoiser Done", "Elapsed: {} s".format(elapsed)
-            )
+            engine.update_stats("Denoiser Done", f"Elapsed: {elapsed} s")
         else:
-            # If we do not write something into the result, the image will be black.
+            # If we do not write something into the result, the image will be
+            # black.
             # So we re-use the result from the last denoiser run.
             self._import_aov(
                 output_name,
