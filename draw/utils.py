@@ -131,4 +131,4 @@ class ConvertFilmChannelOutput:
 
         # Inject into Blender buffer
         outbuf = np.reshape(buf, (-1, dst_depth)).astype(np.float32)
-        render_pass.rect = outbuf.tolist()
+        render_pass.rect = outbuf
