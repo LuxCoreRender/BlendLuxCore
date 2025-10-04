@@ -26,16 +26,26 @@ class ConvertFilmChannelOutput:
         self,
         src_depth: int,
         src_dtype: np.dtype,
+        dst_depth: int,
         *,
         normalize: bool = False,
-        dst_depth: int = None,
-        dst_dtype: np.dtype = np.float32,
+        is_id: bool = False,  # Only for src_dtype == np.uint32
     ):
         self.src_depth = int(src_depth)
+        self.dst_depth = int(dst_depth)
         self.src_dtype = np.dtype(src_dtype)
         self.normalize = bool(normalize)
-        self.dst_depth = int(dst_depth if dst_depth is not None else src_depth)
-        self.dst_dtype = np.dtype(dst_dtype)
+        self.is_id = bool(is_id)
+
+        # Various checks
+        if self.src_depth not in [1, 2, 3, 4]:
+            raise ValueError(
+                f"AOV: Bad value for source depth: '{self.src_depth}'"
+            )
+        if self.src_dtype not in [np.uint32, np.float32]:
+            raise ValueError(
+                f"AOV: Bad value for source dtype: '{self.src_dtype}'"
+            )
 
     @staticmethod
     def check_size(render_engine, width, height):
@@ -59,7 +69,10 @@ class ConvertFilmChannelOutput:
         render_pass: bpy.types.RenderPass,
         execute_image_pipeline: bool,
     ):
-        # Get LuxCore data in a buffer
+        # Destination depth - in most cases, it is 4; but for UV, it will be 3
+        dst_depth = self.dst_depth
+
+        # Get LuxCore data in a float buffer
         buf = np.empty([width, height, self.src_depth], dtype=self.src_dtype)
         if self.src_dtype == np.float32:
             film.GetOutputFloat(
@@ -71,52 +84,51 @@ class ConvertFilmChannelOutput:
             )
             # Convert buffer to float
             buf = buf.astype(np.float32)
+
         else:
             raise ValueError(
                 "ConvertFilmChannelOutput: "
                 f"Unhandled source type ('{self.src_dtype}'"
             )
 
-        # Prepare source buffer
-        # Only certain combinations are allowed
-        print(self.src_depth, self.dst_depth)
-        if self.src_depth == self.dst_depth and self.dst_depth in (1, 2, 3, 4):
-            # Same shape source/depth: nothing to do
-            pass
-        elif self.src_depth == 1 and self.dst_depth == 4:
-            # Pad with 1.f in alpha channel
+        # Reshape source buffer
+        if self.src_depth == 1 and self.dst_depth == 4 and self.src_dtype == np.float32:
+            # Repeat on RGB and pad with 1.f in alpha channel
             buf = np.concat(
                 (buf.repeat(3, axis=-1), np.ones(shape=buf.shape)), axis=2
             )
-        elif self.src_depth == 3 and self.dst_depth == 4:
-            # Pad with 1.f in alpha channel
-            buf = np.concat((buf, np.ones(shape=buf.shape)), axis=2)
+        elif self.src_depth == 1 and self.dst_depth == 1 and self.src_dtype == np.uint32:
+            if self.is_id:
+                buf /= 2**32
+
         elif self.src_depth == 2 and self.dst_depth == 3:
             # This is for UV channel
             # We need to pad the UV pass to 3 elements (Blender can't handle 2
             # elements). The third channel is a mask that is 1 where a UV map
             # exists and 0 otherwise.
-            pad = ((buf[..., 0] != 0) & (buf[..., 1] != 0)).astype(buf.dtype)
+            pad = ((buf[..., 0] != 0) & (buf[..., 1] != 0)).astype(np.float32)
             pad = pad.reshape(width, height, 1)
-            print(pad.shape, buf.shape)
             buf = np.concat((buf, pad), axis=2)
-            print(buf)
+            dst_depth = 3
+        elif self.src_depth == 3 and self.dst_depth == 4:
+            # Pad with 1.f in alpha channel
+            buf = np.concat((buf, np.ones(shape=buf.shape)), axis=2)
+        elif self.src_depth == self.dst_depth and self.src_dtype == np.float32:
+            pass
         else:
             raise ValueError(
-                "ConvertFilmChannelOutput: inconsistent source and "
-                f"destination depths: {self.src_depth} vs {self.dst_depth}"
+                f"AOV - Inconsistent depths: {self.src_depth} / {self.dst_depth}"
             )
 
         # Normalize if required.
-        # We only normalize channel 0 to 2, as channel 3 is intended for alpha
         if self.normalize:
+            # We only normalize channels 0 to 2, as channel 3 is intended for alpha
             hi_channel = min(self.src_depth, 2)
             buf_view = buf[..., 0:hi_channel]  # Basic slicing, this is a view
             assert buf_view.base is not None
-            if (max_value := np.max(buf_view)):
+            if max_value := np.max(buf_view):
                 buf_view /= max_value
 
         # Inject into Blender buffer
-        outbuf = np.reshape(buf, (-1, self.dst_depth)).astype(self.dst_dtype)
-        print(outbuf)
+        outbuf = np.reshape(buf, (-1, dst_depth)).astype(np.float32)
         render_pass.rect = outbuf.tolist()
