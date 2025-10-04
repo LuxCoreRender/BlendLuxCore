@@ -55,14 +55,10 @@ class FrameBufferFinal:
 
         if self._transparent:
             self._combined_output_type = plc.FilmOutputType.RGBA_IMAGEPIPELINE
-            self._convert_combined = (
-                plc.ConvertFilmChannelOutput_4xFloat_To_4xFloatList
-            )
+            self._convert_combined = ConvertFilmChannelOutput(4, np.float32, 4)
         else:
             self._combined_output_type = plc.FilmOutputType.RGB_IMAGEPIPELINE
-            self._convert_combined = (
-                plc.ConvertFilmChannelOutput_3xFloat_To_4xFloatList
-            )
+            self._convert_combined = ConvertFilmChannelOutput(3, np.float32, 4)
 
         # How long the last run of the denoiser took, in seconds
         self.denoiser_last_elapsed_time = 0
