@@ -16,18 +16,19 @@ from .utils import ConvertFilmChannelOutput
 # Note: AOVs with the default settings are not included in the aovs dictionary.
 
 AOVS = {
-    "RGBA": ConvertFilmChannelOutput(4, np.float32),
-    "ALPHA": ConvertFilmChannelOutput(1, np.float32),
-    "DEPTH": ConvertFilmChannelOutput(1, np.float32),
-    "DIRECT_SHADOW_MASK": ConvertFilmChannelOutput(1, np.float32),
-    "INDIRECT_SHADOW_MASK": ConvertFilmChannelOutput(1, np.float32),
-    "UV": ConvertFilmChannelOutput(2, np.float32, dst_depth=3),
-    "RAYCOUNT": ConvertFilmChannelOutput(1, np.float32, normalize=True),
-    "MATERIAL_ID": ConvertFilmChannelOutput(1, np.uint32),
-    "OBJECT_ID": ConvertFilmChannelOutput(1, np.uint32),
-    "SAMPLECOUNT": ConvertFilmChannelOutput(1, np.uint32, normalize=True),
-    "CONVERGENCE": ConvertFilmChannelOutput(1, np.float32),
-    "NOISE": ConvertFilmChannelOutput(1, np.float32),
+    "RGB": ConvertFilmChannelOutput(3, np.float32, 3),
+    "RGBA": ConvertFilmChannelOutput(4, np.float32, 4),
+    "ALPHA": ConvertFilmChannelOutput(1, np.float32, 1),
+    "DEPTH": ConvertFilmChannelOutput(1, np.float32, 1, normalize=True),
+    "DIRECT_SHADOW_MASK": ConvertFilmChannelOutput(1, np.float32, 1),
+    "INDIRECT_SHADOW_MASK": ConvertFilmChannelOutput(1, np.float32, 1),
+    "UV": ConvertFilmChannelOutput(2, np.float32, 3),
+    "RAYCOUNT": ConvertFilmChannelOutput(1, np.float32, 1, normalize=True),
+    "MATERIAL_ID": ConvertFilmChannelOutput(1, np.uint32, 1, is_id=True),
+    "OBJECT_ID": ConvertFilmChannelOutput(1, np.uint32, 1, is_id=True),
+    "SAMPLECOUNT": ConvertFilmChannelOutput(1, np.uint32, 1, normalize=True),
+    "CONVERGENCE": ConvertFilmChannelOutput(1, np.float32, 1),
+    "NOISE": ConvertFilmChannelOutput(1, np.float32, 1),
 }
 
 AOVS_WITH_ID = {
@@ -38,7 +39,7 @@ AOVS_WITH_ID = {
     "OBJECT_ID_MASK",
 }
 
-DEFAULT_AOV_SETTINGS = ConvertFilmChannelOutput(3, np.float32)
+DEFAULT_AOV_SETTINGS = ConvertFilmChannelOutput(3, np.float32, 3)
 
 
 class FrameBufferFinal:
@@ -174,7 +175,9 @@ class FrameBufferFinal:
         lightgroup_name="",
     ):
         """Import AOV into render layer."""
-        aov = AOVS.get(output_name, DEFAULT_AOV_SETTINGS)
+        # print(output_name)  # Debug
+
+        convert_func = AOVS.get(output_name, DEFAULT_AOV_SETTINGS)
 
         if output_name in AOVS_WITH_ID:
             # Add the index so we can differentiate between the outputs with id
@@ -182,16 +185,12 @@ class FrameBufferFinal:
 
         if output_name in engine.aov_imagepipelines:
             index = engine.aov_imagepipelines[output_name]
-
             output_type = (
                 plc.FilmOutputType.RGBA_IMAGEPIPELINE
                 if output_name == "DENOISED" and self._transparent
                 else plc.FilmOutputType.RGB_IMAGEPIPELINE
             )
-
             convert_func = DEFAULT_AOV_SETTINGS
-        else:
-            convert_func = aov
 
         # Depth needs special treatment because it's pre-defined by Blender and
         # not uppercase
