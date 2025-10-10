@@ -116,6 +116,14 @@ def view_update(engine, context, depsgraph, changes=None):
             traceback.print_exc()
         return
 
+    # Check for color management changes first
+    current_display_device = depsgraph.scene_eval.display_settings.display_device
+    if not hasattr(engine, 'last_display_device') or current_display_device != engine.last_display_device:
+        engine.last_display_device = current_display_device
+        # Don't trigger a full re-export, just redraw to apply the new settings
+        engine.tag_redraw()
+        return
+        
     s = time()
     changes = engine.exporter.get_changes(depsgraph, context, changes)
     delta_t = (time() - s) * 1000
@@ -126,6 +134,7 @@ def view_update(engine, context, depsgraph, changes=None):
             # Only restart the session if the view transform didn't change by itself
             force_session_restart(engine)
             return
+
         s = time()
         # We have to re-assign the session because it might have been replaced due to filmsize change
         engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
@@ -196,6 +205,12 @@ def view_draw(engine, context, depsgraph):
     # camera) do not trigger a view_update() call, but only a view_draw() call.
     changes = engine.exporter.get_viewport_changes(depsgraph, context)
 
+    # New logic to handle color management changes in view_draw
+    if changes & export.Change.REQUIRES_VIEW_UPDATE:
+        if framebuffer:
+            framebuffer.update_color_management(context)
+        changes &= ~export.Change.VIEW_TRANSFORM
+        
     if changes & export.Change.REQUIRES_VIEW_UPDATE:
         engine.tag_redraw()
         # view_update(engine, context, depsgraph, changes)  # Disabled, see comment on force_session_restart()
