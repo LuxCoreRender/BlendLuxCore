@@ -5,10 +5,18 @@ import bpy
 from .. import icons
 from .. import utils
 from . import base, sockets, materials, shapes, textures, volumes
-from .base import (TREE_TYPES, TREE_ICONS, NOISE_BASIS_ITEMS, NOISE_TYPE_ITEMS, MIN_NOISE_SIZE, COLORDEPTH_DESC)
+from .base import (
+    TREE_TYPES,
+    TREE_ICONS,
+    NOISE_BASIS_ITEMS,
+    NOISE_TYPE_ITEMS,
+    MIN_NOISE_SIZE,
+    COLORDEPTH_DESC,
+)
 
 if _needs_reload:
     import importlib
+
     modules = (base, sockets, materials, shapes, textures, volumes)
     for module in modules:
         importlib.reload(module)
@@ -41,8 +49,10 @@ classes = (
 
 submodules = (materials, shapes, textures, volumes)
 
+
 def register():
     utils.register_module("Nodes", classes, submodules)
+
 
 def unregister():
     utils.unregister_module("Nodes", classes, submodules)
