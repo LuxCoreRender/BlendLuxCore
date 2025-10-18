@@ -224,6 +224,10 @@ luxcore_node_categories_material = [
             ),
             NodeItem("LuxCoreNodeShapeSimplify", label="Simplify"),
             NodeItem("LuxCoreNodeShapeHarlequin", label="Harlequin"),
+            NodeItem(
+                "LuxCoreNodeShapeMergeOnDistance",
+                label="Merge on Distance",
+            ),
         ],
     ),
     LuxCoreNodeCategoryMaterial(
