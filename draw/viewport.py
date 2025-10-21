@@ -1,4 +1,3 @@
-import bgl
 import gpu
 from gpu_extras.batch import batch_for_shader
 
@@ -59,7 +58,6 @@ class FrameBuffer(object):
 
         self._transparent = self._initialize_transparency(scene, context)
         bufferdepth = 4 if self._transparent else 3
-        self._buffertype = bgl.GL_RGBA if self._transparent else bgl.GL_RGB
         self._output_type = (
             pyluxcore.FilmOutputType.RGBA_IMAGEPIPELINE
             if self._transparent else
