@@ -1,3 +1,5 @@
+import math
+
 from . import ui as utils_ui
 
 class TileStats:
@@ -87,8 +89,16 @@ def clamping_to_string(clamping):
 def convergence_to_string(convergence):
     if convergence < 0.95:
         return "%d%%" % round(convergence * 100)
+    elif convergence > 0.9999999:
+        # limit the string length
+        return ">99.99999%"
     else:
-        return "%.2f%%" % (convergence * 100)
+        # get number of consecutive digits "9"
+        diff = 1 - convergence
+        ndigits = int(-1*math.ceil(math.log10(diff)))
+        ndigits -= 1 # add 1 for the next digit, but subtract 2 for percentage
+        percentage = 100*convergence
+        return f"{percentage:.{ndigits}f}%"
 
 
 def rays_per_sample_to_string(rays_per_sample):
