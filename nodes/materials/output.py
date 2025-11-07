@@ -93,13 +93,13 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
 
         # Copy the links to volumes
         for orig_input in orig_node.inputs:
-            if orig_input.is_linked and orig_input.name in {"Interior Volume", "Exterior Volume"}:
+            # We cannot use orig_input.is_linked as it makes Blender crash
+            links = utils_node.get_links(node_tree, orig_input)
+            if links and orig_input.name in ["Interior Volume", "Exterior Volume"]:
                 # We can not use orig_input.links because of a Blender exception
-                links = utils_node.get_links(node_tree, orig_input)
-                if links:
-                    from_socket = links[0].from_socket
-                    to_socket = self.inputs[orig_input.name]
-                    node_tree.links.new(from_socket, to_socket)
+                from_socket = links[0].from_socket
+                to_socket = self.inputs[orig_input.name]
+                node_tree.links.new(from_socket, to_socket)
 
     def draw_buttons(self, context, layout):
         icon = icons.EXPANDABLE_OPENED if self.show_advanced else icons.EXPANDABLE_CLOSED
