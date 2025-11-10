@@ -21,6 +21,7 @@ if _needs_reload:
     importlib.reload(utils)
     importlib.reload(draw)
 
+
 # Executed in separate thread
 def start_session(engine):
     try:
@@ -39,23 +40,28 @@ def start_session(engine):
         LuxCoreErrorLog.add_error(error)
 
         import traceback
+
         traceback.print_exc()
 
-    # Note: Due to CPython implementation details, it's not necessary to use a lock here (this modification is atomic)
+    # Note: Due to CPython implementation details, it's not necessary to use a
+    # lock here (this modification is atomic)
     engine.starting_session = False
+
 
 def force_session_restart(engine):
     """
     https://github.com/LuxCoreRender/BlendLuxCore/issues/577
-    For unknown reasons, the old way of handling changes to the renderconfig, like a viewport resize
-    or renderengine settings edit, now causes a memory leak. I have not been able to track it down.
-    (The original code is in export/__init__.py in the method _update_config())
-    As a workaround, I stop and delete the session to trigger a full re-export of the scene and
-    a fresh restart of the viewport render.
+    For unknown reasons, the old way of handling changes to the renderconfig,
+    like a viewport resize or renderengine settings edit, now causes a memory
+    leak. I have not been able to track it down. (The original code is in
+    export/__init__.py in the method _update_config()) As a workaround, I stop
+    and delete the session to trigger a full re-export of the scene and a fresh
+    restart of the viewport render.
     """
     if engine.session is not None:
         engine.session.Stop()
         engine.session = None
+
 
 def view_update(engine, context, depsgraph, changes=None):
     start = time()
@@ -79,30 +85,39 @@ def view_update(engine, context, depsgraph, changes=None):
             if was_resized:
                 engine.time_of_last_viewport_resize = time()
                 return
-            elif time() - engine.time_of_last_viewport_resize < engine.VIEWPORT_RESIZE_TIMEOUT:
-                # Don't re-export the session before the timeout is done, to prevent constant re-exports while resizing
+            elif (
+                time() - engine.time_of_last_viewport_resize
+                < engine.VIEWPORT_RESIZE_TIMEOUT
+            ):
+                # Don't re-export the session before the timeout is done, to
+                # prevent constant re-exports while resizing
                 return
         else:
-            display_luxcore_logs = get_addon_preferences(bpy.context).display_luxcore_logs
+            display_luxcore_logs = get_addon_preferences(
+                bpy.context
+            ).display_luxcore_logs
             if display_luxcore_logs:
                 pyluxcore.SetLogHandler(LuxCoreLog.add)
             else:
                 pyluxcore.SetLogHandler(LuxCoreLog.silent)
 
-
         try:
             print("=" * 50)
             print("[Engine/Viewport] New session")
             engine.exporter = export.Exporter()
-            engine.session = engine.exporter.create_session(depsgraph, context, engine=engine)
+            engine.session = engine.exporter.create_session(
+                depsgraph, context, engine=engine
+            )
             # Start in separate thread to avoid blocking the UI
             engine.starting_session = True
             engine.is_first_viewport_start = False
             import _thread
+
             _thread.start_new_thread(start_session, (engine,))
         except Exception as error:
             if engine.session is not None:
-                # in case engine.session was already set in the try block before the error
+                # in case engine.session was already set in the try block
+                # before the error
                 del engine.session
             engine.session = None
             # Reset the exporter to invalidate all caches
@@ -113,22 +128,29 @@ def view_update(engine, context, depsgraph, changes=None):
             LuxCoreErrorLog.add_error(error)
 
             import traceback
+
             traceback.print_exc()
         return
 
     s = time()
     changes = engine.exporter.get_changes(depsgraph, context, changes)
     delta_t = (time() - s) * 1000
-    print(f"[BLC] view_update(): checking for other changes took {delta_t:.1f} ms")
+    print(
+        f"[BLC] view_update(): checking for other changes took {delta_t:.1f} ms"
+    )
 
     if changes:
         if changes & export.Change.REQUIRES_VIEW_UPDATE:
-            # Only restart the session if the view transform didn't change by itself
+            # Only restart the session if the view transform didn't change by
+            # itself
             force_session_restart(engine)
             return
         s = time()
-        # We have to re-assign the session because it might have been replaced due to filmsize change
-        engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
+        # We have to re-assign the session because it might have been replaced
+        # due to filmsize change
+        engine.session = engine.exporter.update(
+            depsgraph, context, engine.session, changes
+        )
         engine.viewport_start_time = time()
 
         if engine.framebuffer:
@@ -155,7 +177,9 @@ def view_draw(engine, context, depsgraph):
     if engine.session is None:
         config = scene.luxcore.config
         definitions = {}
-        luxcore_engine, _ = convert_viewport_engine(context, scene, definitions, config)
+        luxcore_engine, _ = convert_viewport_engine(
+            context, scene, definitions, config
+        )
         message = ""
 
         if luxcore_engine.endswith("OCL"):
@@ -179,7 +203,10 @@ def view_draw(engine, context, depsgraph):
 
             if not renderconfig.HasCachedKernels():
                 gpu_backend = utils.get_addon_preferences(context).gpu_backend
-                message = f"Compiling {gpu_backend} kernels (just once, usually takes 15-30 minutes)"
+                message = (
+                    f"Compiling {gpu_backend} kernels ("
+                    "((just once, usually takes 15-30 minutes)"
+                )
 
         engine.update_stats("Starting viewport render", message)
         engine.viewport_starting_message_shown = True
@@ -187,7 +214,9 @@ def view_draw(engine, context, depsgraph):
         engine.tag_redraw()
         return
 
-    if not engine.framebuffer or engine.framebuffer.needs_replacement(context, scene):
+    if not engine.framebuffer or engine.framebuffer.needs_replacement(
+        context, scene
+    ):
         engine.framebuffer = FrameBuffer(engine, context, scene)
 
     framebuffer = engine.framebuffer
@@ -206,14 +235,17 @@ def view_draw(engine, context, depsgraph):
         # for everything else we call view_update().
         # We have to re-assign the session because it might have been
         # replaced due to filmsize change.
-        engine.session = engine.exporter.update(depsgraph, context, engine.session, changes)
+        engine.session = engine.exporter.update(
+            depsgraph, context, engine.session, changes
+        )
         engine.viewport_start_time = time()
+        framebuffer.reset_denoiser()
 
     if utils.in_material_shading_mode(context):
         if not engine.session.IsInPause():
             engine.session.WaitNewFrame()
             engine.session.UpdateStats()
-            framebuffer.update(engine.session, scene)
+            framebuffer.update(engine.session)
             engine.update_stats("", "")
 
             stats = engine.session.GetStats()
@@ -224,7 +256,7 @@ def view_draw(engine, context, depsgraph):
                 engine.session.Pause()
             else:
                 engine.tag_redraw()
-        framebuffer.draw(engine, context, scene)
+        framebuffer.draw()
         return
 
     # Check if we need to pause the viewport render
@@ -234,27 +266,22 @@ def view_draw(engine, context, depsgraph):
     status_message = ""
 
     if rendered_time > halt_time:
+        # Put in pause...
         if not engine.session.IsInPause():
             print("[Engine/Viewport] Pausing session")
             engine.session.Pause()
         status_message = "(Paused)"
 
-        if framebuffer.denoiser_result_cached:
-            status_message = "(Paused, Denoiser Done)"
+        # ...and denoise
+        if not framebuffer.denoised:
+            if not framebuffer.is_denoiser_active():
+                print("Starting denoiser...")
+                framebuffer.start_denoiser(engine)
+            status_message = "(Paused, Denoiser Working ...)"
+            engine.tag_redraw()
         else:
-            if framebuffer.is_denoiser_active():
-                if framebuffer.is_denoiser_done():
-                    status_message = "(Paused, Denoiser Done)"
-                    framebuffer.load_denoiser_result(scene)
-                else:
-                    status_message = "(Paused, Denoiser Working ...)"
-                    engine.tag_redraw()
-            elif context.scene.luxcore.viewport.get_denoiser(context) == "OIDN":
-                try:
-                    framebuffer.start_denoiser(engine.session)
-                    engine.tag_redraw()
-                except Exception as error:
-                    status_message = "Could not start denoiser: %s" % error
+            status_message = "(Paused, Denoiser Done)"
+
     else:
         # Not in pause yet, keep drawing
         engine.session.WaitNewFrame()
@@ -262,11 +289,10 @@ def view_draw(engine, context, depsgraph):
             engine.session.UpdateStats()
         except RuntimeError as error:
             print("[Engine/Viewport] Error during UpdateStats():", error)
-        framebuffer.update(engine.session, scene)
-        framebuffer.reset_denoiser()
+        framebuffer.update(engine.session)
         engine.tag_redraw()
 
-    framebuffer.draw(engine, context, scene)
+    framebuffer.draw()
 
     # Show formatted statistics in Blender UI
     config = engine.session.GetRenderConfig()
