@@ -3,7 +3,6 @@ import bpy
 
 from .. import export, draw, pyluxcore
 from ..export.image import ImageExporter
-from ..draw.viewport import TempfileManager
 import pyluxcore
 
 if _needs_reload:
@@ -19,7 +18,6 @@ if _needs_reload:
 
 def handler():
     ImageExporter.cleanup()
-    TempfileManager.cleanup()
 
     # Workaround for a bug in LuxCore:
     # We have to uninstall the log handler to prevent a crash.
