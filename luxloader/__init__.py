@@ -80,21 +80,25 @@ def _download_wheels(wheel_requirements, no_deps, no_index):
         if no_index:
             command.append("--no-index")
 
-        process = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-
-        if output := process.stdout.decode():
-            print("[BLC] Downloading wheel:\n", output)
-
-        if process.returncode:
-            raise RuntimeError(
-                "[BLC] Failed to download LuxCore with return code "
-                f"{process.returncode}."
+        try:
+            process = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=True,
+                text=True,
             )
+        except subprocess.CalledProcessError as err:
+            print(err.stdout)
+            raise RuntimeError(
+                "[BLC] Failed to download LuxCore "
+                f"with return code {err.returncode} "
+                f"and return message {err.stdout}"
+            ) from err
+
+
+        if (output := process.stdout):
+            print("[BLC] Downloading wheel:\n", output)
 
 
 INSTALL_INFO_HEADER = """\
