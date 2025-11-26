@@ -17,6 +17,12 @@ on:
         required: true
         type: string
         default: "Latest"
+  workflow_dispatch:
+    inputs:
+      build_type:
+        required: true
+        type: string
+        default: "Release"
 
 jobs:
   build_bundle:
