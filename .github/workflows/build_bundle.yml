@@ -67,4 +67,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: "BlendLuxCore"
+<<<<<<< HEAD
           path: "${{ github.workspace }}/build/out/BlendLuxCore-*.zip"
+=======
+          path: "${{ github.workspace }}/build/BlendLuxCore-*.zip"
+>>>>>>> 9c294874 (Build bundle workflow: add worflow_dispatch)
