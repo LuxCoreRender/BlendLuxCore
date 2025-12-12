@@ -7,7 +7,7 @@ from shutil import which
 
 class LUXCORE_OT_install_pyside(bpy.types.Operator):
     bl_idname = "luxcore.install_pyside"
-    bl_label = "You need PySide. Install it now?"
+    bl_label = "You need PySide6. Install it now?"
     bl_description = ""
 
     def invoke(self, context, event):
@@ -16,18 +16,19 @@ class LUXCORE_OT_install_pyside(bpy.types.Operator):
 
     def execute(self, context):
         threadcount = context.scene.render.threads
-        install_command = 'sudo pip3 install --install-option="--jobs=%d" PySide' % threadcount
+        # Try PySide6 first (recommended for Python 3.10+), fall back to PySide2
+        install_command = 'pip3 install PySide6 || pip3 install PySide2'
 
         if not which("x-terminal-emulator"):
-            self.report({"ERROR"}, "Could not open terminal. Please install PySide by hand:")
-            self.report({"ERROR"}, install_command)
+            self.report({"ERROR"}, "Could not open terminal. Please install PySide6 by hand:")
+            self.report({"ERROR"}, "pip3 install PySide6")
             self.report({"ERROR"}, "(You can copy the command from the terminal)")
-            print(install_command)
+            print("pip3 install PySide6")
             return {"CANCELLED"}
 
         script = (
             "'"
-            + 'echo "This will install PySide (required by pyluxcoretools UI)";'
+            + 'echo "This will install PySide6 (required by pyluxcoretools UI)";'
             # Show which command will be used to install PySide
             + 'echo "' + install_command.replace('"', '\\"') + '";'
             # Execute the command to install PySide
@@ -41,6 +42,30 @@ class LUXCORE_OT_install_pyside(bpy.types.Operator):
         return {"FINISHED"}
 
 
+def _check_pyside_installed():
+    """
+    Check if PySide6 or PySide2 is installed.
+    Returns tuple: (is_installed: bool, version: str or None)
+    """
+    try:
+        result = run(["pip3", "list"], stdout=PIPE, stderr=PIPE)
+        installed_packages = result.stdout.decode()
+        
+        # Check for PySide6 first (preferred for Python 3.10+)
+        if "PySide6" in installed_packages:
+            return True, "PySide6"
+        # Fall back to PySide2
+        if "PySide2" in installed_packages:
+            return True, "PySide2"
+        # Also check for just "PySide" (older versions)
+        if "PySide" in installed_packages:
+            return True, "PySide"
+        
+        return False, None
+    except FileNotFoundError:
+        return False, None
+
+
 class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
     bl_idname = "luxcore.start_pyluxcoretools"
     bl_label = "LuxCore Network Render"
@@ -51,23 +76,17 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
         my_env = os.environ.copy()
 
         if platform.system() == "Darwin":
-            # MacOS does not come with Python3 most installation methods supply
-            # a symbolic link to /usr/local/bin or /usr/local/sbin
-            my_env["PATH"] = "/usr/local/bin:/usr/local/sbin:" + my_env.get("PATH", "")
+            # macOS: add common Python installation paths
+            # Support Homebrew on both Intel (/usr/local) and Apple Silicon (/opt/homebrew)
+            my_env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/local/sbin:" + my_env.get("PATH", "")
 
             try:
-                result = run(["pip3", "list"], env=my_env, stdout=PIPE)
-                installed_packages = result.stdout.decode()
-            except FileNotFoundError:
-                msg = "pip3 not installed, see wiki for instructions"
-                self.report({"WARNING"}, msg)
-                bpy.ops.luxcore.open_website_popup("INVOKE_DEFAULT",
-                                                   message=msg,
-                                                   url="https://wiki.luxcorerender.org/LuxCoreRender_Network_Rendering")
-                return {"CANCELLED"}
+                is_installed, pyside_version = _check_pyside_installed()
+            except Exception:
+                is_installed, pyside_version = False, None
 
-            if "PySide2" not in installed_packages:
-                msg = "PySide2 not installed, see wiki for instructions"
+            if not is_installed:
+                msg = "PySide6 or PySide2 not installed. Install with: pip3 install PySide6"
                 self.report({"WARNING"}, msg)
                 bpy.ops.luxcore.open_website_popup("INVOKE_DEFAULT",
                                                    message=msg,
@@ -78,10 +97,9 @@ class LUXCORE_OT_start_pyluxcoretools(bpy.types.Operator):
             # On Linux, PySide can not be bundled because of this bug:
             # https://github.com/LuxCoreRender/LuxCore/issues/80#issuecomment-378223152
             # So we need to check if PySide is installed, and install it if necessary
-            result = run(["pip3", "list"], stdout=PIPE)
-            installed_packages = result.stdout.decode()
+            is_installed, pyside_version = _check_pyside_installed()
 
-            if "PySide" not in installed_packages:
+            if not is_installed:
                 bpy.ops.luxcore.install_pyside("INVOKE_DEFAULT")
                 return {"CANCELLED"}
 

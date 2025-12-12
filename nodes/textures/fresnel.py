@@ -6,6 +6,7 @@ from ...ui import icons
 from ... import utils
 from ...utils.errorlog import LuxCoreErrorLog
 from ...utils import node as utils_node
+from ...export.image import network_texture_manager
 
 
 class LuxCoreNodeTexFresnel(LuxCoreNodeTexture, bpy.types.Node):
@@ -84,6 +85,8 @@ class LuxCoreNodeTexFresnel(LuxCoreNodeTexture, bpy.types.Node):
             #Fresnel data file
             try:
                 filepath = utils.get_abspath(self.filepath, must_exist=True, must_be_existing_file=True)
+                # Process through network texture manager for network rendering
+                filepath = network_texture_manager.process_path(filepath)
 
                 definitions = {
                     "file": filepath,

@@ -4,7 +4,7 @@ import math
 import pyluxcore
 from .. import utils
 from .caches.exported_data import ExportedObject, ExportedLight
-from .image import ImageExporter
+from .image import ImageExporter, network_texture_manager
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import node as utils_node
 from ..nodes.output import get_active_output
@@ -946,6 +946,8 @@ def export_ies(definitions, ies, library, is_meshlight=False):
         if iesfile:
             try:
                 filepath = utils.get_abspath(iesfile, library, must_exist=True, must_be_existing_file=True)
+                # Process through network texture manager for network rendering
+                filepath = network_texture_manager.process_path(filepath)
                 definitions[prefix + "iesfile"] = filepath
             except OSError as error:
                 # Make the error message more precise

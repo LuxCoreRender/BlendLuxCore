@@ -56,3 +56,29 @@ class LUXCORE_RENDER_PT_filesaver(RenderButtonsPanel, Panel):
         col = layout.column(align=True)
         col.prop(config, "filesaver_format")
         col.prop(config, "filesaver_path")
+
+
+class LUXCORE_RENDER_PT_filesaver_network(RenderButtonsPanel, Panel):
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Network Rendering Options"
+    bl_options = {"DEFAULT_CLOSED"}
+    bl_parent_id = "LUXCORE_RENDER_PT_filesaver"
+
+    @classmethod
+    def poll(cls, context):
+        config = context.scene.luxcore.config
+        return config.use_filesaver
+
+    def draw(self, context):
+        layout = self.layout
+        config = context.scene.luxcore.config
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.prop(config, "filesaver_copy_textures")
+        col.prop(config, "filesaver_use_relative_paths")
+        
+        if config.filesaver_copy_textures and config.filesaver_use_relative_paths:
+            layout.label(text="Textures will be copied to 'textures/' subdirectory", icon=icons.INFO)

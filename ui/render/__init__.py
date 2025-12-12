@@ -33,6 +33,7 @@ classes = (
     image_resize_policy.LUXCORE_RENDER_PT_image_resize_policy,
     tools.LUXCORE_RENDER_PT_tools,
     tools.LUXCORE_RENDER_PT_filesaver,
+    tools.LUXCORE_RENDER_PT_filesaver_network,
     viewport.LUXCORE_RENDER_PT_viewport_settings,
     viewport.LUXCORE_RENDER_PT_viewport_settings_denoiser,
     viewport.LUXCORE_RENDER_PT_viewport_settings_advanced,

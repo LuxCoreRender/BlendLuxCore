@@ -550,6 +550,20 @@ class LuxCoreConfig(PropertyGroup):
     ]
     filesaver_format: EnumProperty(name="", items=filesaver_format_items, default="TXT")
     filesaver_path: StringProperty(name="", subtype="DIR_PATH", description="Output path where the scene is saved")
+    
+    # Network rendering options
+    filesaver_copy_textures: BoolProperty(
+        name="Copy Textures",
+        default=False,
+        description="Copy all texture files to the export directory. Essential for network rendering "
+                    "where render nodes may have different filesystem paths"
+    )
+    filesaver_use_relative_paths: BoolProperty(
+        name="Use Relative Paths",
+        default=False,
+        description="Store texture paths relative to the export directory instead of absolute paths. "
+                    "When enabled with 'Copy Textures', textures are stored in a 'textures' subdirectory"
+    )
 
     # Seed
     seed: IntProperty(name="Seed", default=1, min=1, description=SEED_DESC)

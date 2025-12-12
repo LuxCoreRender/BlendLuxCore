@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import pyluxcore
 from .. import utils
-from .image import ImageExporter
+from .image import ImageExporter, network_texture_manager
 from ..utils.errorlog import LuxCoreErrorLog
 
 
@@ -216,6 +216,8 @@ def _camera_response_func(definitions, index, camera_response_func, scene):
             library = scene.camera.data.library
             name = utils.get_abspath(camera_response_func.file, library,
                                      must_exist=True, must_be_existing_file=True)
+            # Process through network texture manager for network rendering
+            name = network_texture_manager.process_path(name)
         except OSError as error:
             # Make the error message more precise
             LuxCoreErrorLog.add_warning('Could not find .crf file at path "%s" (%s)'
@@ -238,6 +240,8 @@ def _color_LUT(definitions, index, color_LUT, scene):
         library = scene.camera.data.library
         filepath = utils.get_abspath(color_LUT.file, library,
                                      must_exist=True, must_be_existing_file=True)
+        # Process through network texture manager for network rendering
+        filepath = network_texture_manager.process_path(filepath)
     except OSError as error:
         # Make the error message more precise
         LuxCoreErrorLog.add_warning('Could not find .cube file at path "%s" (%s)'

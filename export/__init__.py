@@ -12,6 +12,7 @@ from . import (
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from .caches.object_cache import supports_live_transform
+from .image import network_texture_manager
 
 
 class Change:
@@ -88,6 +89,11 @@ class Exporter(object):
         # the user has linked/appended assets with node trees from previous versions of
         # the addon since opening the .blend file.
         utils_compatibility.run()
+
+        # Initialize network texture manager for filesaver export
+        # This must be done before any image exports
+        if context is None:  # Only for final render
+            network_texture_manager.setup(scene)
 
         # Scene
         image_resize_policy_props = scene.luxcore.config.image_resize_policy.convert()
