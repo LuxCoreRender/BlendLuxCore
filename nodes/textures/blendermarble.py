@@ -53,7 +53,7 @@ class LuxCoreNodeTexBlenderMarble(LuxCoreNodeTexture, bpy.types.Node):
         column.prop(self, "bright")
         column.prop(self, "contrast")
 
-    def sub_export(self, depsgraph, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "blender_marble",
             "noisebasis": self.noise_basis,
