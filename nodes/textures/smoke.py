@@ -106,12 +106,6 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture, bpy.types.Node):
         amplify = 1
 
         use_high_resolution = False
-        if bpy.app.version[:2] < (2, 82):
-            use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
-            if use_high_resolution and grid_name not in {"density_low", "flame_low", "fuel_low",
-                                                         "react_low", "velocity", "heat"}:
-                # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
-                amplify = smoke_domain_mod.domain_settings.amplify + 1
 
         for i in range(3):
             cell_size[i] = smoke_domain_mod.domain_settings.cell_size[i] * 1/amplify
