@@ -16,16 +16,6 @@ if _needs_reload:
     importlib.reload(caches)
     importlib.reload(utils)
 
-
-def fast_custom_normals_supported():
-    version = bpy.app.version
-    if version == (2, 82, 7):
-        return True
-    if version[:2] == (2, 83):
-        return True
-    return False
-
-
 # https://blenderartists.org/t/\
 # efficient-copying-of-vertex-coords-to-and-from-numpy-arrays/661467/2
 def get_ndarray(

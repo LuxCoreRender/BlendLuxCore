@@ -368,11 +368,7 @@ def is_obj_visible(obj):
 
 
 def is_obj_visible_in_cycles(obj):
-    if bpy.app.version[:2] < (3, 0):
-        c_vis = obj.cycles_visibility
-        return any((c_vis.camera, c_vis.diffuse, c_vis.glossy, c_vis.transmission, c_vis.scatter, c_vis.shadow))
-    else:
-        return any((obj.visible_camera, obj.visible_diffuse, obj.visible_glossy, obj.visible_transmission, obj.visible_volume_scatter, obj.visible_shadow))
+    return any((obj.visible_camera, obj.visible_diffuse, obj.visible_glossy, obj.visible_transmission, obj.visible_volume_scatter, obj.visible_shadow))
 
 
 
@@ -468,14 +464,9 @@ def use_instancing(obj, scene, is_viewport_render):
 
 
 def find_smoke_domain_modifier(obj):
-    if bpy.app.version[:2] < (2, 82):
-        for mod in obj.modifiers:
-            if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
-                return mod
-    else:
-        for mod in obj.modifiers:
-            if mod.type == "FLUID" and mod.fluid_type == "DOMAIN":
-                return mod
+    for mod in obj.modifiers:
+        if mod.type == "FLUID" and mod.fluid_type == "DOMAIN":
+            return mod
 
     return None
 
