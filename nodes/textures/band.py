@@ -1,10 +1,12 @@
 import bpy
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty, StringProperty
+from bpy_extras import anim_utils
 from ..base import LuxCoreNodeTexture
 from ... import icons
 from ...utils import node as utils_node
 
+is_blender_5 = bpy.app.version[0] >= 5 # only test of Blender 5 for now
 
 class ColorRampItem(PropertyGroup):
     offset: FloatProperty(update=utils_node.force_viewport_update, name="Offset", default=0.0, min=0, max=1)
@@ -127,7 +129,15 @@ class LuxCoreNodeTexBand(LuxCoreNodeTexture, bpy.types.Node):
             # Keyframes are attached to fcurves, which are attached to the parent node tree
             if anim_data and anim_data.action:
                 data_path = 'nodes["%s"].ramp_items[%d].offset' % (self.name, index)
-                fcurves = (fcurve for fcurve in anim_data.action.fcurves if fcurve.data_path == data_path)
+                if is_blender_5:
+                    # This behavior was already deprecated in Blender 4.4
+                    # https://developer.blender.org/docs/release_notes/4.4/python_api/#slotted-actions
+                    action = anim_data.action
+                    action_slot = anim_data.action_slot
+                    channelbag = anim_utils.action_get_channelbag_for_slot(action, action_slot)
+                    fcurves = (fcurve for fcurve in channelbag.fcurves if fcurve.data_path == data_path)
+                else:
+                    fcurves = (fcurve for fcurve in anim_data.action.fcurves if fcurve.data_path == data_path)
 
                 fcurve_on_current_frame = False
 

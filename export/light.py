@@ -13,6 +13,7 @@ WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 TYPES_SUPPORTING_ENVLIGHTCACHE = {"sky2", "infinite", "constantinfinite"}
 
+is_blender_5 = bpy.app.version[0] >= 5 # only test of Blender 5 for now
 
 def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
     try:
@@ -390,7 +391,14 @@ def _convert_cycles_world(exporter, scene, world, is_viewport_render):
 
     node_tree = world.node_tree
 
-    if not world.use_nodes or not node_tree:
+    if is_blender_5:
+        # world.use_nodes is deprecated in Blender 5.0.
+        # Technically still OK to use for now but made explicit by this.
+        not_worldusenodes = False
+    else:
+        not_worldusenodes = not world.use_nodes
+
+    if not_worldusenodes or not node_tree:
         if not _define_constantinfinite(definitions, list(world.color)):
             return None
 
