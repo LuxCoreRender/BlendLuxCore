@@ -1,3 +1,4 @@
+import bpy
 import pyluxcore
 from .. import utils
 from ..utils import node as utils_node
@@ -8,6 +9,7 @@ from . import cycles_node_reader
 
 GLOBAL_FALLBACK_MAT = "__CLAY__"
 
+is_blender_5 = bpy.app.version[0] >= 5 # only test of Blender 5 for now
 
 def convert(exporter, depsgraph, material, is_viewport_render, obj_name=""):
     try:
@@ -22,7 +24,14 @@ def convert(exporter, depsgraph, material, is_viewport_render, obj_name=""):
         # open all asset files individually and enable use_cycles_nodes everywhere by hand or script
         is_asset_without_lux_mat = node_tree is None and material.library
         
-        if material.use_nodes and (material.luxcore.use_cycles_nodes or is_asset_without_lux_mat):
+        if is_blender_5:
+            # material.use_nodes is deprecated in Blender 5.0.
+            # Technically still OK to use for now but made explicit by this.
+            matusenodes = True
+        else:
+            matusenodes = material.use_nodes
+
+        if matusenodes and (material.luxcore.use_cycles_nodes or is_asset_without_lux_mat):
             return cycles_node_reader.convert(material, props, luxcore_name, obj_name)
 
         if node_tree is None:
