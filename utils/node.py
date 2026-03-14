@@ -294,44 +294,64 @@ def force_viewport_mesh_update2(node_tree):
 
 
 def update_opengl_materials(_, context):
-    if (not hasattr(context, "object")
-            or not context.object
-            or not context.object.active_material
-            or not hasattr(context.object.active_material, "luxcore") # workaround for https://projects.blender.org/blender/blender/issues/140488
-            or not context.object.active_material.luxcore.auto_vp_color):
-        return
-
-    mat = context.object.active_material
-    node_tree = mat.luxcore.node_tree
-    diffuse_color = (0, 0, 0)
-    alpha = 1
-
-    if node_tree is None:
-        mat.diffuse_color = (0.5, 0.5, 0.5, alpha)
-        return
-
+    # TODO should be in upper scope, but there is a circular reference
     from ..utils.node import get_active_output
+
+    # Check objects availability
+    # workaround for https://projects.blender.org/blender/blender/issues/140488
+    try:
+        mat = context.object.active_material
+    except AttributeError:
+        return
+
+    try:
+        node_tree = mat.luxcore.node_tree
+    except AttributeError:
+        return
+
+    if not node_tree:
+        mat.diffuse_color = (0.5, 0.5, 0.5, 1)
+        return
+
     output = get_active_output(node_tree)
+    if not output:
+        mat.diffuse_color = (0, 0, 0, 1)
+        return
 
-    if output:
-        first_node = get_linked_node(output.inputs["Material"])
+    first_node = get_linked_node(output.inputs["Material"])
+    if not first_node:
+        mat.diffuse_color = (0, 0, 0, 1)
+        return
 
-        if first_node:
-            # Set default color for nodes without color sockets, e.g. mix or glossy coating
-            diffuse_color = (0.5, 0.5, 0.5)
+    # Usually we want to show the color in the first input as main color, if it
+    # exists
+    try:
+        socket_rgb = first_node.inputs[0]
+    except KeyError:
+        # Handle nodes without color sockets, e.g. mix or glossy coating
+        mat.diffuse_color = (0.5, 0.5, 0.5, 1)
+        return
 
-            if first_node.inputs:
-                # Usually we want to show the color in the first input as main color
-                socket = first_node.inputs[0]
-                socket_value = getattr(socket, "default_value", None)
+    # Get rgb
+    diffuse_color = (0.5, 0.5, 0.5)
+    if not socket_rgb.is_linked:
+        try:
+            diffuse_color = mathutils.Color(socket_rgb.default_value)
+        except AttributeError:
+            pass
 
-                if not socket.is_linked and isinstance(socket_value, mathutils.Color):
-                    diffuse_color = socket_value
-
-                if "Opacity" in first_node.inputs:
-                    socket = first_node.inputs["Opacity"]
-                    if not socket.is_linked:
-                        alpha = socket.default_value
+    # Get alpha
+    alpha = 1
+    try:
+        socket_alpha = first_node.inputs["Opacity"]
+    except KeyError:
+        pass
+    else:
+        if not socket_alpha.is_linked:
+            try:
+                alpha = socket_alpha.default_value
+            except AttributeError:
+                pass
 
     mat.diffuse_color = (*diffuse_color, alpha)
 
