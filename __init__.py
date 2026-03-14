@@ -46,7 +46,7 @@ except ImportError as error:
     msg = f"\n\nCould not import pyluxcore. \n\nImportError: {error}"
     # Raise from None to suppress the unhelpful
     # "during handling of the above exception, ..."
-    raise RuntimeError(msg) from None
+    raise RuntimeError(msg) from error
 
 
 # Import other modules
