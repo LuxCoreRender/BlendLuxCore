@@ -36,7 +36,14 @@ class LuxCoreMaterialNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
         LuxCoreNodeTree.update(self)
 
         # Force viewport update of the corresponding material
-        for mat in bpy.data.materials:
+        try:
+            materials = bpy.data.materials
+        except AttributeError:
+            # bpy.data.materials may not be accessible in certain contexts
+            # (e.g., during undo/redo operations or when data is restricted)
+            materials = []
+
+        for mat in materials:
             if (
                 hasattr(
                     mat, "luxcore"
@@ -48,7 +55,12 @@ class LuxCoreMaterialNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
 
         # Update opengl materials in case the node linked to the
         # output has changed
-        utils_node.update_opengl_materials(None, bpy.context)
+        try:
+            utils_node.update_opengl_materials(None, bpy.context)
+        except Exception:
+            # Silently ignore errors in opengl material updates
+            # This can fail in various contexts (e.g., during undo/redo)
+            pass
 
 
 class LuxCoreNodeCategoryMaterial(NodeCategory):
