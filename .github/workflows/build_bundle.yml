@@ -105,7 +105,6 @@ jobs:
       - uses: actions/download-artifact@v7
         if: ${{ !env.ACT }}
         with:
-          pattern: BlendLuxCore*.zip
           path: ${{ github.workspace }}/dist
           merge-multiple: false
 
