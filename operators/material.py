@@ -5,7 +5,7 @@ from .utils import (
     poll_object, poll_material, init_mat_node_tree, make_nodetree_name,
     LUXCORE_OT_set_node_tree, LUXCORE_MT_node_tree, show_nodetree,
 )
-from ..ui import icons
+from .. import icons
 
 
 class LUXCORE_OT_material_new(bpy.types.Operator):

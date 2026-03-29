@@ -1,9 +1,56 @@
-from bpy.utils import register_class, unregister_class
+_needs_reload = "bpy" in locals()
+
+import bpy
+
+from .. import utils
+
 from . import (
-    addon_preferences, blender_hair_curves, blender_object, camera, image_tools, light, material,
-    node_editor, output, particle, physics, scene_lightgroups, scene_units,
-    texture, view_layer, view_layer_aovs, volume, world, lol, render,
+    addon_preferences,
+    blender_hair_curves,
+    blender_object,
+    camera,
+    image_tools,
+    light,
+    material,
+    node_editor,
+    output,
+    particle,
+    physics,
+    scene_lightgroups,
+    scene_units,
+    texture,
+    view_layer,
+    view_layer_aovs,
+    volume,
+    world,
+    lol,
+    render,
 )
+
+
+if _needs_reload:
+    import importlib
+
+    addon_preferences = importlib.reload(addon_preferences)
+    blender_hair_curves = importlib.reload(blender_hair_curves)
+    blender_object = importlib.reload(blender_object)
+    camera = importlib.reload(camera)
+    image_tools = importlib.reload(image_tools)
+    light = importlib.reload(light)
+    material = importlib.reload(material)
+    node_editor = importlib.reload(node_editor)
+    output = importlib.reload(output)
+    particle = importlib.reload(particle)
+    physics = importlib.reload(physics)
+    scene_lightgroups = importlib.reload(scene_lightgroups)
+    scene_units = importlib.reload(scene_units)
+    texture = importlib.reload(texture)
+    view_layer = importlib.reload(view_layer)
+    view_layer_aovs = importlib.reload(view_layer_aovs)
+    volume = importlib.reload(volume)
+    world = importlib.reload(world)
+    lol = importlib.reload(lol)
+    render = importlib.reload(render)
 
 classes = (
     addon_preferences.LuxCoreAddonPreferences,
@@ -64,40 +111,26 @@ classes = (
     world.LUXCORE_WORLD_PT_visibility,
 )
 
+submodules = (
+    lol,
+    render,
+    blender_object,
+    camera,
+    light,
+    material,
+    node_editor,
+    output,
+    particle,
+    physics,
+    texture,
+    volume,
+    world
+)
+
+
 def register():
-    lol.register()
-    render.register()
+    utils.register_module("UI", classes, submodules)
 
-    blender_object.register()
-    camera.register()
-    light.register()
-    material.register()
-    node_editor.register()
-    output.register()
-    particle.register()
-    physics.register()
-    texture.register()
-    volume.register()
-    world.register()
-
-    for cls in classes:
-        register_class(cls)
 
 def unregister():
-    lol.unregister()
-    render.unregister()
-
-    blender_object.unregister()
-    camera.unregister()
-    light.unregister()
-    material.unregister()
-    node_editor.unregister()
-    output.unregister()
-    particle.unregister()
-    physics.unregister()
-    texture.unregister()
-    volume.unregister()
-    world.unregister()
-
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("UI", classes, submodules)

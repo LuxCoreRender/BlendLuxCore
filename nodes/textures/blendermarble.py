@@ -2,7 +2,7 @@ import bpy
 from bpy.props import EnumProperty, IntProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 
-from .. import NOISE_BASIS_ITEMS, NOISE_TYPE_ITEMS, MIN_NOISE_SIZE
+from ..base import NOISE_BASIS_ITEMS, NOISE_TYPE_ITEMS, MIN_NOISE_SIZE
 from ...utils import node as utils_node
 
 
@@ -53,7 +53,7 @@ class LuxCoreNodeTexBlenderMarble(LuxCoreNodeTexture, bpy.types.Node):
         column.prop(self, "bright")
         column.prop(self, "contrast")
 
-    def sub_export(self, depsgraph, exporter, props, luxcore_name=None, output_socket=None):
+    def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
         definitions = {
             "type": "blender_marble",
             "noisebasis": self.noise_basis,

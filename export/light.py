@@ -7,12 +7,13 @@ from .caches.exported_data import ExportedObject, ExportedLight
 from .image import ImageExporter
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import node as utils_node
-from ..nodes.output import get_active_output
+from ..utils.node import get_active_output
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
 TYPES_SUPPORTING_ENVLIGHTCACHE = {"sky2", "infinite", "constantinfinite"}
 
+is_blender_5 = bpy.app.version[0] >= 5 # only test of Blender 5 for now
 
 def convert_light(exporter, obj, obj_key, depsgraph, luxcore_scene, transform, is_viewport_render):
     try:
@@ -81,7 +82,7 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
 
     if light.type == "POINT":
         definitions["type"] = "point" if light.shadow_soft_size == 0 else "sphere"
-        definitions["transformation"] = utils.matrix_to_list(transform)
+        definitions["transformation"] = utils.luxutils.matrix_to_list(transform)
 
         if light.shadow_soft_size > 0:
             definitions["radius"] = light.shadow_soft_size
@@ -112,7 +113,7 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
         definitions["target"] = [0, 0, -1]
 
         spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-        definitions["transformation"] = utils.matrix_to_list(transform @ spot_fix)
+        definitions["transformation"] = utils.luxutils.matrix_to_list(transform @ spot_fix)
 
         # Multiplier to reach similar brightness as Cycles, found by eyeballing.
         gain *= 0.07
@@ -149,7 +150,7 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
             "transparency.shadow": [1, 1, 1],
         }
 
-        mat_props = utils.create_props(mat_prefix, mat_definitions)
+        mat_props = utils.luxutils.create_props(mat_prefix, mat_definitions)
         props.Set(mat_props)
 
         # Object
@@ -173,7 +174,7 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
     if not light.cycles.cast_shadow:
         LuxCoreErrorLog.add_warning("Cast Shadow is disabled, but unsupported by LuxCore", obj.name)
 
-    props = utils.create_props(prefix, definitions)
+    props = utils.luxutils.create_props(prefix, definitions)
     return props, ExportedLight(luxcore_name)
 
 
@@ -231,7 +232,7 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
 
         # Position is set by transformation property
         definitions["position"] = [0, 0, 0]
-        definitions["transformation"] = utils.matrix_to_list(transform)
+        definitions["transformation"] = utils.luxutils.matrix_to_list(transform)
 
         if light.shadow_soft_size > 0:
             definitions["radius"] = light.shadow_soft_size
@@ -307,7 +308,7 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
         definitions["target"] = [0, 0, -1]
 
         spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-        definitions["transformation"] = utils.matrix_to_list(transform @ spot_fix)
+        definitions["transformation"] = utils.luxutils.matrix_to_list(transform @ spot_fix)
 
     elif light.type == "AREA":
         if light.luxcore.is_laser:
@@ -322,7 +323,7 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
             definitions["target"] = [0, 0, -1]
 
             spot_fix = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-            definitions["transformation"] = utils.matrix_to_list(transform @ spot_fix)
+            definitions["transformation"] = utils.luxutils.matrix_to_list(transform @ spot_fix)
         else:
             # area (mesh light)
             return _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, luxcore_scene, gain,
@@ -337,7 +338,7 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
     if not is_viewport_render and definitions["type"] in TYPES_SUPPORTING_ENVLIGHTCACHE:
         _envlightcache(definitions, light, scene, is_viewport_render)
 
-    props = utils.create_props(prefix, definitions)
+    props = utils.luxutils.create_props(prefix, definitions)
 
     # Exterior volume of the light
     volume_node_tree = light.luxcore.volume
@@ -368,7 +369,7 @@ def convert_world(exporter, world, scene, is_viewport_render):
             definitions = _convert_luxcore_world(exporter, scene, world, is_viewport_render)
 
         if definitions:
-            return utils.create_props(prefix, definitions)
+            return utils.luxutils.create_props(prefix, definitions)
         else:
             return None
     except Exception as error:
@@ -390,7 +391,14 @@ def _convert_cycles_world(exporter, scene, world, is_viewport_render):
 
     node_tree = world.node_tree
 
-    if not world.use_nodes or not node_tree:
+    if is_blender_5:
+        # world.use_nodes is deprecated in Blender 5.0.
+        # Technically still OK to use for now but made explicit by this.
+        not_worldusenodes = False
+    else:
+        not_worldusenodes = not world.use_nodes
+
+    if not_worldusenodes or not node_tree:
         if not _define_constantinfinite(definitions, list(world.color)):
             return None
 
@@ -456,7 +464,7 @@ def _convert_cycles_world(exporter, scene, world, is_viewport_render):
                             infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
                             transformation = infinite_fix @ Matrix.Identity(4).inverted()
 
-                        definitions["transformation"] = utils.matrix_to_list(transformation)
+                        definitions["transformation"] = utils.luxutils.matrix_to_list(transformation)
                     except OSError as image_missing:
                         LuxCoreErrorLog.add_warning("World: " + str(image_missing))
                         image_missing = True
@@ -614,7 +622,7 @@ def _convert_infinite(definitions, light_or_world, scene, transformation=None):
         infinite_fix = Matrix.Scale(1.0, 4)
         # TODO one axis still not correct
         infinite_fix[0][0] = -1.0  # mirror the hdri map to match Cycles and old LuxBlend
-        transformation = utils.matrix_to_list(infinite_fix @ transformation.inverted())
+        transformation = utils.luxutils.matrix_to_list(infinite_fix @ transformation.inverted())
         definitions["transformation"] = transformation
 
 
@@ -650,7 +658,7 @@ def _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name, luxc
         # This happens if the light size is set to 0
         raise Exception("Area light has size 0 (can not be exported)")
 
-    transform_list = utils.matrix_to_list(transform_matrix)
+    transform_list = utils.luxutils.matrix_to_list(transform_matrix)
     # Only bake the transform into the mesh for final renders (disables instancing which
     # is needed for viewport render so we can move the light object)
 
@@ -700,7 +708,7 @@ def _create_luxcore_meshlight(obj, transform, use_instancing, luxcore_name, luxc
         # Use instancing for viewport render so we can interactively move the light
         obj_definitions["transformation"] = obj_transform
 
-    obj_props = utils.create_props(obj_prefix, obj_definitions)
+    obj_props = utils.luxutils.create_props(obj_prefix, obj_definitions)
 
     mesh_definition = [luxcore_name, fake_material_index]
     exported_obj = ExportedObject(luxcore_name, [mesh_definition], ["fake_mat_name"],
@@ -808,7 +816,7 @@ def _convert_area_light(obj, scene, is_viewport_render, exporter, depsgraph, lux
             msg = 'light "%s": %s' % (obj.name, error)
             LuxCoreErrorLog.add_warning(msg, obj_name=obj.name)
 
-    mat_props = utils.create_props(mat_prefix, mat_definitions)
+    mat_props = utils.luxutils.create_props(mat_prefix, mat_definitions)
     props.Set(mat_props)
 
     # LuxCore object

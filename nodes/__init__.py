@@ -1,41 +1,26 @@
-from ..ui import icons
+_needs_reload = "bpy" in locals()
 
-TREE_TYPES = {
-    "luxcore_material_nodes",
-    "luxcore_texture_nodes",
-    "luxcore_volume_nodes",
-}
+import bpy
 
-TREE_ICONS = {
-    "luxcore_material_nodes": icons.NTREE_MATERIAL,
-    "luxcore_texture_nodes": icons.NTREE_TEXTURE,
-    "luxcore_volume_nodes": icons.NTREE_VOLUME,
-}
+from .. import icons
+from .. import utils
+from . import base, sockets, materials, shapes, textures, volumes
+from .base import (
+    TREE_TYPES,
+    TREE_ICONS,
+    NOISE_BASIS_ITEMS,
+    NOISE_TYPE_ITEMS,
+    MIN_NOISE_SIZE,
+    COLORDEPTH_DESC,
+)
 
-NOISE_BASIS_ITEMS = [
-    ("blender_original", "Blender Original", ""),
-    ("original_perlin", "Original Perlin", ""),
-    ("improved_perlin", "Improved Perlin", ""),
-    ("voronoi_f1", "Voronoi F1", ""),
-    ("voronoi_f2", "Voronoi F2", ""),
-    ("voronoi_f3", "Voronoi F3", ""),
-    ("voronoi_f4", "Voronoi F4", ""),
-    ("voronoi_f2f1", "Voronoi F2-F1", ""),
-    ("voronoi_crackle", "Voronoi Crackle", ""),
-    ("cell_noise", "Cell Noise", ""),
-]
+if _needs_reload:
+    import importlib
 
-NOISE_TYPE_ITEMS = [
-    ("soft_noise", "Soft", ""),
-    ("hard_noise", "Hard", "")
-]
+    modules = (base, sockets, materials, shapes, textures, volumes)
+    for module in modules:
+        importlib.reload(module)
 
-MIN_NOISE_SIZE = 0.0001
-
-COLORDEPTH_DESC = "Depth at which white light is turned into the absorption color"
-
-from . import base, sockets
-from bpy.utils import register_class, unregister_class
 
 classes = (
     base.LuxCoreNodeTreePointer,
@@ -62,23 +47,12 @@ classes = (
     sockets.LuxCoreSocketShape,
 )
 
+submodules = (materials, shapes, textures, volumes)
+
 
 def register():
-    from . import materials, shapes, textures, volumes
-    materials.register()
-    shapes.register()
-    textures.register()
-    volumes.register()
+    utils.register_module("Nodes", classes, submodules)
 
-    for cls in classes:
-        register_class(cls)
 
 def unregister():
-    from . import materials, shapes, textures, volumes
-    materials.unregister()
-    shapes.unregister()
-    textures.unregister()
-    volumes.unregister()
-
-    for cls in classes:
-        unregister_class(cls)
+    utils.unregister_module("Nodes", classes, submodules)

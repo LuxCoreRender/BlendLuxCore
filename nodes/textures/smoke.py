@@ -7,7 +7,7 @@ from ... import utils
 import pyluxcore
 from ...export import smoke
 from ...utils import node as utils_node
-from ...ui import icons
+from ... import icons
 from ...utils.errorlog import LuxCoreErrorLog
 
 class LuxCoreNodeTexSmoke(LuxCoreNodeTexture, bpy.types.Node):
@@ -106,19 +106,13 @@ class LuxCoreNodeTexSmoke(LuxCoreNodeTexture, bpy.types.Node):
         amplify = 1
 
         use_high_resolution = False
-        if bpy.app.version[:2] < (2, 82):
-            use_high_resolution = smoke_domain_mod.domain_settings.use_high_resolution
-            if use_high_resolution and grid_name not in {"density_low", "flame_low", "fuel_low",
-                                                         "react_low", "velocity", "heat"}:
-                # Note: Velocity and heat data is always low-resolution. (Comment from Cycles source code)
-                amplify = smoke_domain_mod.domain_settings.amplify + 1
 
         for i in range(3):
             cell_size[i] = smoke_domain_mod.domain_settings.cell_size[i] * 1/amplify
 
         # combine transformations
         mapping_type = 'globalmapping3d'
-        matrix_transformation = utils.matrix_to_list(mathutils.Matrix.Translation(0.5*mathutils.Vector(cell_size)) @ tex_loc @ tex_rot @ tex_sca,
+        matrix_transformation = utils.luxutils.matrix_to_list(mathutils.Matrix.Translation(0.5*mathutils.Vector(cell_size)) @ tex_loc @ tex_rot @ tex_sca,
                                                      invert=True)
 
         definitions = {

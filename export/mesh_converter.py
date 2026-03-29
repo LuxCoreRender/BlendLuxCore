@@ -1,122 +1,126 @@
-import numpy as np
-
-import bpy
 from contextlib import contextmanager
 from time import time
-from .caches.exported_data import ExportedMesh
+import numpy as np
+
+_needs_reload = "bpy" in locals()
+
+import bpy
+
+from . import caches
 from .. import utils
 from ..utils.errorlog import LuxCoreErrorLog
 
+if _needs_reload:
+    import importlib
 
-def fast_custom_normals_supported():
-    version = bpy.app.version
-    if version == (2, 82, 7):
-        return True
-    if version[:2] == (2, 83):
-        return True
-    return False
+    importlib.reload(caches)
+    importlib.reload(utils)
 
-
-def get_custom_normals_slow(mesh):
-    """ 
-    Slow fallback that reads custom normals via Python, used if fast 
-    custom normal reading via C++ is not supported for this Blender version
-    """
-    
-    if not mesh.has_custom_normals:
-        return None
-
-    # Note: for readability, custom_normals should be of shape (n_loops, 3),
-    # where each row is a normal vector.
-    # However, foreach_get() needs a flat sequence,
-    # so to save two ravel() operations, a flat array is used directly.
-    # dtype=np.float32 is used because this matches Blenders internal data structure
-    # and leads to significantly faster processing.
-    n_loops = len(mesh.loops)
-    custom_normals = np.empty(n_loops * 3, dtype = np.float32)
-    mesh.loops.foreach_get('normal', custom_normals)
-    custom_normals = custom_normals.tolist() # currently, LuxCore is hard-coded to expect a list.
-
-    return custom_normals
+# https://blenderartists.org/t/\
+# efficient-copying-of-vertex-coords-to-and-from-numpy-arrays/661467/2
+def get_ndarray(
+    bpy_collection: bpy.types.bpy_prop_collection,
+    attr: str,
+    stride: int,
+    dtype: np.dtype,
+):
+    """Get a numpy array from a Blender collection."""
+    count = len(bpy_collection)
+    buffer = np.empty(shape=(count, stride), dtype=dtype)
+    bpy_collection.foreach_get(attr, np.ravel(buffer))
+    return buffer
 
 
-def convert(obj, mesh_key, depsgraph, luxcore_scene, is_viewport_render, use_instancing, transform, exporter=None):
+def convert(
+    obj,
+    mesh_key,
+    depsgraph,
+    luxcore_scene,
+    is_viewport_render,
+    use_instancing,
+    transform,
+    exporter=None,
+):
     start_time = time()
-    
+
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
             return None
-        
-        custom_normals = None
-        if mesh.has_custom_normals and not fast_custom_normals_supported():
-            start = time()
-            custom_normals = get_custom_normals_slow(mesh)
-            elapsed = time() - start
-            if elapsed > 0.3:
-                LuxCoreErrorLog.add_warning("Slow custom normal export in this Blender version (took %.1f s)"
-                                            % elapsed, obj_name=obj.name)
 
-        loopTriPtr = mesh.loop_triangles[0].as_pointer()
-        loopTriPolyPtr = mesh.loop_triangle_polygons[0].as_pointer()
-        loopTriCount = len(mesh.loop_triangles)
+        mesh.calc_loop_triangles()
 
-        if '.corner_vert' in mesh.attributes:
-            loopPtr = mesh.attributes['.corner_vert'].data[0].as_pointer()
-        else:
-            loopPtr = mesh.loops[0].as_pointer()
+        # Loop vertices
+        loop_vertex_indices = get_ndarray(
+            mesh.loops, "vertex_index", 1, np.uint32
+        ).ravel()
+        vertices = get_ndarray(mesh.vertices, "co", 3, np.float32)
 
-        if 'position' in mesh.attributes:
-            vertPtr = mesh.attributes['position'].data[0].as_pointer()
-        else:
-            vertPtr = mesh.vertices[0].as_pointer()
+        # Loop triangles
+        loop_triangles = get_ndarray(
+            mesh.loop_triangles, "vertices", 3, np.uint32
+        )
 
-        normalPtr = mesh.vertex_normals[0].as_pointer()
-        loopUVsPtrList = []
-        loopColsPtrList = []
+        # Material slot index for each triangle
+        loop_triangle_materials = get_ndarray(
+            mesh.loop_triangles, "material_index", 1, np.uint32
+        ).ravel()
+        unique_mats = np.unique(loop_triangle_materials)
 
-        if mesh.uv_layers:
-            for uv in mesh.uv_layers:
-                if uv.name in mesh.attributes:
-                    loopUVsPtrList.append(mesh.attributes[uv.name].data[0].as_pointer())
-                else:
-                    loopUVsPtrList.append(uv.data[0].as_pointer())
-        else:
-            loopUVsPtrList.append(0)
+        # Normals
+        normals = get_ndarray(mesh.vertex_normals, "vector", 3, np.float32)
 
-        if mesh.vertex_colors:
-            for vcol in mesh.vertex_colors:
-                if vcol.name in mesh.attributes:
-                    loopColsPtrList.append(mesh.attributes[vcol.name].data[0].as_pointer())
-                else:
-                    loopColsPtrList.append(vcol.data[0].as_pointer())
-        else:
-            loopColsPtrList.append(0)
+        # UV
+        uvs = [
+            get_ndarray(uv_layer.uv, "vector", 2, np.float32)
+            for uv_layer in mesh.uv_layers
+            if uv_layer.active_render
+        ]
 
-        meshPtr = mesh.as_pointer()
+        # Colors
+        rgba_colors = [
+            get_ndarray(color_attribute.data, "color_srgb", 4, np.float32)
+            for color_attribute in mesh.color_attributes
+        ]
+        rgb_colors = [rgba[:, :3] for rgba in rgba_colors]
+        alphas = [rgba[:, 3] for rgba in rgba_colors]
 
-        material_indices = list([p.material_index for p in mesh.polygons])
-        material_count = max(1, len(mesh.materials))
-
+        # Transformation
         if is_viewport_render or use_instancing:
             mesh_transform = None
         else:
-            mesh_transform = utils.matrix_to_list(transform)
+            mesh_transform = np.array(
+                [
+                    transform[0][0:4],
+                    transform[1][0:4],
+                    transform[2][0:4],
+                    transform[3][0:4],
+                ],
+                dtype=np.float32,
+            )
 
-        sharp_attr = False
-        sharpPtr = 0
+        mesh_definitions = []
+        for mat in unique_mats:
+            mat_triangles = loop_triangles[loop_triangle_materials == mat]
+            name = f"{str(mesh_key)}{mat:03d}"
 
-        if 'sharp_face' in mesh.attributes:
-            sharp_attr = True
-            sharpPtr = mesh.attributes['sharp_face'].data[0].as_pointer()
+            luxcore_scene.DefineMeshExt(
+                name=name,
+                points=vertices,
+                triangles=mat_triangles,
+                normals=normals,
+                uvs=uvs,
+                colors=rgb_colors,
+                alphas=alphas,
+                transformation=mesh_transform,
+            )
+            mesh_definitions.append((name, mat))
+            print(f"[BLC] Importing mesh '{name}'\n")
 
-        mesh_definitions = luxcore_scene.DefineBlenderMesh(mesh_key, loopTriCount, loopTriPtr, loopTriPolyPtr, loopPtr,
-                                                          vertPtr, normalPtr, sharpPtr, sharp_attr, loopUVsPtrList,
-                                                          loopColsPtrList, meshPtr, material_count, mesh_transform,
-                                                          bpy.app.version, material_indices, custom_normals)
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time
 
-        return ExportedMesh(mesh_definitions)
+
+        return caches.exported_data.ExportedMesh(mesh_definitions)
 
 
 @contextmanager
@@ -144,20 +148,21 @@ def _prepare_mesh(obj, depsgraph):
 
             if mesh:
                 # TODO test if this makes sense
-                ## has been tested briefly for_v2.10. Seems to work, also including custom normals now
+                # has been tested briefly for_v2.10. Seems to work, also
+                # including custom normals now
                 ## but leaving this out on purpose because
                 ## a) users should clean their meshes themselves, and
                 ## b) this will allow some artistic effects
-                #if object_eval.matrix_world.determinant() < 0.0:
+                # if object_eval.matrix_world.determinant() < 0.0:
                 #     mesh.flip_normals()
-                
+
                 if not mesh.loop_triangles:
                     object_eval.to_mesh_clear()
                     mesh = None
 
             # TODO implement new normals handling
             if mesh:
-                mesh.split_faces() # Applies smooth by angle operator
+                mesh.split_faces()  # Applies smooth by angle operator
 
         yield mesh
     finally:

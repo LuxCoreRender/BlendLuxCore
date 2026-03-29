@@ -3,9 +3,10 @@ from bpy.props import BoolProperty, PointerProperty, IntProperty, FloatVectorPro
 import pyluxcore
 from ... import utils
 from ...utils import node as utils_node
-from ..output import LuxCoreNodeOutput, update_active, get_active_output
-from ...ui import icons
+from ... import icons
 from ...utils.errorlog import LuxCoreErrorLog
+from ...utils.node import get_active_output
+from ..output import update_active, LuxCoreNodeOutput
 
 SHADOWCATCHER_DESC = (
     "Make this material transparent and only catch shadows on it. "
@@ -33,6 +34,16 @@ SHADOW_COLOR_DESC = (
     "better performance)"
 )
 
+SHADOW_COLOR_OVERRIDE_DESC = (
+    "When this checkbox is not active, and shadow color is non-black, "
+    "light tracing rays through this material are blocked. "
+    "This also applies to BiDir. "
+    "Allowing such rays will lead to false total brightness, "
+    "which may appear wrong, for exampe whith windows as an alternative "
+    "to architectural glass. In other cases, with strong caustics, however, "
+    "this may be a desired artistic effect."
+)
+
 
 class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
     """
@@ -52,6 +63,9 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
     shadow_color: FloatVectorProperty(name="Shadow Color", subtype="COLOR", default=(0, 0, 0), min=0, max=1,
                                       update=utils_node.update_opengl_materials,
                                       description=SHADOW_COLOR_DESC)
+    shadow_color_override: BoolProperty(name="Shadow Color Light Override", default=False,
+                                      update=utils_node.update_opengl_materials,
+                                      description=SHADOW_COLOR_OVERRIDE_DESC)
     is_shadow_catcher: BoolProperty(update=utils_node.force_viewport_update, name="Shadow Catcher", default=False,
                                      description=SHADOWCATCHER_DESC)
     shadow_catcher_only_infinite: BoolProperty(update=utils_node.force_viewport_update, name="Only Infinite Lights", default=False,
@@ -79,13 +93,13 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
 
         # Copy the links to volumes
         for orig_input in orig_node.inputs:
-            if orig_input.is_linked and orig_input.name in {"Interior Volume", "Exterior Volume"}:
+            # We cannot use orig_input.is_linked as it makes Blender crash
+            links = utils_node.get_links(node_tree, orig_input)
+            if links and orig_input.name in ["Interior Volume", "Exterior Volume"]:
                 # We can not use orig_input.links because of a Blender exception
-                links = utils_node.get_links(node_tree, orig_input)
-                if links:
-                    from_socket = links[0].from_socket
-                    to_socket = self.inputs[orig_input.name]
-                    node_tree.links.new(from_socket, to_socket)
+                from_socket = links[0].from_socket
+                to_socket = self.inputs[orig_input.name]
+                node_tree.links.new(from_socket, to_socket)
 
     def draw_buttons(self, context, layout):
         icon = icons.EXPANDABLE_OPENED if self.show_advanced else icons.EXPANDABLE_CLOSED
@@ -100,10 +114,13 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
 
         box.prop(self, "id")
 
-        row = box.row()
+        box2 = box.box()
+        row = box2.row()
         row.alignment = "LEFT"
         row.prop(self, "shadow_color", text="")
         row.label(text="Shadow Color")
+        row = box2.row()
+        row.prop(self, "shadow_color_override", text="Allow extra light rays")
 
         # PhotonGI
         photongi_enabled = context.scene.luxcore.config.photongi.enabled
@@ -190,9 +207,10 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
         definitions["shadowcatcher.onlyinfinitelights"] = self.shadow_catcher_only_infinite
         definitions["photongi.enable"] = self.use_photongi
         definitions["transparency.shadow"] = list(self.shadow_color)
+        definitions["transparency.shadowoverride"] = self.shadow_color_override
         definitions["holdout.enable"] = self.is_holdout
 
-        props.Set(utils.create_props(prefix, definitions))
+        props.Set(utils.luxutils.create_props(prefix, definitions))
 
     def _convert_volume(self, exporter, depsgraph, node_tree, props):
         if node_tree is None:

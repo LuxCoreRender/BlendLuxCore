@@ -1,7 +1,7 @@
-# This file contains user- and machine-speific settings required for the blendev script to work.
+# This file contains user- and machine-specific settings required for the blendev script to work.
 # This .default file serves as a template file.
 
-# Copy and rename this file to "blendev-config.txt"
+# Copy and rename this file to "blendev-config.cfg"
 # and make your local configurations in that file
 
 PYMAJOR=3                                           # Python major version against which Blender is compiled
@@ -13,12 +13,12 @@ BLENDER_PROGRAM_PATH=/PATH/TO/BLENDER               # Where different Blender ve
 
 # In case of problems, please check the usage of these variables in the main "blendev" script.
 
-# Some assumptions are mae about the local file structure:
-# 1) BLENDER_PROGRAM_PATH points to a fodler containing different Blender version in subfolders of the form
+# Some assumptions are made about the local file structure:
+# 1) BLENDER_PROGRAM_PATH points to a folder containing different Blender version in subfolders of the form
 #    "blender-4.3.2-linux-x64"
 # 2) Blender stores its config under ~/.config/blender/
 #    This will not be the case e.g. when using a fully-portable runtime with the config in the executable folder.
 # 3) The repositories LuxCore/ and BlendLuxCore/ are located in the same directory.
 #    BlendLuxCore/ could be automatically inferred from this script. May have side-effects as well.
-# 4) Only one major.minor version of python is relevant across all versions of Blender.
+# 4) Only one major.minor version of Python is relevant across all versions of Blender.
 #    This will eventually require an update

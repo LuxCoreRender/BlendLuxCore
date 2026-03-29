@@ -1,13 +1,24 @@
-import bpy
 from time import sleep
+_needs_reload = "bpy" in locals()
+
+import bpy
 import pyluxcore
 from . import final, preview, viewport
-from ..handlers.draw_imageeditor import TileStats
+from .. import icons, utils, properties
+from ..utils.statistics import TileStats
 from ..utils.log import LuxCoreLog
 from ..utils.errorlog import LuxCoreErrorLog
 from ..utils import view_layer as utils_view_layer
 from ..utils import get_addon_preferences
 from ..properties.display import LuxCoreDisplaySettings
+
+
+if _needs_reload:
+    import importlib
+
+    modules = (icons, utils, properties, final, preview, viewport)
+    for module in modules:
+        importlib.reload(module)
 
 
 class LuxCoreRenderEngine(bpy.types.RenderEngine):
@@ -251,3 +262,12 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
         if lightgroup_pass_names != [default_group_name]:
             for name in lightgroup_pass_names:
                 self.register_pass(scene, renderlayer, name, 3, "RGB", "COLOR")
+
+
+def template_refresh_button(is_refreshing, operator_name, layout, run_msg="Refreshing..."):
+    col = layout.column()
+    col.enabled = LuxCoreRenderEngine.final_running
+
+    col.operator(operator_name, icon=icons.REFRESH)
+    if is_refreshing:
+        col.label(text=run_msg)

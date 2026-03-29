@@ -3,7 +3,7 @@ import math
 from bpy.props import FloatProperty, FloatVectorProperty, BoolProperty, StringProperty, IntProperty, EnumProperty
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
-from ...ui import icons
+from ... import icons
 from ...export.caches.object_cache import TriAOVDataIndices
 
 
@@ -49,7 +49,10 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture, bpy.types.Node):
                              max=(math.pi * 2), subtype="ANGLE", unit="ROTATION")
     udelta: FloatProperty(update=utils_node.force_viewport_update, name="U", default=0)
     vdelta: FloatProperty(update=utils_node.force_viewport_update, name="V", default=0)
-    center_map: BoolProperty(update=utils_node.force_viewport_update, name="Center Map", default=False)
+    center_map: BoolProperty(update=utils_node.force_viewport_update, name="Center Map", default=False,
+                             description="Center the map at UV coordinates (0.5, 0.5) instead of (0, 0)")
+    center_rotation: BoolProperty(update=utils_node.force_viewport_update, name="Center Rotation", default=False,
+                                  description="Rotate the texture around UV coordinates (0.5, 0.5) instead of (0, 0)")
 
     # uvrandommapping2d
     seed_types = [
@@ -109,6 +112,7 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture, bpy.types.Node):
 
         if self.mapping_type == "uvmapping2d":
             layout.prop(self, "center_map")
+            layout.prop(self, "center_rotation")
             layout.prop(self, "use_uniform_scale")
 
             if self.use_uniform_scale:
@@ -162,6 +166,8 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture, bpy.types.Node):
     def export_uvmapping2d(self, exporter, depsgraph, props):
         input_socket = self.inputs["2D Mapping (optional)"]
         use_fallback = True
+        uvindex = 0  # Avoid using before assignment
+        input_rotation = 0 # Avoid using before assignement
         if utils_node.get_link(input_socket):
             definitions = input_socket.export(exporter, depsgraph, props)
             if definitions["mapping.type"] == "uvmapping2d":
@@ -203,6 +209,7 @@ class LuxCoreNodeTexMapping2D(LuxCoreNodeTexture, bpy.types.Node):
             "mapping.uvindex": uvindex,
             "mapping.rotation": output_rotation,
             "mapping.uvdelta": output_uvdelta,
+            "mapping.centerrotation": self.center_rotation,
         }
 
     def export_uvrandommapping2d(self):

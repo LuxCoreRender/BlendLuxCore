@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Howetuft, Johannes Hinrichs (CodeFHD)
 #
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 name: BlendLuxCore Create Latest Release
 
@@ -39,6 +39,7 @@ jobs:
       - name: Delete old latest release
         shell: bash
         run: |
+          echo "Delete old latest release"
           echo false > ${{ github.workspace }}/tmp_release_test
           gh release list --json name > ${{ github.workspace }}/tmp_releases
           jq -r -c .[].name ${{ github.workspace }}/tmp_releases | while read i; do

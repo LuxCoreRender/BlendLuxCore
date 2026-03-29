@@ -2,7 +2,7 @@ import bpy
 from bpy.props import EnumProperty, FloatProperty, IntProperty
 from ..base import LuxCoreNodeTexture
 from ...utils import node as utils_node
-from ...ui import icons
+from ... import icons
 
 
 class LuxCoreNodeTexBlenderNoise(LuxCoreNodeTexture, bpy.types.Node):

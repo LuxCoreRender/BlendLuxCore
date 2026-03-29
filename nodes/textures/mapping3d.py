@@ -5,7 +5,7 @@ import math
 from ..base import LuxCoreNodeTexture
 from ... import utils
 from ...utils import node as utils_node
-from ...ui import icons
+from ... import icons
 from ...export.caches.object_cache import TriAOVDataIndices
 
 
@@ -209,7 +209,7 @@ class LuxCoreNodeTexMapping3D(LuxCoreNodeTexture, bpy.types.Node):
 
         return {
             "mapping.type": mapping_type,
-            "mapping.transformation": utils.matrix_to_list(output_mapping),
+            "mapping.transformation": utils.luxutils.matrix_to_list(output_mapping),
             # Only used when mapping.type is uvmapping3d
             "mapping.uvindex": uvindex,
         }

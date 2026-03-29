@@ -1,7 +1,7 @@
 from bl_ui.properties_material import MaterialButtonsPanel, MATERIAL_PT_viewport
 from bpy.types import Panel, Menu
 from ..operators.node_tree_presets import LUXCORE_OT_preset_material
-from ..ui import icons
+from .. import icons
 
 original_viewport_draw = None
 

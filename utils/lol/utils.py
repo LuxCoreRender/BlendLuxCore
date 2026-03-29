@@ -38,7 +38,7 @@ import urllib.error
 from mathutils import Vector, Matrix
 import threading
 from threading import _MainThread, Thread, Lock
-from ...handlers.lol.timer import timer_update
+from .timer import timer_update
 from ...utils import get_addon_preferences, compatibility
 
 download_threads = []
@@ -252,10 +252,12 @@ def init_categories(context):
 
     if ui_props.asset_type == 'MODEL':
         asset_props = scene.luxcoreOL.model
-    if ui_props.asset_type == 'SCENE':
+    elif ui_props.asset_type == 'SCENE':
         asset_props = scene.luxcoreOL.scene
-    if ui_props.asset_type == 'MATERIAL':
+    elif ui_props.asset_type == 'MATERIAL':
         asset_props = scene.luxcoreOL.material
+    else:
+        raise ValueError(f"Unhandled asset properties '{ui_props.asset_type}'")
 
     asset_props['categories'] = categories
 
@@ -641,6 +643,8 @@ def bg_load_previews(context, asset_type):
         assets = context.scene.luxcoreOL.scene['assets']
     elif asset_type == 'MATERIAL':
         assets = context.scene.luxcoreOL.material['assets']
+    else:
+        raise ValueError(f"Unhandled asset properties '{asset_type}'")
 
     clean_previmg()
 

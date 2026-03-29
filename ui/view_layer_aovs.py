@@ -1,7 +1,7 @@
 from bl_ui.properties_view_layer import ViewLayerButtonsPanel
 from bpy.types import Panel
-from . import icons
-from .icons import icon_manager
+from .. import icons
+from ..icons import icon_manager
 
 class LUXCORE_RENDERLAYER_PT_aovs(ViewLayerButtonsPanel, Panel):
     bl_label = "LuxCore AOVs"

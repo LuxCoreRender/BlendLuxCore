@@ -1,8 +1,18 @@
-from bpy.utils import register_class, unregister_class
+_needs_reload = "bpy" in locals()
+
+import bpy
+
+from .. import utils
 from . import base
 
+if _needs_reload:
+    import importlib
+    importlib.reload(base)
+
+classes = (base.LuxCoreRenderEngine,)
+
 def register():
-    register_class(base.LuxCoreRenderEngine)
+    utils.register_module("Engine", classes)
 
 def unregister():
-    unregister_class(base.LuxCoreRenderEngine)
+    utils.unregister_module("Engine", classes)

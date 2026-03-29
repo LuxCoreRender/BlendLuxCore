@@ -3,6 +3,7 @@ from bpy.props import IntProperty
 from ..utils import node as utils_node
 from ..properties.lightgroups import MAX_LIGHTGROUPS, is_lightgroup_pass_name
 
+is_blender_5 = bpy.app.version[0] >= 5 # only test of Blender 5 for now
 
 class LUXCORE_OT_add_lightgroup(bpy.types.Operator):
     bl_idname = "luxcore.add_lightgroup"
@@ -74,6 +75,7 @@ class LUXCORE_OT_select_objects_in_lightgroup(bpy.types.Operator):
 
 
 # Marks to find our node trees if they already exist
+LUX_COMPOSITOR_MARK = "LuxCore Compositor"
 LUX_EDITOR_MARK = "luxcore_light_group_editor"
 LUX_MIXER_MARK = "luxcore_light_group_mixer"
 LUX_MIXER_INSTANCE_MARK = "luxcore_light_group_mixer_instance"
@@ -100,14 +102,21 @@ def create_editor():
     color.default_value = (1, 1, 1, 1)
     editor.interface.new_socket(socket_type="NodeSocketColor", name="Image", in_out="OUTPUT")
 
-    multiply_color = editor.nodes.new("CompositorNodeMixRGB")
+    if is_blender_5:
+        multiply_color = editor.nodes.new(type="ShaderNodeMix")
+    else:
+        multiply_color = editor.nodes.new(type="CompositorNodeMixRGB")
     multiply_color.blend_type = "MULTIPLY"
     editor.links.new(input_node.outputs["Light Group"], multiply_color.inputs[1])
     editor.links.new(input_node.outputs["Color"], multiply_color.inputs[2])
 
-    mix_gain = editor.nodes.new("CompositorNodeMixRGB")
+    if is_blender_5:
+        mix_gain = editor.nodes.new("ShaderNodeMix")
+        mix_gain.inputs[1].default_value = (0, 0, 0)
+    else:
+        mix_gain = editor.nodes.new("CompositorNodeMixRGB")
+        mix_gain.inputs[1].default_value = (0, 0, 0, 1)
     mix_gain.blend_type = "MIX"
-    mix_gain.inputs[1].default_value = (0, 0, 0, 1)
     editor.links.new(input_node.outputs["Gain"], mix_gain.inputs[0])
     editor.links.new(multiply_color.outputs[0], mix_gain.inputs[2])
 
@@ -177,7 +186,10 @@ def create_mixer(editor):
             last_output = editor_instance.outputs[0]
         else:
             # Create add node
-            add = mixer.nodes.new("CompositorNodeMixRGB")
+            if is_blender_5:
+                add = mixer.nodes.new("ShaderNodeMix")
+            else:
+                add = mixer.nodes.new("CompositorNodeMixRGB")
             add.blend_type = "ADD"
             add.location = (editor_instance.location.x + i * add_x_offset, editor_instance.location.y)
             mixer.links.new(last_output, add.inputs[1])
@@ -219,7 +231,12 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
 
-        scene.use_nodes = True
+        if not is_blender_5:
+            scene.use_nodes = True
+
+        # create a dedicated LuxCore compositor node group
+        if is_blender_5 and not LUX_COMPOSITOR_MARK in bpy.data.node_groups:
+            bpy.ops.node.new_compositing_node_group(name=LUX_COMPOSITOR_MARK)
 
         # Ensure that our node trees exist. If they already do, nothing happens in these methods
         # Group to edit one light group
@@ -231,7 +248,15 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
         mixer_nodes = []
         renderlayer_node = None
 
-        for node in scene.node_tree.nodes:
+        if is_blender_5:
+            # make sure that the correct compositing node group is active
+            bpy.context.scene.compositing_node_group = bpy.data.node_groups[LUX_COMPOSITOR_MARK]
+
+        if is_blender_5:
+            nodelist = scene.compositing_node_group.nodes
+        else:
+            nodelist = scene.node_tree.nodes
+        for node in nodelist:
             if node.bl_idname == "CompositorNodeRLayers":
                 renderlayer_node = node
                 continue
@@ -265,7 +290,10 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
             #  Move render layer node to the left to make space for our setup
             renderlayer_node.location.x -= 500
 
-            mixer_node = scene.node_tree.nodes.new("CompositorNodeGroup")
+            if is_blender_5:
+                mixer_node = scene.compositing_node_group.nodes.new("CompositorNodeGroup")
+            else:
+                mixer_node = scene.node_tree.nodes.new("CompositorNodeGroup")
             mixer_node.node_tree = mixer_tree
             mixer_node.show_options = False  # Hides the node group dropdown
             mixer_node.label = "Light Group Mixer"
@@ -278,14 +306,21 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
 
         for mixer_node in mixer_nodes:
             # Connect render layer outputs to mixer inputs and make sure the names match
-            scene.node_tree.links.new(renderlayer_node.outputs["ALBEDO"], mixer_node.inputs["ALBEDO"])
-            scene.node_tree.links.new(renderlayer_node.outputs["AVG_SHADING_NORMAL"], mixer_node.inputs["AVG_SHADING_NORMAL"])
+            if is_blender_5:
+                scene.compositing_node_group.links.new(renderlayer_node.outputs["ALBEDO"], mixer_node.inputs["ALBEDO"])
+                scene.compositing_node_group.links.new(renderlayer_node.outputs["AVG_SHADING_NORMAL"], mixer_node.inputs["AVG_SHADING_NORMAL"])
+            else:
+                scene.node_tree.links.new(renderlayer_node.outputs["ALBEDO"], mixer_node.inputs["ALBEDO"])
+                scene.node_tree.links.new(renderlayer_node.outputs["AVG_SHADING_NORMAL"], mixer_node.inputs["AVG_SHADING_NORMAL"])
             lg_index = 0
             for output in renderlayer_node.outputs:
                 # Blender does not remove old sockets on the render layer node, they are just disabled
                 if output.enabled and is_lightgroup_pass_name(output.name):
                     mixer_input = mixer_node.inputs[MIXER_SOCKET_INDEX_START + lg_index * MIXER_SOCKET_INDEX_STEP]
-                    scene.node_tree.links.new(output, mixer_input)
+                    if is_blender_5:
+                        scene.compositing_node_group.links.new(output, mixer_input)
+                    else:
+                        scene.node_tree.links.new(output, mixer_input)
                     mixer_input.name = output.name
                     lg_index += 1
 
@@ -297,6 +332,9 @@ class LUXCORE_OT_create_lightgroup_nodes(bpy.types.Operator):
 
             renderlayer_node_image_output = renderlayer_node.outputs["Image"]
             if renderlayer_node_image_output.is_linked:
-                scene.node_tree.links.new(mixer_node.outputs[0], renderlayer_node_image_output.links[0].to_socket)
+                if is_blender_5:
+                    scene.compositing_node_group.links.new(mixer_node.outputs[0], renderlayer_node_image_output.links[0].to_socket)
+                else:
+                    scene.node_tree.links.new(mixer_node.outputs[0], renderlayer_node_image_output.links[0].to_socket)
 
         return {"FINISHED"}

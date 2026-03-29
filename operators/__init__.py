@@ -8,12 +8,62 @@ if system() == "Darwin":
     environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
-from bpy.utils import register_class, unregister_class
+_needs_reload = "bpy" in locals()
+
+import bpy
+
+from .. import utils as blc_utils
+
 from . import (
-    camera, debug, general, imagepipeline, ior_presets, keymaps, light, lightgroups, manual_compatibility,
-    material, multi_image_import, node_editor, node_tree_presets, pointer_node, pyluxcoretools,
-    render, render_settings_helper, texture, world, lol,
+    lol,
+    camera,
+    debug,
+    general,
+    imagepipeline,
+    ior_presets,
+    keymaps,
+    light,
+    lightgroups,
+    manual_compatibility,
+    material,
+    multi_image_import,
+    node_editor,
+    node_tree_presets,
+    pointer_node,
+    pyluxcoretools,
+    render,
+    render_settings_helper,
+    texture,
+    world,
 )
+
+
+if _needs_reload:
+    import importlib
+    modules = (
+        camera,
+        debug,
+        general,
+        imagepipeline,
+        ior_presets,
+        keymaps,
+        light,
+        lightgroups,
+        manual_compatibility,
+        material,
+        multi_image_import,
+        node_editor,
+        node_tree_presets,
+        pointer_node,
+        pyluxcoretools,
+        render,
+        render_settings_helper,
+        texture,
+        world,
+        lol,
+    )
+    for module in modules:
+        importlib.reload(module)
 
 classes = (
     camera.LUXCORE_OT_camera_new_volume_node_tree,
@@ -92,19 +142,11 @@ classes = (
     world.LUXCORE_OT_create_sun_hemi,
 )
 
-def register():
-    lol.register()
-    keymaps.register()
+submodules = (lol, keymaps)
 
-    for cls in classes:
-        try:
-            register_class(cls)
-        except Exception as err:
-            print("Warning: Cannot register", cls, err)
+def register():
+    blc_utils.register_module("Operators", classes, submodules)
+
 
 def unregister():
-    lol.unregister()
-    keymaps.unregister()
-
-    for cls in classes:
-        unregister_class(cls)
+    blc_utils.unregister_module("Operators", classes, submodules)

@@ -1,12 +1,39 @@
-import bpy
-import mathutils
+"""Various utilities, NOT REQUIRING OTHER SUBMODULES."""
+
+
+# DO NOT IMPORT ANY OF OTHER MODULES IN THIS MODULE AND ITS SUBMODULES
+#
+# This module should be importable without further dependence to other
+# modules of BlendLuxCore (
+#
+# Please note this module is imported before pyluxcore is loaded, therefore it
+# must not contain any call to pyluxcore. For utilities that rely on pyluxcore,
+# please use `luxutils` submodule
+
+
+import pathlib
 import math
 import re
 import hashlib
 import os
+import itertools
 from os.path import basename, dirname
-import pyluxcore
-from . import view_layer
+import tomllib
+
+_needs_reload = "bpy" in locals()
+import bpy
+import mathutils
+
+from . import view_layer, errorlog, misc
+
+from .misc import get_name_with_lib, pluralize
+
+if _needs_reload:
+    import importlib
+
+    view_layer = importlib.reload(view_layer)
+    errorlog = importlib.reload(errorlog)
+    misc = importlib.reload(misc)
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
@@ -109,36 +136,6 @@ def make_object_id(dg_obj_instance):
     # Truncate to 4 bytes because LuxCore uses unsigned int for the object ID.
     # Make sure it's not exactly 0xffffffff because that's LuxCore's Null index for object IDs.
     return min(as_int & 0xffffffff, 0xffffffff - 1)
-
-
-def create_props(prefix, definitions):
-    """
-    :param prefix: string, will be prepended to each key part of the definitions.
-                   Example: "scene.camera." (note the trailing dot)
-    :param definitions: dictionary of definition pairs. Example: {"fieldofview", 45}
-    :return: pyluxcore.Properties() object, initialized with the given definitions.
-    """
-    props = pyluxcore.Properties()
-
-    for k, v in definitions.items():
-        props.Set(pyluxcore.Property(prefix + k, v))
-
-    return props
-
-
-def matrix_to_list(matrix, invert=False):
-    """
-    Flatten a 4x4 matrix into a list
-    Returns list[16]
-    """
-    # Copy required for BlenderMatrix4x4ToList(), not sure why, but if we don't
-    # make a copy, we only get an identity matrix in C++
-    matrix = matrix.copy()
-
-    if invert:
-        matrix.invert_safe()
-
-    return pyluxcore.BlenderMatrix4x4ToList(matrix)
 
 
 def list_to_matrix(lst):
@@ -371,11 +368,7 @@ def is_obj_visible(obj):
 
 
 def is_obj_visible_in_cycles(obj):
-    if bpy.app.version[:2] < (3, 0):
-        c_vis = obj.cycles_visibility
-        return any((c_vis.camera, c_vis.diffuse, c_vis.glossy, c_vis.transmission, c_vis.scatter, c_vis.shadow))
-    else:
-        return any((obj.visible_camera, obj.visible_diffuse, obj.visible_glossy, obj.visible_transmission, obj.visible_volume_scatter, obj.visible_shadow))
+    return any((obj.visible_camera, obj.visible_diffuse, obj.visible_glossy, obj.visible_transmission, obj.visible_volume_scatter, obj.visible_shadow))
 
 
 
@@ -471,28 +464,11 @@ def use_instancing(obj, scene, is_viewport_render):
 
 
 def find_smoke_domain_modifier(obj):
-    if bpy.app.version[:2] < (2, 82):
-        for mod in obj.modifiers:
-            if mod.type == "SMOKE" and mod.smoke_type == "DOMAIN":
-                return mod
-    else:
-        for mod in obj.modifiers:
-            if mod.type == "FLUID" and mod.fluid_type == "DOMAIN":
-                return mod
+    for mod in obj.modifiers:
+        if mod.type == "FLUID" and mod.fluid_type == "DOMAIN":
+            return mod
 
     return None
-
-
-def get_name_with_lib(datablock):
-    """
-    Format the name for display similar to Blender,
-    with an "L" as prefix if from a library
-    """
-    text = datablock.name
-    if datablock.library:
-        # text += ' (Lib: "%s")' % datablock.library.name
-        text = "L " + text
-    return text
 
 
 def clamp(value, _min=0, _max=1):
@@ -558,21 +534,6 @@ def use_two_tiled_passes(scene):
     denoiser = scene.luxcore.denoiser
     using_tilepath = config.engine == "PATH" and config.use_tiles
     return denoiser.enabled and denoiser.type == "BCD" and using_tilepath and not config.tile.multipass_enable
-
-
-def pluralize(format_str, amount):
-    formatted = format_str % amount
-    if amount != 1:
-        formatted += "s"
-    return formatted
-
-
-def is_opencl_build():
-    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_OPENCL").GetBool()
-    
-    
-def is_cuda_build():
-    return pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_ENABLE_CUDA").GetBool()
 
 
 def image_sequence_resolve_all(image):
@@ -674,16 +635,6 @@ def in_material_shading_mode(context):
     return context and context.space_data.shading.type == "MATERIAL"
 
 
-def get_addon_preferences(context):
-    package_name_components = __package__.split(".")
-    package_name_components.pop()
-    addon_name = ".".join(package_name_components)
-    am_in_extension = __name__.startswith('bl_ext.')
-    if not am_in_extension:
-        addon_name = 'bl_ext.user_default.' + addon_name
-    return context.preferences.addons[addon_name].preferences
-
-
 def count_index(func):
     """
     A decorator that increments an index each time the decorated function is called.
@@ -695,3 +646,77 @@ def count_index(func):
         return func(*args, **kwargs)
     wrapper.index = 0
     return wrapper
+
+
+ADDON_NAME = "BlendLuxCore"
+
+def get_module_name():
+    """Get module name (bl_idname) for current addon."""
+    components = __package__.split('.')
+    prefix = list(itertools.takewhile(lambda x: x != ADDON_NAME, components))
+    prefix.append(ADDON_NAME)
+    return '.'.join(prefix)
+
+
+def get_addon_preferences(context):
+    """Get addon_preferences handle."""
+    addon_name = get_module_name()
+    return context.preferences.addons[addon_name].preferences
+
+
+def get_version_string():
+    """Get BlendLuxCore version string.
+
+    Load version information from blender_manifest.toml, which replaces the old
+    "bl_info" dictionary.
+    """
+    root_path = pathlib.Path(__file__).parent.parent.resolve()
+    manifest_path =  root_path / "blender_manifest.toml"
+    with open(manifest_path, "rb") as f:
+        manifest_data = tomllib.load(f)
+    version_string = manifest_data["version"]
+    return version_string
+
+def get_user_dir(name):
+    """Get a user writeable directory, create it if not existing."""
+    print(f"[BLC] Module name: {get_module_name()}")
+    return pathlib.Path(
+        bpy.utils.extension_path_user(get_module_name(), path=name, create=True)
+    )
+
+VERBOSE_REGISTER = False  # Set to true to see per-class info
+
+def register_module(module_name, classes, submodules=[]):
+    """Register a module in Blender.
+
+    The registration encompasses 2 collections:
+    - A collection of classes, registered with bpy.utils.classes
+    - A collection of submodules (optional), for which 'register' method is called
+    """
+    print(f"[BLC] Registering '{module_name}'")
+    for mod in submodules:
+        mod.register()
+
+    for cls in classes:
+        if VERBOSE_REGISTER:
+            print(f"[BLC] Registering {module_name}.{cls.__name__}")
+        try:
+            bpy.utils.register_class(cls)
+        except Exception as err:
+            errorlog.LuxCoreErrorLog.add_warning(err, "\n")
+
+
+def unregister_module(module_name, classes, submodules=[]):
+    """Unregister a module in Blender.
+
+    The registration encompasses 2 collections, see register_module.
+    The registration is operated in reverse order.
+    """
+    print(f"[BLC] Unregistering '{module_name}'")
+    for cls in reversed(classes):
+        if VERBOSE_REGISTER:
+            print(f"[BLC] Unregistering {module_name}.{cls.__name__}")
+        bpy.utils.unregister_class(cls)
+
+    for mod in reversed(submodules):
+        mod.unregister()

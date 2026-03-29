@@ -399,7 +399,7 @@ class LuxCoreConfigImageResizePolicy(PropertyGroup):
         else:
             definitions["type"] = "NONE"
 
-        return utils.create_props(prefix, definitions)
+        return utils.luxutils.create_props(prefix, definitions)
 
 
 class LuxCoreConfig(PropertyGroup):
@@ -515,6 +515,7 @@ class LuxCoreConfig(PropertyGroup):
         ("BLACKMANHARRIS", "Blackman-Harris", "Default, usually the best option", 0),
         ("MITCHELL_SS", "Mitchell", "Sharp, but can produce black ringing artifacts around bright pixels", 1),
         ("GAUSSIAN", "Gaussian", "Blurry", 2),
+        ("BOX", "Box", "", 3),
         ("SINC", "Sinc", "", 4),
         ("CATMULLROM", "Catmull-Rom", "", 5),
     ]

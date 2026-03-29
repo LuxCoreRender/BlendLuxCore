@@ -2,7 +2,7 @@ import bpy
 from bpy.props import EnumProperty, FloatProperty
 from ..base import LuxCoreNodeTexture
 
-from .. import NOISE_BASIS_ITEMS, MIN_NOISE_SIZE
+from ..base import NOISE_BASIS_ITEMS, MIN_NOISE_SIZE
 from ...utils import node as utils_node
 
 class LuxCoreNodeTexBlenderMusgrave(LuxCoreNodeTexture, bpy.types.Node):

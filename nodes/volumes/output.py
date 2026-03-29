@@ -5,7 +5,7 @@ from ..materials.output import MATERIAL_ID_DESC
 from ... import utils
 import pyluxcore
 from ...utils.errorlog import LuxCoreErrorLog
-from ...ui import icons
+from ... import icons
 
 
 class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
@@ -74,4 +74,4 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
             # LuxCore only assigns a random ID if the ID is not set at all
             definitions["id"] = self.id
 
-        props.Set(utils.create_props(prefix, definitions))
+        props.Set(utils.luxutils.create_props(prefix, definitions))

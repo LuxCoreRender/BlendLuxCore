@@ -41,9 +41,9 @@ class ExportedObject(ExportedData):
                 definitions[part.lux_obj + ".id"] = self.obj_id
 
             if self.transform:
-                definitions[part.lux_obj + ".transformation"] = utils.matrix_to_list(self.transform)
+                definitions[part.lux_obj + ".transformation"] = utils.luxutils.matrix_to_list(self.transform)
 
-        return utils.create_props(prefix, definitions)
+        return utils.luxutils.create_props(prefix, definitions)
 
     def delete(self, luxcore_scene):
         for part in self.parts:

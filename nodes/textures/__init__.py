@@ -1,4 +1,4 @@
-from bpy.utils import register_class, unregister_class
+from .. import utils
 from . import (
     band, blackbody, blenderblend, blenderclouds, blenderdistortednoise, blendermagic,
     blendermarble, blendermusgrave, blendernoise, blenderstucci, blendervoronoi,
@@ -77,14 +77,15 @@ classes = (
     wrinkled.LuxCoreNodeTexWrinkled,
 )
 
-def register():
-    nodeitems_utils.register_node_categories("LUXCORE_TEXTURE_TREE", luxcore_node_categories_texture)
 
-    for cls in classes:
-        register_class(cls)
+def register():
+    nodeitems_utils.register_node_categories(
+        "LUXCORE_TEXTURE_TREE", luxcore_node_categories_texture
+    )
+
+    utils.register_module("Textures", classes)
 
 def unregister():
-    nodeitems_utils.unregister_node_categories("LUXCORE_TEXTURE_TREE")
+    utils.unregister_module("Textures", classes)
 
-    for cls in classes:
-        unregister_class(cls)
+    nodeitems_utils.unregister_node_categories("LUXCORE_TEXTURE_TREE")
