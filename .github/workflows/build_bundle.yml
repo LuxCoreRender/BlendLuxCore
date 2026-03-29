@@ -17,6 +17,16 @@ on:
         required: true
         type: string
         default: "Latest"
+    outputs:
+      commit:
+        description: "The commit that has been checked out"
+        value: ${{ jobs.build-bundle.outputs.commit }}
+      branch:
+        description: "The branch that has been checked out"
+        value: ${{ jobs.build-bundle.outputs.branch }}
+      attestation-url:
+        description: "The url to the attestations"
+        value: ${{ jobs.attest-bundle.outputs.attestation-url }}
   workflow_dispatch:
     inputs:
       build_type:
@@ -25,14 +35,26 @@ on:
         default: "Release"
 
 jobs:
-  build_bundle:
+  build-bundle:
     name: Build bundle
     runs-on: ubuntu-latest
+    outputs:
+      commit: ${{ steps.current-commit.outputs.commit }}
+      branch: ${{ steps.current-commit.outputs.branch }}
+      version: ${{ steps.output-version.outputs.version }}
 
     steps:
 
       - name: Checkout main repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Get current commit
+        id: current-commit
+        run: |
+          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "branch=$(git symbolic-ref HEAD)" >> $GITHUB_OUTPUT
+          echo "commit=$(git rev-parse HEAD)"
+          echo "branch=$(git symbolic-ref HEAD)"
 
       - name: Prepare Blender install
         uses: gerlero/apt-install@v1
@@ -65,6 +87,31 @@ jobs:
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
+        id: upload
         with:
           name: "BlendLuxCore"
           path: "${{ github.workspace }}/build/out/BlendLuxCore-*.zip"
+
+  attest-wheels:
+    needs: [build-bundle]
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      id-token: write
+    outputs:
+      attestation-url: ${{ steps.attestation-step.outputs.attestation-url }}
+
+    steps:
+      - uses: actions/download-artifact@v7
+        if: ${{ !env.ACT }}
+        with:
+          pattern: BlendLuxCore*.zip
+          path: ${{ github.workspace }}/dist
+          merge-multiple: false
+
+      - name: Generate artifact attestations
+        id: attestation-step
+        if: ${{ !env.ACT }}
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ github.workspace }}/dist/*
