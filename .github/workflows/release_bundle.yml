@@ -1,0 +1,119 @@
+# SPDX-FileCopyrightText: 2024 Howetuft
+#
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: LuxCore Python Wheels Releaser
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-version:
+        description: "Release version (major.minor.patch[-pre])"
+        required: True
+        default: ''
+        type: string
+      allow-updates:
+        description: "Update existing release (if any)"
+        required: True
+        type: boolean
+        default: True
+      rebuild-all:
+        description: "Rebuild all"
+        required: True
+        type: boolean
+        default: False
+
+jobs:
+  check-version:
+    name: 'Check version compliance'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check version compliance
+        if: ${{ inputs.release-version != '' }}
+        shell: python
+        run: |
+          import sys
+          import re
+          version = "${{ inputs.release-version }}"
+          semver_regex = r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+          res = re.fullmatch(semver_regex, version)
+          if res:
+            print("::notice::Version number OK ('{version}')")
+          else:
+            message = [
+              f"::error::INVALID RELEASE VERSION NUMBER '{version}'",
+              "Version must comply to Semantic Versioning standard:",
+              "\n\tmajor.minor.patch[-pre]\n",
+              "See https://semver.org for more information",
+              "or leave the field blank for default value\n"
+            ]
+            print("\n".join(message))
+            sys.exit(1)
+
+  call-build-bundle:
+    name: 'Build BlendLuxCore Bundle'
+    needs: [check-version]
+    uses: ./.github/workflows/build_bundle.yml
+    with:
+      build_type: Release
+
+  create-release:
+    name: 'Create release'
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: [call-build-bundle]
+    permissions:
+      id-token: write
+      attestations: write
+      contents: write
+    steps:
+      - run: |
+          _version=${{ inputs.release-version }}
+          echo "Creating release '${_version}'"
+          echo "RELEASE_TAG=v${_version}" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v6
+      - run: mkdir ${{ github.workspace }}/dist
+      - uses: actions/download-artifact@v7
+        with:
+          path: ${{ github.workspace }}/dist
+          merge-multiple: false
+
+      - name: Display structure of downloaded files
+        run: ls -Rl ${{ github.workspace }}/dist
+
+      #- name: Re-zip artifacts
+        #working-directory: ${{ github.workspace }}/dist
+        #run: |
+          #mkdir ../artifacts
+          #for d in */ ; do
+              #d2=${d%/}
+              #echo "zip ${d2}"
+              #zip -j ../artifacts/${d2}.zip ${d2}/*
+          #done
+
+      - id: make-release
+        # Use full length commit SHA, otherwise CodeQL complains...
+        uses: ncipollo/release-action@cdcc88a9acf3ca41c16c37bb7d21b9ad48560d87
+        with:
+          name: "BlendLuxCore ${{ env.RELEASE_TAG }}"
+          tag: ${{ env.RELEASE_TAG }}
+          artifacts: ${{ github.workspace }}/dist/*
+          removeArtifacts: true
+          allowUpdates: ${{ inputs.allow-updates }}
+          draft: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          updateOnlyUnreleased: true
+          body: |
+            ## BlendLuxCore
+
+            This release was built from the following point in LuxCoreRender/BlendLuxCore:
+            - Branch: ${{ needs.call-build-bundle.outputs.branch }}
+            - Commit: ${{ needs.call-build-bundle.outputs.commit }}
+
+            Attestations:
+            ${{ needs.call-build-bundle.outputs.attestation-url }}
+
+      - run: |
+          echo "### Release""" >> $GITHUB_STEP_SUMMARY
+          echo ${{ steps.make-release.outputs.html_url }} >> $GITHUB_STEP_SUMMARY
