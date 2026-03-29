@@ -17,11 +17,6 @@ on:
         description: "Update existing release (if any)"
         required: True
         type: boolean
-        default: True
-      rebuild-all:
-        description: "Rebuild all"
-        required: True
-        type: boolean
         default: False
 
 jobs:
