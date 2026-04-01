@@ -198,6 +198,7 @@ def use_cycles_settings():
 
 
 def use_cycles_material_nodes():
+    _is_blender_5 = bpy.app.version[0] >= 5
     for mat in bpy.data.materials:
-        if mat.use_nodes and mat.node_tree:
+        if (_is_blender_5 or mat.use_nodes) and mat.node_tree:
             mat.luxcore.use_cycles_nodes = True

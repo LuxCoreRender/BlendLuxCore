@@ -490,7 +490,7 @@ def _convert_cycles_world(exporter, scene, world, is_viewport_render):
             if not _define_constantinfinite(definitions, color):
                 return None
     else:
-        raise Exception("Unsupported node type:", surface_node.bl_idname)
+        raise Exception(f"Unsupported node type: {surface_node.bl_idname}")
 
     if gain == 0:
         return None

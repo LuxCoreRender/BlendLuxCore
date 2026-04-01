@@ -204,13 +204,6 @@ class LuxCoreAddonPreferences(AddonPreferences):
             split = row.split(factor=SPLIT_FACTOR)
             split.label(text="Film Device:")
             split.prop(self, "film_device", text="")
-        elif utils.luxutils.is_mlx_build():
-            row.label(text="MLX")
-
-            row = layout.row()
-            split = row.split(factor=SPLIT_FACTOR)
-            split.label(text="Film Device:")
-            split.prop(self, "film_device", text="")
         else:
             row.label(text="Not available in this build")
 

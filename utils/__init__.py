@@ -686,13 +686,15 @@ def get_user_dir(name):
 
 VERBOSE_REGISTER = False  # Set to true to see per-class info
 
-def register_module(module_name, classes, submodules=[]):
+def register_module(module_name, classes, submodules=None):
     """Register a module in Blender.
 
     The registration encompasses 2 collections:
     - A collection of classes, registered with bpy.utils.classes
     - A collection of submodules (optional), for which 'register' method is called
     """
+    if submodules is None:
+        submodules = []
     print(f"[BLC] Registering '{module_name}'")
     for mod in submodules:
         mod.register()
@@ -706,12 +708,14 @@ def register_module(module_name, classes, submodules=[]):
             errorlog.LuxCoreErrorLog.add_warning(err, "\n")
 
 
-def unregister_module(module_name, classes, submodules=[]):
+def unregister_module(module_name, classes, submodules=None):
     """Unregister a module in Blender.
 
     The registration encompasses 2 collections, see register_module.
     The registration is operated in reverse order.
     """
+    if submodules is None:
+        submodules = []
     print(f"[BLC] Unregistering '{module_name}'")
     for cls in reversed(classes):
         if VERBOSE_REGISTER:

@@ -104,6 +104,7 @@ def create_editor():
 
     if is_blender_5:
         multiply_color = editor.nodes.new(type="ShaderNodeMix")
+        multiply_color.data_type = 'RGBA'
     else:
         multiply_color = editor.nodes.new(type="CompositorNodeMixRGB")
     multiply_color.blend_type = "MULTIPLY"
@@ -112,7 +113,8 @@ def create_editor():
 
     if is_blender_5:
         mix_gain = editor.nodes.new("ShaderNodeMix")
-        mix_gain.inputs[1].default_value = (0, 0, 0)
+        mix_gain.data_type = 'RGBA'
+        mix_gain.inputs[1].default_value = (0, 0, 0, 1)
     else:
         mix_gain = editor.nodes.new("CompositorNodeMixRGB")
         mix_gain.inputs[1].default_value = (0, 0, 0, 1)
@@ -188,6 +190,7 @@ def create_mixer(editor):
             # Create add node
             if is_blender_5:
                 add = mixer.nodes.new("ShaderNodeMix")
+                add.data_type = 'RGBA'
             else:
                 add = mixer.nodes.new("CompositorNodeMixRGB")
             add.blend_type = "ADD"
