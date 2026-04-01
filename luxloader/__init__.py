@@ -121,7 +121,10 @@ def _save_installation_info(whl_hash):
     assert whl_hash
     info_file = ROOT_FOLDER / "pyluxcore_installation_info.txt"
     config = configparser.ConfigParser()
-    config["WHEELS"] = {"hash": whl_hash}
+    config["WHEELS"] = {
+        "hash": whl_hash,
+        "python": f"{sys.version_info.major}.{sys.version_info.minor}",
+    }
 
     with open(info_file, "w", encoding="utf-8") as f:
         f.write(INSTALL_INFO_HEADER)
@@ -154,6 +157,15 @@ def _get_installation_info():
         old_wheel_hash = config["WHEELS"]["hash"]
     except KeyError:
         print("[BLC] Warning - Missing hash in info file content")
+        return None
+
+    # If the installation was done under a different Python version (e.g. Blender
+    # upgraded from 4.x Python 3.11 to 5.x Python 3.13), the cached wheels are in
+    # the wrong site-packages directory. Treat as cache miss to force reinstall.
+    old_python = config["WHEELS"].get("python", "")
+    current_python = f"{sys.version_info.major}.{sys.version_info.minor}"
+    if old_python != current_python:
+        print(f"[BLC] Python version changed ({old_python} -> {current_python}), reinstalling pyluxcore")
         return None
 
     return old_wheel_hash
