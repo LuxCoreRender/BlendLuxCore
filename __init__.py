@@ -40,6 +40,11 @@ if _needs_reload:
 
 luxloader.ensure_pyluxcore()
 
+# Invalidate the import caches so Python can discover wheels installed
+# by ensure_pyluxcore() in this same session (without a Blender restart).
+import importlib as _importlib
+_importlib.invalidate_caches()
+
 # Import pyluxcore
 try:
     import pyluxcore
