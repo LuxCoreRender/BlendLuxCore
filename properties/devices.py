@@ -32,6 +32,11 @@ class LuxCoreDeviceSettings(PropertyGroup):
             new = self.devices.add()
             new.name = device_props.Get(prefix + ".name").GetString()
             new.type = device_props.Get(prefix + ".type").GetString()
+
+        for prefix in device_props.GetAllUniqueSubNames("mlx.device"):
+            new = self.devices.add()
+            new.name = device_props.Get(prefix + ".name").GetString()
+            new.type = device_props.Get(prefix + ".type").GetString()
             
 
     def update_devices_if_necessary(self):
@@ -58,8 +63,11 @@ class LuxCoreDeviceSettings(PropertyGroup):
             
             if device.type == "OPENCL_GPU" and preferences.gpu_backend != "OPENCL":
                 enabled = False
-            
+
             if device.type == "CUDA_GPU" and preferences.gpu_backend != "CUDA":
+                enabled = False
+
+            if device.type == "MLX_GPU" and preferences.gpu_backend != "MLX":
                 enabled = False
             
             selection += "1" if enabled else "0"
@@ -72,6 +80,8 @@ class LuxCoreDeviceSettings(PropertyGroup):
             return [device for device in self.devices if device.type == "OPENCL_GPU"]
         elif gpu_backend == "CUDA":
             return [device for device in self.devices if device.type == "CUDA_GPU"]
+        elif gpu_backend == "MLX":
+            return [device for device in self.devices if device.type == "MLX_GPU"]
         else:
             raise Exception("Unknown GPU Backend")
 

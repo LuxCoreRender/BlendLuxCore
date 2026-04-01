@@ -34,6 +34,11 @@ def luxcore_render_draw(panel, context):
                     text="No CUDA support in this BlendLuxCore version",
                     icon=icons.ERROR,
                 )
+            if gpu_backend == "MLX" and not utils.luxutils.is_mlx_build():
+                col_device.label(
+                    text="No MLX support in this BlendLuxCore version",
+                    icon=icons.ERROR,
+                )
     else:
         col_device.enabled = False
         col_device.prop(config, "bidir_device", text="Device")

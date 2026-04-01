@@ -63,6 +63,12 @@ class LuxCoreAddonPreferences(AddonPreferences):
             "OptiX acceleration is used only when supported hardware is detected",
             1,
         ),
+        (
+            "MLX",
+            "MLX",
+            "Use MLX for GPU acceleration on Apple Silicon",
+            2,
+        ),
     ]
     gpu_backend: EnumProperty(items=gpu_backend_items, default="OPENCL")
 
@@ -71,6 +77,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
         backend_to_type = {
             "OPENCL": "OPENCL_GPU",
             "CUDA": "CUDA_GPU",
+            "MLX": "MLX_GPU",
         }
 
         devices = context.scene.luxcore.devices.devices
@@ -183,7 +190,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
         row = layout.row()
         row.label(text="GPU API:")
 
-        if utils.luxutils.is_cuda_build():
+        if utils.luxutils.is_cuda_build() or utils.luxutils.is_mlx_build():
             row.prop(self, "gpu_backend", expand=True)
 
             row = layout.row()
@@ -192,6 +199,13 @@ class LuxCoreAddonPreferences(AddonPreferences):
             split.prop(self, "film_device", text="")
         elif utils.luxutils.is_opencl_build():
             row.label(text="OpenCL")
+
+            row = layout.row()
+            split = row.split(factor=SPLIT_FACTOR)
+            split.label(text="Film Device:")
+            split.prop(self, "film_device", text="")
+        elif utils.luxutils.is_mlx_build():
+            row.label(text="MLX")
 
             row = layout.row()
             split = row.split(factor=SPLIT_FACTOR)

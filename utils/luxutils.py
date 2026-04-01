@@ -49,3 +49,16 @@ def is_cuda_build():
         .Get("compile.LUXRAYS_ENABLE_CUDA")
         .GetBool()
     )
+
+
+def is_mlx_build():
+    """Check if pyluxcore has been built with MLX support."""
+    try:
+        return (
+            pyluxcore.GetPlatformDesc()
+            .Get("compile.LUXRAYS_ENABLE_MLX")
+            .GetBool()
+        )
+    except RuntimeError:
+        # Property absent in builds that pre-date MLX support
+        return False

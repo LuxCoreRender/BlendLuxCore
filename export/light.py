@@ -49,7 +49,7 @@ def _convert_cycles_light(exporter, obj, depsgraph, luxcore_scene, transform, is
     color = list(light.color)
     gain = light.energy
 
-    if light.use_nodes and light.node_tree:
+    if (is_blender_5 or light.use_nodes) and light.node_tree:
         # Modify color and gain according to node setup
         output_node = light.node_tree.get_output_node("CYCLES")
         if output_node:

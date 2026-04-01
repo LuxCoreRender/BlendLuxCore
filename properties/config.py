@@ -484,8 +484,8 @@ class LuxCoreConfig(PropertyGroup):
     # Only available when engine is PATH (not BIDIR)
     devices = [
         ("CPU", "CPU", "CPU only", 0),
-        # Still called OCL for historical reasons, currently it means either OpenCL or CUDA, depending on selection in addon preferences
-        ("OCL", "GPU", "Use GPU(s) and optionally the CPU. You can choose between OpenCL and CUDA in the addon preferences. "
+        # Still called OCL for historical reasons, currently it means either OpenCL, CUDA, or MLX, depending on selection in addon preferences
+        ("OCL", "GPU", "Use GPU(s) and optionally the CPU. You can choose between OpenCL, CUDA, and MLX in the addon preferences. "
                        "You can enable/disable each device in the Devices panel below", 1),
     ]
     device: EnumProperty(name="Device", items=devices, default="CPU")

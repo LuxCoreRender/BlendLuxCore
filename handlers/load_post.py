@@ -78,8 +78,16 @@ def handler(_):
         # a different computer than it was saved on
         scene.luxcore.devices.update_devices_if_necessary()
 
-        if pyluxcore.GetPlatformDesc().Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool():
+        platform_desc = pyluxcore.GetPlatformDesc()
+        if platform_desc.Get("compile.LUXRAYS_DISABLE_OPENCL").GetBool():
             # OpenCL not available, make sure we are using CPU device
+            scene.luxcore.config.device = "CPU"
+        try:
+            mlx_disabled = platform_desc.Get("compile.LUXRAYS_DISABLE_MLX").GetBool()
+        except RuntimeError:
+            mlx_disabled = False
+        if mlx_disabled:
+            # MLX not available, make sure we are using CPU device
             scene.luxcore.config.device = "CPU"
 
         # Use Blender output path for filesaver by default
