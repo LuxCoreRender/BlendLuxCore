@@ -151,7 +151,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
     lol_useragent: StringProperty(
         name="HTTP User-Agent",
         description="User Agent transmitted with requests",
-        default = f"BlendLuxCore/{version_string}",
+        default = f"BlendLuxCore/{utils.get_version_string()}",
     )
 
     max_assetbar_rows: IntProperty(
