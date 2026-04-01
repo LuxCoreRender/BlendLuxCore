@@ -206,7 +206,9 @@ def convert_viewport_engine(context, scene, definitions, config):
 
     device = viewport.device
     if device == "OCL" and not (
-        utils.luxutils.is_opencl_build() or utils.luxutils.is_cuda_build()
+        utils.luxutils.is_opencl_build()
+        or utils.luxutils.is_cuda_build()
+        or utils.luxutils.is_mlx_build()
     ):
         msg = "Config: LuxCore was built without GPU support, can't use GPU engine in viewport"
         LuxCoreErrorLog.add_warning(msg)

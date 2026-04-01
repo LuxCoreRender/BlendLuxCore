@@ -31,6 +31,7 @@ class LUXCORE_RENDER_PT_viewport_settings(RenderButtonsPanel, Panel):
             if viewport.device == "OCL" and not (
                 utils.luxutils.is_opencl_build()
                 or utils.luxutils.is_cuda_build()
+                or utils.luxutils.is_mlx_build()
             ):
                 layout.label(
                     text="No GPU support in this BlendLuxCore version",

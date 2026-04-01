@@ -2,6 +2,9 @@ import bpy
 from bl_ui.space_node import NODE_HT_header, NODE_MT_editor_menus
 from .material import lux_mat_template_ID
 
+# use_nodes is deprecated in Blender 5.0 (always True); hide the toggle there
+_is_blender_5 = bpy.app.version[0] >= 5
+
 original_draw = None
 
 
@@ -34,8 +37,9 @@ def lux_node_header_draw(panel, context):
 
             # No shader nodes for Eevee lights
             if snode_id and not (context.engine == 'BLENDER_EEVEE' and ob_type == 'LIGHT'):
-                row = layout.row()
-                row.prop(snode_id, "use_nodes")
+                if not _is_blender_5:
+                    row = layout.row()
+                    row.prop(snode_id, "use_nodes")
 
             layout.separator_spacer()
 
@@ -62,7 +66,7 @@ def lux_node_header_draw(panel, context):
         if snode.shader_type == 'WORLD':
             NODE_MT_editor_menus.draw_collapsible(context, layout)
 
-            if snode_id:
+            if snode_id and not _is_blender_5:
                 row = layout.row()
                 row.prop(snode_id, "use_nodes")
 
@@ -79,7 +83,7 @@ def lux_node_header_draw(panel, context):
             if lineset is not None:
                 NODE_MT_editor_menus.draw_collapsible(context, layout)
 
-                if snode_id:
+                if snode_id and not _is_blender_5:
                     row = layout.row()
                     row.prop(snode_id, "use_nodes")
 
@@ -94,7 +98,7 @@ def lux_node_header_draw(panel, context):
 
         NODE_MT_editor_menus.draw_collapsible(context, layout)
 
-        if snode_id:
+        if snode_id and not _is_blender_5:
             layout.prop(snode_id, "use_nodes")
 
         layout.separator_spacer()
@@ -109,7 +113,7 @@ def lux_node_header_draw(panel, context):
 
         NODE_MT_editor_menus.draw_collapsible(context, layout)
 
-        if snode_id:
+        if snode_id and not _is_blender_5:
             layout.prop(snode_id, "use_nodes")
 
     elif snode.tree_type == 'GeometryNodeTree':

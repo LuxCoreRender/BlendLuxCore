@@ -49,7 +49,9 @@ class LUXCORE_OT_render_settings_helper(bpy.types.Operator):
 
     def _use_GPU(self):
         return (
-            utils.luxutils.is_opencl_build() or utils.luxutils.is_cuda_build()
+            utils.luxutils.is_opencl_build()
+            or utils.luxutils.is_cuda_build()
+            or utils.luxutils.is_mlx_build()
         )
 
     def invoke(self, context, event):
