@@ -93,8 +93,9 @@ def view_update(engine, context, depsgraph, changes=None):
                 # prevent constant re-exports while resizing
                 return
         else:
-            prefs = get_addon_preferences(bpy.context)
-            display_luxcore_logs = prefs.display_luxcore_logs if prefs else True
+            display_luxcore_logs = get_addon_preferences(
+                bpy.context
+            ).display_luxcore_logs
             if display_luxcore_logs:
                 pyluxcore.SetLogHandler(LuxCoreLog.add)
             else:
@@ -201,8 +202,7 @@ def view_draw(engine, context, depsgraph):
             renderconfig = pyluxcore.RenderConfig(config_props, luxcore_scene)
 
             if not renderconfig.HasCachedKernels():
-                _prefs = utils.get_addon_preferences(context)
-                gpu_backend = _prefs.gpu_backend if _prefs else "OPENCL"
+                gpu_backend = utils.get_addon_preferences(context).gpu_backend
                 message = (
                     f"Compiling {gpu_backend} kernels ("
                     "((just once, usually takes 15-30 minutes)"

@@ -35,6 +35,13 @@ class LUXCORE_RENDER_PT_devices(RenderButtonsPanel, Panel):
     bl_order = 85
     bl_options = {"DEFAULT_CLOSED"}
 
+    @classmethod
+    def poll(cls, context):
+        return (
+            super().poll(context)
+            and utils.get_addon_preferences(context) is not None
+        )
+
     def draw_header(self, context):
         layout = self.layout
         layout.label(text="", icon_value=icon_manager.get_icon_id("logotype"))

@@ -13,6 +13,8 @@ def luxcore_render_draw(panel, context):
 
     if scene.render.engine != "LUXCORE":
         return
+    if utils.get_addon_preferences(context) is None:
+        return
 
     config = context.scene.luxcore.config
 
@@ -22,8 +24,7 @@ def luxcore_render_draw(panel, context):
         col_device.prop(config, "device", text="Compute device", icon="MEMORY")
 
         if config.device == "OCL":
-            prefs = utils.get_addon_preferences(context)
-            gpu_backend = prefs.gpu_backend if prefs else "OPENCL"
+            gpu_backend = utils.get_addon_preferences(context).gpu_backend
 
             if gpu_backend == "OPENCL" and not utils.luxutils.is_opencl_build():
                 col_device.label(
