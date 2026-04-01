@@ -90,7 +90,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             sleep(0.01)
 
     def render(self, depsgraph):
-        display_luxcore_logs = get_addon_preferences(bpy.context).display_luxcore_logs
+        prefs = get_addon_preferences(bpy.context)
+        display_luxcore_logs = prefs.display_luxcore_logs if prefs else True
         if display_luxcore_logs:
             pyluxcore.SetLogHandler(LuxCoreLog.add)
         else:

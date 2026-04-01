@@ -53,6 +53,7 @@ class LuxCoreDeviceSettings(PropertyGroup):
 
     def devices_to_selection_string(self):
         preferences = get_addon_preferences(bpy.context)
+        gpu_backend = preferences.gpu_backend if preferences else "OPENCL"
         selection = ""
 
         for device in self.devices:
@@ -60,22 +61,23 @@ class LuxCoreDeviceSettings(PropertyGroup):
             # Never use OpenCL CPU devices
             if device.type == "OPENCL_CPU":
                 enabled = False
-            
-            if device.type == "OPENCL_GPU" and preferences.gpu_backend != "OPENCL":
+
+            if device.type == "OPENCL_GPU" and gpu_backend != "OPENCL":
                 enabled = False
 
-            if device.type == "CUDA_GPU" and preferences.gpu_backend != "CUDA":
+            if device.type == "CUDA_GPU" and gpu_backend != "CUDA":
                 enabled = False
 
-            if device.type == "MLX_GPU" and preferences.gpu_backend != "MLX":
+            if device.type == "MLX_GPU" and gpu_backend != "MLX":
                 enabled = False
-            
+
             selection += "1" if enabled else "0"
 
         return selection
 
     def get_gpu_devices(self, context):
-        gpu_backend = get_addon_preferences(context).gpu_backend
+        preferences = get_addon_preferences(context)
+        gpu_backend = preferences.gpu_backend if preferences else "OPENCL"
         if gpu_backend == "OPENCL":
             return [device for device in self.devices if device.type == "OPENCL_GPU"]
         elif gpu_backend == "CUDA":

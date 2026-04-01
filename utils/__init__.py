@@ -659,9 +659,10 @@ def get_module_name():
 
 
 def get_addon_preferences(context):
-    """Get addon_preferences handle."""
+    """Get addon_preferences handle, or None if not yet registered."""
     addon_name = get_module_name()
-    return context.preferences.addons[addon_name].preferences
+    addon = context.preferences.addons.get(addon_name)
+    return addon.preferences if addon else None
 
 
 def get_version_string():

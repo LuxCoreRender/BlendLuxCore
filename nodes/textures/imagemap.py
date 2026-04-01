@@ -120,7 +120,8 @@ class LuxCoreNodeTexImagemap(base.LuxCoreNodeTexture, bpy.types.Node):
                                     update=utils.node.force_viewport_update)
         
     def init(self, context):
-        self.show_thumbnail = utils.get_addon_preferences(bpy.context).image_node_thumb_default
+        prefs = utils.get_addon_preferences(bpy.context)
+        self.show_thumbnail = prefs.image_node_thumb_default if prefs else True
 
         self.add_input("LuxCoreSocketMapping2D", "2D Mapping")
 
