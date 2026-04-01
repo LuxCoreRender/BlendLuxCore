@@ -3,7 +3,12 @@ import platform
 import os
 import sys
 import pathlib
+import tomllib
 from importlib.metadata import version
+
+_needs_reload = "bpy" in locals()
+
+from . import luxloader
 
 if platform.system() in {"Linux", "Darwin"}:
     # Required for downloads from the LuxCore Online Library
