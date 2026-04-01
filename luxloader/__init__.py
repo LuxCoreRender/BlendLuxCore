@@ -138,7 +138,7 @@ def _get_installation_info():
     info_file = ROOT_FOLDER / "pyluxcore_installation_info.txt"
     print(f"[BLC] Checking installation info ('{info_file}')")
 
-    if not info_file.exists:
+    if not info_file.exists():
         return None
 
     config = configparser.ConfigParser()
