@@ -41,7 +41,7 @@ jobs:
           res = re.fullmatch(semver_regex, version)
           if not res:
               message = [
-                  f"::error::INVALID RELEASE VERSION NUMBER '{version}'",
+                  f"::error::INVALID RELEASE VERSION NUMBER '{version}' (SEMVER)",
                   "Version must comply to Semantic Versioning standard:",
                   "\n\tmajor.minor.patch[-pre]\n",
                   "See https://semver.org for more information",
@@ -56,12 +56,12 @@ jobs:
               manifest_version = manifest["version"]
               if version != manifest_version:
                   message = [
-                      f"::error::INVALID RELEASE VERSION NUMBER '{version}'",
+                      f"::error::INVALID RELEASE VERSION NUMBER '{version}' (BLENDER MANIFEST)\n",
                       "Requested version is different from manifest version ",
-                      "in `blender_manifest.toml` file ",
+                      "set in `blender_manifest.toml` file ",
                       f"('{manifest_version}')\n",
                   ]
-                  print("\n".join(message))
+                  print("".join(message))
                   sys.exit(1)
 
           # Success
