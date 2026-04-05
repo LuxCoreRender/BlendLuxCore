@@ -24,13 +24,16 @@ jobs:
     name: 'Check version compliance'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v6
+        
       - name: Check version compliance
         if: ${{ inputs.release-version != '' }}
         shell: python
-        working-directory: ${{ github.workspace }}
         run: |
           import sys
           import re
+          import tomllib
           version = "${{ inputs.release-version }}"
 
           # Check semver compliance
