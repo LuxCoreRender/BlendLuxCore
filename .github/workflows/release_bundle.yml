@@ -54,7 +54,7 @@ jobs:
           with open("blender_manifest.toml", "rb") as f:
               manifest = tomllib.load(f)
               manifest_version = manifest["version"]
-              if manifest["version"] != manifest_version:
+              if version != manifest_version:
                   message = [
                       f"::error::INVALID RELEASE VERSION NUMBER '{version}'",
                       "Requested version is different from manifest version ",
