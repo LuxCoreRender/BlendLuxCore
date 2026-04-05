@@ -27,15 +27,16 @@ jobs:
       - name: Check version compliance
         if: ${{ inputs.release-version != '' }}
         shell: python
+        working-directory: ${{ github.workspace }}
         run: |
           import sys
           import re
           version = "${{ inputs.release-version }}"
+
+          # Check semver compliance
           semver_regex = r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
           res = re.fullmatch(semver_regex, version)
-          if res:
-              print("::notice::Version number OK ('{version}')")
-          else:
+          if not res:
               message = [
                   f"::error::INVALID RELEASE VERSION NUMBER '{version}'",
                   "Version must comply to Semantic Versioning standard:",
@@ -45,6 +46,23 @@ jobs:
               ]
               print("\n".join(message))
               sys.exit(1)
+
+          # Check blender_manifest consistency
+          with open("blender_manifest.toml") as f:
+              manifest = tomllib.load(f)
+              manifest_version = manifest["version"]
+              if manifest["version"] != manifest_version:
+                  message = [
+                      f"::error::INVALID RELEASE VERSION NUMBER '{version}'",
+                      "Requested version is different from manifest version ",
+                      "in `blender_manifest.toml` file ",
+                      f"('{manifest_version}')\n",
+                  ]
+                  print("\n".join(message))
+                  sys.exit(1)
+
+          # Success
+          print("::notice::Version number OK ('{version}')")
 
   call-build-bundle:
     name: 'Build BlendLuxCore Bundle'
