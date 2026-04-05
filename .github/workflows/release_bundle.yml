@@ -65,7 +65,7 @@ jobs:
                   sys.exit(1)
 
           # Success
-          print("::notice::Version number OK ('{version}')")
+          print(f"::notice::Version number OK ('{version}')")
 
   call-build-bundle:
     name: 'Build BlendLuxCore Bundle'
