@@ -51,7 +51,7 @@ jobs:
               sys.exit(1)
 
           # Check blender_manifest consistency
-          with open("blender_manifest.toml") as f:
+          with open("blender_manifest.toml", "rb") as f:
               manifest = tomllib.load(f)
               manifest_version = manifest["version"]
               if manifest["version"] != manifest_version:
