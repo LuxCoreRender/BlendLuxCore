@@ -72,6 +72,7 @@ def _download_wheels(wheel_requirements, no_deps, no_index):
             "pip",
             "download",
             wheel_requirement,
+            "--pre",  # Include pre-releases
             "-d",
             WHEEL_DL_FOLDER,
         ]
