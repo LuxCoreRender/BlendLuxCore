@@ -71,10 +71,10 @@ def _download_wheels(wheel_requirements, no_deps, no_index):
             "-m",
             "pip",
             "download",
-            wheel_requirement,
             "--pre",  # Include pre-releases
             "-d",
             WHEEL_DL_FOLDER,
+            wheel_requirement,
         ]
         if no_deps:
             command.append("--no-deps")
