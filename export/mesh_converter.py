@@ -47,17 +47,16 @@ def convert(
         if mesh is None:
             return None
 
-        mesh.calc_loop_triangles()
-
         # Loop vertices
         loop_vertex_indices = get_ndarray(
             mesh.loops, "vertex_index", 1, np.uint32
         ).ravel()
         vertices = get_ndarray(mesh.vertices, "co", 3, np.float32)
+        loop_vertices = vertices[loop_vertex_indices]
 
         # Loop triangles
         loop_triangles = get_ndarray(
-            mesh.loop_triangles, "vertices", 3, np.uint32
+            mesh.loop_triangles, "loops", 3, np.uint32
         )
 
         # Material slot index for each triangle
@@ -67,13 +66,12 @@ def convert(
         unique_mats = np.unique(loop_triangle_materials)
 
         # Normals
-        normals = get_ndarray(mesh.vertex_normals, "vector", 3, np.float32)
+        loop_normals = get_ndarray(mesh.loops, "normal", 3, np.float32)
 
         # UV
         uvs = [
             get_ndarray(uv_layer.uv, "vector", 2, np.float32)
             for uv_layer in mesh.uv_layers
-            if uv_layer.active_render
         ]
 
         # Colors
@@ -105,20 +103,18 @@ def convert(
 
             luxcore_scene.DefineMeshExt(
                 name=name,
-                points=vertices,
+                points=loop_vertices,
                 triangles=mat_triangles,
-                normals=normals,
+                normals=loop_normals,
                 uvs=uvs,
                 colors=rgb_colors,
                 alphas=alphas,
                 transformation=mesh_transform,
             )
             mesh_definitions.append((name, mat))
-            print(f"[BLC] Importing mesh '{name}'\n")
 
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += time() - start_time
-
 
         return caches.exported_data.ExportedMesh(mesh_definitions)
 
