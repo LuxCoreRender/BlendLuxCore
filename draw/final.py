@@ -1,6 +1,6 @@
 """Final rendering."""
 
-from time import time, sleep
+from time import time, sleep, perf_counter
 import numpy as np
 import pyluxcore as plc
 from .. import utils
@@ -86,14 +86,14 @@ class FrameBufferFinal:
             pixels = np.empty([size, 3], dtype=np.float32)
             film.GetOutputFloat(self._combined_output_type, pixels)
             pixels = np.c_[pixels, np.ones(size)]
-            combined.rect = pixels
+            combined.rect.foreach_set(pixels.ravel())
         elif (
             self._combined_output_type == plc.FilmOutputType.RGBA_IMAGEPIPELINE
         ):
             size = self._width * self._height
             pixels = np.empty([size, 4], dtype=np.float32)
             film.GetOutputFloat(self._combined_output_type, pixels)
-            combined.rect = pixels
+            combined.rect.foreach_set(pixels.ravel())
         else:
             raise ValueError(
                 f"Unhandled Output Type {self._combined_output_type}"
