@@ -81,6 +81,8 @@ def convert(
         ]
         rgb_colors = [rgba[:, :3] for rgba in rgba_colors]
         alphas = [rgba[:, 3] for rgba in rgba_colors]
+        loop_rgb_colors = [col[loop_vertex_indices] for col in rgb_colors]
+        loop_alphas = [alpha[loop_vertex_indices] for alpha in alphas]
 
         # Transformation
         if is_viewport_render or use_instancing:
@@ -107,8 +109,8 @@ def convert(
                 triangles=mat_triangles,
                 normals=loop_normals,
                 uvs=uvs,
-                colors=rgb_colors,
-                alphas=alphas,
+                colors=loop_rgb_colors,
+                alphas=loop_alphas,
                 transformation=mesh_transform,
             )
             mesh_definitions.append((name, mat))
