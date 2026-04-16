@@ -16,6 +16,7 @@ if _needs_reload:
     importlib.reload(caches)
     importlib.reload(utils)
 
+
 # https://blenderartists.org/t/\
 # efficient-copying-of-vertex-coords-to-and-from-numpy-arrays/661467/2
 def get_ndarray(
@@ -24,10 +25,15 @@ def get_ndarray(
     stride: int,
     dtype: np.dtype,
 ):
-    """Get a numpy array from a Blender collection."""
+    """Get a numpy array from a Blender collection.
+
+    If stride == 0, the array is raveled
+    """
     count = len(bpy_collection)
-    buffer = np.empty(shape=(count, stride), dtype=dtype)
+    buffer = np.empty(shape=(count, stride if stride else 1), dtype=dtype)
     bpy_collection.foreach_get(attr, np.ravel(buffer))
+    if not stride:
+        buffer = buffer.ravel()
     return buffer
 
 
@@ -47,15 +53,27 @@ def convert(
         if mesh is None:
             return None
 
-        # Loop vertices
-        loop_vertex_indices = get_ndarray(
-            mesh.loops, "vertex_index", 1, np.uint32
-        ).ravel()
-        vertices = get_ndarray(mesh.vertices, "co", 3, np.float32)
-        loop_vertices = vertices[loop_vertex_indices]
+        # Blender API may not be always consistent with naming, for the mesh object.
+        # For the sake of clarity, we list here our naming conventions.
+        # They may specially differ from attribute domains...
+        # https://docs.blender.org/api/current/bpy_types_enum_items/attribute_domain_items.html#rna-enum-attribute-domain-items
+        # Point: a point in the 3D-space, (float, float, float)
+        # Vertex: an index to the mesh array of points
+        # Loop: a vertex and an edge
 
-        # Loop triangles
-        loop_triangles = get_ndarray(
+        # Loop vertices
+        loop_vertices = get_ndarray(mesh.loops, "vertex_index", 0, np.uint32)
+
+        # Points
+        vertex_points = get_ndarray(mesh.vertices, "co", 3, np.float32)
+        loop_points = vertex_points[loop_vertices]
+
+        # Normals
+        vertex_normals = get_ndarray(mesh.vertices, "normal", 3, np.float32)
+        loop_normals = vertex_normals[loop_vertices]
+
+        # Triangle loop indices
+        triangle_loops = get_ndarray(
             mesh.loop_triangles, "loops", 3, np.uint32
         )
 
@@ -65,24 +83,30 @@ def convert(
         ).ravel()
         unique_mats = np.unique(loop_triangle_materials)
 
-        # Normals
-        loop_normals = get_ndarray(mesh.loops, "normal", 3, np.float32)
-
         # UV
         uvs = [
             get_ndarray(uv_layer.uv, "vector", 2, np.float32)
             for uv_layer in mesh.uv_layers
         ]
 
-        # Colors
+        # Vertex colors
+        def reshape_colors(colors, domain):
+            if domain == "POINT":
+                return colors[loop_vertices]
+            elif domain == "CORNER":
+                return colors
+            else:
+                raise ValueError(f"Unhandled attribute domain: '{domain}'")
+
         rgba_colors = [
-            get_ndarray(color_attribute.data, "color_srgb", 4, np.float32)
-            for color_attribute in mesh.color_attributes
+            reshape_colors(
+                get_ndarray(attribute.data, "color", 4, np.float32),
+                attribute.domain,
+            )
+            for attribute in mesh.color_attributes
         ]
-        rgb_colors = [rgba[:, :3] for rgba in rgba_colors]
+        rgb = [rgba[:, :3] for rgba in rgba_colors]
         alphas = [rgba[:, 3] for rgba in rgba_colors]
-        loop_rgb_colors = [col[loop_vertex_indices] for col in rgb_colors]
-        loop_alphas = [alpha[loop_vertex_indices] for alpha in alphas]
 
         # Transformation
         if is_viewport_render or use_instancing:
@@ -98,25 +122,43 @@ def convert(
                 dtype=np.float32,
             )
 
+        # Log
+        def fmt_layer(layers, layer_name):
+            nlayers = len(layers)
+            suffix = "layers" if nlayers > 1 else "layer"
+            return f"{nlayers} {layer_name} {suffix}"
+        print(f"[BLC] Exporting '{str(mesh_key)}' - {len(unique_mats)} submesh(es)")
+        print(f"[BLC] - {len(loop_points)} points")
+        print(f"[BLC] - {len(loop_normals)} normals")
+        print(f"[BLC] - {fmt_layer(uvs, 'uv')}")
+        print(f"[BLC] - {fmt_layer(rgb, 'color')}")
+        print(f"[BLC] - {fmt_layer(alphas, 'alpha')}")
+
         mesh_definitions = []
         for mat in unique_mats:
-            mat_triangles = loop_triangles[loop_triangle_materials == mat]
+            mat_triangles = triangle_loops[loop_triangle_materials == mat]
             name = f"{str(mesh_key)}{mat:03d}"
+
+
+            print(f"[BLC] - Submesh #{mat:03d}: {len(mat_triangles)} triangles")
 
             luxcore_scene.DefineMeshExt(
                 name=name,
-                points=loop_vertices,
+                points=loop_points,
                 triangles=mat_triangles,
                 normals=loop_normals,
                 uvs=uvs,
-                colors=loop_rgb_colors,
-                alphas=loop_alphas,
+                colors=rgb,
+                alphas=alphas,
                 transformation=mesh_transform,
             )
             mesh_definitions.append((name, mat))
 
+        duration = time() - start_time
         if exporter and exporter.stats:
-            exporter.stats.export_time_meshes.value += time() - start_time
+            exporter.stats.export_time_meshes.value += duration
+        print(f"[BLC] Export duration: {duration:.3f}s")
+        print("[BLC]")
 
         return caches.exported_data.ExportedMesh(mesh_definitions)
 
