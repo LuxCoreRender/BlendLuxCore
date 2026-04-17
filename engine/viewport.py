@@ -231,15 +231,9 @@ def view_draw(engine, context, depsgraph):
         force_session_restart(engine)
         return
     elif changes & (export.Change.CAMERA | export.Change.MATERIAL):
-        # Only update in view_draw if it is a camera update,
-        # for everything else we call view_update().
-        # We have to re-assign the session because it might have been
-        # replaced due to filmsize change.
-        engine.session = engine.exporter.update(
-            depsgraph, context, engine.session, changes
-        )
-        engine.viewport_start_time = time()
-        framebuffer.reset_denoiser()
+        # Maybe this will prevent (help)?
+        force_session_restart(engine)
+        return
 
     if utils.in_material_shading_mode(context):
         if not engine.session.IsInPause():
