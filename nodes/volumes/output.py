@@ -15,7 +15,7 @@ class LuxCoreNodeVolOutput(bpy.types.Node, LuxCoreNodeOutput):
     """
     bl_label = "Volume Output"
     bl_width_default = 160
-
+    enable_update_callback: BoolProperty(default=False)
     active: BoolProperty(name="Active", default=True, update=update_active)
     id: IntProperty(name="Volume ID", default=-1, min=-1, soft_max=32767,
                      description=MATERIAL_ID_DESC)

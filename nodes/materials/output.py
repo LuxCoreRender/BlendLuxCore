@@ -52,7 +52,7 @@ class LuxCoreNodeMatOutput(LuxCoreNodeOutput, bpy.types.Node):
     """
     bl_label = "Material Output"
     bl_width_default = 220
-
+    enable_update_callback: BoolProperty(default=False)
     active: BoolProperty(name="Active", default=True, update=update_active)
     show_advanced: BoolProperty(name="Advanced", default=False, description="Show/hide advanced settings")
     id: IntProperty(update=utils_node.force_viewport_update, name="Material ID", default=-1, min=-1, soft_max=32767,
