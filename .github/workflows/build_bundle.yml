@@ -56,33 +56,70 @@ jobs:
           echo "commit=$(git rev-parse HEAD)"
           echo "branch=$(git symbolic-ref HEAD)"
 
-      - name: Prepare Blender install
-        uses: gerlero/apt-install@v1
-        with:
-          packages: libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libgl1
+      #- name: Prepare Blender install
+        #uses: gerlero/apt-install@v1
+        #with:
+          #packages: libxxf86vm1 libxfixes3 libxi6 libxkbcommon0 libgl1
 
-      - name: Prepare Python
-        run: touch requirements.txt
+      #- name: Prepare Python
+        #run: touch requirements.txt
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      #- name: Set up Python
+        #uses: actions/setup-python@v5
+        #with:
+          #python-version: '3.11'
 
-      - name: Set up Blender
-        uses: moguri/setup-blender@v1
-        with:
-          blender-version: '5.1.1'
+      #- name: Set up Blender
+        #uses: moguri/setup-blender@v1
+        #with:
+          #blender-version: '5.1.1'
 
       - name: Set up cmake
         uses: lukka/get-cmake@latest
 
+      - name: Download Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BLENDER_VERSION="5.1"
+          BLENDER_VERSION_PATCH=".1"
+          BLENDER_URL="https://download.blender.org/release/Blender${BLENDER_VERSION}/blender-${BLENDER_VERSION}${BLENDER_VERSION_PATCH}-linux-x64.tar.xz"
+          INSTALL_DIR="$HOME/.local/opt/blender-${BLENDER_VERSION}"
+          BIN_DIR="$HOME/.local/bin"
+
+          mkdir -p "$INSTALL_DIR" "$BIN_DIR"
+
+          echo "Downloading Blender ${BLENDER_VERSION} LTS..."
+          wget -q --show-progress -O /tmp/blender.tar.xz "$BLENDER_URL"
+
+          echo "Extracting Blender to ${INSTALL_DIR}..."
+          tar -xf /tmp/blender.tar.xz -C "$INSTALL_DIR" --strip-components=1
+
+          rm /tmp/blender.tar.xz
+
+          echo "Creating symlink in ${BIN_DIR}..."
+          ln -sf "${INSTALL_DIR}/blender" "${BIN_DIR}/blender"
+
+          echo "Blender ${BLENDER_VERSION} installed successfully!"
+
+          echo "BLENDER_ROOT=${INSTALL_DIR}" >> $GITHUB_ENV
+
       - name: Package bundle
         shell: bash
         run: |
+          apt update -y && apt install xorg -y
           build_dir="${{ github.workspace }}/build"
           mkdir ${build_dir}
-          cmake -B ${build_dir} -S . -DCMAKE_BUILD_TYPE=${{ inputs.build_type }}
+          echo "Configure"
+          cmake \
+            -B ${build_dir} \
+            -S . \
+            -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+            -DBLENDER_ROOT=${BLENDER_ROOT} \
+            -Dblender_ROOT=${BLENDER_ROOT}
+
+          echo "Build"
           cmake --build ${build_dir}
 
       - name: Upload artifact

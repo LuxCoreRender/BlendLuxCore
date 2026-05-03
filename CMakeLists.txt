@@ -1,7 +1,7 @@
 # To build extension:
 # cmake . && cmake --build .
 
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.27)  # For <PACKAGENAME>_ROOT env var
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
@@ -49,7 +49,14 @@ else()
   )
 endif()
 
-find_program(BLENDER blender NAMES blender.exe VALIDATOR validate_blender_version NO_CACHE REQUIRED)
+MESSAGE(STATUS "BLENDER_ROOT=$ENV{BLENDER_ROOT}")
+find_program(
+  BLENDER blender
+  NAMES blender
+  PATHS ENV BLENDER_ROOT
+  VALIDATOR validate_blender_version
+  NO_CACHE REQUIRED
+)
 
 # Add BlendLuxCore target
 # https://docs.blender.org/manual/en/latest/advanced/command_line/extension_arguments.html
