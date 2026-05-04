@@ -273,14 +273,18 @@ def view_draw(engine, context, depsgraph):
         status_message = "(Paused)"
 
         # ...and denoise
-        if not framebuffer.denoised:
+        use_oidn = context.scene.luxcore.viewport.get_denoiser(context) == "OIDN"
+        if use_oidn and not framebuffer.denoised:
             if not framebuffer.is_denoiser_active():
-                print("Starting denoiser...")
+                print("Starting OIDN denoiser...")
                 framebuffer.start_denoiser(engine)
-            status_message = "(Paused, Denoiser Working ...)"
+            status_message = "(Paused, OIDN Denoiser Working ...)"
             engine.tag_redraw()
         else:
-            status_message = "(Paused, Denoiser Done)"
+            if use_oidn:
+                status_message = "(Paused, OIDN Denoiser Done)"
+            else:
+                status_message = "(Paused)"
 
     else:
         # Not in pause yet, keep drawing
