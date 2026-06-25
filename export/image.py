@@ -39,7 +39,8 @@ class ImageExporter(object):
             try:
                 image.save()
             except RuntimeError as error:
-                raise OSError(str(error))
+                print("[BLC] Warning: could not save image. ", str(error))
+                return
             finally:
                 # The changes above altered the source to "FILE", so we have to restore the original source
                 image.filepath_raw = orig_filepath
