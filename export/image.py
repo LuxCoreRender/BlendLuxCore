@@ -1,112 +1,180 @@
-import bpy
+"""This module provides export feature for Blender image objects"""
+
 import tempfile
 import os
 from .. import utils
 
 
-class ImageExporter(object):
+class ImageExporter:
     """
     This class is a singleton
     """
+
     temp_images = {}
 
     @classmethod
     def _save_to_temp_file(cls, image):
-        # Note: We can't use utils.make_key(image) here because the memory address
-        # might be re-used on undo, causing a key collision
-        if image.filepath_raw:
-            key = image.filepath_raw
-        else:
-            key = image.name
+        """Save packed files from an image.
 
-        if key in cls.temp_images:
-            # Image was already exported
-            temp_image = cls.temp_images[key]
-        else:
-            if image.filepath_raw:
-                _, extension = os.path.splitext(image.filepath_raw)
-            else:
-                # Generated images do not have a filepath, fallback to file_format
-                extension = "." + image.file_format.lower()
+        Nota bene:
+        - The input image is supposed to contain exactly ONE packed file.
+          This is a design limitation at this stage.
+        - We don't use 'image.save', as we don't need the conversion features
+          it provides and, on the other hand, we need several formats
+          (including dds) that this method does not handle.
+        """
+        assert image.packed_file
 
-            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=extension)
+        result = []
+        for packed in image.packed_files:
 
-            print('Unpacking image "%s" to temp file "%s"' % (image.name, temp_image.name))
-            orig_filepath = image.filepath_raw
-            orig_source = image.source
-            image.filepath_raw = temp_image.name
+            # Save original filepath
+            orig_filepath = packed.filepath
 
+            # Compute key
+            # Note: We can't use utils.make_key(image) here because the memory
+            # address might be re-used on undo, causing a key collision
+            key = orig_filepath or f"{image.name}-{packed.tile_number}"
+
+            # Check whether packed image has already been exported
             try:
-                image.save()
-            except RuntimeError as error:
-                print("[BLC] Warning: could not save image. ", str(error))
-                return
-            finally:
-                # The changes above altered the source to "FILE", so we have to restore the original source
-                image.filepath_raw = orig_filepath
-                image.source = orig_source
+                temp_image = cls.temp_images[key]
+                print(f"[BLC] '{key}' already exported - skip")
+                continue
+            except KeyError:
+                pass
+
+            # Compute filename extension
+            if orig_filepath:
+                _, extension = os.path.splitext(orig_filepath)
+            else:
+                # Generated images do not have a filepath, fallback to
+                # file_format
+                extension = f".{image.file_format.lower()}"
+
+            with tempfile.NamedTemporaryFile(
+                delete=False, suffix=extension
+            ) as temp_image:
+                packed.filepath = temp_image.name
+                print(
+                    f"[BLC] Unpacking image '{image.name}' to temp file "
+                    f"'{temp_image.name}'"
+                )
+
+                try:
+                    packed.save()
+                except RuntimeError as error:
+                    print("[BLC] Warning: could not save image. ", str(error))
+                    continue
+                finally:
+                    # The changes above altered the file path, so we have to
+                    # restore the original one
+                    packed.filepath = orig_filepath
 
             # Only store the key once we are sure that everything went OK
             cls.temp_images[key] = temp_image
-        return temp_image.name
+
+            result.append(temp_image.name)
+
+        # Design limitation: the rest of BLC assumes there is only one packed
+        # file per image, so we'll adapt the output.
+        # If one day this limitation is removed, the code above is ready for
+        # multiple packed files per image
+        if (len(result)) > 1:
+            print(
+                f"[BLC] Warning: image '{image.name}' contains multiple "
+                "packed files but only one will be used"
+            )
+        return result[0] if result else None
 
     @classmethod
     def export(cls, image, image_user, scene):
+        """Export image.
+
+        This is the main method of the module.
+        """
         if image.source == "GENERATED":
             return cls._save_to_temp_file(image)
-        elif image.source == "FILE":
+
+        if image.source == "FILE":
             if image.packed_file:
                 return cls._save_to_temp_file(image)
-            else:
-                try:
-                    filepath = utils.get_abspath(image.filepath, library=image.library,
-                                                 must_exist=True, must_be_existing_file=True)
-                    return filepath
-                except OSError as error:
-                    # Make the error message more precise
-                    raise OSError('Could not find image "%s" at path "%s" (%s)'
-                                  % (image.name, image.filepath, error))
-        elif image.source == "SEQUENCE":
+
+            try:
+                filepath = utils.get_abspath(
+                    image.filepath,
+                    library=image.library,
+                    must_exist=True,
+                    must_be_existing_file=True,
+                )
+                return filepath
+            except OSError as error:
+                # Make the error message more precise
+                raise OSError(
+                    f"Could not find image '{image.name}' "
+                    f"at path '{image.filepath}' ({error})"
+                ) from error
+
+        if image.source == "SEQUENCE":
             # Note: image sequences can never be packed
             try:
                 frame = image_user.get_frame(scene)
             except ValueError as error:
-                raise OSError(str(error))
+                raise RuntimeError(str(error)) from error
 
             indexed_filepaths = utils.image_sequence_resolve_all(image)
             try:
                 if frame < 1:
                     raise IndexError
-                index, filepath = indexed_filepaths[frame - 1]
+                _, filepath = indexed_filepaths[frame - 1]
                 return filepath
-            except IndexError:
-                raise OSError('Frame %d in image sequence "%s" does not exist (contains only %d frames)'
-                              % (frame, image.name, len(indexed_filepaths)))
-        else:
-            raise Exception('Unsupported image source "%s" in image "%s"' % (image.source, image.name))
+            except IndexError as error:
+                raise RuntimeError(
+                    f'Frame {frame} in image sequence "{image.name}" '
+                    "does not exist (contains only "
+                    f'"{len(indexed_filepaths)}" frames)'
+                ) from error
+
+        # Unhandled source
+        raise NotImplementedError(
+            f"Unsupported image source '{image.source}' "
+            f"in image '{image.name}'"
+        )
 
     @classmethod
     def export_cycles_node_reader(cls, image):
+        """Export cycles node reader."""
         # TODO deduplicate code, support image sequences
         if image.source == "GENERATED":
             return cls._save_to_temp_file(image)
-        elif image.source == "FILE":
+
+        if image.source == "FILE":
             if image.packed_file:
                 return cls._save_to_temp_file(image)
-            else:
-                try:
-                    filepath = utils.get_abspath(image.filepath, library=image.library,
-                                                 must_exist=True, must_be_existing_file=True)
-                    return filepath
-                except OSError as error:
-                    # Make the error message more precise
-                    raise OSError('Could not find image "%s" at path "%s" (%s)'
-                                  % (image.name, image.filepath, error))
-        else:
-            raise Exception('Unsupported image source "%s" in image "%s"' % (image.source, image.name))
+
+            try:
+                filepath = utils.get_abspath(
+                    image.filepath,
+                    library=image.library,
+                    must_exist=True,
+                    must_be_existing_file=True,
+                )
+                return filepath
+            except OSError as error:
+                # Make the error message more precise
+                raise OSError(
+                    f'Could not find image "{image.name}" '
+                    f'at path "{image.filepath}" ({error})'
+                ) from error
+
+        raise NotImplementedError(
+            f'Unsupported image source "{image.source}" '
+            f'in image "{image.name}"'
+        )
 
     @classmethod
     def cleanup(cls):
+        """Remove cached images."""
         for temp_image in cls.temp_images.values():
             filepath = temp_image.name
             temp_image.close()
@@ -114,4 +182,3 @@ class ImageExporter(object):
             os.remove(filepath)
 
         cls.temp_images.clear()
-
