@@ -52,7 +52,7 @@ class LuxCoreAddonPreferences(AddonPreferences):
     """Addon Preference panel."""
 
     # id name for 4.2
-    bl_idname = utils.get_module_name()
+    bl_idname = utils.get_module_id()
 
     gpu_backend_items = [
         ("OPENCL", "OpenCL", "Use OpenCL for GPU acceleration", 0),

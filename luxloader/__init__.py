@@ -13,6 +13,9 @@ from enum import Enum, IntEnum
 import types
 import json
 import configparser
+import gzip
+import pickle
+import re
 
 import bpy
 import addon_utils
@@ -22,18 +25,21 @@ from .. import utils
 
 # The variable PYLUXCORE_VERSION specifies the release version of pyluxcore
 # that will be downloaded from PyPi during the standard installation of
-# BlendLuxCore. Please update this variable ONLY after the targeted version of
+# BlendLuxCore. Please update this variable ONLY AFTER the targeted version of
 # pyluxcore has been released on PyPi.
 PYLUXCORE_VERSION = "2.11.0a6"
 
-# User folders
-ROOT_FOLDER = utils.get_user_dir("")
-WHEEL_DL_FOLDER = utils.get_user_dir("wheels")
-WHEEL_BACKUP_FOLDER = utils.get_user_dir("wheels_backup")
+# Module folders
+ROOT_FOLDER = utils.get_module_path().parent  # The root dir of the package
+WHEEL_DL_FOLDER = ROOT_FOLDER / "wheels"
+WHEEL_BACKUP_FOLDER = ROOT_FOLDER / "wheels_backup"
+
+# Extension folder
+EXTENSIONS_FOLDER = pathlib.Path(bpy.utils.user_resource("EXTENSIONS"))
 
 # Settings file
 SETTINGS_FOLDER = pathlib.Path(
-    bpy.utils.user_resource("CONFIG", path="BlendLuxCore", create=True)
+    bpy.utils.user_resource("CONFIG", path="blendluxcore", create=True)
 )
 SETTINGS_FILENAME = "blc_settings.json"
 SETTINGS_FILEPATH = SETTINGS_FOLDER / SETTINGS_FILENAME
@@ -97,8 +103,7 @@ def _download_wheels(wheel_requirements, no_deps, no_index):
                 f"and return message {err.stdout}"
             ) from err
 
-
-        if (output := process.stdout):
+        if output := process.stdout:
             print("[BLC] Downloading wheel:\n", output)
 
 
@@ -259,34 +264,103 @@ def _get_settings():
         return DEFAULT_SETTINGS
 
 
-def _install_wheels():
-    """Install wheels in Blender from download folder."""
-    extensions_directory = pathlib.Path(bpy.utils.user_resource("EXTENSIONS"))
-    if not (wheel_list := [("blendluxcore", list(WHEEL_DL_FOLDER.iterdir()))]):
-        raise ValueError("[BLC] ERROR - No wheel to install.")
+def _update_manifest(wheel_list):
+    """Update blender_manifest.toml with wheel info.
 
-    local_dir = extensions_directory / ".local"
+    This is intended as a post-update treatment: wheels should have been
+    installed before.
+    """
+
+    print(f"[BLC] Updating blender manifest")
+    pkg_manifest_filepath = ROOT_FOLDER / "blender_manifest.toml"
+
+    # Compute statement
+    wheel_abs_paths = list(
+        itertools.chain.from_iterable(
+            entry[1] for entry in wheel_list if entry[0] == "blendluxcore"
+        )
+    )
+    wheel_rel_paths = [
+        f'"{path.relative_to(ROOT_FOLDER)}"'
+        for path in wheel_abs_paths
+    ]
+    wheel_manifest_statement = f"wheels = [{", ".join(wheel_rel_paths)}]\n"
+
+    # Read manifest
+    with open(pkg_manifest_filepath, mode="r", encoding="utf-8") as manifest:
+        content = manifest.read()
+
+    # Modify: add wheel statement to manifest content (modify current wheel entry)
+    content, number_of_replacements = re.subn(
+        r"^\s*wheels\s*=\s*\[.*\]\n?",
+        wheel_manifest_statement,
+        content,
+        flags=re.MULTILINE
+    )
+    if number_of_replacements != 1:
+        print(
+            "[BLC] WARNING: inconsistent number of replacements when updating"
+            "`wheels` statement in blender_manifest.toml "
+            f"({number_of_replacements}) - see file '{pkg_manifest_filepath}'"
+        )
+
+    # Write back to file
+    with open(pkg_manifest_filepath, mode="w", encoding="utf-8") as manifest:
+        manifest.write(content)
+
+    # Create fake wheels
+    for path in wheel_abs_paths:
+        print(f"[BLC] Creating fake wheel {path.name}")
+        path.touch()
+
+
+
+def _apply_wheels(p_wheel_list):
+    """Wrap call to wheel_manager.apply_action."""
+
+    local_dir = EXTENSIONS_FOLDER / ".local"
     pyver = f"python{sys.version_info.major}.{sys.version_info.minor}"
     site_packages = local_dir / "lib" / pyver / "site-packages"
 
-    # We use Blender internal feature to install the wheels
-    def apply(p_wheel_list):
-        wheel_manager.apply_action(
-            local_dir=str(local_dir),
-            local_dir_site_packages=str(site_packages),
-            wheel_list=p_wheel_list,
-            error_fn=lambda ex: print("Error:", ex),
-            remove_error_fn=lambda filepath, ex: print(
-                "Error removing file:", filepath, ex
-            ),
-            debug=True,
-        )
+    wheel_manager.apply_action(
+        local_dir=str(local_dir),
+        local_dir_site_packages=str(site_packages),
+        wheel_list=p_wheel_list,
+        error_fn=lambda ex: print("Error:", ex),
+        remove_error_fn=lambda filepath, ex: print(
+            "Error removing file:", filepath, ex
+        ),
+        debug=True,
+    )
 
-    # First, remove previous wheels
-    apply([("blendluxcore", [])])
 
-    # Second, add new wheels
-    apply(wheel_list)
+def _install_wheels():
+    """Install wheels in Blender from download folder.
+
+    Notes:
+    - We use Blender internal feature (wheel_manager.apply_action) to install
+      the wheels, see _apply_wheels
+    - Once the wheels have been installed, we have to declare them in
+      blender_manifest.toml, otherwise the wheels will not be "registered" by
+      Blender and any modification on add-ons (install, refresh...) will remove
+      them
+    - We have to create fake wheels in BLC repo to lure pkg_wheel_filter() (in
+      'scripts/addons_core/bl_pkg/bl_extension_ops.py'), as this function will
+      check whether the files actually exist and, if not, will uninstall them
+    """
+
+    # Get the wheel list
+    if not (wheel_list := [("blendluxcore", list(WHEEL_DL_FOLDER.iterdir()))]):
+        raise ValueError("[BLC] ERROR - No wheel to install.")
+
+    # Remove previous wheels
+    _apply_wheels([("blendluxcore", [])])
+
+    # Install new wheels
+    _apply_wheels(wheel_list)
+
+    # Update wheel information in blender_manifest.toml and create fake wheels
+    _update_manifest(wheel_list)
 
 
 class WheelSource(IntEnum):
