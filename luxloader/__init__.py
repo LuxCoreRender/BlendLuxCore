@@ -280,11 +280,11 @@ def _update_manifest(wheel_list):
             entry[1] for entry in wheel_list if entry[0] == "blendluxcore"
         )
     )
-    wheel_rel_paths = [
+    wheel_rel_paths = ", ".join(
         f'"{path.relative_to(ROOT_FOLDER)}"'
         for path in wheel_abs_paths
-    ]
-    wheel_manifest_statement = f"wheels = [{", ".join(wheel_rel_paths)}]\n"
+    )
+    wheel_manifest_statement = f"wheels = [{wheels_rel_paths}]\n"
 
     # Read manifest
     with open(pkg_manifest_filepath, mode="r", encoding="utf-8") as manifest:
