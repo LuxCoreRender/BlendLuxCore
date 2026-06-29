@@ -745,7 +745,7 @@ def get_module_id():
 
 def get_module_path():
     """Get absolute path to module."""
-    return pathlib.Path(base_package_path)
+    return pathlib.Path(base_package_path).parent
 
 
 def get_addon_preferences(context):

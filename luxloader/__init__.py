@@ -30,7 +30,7 @@ from .. import utils
 PYLUXCORE_VERSION = "2.11.0a6"
 
 # Module folders
-ROOT_FOLDER = utils.get_module_path().parent  # The root dir of the package
+ROOT_FOLDER = utils.get_module_path()  # The root dir of the package
 WHEEL_DL_FOLDER = ROOT_FOLDER / "wheels"
 WHEEL_BACKUP_FOLDER = ROOT_FOLDER / "wheels_backup"
 
@@ -410,7 +410,7 @@ def _fetch_wheels():
 
         wheels = [f"pyluxcore=={pyluxcore_version}"]
 
-        print("[BLC] Installing pyluxcore version:", pyluxcore_version)
+        print("[BLC] Targeting pyluxcore version:", pyluxcore_version)
 
     # Case #2: Get from local source (1 file)
     elif wheel_source == WheelSource.LOCAL:
@@ -451,7 +451,16 @@ def _fetch_wheels():
     # Check cache (hash and compare)
     wheel_hash = _hash_wheels(wheels)
     if not reinstall_upon_reloading and wheel_hash == old_wheel_hash:
-        return FetchWheelStatus.CACHE, wheel_hash
+        # We check there is no desync and pyluxcore is available
+        try:
+            import pyluxcore
+        except ModuleNotFoundError:
+            print(
+                "[BLC] Warning: pyluxcore should already be installed, "
+                "but it is not possible to find it! Reinstalling..."
+            )
+        else:
+            return FetchWheelStatus.CACHE, wheel_hash
 
     # Download
     _backup_wheels()
