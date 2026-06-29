@@ -46,7 +46,7 @@ platforms = ["windows-x64", "macos-arm64", "linux-x64", "macos-x64"]
 # https://docs.blender.org/manual/en/dev/advanced/extensions/python_wheels.html
 #
 # DO NOT ALTER following line, it will be replaced by actual wheel list at runtime
-wheels = ["wheels/pyluxcore-2.11.0a6-cp314-cp314-manylinux_2_28_x86_64.whl", "wheels/nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl"]
+wheels = []
 
 # # Optional: add-ons can list which resources they will require:
 # # * files (for access of any filesystem operations)
