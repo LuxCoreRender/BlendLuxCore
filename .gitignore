@@ -24,3 +24,6 @@ CMakeFiles/
 Makefile
 cmake_install.cmake
 install_manifest.txt
+
+# BLC files
+pyluxcore_installation_info.txt
