@@ -58,6 +58,10 @@ find_program(
   NO_CACHE REQUIRED
 )
 
+# Clean wheels directory
+MESSAGE(STATUS "Cleaning wheels directory")
+file(REMOVE ${CMAKE_CURRENT_SOURCE_DIR}/wheels/*.*)
+
 # Add BlendLuxCore target
 # https://docs.blender.org/manual/en/latest/advanced/command_line/extension_arguments.html
 add_custom_target(
