@@ -399,6 +399,14 @@ def _fetch_wheels():
     no_deps = bool(settings.get("no_deps", False))
     no_index = bool(settings.get("no_index", False))
 
+    # Ensure 'wheels' directory exists
+    wheels_dir = ROOT_FOLDER / "wheels"
+    try:
+        print(f"[BLC] Ensuring '{wheels_dir}' exists")
+        wheels_dir.mkdir()
+    except FileExistsError:
+        pass  # Already exists, pass silently
+
     # Get installation info for comparison in the following steps
     old_wheel_hash = _get_installation_info()
 
