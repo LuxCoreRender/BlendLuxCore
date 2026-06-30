@@ -273,7 +273,6 @@ def _update_manifest(wheel_list):
 
     print(f"[BLC] Updating blender manifest")
     pkg_manifest_filepath = ROOT_FOLDER / "blender_manifest.toml"
-    import pdb; pdb.set_trace()
 
     # Compute statement
     wheel_abs_paths = list(
