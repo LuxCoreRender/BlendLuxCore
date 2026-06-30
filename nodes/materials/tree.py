@@ -31,7 +31,7 @@ class LuxCoreMaterialNodeTree(bpy.types.NodeTree, LuxCoreNodeTree):
 
     # This block updates the preview, when socket links change
     def update(self):
-        super().update(self)
+        super().update()
 
         # Force viewport update of the corresponding material
         try:
