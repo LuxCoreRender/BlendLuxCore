@@ -58,17 +58,23 @@ find_program(
   NO_CACHE REQUIRED
 )
 
-# Clean wheels directory
+# Clean 'wheels' directory
 MESSAGE(STATUS "Cleaning wheels directory")
-FILE(GLOB WHEELS "${CMAKE_CURRENT_SOURCE_DIR}/wheels/*")
+FILE(GLOB WHEELS "${CMAKE_CURRENT_SOURCE_DIR}/wheels/*.whl")
 file(REMOVE ${WHEELS})
+
+# Clean 'out' directory
+MESSAGE(STATUS "Cleaning wheels directory")
+FILE(GLOB OUTFILES "${CMAKE_CURRENT_SOURCE_DIR}/out/*")
+file(REMOVE ${OUTFILES})
+
+# Clean 'pyluxcore_installation_info.txt'
+MESSAGE(STATUS "Cleaning pyluxcore_installation_info.txt")
+file(REMOVE "pyluxcore_installation_info.txt")
 
 # Clean wheels entry in Blender manifest
 # Nota: It would also be possible to use configure_file
 MESSAGE(STATUS "Cleaning wheels entry in blender_manifest.toml")
-#file(READ "blender_manifest.toml" CONTENT)
-#string(REPLACE "\n" ";" LINES "${CONTENT}")
-
 file(READ "blender_manifest.toml" CONTENT)
 string(REGEX REPLACE "wheels *= *\\\[[^]]*\\]" "wheels = []" NEW_CONTENT "${CONTENT}")
 file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/blender_manifest.toml" "${NEW_CONTENT}")
