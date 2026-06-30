@@ -69,11 +69,14 @@ files = "File exchanges between renderer and denoiser"
 
 # # Optional: advanced build settings.
 # # https://docs.blender.org/manual/en/dev/advanced/extensions/command_line_arguments.html#command-line-args-extension-build
-# [build]
-# # These are the default build excluded patterns.
-# # You only need to edit them if you want different options.
-# paths_exclude_pattern = [
-#   "__pycache__/",
-#   "/.git/",
-#   "/*.zip",
-# ]
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "CMakeFiles/",
+  ".*",
+  "/out/*",
+  "CMakeCache.txt",
+  "cmake_install.cmake",
+  "install_manifest.txt",
+  "**/*.zip",
+]
