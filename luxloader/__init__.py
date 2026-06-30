@@ -281,7 +281,7 @@ def _update_manifest(wheel_list):
         )
     )
     wheel_rel_paths = ", ".join(
-        f'"{path.relative_to(ROOT_FOLDER)}"'
+        f'"{path.relative_to(ROOT_FOLDER).as_posix()}"'
         for path in wheel_abs_paths
     )
     wheel_manifest_statement = f"wheels = [{wheel_rel_paths}]\n"
