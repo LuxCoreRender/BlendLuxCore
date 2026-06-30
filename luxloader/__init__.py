@@ -284,7 +284,7 @@ def _update_manifest(wheel_list):
         f'"{path.relative_to(ROOT_FOLDER)}"'
         for path in wheel_abs_paths
     )
-    wheel_manifest_statement = f"wheels = [{wheels_rel_paths}]\n"
+    wheel_manifest_statement = f"wheels = [{wheel_rel_paths}]\n"
 
     # Read manifest
     with open(pkg_manifest_filepath, mode="r", encoding="utf-8") as manifest:
@@ -312,7 +312,6 @@ def _update_manifest(wheel_list):
     for path in wheel_abs_paths:
         print(f"[BLC] Creating fake wheel {path.name}")
         path.touch()
-
 
 
 def _apply_wheels(p_wheel_list):
