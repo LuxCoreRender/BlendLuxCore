@@ -420,17 +420,20 @@ def _fetch_wheels():
 
         wheels = [f"pyluxcore=={pyluxcore_version}"]
 
+        print("[BLC] Fetching wheels from PyPi")
         print("[BLC] Targeting pyluxcore version:", pyluxcore_version)
 
     # Case #2: Get from local source (1 file)
     elif wheel_source == WheelSource.LOCAL:
         # Get path to wheel and check consistency
         path_to_wheel = pathlib.Path(settings.get("path_to_wheel", ""))
+        print("[BLC] Fetching wheels from local source:", path_to_wheel)
         if not (path_to_wheel.is_file() and path_to_wheel.is_absolute()):
             print(f"[BLC] Wheel file not found ('{path_to_wheel}')")
             return FetchWheelStatus.ERROR, None
 
         # Get optional folder with dependencies
+        print("[BLC] Getting dependencies")
         additional_deps = []
         if path_to_wheel_deps_setting := settings.get(
             "path_to_wheel_deps", ""
