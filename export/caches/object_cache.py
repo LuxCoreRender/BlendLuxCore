@@ -340,6 +340,7 @@ class ObjectCache2:
                     )
                 )
                 and obj.type in MESH_OBJECTS
+                and dg_obj_instance.particle_system is not None  # Skip collection instances - export individually for indirect_only
             ):
                 # This code is optimized for large amounts of duplis. Drawback is that objects generated from this
                 # code can't be transformed later in a viewport render session (due to BlendLuxCore implementation
@@ -744,14 +745,16 @@ class ObjectCache2:
             obj_transform = transform.copy() if use_instancing else None
             obj_id = utils.make_object_id(dg_obj_instance)
 
+            visible = utils.visible_to_camera(
+                dg_obj_instance, is_viewport_render, view_layer
+            )
+
             return ExportedObject(
                 obj_key,
                 exported_mesh.mesh_definitions,
                 mat_names,
                 obj_transform,
-                utils.visible_to_camera(
-                    dg_obj_instance, is_viewport_render, view_layer
-                ),
+                visible,
                 obj_id,
             )
 
@@ -761,7 +764,9 @@ class ObjectCache2:
         )
         return depsgraph.id_type_updated("OBJECT") and not only_scene
 
-    def update(self, exporter, depsgraph, luxcore_scene, scene_props, context):
+    def update(self, exporter, depsgraph, luxcore_scene, scene_props, context, view_layer=None):
+        if view_layer is None:
+            view_layer = depsgraph.view_layer_eval
         is_viewport_render = bool(context)
         redefine_objs_with_these_mesh_keys = []
         # Always instance in viewport so we can move objects around
@@ -899,10 +904,10 @@ class ObjectCache2:
                     updated = True
 
                 if exported_obj.visible_to_camera != utils.visible_to_camera(
-                    dg_obj_instance, is_viewport_render
+                    dg_obj_instance, is_viewport_render, view_layer
                 ):
                     exported_obj.visible_to_camera = utils.visible_to_camera(
-                        dg_obj_instance, is_viewport_render
+                        dg_obj_instance, is_viewport_render, view_layer
                     )
                     updated = True
 
@@ -918,6 +923,7 @@ class ObjectCache2:
                     luxcore_scene,
                     scene_props,
                     is_viewport_render,
+                    view_layer,
                 )
 
         # self._debug_info()
