@@ -382,6 +382,33 @@ def visible_to_camera(dg_obj_instance, is_viewport_render, view_layer=None):
     return not obj.indirect_only_get(view_layer=view_layer)
 
 
+def is_holdout_object(obj, view_layer=None):
+    """
+    Check if object is in any LayerCollection with holdout=True.
+    Similar to indirect_only but for holdout.
+    Works like Cycles - respects LayerCollection.holdout settings.
+    """
+    if not view_layer:
+        return False
+
+    # Use original object - evaluated objects don't have collection membership
+    obj = obj.original if hasattr(obj, 'original') else obj
+
+    # Get all collections this object belongs to
+    obj_collections = set(obj.users_collection)
+
+    # Recursively check layer collections
+    def check_layer_collection(layer_coll):
+        if layer_coll.collection in obj_collections and layer_coll.holdout:
+            return True
+        for child in layer_coll.children:
+            if check_layer_collection(child):
+                return True
+        return False
+
+    return check_layer_collection(view_layer.layer_collection)
+
+
 def get_theme(context):
     current_theme_name = context.preferences.themes.items()[0][0]
     return context.preferences.themes[current_theme_name]
