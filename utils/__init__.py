@@ -430,8 +430,9 @@ def visible_to_camera(dg_obj_instance, is_viewport_render, view_layer=None):
     )
     if not obj.luxcore.visible_to_camera:
         return False
-    if is_viewport_render:
-        obj = obj.original
+    # Always use original object for indirect_only_get() because evaluated objects
+    # don't have collection membership data (users_collection is empty)
+    obj = obj.original
     return not obj.indirect_only_get(view_layer=view_layer)
 
 
