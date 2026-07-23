@@ -210,7 +210,7 @@ def get_material(obj, material_index, depsgraph):
 
 
 def export_material(
-    obj, material_index, exporter, depsgraph, is_viewport_render
+    obj, material_index, exporter, depsgraph, is_viewport_render, force_holdout=False
 ):
     mat = get_material(obj, material_index, depsgraph)
 
@@ -220,7 +220,7 @@ def export_material(
         mat = mat.original
 
         lux_mat_name, mat_props = material.convert(
-            exporter, depsgraph, mat, is_viewport_render, obj.name
+            exporter, depsgraph, mat, is_viewport_render, obj.name, force_holdout
         )
         node_tree = mat.luxcore.node_tree
         return lux_mat_name, mat_props, node_tree
@@ -543,8 +543,10 @@ class ObjectCache2:
 
                             self.exported_hair[obj_key] = lux_shape
                         if lux_shape:
+                            # Check if object is in holdout layer collection
+                            force_holdout = utils.is_holdout_object(obj.original, view_layer)
                             lux_mat, mat_props, node_tree = export_material(
-                                obj, 0, exporter, depsgraph, is_viewport_render
+                                obj, 0, exporter, depsgraph, is_viewport_render, force_holdout
                             )
                             scene_props.Set(mat_props)
                             set_hair_props(
@@ -646,8 +648,10 @@ class ObjectCache2:
                         self.exported_hair[psys_key] = lux_shape
 
                 if lux_shape:
+                    # Check if object is in holdout layer collection
+                    force_holdout = utils.is_holdout_object(obj.original, view_layer)
                     lux_mat, mat_props, node_tree = export_material(
-                        obj, mat_index, exporter, depsgraph, is_viewport_render
+                        obj, mat_index, exporter, depsgraph, is_viewport_render, force_holdout
                     )
                     scene_props.Set(mat_props)
                     set_hair_props(
@@ -721,13 +725,18 @@ class ObjectCache2:
             loaded_from_cache = False
 
         if exported_mesh:
+            # Check if object is in holdout layer collection (like Cycles)
+            # For instances, check the parent object (similar to visible_to_camera logic)
+            check_obj = dg_obj_instance.parent if dg_obj_instance.is_instance else obj
+            force_holdout = utils.is_holdout_object(check_obj.original, view_layer)
+
             mat_names = []
             for idx, (shape_name, mat_index) in enumerate(
                 exported_mesh.mesh_definitions
             ):
                 shape = shape_name
                 lux_mat_name, mat_props, node_tree = export_material(
-                    obj, mat_index, exporter, depsgraph, is_viewport_render
+                    obj, mat_index, exporter, depsgraph, is_viewport_render, force_holdout
                 )
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
@@ -748,6 +757,11 @@ class ObjectCache2:
             visible = utils.visible_to_camera(
                 dg_obj_instance, is_viewport_render, view_layer
             )
+
+            # Holdout overrides indirect_only - holdout needs object to be visible to camera
+            # to "cut a hole" in the film. In reflections/GI it will still be visible normally.
+            if force_holdout:
+                visible = True
 
             return ExportedObject(
                 obj_key,
@@ -903,12 +917,17 @@ class ObjectCache2:
                     exported_obj.obj_id = obj_id
                     updated = True
 
-                if exported_obj.visible_to_camera != utils.visible_to_camera(
+                visible = utils.visible_to_camera(
                     dg_obj_instance, is_viewport_render, view_layer
-                ):
-                    exported_obj.visible_to_camera = utils.visible_to_camera(
-                        dg_obj_instance, is_viewport_render, view_layer
-                    )
+                )
+
+                # Holdout overrides indirect_only
+                check_obj = dg_obj_instance.parent if dg_obj_instance.is_instance else dg_obj_instance.object
+                if utils.is_holdout_object(check_obj.original, view_layer):
+                    visible = True
+
+                if exported_obj.visible_to_camera != visible:
+                    exported_obj.visible_to_camera = visible
                     updated = True
 
                 if updated:
