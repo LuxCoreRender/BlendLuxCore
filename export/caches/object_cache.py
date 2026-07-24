@@ -320,6 +320,21 @@ class ObjectCache2:
         is_viewport_render = bool(context)
         instances = {}
 
+        # Check if scene uses indirect_only or holdout (performance optimization)
+        # If not, we can safely batch collection instances
+        scene_uses_indirect_or_holdout = False
+        if view_layer:
+            def check_layer_coll(lc):
+                if lc.indirect_only or lc.holdout:
+                    return True
+                for child in lc.children:
+                    if check_layer_coll(child):
+                        return True
+                return False
+            scene_uses_indirect_or_holdout = check_layer_coll(view_layer.layer_collection)
+            if scene_uses_indirect_or_holdout:
+                print(f"[Export] Scene uses indirect_only/holdout - collection instances exported individually")
+
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
         else:
@@ -340,7 +355,7 @@ class ObjectCache2:
                     )
                 )
                 and obj.type in MESH_OBJECTS
-                and dg_obj_instance.particle_system is not None  # Skip collection instances - export individually for indirect_only
+                and (not scene_uses_indirect_or_holdout or dg_obj_instance.particle_system is not None)  # Conditional batching: skip collection instances only if scene uses indirect_only/holdout
             ):
                 # This code is optimized for large amounts of duplis. Drawback is that objects generated from this
                 # code can't be transformed later in a viewport render session (due to BlendLuxCore implementation
