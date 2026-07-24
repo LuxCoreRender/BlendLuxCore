@@ -320,8 +320,8 @@ class ObjectCache2:
         is_viewport_render = bool(context)
         instances = {}
 
-        # Check if scene uses indirect_only or holdout (performance optimization)
-        # If not, we can safely batch collection instances
+        # Hybrid batching: Conditional + Smart
+        # Check once if scene uses indirect_only/holdout to avoid per-instance overhead
         scene_uses_indirect_or_holdout = False
         if view_layer:
             def check_layer_coll(lc):
@@ -332,8 +332,11 @@ class ObjectCache2:
                         return True
                 return False
             scene_uses_indirect_or_holdout = check_layer_coll(view_layer.layer_collection)
+
             if scene_uses_indirect_or_holdout:
-                print(f"[Export] Scene uses indirect_only/holdout - collection instances exported individually")
+                print(f"[Export] Hybrid batching: Scene uses indirect_only/holdout - full smart batching")
+            else:
+                print(f"[Export] Hybrid batching: Scene clean - fast batching")
 
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
@@ -355,7 +358,7 @@ class ObjectCache2:
                     )
                 )
                 and obj.type in MESH_OBJECTS
-                and (not scene_uses_indirect_or_holdout or dg_obj_instance.particle_system is not None)  # Conditional batching: skip collection instances only if scene uses indirect_only/holdout
+                # Smart batching: always allow batching, group by (mesh, visibility) later
             ):
                 # This code is optimized for large amounts of duplis. Drawback is that objects generated from this
                 # code can't be transformed later in a viewport render session (due to BlendLuxCore implementation
@@ -367,10 +370,31 @@ class ObjectCache2:
                         engine, obj.name, " (dupli)", index, obj_count_estimate
                     )
 
+                # Hybrid batching: Conditional + Smart
+                if scene_uses_indirect_or_holdout:
+                    # Full smart batching: Calculate visibility and holdout per instance
+                    instance_visible = utils.visible_to_camera(dg_obj_instance, is_viewport_render, view_layer)
+
+                    # Holdout overrides indirect_only
+                    check_obj = dg_obj_instance.parent if dg_obj_instance.is_instance else obj
+                    is_holdout = utils.is_holdout_object(check_obj.original, view_layer)
+
+                    if is_holdout:
+                        instance_visible = True  # Holdout needs to be visible to camera to cut hole
+
+                    # Key: (mesh_pointer, camerainvisible, is_holdout)
+                    # Must distinguish holdout vs normal visible - they need different materials!
+                    camerainvisible = not instance_visible
+                    batch_key = (obj.original.as_pointer(), camerainvisible, is_holdout)
+                else:
+                    # Fast batching: Simple key without per-instance overhead
+                    # All instances assumed visible, no holdout/indirect_only checks
+                    batch_key = (obj.original.as_pointer(), False, False)  # (mesh, camerainvisible=False, is_holdout=False)
+
                 try:
                     # The code in this try block is performance-critical, as it is
                     # executed most often when exporting millions of instances.
-                    duplis = instances[obj.original.as_pointer()]
+                    duplis = instances[batch_key]
                     # If duplis is None, then a non-exportable object like a curve with zero faces is being duplicated
                     if duplis:
                         obj_id = dg_obj_instance.object.original.luxcore.id
@@ -409,12 +433,13 @@ class ObjectCache2:
                     if exported_obj:
                         # Note, the transformation matrix and object ID of this first instance is not added
                         # to the duplication list, since it already exists in the scene
-                        instances[obj.original.as_pointer()] = Duplis(
+                        # Smart batching: Store by (mesh, visibility) key
+                        instances[batch_key] = Duplis(
                             exported_obj
                         )
                     else:
                         # Could not export the object, happens e.g. with curve objects with zero faces
-                        instances[obj.original.as_pointer()] = None
+                        instances[batch_key] = None
             else:
                 # This code is for singular objects and for duplis that should be movable later in a viewport render
                 if not utils.is_instance_visible(
