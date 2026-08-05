@@ -78,7 +78,8 @@ class LuxCoreRenderEngine(bpy.types.RenderEngine):
             if getattr(self, "session", None):
                 if not self.is_preview:
                     print("[Engine] del: stopping session")
-                self.session.Stop()
+                if self.session.IsStarted():
+                    self.session.Stop()
                 del self.session
         except ReferenceError:
             print("[Engine] del: RenderEngine struct was already deleted")
