@@ -198,6 +198,8 @@ class Exporter(object):
         # World
         world_props = world.convert(self, depsgraph, scene, is_viewport_render)
         scene_props.Set(world_props)
+        # Inititalize the world_cache
+        self.world_cache.world_name = scene.world.name_full if scene.world else None
 
         if (
             scene.luxcore.debug.enabled
