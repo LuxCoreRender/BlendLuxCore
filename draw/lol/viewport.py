@@ -32,9 +32,11 @@ import mathutils
 
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
+from gpu_extras.presets import draw_texture_2d
 from ...utils import get_addon_preferences
 from ...utils.lol import utils as utils
 
+is_blender_5 = bpy.app.version[0] >= 5 # only test of Blender 5 for now
 
 def draw_rect(x, y, width, height, color):
     gpu.state.blend_set('ALPHA')
@@ -132,30 +134,14 @@ def draw_bbox(location, rotation, bbox_min, bbox_max, progress=None, color=(0, 1
 
 
 def draw_image(x, y, width, height, image, transparency, crop=(0, 0, 1, 1)):
-    coords = [
-        (x, y), (x + width, y),
-        (x, y + height), (x + width, y + height)]
-
-    uvs = [(crop[0], crop[1]),
-           (crop[2], crop[1]),
-           (crop[0], crop[3]),
-           (crop[2], crop[3]),
-           ]
-
-    indices = [(0, 1, 2), (2, 1, 3)]
-
     gpu.state.blend_set('ALPHA')
-    shader = gpu.shader.from_builtin('IMAGE')
-    batch = batch_for_shader(shader, 'TRIS',
-                             {"pos": coords,
-                              "texCoord": uvs},
-                             indices=indices)
 
     texture = gpu.texture.from_image(image)
 
-    shader.bind()
-    shader.uniform_sampler("image", texture)
-    batch.draw(shader)
+    if is_blender_5:
+        draw_texture_2d(texture, (x,y), width, height, is_scene_linear_with_rec709_srgb_target=True)
+    else:
+        draw_texture_2d(texture, (x,y), width, height)
 
     gpu.state.blend_set('NONE')
 
