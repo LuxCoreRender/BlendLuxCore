@@ -36,7 +36,9 @@ def render(engine, depsgraph):
 
     _check_halt_conditions(engine, scene)
 
-    layer = depsgraph.view_layer_eval
+    # Use original view_layer instead of evaluated (evaluated doesn't work correctly with indirect_only_get)
+    view_layer_eval = depsgraph.view_layer_eval
+    layer = scene.original.view_layers.get(view_layer_eval.name)
 
     print('[Engine/Final] Rendering layer "%s"' % layer.name)
 

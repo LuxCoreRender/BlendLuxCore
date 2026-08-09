@@ -505,8 +505,12 @@ class Exporter(object):
             props.Set(self.camera_cache.props)
 
         if changes & Change.OBJECT:
+            # Get original view_layer from evaluated (evaluated doesn't work correctly with indirect_only_get)
+            view_layer_eval = depsgraph.view_layer_eval
+            scene_orig = depsgraph.scene_eval.original
+            view_layer = scene_orig.view_layers.get(view_layer_eval.name)
             self.object_cache2.update(
-                self, depsgraph, luxcore_scene, props, context
+                self, depsgraph, luxcore_scene, props, context, view_layer
             )
 
         if changes & Change.MATERIAL:
