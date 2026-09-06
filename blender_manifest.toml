@@ -13,7 +13,7 @@ type = "add-on"  # Supported types: "add-on", "theme"
 # I.e. MAJOR.MINOR.PATCH
 # E.g.: "2.9.4": major: 2; minor: 9; patch: 3.
 # or for pre-release versions: "2.9.4-alpha.1": major: 2; minor: 9; patch: 3; pre-release: alpha.1
-version = "2.11.0"
+version = "2.11.2"
 
 # Optional: link to documentation, support, source files, etc
 website = "https://luxcorerender.org"
