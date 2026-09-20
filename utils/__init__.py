@@ -1,5 +1,6 @@
 """Various utilities, NOT REQUIRING OTHER SUBMODULES."""
 
+
 # DO NOT IMPORT ANY OF OTHER MODULES IN THIS MODULE AND ITS SUBMODULES
 #
 # This module should be importable without further dependence to other
@@ -18,8 +19,6 @@ import os
 import itertools
 from os.path import basename, dirname
 import tomllib
-from .. import __package__ as base_package
-from .. import __file__ as base_package_path
 
 _needs_reload = "bpy" in locals()
 import bpy
@@ -38,29 +37,23 @@ if _needs_reload:
 
 MESH_OBJECTS = {"MESH", "CURVES", "SURFACE", "META", "FONT"}
 EXPORTABLE_OBJECTS = MESH_OBJECTS | {"LIGHT"}
-NON_DEFORMING_MODIFIERS = {
-    "COLLISION",
-    "PARTICLE_INSTANCE",
-    "PARTICLE_SYSTEM",
-    "SMOKE",
-}
+NON_DEFORMING_MODIFIERS = {"COLLISION", "PARTICLE_INSTANCE", "PARTICLE_SYSTEM", "SMOKE"}
 
 
 def sanitize_luxcore_name(string):
-    """ This is just a regex that removes non-allowed characters.
-
-    Do NOT use this function to create a luxcore name for an
-    object/material/etc.! Use the function get_luxcore_name() instead.
+    """
+    Do NOT use this function to create a luxcore name for an object/material/etc.!
+    Use the function get_luxcore_name() instead.
+    This is just a regex that removes non-allowed characters.
     """
     return re.sub("[^_0-9a-zA-Z]+", "__", string)
 
 
 def make_key(datablock):
-    # We use the memory address as key, e.g. to track materials or objects even
-    # when they are renamed during viewport render.
-    # Note that the memory address changes on undo/redo, but in this case the
-    # viewport render is stopped and re-started anyway, so it should not be a
-    # problem.
+    # We use the memory address as key, e.g. to track materials or objects even when they are
+    # renamed during viewport render.
+    # Note that the memory address changes on undo/redo, but in this case the viewport render
+    # is stopped and re-started anyway, so it should not be a problem.
     assert isinstance(datablock, bpy.types.ID)
     return str(datablock.original.as_pointer())
 
@@ -132,7 +125,7 @@ def make_object_id(dg_obj_instance):
 
     if dg_obj_instance.is_instance:
         # random_id seems to be a 4-Byte integer in range -0xffffffff to 0xffffffff.
-        return dg_obj_instance.random_id & 0xFFFFFFFE
+        return dg_obj_instance.random_id & 0xfffffffe
 
     key = dg_obj_instance.object.original.name
 
@@ -142,18 +135,16 @@ def make_object_id(dg_obj_instance):
     as_int = int.from_bytes(digest, byteorder="little")
     # Truncate to 4 bytes because LuxCore uses unsigned int for the object ID.
     # Make sure it's not exactly 0xffffffff because that's LuxCore's Null index for object IDs.
-    return min(as_int & 0xFFFFFFFF, 0xFFFFFFFF - 1)
+    return min(as_int & 0xffffffff, 0xffffffff - 1)
 
 
 def list_to_matrix(lst):
-    return mathutils.Matrix(
-        [
-            lst[0:4],
-            lst[4:8],
-            lst[8:12],
-            lst[12:16],
-        ]
-    )
+    return mathutils.Matrix([
+        lst[0:4],
+        lst[4:8],
+        lst[8:12],
+        lst[12:16],
+    ])
 
 
 def calc_filmsize_raw(scene, context=None):
@@ -172,32 +163,22 @@ def calc_filmsize_raw(scene, context=None):
 
 def calc_filmsize(scene, context=None):
     render = scene.render
-    border_min_x, border_max_x, border_min_y, border_max_y = (
-        calc_blender_border(scene, context)
-    )
+    border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
     width_raw, height_raw = calc_filmsize_raw(scene, context)
-
+    
     if context:
-        # Viewport render
+        # Viewport render        
         width = width_raw
         height = height_raw
-        if context.region_data.view_perspective in ("ORTHO", "PERSP"):
-            width = int(width_raw * border_max_x) - int(
-                width_raw * border_min_x
-            )
-            height = int(height_raw * border_max_y) - int(
-                height_raw * border_min_y
-            )
+        if context.region_data.view_perspective in ("ORTHO", "PERSP"):            
+            width = int(width_raw * border_max_x) - int(width_raw * border_min_x)
+            height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
         else:
             # Camera viewport
-            zoom = 0.25 * (
-                (math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2
-            )
-            aspectratio, aspect_x, aspect_y = calc_aspect(
-                render.resolution_x * render.pixel_aspect_x,
-                render.resolution_y * render.pixel_aspect_y,
-                scene.camera.data.sensor_fit,
-            )
+            zoom = 0.25 * ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
+            aspectratio, aspect_x, aspect_y = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                          render.resolution_y * render.pixel_aspect_y,
+                                                          scene.camera.data.sensor_fit)
 
             if render.use_border:
                 base = zoom
@@ -208,12 +189,8 @@ def calc_filmsize(scene, context=None):
                 elif scene.camera.data.sensor_fit == "VERTICAL":
                     base *= height
 
-                width = int(base * aspect_x * border_max_x) - int(
-                    base * aspect_x * border_min_x
-                )
-                height = int(base * aspect_y * border_max_y) - int(
-                    base * aspect_y * border_min_y
-                )
+                width = int(base * aspect_x * border_max_x) - int(base * aspect_x * border_min_x)
+                height = int(base * aspect_y * border_max_y) - int(base * aspect_y * border_min_y)
 
         pixel_size = int(scene.luxcore.viewport.pixel_size)
         width //= pixel_size
@@ -221,9 +198,7 @@ def calc_filmsize(scene, context=None):
     else:
         # Final render
         width = int(width_raw * border_max_x) - int(width_raw * border_min_x)
-        height = int(height_raw * border_max_y) - int(
-            height_raw * border_min_y
-        )
+        height = int(height_raw * border_max_y) - int(height_raw * border_min_y)
 
     # Make sure width and height are never zero
     # (can e.g. happen if you have a small border in camera viewport and zoom out a lot)
@@ -255,12 +230,7 @@ def calc_blender_border(scene, context=None):
         use_border = render.use_border
 
     if use_border:
-        blender_border = [
-            border_min_x,
-            border_max_x,
-            border_min_y,
-            border_max_y,
-        ]
+        blender_border = [border_min_x, border_max_x, border_min_y, border_max_y]
         # Round all values to avoid running into problems later
         # when a value is for example 0.699999988079071
         blender_border = [round(value, 6) for value in blender_border]
@@ -276,85 +246,77 @@ def calc_screenwindow(zoom, shift_x, shift_y, scene, context=None):
     render = scene.render
 
     width_raw, height_raw = calc_filmsize_raw(scene, context)
-    border_min_x, border_max_x, border_min_y, border_max_y = (
-        calc_blender_border(scene, context)
-    )
+    border_min_x, border_max_x, border_min_y, border_max_y = calc_blender_border(scene, context)
 
     # Following: Black Magic
     scale = 1
     offset_x = 0
     offset_y = 0
-
+    
     if context:
         # Viewport rendering
         if context.region_data.view_perspective == "CAMERA":
             # Camera view
             offset_x, offset_y = context.region_data.view_camera_offset
-
-            if scene.camera and scene.camera.data.type == "ORTHO":
+            
+            if scene.camera and scene.camera.data.type == "ORTHO":                    
                 scale = 0.5 * scene.camera.data.ortho_scale
-
+                
             if render.use_border:
                 offset_x = 0
                 offset_y = 0
                 zoom = 1
-                aspectratio, xaspect, yaspect = calc_aspect(
-                    render.resolution_x * render.pixel_aspect_x,
-                    render.resolution_y * render.pixel_aspect_y,
-                    scene.camera.data.sensor_fit,
-                )
-
+                aspectratio, xaspect, yaspect = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                            render.resolution_y * render.pixel_aspect_y,
+                                                            scene.camera.data.sensor_fit)
+                    
                 if scene.camera and scene.camera.data.type == "ORTHO":
                     # zoom = scale * world_scale
                     zoom = scale
-
+                    
             else:
                 # No border
-                aspectratio, xaspect, yaspect = calc_aspect(
-                    width_raw, height_raw, scene.camera.data.sensor_fit
-                )
-
+                aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw, scene.camera.data.sensor_fit)
+                
         else:
             # Normal viewport
             aspectratio, xaspect, yaspect = calc_aspect(width_raw, height_raw)
     else:
         # Final rendering
-        aspectratio, xaspect, yaspect = calc_aspect(
-            render.resolution_x * render.pixel_aspect_x,
-            render.resolution_y * render.pixel_aspect_y,
-            scene.camera.data.sensor_fit,
-        )
-
-        if scene.camera and scene.camera.data.type == "ORTHO":
-            scale = 0.5 * scene.camera.data.ortho_scale
+        aspectratio, xaspect, yaspect = calc_aspect(render.resolution_x * render.pixel_aspect_x,
+                                                    render.resolution_y * render.pixel_aspect_y,
+                                                    scene.camera.data.sensor_fit)
+        
+        if scene.camera and scene.camera.data.type == "ORTHO":                    
+            scale = 0.5 * scene.camera.data.ortho_scale                
 
     dx = scale * 2 * (shift_x + 2 * xaspect * offset_x)
     dy = scale * 2 * (shift_y + 2 * yaspect * offset_y)
 
     screenwindow = [
-        -xaspect * zoom + dx,
-        +xaspect * zoom + dx,
-        -yaspect * zoom + dy,
-        +yaspect * zoom + dy,
+        -xaspect*zoom + dx,
+         xaspect*zoom + dx,
+        -yaspect*zoom + dy,
+         yaspect*zoom + dy
     ]
-
+    
     screenwindow = [
         screenwindow[0] * (1 - border_min_x) + screenwindow[1] * border_min_x,
         screenwindow[0] * (1 - border_max_x) + screenwindow[1] * border_max_x,
         screenwindow[2] * (1 - border_min_y) + screenwindow[3] * border_min_y,
-        screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y,
+        screenwindow[2] * (1 - border_max_y) + screenwindow[3] * border_max_y
     ]
-
+    
     return screenwindow
 
 
 def calc_aspect(width, height, fit="AUTO"):
     horizontal_fit = False
     if fit == "AUTO":
-        horizontal_fit = width > height
+        horizontal_fit = (width > height)
     elif fit == "HORIZONTAL":
         horizontal_fit = True
-
+    
     if horizontal_fit:
         aspect = height / width
         xaspect = 1
@@ -363,7 +325,7 @@ def calc_aspect(width, height, fit="AUTO"):
         aspect = width / height
         xaspect = aspect
         yaspect = 1
-
+    
     return aspect, xaspect, yaspect
 
 
@@ -384,14 +346,12 @@ def find_active_vertex_color_layer(vertex_colors):
 def is_instance_visible(dg_obj_instance, obj, context):
     if not (dg_obj_instance.show_self or dg_obj_instance.show_particles):
         return False
-
+    
     if context:
-        viewport_vis_obj = (
-            dg_obj_instance.parent if dg_obj_instance.parent else obj
-        )
+        viewport_vis_obj = dg_obj_instance.parent if dg_obj_instance.parent else obj
         if not viewport_vis_obj.visible_in_viewport_get(context.space_data):
             return False
-
+        
     return is_obj_visible(obj)
 
 
@@ -399,9 +359,7 @@ def is_obj_visible(obj):
     if obj.luxcore.exclude_from_render:
         return False
 
-    if obj.type not in EXPORTABLE_OBJECTS and (
-        obj.data == None or obj.data.rna_type.name != "Hair Curves"
-    ):
+    if obj.type not in EXPORTABLE_OBJECTS and (obj.data == None or obj.data.rna_type.name != 'Hair Curves'):
         return False
 
     # Do not export the object if it's made completely invisible through Cycles settings
@@ -410,29 +368,45 @@ def is_obj_visible(obj):
 
 
 def is_obj_visible_in_cycles(obj):
-    return any(
-        (
-            obj.visible_camera,
-            obj.visible_diffuse,
-            obj.visible_glossy,
-            obj.visible_transmission,
-            obj.visible_volume_scatter,
-            obj.visible_shadow,
-        )
-    )
+    return any((obj.visible_camera, obj.visible_diffuse, obj.visible_glossy, obj.visible_transmission, obj.visible_volume_scatter, obj.visible_shadow))
+
 
 
 def visible_to_camera(dg_obj_instance, is_viewport_render, view_layer=None):
-    obj = (
-        dg_obj_instance.parent
-        if dg_obj_instance.is_instance
-        else dg_obj_instance.object
-    )
+    obj = dg_obj_instance.parent if dg_obj_instance.is_instance else dg_obj_instance.object
     if not obj.luxcore.visible_to_camera:
         return False
-    if is_viewport_render:
-        obj = obj.original
+    # Always use original object for indirect_only_get() because evaluated objects
+    # don't have collection membership data (users_collection is empty)
+    obj = obj.original
     return not obj.indirect_only_get(view_layer=view_layer)
+
+
+def is_holdout_object(obj, view_layer=None):
+    """
+    Check if object is in any LayerCollection with holdout=True.
+    Similar to indirect_only but for holdout.
+    Works like Cycles - respects LayerCollection.holdout settings.
+    """
+    if not view_layer:
+        return False
+
+    # Use original object - evaluated objects don't have collection membership
+    obj = obj.original if hasattr(obj, 'original') else obj
+
+    # Get all collections this object belongs to
+    obj_collections = set(obj.users_collection)
+
+    # Recursively check layer collections
+    def check_layer_collection(layer_coll):
+        if layer_coll.collection in obj_collections and layer_coll.holdout:
+            return True
+        for child in layer_coll.children:
+            if check_layer_collection(child):
+                return True
+        return False
+
+    return check_layer_collection(view_layer.layer_collection)
 
 
 def get_theme(context):
@@ -440,14 +414,8 @@ def get_theme(context):
     return context.preferences.themes[current_theme_name]
 
 
-def get_abspath(
-    path,
-    library=None,
-    must_exist=False,
-    must_be_existing_file=False,
-    must_be_existing_dir=False,
-):
-    """library: The library this path is from."""
+def get_abspath(path, library=None, must_exist=False, must_be_existing_file=False, must_be_existing_dir=False):
+    """ library: The library this path is from. """
     assert not (must_be_existing_file and must_be_existing_dir)
 
     abspath = bpy.path.abspath(path, library=library)
@@ -472,11 +440,7 @@ def absorption_at_depth_scaled(abs_col, depth, scale=1):
     scaled = [0, 0, 0]
     for i in range(len(abs_col)):
         v = float(abs_col[i])
-        scaled[i] = (
-            (-math.log(max([v, 1e-30])) / depth)
-            * scale
-            * (v == 1.0 and -1 or 1)
-        )
+        scaled[i] = (-math.log(max([v, 1e-30])) / depth) * scale * (v == 1.0 and -1 or 1)
 
     return scaled
 
@@ -489,7 +453,7 @@ def all_elems_equal(_list):
 
 
 def use_obj_motion_blur(obj, scene):
-    """Check if this particular object will be exported with motion blur"""
+    """ Check if this particular object will be exported with motion blur """
     cam = scene.camera
 
     if cam is None:
@@ -502,9 +466,7 @@ def use_obj_motion_blur(obj, scene):
 
 
 def has_deforming_modifiers(obj):
-    return any(
-        [mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers]
-    )
+    return any([mod.type not in NON_DEFORMING_MODIFIERS for mod in obj.modifiers])
 
 
 def can_share_mesh(obj):
@@ -546,26 +508,17 @@ def using_filesaver(is_viewport_render, scene):
 
 
 def using_bidir_in_viewport(scene):
-    return (
-        scene.luxcore.config.engine == "BIDIR"
-        and scene.luxcore.viewport.use_bidir
-    )
+    return scene.luxcore.config.engine == "BIDIR" and scene.luxcore.viewport.use_bidir
 
 
 def using_hybridbackforward(scene):
     config = scene.luxcore.config
-    return (
-        config.engine == "PATH"
-        and not config.use_tiles
-        and config.path.hybridbackforward_enable
-    )
+    return (config.engine == "PATH" and not config.use_tiles
+            and config.path.hybridbackforward_enable)
 
 
 def using_hybridbackforward_in_viewport(scene):
-    return (
-        using_hybridbackforward(scene)
-        and scene.luxcore.viewport.add_light_tracing
-    )
+    return using_hybridbackforward(scene) and scene.luxcore.viewport.add_light_tracing
 
 
 def using_photongi_debug_mode(is_viewport_render, scene):
@@ -608,12 +561,7 @@ def use_two_tiled_passes(scene):
     config = scene.luxcore.config
     denoiser = scene.luxcore.denoiser
     using_tilepath = config.engine == "PATH" and config.use_tiles
-    return (
-        denoiser.enabled
-        and denoiser.type == "BCD"
-        and using_tilepath
-        and not config.tile.multipass_enable
-    )
+    return denoiser.enabled and denoiser.type == "BCD" and using_tilepath and not config.tile.multipass_enable
 
 
 def image_sequence_resolve_all(image):
@@ -627,7 +575,6 @@ def image_sequence_resolve_all(image):
     filename_noext, ext = os.path.splitext(filename)
 
     from string import digits
-
     if isinstance(filepath, bytes):
         digits = digits.encode()
     filename_nodigits = filename_noext.rstrip(digits)
@@ -638,19 +585,16 @@ def image_sequence_resolve_all(image):
 
     indexed_filepaths = []
     for f in os.scandir(basedir):
-        index_str = f.name[len(filename_nodigits) : -len(ext) if ext else -1]
+        index_str = f.name[len(filename_nodigits):-len(ext) if ext else -1]
 
-        if (
-            f.is_file()
-            and f.name.startswith(filename_nodigits)
-            and f.name.endswith(ext)
-            and index_str.isdigit()
-        ):
+        if (f.is_file()
+                and f.name.startswith(filename_nodigits)
+                and f.name.endswith(ext)
+                and index_str.isdigit()):
             elem = (int(index_str), f.path)
             indexed_filepaths.append(elem)
 
     return sorted(indexed_filepaths, key=lambda elem: elem[0])
-
 
 def openVDB_sequence_resolve_all(file):
     filepath = get_abspath(file)
@@ -661,11 +605,11 @@ def openVDB_sequence_resolve_all(file):
     # in case of the Blender cache files the structure is name_frame_index.ext
 
     # Test if the filename structure matches the Blender nomenclature
-    matchstr = r"(.*)_([0-9]{6})_([0-9]{2})"
+    matchstr = r'(.*)_([0-9]{6})_([0-9]{2})'
     matchObj = re.match(matchstr, filename_noext)
 
     if not matchObj:
-        matchstr = r"(\D*)([0-9]+)"
+        matchstr = r'(\D*)([0-9]+)'
         # Test if the filename structure matches a general sequence structure
         matchObj = re.match(matchstr, filename_noext)
 
@@ -696,18 +640,14 @@ def get_blendfile_name():
     return os.path.splitext(basename)[0]  # remove ".blend"
 
 
-def get_persistent_cache_file_path(
-    file_path, save_or_overwrite, is_viewport_render, scene
-):
+def get_persistent_cache_file_path(file_path, save_or_overwrite, is_viewport_render, scene):
     file_path_abs = get_abspath(file_path, library=scene.library)
 
     if not os.path.isfile(file_path_abs) and not save_or_overwrite:
         # Do not save the cache file
         return ""
     else:
-        if using_filesaver(is_viewport_render, scene) and file_path.startswith(
-            "//"
-        ):
+        if using_filesaver(is_viewport_render, scene) and file_path.startswith("//"):
             # It is a relative path and we are using filesaver - don't make it
             # an absolute path, just strip the leading "//"
             return file_path[2:]
@@ -728,29 +668,28 @@ def count_index(func):
     A decorator that increments an index each time the decorated function is called.
     It also passes the index as a keyword argument to the function.
     """
-
     def wrapper(*args, **kwargs):
         kwargs["index"] = wrapper.index
         wrapper.index += 1
         return func(*args, **kwargs)
-
     wrapper.index = 0
     return wrapper
 
 
-def get_module_id():
+ADDON_NAME = "BlendLuxCore"
+
+def get_module_name():
     """Get module name (bl_idname) for current addon."""
-    return base_package
-
-
-def get_module_path():
-    """Get absolute path to module."""
-    return pathlib.Path(base_package_path).parent
+    components = __package__.split('.')
+    prefix = list(itertools.takewhile(lambda x: x != ADDON_NAME, components))
+    prefix.append(ADDON_NAME)
+    return '.'.join(prefix)
 
 
 def get_addon_preferences(context):
     """Get addon_preferences handle."""
-    return context.preferences.addons[base_package].preferences
+    addon_name = get_module_name()
+    return context.preferences.addons[addon_name].preferences
 
 
 def get_version_string():
@@ -759,22 +698,21 @@ def get_version_string():
     Load version information from blender_manifest.toml, which replaces the old
     "bl_info" dictionary.
     """
-    manifest_path = get_module_path() / "blender_manifest.toml"
+    root_path = pathlib.Path(__file__).parent.parent.resolve()
+    manifest_path =  root_path / "blender_manifest.toml"
     with open(manifest_path, "rb") as f:
         manifest_data = tomllib.load(f)
-    return manifest_data["version"]
-
+    version_string = manifest_data["version"]
+    return version_string
 
 def get_user_dir(name):
     """Get a user writeable directory, create it if not existing."""
-    print(f"[BLC] Module id: {get_module_id()}")
+    print(f"[BLC] Module name: {get_module_name()}")
     return pathlib.Path(
-        bpy.utils.extension_path_user(get_module_id(), path=name, create=True)
+        bpy.utils.extension_path_user(get_module_name(), path=name, create=True)
     )
 
-
-VERBOSE_REGISTER = False  # Set to true to see per-class info (debug)
-
+VERBOSE_REGISTER = False  # Set to true to see per-class info
 
 def register_module(module_name, classes, submodules=[]):
     """Register a module in Blender.
