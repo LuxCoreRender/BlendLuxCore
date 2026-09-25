@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty
+from bpy.props import PointerProperty, BoolProperty, FloatProperty, IntProperty, StringProperty
 from bpy.types import PropertyGroup
 from .hair import LuxCoreHair
 
@@ -31,6 +31,28 @@ class LuxCoreObjectProps(PropertyGroup):
     )
     enable_motion_blur: BoolProperty(
         name="Motion Blur", default=True, description=DESC_MOTION_BLUR
+    )
+    use_proxy: BoolProperty(
+        name="Use Proxy",
+        default=False,
+        description="Load geometry from the Proxy File below instead of exporting the Blender mesh. "
+                     "If disabled, the Proxy File path is ignored even if set"
+    )
+    scene_shape: StringProperty(
+        name="Proxy File", default="", subtype="FILE_PATH",
+        description="Path to an external PLY file on disk, used as a proxy instead of exporting the Blender "
+                     "mesh. If the filename ends in a number (e.g. 'tree007.ply'), sibling files in the same "
+                     "folder sharing the same base name are auto-detected and used as additional materials, "
+                     "with the number mapped to the material slot index (as produced by LuxCore's "
+                     "'Only write LuxCore scene' option)"
+    )
+    proxy_apply_modifiers: BoolProperty(
+        name="Apply Modifiers",
+        default=True,
+        description="When generating a proxy, export the mesh after modifiers (Subdivision, Bevel, ...) "
+                     "are applied. Disable this if the object's own modifier stack scatters/instances other "
+                     "objects (e.g. a Geometry Nodes distributor), since applying modifiers would realize "
+                     "all those instances into one merged mesh instead of keeping them as instances"
     )
     id: IntProperty(
         name="Object ID",
