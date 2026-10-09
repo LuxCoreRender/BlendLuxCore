@@ -61,3 +61,12 @@ class LuxCoreDenoiser(PropertyGroup):
                                                   default="REFLECT_TRANSMIT", description="How to treat specular materials in the albedo AOV")
     prefilter_AOVs: BoolProperty(name="Prefilter Auxiliary AOVs", default=True,
                                  description="Denoise the albedo and avg. shading normal AOVs before using them to denoise the main image")
+    oidn_firefly_suppression: BoolProperty(name="Firefly Suppression", default=False,
+                                           description="Scale down isolated outlier pixels before denoising, so the "
+                                                       "denoiser does not smear fireflies into blobs. Only the denoised "
+                                                       "result is affected, the raw render is untouched. Intended for "
+                                                       "mostly converged renders: at very low sample counts the noise "
+                                                       "is the signal and suppressing it darkens the image")
+    oidn_firefly_sigma: FloatProperty(name="Threshold", default=4.0, min=1.0, soft_max=10.0,
+                                      description="Outlier threshold in units of local noise (median absolute "
+                                                  "deviation). Lower values suppress more aggressively")
