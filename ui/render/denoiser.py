@@ -60,6 +60,11 @@ class LUXCORE_RENDER_PT_denoiser(RenderButtonsPanel, Panel):
             sub.prop(denoiser, "max_memory_MB")
             sub.prop(denoiser, "albedo_specular_passthrough_mode")
             sub.prop(denoiser, "prefilter_AOVs")
+            row = layout.row()
+            row.prop(denoiser, "oidn_firefly_suppression")
+            sub = row.row()
+            sub.active = denoiser.oidn_firefly_suppression
+            sub.prop(denoiser, "oidn_firefly_sigma")
 
 
 class LUXCORE_RENDER_PT_denoiser_bcd_advanced(RenderButtonsPanel, Panel):
