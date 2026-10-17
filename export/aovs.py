@@ -257,6 +257,8 @@ def get_OIDN_props(definitions, scene, index):
     definitions[str(index) + ".oidnmemory"] = denoiser.max_memory_MB
     definitions[str(index) + ".sharpness"] = 0
     definitions[str(index) + ".prefilter.enable"] = denoiser.prefilter_AOVs
+    if denoiser.oidn_firefly_suppression:
+        definitions[str(index) + ".firefly.sigma"] = denoiser.oidn_firefly_sigma
     return index + 1
 
 
