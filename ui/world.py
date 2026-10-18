@@ -1,3 +1,4 @@
+import os
 import bpy
 from bl_ui.properties_world import WorldButtonsPanel
 from bpy.types import Panel
@@ -5,6 +6,7 @@ from cycles.ui import panel_node_draw
 
 from .. import icons
 from ..icons import icon_manager
+from .. import utils
 
 from ..utils import ui as utils_ui
 from .light import draw_envlight_cache_ui
@@ -49,7 +51,7 @@ class LUXCORE_PT_context_world(WorldButtonsPanel, Panel):
         layout.use_property_decorate = False       
 
         if world.luxcore.light != "none":
-            is_sky = world.luxcore.light == "sky2"
+            is_sky = world.luxcore.light in ("sky2", "sky3")
             if (is_sky or (world.luxcore.light == "infinite" and world.luxcore.image)):
                 rgb_gain_label = "Tint"
             else:
@@ -132,6 +134,68 @@ class LUXCORE_WORLD_PT_sky2(WorldButtonsPanel, Panel):
 
         # Note: ground albedo can be used without ground color
         layout.prop(world.luxcore, "groundalbedo")
+        layout.prop(world.luxcore, "ground_enable")
+
+        if world.luxcore.ground_enable:
+            layout.prop(world.luxcore, "ground_color")
+
+
+class LUXCORE_WORLD_PT_sky3(WorldButtonsPanel, Panel):
+    """
+    Sky3 (Prague Sky Model, Wilkie 2021) UI Panel
+    """
+    COMPAT_ENGINES = {"LUXCORE"}
+    bl_label = "Prague Sky Settings"
+    bl_parent_id = "LUXCORE_PT_context_world"
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        world = context.world
+        return (world and not world.luxcore.use_cycles_settings
+                and engine == "LUXCORE" and world.luxcore.light == "sky3")
+
+    def draw(self, context):
+        layout = self.layout
+        world = context.world
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        # The dataset path is an addon preference
+        prefs = utils.get_addon_preferences(context)
+        dataset_path = bpy.path.abspath(prefs.skymodel_dataset_path)
+        if not dataset_path or not os.path.isfile(dataset_path):
+            col = layout.column()
+            col.label(text="Prague Sky Model dataset not found.", icon=icons.WARNING)
+            col.label(text="Set the path in the addon preferences")
+        else:
+            layout.label(text="Dataset: " + dataset_path, icon=icons.INFO)
+
+        layout.prop(world.luxcore, "sun")
+        sun = world.luxcore.sun
+        if sun:
+            is_really_a_sun = sun.type == "LIGHT" and sun.data and sun.data.type == "SUN"
+
+            if is_really_a_sun:
+                if sun.data.luxcore.light_type in ("sun", "sun3"):
+                    layout.label(text="Sun disc is exported as Prague Sun", icon=icons.INFO)
+                else:
+                    layout.label(text="This light type does not emit", icon=icons.WARNING)
+                    layout.label(text="a Prague Sun disc")
+            else:
+                layout.label(text="Not a sun lamp", icon=icons.WARNING)
+        else:
+            layout.label(text="Without an attached sun lamp there is", icon=icons.WARNING)
+            layout.label(text="no sun disc in the sky")
+
+        # Atmosphere parameters, exported as scene.pragueskymodel.*
+        layout.prop(world.luxcore, "sky3_visibility")
+        layout.prop(world.luxcore, "sky3_altitude")
+        layout.prop(world.luxcore, "sky3_groundalbedo")
+
+        # Note: ground albedo only affects the sky simulation,
+        # ground color replaces the lower half of the sky sphere
         layout.prop(world.luxcore, "ground_enable")
 
         if world.luxcore.ground_enable:

@@ -11,7 +11,7 @@ from ..utils.node import get_active_output
 
 WORLD_BACKGROUND_LIGHT_NAME = "__WORLD_BACKGROUND_LIGHT__"
 MISSING_IMAGE_COLOR = [1, 0, 1]
-TYPES_SUPPORTING_ENVLIGHTCACHE = {"sky2", "infinite", "constantinfinite"}
+TYPES_SUPPORTING_ENVLIGHTCACHE = {"sky2", "sky3", "infinite", "constantinfinite"}
 
 is_blender_5 = bpy.app.version[0] >= 5 # only test of Blender 5 for now
 
@@ -242,7 +242,15 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
 
         _define_brightness_and_color(light, definitions)
 
-        if light.luxcore.light_type == "sun":
+        # A sun attached to a Prague Sky world is exported as sun3,
+        # so sun and sky stay a physically consistent pair
+        is_sky3_sun = (light.luxcore.light_type == "sun"
+                       and scene.world is not None
+                       and scene.world.luxcore.light == "sky3"
+                       and scene.world.luxcore.sun is not None
+                       and scene.world.luxcore.sun.name == obj.name)
+
+        if light.luxcore.light_type == "sun" and not is_sky3_sun:
             # sun
             definitions["type"] = "sun"
             definitions["dir"] = sun_dir
@@ -251,6 +259,18 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
 
             if light.luxcore.color_mode == "rgb":
                 # The sun doesn't support have a "color" property, but its color can be tinted via the gain
+                tint_color = light.luxcore.rgb_gain
+                for i in range(3):
+                    definitions["gain"][i] *= tint_color[i]
+        elif light.luxcore.light_type == "sun3" or is_sky3_sun:
+            # sun3 (Prague Sky Model sun disc)
+            # Note: sun3 has no color property, the radiance comes from the model.
+            # RGB tint is applied via the gain.
+            definitions["type"] = "sun3"
+            definitions["dir"] = sun_dir
+            definitions["relsize"] = light.luxcore.relsize
+
+            if light.luxcore.color_mode == "rgb":
                 tint_color = light.luxcore.rgb_gain
                 for i in range(3):
                     definitions["gain"][i] *= tint_color[i]
@@ -541,6 +561,26 @@ def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
         for i in range(3):
             definitions["gain"][i] *= tint_color[i]
 
+    elif light_type == "sky3":
+        # Prague Sky Model (Wilkie 2021), physically consistent only with a sun3 light
+        definitions["type"] = "sky3"
+        definitions["ground.enable"] = world.luxcore.ground_enable
+        definitions["ground.color"] = list(world.luxcore.ground_color)
+
+        # The atmosphere parameters (visibility/altitude/groundalbedo) and the
+        # dataset path are exported as scene.pragueskymodel.* (see export/world.py)
+
+        if world.luxcore.sun and world.luxcore.sun.data:
+            # Use the sun direction so the user does not have to keep two values in sync
+            definitions["dir"] = _calc_sun_dir(world.luxcore.sun.matrix_world)
+            if world.luxcore.use_sun_gain_for_sky:
+                sun = world.luxcore.sun.data
+                gain, _, _ = _convert_common_props(exporter, scene, sun)
+                definitions["gain"] = apply_exposure(gain, sun.luxcore.exposure)
+
+        for i in range(3):
+            definitions["gain"][i] *= tint_color[i]
+
     elif light_type == "infinite":
         if world.luxcore.image:
             transformation = Matrix.Rotation(world.luxcore.rotation, 4, "Z")
@@ -576,13 +616,13 @@ def _calc_sun_dir(transform):
 
 def _convert_common_props(exporter, scene, light_or_world):
     if isinstance(light_or_world, bpy.types.Light):
-        if light_or_world.type == "SUN" and light_or_world.luxcore.light_type == "sun":
+        if light_or_world.type == "SUN" and light_or_world.luxcore.light_type in ("sun", "sun3"):
             raw_gain = light_or_world.luxcore.sun_sky_gain
         else:
             raw_gain = light_or_world.luxcore.gain
     else:
         # It's a bpy.types.World
-        if light_or_world.luxcore.light == "sky2":
+        if light_or_world.luxcore.light in ("sky2", "sky3"):
             raw_gain = light_or_world.luxcore.sun_sky_gain
         else:
             raw_gain = light_or_world.luxcore.gain
