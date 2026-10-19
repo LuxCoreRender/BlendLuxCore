@@ -269,6 +269,7 @@ def _convert_luxcore_light(exporter, obj, depsgraph, luxcore_scene, transform, i
             definitions["type"] = "sun3"
             definitions["dir"] = sun_dir
             definitions["relsize"] = light.luxcore.relsize
+            _add_prague_sky_props(definitions, scene)
 
             if light.luxcore.color_mode == "rgb":
                 tint_color = light.luxcore.rgb_gain
@@ -566,9 +567,11 @@ def _convert_luxcore_world(exporter, scene, world, is_viewport_render):
         definitions["type"] = "sky3"
         definitions["ground.enable"] = world.luxcore.ground_enable
         definitions["ground.color"] = list(world.luxcore.ground_color)
+        _add_prague_sky_props(definitions, scene)
 
         # The atmosphere parameters (visibility/altitude/groundalbedo) and the
-        # dataset path are exported as scene.pragueskymodel.* (see export/world.py)
+        # dataset path are additionally emitted as scene.pragueskymodel.*
+        # (see export/world.py) and per light (see _add_prague_sky_props)
 
         if world.luxcore.sun and world.luxcore.sun.data:
             # Use the sun direction so the user does not have to keep two values in sync
@@ -612,6 +615,30 @@ def _get_distant_light_normalization_factor(theta):
 def _calc_sun_dir(transform):
     matrix_inv = transform.inverted()
     return [matrix_inv[2][0], matrix_inv[2][1], matrix_inv[2][2]]
+
+
+def _add_prague_sky_props(definitions, scene):
+    """
+    Add the Prague Sky Model parameters per light.
+
+    The scene-level scene.pragueskymodel.* block is only part of the
+    initial scene export. During live viewport updates, a light is
+    re-parsed on its own with only its own properties, so without these
+    per-light fallbacks the atmosphere parameters revert to the LuxCore
+    defaults and the dataset could not be found at all (the light would
+    disappear until the viewport render is restarted).
+    """
+    world = scene.world
+    if world and not world.luxcore.use_cycles_settings and world.luxcore.light == "sky3":
+        definitions["visibility"] = world.luxcore.sky3_visibility
+        definitions["altitude"] = world.luxcore.sky3_altitude
+        definitions["groundalbedo"] = world.luxcore.sky3_groundalbedo
+
+    # The dataset path is an addon preference
+    prefs = utils.get_addon_preferences(bpy.context)
+    dataset_path = bpy.path.abspath(prefs.skymodel_dataset_path)
+    if dataset_path:
+        definitions["dataset"] = dataset_path
 
 
 def _convert_common_props(exporter, scene, light_or_world):

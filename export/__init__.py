@@ -541,7 +541,52 @@ class Exporter(object):
             )
             props.Set(world_props)
 
+            # The attached sun of a Prague Sky world is exported as a sun3
+            # light whose parameters (atmosphere) depend on the world.
+            # Re-export it so it stays in sync when the world changes.
+            self._reexport_sky3_sun(depsgraph, luxcore_scene, props, context.scene)
+
         return props
+
+    def _reexport_sky3_sun(self, depsgraph, luxcore_scene, scene_props, scene):
+        """
+        Re-export the sun lamps of a Prague Sky world when the world changes
+        (e.g. visibility, altitude, groundalbedo are edited) so their sun3
+        lights pick up the new atmosphere parameters.
+        """
+        world = scene.world
+        if (not world or world.luxcore.use_cycles_settings
+                or world.luxcore.light != "sky3"):
+            return
+
+        # Collect the sun lamps whose export depends on the world settings:
+        # the attached sun and all explicit Prague Sun (sun3) lamps
+        suns = set()
+        attached = world.luxcore.sun
+        if (attached and attached.type == "LIGHT" and attached.data
+                and attached.data.luxcore.light_type in ("sun", "sun3")):
+            suns.add(attached)
+        for obj in scene.objects:
+            if (obj.type == "LIGHT" and obj.data and obj.data.type == "SUN"
+                    and obj.data.luxcore.light_type == "sun3"):
+                suns.add(obj)
+
+        for sun in suns:
+            obj_key = utils.make_key(sun)
+            if obj_key not in self.object_cache2.exported_objects:
+                # Not exported (e.g. hidden in this view layer), nothing to do
+                continue
+            if obj_key in self.object_cache2.reexported_light_keys:
+                # Already re-exported during this update pass, e.g. because
+                # the sun object itself was updated
+                continue
+
+            light_props, exported_light = light.convert_light(
+                self, sun, obj_key, depsgraph, luxcore_scene,
+                sun.matrix_world.copy(), True)
+            if exported_light:
+                self.object_cache2.exported_objects[obj_key] = exported_light
+                scene_props.Set(light_props)
 
     def _init_stats(self, stats, config_props, scene):
         render_engine = config_props.Get("renderengine.type").GetString()
