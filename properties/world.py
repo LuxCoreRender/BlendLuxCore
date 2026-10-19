@@ -110,11 +110,11 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     # sky3 settings (Prague Sky Model, Wilkie 2021)
     # Note: the dataset path is an addon preference,
     # the atmosphere parameters are exported as scene.pragueskymodel.*
-    sky3_visibility: FloatProperty(name="Visibility", default=59.4, min=20, soft_max=131.8,
+    sky3_visibility: FloatProperty(name="Visibility", default=59.4, min=20, max=131.8,
                                    precision=1, description=SKY3_VISIBILITY_DESC)
     sky3_altitude: FloatProperty(name="Altitude", default=0, min=0, max=15000,
                                   subtype="NONE", precision=0, description=SKY3_ALTITUDE_DESC)
-    sky3_groundalbedo: FloatProperty(name="Ground Albedo", default=0, min=0, max=1,
+    sky3_groundalbedo: FloatProperty(name="Ground Albedo", default=0.5, min=0, max=1,
                                       description=SKY3_GROUNDALBEDO_DESC)
 
     # infinite
