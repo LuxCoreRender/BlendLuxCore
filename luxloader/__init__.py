@@ -27,7 +27,7 @@ from .. import utils
 # that will be downloaded from PyPi during the standard installation of
 # BlendLuxCore. Please update this variable ONLY AFTER the targeted version of
 # pyluxcore has been released on PyPi.
-PYLUXCORE_VERSION = "2.11.0a6"
+PYLUXCORE_VERSION = "2.11.2"
 
 # Module folders
 ROOT_FOLDER = utils.get_module_path()  # The root dir of the package
@@ -144,7 +144,7 @@ def _get_installation_info():
     info_file = ROOT_FOLDER / "pyluxcore_installation_info.txt"
     print(f"[BLC] Checking installation info ('{info_file}')")
 
-    if not info_file.exists:
+    if not info_file.exists():
         return None
 
     config = configparser.ConfigParser()
@@ -420,17 +420,20 @@ def _fetch_wheels():
 
         wheels = [f"pyluxcore=={pyluxcore_version}"]
 
+        print("[BLC] Fetching wheels from PyPi")
         print("[BLC] Targeting pyluxcore version:", pyluxcore_version)
 
     # Case #2: Get from local source (1 file)
     elif wheel_source == WheelSource.LOCAL:
         # Get path to wheel and check consistency
         path_to_wheel = pathlib.Path(settings.get("path_to_wheel", ""))
+        print("[BLC] Fetching wheels from local source:", path_to_wheel)
         if not (path_to_wheel.is_file() and path_to_wheel.is_absolute()):
             print(f"[BLC] Wheel file not found ('{path_to_wheel}')")
             return FetchWheelStatus.ERROR, None
 
         # Get optional folder with dependencies
+        print("[BLC] Getting dependencies")
         additional_deps = []
         if path_to_wheel_deps_setting := settings.get(
             "path_to_wheel_deps", ""

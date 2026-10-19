@@ -5,7 +5,7 @@ schema_version = "1.0.0"
 id = "blendluxcore"
 name = "BlendLuxCore"
 tagline = "LuxCore"
-maintainer = "Johannes Hinrichs (CodeFHD)"
+maintainer = "Johannes Hinrichs (CodeFHD), Howetuft"
 type = "add-on"  # Supported types: "add-on", "theme"
 
 
@@ -13,7 +13,7 @@ type = "add-on"  # Supported types: "add-on", "theme"
 # I.e. MAJOR.MINOR.PATCH
 # E.g.: "2.9.4": major: 2; minor: 9; patch: 3.
 # or for pre-release versions: "2.9.4-alpha.1": major: 2; minor: 9; patch: 3; pre-release: alpha.1
-version = "2.11.0-a.6"
+version = "2.11.1"
 
 # Optional: link to documentation, support, source files, etc
 website = "https://luxcorerender.org"
@@ -22,7 +22,7 @@ website = "https://luxcorerender.org"
 # https://docs.blender.org/manual/en/dev/advanced/extensions/tags.html
 tags = ["Render"]
 
-blender_version_min = "4.2.0"
+blender_version_min = "4.5.0"
 # # Optional: Blender version that the extension does not support, earlier versions are supported.
 # # This can be omitted and defined later on the extensions platform if an issue is found.
 # blender_version_max = "5.1.0"
@@ -39,12 +39,13 @@ license = [
 # ]
 
 # # Optional: list of supported platforms. If omitted, the extension will be available in all operating systems.
-platforms = ["windows-x64", "macos-arm64", "linux-x64", "macos-x64", "windows-arm64"]
+platforms = ["windows-x64", "macos-arm64", "linux-x64", "macos-x64"]
 
 # Optional: bundle 3rd party Python modules.
 # https://docs.blender.org/manual/en/dev/advanced/extensions/python_wheels.html
 #
 # DO NOT ALTER following line, it will be replaced by actual wheel list at runtime
+# For developers: If you intend to use BLC in Editable Mode, please run 'debug_helpers/setup-wheels-filter.sh' beforehands
 wheels = []
 
 # # Optional: add-ons can list which resources they will require:
