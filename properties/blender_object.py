@@ -40,6 +40,7 @@ class LuxCoreObjectProps(PropertyGroup):
     )
     scene_shape: StringProperty(
         name="Proxy File", default="", subtype="FILE_PATH",
+        options={"PATH_SUPPORTS_BLEND_RELATIVE"},
         description="Path to an external PLY file on disk, used as a proxy instead of exporting the Blender "
                      "mesh. If the filename ends in a number (e.g. 'tree007.ply'), sibling files in the same "
                      "folder sharing the same base name are auto-detected and used as additional materials, "

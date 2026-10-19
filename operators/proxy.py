@@ -94,6 +94,22 @@ def _export_mesh_by_material(obj, directory, apply_modifiers=True, apply_world_t
     return exported_files
 
 
+def _to_relative_proxy_path(filepath):
+    """Convert an absolute proxy file path to a path relative to the .blend file.
+
+    bpy.path.relpath() can silently fail to produce a relative ("//...") path when
+    the .blend file lives on a network share (GVFS/SMB mounts on Linux, UNC paths on
+    Windows): instead of erroring, it just returns the path unchanged as absolute.
+    Since the whole point of a proxy path is to survive the project being copied to
+    another machine, that failure defeats the feature. os.path.relpath() does the
+    same job with plain string math, so it isn't affected by that drive/share
+    detection quirk.
+    """
+    blend_dir = os.path.dirname(bpy.data.filepath)
+    rel = os.path.relpath(filepath, blend_dir)
+    return "//" + rel.replace(os.sep, "/")
+
+
 def _generate_proxy_for_object(obj):
     """Export obj's mesh as per-material PLY proxy files and set obj up to use them.
 
@@ -114,7 +130,7 @@ def _generate_proxy_for_object(obj):
     if not files:
         return []
 
-    obj.luxcore.scene_shape = bpy.path.relpath(files[0])
+    obj.luxcore.scene_shape = _to_relative_proxy_path(files[0])
     obj.luxcore.use_proxy = True
     return files
 
