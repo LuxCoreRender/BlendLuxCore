@@ -306,6 +306,10 @@ class ObjectCache2:
         self.exported_objects = {}
         self.exported_meshes = {}
         self.exported_hair = {}
+        # Keys of lights that were re-exported in the last update() pass.
+        # Used by the world update (see Exporter._reexport_sky3_sun) to
+        # avoid re-exporting the same light twice.
+        self.reexported_light_keys = set()
 
     def first_run(
         self,
@@ -767,6 +771,20 @@ class ObjectCache2:
         # Always instance in viewport so we can move objects around
         use_instancing = True
 
+        # Keys of light objects that were updated (moved or settings changed)
+        # in this depsgraph evaluation, and keys of lights that were already
+        # re-exported by the geometry update loop below.
+        # Lights are only re-exported if they actually changed, because
+        # re-exporting a light deletes and re-creates it in LuxCore, which can
+        # be expensive (e.g. the Prague Sky Model dataset is loaded again).
+        updated_light_ptrs = set()
+        reexported_light_keys = set()
+        self.reexported_light_keys = reexported_light_keys
+        for dg_update in depsgraph.updates:
+            if (isinstance(dg_update.id, bpy.types.Object)
+                    and dg_update.id.type == "LIGHT"):
+                updated_light_ptrs.add(utils.make_key(dg_update.id))
+
         # Geometry updates (mesh edit, modifier edit etc.)
         if depsgraph.id_type_updated("OBJECT"):
             for dg_update in depsgraph.updates:
@@ -863,6 +881,7 @@ class ObjectCache2:
                         if exported_stuff:
                             self.exported_objects[obj_key] = exported_stuff
                             scene_props.Set(props)
+                        reexported_light_keys.add(obj_key)
 
         # TODO maybe not loop over all instances, instead only loop over updated
         #  objects and check if they have a particle system that needs to be updated?
@@ -908,6 +927,14 @@ class ObjectCache2:
 
                 if updated:
                     scene_props.Set(exported_obj.get_props())
+            elif obj.type == "LIGHT" and not dg_obj_instance.is_instance and (
+                    obj_key in reexported_light_keys
+                    or (obj_key in self.exported_objects
+                        and utils.make_key(dg_obj_instance.object) not in updated_light_ptrs)):
+                # Already exported light that was not updated, nothing to do.
+                # (Instanced lights are always re-exported because we can not
+                # tell if their emitter moved)
+                continue
             else:
                 # Object is new and not in LuxCore yet, or it is a light, do a full export
                 self._convert_obj(

@@ -161,6 +161,17 @@ class LuxCoreAddonPreferences(AddonPreferences):
 
     display_luxcore_logs: BoolProperty(name="Show LuxCore Logs", default=True)
 
+    skymodel_dataset_path: StringProperty(
+        name="Prague Sky Model Dataset",
+        description=(
+            "Path to the Prague Sky Model dataset file (SkyModelDataset.dat, "
+            "available from github.com/PetrVevoda/pragueskymodel). "
+            "Required by the Prague Sky and Prague Sun light sources"
+        ),
+        subtype="FILE_PATH",
+        default="",
+    )
+
     # Read-only string property, returns the current date
     def get_pyluxcore_version(self):
         """Provide pyluxcore version."""
@@ -237,6 +248,12 @@ class LuxCoreAddonPreferences(AddonPreferences):
         split = row.split(factor=SPLIT_FACTOR)
         split.label(text="Pyluxcore version:")
         split.prop(self, "pyluxcore_version")
+
+        # Prague Sky Model dataset path
+        row = layout.row()
+        split = row.split(factor=SPLIT_FACTOR)
+        split.label(text="Prague Sky Model Dataset:")
+        split.prop(self, "skymodel_dataset_path", text="")
 
         # Final separator (keep at the end)
         layout.separator()
