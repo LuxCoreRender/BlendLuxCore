@@ -2,6 +2,8 @@ import bpy
 from array import array
 from functools import lru_cache
 from time import time
+import hashlib
+import os
 
 from ... import utils
 import pyluxcore
@@ -473,6 +475,22 @@ class ObjectCache2:
         #         print(key, "mesh is None")
 
     def _get_mesh_key(self, obj, use_instancing, is_viewport_render=True):
+        if hasattr(obj.luxcore, "use_proxy") and obj.luxcore.use_proxy and obj.luxcore.scene_shape != "":
+            # Proxy geometry comes from the file path, not from obj.data. Different objects can
+            # point at different proxy files while sharing the same (irrelevant) placeholder mesh
+            # data, e.g. linked duplicates - so the cache key must be based on the resolved path,
+            # not on obj.data, or they would wrongly share/overwrite each other's cached geometry.
+            # Hashed rather than used raw, since the path (slashes, drive letters, spaces) would
+            # otherwise end up embedded in LuxCore SDL shape/property names.
+            abspath = bpy.path.abspath(obj.luxcore.scene_shape, library=obj.original.library)
+            if os.path.exists(abspath):
+                path_hash = hashlib.md5(abspath.encode("utf-8")).hexdigest()[:16]
+                return "proxy_" + path_hash
+            # File missing: mesh_converter falls back to exporting obj's own Blender mesh,
+            # so the key must fall back too - otherwise two objects with different geometry
+            # but the same (missing) proxy path would collide on this path-based key and
+            # wrongly share each other's cached fallback mesh.
+
         # Important: we need the data of the original object, not the evaluated one.
         # The instancing state has to be part of the key because a non-instanced mesh
         # has its transformation baked-in and can't be used by other instances.
@@ -690,6 +708,9 @@ class ObjectCache2:
         transform = dg_obj_instance.matrix_world
 
         # Objects with displacement in the node tree are instanced to avoid discrepancies between viewport and final render
+        # Proxy objects are always instanced too: their geometry is loaded from an external file in local
+        # space (not baked with the object's transform), so the object's own transform must always be sent
+        # to the engine separately - which only happens on the instancing path (see ExportedObject.get_props).
         use_instancing = (
             is_viewport_render
             or dg_obj_instance.is_instance
@@ -698,6 +719,7 @@ class ObjectCache2:
                 exporter.motion_blur_enabled and obj.luxcore.enable_motion_blur
             )
             or uses_displacement(obj)
+            or (hasattr(obj.luxcore, "use_proxy") and obj.luxcore.use_proxy)
         )
 
         mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
