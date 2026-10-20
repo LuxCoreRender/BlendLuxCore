@@ -105,8 +105,14 @@ def view_update(engine, context, depsgraph, changes=None):
             print("=" * 50)
             print("[Engine/Viewport] New session")
             engine.exporter = export.Exporter()
+
+            # Get original view_layer for indirect_only and holdout support
+            view_layer_eval = depsgraph.view_layer_eval
+            scene_orig = depsgraph.scene_eval.original
+            view_layer = scene_orig.view_layers.get(view_layer_eval.name)
+
             engine.session = engine.exporter.create_session(
-                depsgraph, context, engine=engine
+                depsgraph, context, engine=engine, view_layer=view_layer
             )
             # Start in separate thread to avoid blocking the UI
             engine.starting_session = True
