@@ -22,6 +22,7 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
     )
     enhanced: BoolProperty(
         name="Enhanced",
+        description="Evaluate the smooth subdivision limit surface with angle-based edge creases",
         default=True,
         update=utils_node.force_viewport_mesh_update,
     )
@@ -37,7 +38,7 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
     sharpness_threshold: FloatProperty(
         name="Sharpness Threshold (radians)",
         description=(
-            "If the dihedral angle between two adjacent faces is less than this "
+            "If the angle between adjacent face normals is greater than this "
             "threshold, the shared edge is considered sharp and will be treated "
             "as such during subdivision."
             "\nENHANCED ONLY"
