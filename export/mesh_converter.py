@@ -61,16 +61,27 @@ def convert(
         # Vertex: an index to the mesh array of points
         # Loop: a vertex and an edge
 
-        # Loop vertices
+        # Loop vertices: for each loop, the index of the mesh vertex it uses
         loop_vertices = get_ndarray(mesh.loops, "vertex_index", 0, np.uint32)
 
-        # Points
+        # Points: the unique mesh vertices. The same array is shared by all
+        # the submeshes defined below (LuxCore shares the point storage
+        # between meshes defined with identical points)
         vertex_points = get_ndarray(mesh.vertices, "co", 3, np.float32)
-        loop_points = vertex_points[loop_vertices]
+        num_vertices = len(vertex_points)
 
-        # Normals
+        # Normals (per-vertex)
         vertex_normals = get_ndarray(mesh.vertices, "normal", 3, np.float32)
-        loop_normals = vertex_normals[loop_vertices]
+
+        # Gather per-loop data (uv, corner colors...) into per-vertex arrays,
+        # so that they stay aligned with the unique points. When several
+        # loops of a same vertex disagree (e.g. UV seams), the last loop wins.
+        def gather_per_vertex(loop_data):
+            per_vertex = np.zeros(
+                (num_vertices,) + loop_data.shape[1:], dtype=loop_data.dtype
+            )
+            per_vertex[loop_vertices] = loop_data
+            return per_vertex
 
         # Triangle loop indices
         triangle_loops = get_ndarray(
@@ -83,18 +94,18 @@ def convert(
         ).ravel()
         unique_mats = np.unique(loop_triangle_materials)
 
-        # UV
+        # UV (per-loop in Blender, gathered per-vertex)
         uvs = [
-            get_ndarray(uv_layer.uv, "vector", 2, np.float32)
+            gather_per_vertex(get_ndarray(uv_layer.uv, "vector", 2, np.float32))
             for uv_layer in mesh.uv_layers
         ]
 
         # Vertex colors
         def reshape_colors(colors, domain):
             if domain == "POINT":
-                return colors[loop_vertices]
-            elif domain == "CORNER":
                 return colors
+            elif domain == "CORNER":
+                return gather_per_vertex(colors)
             else:
                 raise ValueError(f"Unhandled attribute domain: '{domain}'")
 
@@ -128,29 +139,42 @@ def convert(
             suffix = "layers" if nlayers > 1 else "layer"
             return f"{nlayers} {layer_name} {suffix}"
         print(f"[BLC] Exporting '{str(mesh_key)}' - {len(unique_mats)} submesh(es)")
-        print(f"[BLC] - {len(loop_points)} points")
-        print(f"[BLC] - {len(loop_normals)} normals")
+        print(f"[BLC] - {num_vertices} points (shared between submeshes)")
+        print(f"[BLC] - {len(vertex_normals)} normals")
         print(f"[BLC] - {fmt_layer(uvs, 'uv')}")
         print(f"[BLC] - {fmt_layer(rgb, 'color')}")
         print(f"[BLC] - {fmt_layer(alphas, 'alpha')}")
 
         mesh_definitions = []
-        for mat in unique_mats:
-            mat_triangles = triangle_loops[loop_triangle_materials == mat]
+        for idx, mat in enumerate(unique_mats):
+            # Remap the triangle loop indices to vertex indices, so that all
+            # the submeshes index the same shared unique point array
+            mat_triangles = loop_vertices[triangle_loops[loop_triangle_materials == mat]]
             name = f"{str(mesh_key)}{mat:03d}"
 
+            if idx == 0:
+                # First submesh: send the points (and bake the transformation
+                # into them, if any)
+                points = vertex_points
+                submesh_transform = mesh_transform
+            else:
+                # Other submeshes: share the point buffer of the first submesh
+                # (by name) instead of re-sending the same points. The
+                # transformation is already baked into those shared points.
+                points = mesh_definitions[0][0]
+                submesh_transform = None
 
             print(f"[BLC] - Submesh #{mat:03d}: {len(mat_triangles)} triangles")
 
             luxcore_scene.DefineMeshExt(
                 name=name,
-                points=loop_points,
+                points=points,
                 triangles=mat_triangles,
-                normals=loop_normals,
+                normals=vertex_normals,
                 uvs=uvs,
                 colors=rgb,
                 alphas=alphas,
-                transformation=mesh_transform,
+                transformation=submesh_transform,
             )
             mesh_definitions.append((name, mat))
 

@@ -25,15 +25,6 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
         default=True,
         update=utils_node.force_viewport_mesh_update,
     )
-    merge_on_distance: BoolProperty(
-        name="Preliminary Merge on Distance",
-        description=(
-            "Apply a preliminary 'merge on distance' before "
-            "sudivision"
-        ),
-        default=True,
-        update=utils_node.force_viewport_mesh_update,
-    )
     sharpness_threshold: FloatProperty(
         name="Sharpness Threshold (radians)",
         description=(
@@ -66,7 +57,6 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
         layout.prop(self, "max_level")
         layout.prop(self, "max_edge_screen_size")
         layout.prop(self, "enhanced")
-        layout.prop(self, "merge_on_distance")
         layout.prop(self, "sharpness_threshold")
         layout.prop(self, "crease_weight")
 
@@ -79,7 +69,6 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
             "maxlevel": self.max_level,
             "maxedgescreensize": self.max_edge_screen_size,
             "enhanced": self.enhanced,
-            "mergebefore": self.merge_on_distance,
             "sharpnessthreshold": self.sharpness_threshold,
             "creaseweight": self.crease_weight
         }
