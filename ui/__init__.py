@@ -105,6 +105,7 @@ classes = (
     view_layer_aovs.LUXCORE_RENDERLAYER_PT_aovs_render,
     world.LUXCORE_PT_context_world,
     world.LUXCORE_WORLD_PT_sky2,
+    world.LUXCORE_WORLD_PT_sky3,
     world.LUXCORE_WORLD_PT_infinite,
     world.LUXCORE_WORLD_PT_volume,
     world.LUXCORE_WORLD_PT_performance,

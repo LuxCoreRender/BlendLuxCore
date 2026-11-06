@@ -40,6 +40,8 @@ class LuxCoreLightProps(bpy.types.PropertyGroup):
         ("sun", "Sun", "Physically correct sun that emits parallel light rays and changes color with elevation", 0),
         ("distant", "Distant", "Distant star without atmosphere simulation (emits parallel light)", 1),
         ("hemi", "Hemi", "180 degree constant light source", 2),
+        ("sun3", "Prague Sun", "Sun disc based on the Prague Sky Model (Wilkie 2021), physically consistent "
+                               "only in combination with the Prague Sky world light", 3),
     ]
     light_type: EnumProperty(name="Sun Type", items=light_types, default="sun")
 

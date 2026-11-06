@@ -93,7 +93,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
     def draw_luxcore_settings(self, context):
         layout = self.layout
         light = context.light
-        is_sunlight = light.type == "SUN" and light.luxcore.light_type == "sun"
+        is_sunlight = light.type == "SUN" and light.luxcore.light_type in ("sun", "sun3")
 
         layout.use_property_split = True
         layout.use_property_decorate = False
@@ -147,7 +147,7 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                 
         else:
             col = layout.column(align=True)
-            if light.type == "SUN" and light.luxcore.light_type == "sun":
+            if light.type == "SUN" and light.luxcore.light_type in ("sun", "sun3"):
                 col.prop(light.luxcore, "sun_sky_gain")
             else:
                 col.prop(light.luxcore, "gain")
@@ -171,8 +171,20 @@ class LUXCORE_LIGHT_PT_context_light(DataButtonsPanel, Panel):
                 layout.prop(light.luxcore, "relsize")
                 layout.prop(light.luxcore, "turbidity")
                 world = context.scene.world
-                if world and world.luxcore.light == "sky2" and world.luxcore.sun != context.object:
+                if (world and world.luxcore.light in ("sky2", "sky3")
+                        and world.luxcore.sun != context.object):
                     layout.operator("luxcore.attach_sun_to_sky", icon=icons.WORLD)
+            elif light.luxcore.light_type == "sun3":
+                layout.prop(light.luxcore, "relsize")
+                world = context.scene.world
+                if world and world.luxcore.light == "sky3":
+                    if world.luxcore.sun != context.object:
+                        layout.operator("luxcore.attach_sun_to_sky", icon=icons.WORLD)
+                    # The atmosphere parameters come from the Prague Sky settings of the world
+                    layout.label(text="Atmosphere: see Prague Sky world settings", icon=icons.INFO)
+                else:
+                    layout.label(text="Only physically consistent in combination", icon=icons.WARNING)
+                    layout.label(text="with the Prague Sky world light")
             elif light.luxcore.light_type == "distant":
                 layout.prop(light.luxcore, "theta")
                 layout.prop(light.luxcore, "normalize_distant")
@@ -313,7 +325,7 @@ class LUXCORE_LIGHT_PT_visibility(DataButtonsPanel, Panel):
             return False
 
         # Visible for sky2, sun, infinite, constantinfinite, area
-        return ((light.type == "SUN" and light.luxcore.light_type == "sun")
+        return ((light.type == "SUN" and light.luxcore.light_type in ("sun", "sun3"))
                 or light.type == "HEMI"
                 or (light.type == "AREA" and not light.luxcore.is_laser))
 

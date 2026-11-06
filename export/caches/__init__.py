@@ -112,7 +112,7 @@ class WorldCache:
             world_updated = depsgraph.id_type_updated("WORLD") or self.world_name != world.name_full
 
             # The sun influcences the world, e.g. through direction and turbidity if sky2 is used
-            if world.luxcore.light == "sky2" and depsgraph.id_type_updated("OBJECT"):
+            if world.luxcore.light in ("sky2", "sky3") and depsgraph.id_type_updated("OBJECT"):
                 for dg_update in depsgraph.updates:
                     if dg_update.id == world.luxcore.sun:
                         world_updated = True

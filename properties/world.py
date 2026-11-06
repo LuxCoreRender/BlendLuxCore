@@ -40,15 +40,32 @@ GROUND_ENABLE_DESC = (
 
 GROUND_COLOR_DESC = GROUND_ENABLE_DESC
 
+SKY3_VISIBILITY_DESC = (
+    "Horizontal meteorological range in km.\n"
+    "Replaces turbidity: 59.4 is moderately clear, "
+    "131.8 is very clear (closest to turbidity 2.2)"
+)
+
+SKY3_ALTITUDE_DESC = (
+    "Observer altitude in meters above sea level"
+)
+
+SKY3_GROUNDALBEDO_DESC = (
+    "Scalar ground albedo [0, 1] used in the sky simulation. "
+    "The Prague Sky Model only supports a gray ground albedo"
+)
+
 
 class LuxCoreWorldProps(bpy.types.PropertyGroup):
     use_cycles_settings: BoolProperty(name="Use Cycles Settings", default=False)
 
     lights = [
         ("sky2", "Sky", "Hosek and Wilkie sky model", 0),
-        ("infinite", "HDRI", "High dynamic range image", 1),
-        ("constantinfinite", "Flat Color", "Flat background color", 2),
-        ("none", "None", "No background light", 3),
+        ("sky3", "Prague Sky", "Wilkie 2021 sky model (requires the Prague Sky Model dataset, "
+                               "use together with the Prague Sun)", 1),
+        ("infinite", "HDRI", "High dynamic range image", 2),
+        ("constantinfinite", "Flat Color", "Flat background color", 3),
+        ("none", "None", "No background light", 4),
     ]
     light: EnumProperty(name="Background", items=lights, default="sky2")
 
@@ -89,6 +106,16 @@ class LuxCoreWorldProps(bpy.types.PropertyGroup):
     ground_color: FloatVectorProperty(name="Ground Color", default=(0.5, 0.5, 0.5),
                                        min=0, max=1, subtype="COLOR",
                                        description=GROUND_COLOR_DESC)
+
+    # sky3 settings (Prague Sky Model, Wilkie 2021)
+    # Note: the dataset path is an addon preference,
+    # the atmosphere parameters are exported as scene.pragueskymodel.*
+    sky3_visibility: FloatProperty(name="Visibility", default=59.4, min=20, max=131.8,
+                                   precision=1, description=SKY3_VISIBILITY_DESC)
+    sky3_altitude: FloatProperty(name="Altitude", default=0, min=0, max=15000,
+                                  subtype="NONE", precision=0, description=SKY3_ALTITUDE_DESC)
+    sky3_groundalbedo: FloatProperty(name="Ground Albedo", default=0.5, min=0, max=1,
+                                      description=SKY3_GROUNDALBEDO_DESC)
 
     # infinite
     def update_image(self, context):
