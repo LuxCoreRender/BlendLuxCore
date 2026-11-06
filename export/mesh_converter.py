@@ -64,23 +64,34 @@ def convert(
         # Loop vertices: for each loop, the index of the mesh vertex it uses
         loop_vertices = get_ndarray(mesh.loops, "vertex_index", 0, np.uint32)
 
-        # Points: the unique mesh vertices. The same array is shared by all
-        # the submeshes defined below (LuxCore shares the point storage
-        # between meshes defined with identical points)
+        # Points: weld coincident vertices (the evaluated mesh may contain
+        # split vertices, e.g. from split_faces() at sharp edges). Coincident
+        # vertices must not stay distinct, otherwise modifiers displacing
+        # vertices (like subdivision) would open gaps in the mesh.
+        # Discontinuities of varying data (uv...) are handled separately with
+        # per-corner data (triangle_uvs below).
+        # The welded point array is shared by all the submeshes defined below
+        # (LuxCore shares the point storage between meshes defined with
+        # identical points).
         vertex_points = get_ndarray(mesh.vertices, "co", 3, np.float32)
-        num_vertices = len(vertex_points)
+        welded_points, first_index, weld_inverse = np.unique(
+            vertex_points, axis=0, return_index=True, return_inverse=True
+        )
+        num_points = len(welded_points)
 
-        # Normals (per-vertex)
+        # Normals (per welded vertex: keep the normal of the first occurrence)
         vertex_normals = get_ndarray(mesh.vertices, "normal", 3, np.float32)
+        welded_normals = vertex_normals[first_index]
 
-        # Gather per-loop data (uv, corner colors...) into per-vertex arrays,
-        # so that they stay aligned with the unique points. When several
-        # loops of a same vertex disagree (e.g. UV seams), the last loop wins.
+        # Gather per-loop data (uv, corner colors...) into per-welded-vertex
+        # arrays, so that they stay aligned with the welded points. When
+        # several loops of a same vertex disagree (e.g. UV seams), the last
+        # loop wins.
         def gather_per_vertex(loop_data):
             per_vertex = np.zeros(
-                (num_vertices,) + loop_data.shape[1:], dtype=loop_data.dtype
+                (num_points,) + loop_data.shape[1:], dtype=loop_data.dtype
             )
-            per_vertex[loop_vertices] = loop_data
+            per_vertex[weld_inverse[loop_vertices]] = loop_data
             return per_vertex
 
         # Triangle loop indices
@@ -94,7 +105,8 @@ def convert(
         ).ravel()
         unique_mats = np.unique(loop_triangle_materials)
 
-        # UV (per-loop in Blender, gathered per-vertex)
+        # UV (per-loop in Blender, gathered per welded vertex; the last loop
+        # wins). Discontinuities are handled by submeshes, not by the mesh.
         uvs = [
             gather_per_vertex(get_ndarray(uv_layer.uv, "vector", 2, np.float32))
             for uv_layer in mesh.uv_layers
@@ -103,7 +115,7 @@ def convert(
         # Vertex colors
         def reshape_colors(colors, domain):
             if domain == "POINT":
-                return colors
+                return colors[first_index]
             elif domain == "CORNER":
                 return gather_per_vertex(colors)
             else:
@@ -139,23 +151,27 @@ def convert(
             suffix = "layers" if nlayers > 1 else "layer"
             return f"{nlayers} {layer_name} {suffix}"
         print(f"[BLC] Exporting '{str(mesh_key)}' - {len(unique_mats)} submesh(es)")
-        print(f"[BLC] - {num_vertices} points (shared between submeshes)")
-        print(f"[BLC] - {len(vertex_normals)} normals")
+        print(f"[BLC] - {num_points} welded points (shared between submeshes), "
+              f"from {len(vertex_points)} raw vertices")
+        print(f"[BLC] - {len(welded_normals)} normals")
         print(f"[BLC] - {fmt_layer(uvs, 'uv')}")
         print(f"[BLC] - {fmt_layer(rgb, 'color')}")
         print(f"[BLC] - {fmt_layer(alphas, 'alpha')}")
 
         mesh_definitions = []
         for idx, mat in enumerate(unique_mats):
-            # Remap the triangle loop indices to vertex indices, so that all
-            # the submeshes index the same shared unique point array
-            mat_triangles = loop_vertices[triangle_loops[loop_triangle_materials == mat]]
+            # Remap the triangle loop indices to welded vertex indices, so
+            # that all the submeshes index the same shared welded point array
+            # (uint32, as expected by pyluxcore)
+            mat_triangles = weld_inverse[
+                loop_vertices[triangle_loops[loop_triangle_materials == mat]]
+            ].astype(np.uint32)
             name = f"{str(mesh_key)}{mat:03d}"
 
             if idx == 0:
                 # First submesh: send the points (and bake the transformation
                 # into them, if any)
-                points = vertex_points
+                points = welded_points
                 submesh_transform = mesh_transform
             else:
                 # Other submeshes: share the point buffer of the first submesh
@@ -170,7 +186,7 @@ def convert(
                 name=name,
                 points=points,
                 triangles=mat_triangles,
-                normals=vertex_normals,
+                normals=welded_normals,
                 uvs=uvs,
                 colors=rgb,
                 alphas=alphas,
