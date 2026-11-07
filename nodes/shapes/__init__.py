@@ -7,6 +7,7 @@ from . import (
     heightdisplacement,
     simplify,
     subdiv,
+    tessellate,
     vectordisplacement,
     mergeondistance,
 )
@@ -20,6 +21,7 @@ if _needs_reload:
         heightdisplacement,
         simplify,
         subdiv,
+        tessellate,
         vectordisplacement,
         mergeondistance,
     )
@@ -31,6 +33,7 @@ classes = (
     heightdisplacement.LuxCoreNodeShapeHeightDisplacement,
     simplify.LuxCoreNodeShapeSimplify,
     subdiv.LuxCoreNodeShapeSubdiv,
+    tessellate.LuxCoreNodeShapeTessellate,
     vectordisplacement.LuxCoreNodeShapeVectorDisplacement,
     mergeondistance.LuxCoreNodeShapeMergeOnDistance,
 )

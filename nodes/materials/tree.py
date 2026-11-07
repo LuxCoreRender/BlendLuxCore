@@ -226,6 +226,7 @@ luxcore_node_categories_material = [
         "Shape Modifiers",
         items=[
             NodeItem("LuxCoreNodeShapeSubdiv", label="Subdivision"),
+            NodeItem("LuxCoreNodeShapeTessellate", label="Tessellate"),
             NodeItem(
                 "LuxCoreNodeShapeHeightDisplacement",
                 label="Height Displacement",
