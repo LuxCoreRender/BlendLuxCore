@@ -113,6 +113,39 @@ def convert(
             for attribute in mesh.color_attributes
         ]
 
+        # Edge creases (used by the subdiv shape in "imported" creases mode):
+        # Blender stores them as the float attribute "crease_edge" (EDGE
+        # domain, 0..1). Convert to OpenSubdiv sharpness (x10, clamped at
+        # 10 = infinite crease) and remap the vertex indices to the welded
+        # point indices, so that the pairs index the shared point array.
+        crease_pairs = None
+        crease_weights = None
+        crease_attr = mesh.attributes.get("crease_edge")
+        if crease_attr is not None and crease_attr.domain == "EDGE":
+            edge_verts = get_ndarray(mesh.edges, "vertices", 2, np.int32)
+            edge_crease = get_ndarray(crease_attr.data, "value", 0, np.float32)
+            w0 = weld_inverse[edge_verts[:, 0]]
+            w1 = weld_inverse[edge_verts[:, 1]]
+            keep = edge_crease > 0.0
+            w0, w1, cw = w0[keep], w1[keep], edge_crease[keep]
+            # Dedupe: several split edges may weld to the same point pair
+            keys = (np.minimum(w0, w1).astype(np.uint64) << 32) | np.maximum(w0, w1).astype(np.uint64)
+            _, first = np.unique(keys, return_index=True)
+            crease_pairs = np.stack(
+                [w0[first], w1[first]], axis=1
+            ).astype(np.uint32).ravel()
+            crease_weights = np.minimum(cw[first] * 10.0, 10.0).astype(np.float32)
+        vert_crease_attr = mesh.attributes.get("crease_vert")
+        if (
+            vert_crease_attr is not None
+            and vert_crease_attr.domain == "POINT"
+            and np.any(get_ndarray(vert_crease_attr.data, "value", 0, np.float32) > 0.0)
+        ):
+            print(
+                "[BLC] Warning: vertex creases (crease_vert) are not exported "
+                "(OpenSubdiv topology descriptors only support edge creases)"
+            )
+
         # --- UV islands ------------------------------------------------------
         # A loop belongs to the island of its (vertex, uv) pair; the two loops
         # at the endpoints of a shared edge are joined when their UVs match on
@@ -294,6 +327,10 @@ def convert(
                 colors=sub_rgb,
                 alphas=sub_alphas,
                 transformation=submesh_transform,
+                # All submeshes share the same welded point array, so the
+                # crease pairs (welded point indices) are valid for each of them
+                crease_pairs=crease_pairs,
+                crease_weights=crease_weights,
             )
             mesh_definitions.append((name, mat))
 
