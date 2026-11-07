@@ -5,6 +5,7 @@ import numpy as np
 _needs_reload = "bpy" in locals()
 
 import bpy
+import pyluxcore
 
 from . import caches
 from .. import utils
@@ -113,59 +114,74 @@ def convert(
         ]
 
         # --- UV islands ------------------------------------------------------
-        # Union-find over loops: the two loops at the endpoints of a shared
-        # edge belong to the same island when their UVs match on every UV
-        # layer. A loop thus belongs to the island of its (vertex, uv) pair;
-        # a triangle goes to the island of its first loop. Triangles of
-        # different islands (or materials) are exported as separate submeshes,
-        # so that each submesh has consistent per-vertex UVs over the shared
-        # welded points.
+        # A loop belongs to the island of its (vertex, uv) pair; the two loops
+        # at the endpoints of a shared edge are joined when their UVs match on
+        # every UV layer, and the 3 loops of a triangle are always joined (a
+        # seam cannot run through the interior of a triangle). A triangle goes
+        # to the island of its first loop. Triangles of different islands (or
+        # materials) are exported as separate submeshes, so that each submesh
+        # has consistent per-vertex UVs over the shared welded points.
+        # Fully vectorized with numpy (no per-element Python loop): edges are
+        # sorted so that matching occurrences are adjacent, and connected
+        # components are computed by label propagation.
         loop_welded = weld_inverse[loop_vertices]
         n_tris = len(triangle_loops)
         n_loops = len(loop_vertices)
 
-        parent = np.arange(n_loops)
+        if loop_uvs:
+            # Distinct uv id per loop (all layers), via a void view for speed
+            uv_flat = np.ascontiguousarray(uv_sig.reshape(n_loops, -1))
+            uv_void = uv_flat.view(np.dtype((np.void, uv_flat.dtype.itemsize * uv_flat.shape[1]))).ravel()
+            _, uv_id = np.unique(uv_void, return_inverse=True)
 
-        def find(x):
-            while parent[x] != x:
-                parent[x] = parent[parent[x]]
-                x = parent[x]
-            return x
+            # Edge occurrences: for each triangle, edges (c0,c1), (c1,c2), (c2,c0),
+            # normalized so the welded endpoint ids are sorted
+            e_src = np.stack(
+                [triangle_loops, np.roll(triangle_loops, -1, axis=1)], axis=2
+            ).reshape(-1, 2)  # [n_tris*3, 2] loop indices
+            w0 = loop_welded[e_src[:, 0]]
+            w1 = loop_welded[e_src[:, 1]]
+            swap = w0 > w1
+            e_lo = np.where(swap, w1, w0)
+            e_hi = np.where(swap, w0, w1)
+            l_lo = np.where(swap, e_src[:, 1], e_src[:, 0])  # loop at lo endpoint
+            l_hi = np.where(swap, e_src[:, 0], e_src[:, 1])  # loop at hi endpoint
+            u_lo = uv_id[l_lo]
+            u_hi = uv_id[l_hi]
+            e_key = e_lo * num_points + e_hi
 
-        # edge (welded endpoints, sorted) -> [(loop index, uv at min, uv at max)]
-        edge_map = {}
-        for t in range(n_tris):
-            loops = triangle_loops[t]
-            w = loop_welded[loops]
-            # The 3 loops of a triangle belong to the same UV patch (a seam
-            # cannot run through the interior of a triangle)
-            for k in range(1, 3):
-                r1, r2 = find(int(loops[0])), find(int(loops[k]))
-                if r1 != r2:
-                    parent[r1] = r2
-            for k in range(3):
-                la, lb = int(loops[k]), int(loops[(k + 1) % 3])
-                a, b = int(w[k]), int(w[(k + 1) % 3])
-                ua = uv_sig[la].tobytes()
-                ub = uv_sig[lb].tobytes()
-                if a > b:
-                    a, b, la, lb, ua, ub = b, a, lb, la, ub, ua
-                edge_map.setdefault((a, b), []).append((la, lb, ua, ub))
-        for lst in edge_map.values():
-            if len(lst) == 2:
-                (la1, lb1, ua1, ub1), (la2, lb2, ua2, ub2) = lst
-                # same edge endpoints: union when the UVs match at both ends
-                if ua1 == ua2 and ub1 == ub2:
-                    r1, r2 = find(la1), find(la2)
-                    if r1 != r2:
-                        parent[r1] = r2
-                    r1, r2 = find(lb1), find(lb2)
-                    if r1 != r2:
-                        parent[r1] = r2
+            # Sort occurrences by (edge, uv at lo, uv at hi): identical
+            # (edge, uv-at-endpoints) occurrences become adjacent runs
+            order = np.lexsort((u_hi, u_lo, e_key))
+            k_s = e_key[order]
+            ulo_s = u_lo[order]
+            uhi_s = u_hi[order]
+            llo_s = l_lo[order]
+            lhi_s = l_hi[order]
+            same_run = np.ones(len(order), dtype=bool)
+            same_run[1:] = (k_s[1:] == k_s[:-1]) & (ulo_s[1:] == ulo_s[:-1]) & (uhi_s[1:] == uhi_s[:-1])
+            run_start = np.nonzero(~same_run)[0]  # first occurrence index of each run
+            run_end = np.append(run_start[1:] - 1, len(order) - 1)  # last index per run
+            shared = (run_end - run_start + 1) >= 2
 
-        loop_island = np.array([find(l) for l in range(n_loops)])
-        # Compact island numbering (used in submesh names)
-        _, loop_island = np.unique(loop_island, return_inverse=True)
+            # Union pairs: within each triangle, and across each shared edge run
+            # (first with last occurrence of the run merges the whole run)
+            p1 = [triangle_loops[:, 0], triangle_loops[:, 0],
+                  llo_s[run_start[shared]], lhi_s[run_start[shared]]]
+            p2 = [triangle_loops[:, 1], triangle_loops[:, 2],
+                  llo_s[run_end[shared]], lhi_s[run_end[shared]]]
+            pairs_a = np.concatenate(p1)
+            pairs_b = np.concatenate(p2)
+
+            # Connected components over loops, using the parallel C++ union-find
+            # exposed by pyluxcore (slg::equiv::GroupByEquivalence)
+            loop_island = pyluxcore.union_find(
+                n_loops, np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32)
+            ).astype(np.int64)
+        else:
+            # No UV layers: no UV seams possible, one island per material
+            loop_island = np.zeros(n_loops, dtype=np.int64)
+
         # Triangle island = island of its first loop
         island = loop_island[triangle_loops[:, 0]] if n_tris else np.zeros(0, dtype=np.int64)
         n_islands = int(loop_island.max()) + 1 if n_loops else 1
@@ -174,8 +190,8 @@ def convert(
         tri_keys = loop_triangle_materials * n_islands + island
         group_keys, tri_group = np.unique(tri_keys, return_inverse=True)
         groups = {}
-        for t in range(n_tris):
-            groups.setdefault(int(tri_group[t]), []).append(t)
+        for g in range(len(group_keys)):
+            groups[g] = np.nonzero(tri_group == g)[0]
 
         # Transformation
         if is_viewport_render or use_instancing:
@@ -204,10 +220,11 @@ def convert(
 
         mesh_definitions = []
         first_name = None
-        for gkey in sorted(groups.keys()):
+        for g in sorted(groups.keys()):
+            gkey = int(group_keys[g])
             mat = gkey // n_islands
             isl = gkey % n_islands
-            g_tris = np.array(groups[gkey], dtype=np.int64)
+            g_tris = groups[g]
             g_loops = triangle_loops[g_tris]       # [g, 3] loop indices
             g_loop_flat = g_loops.ravel()
             gw = loop_welded[g_loops]              # welded vertex per corner
@@ -258,7 +275,10 @@ def convert(
                 points = first_name
                 submesh_transform = None
 
-            print(f"[BLC] - Submesh {name}: {len(sub_triangles)} triangles")
+            if g < 10 or len(groups) <= 12:
+                print(f"[BLC] - Submesh {name}: {len(sub_triangles)} triangles")
+            elif g == 10:
+                print(f"[BLC] - ... ({len(groups) - 10} more submeshes)")
 
             luxcore_scene.DefineMeshExt(
                 name=name,
