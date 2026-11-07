@@ -164,27 +164,32 @@ def convert(
             run_end = np.append(run_start[1:] - 1, len(order) - 1)  # last index per run
             shared = (run_end - run_start + 1) >= 2
 
-            # Union pairs: within each triangle, and across each shared edge run
-            # (first with last occurrence of the run merges the whole run)
-            p1 = [triangle_loops[:, 0], triangle_loops[:, 0],
-                  llo_s[run_start[shared]], lhi_s[run_start[shared]]]
-            p2 = [triangle_loops[:, 1], triangle_loops[:, 2],
-                  llo_s[run_end[shared]], lhi_s[run_end[shared]]]
+            # Union pairs over TRIANGLES (not loops: the 3 loops of a triangle
+            # are one node), across each shared edge run (first with last
+            # occurrence of the run merges the whole run). The element space
+            # is ~3x smaller than the loop space, which dominates the
+            # union-find cost.
+            tri_of_loop = np.repeat(np.arange(n_tris, dtype=np.int64), 3)
+            # triangle of each occurrence in the SORTED order
+            tri_of_sorted = tri_of_loop[order]
+            p1 = [tri_of_sorted[run_start[shared]]]
+            p2 = [tri_of_sorted[run_end[shared]]]
             pairs_a = np.concatenate(p1)
             pairs_b = np.concatenate(p2)
 
-            # Connected components over loops, using the parallel C++ union-find
-            # exposed by pyluxcore (slg::equiv::GroupByEquivalence)
-            loop_island = pyluxcore.union_find(
-                n_loops, np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32)
-            ).astype(np.int64)
+            # Connected components over triangles, using the parallel C++
+            # union-find exposed by pyluxcore (slg::equiv::GroupByEquivalence)
+            island = pyluxcore.union_find(
+                n_tris, np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32)
+            ).astype(np.int64) if n_tris else np.zeros(0, dtype=np.int64)
+            # Loop island for the per-submesh gathers (island of the loop's tri)
+            loop_island = island[tri_of_loop]
         else:
             # No UV layers: no UV seams possible, one island per material
+            island = np.zeros(n_tris, dtype=np.int64)
             loop_island = np.zeros(n_loops, dtype=np.int64)
 
-        # Triangle island = island of its first loop
-        island = loop_island[triangle_loops[:, 0]] if n_tris else np.zeros(0, dtype=np.int64)
-        n_islands = int(loop_island.max()) + 1 if n_loops else 1
+        n_islands = int(island.max()) + 1 if n_tris else 1
 
         # Group triangles by (material, island)
         tri_keys = loop_triangle_materials * n_islands + island
