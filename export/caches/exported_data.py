@@ -24,8 +24,11 @@ class ExportedObject(ExportedData):
         self.visible_to_camera = visible_to_camera
         self.obj_id = obj_id
 
-        for (shape_name, mat_index), mat_name in zip(mesh_definitions, mat_names):
-            obj_name = lux_name_base + str(mat_index)
+        # Note: a mesh can be exported as several submeshes (UV islands) that
+        # share the same material, so the part index is needed to make the
+        # object name unique (the material index alone would collide)
+        for i, ((shape_name, mat_index), mat_name) in enumerate(zip(mesh_definitions, mat_names)):
+            obj_name = lux_name_base + str(mat_index) + "_" + str(i)
 
             self.parts.append(ExportedPart(obj_name, shape_name, mat_name))
 
