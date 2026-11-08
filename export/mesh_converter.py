@@ -1,3 +1,5 @@
+import os
+import os
 from contextlib import contextmanager
 from time import time
 import numpy as np
@@ -23,6 +25,14 @@ if _needs_reload:
 # are used by TriAOVDataIndices (random per island). LuxCore reads this layer
 # to bind materials per face, incl. on subdivided envelope meshes.
 MATERIAL_TRI_AOV_INDEX = 2
+
+# Islands (varying-data connected components) smaller than this many
+# triangles are merged into an adjacent island at export (avoids tiny
+# fragments / thousands of submeshes on big models)
+MIN_ISLAND_TRIANGLE_COUNT = 64
+# Small islands are merged into an adjacent island only when the angle
+# between the two sides' normals is below this (hard edges are kept)
+MIN_ISLAND_MERGE_COS_ANGLE = float(np.cos(np.deg2rad(30.0)))
 
 
 # https://blenderartists.org/t/\
@@ -242,6 +252,57 @@ def convert(
         island = pyluxcore.union_find(
             n_tris, np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32)
         ).astype(np.int64) if n_tris else np.zeros(0, dtype=np.int64)
+
+        # Merge very small islands into an adjacent island: one submesh per
+        # tiny island means many small fragments on big models (each submesh
+        # is a full LuxCore mesh with per-point arrays), e.g. dense split
+        # normals create tens of thousands of 2-4 triangle islands. Merging
+        # only affects the varying data gathered at the shared points (last
+        # write wins), so keep the threshold small, and never merge across a
+        # hard edge (large angle between the two sides' normals), otherwise
+        # flat faces would be smoothed away (e.g. the default cube).
+        if n_tris:
+            n_islands0 = int(island.max()) + 1
+            island_size = np.bincount(island, minlength=n_islands0)
+            if os.environ.get("BLC_DEBUG_ISLANDS"):
+                hist, edges = np.histogram(island_size, bins=[1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 1 << 30])
+                print(f"[BLC] island size histogram for {mesh_key}: " +
+                      ", ".join(f"[{edges[i]},{edges[i+1]}): {hist[i]}" for i in range(len(hist))),
+                      flush=True)
+            small = island_size < MIN_ISLAND_TRIANGLE_COUNT
+            if np.any(small):
+                # group edge occurrences by edge only (ignoring signatures)
+                order_e = np.argsort(e_key, kind="stable")
+                k_e = e_key[order_e]
+                starts = np.nonzero(np.r_[True, k_e[1:] != k_e[:-1]])[0]
+                ends = np.r_[starts[1:] - 1, len(k_e) - 1]
+                multi = (ends - starts + 1) >= 2
+                ts_e = tri_of_occurrence[order_e]
+                l_lo_e = l_lo[order_e]
+                l_hi_e = l_hi[order_e]
+                isl_a = island[ts_e[starts]]
+                isl_b = island[ts_e[ends]]
+                adj = multi & (isl_a != isl_b)
+                # angle between the two sides' normals (at both endpoints)
+                n1 = loop_normals[l_lo_e[starts]]
+                n2 = loop_normals[l_hi_e[ends]]
+                cosang = np.einsum("ij,ij->i", n1, n2)
+                not_hard = cosang > MIN_ISLAND_MERGE_COS_ANGLE
+                any_small = np.zeros(len(starts), dtype=bool)
+                any_small[adj] = small[isl_a[adj]] | small[isl_b[adj]]
+                merge = adj & any_small & not_hard
+                if np.any(merge):
+                    merge_pairs = np.stack(
+                        [ts_e[starts[merge]], ts_e[ends[merge]]], axis=1
+                    ).astype(np.uint32)
+                    # re-run the union-find with the original pairs + merge
+                    # pairs, so chains of small islands collapse in one pass
+                    all_pairs = np.concatenate([
+                        np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32),
+                        merge_pairs,
+                    ])
+                    island = pyluxcore.union_find(n_tris, all_pairs).astype(np.int64)
+
         # Loop island for the per-submesh gathers (island of the loop's tri)
         loop_island = island[tri_of_loop]
 
