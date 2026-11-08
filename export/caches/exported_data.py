@@ -10,6 +10,9 @@ class ExportedPart:
 class ExportedMesh:
     def __init__(self, mesh_definitions):
         self.mesh_definitions = mesh_definitions
+        # Name of the envelope mesh (all triangles of the mesh over the
+        # shared welded points); used as the source for subdivision shapes
+        self.envelope_name = None
 
 
 class ExportedData:
@@ -26,8 +29,15 @@ class ExportedObject(ExportedData):
 
         # Note: a mesh can be exported as several submeshes (UV islands) that
         # share the same material, so the part index is needed to make the
-        # object name unique (the material index alone would collide)
+        # object name unique (the material index alone would collide).
+        # Parts that end up with the same shape AND material (e.g. all
+        # submeshes of an object whose shape tree subdivides the shared
+        # envelope) are redundant and merged into a single part.
+        seen_parts = set()
         for i, ((shape_name, mat_index), mat_name) in enumerate(zip(mesh_definitions, mat_names)):
+            if (shape_name, mat_name) in seen_parts:
+                continue
+            seen_parts.add((shape_name, mat_name))
             obj_name = lux_name_base + str(mat_index) + "_" + str(i)
 
             self.parts.append(ExportedPart(obj_name, shape_name, mat_name))
