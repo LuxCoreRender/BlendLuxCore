@@ -73,9 +73,16 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Pin the CMake version and download it directly with retries:
-          # lukka/get-cmake@latest is a moving branch and fails the job on
-          # transient gateway errors from the release-asset download (HTTP 504)
+          # GitHub-hosted ubuntu runners ship CMake preinstalled (3.31.x on
+          # ubuntu-24.04), which satisfies cmake_minimum_required(VERSION 3.27)
+          if command -v cmake >/dev/null 2>&1; then
+            echo "Using preinstalled $(cmake --version | head -1)"
+            exit 0
+          fi
+
+          # Local act runs have no CMake preinstalled, so download a pinned
+          # release directly with retries: the GitHub release CDN can return
+          # transient HTTP 504s, which made lukka/get-cmake@latest fail CI
           CMAKE_VERSION="4.4.5"
           CMAKE_SHA256="ed85135c5a5135b45e50423cb406dea04ca3338da0b8ef3c9ede963559680be0"
           CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
