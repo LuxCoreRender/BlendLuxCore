@@ -69,7 +69,33 @@ jobs:
           #blender-version: '5.1.1'
 
       - name: Set up cmake
-        uses: lukka/get-cmake@latest
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Pin the CMake version and download it directly with retries:
+          # lukka/get-cmake@latest is a moving branch and fails the job on
+          # transient gateway errors from the release-asset download (HTTP 504)
+          CMAKE_VERSION="4.4.5"
+          CMAKE_SHA256="ed85135c5a5135b45e50423cb406dea04ca3338da0b8ef3c9ede963559680be0"
+          CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
+          INSTALL_DIR="$HOME/.local/opt/cmake-${CMAKE_VERSION}"
+
+          mkdir -p "$INSTALL_DIR"
+
+          echo "Downloading CMake ${CMAKE_VERSION}..."
+          curl --fail -L --retry 10 --retry-all-errors --retry-delay 5 \
+            -o /tmp/cmake.tar.gz "$CMAKE_URL"
+
+          echo "Verifying checksum..."
+          echo "${CMAKE_SHA256}  /tmp/cmake.tar.gz" | sha256sum -c -
+
+          echo "Extracting CMake to ${INSTALL_DIR}..."
+          tar -xzf /tmp/cmake.tar.gz -C "$INSTALL_DIR" --strip-components=1
+          rm /tmp/cmake.tar.gz
+
+          echo "${INSTALL_DIR}/bin" >> "$GITHUB_PATH"
+          cmake --version
 
       - name: Download Blender
         shell: bash
