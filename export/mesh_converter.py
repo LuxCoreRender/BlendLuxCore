@@ -83,6 +83,14 @@ def convert(
         # Per-vertex data of the (possibly split) source vertices
         vertex_normals = get_ndarray(mesh.vertices, "normal", 3, np.float32)
 
+        # Per-loop shading normals: corner normals honor flat/smooth faces and
+        # custom split normals (fall back to per-vertex normals if unavailable)
+        corner_normals = getattr(mesh, "corner_normals", None)
+        if corner_normals is not None and len(corner_normals) == len(mesh.loops):
+            loop_normals = get_ndarray(corner_normals, "vector", 3, np.float32)
+        else:
+            loop_normals = vertex_normals[loop_vertices]
+
         # Triangle loop indices
         triangle_loops = get_ndarray(
             mesh.loop_triangles, "loops", 3, np.uint32
@@ -98,11 +106,17 @@ def convert(
             get_ndarray(uv_layer.uv, "vector", 2, np.float32)
             for uv_layer in mesh.uv_layers
         ]
-        # Per-loop UV signature (all layers), used to detect UV seams
+        # Per-loop varying signature: UVs (all layers) + shading normal.
+        # A discontinuity in any of them is a seam (like a UV seam): loops
+        # across a shared edge are joined only when the full signature
+        # matches at both endpoints.
         if loop_uvs:
             uv_sig = np.stack(loop_uvs, axis=1)  # [n_loops, n_layers, 2]
         else:
             uv_sig = np.zeros((len(loop_vertices), 0, 2), dtype=np.float32)
+        loop_sig = np.concatenate(
+            [uv_sig.reshape(len(loop_vertices), -1), loop_normals], axis=1
+        )
 
         # Vertex color attributes
         color_attrs = [
@@ -146,14 +160,14 @@ def convert(
                 "(OpenSubdiv topology descriptors only support edge creases)"
             )
 
-        # --- UV islands ------------------------------------------------------
-        # A loop belongs to the island of its (vertex, uv) pair; the two loops
-        # at the endpoints of a shared edge are joined when their UVs match on
-        # every UV layer, and the 3 loops of a triangle are always joined (a
-        # seam cannot run through the interior of a triangle). A triangle goes
-        # to the island of its first loop. Triangles of different islands (or
-        # materials) are exported as separate submeshes, so that each submesh
-        # has consistent per-vertex UVs over the shared welded points.
+        # --- Varying-data islands (UV seams + normal seams) ------------------
+        # A loop belongs to the island of its (vertex, uv, normal) signature;
+        # the two loops at the endpoints of a shared edge are joined when
+        # their signatures match, and the 3 loops of a triangle are always
+        # joined (a seam cannot run through the interior of a triangle).
+        # Triangles of different islands (or materials) are exported as
+        # separate submeshes, so that each submesh has consistent per-vertex
+        # UVs AND normals over the shared welded points.
         # Fully vectorized with numpy (no per-element Python loop): edges are
         # sorted so that matching occurrences are adjacent, and connected
         # components are computed by label propagation.
@@ -161,66 +175,68 @@ def convert(
         n_tris = len(triangle_loops)
         n_loops = len(loop_vertices)
 
-        if loop_uvs:
-            # Distinct uv id per loop (all layers), via a void view for speed
-            uv_flat = np.ascontiguousarray(uv_sig.reshape(n_loops, -1))
-            uv_void = uv_flat.view(np.dtype((np.void, uv_flat.dtype.itemsize * uv_flat.shape[1]))).ravel()
-            _, uv_id = np.unique(uv_void, return_inverse=True)
+        # Distinct signature id per loop, via a void view for speed
+        sig_flat = np.ascontiguousarray(loop_sig)
+        sig_void = sig_flat.view(np.dtype((np.void, sig_flat.dtype.itemsize * sig_flat.shape[1]))).ravel()
+        _, sig_id = np.unique(sig_void, return_inverse=True)
 
-            # Edge occurrences: for each triangle, edges (c0,c1), (c1,c2), (c2,c0),
-            # normalized so the welded endpoint ids are sorted
-            e_src = np.stack(
-                [triangle_loops, np.roll(triangle_loops, -1, axis=1)], axis=2
-            ).reshape(-1, 2)  # [n_tris*3, 2] loop indices
-            w0 = loop_welded[e_src[:, 0]]
-            w1 = loop_welded[e_src[:, 1]]
-            swap = w0 > w1
-            e_lo = np.where(swap, w1, w0)
-            e_hi = np.where(swap, w0, w1)
-            l_lo = np.where(swap, e_src[:, 1], e_src[:, 0])  # loop at lo endpoint
-            l_hi = np.where(swap, e_src[:, 0], e_src[:, 1])  # loop at hi endpoint
-            u_lo = uv_id[l_lo]
-            u_hi = uv_id[l_hi]
-            e_key = e_lo * num_points + e_hi
+        # Edge occurrences: for each triangle, edges (c0,c1), (c1,c2), (c2,c0),
+        # normalized so the welded endpoint ids are sorted
+        e_src = np.stack(
+            [triangle_loops, np.roll(triangle_loops, -1, axis=1)], axis=2
+        ).reshape(-1, 2)  # [n_tris*3, 2] loop indices
+        w0 = loop_welded[e_src[:, 0]]
+        w1 = loop_welded[e_src[:, 1]]
+        swap = w0 > w1
+        e_lo = np.where(swap, w1, w0)
+        e_hi = np.where(swap, w0, w1)
+        l_lo = np.where(swap, e_src[:, 1], e_src[:, 0])  # loop at lo endpoint
+        l_hi = np.where(swap, e_src[:, 0], e_src[:, 1])  # loop at hi endpoint
+        u_lo = sig_id[l_lo]
+        u_hi = sig_id[l_hi]
+        e_key = e_lo * num_points + e_hi
 
-            # Sort occurrences by (edge, uv at lo, uv at hi): identical
-            # (edge, uv-at-endpoints) occurrences become adjacent runs
-            order = np.lexsort((u_hi, u_lo, e_key))
-            k_s = e_key[order]
-            ulo_s = u_lo[order]
-            uhi_s = u_hi[order]
-            llo_s = l_lo[order]
-            lhi_s = l_hi[order]
-            same_run = np.ones(len(order), dtype=bool)
-            same_run[1:] = (k_s[1:] == k_s[:-1]) & (ulo_s[1:] == ulo_s[:-1]) & (uhi_s[1:] == uhi_s[:-1])
-            run_start = np.nonzero(~same_run)[0]  # first occurrence index of each run
-            run_end = np.append(run_start[1:] - 1, len(order) - 1)  # last index per run
-            shared = (run_end - run_start + 1) >= 2
+        # Sort occurrences by (edge, sig at lo, sig at hi): identical
+        # (edge, signature-at-endpoints) occurrences become adjacent runs
+        order = np.lexsort((u_hi, u_lo, e_key))
+        k_s = e_key[order]
+        ulo_s = u_lo[order]
+        uhi_s = u_hi[order]
+        llo_s = l_lo[order]
+        lhi_s = l_hi[order]
+        same_run = np.ones(len(order), dtype=bool)
+        same_run[1:] = (k_s[1:] == k_s[:-1]) & (ulo_s[1:] == ulo_s[:-1]) & (uhi_s[1:] == uhi_s[:-1])
+        run_start = np.nonzero(~same_run)[0]  # first occurrence index of each run
+        run_end = np.append(run_start[1:] - 1, len(order) - 1)  # last index per run
+        shared = (run_end - run_start + 1) >= 2
 
-            # Union pairs over TRIANGLES (not loops: the 3 loops of a triangle
-            # are one node), across each shared edge run (first with last
-            # occurrence of the run merges the whole run). The element space
-            # is ~3x smaller than the loop space, which dominates the
-            # union-find cost.
-            tri_of_loop = np.repeat(np.arange(n_tris, dtype=np.int64), 3)
-            # triangle of each occurrence in the SORTED order
-            tri_of_sorted = tri_of_loop[order]
-            p1 = [tri_of_sorted[run_start[shared]]]
-            p2 = [tri_of_sorted[run_end[shared]]]
-            pairs_a = np.concatenate(p1)
-            pairs_b = np.concatenate(p2)
+        # Union pairs over TRIANGLES (not loops: the 3 loops of a triangle
+        # are one node), across each shared edge run (first with last
+        # occurrence of the run merges the whole run). The element space
+        # is ~3x smaller than the loop space, which dominates the
+        # union-find cost.
+        # Triangle of each edge occurrence (occurrences are laid out as
+        # 3 per triangle, in triangle order)
+        tri_of_occurrence = np.repeat(np.arange(n_tris, dtype=np.int64), 3)
+        # Triangle that owns each loop (loop_triangles partitions the loops,
+        # but the loops of a triangle are not necessarily consecutive, e.g.
+        # when triangulating quads)
+        tri_of_loop = np.empty(n_loops, dtype=np.int64)
+        tri_of_loop[triangle_loops.ravel()] = tri_of_occurrence
+        # triangle of each occurrence in the SORTED order
+        tri_of_sorted = tri_of_occurrence[order]
+        p1 = [tri_of_sorted[run_start[shared]]]
+        p2 = [tri_of_sorted[run_end[shared]]]
+        pairs_a = np.concatenate(p1)
+        pairs_b = np.concatenate(p2)
 
-            # Connected components over triangles, using the parallel C++
-            # union-find exposed by pyluxcore (slg::equiv::GroupByEquivalence)
-            island = pyluxcore.union_find(
-                n_tris, np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32)
-            ).astype(np.int64) if n_tris else np.zeros(0, dtype=np.int64)
-            # Loop island for the per-submesh gathers (island of the loop's tri)
-            loop_island = island[tri_of_loop]
-        else:
-            # No UV layers: no UV seams possible, one island per material
-            island = np.zeros(n_tris, dtype=np.int64)
-            loop_island = np.zeros(n_loops, dtype=np.int64)
+        # Connected components over triangles, using the parallel C++
+        # union-find exposed by pyluxcore (slg::equiv::GroupByEquivalence)
+        island = pyluxcore.union_find(
+            n_tris, np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32)
+        ).astype(np.int64) if n_tris else np.zeros(0, dtype=np.int64)
+        # Loop island for the per-submesh gathers (island of the loop's tri)
+        loop_island = island[tri_of_loop]
 
         n_islands = int(island.max()) + 1 if n_tris else 1
 
@@ -287,7 +303,7 @@ def convert(
                 uv_sub[isl_gw] = loop_uv[isl_loops]
                 sub_uvs.append(uv_sub)
             sub_normals = np.zeros((num_points, 3), dtype=np.float32)
-            sub_normals[isl_gw] = vertex_normals[loop_vertices[isl_loops]]
+            sub_normals[isl_gw] = loop_normals[isl_loops]
             sub_rgb, sub_alphas = [], []
             for colors, domain in color_attrs:
                 if domain == "POINT":
