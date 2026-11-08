@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import IntProperty, FloatProperty, BoolProperty
+from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty
 from ..base import LuxCoreNodeShape
 from ...utils import node as utils_node
 
@@ -18,20 +18,6 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
         name="Max. Edge Screen Size",
         default=0,
         min=0,
-        update=utils_node.force_viewport_mesh_update,
-    )
-    enhanced: BoolProperty(
-        name="Enhanced",
-        default=True,
-        update=utils_node.force_viewport_mesh_update,
-    )
-    merge_on_distance: BoolProperty(
-        name="Preliminary Merge on Distance",
-        description=(
-            "Apply a preliminary 'merge on distance' before "
-            "sudivision"
-        ),
-        default=True,
         update=utils_node.force_viewport_mesh_update,
     )
     sharpness_threshold: FloatProperty(
@@ -58,15 +44,31 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
         update=utils_node.force_viewport_mesh_update,
     )
 
+    creases: EnumProperty(
+        name="Creases",
+        description=(
+            "How creases (sharp edges) are determined:\n"
+            "None: no creases\n"
+            "Computed: from the dihedral angles (see sharpness threshold)\n"
+            "Imported: from the mesh crease data (crease_edge attribute)"
+        ),
+        items=[
+            ("NONE", "None", "No creases"),
+            ("COMPUTED", "Computed", "Computed from the dihedral angles"),
+            ("IMPORTED", "Imported", "Imported from the mesh crease data"),
+        ],
+        default="COMPUTED",
+        update=utils_node.force_viewport_mesh_update,
+    )
+
     def init(self, context):
         self.add_input("LuxCoreSocketShape", "Shape")
         self.outputs.new("LuxCoreSocketShape", "Shape")
 
     def draw_buttons(self, context, layout):
+        layout.prop(self, "creases")
         layout.prop(self, "max_level")
         layout.prop(self, "max_edge_screen_size")
-        layout.prop(self, "enhanced")
-        layout.prop(self, "merge_on_distance")
         layout.prop(self, "sharpness_threshold")
         layout.prop(self, "crease_weight")
 
@@ -78,10 +80,9 @@ class LuxCoreNodeShapeSubdiv(LuxCoreNodeShape, bpy.types.Node):
             ),
             "maxlevel": self.max_level,
             "maxedgescreensize": self.max_edge_screen_size,
-            "enhanced": self.enhanced,
-            "mergebefore": self.merge_on_distance,
             "sharpnessthreshold": self.sharpness_threshold,
-            "creaseweight": self.crease_weight
+            "creaseweight": self.crease_weight,
+            "creases": self.creases.lower()
         }
         return self.create_props(
             props, definitions, self.make_shape_name(base_shape_name)
