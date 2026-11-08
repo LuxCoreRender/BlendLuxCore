@@ -129,9 +129,14 @@ jobs:
           name: "BlendLuxCore"
           path: "${{ github.workspace }}/build/out/BlendLuxCore-*.zip"
 
-  attest-wheels:
+  attest-bundle:
+    name: Attest bundle
     needs: [build-bundle]
     runs-on: ubuntu-latest
+    # actions/attest-build-provenance needs an OIDC ID token, which GitHub
+    # only provides for same-repository PRs and non-PR events (not for fork
+    # PRs) - otherwise it fails with "Unable to get ACTIONS_ID_TOKEN_REQUEST_URL"
+    if: ${{ !env.ACT && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     permissions:
       attestations: write
       id-token: write
