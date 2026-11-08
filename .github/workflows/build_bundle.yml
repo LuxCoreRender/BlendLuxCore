@@ -21,7 +21,7 @@ on:
         value: ${{ jobs.build-bundle.outputs.branch }}
       attestation-url:
         description: "The url to the attestations"
-        value: ${{ jobs.attest-wheels.outputs.attestation-url }}
+        value: ${{ jobs.attest-bundle.outputs.attestation-url }}
   workflow_dispatch:
     inputs:
       build_type:
@@ -36,7 +36,6 @@ jobs:
     outputs:
       commit: ${{ steps.current-commit.outputs.commit }}
       branch: ${{ steps.current-commit.outputs.branch }}
-      version: ${{ steps.output-version.outputs.version }}
 
     steps:
 
@@ -47,9 +46,9 @@ jobs:
         id: current-commit
         run: |
           echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-          echo "branch=$(git symbolic-ref HEAD)" >> $GITHUB_OUTPUT
+          echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
           echo "commit=$(git rev-parse HEAD)"
-          echo "branch=$(git symbolic-ref HEAD)"
+          echo "branch=$(git rev-parse --abbrev-ref HEAD)"
 
       #- name: Prepare Blender install
         #uses: gerlero/apt-install@v1
@@ -103,7 +102,7 @@ jobs:
       - name: Package bundle
         shell: bash
         run: |
-          apt update -y && apt install xorg -y
+          sudo apt update -y && sudo apt install -y xorg
           build_dir="${{ github.workspace }}/build"
           mkdir -p "${build_dir}"
           echo "Configure"
@@ -130,7 +129,9 @@ jobs:
     # actions/attest-build-provenance needs an OIDC ID token, which GitHub
     # only provides for same-repository PRs and non-PR events (not for fork
     # PRs) - otherwise it fails with "Unable to get ACTIONS_ID_TOKEN_REQUEST_URL"
-    if: ${{ !env.ACT && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    # Note: the `env` context is not available in job-level `if`, so local act
+    # runs are skipped at step level instead (`if: ${{ !env.ACT }}`)
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
