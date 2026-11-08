@@ -6,11 +6,6 @@ name: BlendLuxCore Build Bundle
 
 on:
   pull_request:
-    inputs:
-      build_type:
-        required: false
-        type: string
-        default: "Latest"
   workflow_call:
     inputs:
       build_type:
@@ -26,7 +21,7 @@ on:
         value: ${{ jobs.build-bundle.outputs.branch }}
       attestation-url:
         description: "The url to the attestations"
-        value: ${{ jobs.attest-bundle.outputs.attestation-url }}
+        value: ${{ jobs.attest-wheels.outputs.attestation-url }}
   workflow_dispatch:
     inputs:
       build_type:
@@ -110,17 +105,17 @@ jobs:
         run: |
           apt update -y && apt install xorg -y
           build_dir="${{ github.workspace }}/build"
-          mkdir ${build_dir}
+          mkdir -p "${build_dir}"
           echo "Configure"
           cmake \
-            -B ${build_dir} \
+            -B "${build_dir}" \
             -S . \
-            -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
-            -DBLENDER_ROOT=${BLENDER_ROOT} \
-            -Dblender_ROOT=${BLENDER_ROOT}
+            -DCMAKE_BUILD_TYPE="${{ inputs.build_type || 'Latest' }}" \
+            -DBLENDER_ROOT="${BLENDER_ROOT}" \
+            -Dblender_ROOT="${BLENDER_ROOT}"
 
           echo "Build"
-          cmake --build ${build_dir}
+          cmake --build "${build_dir}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -131,8 +126,10 @@ jobs:
 
   attest-wheels:
     needs: [build-bundle]
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       attestations: write
       id-token: write
     outputs:
