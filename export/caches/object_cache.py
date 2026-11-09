@@ -750,17 +750,16 @@ class ObjectCache2:
                 # (This assumes that the instances use the same materials as the original mesh)
                 if node_tree and not loaded_from_cache:
                     warn_about_missing_uvs(obj, node_tree)
-                    # Subdivision must run on the whole envelope (all
-                    # triangles over the shared welded points), not per
-                    # submesh: refining each submesh separately treats shared
-                    # edges as boundaries (cracks/warping). Materials are
-                    # face-varying data on the envelope, not topology.
-                    base_shape = shape
-                    if uses_subdiv(node_tree) and exported_mesh.envelope_name:
-                        base_shape = exported_mesh.envelope_name
                     shape = define_shapes(
-                        base_shape, node_tree, exporter, depsgraph, scene_props
+                        shape, node_tree, exporter, depsgraph, scene_props
                     )
+                    # For subdivision shapes the C++ side builds the watertight
+                    # envelope over all submeshes sharing the point buffer and
+                    # splits the result back per material; pass the slot index
+                    if uses_subdiv(node_tree):
+                        scene_props.Set(pyluxcore.Property(
+                            "scene.shapes." + shape + ".matslot", mat_index
+                        ))
 
                 exported_mesh.mesh_definitions[idx] = [shape, mat_index]
 
@@ -853,18 +852,18 @@ class ObjectCache2:
                                     if mat:
                                         node_tree = mat.luxcore.node_tree
                                         if node_tree:
-                                            # Subdivide the whole envelope, not
-                                            # each submesh separately (see above)
-                                            base_shape = shape
-                                            if uses_subdiv(node_tree) and exported_mesh.envelope_name:
-                                                base_shape = exported_mesh.envelope_name
                                             shape = define_shapes(
-                                                base_shape,
+                                                shape,
                                                 node_tree,
                                                 exporter,
                                                 depsgraph,
                                                 scene_props,
                                             )
+                                            # pass the material slot to subdiv shapes
+                                            if uses_subdiv(node_tree):
+                                                scene_props.Set(pyluxcore.Property(
+                                                    "scene.shapes." + shape + ".matslot", mat_index
+                                                ))
 
                                     exported_mesh.mesh_definitions[i] = (
                                         shape,

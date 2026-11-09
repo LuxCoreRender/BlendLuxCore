@@ -23,7 +23,7 @@ if _needs_reload:
 # Reserved triangle AOV layer holding the material slot index of each
 # triangle (face-varying data bound to the mesh, like UVs). Indices 0 and 1
 # are used by TriAOVDataIndices (random per island). LuxCore reads this layer
-# to bind materials per face, incl. on subdivided envelope meshes.
+# to split the C++ subdiv envelope back per material.
 MATERIAL_TRI_AOV_INDEX = 2
 
 # Islands (varying-data connected components) smaller than this many
@@ -53,6 +53,7 @@ def get_ndarray(
     if not stride:
         buffer = buffer.ravel()
     return buffer
+
 
 
 def convert(
@@ -340,62 +341,9 @@ def convert(
         print(f"[BLC] - {fmt_layer(loop_uvs, 'uv layer')}")
         print(f"[BLC] - {fmt_layer(color_attrs, 'color layer')}")
 
-        # Envelope mesh: ALL triangles of the mesh (all materials) over the
-        # shared welded point array. This is the topology input for
-        # subdivision: a subdiv shape must source the whole envelope,
-        # otherwise each submesh is refined as an open patch and shared edges
-        # become boundaries (cracks/warping). Materials are NOT part of the
-        # topology: they are face-varying data bound to the mesh (see the
-        # triangle AOV below), like UVs, so the envelope stays watertight
-        # across material boundaries.
-        # The envelope owns the point buffer; all submeshes reference it by
-        # name (LuxCore shares the vertex storage between meshes defined with
-        # the same points).
-        envelope_name = f"{mesh_key}_env"
-        envelope_triangles = loop_welded[triangle_loops].astype(np.uint32)
-        envelope_normals = np.zeros((num_points, 3), dtype=np.float32)
-        envelope_normals[loop_welded] = loop_normals
-        envelope_uvs = []
-        for loop_uv in loop_uvs:
-            uv_env = np.zeros((num_points, 2), dtype=np.float32)
-            uv_env[loop_welded] = loop_uv
-            envelope_uvs.append(uv_env)
-        envelope_rgb, envelope_alphas = [], []
-        for colors, domain in color_attrs:
-            if domain == "POINT":
-                rgba = colors[first_index]
-            elif domain == "CORNER":
-                rgba = np.zeros((num_points, 4), dtype=np.float32)
-                rgba[loop_welded] = colors
-            else:
-                raise ValueError(f"Unhandled attribute domain: '{domain}'")
-            envelope_rgb.append(rgba[:, :3])
-            envelope_alphas.append(rgba[:, 3])
-        luxcore_scene.DefineMeshExt(
-            name=envelope_name,
-            points=welded_points,
-            triangles=envelope_triangles,
-            normals=envelope_normals,
-            uvs=envelope_uvs,
-            colors=envelope_rgb,
-            alphas=envelope_alphas,
-            transformation=mesh_transform,
-            crease_pairs=crease_pairs,
-            crease_weights=crease_weights,
-        )
-        # Material as face-varying data bound to the mesh: one material slot
-        # index per triangle, stored in a reserved triangle AOV layer
-        # (kept as float32 like other AOVs). Consumed per face by LuxCore,
-        # so it survives subdivision of the envelope.
-        luxcore_scene.SetMeshTriangleAOV(
-            envelope_name, MATERIAL_TRI_AOV_INDEX,
-            loop_triangle_materials.astype(np.float32),
-        )
-        points_owner = envelope_name
-        print(f"[BLC] - Envelope {envelope_name}: {len(envelope_triangles)} triangles "
-              f"over {num_points} welded points")
 
         mesh_definitions = []
+        first_submesh_name = None
         for g in sorted(groups.keys()):
             gkey = int(group_keys[g])
             mat = gkey // n_islands
@@ -438,10 +386,16 @@ def convert(
                 sub_rgb.append(rgba[:, :3])
                 sub_alphas.append(rgba[:, 3])
 
-            # All submeshes share the envelope's point buffer (by name); the
-            # transformation is already applied to the envelope's points
-            points = points_owner
-            submesh_transform = None
+            # All submeshes share one point buffer: the first submesh owns it
+            # (and bakes the transformation into its points), the others
+            # reference it by name
+            if first_submesh_name is None:
+                points = welded_points
+                submesh_transform = mesh_transform
+                first_submesh_name = name
+            else:
+                points = first_submesh_name
+                submesh_transform = None
 
             if g < 10 or len(groups) <= 12:
                 print(f"[BLC] - Submesh {name}: {len(sub_triangles)} triangles")
@@ -462,6 +416,10 @@ def convert(
                 crease_pairs=crease_pairs,
                 crease_weights=crease_weights,
             )
+            luxcore_scene.SetMeshTriangleAOV(
+                name, MATERIAL_TRI_AOV_INDEX,
+                np.full(len(sub_triangles), mat, dtype=np.float32),
+            )
             mesh_definitions.append((name, mat))
 
         duration = time() - start_time
@@ -470,8 +428,10 @@ def convert(
         print(f"[BLC] Export duration: {duration:.3f}s")
         print("[BLC]")
 
+        # Per-face material slot, consumed by the C++ subdiv envelope builder
+        # (MATERIAL_TRI_AOV_INDEX in LuxCore) to split the subdivided result
+        # back per material
         exported = caches.exported_data.ExportedMesh(mesh_definitions)
-        exported.envelope_name = envelope_name
         return exported
 
 
