@@ -10,9 +10,6 @@ class ExportedPart:
 class ExportedMesh:
     def __init__(self, mesh_definitions):
         self.mesh_definitions = mesh_definitions
-        # Name of the envelope mesh (all triangles of the mesh over the
-        # shared welded points); used as the source for subdivision shapes
-        self.envelope_name = None
 
 
 class ExportedData:

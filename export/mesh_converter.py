@@ -1,3 +1,5 @@
+import os
+import os
 from contextlib import contextmanager
 from time import time
 import numpy as np
@@ -21,8 +23,16 @@ if _needs_reload:
 # Reserved triangle AOV layer holding the material slot index of each
 # triangle (face-varying data bound to the mesh, like UVs). Indices 0 and 1
 # are used by TriAOVDataIndices (random per island). LuxCore reads this layer
-# to bind materials per face, incl. on subdivided envelope meshes.
+# to split the C++ subdiv envelope back per material.
 MATERIAL_TRI_AOV_INDEX = 2
+
+# Islands (varying-data connected components) smaller than this many
+# triangles are merged into an adjacent island at export (avoids tiny
+# fragments / thousands of submeshes on big models)
+MIN_ISLAND_TRIANGLE_COUNT = 64
+# Small islands are merged into an adjacent island only when the angle
+# between the two sides' normals is below this (hard edges are kept)
+MIN_ISLAND_MERGE_COS_ANGLE = float(np.cos(np.deg2rad(30.0)))
 
 
 # https://blenderartists.org/t/\
@@ -43,6 +53,7 @@ def get_ndarray(
     if not stride:
         buffer = buffer.ravel()
     return buffer
+
 
 
 def convert(
@@ -242,6 +253,57 @@ def convert(
         island = pyluxcore.union_find(
             n_tris, np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32)
         ).astype(np.int64) if n_tris else np.zeros(0, dtype=np.int64)
+
+        # Merge very small islands into an adjacent island: one submesh per
+        # tiny island means many small fragments on big models (each submesh
+        # is a full LuxCore mesh with per-point arrays), e.g. dense split
+        # normals create tens of thousands of 2-4 triangle islands. Merging
+        # only affects the varying data gathered at the shared points (last
+        # write wins), so keep the threshold small, and never merge across a
+        # hard edge (large angle between the two sides' normals), otherwise
+        # flat faces would be smoothed away (e.g. the default cube).
+        if n_tris:
+            n_islands0 = int(island.max()) + 1
+            island_size = np.bincount(island, minlength=n_islands0)
+            if os.environ.get("BLC_DEBUG_ISLANDS"):
+                hist, edges = np.histogram(island_size, bins=[1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 1 << 30])
+                print(f"[BLC] island size histogram for {mesh_key}: " +
+                      ", ".join(f"[{edges[i]},{edges[i+1]}): {hist[i]}" for i in range(len(hist))),
+                      flush=True)
+            small = island_size < MIN_ISLAND_TRIANGLE_COUNT
+            if np.any(small):
+                # group edge occurrences by edge only (ignoring signatures)
+                order_e = np.argsort(e_key, kind="stable")
+                k_e = e_key[order_e]
+                starts = np.nonzero(np.r_[True, k_e[1:] != k_e[:-1]])[0]
+                ends = np.r_[starts[1:] - 1, len(k_e) - 1]
+                multi = (ends - starts + 1) >= 2
+                ts_e = tri_of_occurrence[order_e]
+                l_lo_e = l_lo[order_e]
+                l_hi_e = l_hi[order_e]
+                isl_a = island[ts_e[starts]]
+                isl_b = island[ts_e[ends]]
+                adj = multi & (isl_a != isl_b)
+                # angle between the two sides' normals (at both endpoints)
+                n1 = loop_normals[l_lo_e[starts]]
+                n2 = loop_normals[l_hi_e[ends]]
+                cosang = np.einsum("ij,ij->i", n1, n2)
+                not_hard = cosang > MIN_ISLAND_MERGE_COS_ANGLE
+                any_small = np.zeros(len(starts), dtype=bool)
+                any_small[adj] = small[isl_a[adj]] | small[isl_b[adj]]
+                merge = adj & any_small & not_hard
+                if np.any(merge):
+                    merge_pairs = np.stack(
+                        [ts_e[starts[merge]], ts_e[ends[merge]]], axis=1
+                    ).astype(np.uint32)
+                    # re-run the union-find with the original pairs + merge
+                    # pairs, so chains of small islands collapse in one pass
+                    all_pairs = np.concatenate([
+                        np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32),
+                        merge_pairs,
+                    ])
+                    island = pyluxcore.union_find(n_tris, all_pairs).astype(np.int64)
+
         # Loop island for the per-submesh gathers (island of the loop's tri)
         loop_island = island[tri_of_loop]
 
@@ -279,62 +341,9 @@ def convert(
         print(f"[BLC] - {fmt_layer(loop_uvs, 'uv layer')}")
         print(f"[BLC] - {fmt_layer(color_attrs, 'color layer')}")
 
-        # Envelope mesh: ALL triangles of the mesh (all materials) over the
-        # shared welded point array. This is the topology input for
-        # subdivision: a subdiv shape must source the whole envelope,
-        # otherwise each submesh is refined as an open patch and shared edges
-        # become boundaries (cracks/warping). Materials are NOT part of the
-        # topology: they are face-varying data bound to the mesh (see the
-        # triangle AOV below), like UVs, so the envelope stays watertight
-        # across material boundaries.
-        # The envelope owns the point buffer; all submeshes reference it by
-        # name (LuxCore shares the vertex storage between meshes defined with
-        # the same points).
-        envelope_name = f"{mesh_key}_env"
-        envelope_triangles = loop_welded[triangle_loops].astype(np.uint32)
-        envelope_normals = np.zeros((num_points, 3), dtype=np.float32)
-        envelope_normals[loop_welded] = loop_normals
-        envelope_uvs = []
-        for loop_uv in loop_uvs:
-            uv_env = np.zeros((num_points, 2), dtype=np.float32)
-            uv_env[loop_welded] = loop_uv
-            envelope_uvs.append(uv_env)
-        envelope_rgb, envelope_alphas = [], []
-        for colors, domain in color_attrs:
-            if domain == "POINT":
-                rgba = colors[first_index]
-            elif domain == "CORNER":
-                rgba = np.zeros((num_points, 4), dtype=np.float32)
-                rgba[loop_welded] = colors
-            else:
-                raise ValueError(f"Unhandled attribute domain: '{domain}'")
-            envelope_rgb.append(rgba[:, :3])
-            envelope_alphas.append(rgba[:, 3])
-        luxcore_scene.DefineMeshExt(
-            name=envelope_name,
-            points=welded_points,
-            triangles=envelope_triangles,
-            normals=envelope_normals,
-            uvs=envelope_uvs,
-            colors=envelope_rgb,
-            alphas=envelope_alphas,
-            transformation=mesh_transform,
-            crease_pairs=crease_pairs,
-            crease_weights=crease_weights,
-        )
-        # Material as face-varying data bound to the mesh: one material slot
-        # index per triangle, stored in a reserved triangle AOV layer
-        # (kept as float32 like other AOVs). Consumed per face by LuxCore,
-        # so it survives subdivision of the envelope.
-        luxcore_scene.SetMeshTriangleAOV(
-            envelope_name, MATERIAL_TRI_AOV_INDEX,
-            loop_triangle_materials.astype(np.float32),
-        )
-        points_owner = envelope_name
-        print(f"[BLC] - Envelope {envelope_name}: {len(envelope_triangles)} triangles "
-              f"over {num_points} welded points")
 
         mesh_definitions = []
+        first_submesh_name = None
         for g in sorted(groups.keys()):
             gkey = int(group_keys[g])
             mat = gkey // n_islands
@@ -377,10 +386,16 @@ def convert(
                 sub_rgb.append(rgba[:, :3])
                 sub_alphas.append(rgba[:, 3])
 
-            # All submeshes share the envelope's point buffer (by name); the
-            # transformation is already applied to the envelope's points
-            points = points_owner
-            submesh_transform = None
+            # All submeshes share one point buffer: the first submesh owns it
+            # (and bakes the transformation into its points), the others
+            # reference it by name
+            if first_submesh_name is None:
+                points = welded_points
+                submesh_transform = mesh_transform
+                first_submesh_name = name
+            else:
+                points = first_submesh_name
+                submesh_transform = None
 
             if g < 10 or len(groups) <= 12:
                 print(f"[BLC] - Submesh {name}: {len(sub_triangles)} triangles")
@@ -401,6 +416,10 @@ def convert(
                 crease_pairs=crease_pairs,
                 crease_weights=crease_weights,
             )
+            luxcore_scene.SetMeshTriangleAOV(
+                name, MATERIAL_TRI_AOV_INDEX,
+                np.full(len(sub_triangles), mat, dtype=np.float32),
+            )
             mesh_definitions.append((name, mat))
 
         duration = time() - start_time
@@ -409,8 +428,10 @@ def convert(
         print(f"[BLC] Export duration: {duration:.3f}s")
         print("[BLC]")
 
+        # Per-face material slot, consumed by the C++ subdiv envelope builder
+        # (MATERIAL_TRI_AOV_INDEX in LuxCore) to split the subdivided result
+        # back per material
         exported = caches.exported_data.ExportedMesh(mesh_definitions)
-        exported.envelope_name = envelope_name
         return exported
 
 

@@ -11,6 +11,7 @@ class ImageExporter:
     """
 
     temp_images = {}
+    temp_generated_images = {}
 
     @classmethod
     def _save_to_temp_file(cls, image):
@@ -23,7 +24,11 @@ class ImageExporter:
           it provides and, on the other hand, we need several formats
           (including dds) that this method does not handle.
         """
-        assert image.packed_file
+        if image.packed_file is None:
+            raise RuntimeError(
+                f"Image '{image.name}' has no packed file to export "
+                f"(source={image.source}, filepath='{image.filepath}')"
+            )
 
         result = []
         for packed in image.packed_files:
@@ -99,6 +104,25 @@ class ImageExporter:
         This is the main method of the module.
         """
         if image.source == "GENERATED":
+            if image.packed_file is None:
+                # Generated images are not packed by default, and pack() does
+                # not work for them: save the pixels to a temp file instead.
+                # In background mode the pixels may not be generated yet, so
+                # force the generation first.
+                key = f"generated-{image.name}"
+                if key in cls.temp_generated_images:
+                    return cls.temp_generated_images[key]
+                if not image.has_data:
+                    _ = image.pixels[0]
+                extension = f".{image.file_format.lower()}"
+                with tempfile.NamedTemporaryFile(
+                    delete=False, suffix=extension
+                ) as temp_image:
+                    image.save_render(temp_image.name, scene=scene)
+                    print(f"[BLC] Saved generated image '{image.name}' to temp "
+                          f"file '{temp_image.name}'")
+                    cls.temp_generated_images[key] = temp_image.name
+                    return temp_image.name
             return cls._save_to_temp_file(image)
 
         if image.source == "FILE":
