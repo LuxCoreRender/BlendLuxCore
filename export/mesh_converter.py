@@ -56,6 +56,51 @@ def get_ndarray(
 
 
 
+def _sortable_float_bits(values):
+    """Order-preserving uint32 keys of a contiguous float32 array.
+
+    Transforms the float bits so that uint32 comparison order matches float
+    order; -0.0 is mapped to the +0.0 key so it compares equal (as np.unique
+    does).
+    """
+    bits = values.view(np.uint32)
+    keys = bits ^ np.where(bits >> 31 == 1, np.uint32(0xFFFFFFFF), np.uint32(0x80000000))
+    return np.where(bits == np.uint32(0x80000000), np.uint32(0), keys)
+
+
+def _weld_points(vertex_points):
+    """Weld coincident points.
+
+    Same result as
+    np.unique(vertex_points, axis=0, return_index=True, return_inverse=True),
+    but faster: the two first coordinates are packed into a single uint64
+    sort key (order-preserving float bits), so the weld is a lexicographic
+    sort over 8-byte keys instead of a sort over 12-byte voids.
+    """
+    n = len(vertex_points)
+    if n == 0:
+        return (vertex_points.reshape(0, 3), np.zeros(0, dtype=np.int64),
+                np.zeros(0, dtype=np.int64))
+    if np.isnan(vertex_points).any():
+        # NaN payloads are not bit-identical; fall back to exact unique
+        return np.unique(vertex_points, axis=0, return_index=True, return_inverse=True)
+    keys = _sortable_float_bits(np.ascontiguousarray(vertex_points))
+    key64 = (keys[:, 0].astype(np.uint64) << 32) | keys[:, 1].astype(np.uint64)
+    # Lexicographic (x, y, z) order, same as np.unique(axis=0): z as tiebreak
+    order = np.lexsort((keys[:, 2], key64))
+    k64 = key64[order]
+    z = keys[:, 2][order]
+    same = (k64[1:] == k64[:-1]) & (z[1:] == z[:-1])
+    boundary = np.empty(n, dtype=bool)
+    boundary[0] = True
+    boundary[1:] = ~same
+    first_index = order[boundary]
+    group = np.cumsum(boundary) - 1
+    weld_inverse = np.empty(n, dtype=np.int64)
+    weld_inverse[order] = group
+    return vertex_points[first_index], first_index, weld_inverse
+
+
 def convert(
     obj,
     mesh_key,
@@ -93,9 +138,7 @@ def convert(
         # (LuxCore shares the point storage between meshes defined with
         # identical points).
         vertex_points = get_ndarray(mesh.vertices, "co", 3, np.float32)
-        welded_points, first_index, weld_inverse = np.unique(
-            vertex_points, axis=0, return_index=True, return_inverse=True
-        )
+        welded_points, first_index, weld_inverse = _weld_points(vertex_points)
         num_points = len(welded_points)
 
         # Per-vertex data of the (possibly split) source vertices
@@ -193,10 +236,9 @@ def convert(
         n_tris = len(triangle_loops)
         n_loops = len(loop_vertices)
 
-        # Distinct signature id per loop, via a void view for speed
+        # Per-loop signature bytes (void view), for exact seam comparison
         sig_flat = np.ascontiguousarray(loop_sig)
         sig_void = sig_flat.view(np.dtype((np.void, sig_flat.dtype.itemsize * sig_flat.shape[1]))).ravel()
-        _, sig_id = np.unique(sig_void, return_inverse=True)
 
         # Edge occurrences: for each triangle, edges (c0,c1), (c1,c2), (c2,c0),
         # normalized so the welded endpoint ids are sorted
@@ -210,29 +252,13 @@ def convert(
         e_hi = np.where(swap, w0, w1)
         l_lo = np.where(swap, e_src[:, 1], e_src[:, 0])  # loop at lo endpoint
         l_hi = np.where(swap, e_src[:, 0], e_src[:, 1])  # loop at hi endpoint
-        u_lo = sig_id[l_lo]
-        u_hi = sig_id[l_hi]
         e_key = e_lo * num_points + e_hi
 
-        # Sort occurrences by (edge, sig at lo, sig at hi): identical
-        # (edge, signature-at-endpoints) occurrences become adjacent runs
-        order = np.lexsort((u_hi, u_lo, e_key))
+        # Sort occurrences by edge only (single int64 key): the occurrences of
+        # a same edge become one adjacent run
+        order = np.argsort(e_key, kind="stable")
         k_s = e_key[order]
-        ulo_s = u_lo[order]
-        uhi_s = u_hi[order]
-        llo_s = l_lo[order]
-        lhi_s = l_hi[order]
-        same_run = np.ones(len(order), dtype=bool)
-        same_run[1:] = (k_s[1:] == k_s[:-1]) & (ulo_s[1:] == ulo_s[:-1]) & (uhi_s[1:] == uhi_s[:-1])
-        run_start = np.nonzero(~same_run)[0]  # first occurrence index of each run
-        run_end = np.append(run_start[1:] - 1, len(order) - 1)  # last index per run
-        shared = (run_end - run_start + 1) >= 2
 
-        # Union pairs over TRIANGLES (not loops: the 3 loops of a triangle
-        # are one node), across each shared edge run (first with last
-        # occurrence of the run merges the whole run). The element space
-        # is ~3x smaller than the loop space, which dominates the
-        # union-find cost.
         # Triangle of each edge occurrence (occurrences are laid out as
         # 3 per triangle, in triangle order)
         tri_of_occurrence = np.repeat(np.arange(n_tris, dtype=np.int64), 3)
@@ -243,16 +269,35 @@ def convert(
         tri_of_loop[triangle_loops.ravel()] = tri_of_occurrence
         # triangle of each occurrence in the SORTED order
         tri_of_sorted = tri_of_occurrence[order]
-        p1 = [tri_of_sorted[run_start[shared]]]
-        p2 = [tri_of_sorted[run_end[shared]]]
-        pairs_a = np.concatenate(p1)
-        pairs_b = np.concatenate(p2)
+
+        # Union pairs over TRIANGLES (not loops: the 3 loops of a triangle
+        # are one node), across each shared edge: consecutive occurrences of
+        # the same edge are joined when the full signature matches at both
+        # endpoints (chaining joins whole signature groups within an edge
+        # run; the run length is 2 for manifold edges). The element space
+        # is ~3x smaller than the loop space, which dominates the
+        # union-find cost.
+        same_edge = np.empty(len(order), dtype=bool)
+        same_edge[0] = False
+        same_edge[1:] = k_s[1:] == k_s[:-1]
+        s_lo = sig_void[l_lo[order]]
+        s_hi = sig_void[l_hi[order]]
+        join = same_edge[1:] & (s_lo[1:] == s_lo[:-1]) & (s_hi[1:] == s_hi[:-1])
+        del s_lo, s_hi
+        idx = np.nonzero(join)[0]
+        del join
+        pairs = (
+            np.stack([tri_of_sorted[idx], tri_of_sorted[idx + 1]], axis=1).astype(np.uint32)
+            if n_tris else np.zeros((0, 2), dtype=np.uint32)
+        )
 
         # Connected components over triangles, using the parallel C++
         # union-find exposed by pyluxcore (slg::equiv::GroupByEquivalence)
-        island = pyluxcore.union_find(
-            n_tris, np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32)
-        ).astype(np.int64) if n_tris else np.zeros(0, dtype=np.int64)
+        island = (
+            pyluxcore.union_find(n_tris, pairs).astype(np.int64)
+            if n_tris
+            else np.zeros(0, dtype=np.int64)
+        )
 
         # Merge very small islands into an adjacent island: one submesh per
         # tiny island means many small fragments on big models (each submesh
@@ -272,37 +317,33 @@ def convert(
                       flush=True)
             small = island_size < MIN_ISLAND_TRIANGLE_COUNT
             if np.any(small):
-                # group edge occurrences by edge only (ignoring signatures)
-                order_e = np.argsort(e_key, kind="stable")
-                k_e = e_key[order_e]
-                starts = np.nonzero(np.r_[True, k_e[1:] != k_e[:-1]])[0]
-                ends = np.r_[starts[1:] - 1, len(k_e) - 1]
+                # Edge runs (order is already sorted by edge key)
+                starts = np.nonzero(np.r_[True, k_s[1:] != k_s[:-1]])[0]
+                ends = np.r_[starts[1:] - 1, len(k_s) - 1]
                 multi = (ends - starts + 1) >= 2
-                ts_e = tri_of_occurrence[order_e]
-                l_lo_e = l_lo[order_e]
-                l_hi_e = l_hi[order_e]
-                isl_a = island[ts_e[starts]]
-                isl_b = island[ts_e[ends]]
+                l_lo_s = l_lo[order]
+                l_hi_s = l_hi[order]
+                isl_a = island[tri_of_sorted[starts]]
+                isl_b = island[tri_of_sorted[ends]]
                 adj = multi & (isl_a != isl_b)
                 # angle between the two sides' normals (at both endpoints)
-                n1 = loop_normals[l_lo_e[starts]]
-                n2 = loop_normals[l_hi_e[ends]]
+                n1 = loop_normals[l_lo_s[starts]]
+                n2 = loop_normals[l_hi_s[ends]]
                 cosang = np.einsum("ij,ij->i", n1, n2)
                 not_hard = cosang > MIN_ISLAND_MERGE_COS_ANGLE
                 any_small = np.zeros(len(starts), dtype=bool)
                 any_small[adj] = small[isl_a[adj]] | small[isl_b[adj]]
                 merge = adj & any_small & not_hard
                 if np.any(merge):
-                    merge_pairs = np.stack(
-                        [ts_e[starts[merge]], ts_e[ends[merge]]], axis=1
-                    ).astype(np.uint32)
-                    # re-run the union-find with the original pairs + merge
-                    # pairs, so chains of small islands collapse in one pass
-                    all_pairs = np.concatenate([
-                        np.stack([pairs_a, pairs_b], axis=1).astype(np.uint32),
-                        merge_pairs,
-                    ])
-                    island = pyluxcore.union_find(n_tris, all_pairs).astype(np.int64)
+                    # Merge at the ISLAND level: a small union-find over the
+                    # island labels (not over all triangles), then map back,
+                    # so chains of small islands collapse in one pass
+                    isl_pairs = np.unique(
+                        np.stack([isl_a[merge], isl_b[merge]], axis=1).astype(np.uint32),
+                        axis=0,
+                    )
+                    isl_map = pyluxcore.union_find(n_islands0, isl_pairs).astype(np.int64)
+                    island = isl_map[island]
 
         # Loop island for the per-submesh gathers (island of the loop's tri)
         loop_island = island[tri_of_loop]
