@@ -35,6 +35,10 @@ MIN_ISLAND_TRIANGLE_COUNT = 64
 # between the two sides' normals is below this (hard edges are kept)
 MIN_ISLAND_MERGE_COS_ANGLE = float(np.cos(np.deg2rad(30.0)))
 
+# Verbose per-submesh logging (off by default: printing thousands of submeshes
+# is a measurable cost on fragment-heavy models)
+_DEBUG_MESH = bool(os.environ.get("BLC_DEBUG_MESH"))
+
 
 # https://blenderartists.org/t/\
 # efficient-copying-of-vertex-coords-to-and-from-numpy-arrays/661467/2
@@ -469,17 +473,19 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         # the shared welded points
         sub_uvs = []
         for loop_uv in loop_uvs:
-            uv_sub = np.zeros((num_points, 2), dtype=np.float32)
+            # np.empty: points outside this submesh's islands are never
+            # referenced by its triangles, so their values are never read
+            uv_sub = np.empty((num_points, 2), dtype=np.float32)
             uv_sub[isl_gw] = loop_uv[isl_loops]
             sub_uvs.append(uv_sub)
-        sub_normals = np.zeros((num_points, 3), dtype=np.float32)
+        sub_normals = np.empty((num_points, 3), dtype=np.float32)
         sub_normals[isl_gw] = loop_normals[isl_loops]
         sub_rgb, sub_alphas = [], []
         for colors, domain in color_attrs:
             if domain == "POINT":
                 rgba = colors[first_index]
             elif domain == "CORNER":
-                rgba = np.zeros((num_points, 4), dtype=np.float32)
+                rgba = np.empty((num_points, 4), dtype=np.float32)
                 rgba[isl_gw] = colors[isl_loops]
             else:
                 raise ValueError(f"Unhandled attribute domain: '{domain}'")
@@ -497,9 +503,9 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             points = first_submesh_name
             submesh_transform = None
 
-        if g < 10 or len(groups) <= 12:
+        if _DEBUG_MESH and (g < 10 or len(groups) <= 12):
             print(f"[BLC] - Submesh {name}: {len(sub_triangles)} triangles")
-        elif g == 10:
+        elif _DEBUG_MESH and g == 10:
             print(f"[BLC] - ... ({len(groups) - 10} more submeshes)")
 
         payloads.append(dict(
@@ -604,36 +610,39 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         )
     if os.environ.get("BLC_EXPORT_CHUNK_SIZE"):
         chunk_size = int(os.environ["BLC_EXPORT_CHUNK_SIZE"])
+    # Also bound chunks by total points, so scenes with a few huge objects
+    # (e.g. multi-million-vertex meshes) still get several chunks and the
+    # extract/compute pipeline can overlap
+    max_chunk_points = int(os.environ.get("BLC_EXPORT_CHUNK_POINTS", "1000000"))
+
+    # Split jobs into chunks (by count and by total points)
+    chunks = []
+    cur, cur_pts = [], 0
+    for job in jobs:
+        obj = job[0]
+        # obj.data may be a Curve etc. without .vertices
+        pts = len(obj.data.vertices) if obj.data is not None and hasattr(obj.data, "vertices") else 0
+        if cur and (len(cur) >= chunk_size or cur_pts + pts > max_chunk_points):
+            chunks.append(cur)
+            cur, cur_pts = [], 0
+        cur.append(job)
+        cur_pts += pts
+    if cur:
+        chunks.append(cur)
 
     results = [None] * len(jobs)
     debug = bool(os.environ.get("BLC_DEBUG_EXPORT"))
-    for chunk_start in range(0, len(jobs), chunk_size):
-        chunk = jobs[chunk_start:chunk_start + chunk_size]
-        if debug:
-            print(f"[BLC-DEBUG] chunk {chunk_start}..{chunk_start + len(chunk)}: extracting", flush=True)
 
-        # Phase 1: extract, serially in the calling (main) thread
-        datas = []
-        for (obj, *_rest) in chunk:
-            if debug:
-                print(f"[BLC-DEBUG] extract {obj.name}", flush=True)
-            datas.append(extract_mesh_data(obj, depsgraph))
-        if debug:
-            print(f"[BLC-DEBUG] chunk extracted, computing", flush=True)
+    def _compute(args):
+        data, job = args
+        if data is None:
+            return None
+        _obj, mesh_key, transform, is_viewport_render, use_instancing = job
+        return compute_submeshes(
+            data, mesh_key, transform, is_viewport_render, use_instancing
+        )
 
-        # Phase 2: compute in a thread pool
-        def _compute(args):
-            data, job = args
-            if data is None:
-                return None
-            _obj, mesh_key, transform, is_viewport_render, use_instancing = job
-            return compute_submeshes(
-                data, mesh_key, transform, is_viewport_render, use_instancing
-            )
-
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            computed = list(pool.map(_compute, zip(datas, chunk)))
-
+    def _define(chunk_start, chunk, computed):
         # Phase 3: define in the LuxCore scene, serially in the calling thread
         for i, (job, comp) in enumerate(zip(chunk, computed)):
             if comp is None:
@@ -644,6 +653,42 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
                 exporter.stats.export_time_meshes.value += info["duration"]
             print(f"[BLC] Export duration: {info['duration']:.3f}s")
             print("[BLC]")
+
+    # Pipeline with a window of 2 chunks in flight: while the pool computes
+    # chunk i, the calling thread extracts chunk i+1 (extraction is Blender-API
+    # bound and serial, compute overlaps it), then chunk i is defined in order.
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        pending = []  # (chunk_index, chunk, future)
+        chunk_offsets = []
+        off = 0
+        for ch in chunks:
+            chunk_offsets.append(off)
+            off += len(ch)
+        for chunk_index, chunk in enumerate(chunks):
+            chunk_start = chunk_offsets[chunk_index]
+            if debug:
+                print(f"[BLC-DEBUG] chunk {chunk_start}..{chunk_start + len(chunk)}: extracting", flush=True)
+
+            # Phase 1: extract, serially in the calling (main) thread
+            datas = []
+            for (obj, *_rest) in chunk:
+                if debug:
+                    print(f"[BLC-DEBUG] extract {obj.name}", flush=True)
+                datas.append(extract_mesh_data(obj, depsgraph))
+
+            # Phase 2: submit compute to the pool
+            future = pool.submit(lambda: [_compute(a) for a in zip(datas, chunk)])
+            pending.append((chunk_start, chunk, future))
+
+            # Keep at most 2 chunks in flight; define the oldest (in order)
+            while len(pending) > 1:
+                cs, ch, fut = pending.pop(0)
+                if debug:
+                    print(f"[BLC-DEBUG] chunk {cs} computed, defining", flush=True)
+                _define(cs, ch, fut.result())
+
+        for cs, ch, fut in pending:
+            _define(cs, ch, fut.result())
 
     return results
 
@@ -684,9 +729,12 @@ def _prepare_mesh(obj, depsgraph):
                     object_eval.to_mesh_clear()
                     mesh = None
 
-            # TODO implement new normals handling
-            if mesh:
-                mesh.split_faces()  # Applies smooth by angle operator
+            # No split_faces() here: in Blender 5.2 mesh.corner_normals already
+            # honor sharp edges / smooth-by-angle (verified: default cube gets 3
+            # distinct corner normals per vertex without splitting), and the
+            # weld below merges any coincident vertices anyway (e.g. from
+            # modifiers). Skipping split_faces avoids duplicating all vertices
+            # of split meshes just to weld them back.
 
         yield mesh
     finally:
