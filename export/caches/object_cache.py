@@ -1,7 +1,10 @@
 import bpy
+import os
 from array import array
 from functools import lru_cache
 from time import time
+
+import numpy as np
 
 from ... import utils
 import pyluxcore
@@ -342,6 +345,71 @@ class ObjectCache2:
 
         # Particle system counts might have changed
         supports_live_transform.cache_clear()
+
+        # Pre-pass: collect the objects whose mesh needs to be (re)converted,
+        # and convert them in parallel (Blender data extraction in this
+        # thread, compute in a thread pool, LuxCore scene definition back in
+        # this thread). Results are consumed by _convert_obj below.
+        self._prefetched_meshes = {}
+        jobs = []       # (obj, mesh_key, transform, is_viewport_render, use_instancing)
+        job_obj_keys = []
+        seen_dupli_originals = set()
+        for index, dg_obj_instance in enumerate(depsgraph.object_instances):
+            obj = dg_obj_instance.object
+            if (
+                dg_obj_instance.is_instance
+                and not (
+                    is_viewport_render
+                    and supports_live_transform(dg_obj_instance.particle_system)
+                )
+                and obj.type in MESH_OBJECTS
+            ):
+                # Dupli path: only the first occurrence of each original converts
+                ptr = obj.original.as_pointer()
+                if ptr in seen_dupli_originals:
+                    continue
+                seen_dupli_originals.add(ptr)
+            else:
+                if not utils.is_instance_visible(dg_obj_instance, obj, context):
+                    continue
+            if obj.type not in MESH_OBJECTS or obj.data is None:
+                continue
+            if not dg_obj_instance.show_self:
+                continue
+            # Copy the matrix into a plain numpy array here in the main
+            # thread: reading a live depsgraph Matrix from a worker thread
+            # would crash
+            mw = dg_obj_instance.matrix_world
+            transform = np.array(
+                [[mw[i][j] for j in range(4)] for i in range(4)],
+                dtype=np.float32,
+            )
+            use_instancing = (
+                is_viewport_render
+                or dg_obj_instance.is_instance
+                or utils.can_share_mesh(obj.original)
+                or (
+                    exporter.motion_blur_enabled and obj.luxcore.enable_motion_blur
+                )
+                or uses_displacement(obj)
+            )
+            mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
+            if use_instancing and mesh_key in self.exported_meshes:
+                continue  # already cached, the main loop will use the cache
+            # Store obj.original (a persistent reference owned by bpy.data):
+            # the DepsgraphObjectInstance wrappers from the pre-pass iteration
+            # must not be kept past the loop
+            jobs.append(
+                (obj.original, mesh_key, transform, is_viewport_render, use_instancing)
+            )
+            job_obj_keys.append(utils.make_key_from_instance(dg_obj_instance))
+
+        if jobs and not os.environ.get("BLC_SERIAL_EXPORT"):
+            prefetched_results = mesh_converter.convert_objects(
+                jobs, depsgraph, luxcore_scene, exporter=exporter
+            )
+            for obj_key, result in zip(job_obj_keys, prefetched_results):
+                self._prefetched_meshes[obj_key] = result
 
         for index, dg_obj_instance in enumerate(depsgraph.object_instances):
             obj = dg_obj_instance.object
@@ -717,7 +785,13 @@ class ObjectCache2:
 
         mesh_key = self._get_mesh_key(obj, use_instancing, is_viewport_render)
 
-        if use_instancing and mesh_key in self.exported_meshes:
+        prefetched_meshes = getattr(self, "_prefetched_meshes", None)
+        if prefetched_meshes is not None and obj_key in prefetched_meshes:
+            # Mesh was converted in parallel by first_run's pre-pass
+            exported_mesh = prefetched_meshes.pop(obj_key)
+            self.exported_meshes[mesh_key] = exported_mesh
+            loaded_from_cache = False
+        elif use_instancing and mesh_key in self.exported_meshes:
             exported_mesh = self.exported_meshes[mesh_key]
             loaded_from_cache = True
         else:
