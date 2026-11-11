@@ -522,6 +522,10 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             crease_pairs=crease_pairs,
             crease_weights=crease_weights,
             mat=mat,
+            # Unique slot id per submesh (material x island group); starts at 1
+            # because tri AOV layer 2 is also read by the wireframe texture,
+            # which skips an edge class when the value is 0
+            slot=g + 1,
         ))
 
     duration = time() - start_time
@@ -553,9 +557,9 @@ def define_submeshes(luxcore_scene, payloads):
             )
             luxcore_scene.SetMeshTriangleAOV(
                 payload["name"], MATERIAL_TRI_AOV_INDEX,
-                np.full(len(payload["triangles"]), payload["mat"], dtype=np.float32),
+                np.full(len(payload["triangles"]), payload["slot"], dtype=np.float32),
             )
-            mesh_definitions.append((payload["name"], payload["mat"]))
+            mesh_definitions.append((payload["name"], payload["mat"], payload["slot"]))
 
     # Per-face material slot, consumed by the C++ subdiv envelope builder
     # (MATERIAL_TRI_AOV_INDEX in LuxCore) to split the subdivided result
