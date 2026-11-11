@@ -31,7 +31,8 @@ class ExportedObject(ExportedData):
         # submeshes of an object whose shape tree subdivides the shared
         # envelope) are redundant and merged into a single part.
         seen_parts = set()
-        for i, ((shape_name, mat_index), mat_name) in enumerate(zip(mesh_definitions, mat_names)):
+        for i, (mesh_def, mat_name) in enumerate(zip(mesh_definitions, mat_names)):
+            shape_name, mat_index = mesh_def[0], mesh_def[1]
             if (shape_name, mat_name) in seen_parts:
                 continue
             seen_parts.add((shape_name, mat_name))

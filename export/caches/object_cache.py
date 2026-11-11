@@ -79,6 +79,38 @@ def uses_subdiv(node_tree):
     )
 
 
+def _shape_prop(scene_props, shape_name, key, default=""):
+    try:
+        return scene_props.Get(
+            "scene.shapes." + shape_name + "." + key
+        ).GetString()
+    except Exception:
+        return default
+
+
+def set_matslot_on_subdiv_shape(scene_props, shape, mat_index):
+    """Set the matslot property on the subdiv shape of a shape chain.
+
+    The chain may end with another shape (e.g. harlequin after subdiv), so walk
+    the chain via the "source" links and set matslot on the subdiv shape itself
+    (that's the shape LuxCore reads matslot from). Falls back to the final
+    shape name if no subdiv shape is found.
+    """
+    name = shape
+    seen = set()
+    while name and name not in seen:
+        seen.add(name)
+        if _shape_prop(scene_props, name, "type") == "subdiv":
+            scene_props.Set(pyluxcore.Property(
+                "scene.shapes." + name + ".matslot", mat_index
+            ))
+            return
+        name = _shape_prop(scene_props, name, "source")
+    scene_props.Set(pyluxcore.Property(
+        "scene.shapes." + shape + ".matslot", mat_index
+    ))
+
+
 def uses_displacement(obj):
     for mat_slot in obj.material_slots:
         mat = mat_slot.material
@@ -810,9 +842,11 @@ class ObjectCache2:
 
         if exported_mesh:
             mat_names = []
-            for idx, (shape_name, mat_index) in enumerate(
+            for idx, mesh_def in enumerate(
                 exported_mesh.mesh_definitions
             ):
+                shape_name, mat_index = mesh_def[0], mesh_def[1]
+                slot = mesh_def[2] if len(mesh_def) > 2 else mat_index
                 shape = shape_name
                 lux_mat_name, mat_props, node_tree = export_material(
                     obj, mat_index, exporter, depsgraph, is_viewport_render
@@ -831,11 +865,9 @@ class ObjectCache2:
                     # envelope over all submeshes sharing the point buffer and
                     # splits the result back per material; pass the slot index
                     if uses_subdiv(node_tree):
-                        scene_props.Set(pyluxcore.Property(
-                            "scene.shapes." + shape + ".matslot", mat_index
-                        ))
+                        set_matslot_on_subdiv_shape(scene_props, shape, slot)
 
-                exported_mesh.mesh_definitions[idx] = [shape, mat_index]
+                exported_mesh.mesh_definitions[idx] = [shape, mat_index, slot]
 
             obj_transform = transform.copy() if use_instancing else None
             obj_id = utils.make_object_id(dg_obj_instance)
@@ -916,9 +948,9 @@ class ObjectCache2:
                                 for i in range(
                                     len(exported_mesh.mesh_definitions)
                                 ):
-                                    shape, mat_index = (
-                                        exported_mesh.mesh_definitions[i]
-                                    )
+                                    mesh_def = exported_mesh.mesh_definitions[i]
+                                    shape, mat_index = mesh_def[0], mesh_def[1]
+                                    slot = mesh_def[2] if len(mesh_def) > 2 else mat_index
                                     mat = get_material(
                                         obj, mat_index, depsgraph
                                     )
@@ -935,13 +967,14 @@ class ObjectCache2:
                                             )
                                             # pass the material slot to subdiv shapes
                                             if uses_subdiv(node_tree):
-                                                scene_props.Set(pyluxcore.Property(
-                                                    "scene.shapes." + shape + ".matslot", mat_index
-                                                ))
+                                                set_matslot_on_subdiv_shape(
+                                                    scene_props, shape, slot
+                                                )
 
                                     exported_mesh.mesh_definitions[i] = (
                                         shape,
                                         mat_index,
+                                        slot,
                                     )
 
                             self.exported_meshes[mesh_key] = exported_mesh
