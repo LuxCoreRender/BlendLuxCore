@@ -222,7 +222,8 @@ def extract_mesh_data(obj, depsgraph):
         )
 
 
-def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instancing):
+def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instancing,
+                      share_points=True):
     """Weld points, find varying-data islands, group triangles by
     (material, island) and gather the per-submesh varying data.
 
@@ -230,7 +231,15 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     The big sorts and the union-find release the GIL in pyluxcore.
     Returns (payloads, info): payloads is a list of dicts ready for
     define_submeshes(), info holds log/stat data.
+
+    share_points: when True (objects with a subdivision shape), all submeshes
+    share one welded point buffer (the C++ subdiv envelope is built over all
+    meshes sharing it). When False, each submesh is compacted to the points it
+    actually uses, which saves a lot of memory on fragment-heavy meshes.
+    Set BLC_FORCE_SHARE_POINTS=1 to force the shared-point path (debug).
     """
+    if os.environ.get("BLC_FORCE_SHARE_POINTS"):
+        share_points = True
     start_time = time()
 
     loop_vertices = data["loop_vertices"]
@@ -421,7 +430,13 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     for g in range(len(group_keys)):
         groups[g] = np.nonzero(tri_group == g)[0]
 
-    # Transformation
+    # Transformation: bake it into the welded points and pre-rotate the loop
+    # normals here in numpy (the parallel compute phase), instead of passing
+    # it to DefineMeshExt, which would deep-copy + rotate the normals of
+    # EVERY submesh in the serial define phase. Negative-determinant
+    # transforms (mirror) keep the C++ path, which handles the handedness
+    # flip.
+    normals_pretransformed = False
     if is_viewport_render or use_instancing:
         mesh_transform = None
     else:
@@ -434,6 +449,19 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             ],
             dtype=np.float32,
         )
+        rot = mesh_transform[:3, :3]
+        if np.linalg.det(rot) > 0.0:
+            welded_points = (
+                welded_points @ rot.T + mesh_transform[:3, 3]
+            ).astype(np.float32)
+            # Normal transform is the inverse-transpose of the rotation:
+            # n' = (R^-1)^T n, i.e. n_row @ R^-1 in numpy
+            rot_inv = np.linalg.inv(rot).astype(np.float32)
+            loop_normals = loop_normals @ rot_inv
+            norms = np.linalg.norm(loop_normals, axis=1, keepdims=True)
+            loop_normals = (loop_normals / np.maximum(norms, 1e-30)).astype(np.float32)
+            mesh_transform = None
+            normals_pretransformed = True
 
     # Log
     def fmt_layer(layers, layer_name):
@@ -483,6 +511,14 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         arr[isl_gw] = loop_data[isl_loops]
         return arr
 
+    def _compact_attr(loop_data, g_loop_flat, local_idx, n_used):
+        # Per-submesh compact attribute array: one row per used point, filled
+        # from the submesh's corners (last corner wins at a shared point, same
+        # semantics as the shared-buffer gather above)
+        arr = np.empty((n_used, loop_data.shape[1]), dtype=np.float32)
+        arr[local_idx] = loop_data[g_loop_flat]
+        return arr
+
     payloads = []
     first_submesh_name = None
     for g in sorted(groups.keys()):
@@ -493,59 +529,100 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         g_loops = triangle_loops[g_tris]       # [g, 3] loop indices
         g_loop_flat = g_loops.ravel()
         gw = loop_welded[g_loops]              # welded vertex per corner
-        # Remap the triangle loop indices to welded vertex indices, so
-        # that all the submeshes index the same shared welded point array
-        # (uint32, as expected by pyluxcore)
-        sub_triangles = gw.astype(np.uint32)
         name = f"{str(mesh_key)}{mat:03d}i{isl:03d}"
 
-        # Loops of this submesh that belong to this island (a triangle
-        # corner at a seam vertex may belong to another island)
-        isl_mask = loop_island[g_loop_flat] == isl
-        isl_loops = g_loop_flat[isl_mask]
-        isl_gw = gw.ravel()[isl_mask]
+        if share_points:
+            # Remap the triangle loop indices to welded vertex indices, so
+            # that all the submeshes index the same shared welded point array
+            # (uint32, as expected by pyluxcore)
+            sub_triangles = gw.astype(np.uint32)
 
-        # Per-submesh varying data, gathered from this island's loops
-        # (consistent within the island by construction), aligned with
-        # the shared welded points. Corner-domain attributes fall back to
-        # a shared per-object array when this submesh has no seam for them
-        # (see _submesh_attr); points outside the submesh's islands are
-        # never referenced by its triangles, so their values are never read.
-        gw_flat = gw.ravel()
-        sub_uvs = [
-            _submesh_attr(cand, loop_uv, g_loop_flat, gw_flat, isl_loops, isl_gw)
-            for cand, loop_uv in zip(uv_candidates, loop_uvs)
-        ]
-        sub_normals = _submesh_attr(
-            normal_candidate, loop_normals, g_loop_flat, gw_flat, isl_loops, isl_gw
-        )
-        sub_rgb, sub_alphas = [], []
-        for (colors, domain), (rgb_cand, alpha_cand), (pt_rgb, pt_alpha) in zip(
-            color_attrs, color_candidates, point_colors
-        ):
-            if domain == "POINT":
-                sub_rgb.append(pt_rgb)
-                sub_alphas.append(pt_alpha)
-            elif domain == "CORNER":
-                sub_rgb.append(_submesh_attr(
-                    rgb_cand, colors[:, :3], g_loop_flat, gw_flat, isl_loops, isl_gw
-                ))
-                sub_alphas.append(_submesh_attr(
-                    alpha_cand, colors[:, 3:4], g_loop_flat, gw_flat, isl_loops, isl_gw
-                ))
+            # Loops of this submesh that belong to this island (a triangle
+            # corner at a seam vertex may belong to another island)
+            isl_mask = loop_island[g_loop_flat] == isl
+            isl_loops = g_loop_flat[isl_mask]
+            isl_gw = gw.ravel()[isl_mask]
+
+            # Per-submesh varying data, gathered from this island's loops
+            # (consistent within the island by construction), aligned with
+            # the shared welded points. Corner-domain attributes fall back to
+            # a shared per-object array when this submesh has no seam for them
+            # (see _submesh_attr); points outside the submesh's islands are
+            # never referenced by its triangles, so their values are never read.
+            gw_flat = gw.ravel()
+            sub_uvs = [
+                _submesh_attr(cand, loop_uv, g_loop_flat, gw_flat, isl_loops, isl_gw)
+                for cand, loop_uv in zip(uv_candidates, loop_uvs)
+            ]
+            sub_normals = _submesh_attr(
+                normal_candidate, loop_normals, g_loop_flat, gw_flat, isl_loops, isl_gw
+            )
+            sub_rgb, sub_alphas = [], []
+            for (colors, domain), (rgb_cand, alpha_cand), (pt_rgb, pt_alpha) in zip(
+                color_attrs, color_candidates, point_colors
+            ):
+                if domain == "POINT":
+                    sub_rgb.append(pt_rgb)
+                    sub_alphas.append(pt_alpha)
+                elif domain == "CORNER":
+                    sub_rgb.append(_submesh_attr(
+                        rgb_cand, colors[:, :3], g_loop_flat, gw_flat, isl_loops, isl_gw
+                    ))
+                    sub_alphas.append(_submesh_attr(
+                        alpha_cand, colors[:, 3:4], g_loop_flat, gw_flat, isl_loops, isl_gw
+                    ))
+                else:
+                    raise ValueError(f"Unhandled attribute domain: '{domain}'")
+
+            # All submeshes share one point buffer: the first submesh owns it
+            # (and bakes the transformation into its points), the others
+            # reference it by name
+            if first_submesh_name is None:
+                points = welded_points
+                submesh_transform = mesh_transform
+                first_submesh_name = name
             else:
-                raise ValueError(f"Unhandled attribute domain: '{domain}'")
-
-        # All submeshes share one point buffer: the first submesh owns it
-        # (and bakes the transformation into its points), the others
-        # reference it by name
-        if first_submesh_name is None:
-            points = welded_points
-            submesh_transform = mesh_transform
-            first_submesh_name = name
+                points = first_submesh_name
+                submesh_transform = None
+            sub_creases = crease_pairs
+            sub_crease_weights = crease_weights
         else:
-            points = first_submesh_name
-            submesh_transform = None
+            # Compact the submesh to the welded points it actually uses:
+            # local point array + remapped triangles + compact attribute
+            # arrays. Much less memory than full-object-size arrays per
+            # submesh on fragment-heavy meshes.
+            used, local_idx = np.unique(gw.ravel(), return_inverse=True)
+            sub_triangles = local_idx.reshape(gw.shape).astype(np.uint32)
+            points = welded_points[used]
+            submesh_transform = mesh_transform
+            n_used = len(used)
+            sub_uvs = [
+                _compact_attr(loop_uv, g_loop_flat, local_idx, n_used)
+                for loop_uv in loop_uvs
+            ]
+            sub_normals = _compact_attr(
+                loop_normals, g_loop_flat, local_idx, n_used
+            )
+            sub_rgb, sub_alphas = [], []
+            for colors, domain in color_attrs:
+                if domain == "POINT":
+                    # Per-vertex colors welded once per object: compact to
+                    # the used points (indices remapped like the triangles)
+                    sub_rgb.append(colors[first_index][used][:, :3].copy())
+                    sub_alphas.append(colors[first_index][used][:, 3:4].copy())
+                elif domain == "CORNER":
+                    sub_rgb.append(_compact_attr(
+                        colors[:, :3], g_loop_flat, local_idx, n_used
+                    ))
+                    sub_alphas.append(_compact_attr(
+                        colors[:, 3:4], g_loop_flat, local_idx, n_used
+                    ))
+                else:
+                    raise ValueError(f"Unhandled attribute domain: '{domain}'")
+            # Creases are only consumed by subdivision shapes (IMPORTED
+            # crease mode); this object has none, so skip them
+            sub_creases = None
+            sub_crease_weights = None
 
         if _DEBUG_MESH and (g < 10 or len(groups) <= 12):
             print(f"[BLC] - Submesh {name}: {len(sub_triangles)} triangles")
@@ -561,10 +638,12 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             colors=sub_rgb,
             alphas=sub_alphas,
             transformation=submesh_transform,
-            # All submeshes share the same welded point array, so the
-            # crease pairs (welded point indices) are valid for each of them
-            crease_pairs=crease_pairs,
-            crease_weights=crease_weights,
+            # With shared points, all submeshes share the same welded point
+            # array, so the crease pairs (welded point indices) are valid for
+            # each of them
+            crease_pairs=sub_creases,
+            crease_weights=sub_crease_weights,
+            normals_pretransformed=normals_pretransformed,
             mat=mat,
             # Unique slot id per submesh (material x island group); starts at 1
             # because tri AOV layer 2 is also read by the wireframe texture,
@@ -586,7 +665,7 @@ def define_submeshes(luxcore_scene, payloads):
     """
     mesh_definitions = []
     with _SCENE_LOCK:
-        for payload in payloads:
+        for i, payload in enumerate(payloads):
             luxcore_scene.DefineMeshExt(
                 name=payload["name"],
                 points=payload["points"],
@@ -596,8 +675,14 @@ def define_submeshes(luxcore_scene, payloads):
                 colors=payload["colors"],
                 alphas=payload["alphas"],
                 transformation=payload["transformation"],
-                crease_pairs=payload["crease_pairs"],
-                crease_weights=payload["crease_weights"],
+                # All submeshes share the same welded point array, so the
+                # crease pairs (welded point indices) are identical for all
+                # of them: set them only on the first submesh. The subdiv
+                # envelope builder does not read per-submesh creases, and a
+                # single-submesh object is its own first submesh.
+                crease_pairs=payload["crease_pairs"] if i == 0 else None,
+                crease_weights=payload["crease_weights"] if i == 0 else None,
+                normals_pretransformed=payload.get("normals_pretransformed", False),
             )
             luxcore_scene.SetMeshTriangleAOV(
                 payload["name"], MATERIAL_TRI_AOV_INDEX,
@@ -620,6 +705,7 @@ def convert(
     use_instancing,
     transform,
     exporter=None,
+    share_points=True,
 ):
     """Convert one object: extract (main thread), compute, define."""
     start_time = time()
@@ -629,7 +715,8 @@ def convert(
         return None
 
     payloads, info = compute_submeshes(
-        data, mesh_key, transform, is_viewport_render, use_instancing
+        data, mesh_key, transform, is_viewport_render, use_instancing,
+        share_points=share_points,
     )
 
     duration = time() - start_time
@@ -642,41 +729,24 @@ def convert(
 
 
 def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
-                    max_workers=None, chunk_size=16):
+                    max_workers=None):
     """Batch-convert several objects in parallel.
 
     jobs: list of (obj, mesh_key, transform, is_viewport_render, use_instancing).
     Extraction (Blender API) runs serially in the calling thread, the compute
     phase (weld, islands, gathers) runs in a thread pool, and the LuxCore
-    scene definition runs serially in the calling thread. Objects are
-    processed in chunks to bound memory usage.
+    scene definition runs serially in the calling thread. A small window of
+    objects is kept in flight to bound memory usage.
     Returns a list of ExportedMesh (or None), aligned with jobs.
     """
     if max_workers is None:
         max_workers = int(os.environ.get("BLC_EXPORT_WORKERS", "0")) or min(
             16, os.cpu_count() or 4
         )
-    if os.environ.get("BLC_EXPORT_CHUNK_SIZE"):
-        chunk_size = int(os.environ["BLC_EXPORT_CHUNK_SIZE"])
-    # Also bound chunks by total points, so scenes with a few huge objects
-    # (e.g. multi-million-vertex meshes) still get several chunks and the
-    # extract/compute pipeline can overlap
-    max_chunk_points = int(os.environ.get("BLC_EXPORT_CHUNK_POINTS", "1000000"))
-
-    # Split jobs into chunks (by count and by total points)
-    chunks = []
-    cur, cur_pts = [], 0
-    for job in jobs:
-        obj = job[0]
-        # obj.data may be a Curve etc. without .vertices
-        pts = len(obj.data.vertices) if obj.data is not None and hasattr(obj.data, "vertices") else 0
-        if cur and (len(cur) >= chunk_size or cur_pts + pts > max_chunk_points):
-            chunks.append(cur)
-            cur, cur_pts = [], 0
-        cur.append(job)
-        cur_pts += pts
-    if cur:
-        chunks.append(cur)
+    # How many objects may be extracted-but-not-yet-defined at once. This
+    # bounds the memory held by in-flight extracted data + payloads, so scenes
+    # with a few huge objects don't hold the whole scene's meshes at once.
+    inflight_max = int(os.environ.get("BLC_EXPORT_INFLIGHT", "4"))
 
     results = [None] * len(jobs)
     debug = bool(os.environ.get("BLC_DEBUG_EXPORT"))
@@ -685,58 +755,45 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         data, job = args
         if data is None:
             return None
-        _obj, mesh_key, transform, is_viewport_render, use_instancing = job
+        _obj, mesh_key, transform, is_viewport_render, use_instancing, share_points = job
         return compute_submeshes(
-            data, mesh_key, transform, is_viewport_render, use_instancing
+            data, mesh_key, transform, is_viewport_render, use_instancing,
+            share_points=share_points,
         )
 
-    def _define(chunk_start, chunk, computed):
+    def _define(result_index, comp):
         # Phase 3: define in the LuxCore scene, serially in the calling thread
-        for i, (job, comp) in enumerate(zip(chunk, computed)):
-            if comp is None:
-                continue
-            payloads, info = comp
-            results[chunk_start + i] = define_submeshes(luxcore_scene, payloads)
-            if exporter and exporter.stats:
-                exporter.stats.export_time_meshes.value += info["duration"]
-            print(f"[BLC] Export duration: {info['duration']:.3f}s")
-            print("[BLC]")
+        if comp is None:
+            return
+        payloads, info = comp
+        results[result_index] = define_submeshes(luxcore_scene, payloads)
+        if exporter and exporter.stats:
+            exporter.stats.export_time_meshes.value += info["duration"]
+        print(f"[BLC] Export duration: {info['duration']:.3f}s")
+        print("[BLC]")
 
-    # Pipeline with a window of 2 chunks in flight: while the pool computes
-    # chunk i, the calling thread extracts chunk i+1 (extraction is Blender-API
-    # bound and serial, compute overlaps it), then chunk i is defined in order.
+    # Pipeline with a window of inflight_max objects: while the pool computes
+    # object i, the calling thread extracts object i+1 (extraction is
+    # Blender-API bound and serial, compute overlaps it), then the oldest
+    # object is defined in order.
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        pending = []  # (chunk_index, chunk, future)
-        chunk_offsets = []
-        off = 0
-        for ch in chunks:
-            chunk_offsets.append(off)
-            off += len(ch)
-        for chunk_index, chunk in enumerate(chunks):
-            chunk_start = chunk_offsets[chunk_index]
+        pending = []  # (result_index, future)
+        for i, job in enumerate(jobs):
             if debug:
-                print(f"[BLC-DEBUG] chunk {chunk_start}..{chunk_start + len(chunk)}: extracting", flush=True)
-
+                print(f"[BLC-DEBUG] extract {job[0].name}", flush=True)
             # Phase 1: extract, serially in the calling (main) thread
-            datas = []
-            for (obj, *_rest) in chunk:
-                if debug:
-                    print(f"[BLC-DEBUG] extract {obj.name}", flush=True)
-                datas.append(extract_mesh_data(obj, depsgraph))
-
+            data = extract_mesh_data(job[0], depsgraph)
             # Phase 2: submit compute to the pool
-            future = pool.submit(lambda: [_compute(a) for a in zip(datas, chunk)])
-            pending.append((chunk_start, chunk, future))
-
-            # Keep at most 2 chunks in flight; define the oldest (in order)
-            while len(pending) > 1:
-                cs, ch, fut = pending.pop(0)
+            pending.append((i, pool.submit(_compute, (data, job))))
+            # Keep at most inflight_max objects in flight; define the oldest
+            while len(pending) > inflight_max:
+                ri, fut = pending.pop(0)
                 if debug:
-                    print(f"[BLC-DEBUG] chunk {cs} computed, defining", flush=True)
-                _define(cs, ch, fut.result())
+                    print(f"[BLC-DEBUG] object {ri} computed, defining", flush=True)
+                _define(ri, fut.result())
 
-        for cs, ch, fut in pending:
-            _define(cs, ch, fut.result())
+        for ri, fut in pending:
+            _define(ri, fut.result())
 
     return results
 
