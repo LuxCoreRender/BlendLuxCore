@@ -241,6 +241,10 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     if os.environ.get("BLC_FORCE_SHARE_POINTS"):
         share_points = True
     start_time = time()
+    _stage_t = {} if os.environ.get("BLC_TIME_STAGES") else None
+    def _stage(name, t0):
+        if _stage_t is not None:
+            _stage_t[name] = _stage_t.get(name, 0.0) + (time() - t0)
 
     loop_vertices = data["loop_vertices"]
     vertex_points = data["vertex_points"]
@@ -260,7 +264,9 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     # The welded point array is shared by all the submeshes defined below
     # (LuxCore shares the point storage between meshes defined with
     # identical points).
+    _t = time()
     welded_points, first_index, weld_inverse = _weld_points(vertex_points)
+    _stage('weld', _t); _t = time()
     num_points = len(welded_points)
 
     # Per-loop varying signature: UVs (all layers) + shading normal.
@@ -419,16 +425,28 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
                 island = isl_map[island]
 
     # Loop island for the per-submesh gathers (island of the loop's tri)
+    _stage('islands', _t); _t = time()
     loop_island = island[tri_of_loop]
 
     n_islands = int(island.max()) + 1 if n_tris else 1
 
-    # Group triangles by (material, island)
+    # Group triangles by (material, island): one sort + split by boundary,
+    # instead of one full scan of tri_group per group (O(groups x tris))
     tri_keys = loop_triangle_materials * n_islands + island
     group_keys, tri_group = np.unique(tri_keys, return_inverse=True)
-    groups = {}
-    for g in range(len(group_keys)):
-        groups[g] = np.nonzero(tri_group == g)[0]
+    if len(group_keys) > 64:
+        # Many groups: one sort + split by boundary is cheaper than one full
+        # scan of tri_group per group (O(groups x tris))
+        order = np.argsort(tri_group, kind="stable")
+        sorted_g = tri_group[order]
+        starts = np.nonzero(np.r_[True, sorted_g[1:] != sorted_g[:-1]])[0]
+        ends = np.r_[starts[1:], len(order)]
+        groups = {g: order[starts[g]:ends[g]] for g in range(len(group_keys))}
+    else:
+        groups = {}
+        for g in range(len(group_keys)):
+            groups[g] = np.nonzero(tri_group == g)[0]
+    _stage('group', _t); _t = time()
 
     # Transformation: bake it into the welded points and pre-rotate the loop
     # normals here in numpy (the parallel compute phase), instead of passing
@@ -485,6 +503,7 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         cand[loop_welded] = loop_data
         return cand
 
+    _stage('sig_edges', _t); _t = time()
     uv_candidates = [_candidate(loop_uv) for loop_uv in loop_uvs]
     normal_candidate = _candidate(loop_normals)
     # Keep rgb and alpha as separate contiguous arrays so a shared candidate
@@ -496,10 +515,17 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         if domain == "POINT" else (None, None)
         for colors, domain in color_attrs
     ]
-    color_candidates = [
-        (_candidate(colors[:, :3]), _candidate(colors[:, 3:4]))
+    # Contiguous rgb/alpha views per color attribute, computed once per
+    # object (slicing per submesh would gather from a strided array)
+    corner_colors = [
+        (np.ascontiguousarray(colors[:, :3]), np.ascontiguousarray(colors[:, 3:4]))
         if domain == "CORNER" else (None, None)
         for colors, domain in color_attrs
+    ]
+    color_candidates = [
+        (_candidate(rgb), _candidate(alpha))
+        if rgb is not None else (None, None)
+        for rgb, alpha in corner_colors
     ]
 
     def _submesh_attr(cand, loop_data, g_loop_flat, gw_flat, isl_loops, isl_gw):
@@ -531,6 +557,7 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         gw = loop_welded[g_loops]              # welded vertex per corner
         name = f"{str(mesh_key)}{mat:03d}i{isl:03d}"
 
+        _t2 = time()
         if share_points:
             # Remap the triangle loop indices to welded vertex indices, so
             # that all the submeshes index the same shared welded point array
@@ -558,18 +585,18 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
                 normal_candidate, loop_normals, g_loop_flat, gw_flat, isl_loops, isl_gw
             )
             sub_rgb, sub_alphas = [], []
-            for (colors, domain), (rgb_cand, alpha_cand), (pt_rgb, pt_alpha) in zip(
-                color_attrs, color_candidates, point_colors
+            for (rgb, alpha), domain, (rgb_cand, alpha_cand), (pt_rgb, pt_alpha) in zip(
+                corner_colors, [d for _, d in color_attrs], color_candidates, point_colors
             ):
                 if domain == "POINT":
                     sub_rgb.append(pt_rgb)
                     sub_alphas.append(pt_alpha)
                 elif domain == "CORNER":
                     sub_rgb.append(_submesh_attr(
-                        rgb_cand, colors[:, :3], g_loop_flat, gw_flat, isl_loops, isl_gw
+                        rgb_cand, rgb, g_loop_flat, gw_flat, isl_loops, isl_gw
                     ))
                     sub_alphas.append(_submesh_attr(
-                        alpha_cand, colors[:, 3:4], g_loop_flat, gw_flat, isl_loops, isl_gw
+                        alpha_cand, alpha, g_loop_flat, gw_flat, isl_loops, isl_gw
                     ))
                 else:
                     raise ValueError(f"Unhandled attribute domain: '{domain}'")
@@ -587,6 +614,7 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             sub_creases = crease_pairs
             sub_crease_weights = crease_weights
         else:
+            _stage('pl_gather', _t2); _t2 = time()
             # Compact the submesh to the welded points it actually uses:
             # local point array + remapped triangles + compact attribute
             # arrays. Much less memory than full-object-size arrays per
@@ -604,18 +632,20 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
                 loop_normals, g_loop_flat, local_idx, n_used
             )
             sub_rgb, sub_alphas = [], []
-            for colors, domain in color_attrs:
+            for (rgb, alpha), domain, (pt_rgb, pt_alpha) in zip(
+                corner_colors, [d for _, d in color_attrs], point_colors
+            ):
                 if domain == "POINT":
                     # Per-vertex colors welded once per object: compact to
                     # the used points (indices remapped like the triangles)
-                    sub_rgb.append(colors[first_index][used][:, :3].copy())
-                    sub_alphas.append(colors[first_index][used][:, 3:4].copy())
+                    sub_rgb.append(pt_rgb[used])
+                    sub_alphas.append(pt_alpha[used])
                 elif domain == "CORNER":
                     sub_rgb.append(_compact_attr(
-                        colors[:, :3], g_loop_flat, local_idx, n_used
+                        rgb, g_loop_flat, local_idx, n_used
                     ))
                     sub_alphas.append(_compact_attr(
-                        colors[:, 3:4], g_loop_flat, local_idx, n_used
+                        alpha, g_loop_flat, local_idx, n_used
                     ))
                 else:
                     raise ValueError(f"Unhandled attribute domain: '{domain}'")
@@ -624,6 +654,7 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             sub_creases = None
             sub_crease_weights = None
 
+        _stage('pl_attr', _t2)
         if _DEBUG_MESH and (g < 10 or len(groups) <= 12):
             print(f"[BLC] - Submesh {name}: {len(sub_triangles)} triangles")
         elif _DEBUG_MESH and g == 10:
@@ -651,7 +682,10 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             slot=g + 1,
         ))
 
+    _stage('payloads', _t)
     duration = time() - start_time
+    if _stage_t is not None:
+        print(f"[BLC-STAGES] {mesh_key}: " + " ".join(f"{k}={v:.3f}" for k, v in _stage_t.items()), flush=True)
     info = dict(duration=duration, num_points=num_points,
                 num_raw=len(vertex_points))
     return payloads, info
