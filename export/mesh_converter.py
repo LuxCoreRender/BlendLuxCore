@@ -222,21 +222,76 @@ def extract_mesh_data(obj, depsgraph):
         )
 
 
+_compute_submeshes_c = getattr(pyluxcore, "compute_submeshes_c", None)
+
+
 def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instancing,
                       share_points=True):
     """Weld points, find varying-data islands, group triangles by
     (material, island) and gather the per-submesh varying data.
 
-    Pure numpy/pyluxcore (no Blender API): safe to run in worker threads.
-    The big sorts and the union-find release the GIL in pyluxcore.
-    Returns (payloads, info): payloads is a list of dicts ready for
-    define_submeshes(), info holds log/stat data.
+    Uses the C++/TBB implementation in pyluxcore when available
+    (BLC_COMPUTE=py forces the numpy fallback). Returns (payloads, info):
+    payloads is a list of dicts ready for define_submeshes(), info holds
+    log/stat data.
 
     share_points: when True (objects with a subdivision shape), all submeshes
     share one welded point buffer (the C++ subdiv envelope is built over all
     meshes sharing it). When False, each submesh is compacted to the points it
     actually uses, which saves a lot of memory on fragment-heavy meshes.
     Set BLC_FORCE_SHARE_POINTS=1 to force the shared-point path (debug).
+    """
+    if os.environ.get("BLC_FORCE_SHARE_POINTS"):
+        share_points = True
+    if _compute_submeshes_c is not None and os.environ.get("BLC_COMPUTE", "cpp") != "py":
+        # Pass the transform only when it will be applied (same condition as
+        # the numpy path: not in viewport, not instanced)
+        xform = None
+        if transform is not None and not (is_viewport_render or use_instancing):
+            xform = np.array(
+                [[transform[i][j] for j in range(4)] for i in range(4)],
+                dtype=np.float32,
+            )
+        payloads, info = _compute_submeshes_c(
+            data["vertex_points"],
+            data["loop_vertices"],
+            data["loop_normals"],
+            data["triangle_loops"],
+            data["loop_triangle_materials"],
+            data["loop_uvs"],
+            [colors for colors, _domain in data["color_attrs"]],
+            [domain for _colors, domain in data["color_attrs"]],
+            data["edge_verts"],
+            data["edge_crease"],
+            xform,
+            is_viewport_render,
+            use_instancing,
+            share_points,
+            str(mesh_key),
+        )
+        print(f"[BLC] Exporting '{str(mesh_key)}' - {len(payloads)} submesh(es)")
+        print(f"[BLC] - {info['num_points']} welded points (shared between submeshes), "
+              f"from {info['num_raw']} raw vertices")
+        print(f"[BLC] - {len(data['loop_uvs'])} uv layer(s)" if len(data['loop_uvs']) != 1
+              else "[BLC] - 1 uv layer")
+        print(f"[BLC] - {len(data['color_attrs'])} color layer(s)" if len(data['color_attrs']) != 1
+              else "[BLC] - 1 color layer")
+        if os.environ.get("BLC_TIME_STAGES"):
+            st = info.get("stages", {})
+            print("[BLC-STAGES] " + str(mesh_key) + ": " +
+                  " ".join(f"{k}={v:.3f}" for k, v in st.items()), flush=True)
+        return payloads, info
+    return _compute_submeshes_py(
+        data, mesh_key, transform, is_viewport_render, use_instancing, share_points
+    )
+
+
+def _compute_submeshes_py(data, mesh_key, transform, is_viewport_render, use_instancing,
+                          share_points=True):
+    """Numpy fallback implementation of compute_submeshes (used when the
+    pyluxcore build has no compute_submeshes_c, or BLC_COMPUTE=py).
+    Pure numpy/pyluxcore (no Blender API): safe to run in worker threads.
+    The big sorts and the union-find release the GIL in pyluxcore.
     """
     if os.environ.get("BLC_FORCE_SHARE_POINTS"):
         share_points = True
