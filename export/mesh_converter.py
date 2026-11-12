@@ -1,5 +1,4 @@
 import os
-import threading
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from time import time
@@ -107,10 +106,6 @@ def _weld_points(vertex_points):
     weld_inverse[order] = group
     return vertex_points[first_index], first_index, weld_inverse
 
-
-# Serializes LuxCore scene mutations (DefineMeshExt, SetMeshTriangleAOV) when
-# the compute phase runs in worker threads
-_SCENE_LOCK = threading.Lock()
 
 # Below this size, np.argsort is faster than the parallel C++ sort
 _ARGSORT_PARALLEL_MIN_SIZE = 1 << 20
@@ -749,35 +744,35 @@ def _compute_submeshes_py(data, mesh_key, transform, is_viewport_render, use_ins
 def define_submeshes(luxcore_scene, payloads):
     """Define the computed submeshes in the LuxCore scene.
 
-    Must run in the main thread (the LuxCore scene is not thread-safe).
+    Safe to call from worker threads: pyluxcore serializes the scene mesh
+    mutations internally (and releases the GIL around the C++ calls).
     Returns the ExportedMesh with the per-submesh material definitions.
     """
     mesh_definitions = []
-    with _SCENE_LOCK:
-        for i, payload in enumerate(payloads):
-            luxcore_scene.DefineMeshExt(
-                name=payload["name"],
-                points=payload["points"],
-                triangles=payload["triangles"],
-                normals=payload["normals"],
-                uvs=payload["uvs"],
-                colors=payload["colors"],
-                alphas=payload["alphas"],
-                transformation=payload["transformation"],
-                # All submeshes share the same welded point array, so the
-                # crease pairs (welded point indices) are identical for all
-                # of them: set them only on the first submesh. The subdiv
-                # envelope builder does not read per-submesh creases, and a
-                # single-submesh object is its own first submesh.
-                crease_pairs=payload["crease_pairs"] if i == 0 else None,
-                crease_weights=payload["crease_weights"] if i == 0 else None,
-                normals_pretransformed=payload.get("normals_pretransformed", False),
-            )
-            luxcore_scene.SetMeshTriangleAOV(
-                payload["name"], MATERIAL_TRI_AOV_INDEX,
-                np.full(len(payload["triangles"]), payload["slot"], dtype=np.float32),
-            )
-            mesh_definitions.append((payload["name"], payload["mat"], payload["slot"]))
+    for i, payload in enumerate(payloads):
+        luxcore_scene.DefineMeshExt(
+            name=payload["name"],
+            points=payload["points"],
+            triangles=payload["triangles"],
+            normals=payload["normals"],
+            uvs=payload["uvs"],
+            colors=payload["colors"],
+            alphas=payload["alphas"],
+            transformation=payload["transformation"],
+            # All submeshes share the same welded point array, so the
+            # crease pairs (welded point indices) are identical for all
+            # of them: set them only on the first submesh. The subdiv
+            # envelope builder does not read per-submesh creases, and a
+            # single-submesh object is its own first submesh.
+            crease_pairs=payload["crease_pairs"] if i == 0 else None,
+            crease_weights=payload["crease_weights"] if i == 0 else None,
+            normals_pretransformed=payload.get("normals_pretransformed", False),
+        )
+        luxcore_scene.SetMeshTriangleAOV(
+            payload["name"], MATERIAL_TRI_AOV_INDEX,
+            np.full(len(payload["triangles"]), payload["slot"], dtype=np.float32),
+        )
+        mesh_definitions.append((payload["name"], payload["mat"], payload["slot"]))
 
     # Per-face material slot, consumed by the C++ subdiv envelope builder
     # (MATERIAL_TRI_AOV_INDEX in LuxCore) to split the subdivided result
@@ -822,9 +817,10 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
     """Batch-convert several objects in parallel.
 
     jobs: list of (obj, mesh_key, transform, is_viewport_render, use_instancing).
-    Extraction (Blender API) runs serially in the calling thread, the compute
-    phase (weld, islands, gathers) runs in a thread pool, and the LuxCore
-    scene definition runs serially in the calling thread. A small window of
+    Extraction (Blender API) runs serially in the calling thread; the compute
+    phase (weld, islands, gathers) and the LuxCore scene definition are fused
+    and run in a thread pool (pyluxcore serializes the scene mesh mutations
+    internally and releases the GIL around the C++ calls). A small window of
     objects is kept in flight to bound memory usage.
     Returns a list of ExportedMesh (or None), aligned with jobs.
     """
@@ -832,7 +828,7 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         max_workers = int(os.environ.get("BLC_EXPORT_WORKERS", "0")) or min(
             16, os.cpu_count() or 4
         )
-    # How many objects may be extracted-but-not-yet-defined at once. This
+    # How many objects may be extracted-but-not-yet-converted at once. This
     # bounds the memory held by in-flight extracted data + payloads, so scenes
     # with a few huge objects don't hold the whole scene's meshes at once.
     inflight_max = int(os.environ.get("BLC_EXPORT_INFLIGHT", "4"))
@@ -840,31 +836,34 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
     results = [None] * len(jobs)
     debug = bool(os.environ.get("BLC_DEBUG_EXPORT"))
 
-    def _compute(args):
+    def _compute_and_define(args):
+        # Phases 2+3, fused in the worker: compute the submeshes, then define
+        # them in the LuxCore scene (thread-safe in pyluxcore)
         data, job = args
         if data is None:
             return None
         _obj, mesh_key, transform, is_viewport_render, use_instancing, share_points = job
-        return compute_submeshes(
+        payloads, info = compute_submeshes(
             data, mesh_key, transform, is_viewport_render, use_instancing,
             share_points=share_points,
         )
+        result = define_submeshes(luxcore_scene, payloads)
+        return result, info
 
-    def _define(result_index, comp):
-        # Phase 3: define in the LuxCore scene, serially in the calling thread
+    def _collect(result_index, fut):
+        comp = fut.result()
         if comp is None:
             return
-        payloads, info = comp
-        results[result_index] = define_submeshes(luxcore_scene, payloads)
+        results[result_index], info = comp
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += info["duration"]
         print(f"[BLC] Export duration: {info['duration']:.3f}s")
         print("[BLC]")
 
-    # Pipeline with a window of inflight_max objects: while the pool computes
-    # object i, the calling thread extracts object i+1 (extraction is
-    # Blender-API bound and serial, compute overlaps it), then the oldest
-    # object is defined in order.
+    # Pipeline with a window of inflight_max objects: while the pool converts
+    # object i (compute + define), the calling thread extracts object i+1
+    # (extraction is Blender-API bound and serial, so it overlaps the pool),
+    # then the oldest object's future is collected.
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         pending = []  # (result_index, future)
         for i, job in enumerate(jobs):
@@ -872,19 +871,20 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
                 print(f"[BLC-DEBUG] extract {job[0].name}", flush=True)
             # Phase 1: extract, serially in the calling (main) thread
             data = extract_mesh_data(job[0], depsgraph)
-            # Phase 2: submit compute to the pool
-            pending.append((i, pool.submit(_compute, (data, job))))
-            # Keep at most inflight_max objects in flight; define the oldest
+            # Phases 2+3: submit compute+define to the pool
+            pending.append((i, pool.submit(_compute_and_define, (data, job))))
+            # Keep at most inflight_max objects in flight; collect the oldest
             while len(pending) > inflight_max:
                 ri, fut = pending.pop(0)
                 if debug:
-                    print(f"[BLC-DEBUG] object {ri} computed, defining", flush=True)
-                _define(ri, fut.result())
+                    print(f"[BLC-DEBUG] object {ri} converted", flush=True)
+                _collect(ri, fut)
 
         for ri, fut in pending:
-            _define(ri, fut.result())
+            _collect(ri, fut)
 
     return results
+
 
 @contextmanager
 def _prepare_mesh(obj, depsgraph):
