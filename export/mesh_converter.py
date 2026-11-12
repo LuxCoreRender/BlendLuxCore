@@ -446,6 +446,43 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     print(f"[BLC] - {fmt_layer(loop_uvs, 'uv layer')}")
     print(f"[BLC] - {fmt_layer(color_attrs, 'color layer')}")
 
+    # Candidate per-object shared arrays for corner-domain attributes (one
+    # value per welded point; where loops disagree at a seam, the last writer
+    # wins). A submesh shares a candidate only if all of its loops carry
+    # exactly the candidate values -- then the zero-copy wrap hands the same
+    # numpy memory to LuxCore for every such submesh, with no per-submesh
+    # allocation or C++ copy.
+    def _candidate(loop_data):
+        cand = np.empty((num_points, loop_data.shape[1]), dtype=np.float32)
+        cand[loop_welded] = loop_data
+        return cand
+
+    uv_candidates = [_candidate(loop_uv) for loop_uv in loop_uvs]
+    normal_candidate = _candidate(loop_normals)
+    # Keep rgb and alpha as separate contiguous arrays so a shared candidate
+    # stays contiguous (a [:, :3] view would force a copy in pyluxcore)
+    # POINT-domain colors are per-vertex: weld them once and share the
+    # contiguous rgb/alpha arrays between all submeshes
+    point_colors = [
+        (colors[first_index][:, :3].copy(), colors[first_index][:, 3:4].copy())
+        if domain == "POINT" else (None, None)
+        for colors, domain in color_attrs
+    ]
+    color_candidates = [
+        (_candidate(colors[:, :3]), _candidate(colors[:, 3:4]))
+        if domain == "CORNER" else (None, None)
+        for colors, domain in color_attrs
+    ]
+
+    def _submesh_attr(cand, loop_data, g_loop_flat, gw_flat, isl_loops, isl_gw):
+        # Share the candidate if every loop of this submesh (its triangles
+        # index all of them, not only the island's) agrees with it
+        if cand is not None and np.array_equal(loop_data[g_loop_flat], cand[gw_flat]):
+            return cand
+        arr = np.empty((num_points, loop_data.shape[1]), dtype=np.float32)
+        arr[isl_gw] = loop_data[isl_loops]
+        return arr
+
     payloads = []
     first_submesh_name = None
     for g in sorted(groups.keys()):
@@ -470,27 +507,34 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
 
         # Per-submesh varying data, gathered from this island's loops
         # (consistent within the island by construction), aligned with
-        # the shared welded points
-        sub_uvs = []
-        for loop_uv in loop_uvs:
-            # np.empty: points outside this submesh's islands are never
-            # referenced by its triangles, so their values are never read
-            uv_sub = np.empty((num_points, 2), dtype=np.float32)
-            uv_sub[isl_gw] = loop_uv[isl_loops]
-            sub_uvs.append(uv_sub)
-        sub_normals = np.empty((num_points, 3), dtype=np.float32)
-        sub_normals[isl_gw] = loop_normals[isl_loops]
+        # the shared welded points. Corner-domain attributes fall back to
+        # a shared per-object array when this submesh has no seam for them
+        # (see _submesh_attr); points outside the submesh's islands are
+        # never referenced by its triangles, so their values are never read.
+        gw_flat = gw.ravel()
+        sub_uvs = [
+            _submesh_attr(cand, loop_uv, g_loop_flat, gw_flat, isl_loops, isl_gw)
+            for cand, loop_uv in zip(uv_candidates, loop_uvs)
+        ]
+        sub_normals = _submesh_attr(
+            normal_candidate, loop_normals, g_loop_flat, gw_flat, isl_loops, isl_gw
+        )
         sub_rgb, sub_alphas = [], []
-        for colors, domain in color_attrs:
+        for (colors, domain), (rgb_cand, alpha_cand), (pt_rgb, pt_alpha) in zip(
+            color_attrs, color_candidates, point_colors
+        ):
             if domain == "POINT":
-                rgba = colors[first_index]
+                sub_rgb.append(pt_rgb)
+                sub_alphas.append(pt_alpha)
             elif domain == "CORNER":
-                rgba = np.empty((num_points, 4), dtype=np.float32)
-                rgba[isl_gw] = colors[isl_loops]
+                sub_rgb.append(_submesh_attr(
+                    rgb_cand, colors[:, :3], g_loop_flat, gw_flat, isl_loops, isl_gw
+                ))
+                sub_alphas.append(_submesh_attr(
+                    alpha_cand, colors[:, 3:4], g_loop_flat, gw_flat, isl_loops, isl_gw
+                ))
             else:
                 raise ValueError(f"Unhandled attribute domain: '{domain}'")
-            sub_rgb.append(rgba[:, :3])
-            sub_alphas.append(rgba[:, 3])
 
         # All submeshes share one point buffer: the first submesh owns it
         # (and bakes the transformation into its points), the others
