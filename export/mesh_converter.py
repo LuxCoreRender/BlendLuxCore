@@ -11,6 +11,7 @@ import pyluxcore
 
 from . import caches
 from .. import utils
+from ..utils.log import log, log_str
 from ..utils.errorlog import LuxCoreErrorLog
 
 if _needs_reload:
@@ -37,26 +38,6 @@ MIN_ISLAND_MERGE_COS_ANGLE = float(np.cos(np.deg2rad(30.0)))
 # Verbose per-submesh logging (off by default: printing thousands of submeshes
 # is a measurable cost on fragment-heavy models)
 _DEBUG_MESH = bool(os.environ.get("BLC_DEBUG_MESH"))
-
-# Wall-clock reference of the current export pass, used to timestamp log lines
-_export_wall_t0 = None
-
-
-def _reset_wall_t0():
-    global _export_wall_t0
-    _export_wall_t0 = time()
-
-
-def _ensure_wall_t0():
-    global _export_wall_t0
-    if _export_wall_t0 is None:
-        _export_wall_t0 = time()
-
-
-def _wall_str():
-    if _export_wall_t0 is None:
-        return ""
-    return f" (wall {time() - _export_wall_t0:.3f}s)"
 
 
 # https://blenderartists.org/t/\
@@ -241,7 +222,7 @@ _compute_submeshes_c = getattr(pyluxcore, "compute_submeshes_c", None)
 
 
 def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instancing,
-                      share_points=True, log=None):
+                      share_points=True, log_lines=None):
     """Weld points, find varying-data islands, group triangles by
     (material, island) and gather the per-submesh varying data.
 
@@ -250,9 +231,9 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     payloads is a list of dicts ready for define_submeshes(), info holds
     log/stat data.
 
-    log: when a list is passed, log messages are appended to it instead of
-    being printed. The parallel exporter uses this to print the messages of
-    each mesh from the main thread, so they stay grouped by mesh.
+    log_lines: when a list is passed, log messages are appended to it instead
+    of being printed. The parallel exporter uses this to print the messages
+    of each mesh from the main thread, so they stay grouped by mesh.
 
     share_points: when True (objects with a subdivision shape), all submeshes
     share one welded point buffer (the C++ subdiv envelope is built over all
@@ -260,12 +241,12 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     actually uses, which saves a lot of memory on fragment-heavy meshes.
     Set BLC_FORCE_SHARE_POINTS=1 to force the shared-point path (debug).
     """
-    if log is None:
-        def emit(msg, **kwargs):
-            print(msg, **kwargs)
+    if log_lines is None:
+        def emit(msg):
+            log(msg)
     else:
-        def emit(msg, **kwargs):
-            log.append(msg)
+        def emit(msg):
+            log_lines.append(log_str(msg))
     if os.environ.get("BLC_FORCE_SHARE_POINTS"):
         share_points = True
     if _compute_submeshes_c is not None and os.environ.get("BLC_COMPUTE", "cpp") != "py":
@@ -294,37 +275,37 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             share_points,
             str(mesh_key),
         )
-        emit(f"[BLC] Exporting '{str(mesh_key)}' - {len(payloads)} submesh(es)")
-        emit(f"[BLC] - {info['num_points']} welded points (shared between submeshes), "
+        emit(f"Exporting '{str(mesh_key)}' - {len(payloads)} submesh(es)")
+        emit(f"- {info['num_points']} welded points (shared between submeshes), "
              f"from {info['num_raw']} raw vertices")
-        emit(f"[BLC] - {len(data['loop_uvs'])} uv layer(s)" if len(data['loop_uvs']) != 1
-             else "[BLC] - 1 uv layer")
-        emit(f"[BLC] - {len(data['color_attrs'])} color layer(s)" if len(data['color_attrs']) != 1
-             else "[BLC] - 1 color layer")
+        emit(f"- {len(data['loop_uvs'])} uv layer(s)" if len(data['loop_uvs']) != 1
+             else "- 1 uv layer")
+        emit(f"- {len(data['color_attrs'])} color layer(s)" if len(data['color_attrs']) != 1
+             else "- 1 color layer")
         if os.environ.get("BLC_TIME_STAGES"):
             st = info.get("stages", {})
             emit("[BLC-STAGES] " + str(mesh_key) + ": " +
-                 " ".join(f"{k}={v:.3f}" for k, v in st.items()), flush=True)
+                 " ".join(f"{k}={v:.3f}" for k, v in st.items()))
         return payloads, info
     return _compute_submeshes_py(
         data, mesh_key, transform, is_viewport_render, use_instancing, share_points,
-        log=log,
+        log_lines=log_lines,
     )
 
 
 def _compute_submeshes_py(data, mesh_key, transform, is_viewport_render, use_instancing,
-                          share_points=True, log=None):
+                          share_points=True, log_lines=None):
     """Numpy fallback implementation of compute_submeshes (used when the
     pyluxcore build has no compute_submeshes_c, or BLC_COMPUTE=py).
     Pure numpy/pyluxcore (no Blender API): safe to run in worker threads.
     The big sorts and the union-find release the GIL in pyluxcore.
     """
-    if log is None:
-        def emit(msg, **kwargs):
-            print(msg, **kwargs)
+    if log_lines is None:
+        def emit(msg):
+            log(msg)
     else:
-        def emit(msg, **kwargs):
-            log.append(msg)
+        def emit(msg):
+            log_lines.append(log_str(msg))
     if os.environ.get("BLC_FORCE_SHARE_POINTS"):
         share_points = True
     start_time = time()
@@ -478,9 +459,8 @@ def _compute_submeshes_py(data, mesh_key, transform, is_viewport_render, use_ins
         island_size = np.bincount(island, minlength=n_islands0)
         if os.environ.get("BLC_DEBUG_ISLANDS"):
             hist, edges = np.histogram(island_size, bins=[1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 1 << 30])
-            print(f"[BLC] island size histogram for {mesh_key}: " +
-                  ", ".join(f"[{edges[i]},{edges[i+1]}): {hist[i]}" for i in range(len(hist))),
-                  flush=True)
+            log(f"island size histogram for {mesh_key}: " +
+                      ", ".join(f"[{edges[i]},{edges[i+1]}): {hist[i]}" for i in range(len(hist))))
         small = island_size < MIN_ISLAND_TRIANGLE_COUNT
         if np.any(small):
             # Edge runs (order is already sorted by edge key)
@@ -573,11 +553,11 @@ def _compute_submeshes_py(data, mesh_key, transform, is_viewport_render, use_ins
         nlayers = len(layers)
         suffix = "layers" if nlayers > 1 else "layer"
         return f"{nlayers} {layer_name} {suffix}"
-    emit(f"[BLC] Exporting '{str(mesh_key)}' - {len(groups)} submesh(es)")
-    emit(f"[BLC] - {num_points} welded points (shared between submeshes), "
+    emit(f"Exporting '{str(mesh_key)}' - {len(groups)} submesh(es)")
+    emit(f"- {num_points} welded points (shared between submeshes), "
          f"from {len(vertex_points)} raw vertices")
-    emit(f"[BLC] - {fmt_layer(loop_uvs, 'uv layer')}")
-    emit(f"[BLC] - {fmt_layer(color_attrs, 'color layer')}")
+    emit(f"- {fmt_layer(loop_uvs, 'uv layer')}")
+    emit(f"- {fmt_layer(color_attrs, 'color layer')}")
 
     # Candidate per-object shared arrays for corner-domain attributes (one
     # value per welded point; where loops disagree at a seam, the last writer
@@ -743,9 +723,9 @@ def _compute_submeshes_py(data, mesh_key, transform, is_viewport_render, use_ins
 
         _stage('pl_attr', _t2)
         if _DEBUG_MESH and (g < 10 or len(groups) <= 12):
-            print(f"[BLC] - Submesh {name}: {len(sub_triangles)} triangles")
+            log(f"- Submesh {name}: {len(sub_triangles)} triangles")
         elif _DEBUG_MESH and g == 10:
-            print(f"[BLC] - ... ({len(groups) - 10} more submeshes)")
+            log(f"- ... ({len(groups) - 10} more submeshes)")
 
         payloads.append(dict(
             name=name,
@@ -830,7 +810,6 @@ def convert(
 ):
     """Convert one object: extract (main thread), compute, define."""
     start_time = time()
-    _ensure_wall_t0()
 
     data = extract_mesh_data(obj, depsgraph)
     if data is None:
@@ -844,8 +823,8 @@ def convert(
     duration = time() - start_time
     if exporter and exporter.stats:
         exporter.stats.export_time_meshes.value += duration
-    print(f"[BLC] Export duration: {duration:.3f}s")
-    print(f"[BLC]{_wall_str()}")
+    log(f"Export duration: {duration:.3f}s")
+    log("")
 
     return define_submeshes(luxcore_scene, payloads)
 
@@ -862,7 +841,6 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
     objects is kept in flight to bound memory usage.
     Returns a list of ExportedMesh (or None), aligned with jobs.
     """
-    _reset_wall_t0()
     if max_workers is None:
         max_workers = int(os.environ.get("BLC_EXPORT_WORKERS", "0")) or min(
             16, os.cpu_count() or 4
@@ -884,25 +862,25 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         _obj, mesh_key, transform, is_viewport_render, use_instancing, share_points = job
         # Buffer this mesh's log messages: they are printed by the main
         # thread in _collect, so the lines of each mesh stay grouped together
-        log = []
+        log_lines = []
         payloads, info = compute_submeshes(
             data, mesh_key, transform, is_viewport_render, use_instancing,
-            share_points=share_points, log=log,
+            share_points=share_points, log_lines=log_lines,
         )
         result = define_submeshes(luxcore_scene, payloads)
-        return result, info, log
+        return result, info, log_lines
 
     def _collect(result_index, fut):
         comp = fut.result()
         if comp is None:
             return
-        results[result_index], info, log = comp
+        results[result_index], info, log_lines = comp
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += info["duration"]
-        for line in log:
+        for line in log_lines:
             print(line)
-        print(f"[BLC] Export duration: {info['duration']:.3f}s")
-        print(f"[BLC]{_wall_str()}")
+        log(f"Export duration: {info['duration']:.3f}s")
+        log("")
 
     # Pipeline with a window of inflight_max objects: while the pool converts
     # object i (compute + define), the calling thread extracts object i+1
