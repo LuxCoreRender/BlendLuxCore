@@ -221,7 +221,7 @@ _compute_submeshes_c = getattr(pyluxcore, "compute_submeshes_c", None)
 
 
 def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instancing,
-                      share_points=True):
+                      share_points=True, log=None):
     """Weld points, find varying-data islands, group triangles by
     (material, island) and gather the per-submesh varying data.
 
@@ -230,12 +230,22 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     payloads is a list of dicts ready for define_submeshes(), info holds
     log/stat data.
 
+    log: when a list is passed, log messages are appended to it instead of
+    being printed. The parallel exporter uses this to print the messages of
+    each mesh from the main thread, so they stay grouped by mesh.
+
     share_points: when True (objects with a subdivision shape), all submeshes
     share one welded point buffer (the C++ subdiv envelope is built over all
     meshes sharing it). When False, each submesh is compacted to the points it
     actually uses, which saves a lot of memory on fragment-heavy meshes.
     Set BLC_FORCE_SHARE_POINTS=1 to force the shared-point path (debug).
     """
+    if log is None:
+        def emit(msg, **kwargs):
+            print(msg, **kwargs)
+    else:
+        def emit(msg, **kwargs):
+            log.append(msg)
     if os.environ.get("BLC_FORCE_SHARE_POINTS"):
         share_points = True
     if _compute_submeshes_c is not None and os.environ.get("BLC_COMPUTE", "cpp") != "py":
@@ -264,30 +274,37 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
             share_points,
             str(mesh_key),
         )
-        print(f"[BLC] Exporting '{str(mesh_key)}' - {len(payloads)} submesh(es)")
-        print(f"[BLC] - {info['num_points']} welded points (shared between submeshes), "
-              f"from {info['num_raw']} raw vertices")
-        print(f"[BLC] - {len(data['loop_uvs'])} uv layer(s)" if len(data['loop_uvs']) != 1
-              else "[BLC] - 1 uv layer")
-        print(f"[BLC] - {len(data['color_attrs'])} color layer(s)" if len(data['color_attrs']) != 1
-              else "[BLC] - 1 color layer")
+        emit(f"[BLC] Exporting '{str(mesh_key)}' - {len(payloads)} submesh(es)")
+        emit(f"[BLC] - {info['num_points']} welded points (shared between submeshes), "
+             f"from {info['num_raw']} raw vertices")
+        emit(f"[BLC] - {len(data['loop_uvs'])} uv layer(s)" if len(data['loop_uvs']) != 1
+             else "[BLC] - 1 uv layer")
+        emit(f"[BLC] - {len(data['color_attrs'])} color layer(s)" if len(data['color_attrs']) != 1
+             else "[BLC] - 1 color layer")
         if os.environ.get("BLC_TIME_STAGES"):
             st = info.get("stages", {})
-            print("[BLC-STAGES] " + str(mesh_key) + ": " +
-                  " ".join(f"{k}={v:.3f}" for k, v in st.items()), flush=True)
+            emit("[BLC-STAGES] " + str(mesh_key) + ": " +
+                 " ".join(f"{k}={v:.3f}" for k, v in st.items()), flush=True)
         return payloads, info
     return _compute_submeshes_py(
-        data, mesh_key, transform, is_viewport_render, use_instancing, share_points
+        data, mesh_key, transform, is_viewport_render, use_instancing, share_points,
+        log=log,
     )
 
 
 def _compute_submeshes_py(data, mesh_key, transform, is_viewport_render, use_instancing,
-                          share_points=True):
+                          share_points=True, log=None):
     """Numpy fallback implementation of compute_submeshes (used when the
     pyluxcore build has no compute_submeshes_c, or BLC_COMPUTE=py).
     Pure numpy/pyluxcore (no Blender API): safe to run in worker threads.
     The big sorts and the union-find release the GIL in pyluxcore.
     """
+    if log is None:
+        def emit(msg, **kwargs):
+            print(msg, **kwargs)
+    else:
+        def emit(msg, **kwargs):
+            log.append(msg)
     if os.environ.get("BLC_FORCE_SHARE_POINTS"):
         share_points = True
     start_time = time()
@@ -536,11 +553,11 @@ def _compute_submeshes_py(data, mesh_key, transform, is_viewport_render, use_ins
         nlayers = len(layers)
         suffix = "layers" if nlayers > 1 else "layer"
         return f"{nlayers} {layer_name} {suffix}"
-    print(f"[BLC] Exporting '{str(mesh_key)}' - {len(groups)} submesh(es)")
-    print(f"[BLC] - {num_points} welded points (shared between submeshes), "
-          f"from {len(vertex_points)} raw vertices")
-    print(f"[BLC] - {fmt_layer(loop_uvs, 'uv layer')}")
-    print(f"[BLC] - {fmt_layer(color_attrs, 'color layer')}")
+    emit(f"[BLC] Exporting '{str(mesh_key)}' - {len(groups)} submesh(es)")
+    emit(f"[BLC] - {num_points} welded points (shared between submeshes), "
+         f"from {len(vertex_points)} raw vertices")
+    emit(f"[BLC] - {fmt_layer(loop_uvs, 'uv layer')}")
+    emit(f"[BLC] - {fmt_layer(color_attrs, 'color layer')}")
 
     # Candidate per-object shared arrays for corner-domain attributes (one
     # value per welded point; where loops disagree at a seam, the last writer
@@ -843,20 +860,25 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         if data is None:
             return None
         _obj, mesh_key, transform, is_viewport_render, use_instancing, share_points = job
+        # Buffer this mesh's log messages: they are printed by the main
+        # thread in _collect, so the lines of each mesh stay grouped together
+        log = []
         payloads, info = compute_submeshes(
             data, mesh_key, transform, is_viewport_render, use_instancing,
-            share_points=share_points,
+            share_points=share_points, log=log,
         )
         result = define_submeshes(luxcore_scene, payloads)
-        return result, info
+        return result, info, log
 
     def _collect(result_index, fut):
         comp = fut.result()
         if comp is None:
             return
-        results[result_index], info = comp
+        results[result_index], info, log = comp
         if exporter and exporter.stats:
             exporter.stats.export_time_meshes.value += info["duration"]
+        for line in log:
+            print(line)
         print(f"[BLC] Export duration: {info['duration']:.3f}s")
         print("[BLC]")
 
