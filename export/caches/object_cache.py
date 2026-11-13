@@ -20,6 +20,7 @@ from ..hair import (
 from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
+from ...utils.log import log
 from ...utils import node as utils_node
 from ...utils import MESH_OBJECTS
 from ...utils.node import get_active_output
@@ -386,6 +387,9 @@ class ObjectCache2:
         is_viewport_render = bool(context)
         instances = {}
 
+        mesh_export_t0 = time()
+        log("Exporting meshes")
+
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
         else:
@@ -556,6 +560,8 @@ class ObjectCache2:
                     view_layer,
                     engine,
                 )
+
+        log(f"Mesh export finished in {time() - mesh_export_t0:.3f}s")
 
         # self._debug_info()
         return instances
