@@ -72,6 +72,9 @@ submodules = (properties, nodes, operators, handlers, engine, ui)
 def register():
     utils.register_module("Main", [], submodules)
 
+    # Share the same wall-time base as pyluxcore's [SDL][t] timestamps
+    # (luxcore::Init() sets its reference time to the wall clock at this call)
+    utils.log.reset_t0()
     pyluxcore.Init(utils.log.LuxCoreLog.add)
     print(
         f"BlendLuxCore {utils.get_version_string()} registered "
