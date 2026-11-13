@@ -38,6 +38,26 @@ MIN_ISLAND_MERGE_COS_ANGLE = float(np.cos(np.deg2rad(30.0)))
 # is a measurable cost on fragment-heavy models)
 _DEBUG_MESH = bool(os.environ.get("BLC_DEBUG_MESH"))
 
+# Wall-clock reference of the current export pass, used to timestamp log lines
+_export_wall_t0 = None
+
+
+def _reset_wall_t0():
+    global _export_wall_t0
+    _export_wall_t0 = time()
+
+
+def _ensure_wall_t0():
+    global _export_wall_t0
+    if _export_wall_t0 is None:
+        _export_wall_t0 = time()
+
+
+def _wall_str():
+    if _export_wall_t0 is None:
+        return ""
+    return f" (wall {time() - _export_wall_t0:.3f}s)"
+
 
 # https://blenderartists.org/t/\
 # efficient-copying-of-vertex-coords-to-and-from-numpy-arrays/661467/2
@@ -810,6 +830,7 @@ def convert(
 ):
     """Convert one object: extract (main thread), compute, define."""
     start_time = time()
+    _ensure_wall_t0()
 
     data = extract_mesh_data(obj, depsgraph)
     if data is None:
@@ -824,7 +845,7 @@ def convert(
     if exporter and exporter.stats:
         exporter.stats.export_time_meshes.value += duration
     print(f"[BLC] Export duration: {duration:.3f}s")
-    print("[BLC]")
+    print(f"[BLC]{_wall_str()}")
 
     return define_submeshes(luxcore_scene, payloads)
 
@@ -841,6 +862,7 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
     objects is kept in flight to bound memory usage.
     Returns a list of ExportedMesh (or None), aligned with jobs.
     """
+    _reset_wall_t0()
     if max_workers is None:
         max_workers = int(os.environ.get("BLC_EXPORT_WORKERS", "0")) or min(
             16, os.cpu_count() or 4
@@ -880,7 +902,7 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         for line in log:
             print(line)
         print(f"[BLC] Export duration: {info['duration']:.3f}s")
-        print("[BLC]")
+        print(f"[BLC]{_wall_str()}")
 
     # Pipeline with a window of inflight_max objects: while the pool converts
     # object i (compute + define), the calling thread extracts object i+1
