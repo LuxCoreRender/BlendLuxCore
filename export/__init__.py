@@ -23,6 +23,7 @@ from . import (
 )
 from .light import WORLD_BACKGROUND_LIGHT_NAME
 from .caches.object_cache import supports_live_transform
+from .image import ImageExporter
 
 if _needs_reload:
     import importlib
@@ -362,6 +363,9 @@ class Exporter(object):
             engine.update_stats(
                 "Export Finished (%.1f s)" % export_time, message
             )
+
+        # Report the packed images that were skipped because already exported
+        ImageExporter.print_skipped_summary()
 
         # Do not hold reference to temporary data
         self.scene = None
