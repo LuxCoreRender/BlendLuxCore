@@ -10,6 +10,7 @@ from textwrap import dedent
 import base64
 import hashlib
 from enum import Enum, IntEnum
+from ..utils.log import log
 import types
 import json
 import configparser
@@ -104,7 +105,7 @@ def _download_wheels(wheel_requirements, no_deps, no_index):
             ) from err
 
         if output := process.stdout:
-            print("[BLC] Downloading wheel:\n", output)
+            log(f"Downloading wheel:\n{output}")
 
 
 INSTALL_INFO_HEADER = """\
@@ -142,7 +143,7 @@ def _get_installation_info():
     """
     # Read the file
     info_file = ROOT_FOLDER / "pyluxcore_installation_info.txt"
-    print(f"[BLC] Checking installation info ('{info_file}')")
+    log(f"Checking installation info ('{info_file}')")
 
     if not info_file.exists():
         return None
@@ -153,13 +154,13 @@ def _get_installation_info():
     except FileNotFoundError:
         return None
     except configparser.MissingSectionHeaderError:
-        print("[BLC] - Warning - Malformed info file")
+        log("- Warning - Malformed info file")
         return None
 
     try:
         old_wheel_hash = config["WHEELS"]["hash"]
     except KeyError:
-        print("[BLC] Warning - Missing hash in info file content")
+        log("Warning - Missing hash in info file content")
         return None
 
     return old_wheel_hash
@@ -245,7 +246,7 @@ def _get_settings():
     """
     try:
         with open(SETTINGS_FILEPATH, "r", encoding="utf-8") as fsettings:
-            print(f"[BLC] Found wheel settings file ('{SETTINGS_FILEPATH}').")
+            log(f"Found wheel settings file ('{SETTINGS_FILEPATH}').")
             return json.load(fsettings)
     except FileNotFoundError:
         # Pass silently: settings file is optional, so not finding it is not an
@@ -253,14 +254,14 @@ def _get_settings():
         return DEFAULT_SETTINGS
     except OSError as err:
         # Warn and pass
-        print(
-            "[BLC] Warning: system error while trying to open settings file: "
+        log(
+            "Warning: system error while trying to open settings file: "
             f"'{err}'"
         )
         return DEFAULT_SETTINGS
     except (json.JSONDecodeError, UnicodeDecodeError) as err:
         # Warn and pass
-        print(f"[BLC] Warning: cannot decode settings file: '{err}'")
+        log(f"Warning: cannot decode settings file: '{err}'")
         return DEFAULT_SETTINGS
 
 
@@ -271,7 +272,7 @@ def _update_manifest(wheel_list):
     installed before.
     """
 
-    print(f"[BLC] Updating blender manifest")
+    log("Updating blender manifest")
     pkg_manifest_filepath = ROOT_FOLDER / "blender_manifest.toml"
 
     # Compute statement
@@ -298,8 +299,8 @@ def _update_manifest(wheel_list):
         flags=re.MULTILINE
     )
     if number_of_replacements != 1:
-        print(
-            "[BLC] WARNING: inconsistent number of replacements when updating"
+        log(
+            "WARNING: inconsistent number of replacements when updating"
             "`wheels` statement in blender_manifest.toml "
             f"({number_of_replacements}) - see file '{pkg_manifest_filepath}'"
         )
@@ -310,7 +311,7 @@ def _update_manifest(wheel_list):
 
     # Create fake wheels
     for path in wheel_abs_paths:
-        print(f"[BLC] Creating fake wheel {path.name}")
+        log(f"Creating fake wheel {path.name}")
         path.touch()
 
 
@@ -403,7 +404,7 @@ def _fetch_wheels():
     def ensure_directory(directory):
         abs_dir = ROOT_FOLDER / directory
         try:
-            print(f"[BLC] Ensuring '{abs_dir}' exists")
+            log(f"Ensuring '{abs_dir}' exists")
             abs_dir.mkdir()
         except FileExistsError:
             pass  # Already exists, pass silently
@@ -420,20 +421,20 @@ def _fetch_wheels():
 
         wheels = [f"pyluxcore=={pyluxcore_version}"]
 
-        print("[BLC] Fetching wheels from PyPi")
-        print("[BLC] Targeting pyluxcore version:", pyluxcore_version)
+        log("Fetching wheels from PyPi")
+        log(f"Targeting pyluxcore version: {pyluxcore_version}")
 
     # Case #2: Get from local source (1 file)
     elif wheel_source == WheelSource.LOCAL:
         # Get path to wheel and check consistency
         path_to_wheel = pathlib.Path(settings.get("path_to_wheel", ""))
-        print("[BLC] Fetching wheels from local source:", path_to_wheel)
+        log(f"Fetching wheels from local source: {path_to_wheel}")
         if not (path_to_wheel.is_file() and path_to_wheel.is_absolute()):
-            print(f"[BLC] Wheel file not found ('{path_to_wheel}')")
+            log(f"Wheel file not found ('{path_to_wheel}')")
             return FetchWheelStatus.ERROR, None
 
         # Get optional folder with dependencies
-        print("[BLC] Getting dependencies")
+        log("Getting dependencies")
         additional_deps = []
         if path_to_wheel_deps_setting := settings.get(
             "path_to_wheel_deps", ""
@@ -445,16 +446,16 @@ def _fetch_wheels():
             ):
                 additional_deps = list(path_to_wheel_deps.glob("*.whl"))
             else:
-                print(
-                    "[BLC] Additional deps folder is not valid "
+                log(
+                    "Additional deps folder is not valid "
                     f"('{path_to_wheel_deps}') - Skipping"
                 )
 
         # Set wheel list
         wheels = additional_deps + [path_to_wheel]
 
-        print(
-            f"[BLC] Installing local version of pyluxcore ('{path_to_wheel}')"
+        log(
+            f"Installing local version of pyluxcore ('{path_to_wheel}')"
         )
 
     # No other case
@@ -468,8 +469,8 @@ def _fetch_wheels():
         try:
             import pyluxcore
         except ModuleNotFoundError:
-            print(
-                "[BLC] Warning: pyluxcore should already be installed, "
+            log(
+                "Warning: pyluxcore should already be installed, "
                 "but it is not possible to find it! Reinstalling..."
             )
         else:
@@ -480,7 +481,7 @@ def _fetch_wheels():
     try:
         _download_wheels(wheels, no_deps, no_index)
     except Exception as err:
-        print(f"[BLC] Unexpected {err=}, {type(err)=}")
+        log(f"Unexpected {err=}, {type(err)=}")
         _clear_wheels()
         _restore_backup_wheels()
         result = FetchWheelStatus.ERROR, None
@@ -503,7 +504,7 @@ def ensure_pyluxcore():
     The source which we must fetch wheels from is to be found in settings.
     """
 
-    print("[BLC] Ensuring pyluxcore")
+    log("Ensuring pyluxcore")
 
     # Fetch wheels (download or copy from local source, depending on settings)
     # and install them
@@ -511,18 +512,18 @@ def ensure_pyluxcore():
 
     if fetch_result == FetchWheelStatus.OK:
         # Install wheels
-        print("[BLC] Installing wheel(s)")
+        log("Installing wheel(s)")
         try:
             _install_wheels()
         except ValueError:
-            print("[BLC] No wheel installed - BlendLuxCore may be unusable")
+            log("No wheel installed - BlendLuxCore may be unusable")
         else:
             _save_installation_info(wheel_hash)
     elif fetch_result == FetchWheelStatus.CACHE:
         # Wheels have been found in cache and thus are already installed:
         # => Nothing to do
-        print(
-            "[BLC] Skipping pyluxcore installation. Similar wheel(s) already "
+        log(
+            "Skipping pyluxcore installation. Similar wheel(s) already "
             "installed."
         )
     elif fetch_result == FetchWheelStatus.ERROR:

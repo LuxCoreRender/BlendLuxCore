@@ -3,6 +3,7 @@
 import tempfile
 import os
 from .. import utils
+from ..utils.log import log
 
 
 class ImageExporter:
@@ -12,6 +13,8 @@ class ImageExporter:
 
     temp_images = {}
     temp_generated_images = {}
+    # Number of times each already-exported image was skipped
+    skipped_images = {}
 
     @classmethod
     def _save_to_temp_file(cls, image):
@@ -48,8 +51,9 @@ class ImageExporter:
                 # This is a new image
                 pass
             else:
-                # This is an already exported image
-                print(f"[BLC] '{key}' already exported - skip")
+                # This is an already exported image: count the skip, it will
+                # be reported once in the summary (see print_skipped_summary)
+                cls.skipped_images[key] = cls.skipped_images.get(key, 0) + 1
                 result.append(temp_image.name)
                 continue
 
@@ -66,15 +70,15 @@ class ImageExporter:
                 delete=False, suffix=extension
             ) as temp_image:
                 packed.filepath = temp_image.name
-                print(
-                    f"[BLC] Unpacking image '{image.name}' to temp file "
+                log(
+                    f"Unpacking image '{image.name}' to temp file "
                     f"'{temp_image.name}'"
                 )
 
                 try:
                     packed.save()
                 except RuntimeError as error:
-                    print("[BLC] Warning: could not save image. ", str(error))
+                    log(f"Warning: could not save image. {error}")
                     continue
                 finally:
                     # The changes above altered the file path, so we have to
@@ -91,8 +95,8 @@ class ImageExporter:
         # If one day this limitation is removed, the code above is ready for
         # multiple packed files per image
         if (len(result)) > 1:
-            print(
-                f"[BLC] Warning: image '{image.name}' contains multiple "
+            log(
+                f"Warning: image '{image.name}' contains multiple "
                 "packed files but only one will be used"
             )
         return result[0] if result else None
@@ -119,8 +123,8 @@ class ImageExporter:
                     delete=False, suffix=extension
                 ) as temp_image:
                     image.save_render(temp_image.name, scene=scene)
-                    print(f"[BLC] Saved generated image '{image.name}' to temp "
-                          f"file '{temp_image.name}'")
+                    log(f"Saved generated image '{image.name}' to temp "
+                              f"file '{temp_image.name}'")
                     cls.temp_generated_images[key] = temp_image.name
                     return temp_image.name
             return cls._save_to_temp_file(image)
@@ -202,8 +206,26 @@ class ImageExporter:
         )
 
     @classmethod
+    def print_skipped_summary(cls):
+        """Print a summary of the already-exported images that were skipped,
+        instead of one message per occurrence."""
+        if not cls.skipped_images:
+            return
+        total = sum(cls.skipped_images.values())
+        log(
+            f"{total} already-exported image(s) skipped "
+            f"({len(cls.skipped_images)} unique):"
+        )
+        for key, count in sorted(
+            cls.skipped_images.items(), key=lambda item: item[1], reverse=True
+        ):
+            log(f"'{key}' already exported - skipped {count} time(s)")
+        cls.skipped_images.clear()
+
+    @classmethod
     def cleanup(cls):
         """Remove cached images."""
+        cls.print_skipped_summary()
         for temp_image in cls.temp_images.values():
             filepath = temp_image.name
             temp_image.close()

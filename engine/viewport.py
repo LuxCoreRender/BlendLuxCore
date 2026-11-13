@@ -10,7 +10,7 @@ from ..draw.viewport import FrameBuffer
 from .. import utils
 from ..utils import render as utils_render
 from ..utils import get_addon_preferences
-from ..utils.log import LuxCoreLog
+from ..utils.log import LuxCoreLog, log as blc_log
 from ..utils.errorlog import LuxCoreErrorLog
 from ..export.config import convert_viewport_engine
 
@@ -135,8 +135,8 @@ def view_update(engine, context, depsgraph, changes=None):
     s = time()
     changes = engine.exporter.get_changes(depsgraph, context, changes)
     delta_t = (time() - s) * 1000
-    print(
-        f"[BLC] view_update(): checking for other changes took {delta_t:.1f} ms"
+    blc_log(
+        f"view_update(): checking for other changes took {delta_t:.1f} ms"
     )
 
     if changes:
@@ -156,10 +156,10 @@ def view_update(engine, context, depsgraph, changes=None):
         if engine.framebuffer:
             engine.framebuffer.reset_denoiser()
         delta_t = (time() - s) * 1000
-        print(f"[BLC] view_update(): applying changes took {delta_t:.1f} ms")
+        blc_log(f"view_update(): applying changes took {delta_t:.1f} ms")
 
     delta_t = (time() - start) * 1000
-    print(f"[BLC] view_update() took {delta_t:.1f} ms")
+    blc_log(f"view_update() took {delta_t:.1f} ms")
 
 
 def view_draw(engine, context, depsgraph):

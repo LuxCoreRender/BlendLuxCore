@@ -18,6 +18,7 @@ import os
 import itertools
 from os.path import basename, dirname
 import tomllib
+from .log import log as blc_log
 from .. import __package__ as base_package
 from .. import __file__ as base_package_path
 
@@ -767,7 +768,7 @@ def get_version_string():
 
 def get_user_dir(name):
     """Get a user writeable directory, create it if not existing."""
-    print(f"[BLC] Module id: {get_module_id()}")
+    blc_log(f"Module id: {get_module_id()}")
     return pathlib.Path(
         bpy.utils.extension_path_user(get_module_id(), path=name, create=True)
     )
@@ -783,13 +784,13 @@ def register_module(module_name, classes, submodules=[]):
     - A collection of classes, registered with bpy.utils.classes
     - A collection of submodules (optional), for which 'register' method is called
     """
-    print(f"[BLC] Registering '{module_name}'")
+    blc_log(f"Registering '{module_name}'")
     for mod in submodules:
         mod.register()
 
     for cls in classes:
         if VERBOSE_REGISTER:
-            print(f"[BLC] Registering {module_name}.{cls.__name__}")
+            blc_log(f"Registering {module_name}.{cls.__name__}")
         try:
             bpy.utils.register_class(cls)
         except Exception as err:
@@ -802,10 +803,10 @@ def unregister_module(module_name, classes, submodules=[]):
     The registration encompasses 2 collections, see register_module.
     The registration is operated in reverse order.
     """
-    print(f"[BLC] Unregistering '{module_name}'")
+    blc_log(f"Unregistering '{module_name}'")
     for cls in reversed(classes):
         if VERBOSE_REGISTER:
-            print(f"[BLC] Unregistering {module_name}.{cls.__name__}")
+            blc_log(f"Unregistering {module_name}.{cls.__name__}")
         bpy.utils.unregister_class(cls)
 
     for mod in reversed(submodules):

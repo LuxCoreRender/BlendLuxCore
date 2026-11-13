@@ -20,6 +20,7 @@ from ..hair import (
 from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
+from ...utils.log import log
 from ...utils import node as utils_node
 from ...utils import MESH_OBJECTS
 from ...utils.node import get_active_output
@@ -126,6 +127,22 @@ def uses_displacement(obj):
                 True,
             )
         ):
+            return True
+    return False
+
+
+def obj_uses_subdiv(obj):
+    """True if any material slot of the object uses a subdivision shape.
+
+    Subdivided objects must keep one shared welded point buffer across all
+    their submeshes: the C++ subdiv envelope is built over all meshes sharing
+    that buffer, so shared edges stay interior (watertight) during
+    subdivision. Other objects can compact each submesh to its own used
+    points, which saves a lot of memory on fragment-heavy meshes.
+    """
+    for mat_slot in obj.material_slots:
+        mat = mat_slot.material
+        if mat and uses_subdiv(mat.luxcore.node_tree):
             return True
     return False
 
@@ -370,6 +387,9 @@ class ObjectCache2:
         is_viewport_render = bool(context)
         instances = {}
 
+        mesh_export_t0 = time()
+        log("Exporting meshes")
+
         if engine:
             obj_count_estimate = max(1, get_obj_count_estimate(depsgraph))
         else:
@@ -432,7 +452,8 @@ class ObjectCache2:
             # the DepsgraphObjectInstance wrappers from the pre-pass iteration
             # must not be kept past the loop
             jobs.append(
-                (obj.original, mesh_key, transform, is_viewport_render, use_instancing)
+                (obj.original, mesh_key, transform, is_viewport_render,
+                 use_instancing, obj_uses_subdiv(obj.original))
             )
             job_obj_keys.append(utils.make_key_from_instance(dg_obj_instance))
 
@@ -539,6 +560,8 @@ class ObjectCache2:
                     view_layer,
                     engine,
                 )
+
+        log(f"Mesh export finished in {time() - mesh_export_t0:.3f}s")
 
         # self._debug_info()
         return instances
@@ -836,6 +859,7 @@ class ObjectCache2:
                 use_instancing,
                 transform,
                 exporter,
+                share_points=obj_uses_subdiv(obj.original),
             )
             self.exported_meshes[mesh_key] = exported_mesh
             loaded_from_cache = False
@@ -942,6 +966,7 @@ class ObjectCache2:
                                 is_viewport_render,
                                 use_instancing,
                                 transform,
+                                share_points=obj_uses_subdiv(obj),
                             )
 
                             if exported_mesh:
