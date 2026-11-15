@@ -273,7 +273,7 @@ def get_material(obj, material_index, depsgraph):
 
 
 def export_material(
-    obj, material_index, exporter, depsgraph, is_viewport_render
+    obj, material_index, exporter, depsgraph, is_viewport_render, memo=None
 ):
     mat = get_material(obj, material_index, depsgraph)
 
@@ -282,11 +282,19 @@ def export_material(
         # Blender gives us "NodeTreeUndefined" as mat.node_tree.bl_idname
         mat = mat.original
 
+        # Memoize per material: the node tree -> props conversion is pure
+        # Python and dominates when many objects share few materials
+        key = (mat.as_pointer(), is_viewport_render) if memo is not None else None
+        if key is not None and key in memo:
+            return memo[key]
         lux_mat_name, mat_props = material.convert(
             exporter, depsgraph, mat, is_viewport_render, obj.name
         )
         node_tree = mat.luxcore.node_tree
-        return lux_mat_name, mat_props, node_tree
+        result = (lux_mat_name, mat_props, node_tree)
+        if key is not None:
+            memo[key] = result
+        return result
     else:
         lux_mat_name, mat_props = material.fallback()
         return lux_mat_name, mat_props, None
@@ -367,6 +375,8 @@ class Duplis:
 class ObjectCache2:
     def __init__(self):
         self.exported_objects = {}
+        # Per-first_run memo of export_material() results (see export_material)
+        self._mat_memo = {}
         self.exported_meshes = {}
         self.exported_hair = {}
         # Keys of lights that were re-exported in the last update() pass.
@@ -388,6 +398,7 @@ class ObjectCache2:
         instances = {}
 
         mesh_export_t0 = time()
+        self._mat_memo.clear()
         log("Exporting meshes")
 
         if engine:
@@ -681,7 +692,8 @@ class ObjectCache2:
                             self.exported_hair[obj_key] = lux_shape
                         if lux_shape:
                             lux_mat, mat_props, node_tree = export_material(
-                                obj, 0, exporter, depsgraph, is_viewport_render
+                                obj, 0, exporter, depsgraph, is_viewport_render,
+                                memo=self._mat_memo,
                             )
                             scene_props.Set(mat_props)
                             set_hair_props(
@@ -784,7 +796,8 @@ class ObjectCache2:
 
                 if lux_shape:
                     lux_mat, mat_props, node_tree = export_material(
-                        obj, mat_index, exporter, depsgraph, is_viewport_render
+                        obj, mat_index, exporter, depsgraph, is_viewport_render,
+                        memo=self._mat_memo,
                     )
                     scene_props.Set(mat_props)
                     set_hair_props(
@@ -873,7 +886,8 @@ class ObjectCache2:
                 slot = mesh_def[2] if len(mesh_def) > 2 else mat_index
                 shape = shape_name
                 lux_mat_name, mat_props, node_tree = export_material(
-                    obj, mat_index, exporter, depsgraph, is_viewport_render
+                    obj, mat_index, exporter, depsgraph, is_viewport_render,
+                    memo=self._mat_memo,
                 )
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)

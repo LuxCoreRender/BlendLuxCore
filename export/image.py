@@ -15,6 +15,9 @@ class ImageExporter:
     temp_generated_images = {}
     # Number of times each already-exported image was skipped
     skipped_images = {}
+    # Keys of the images unpacked by unpack_packed_images(): their first
+    # _save_to_temp_file() call is the unpack itself, not a skip
+    prewarmed_keys = set()
 
     @classmethod
     def _save_to_temp_file(cls, image):
@@ -53,7 +56,10 @@ class ImageExporter:
             else:
                 # This is an already exported image: count the skip, it will
                 # be reported once in the summary (see print_skipped_summary)
-                cls.skipped_images[key] = cls.skipped_images.get(key, 0) + 1
+                if key in cls.prewarmed_keys:
+                    cls.prewarmed_keys.discard(key)
+                else:
+                    cls.skipped_images[key] = cls.skipped_images.get(key, 0) + 1
                 result.append(temp_image.name)
                 continue
 
@@ -100,6 +106,54 @@ class ImageExporter:
                 "packed files but only one will be used"
             )
         return result[0] if result else None
+
+    @classmethod
+    def unpack_packed_images(cls, images, max_workers=None):
+        """Unpack all packed images to temp files, in parallel.
+
+        The packed bytes are read in the calling (main) thread -- Blender
+        RNA is not thread-safe -- and the temp files are written from a
+        thread pool (pure file I/O, releases the GIL). Later
+        _save_to_temp_file() calls then hit the temp_images cache.
+        Writing bytes(packed_file.data) is byte-identical to packed.save()
+        (sha256-verified on CannelleEtFromage's packed files).
+        """
+        if max_workers is None:
+            # Deferred import: mesh_converter imports the caches, which
+            # import back into the export package
+            from .mesh_converter import DEFAULT_EXPORT_WORKERS
+            max_workers = DEFAULT_EXPORT_WORKERS
+
+        jobs = []  # (key, data, extension)
+        for image in images:
+            for packed in image.packed_files:
+                orig_filepath = getattr(packed, "filepath", "")
+                key = orig_filepath or f"{image.name}-{packed.tile_number}"
+                if key in cls.temp_images:
+                    continue
+                inner = getattr(packed, "packed_file", packed)
+                data = bytes(inner.data)  # main thread: RNA access
+                if orig_filepath:
+                    _, extension = os.path.splitext(orig_filepath)
+                else:
+                    extension = f".{image.file_format.lower()}"
+                jobs.append((key, data, extension))
+
+        if not jobs:
+            return
+        log(f"Unpacking {len(jobs)} packed image(s) in parallel")
+
+        def write_temp(job):
+            _key, data, extension = job
+            with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as f:
+                f.write(data)
+            return _key, f
+
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            for key, temp_file in pool.map(write_temp, jobs):
+                cls.temp_images[key] = temp_file
+                cls.prewarmed_keys.add(key)
 
     @classmethod
     def export(cls, image, image_user, scene):
@@ -233,3 +287,4 @@ class ImageExporter:
             os.remove(filepath)
 
         cls.temp_images.clear()
+        cls.prewarmed_keys.clear()

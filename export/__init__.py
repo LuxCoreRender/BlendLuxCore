@@ -114,6 +114,12 @@ class Exporter(object):
         # Notes:
         # In final render, context is None
 
+        if view_layer is None:
+            # The viewport path passes context but not view_layer
+            view_layer = (
+                context.view_layer if context is not None else bpy.context.view_layer
+            )
+
         print("[Exporter] Creating session")
         start = time()
         # TODO 2.8 I'm not too happy about this, we shouldn't keep any
@@ -129,6 +135,10 @@ class Exporter(object):
         # previous versions of the addon since opening the .blend file.
         utils_compatibility.run()
 
+        # Unpack all packed images to temp files in parallel, up front:
+        # the per-texture exports below then only hit the cache
+        ImageExporter.unpack_packed_images(bpy.data.images)
+
         # Scene
         image_resize_policy_props = (
             scene.luxcore.config.image_resize_policy.convert()
@@ -143,7 +153,30 @@ class Exporter(object):
         self.camera_cache.diff(
             self, scene, depsgraph, context
         )  # Init camera cache
-        luxcore_scene.Parse(self.camera_cache.props)
+        # The early camera Parse is only needed when hair curves are present
+        # (strands tessellation reads the camera while shapes are parsed).
+        # Without hair, fold the camera props into the single full Parse
+        # below instead of parsing the scene twice.
+        # Hair can also come from HAIR particle systems on mesh objects
+        # (the strands tessellation needs the camera parsed first in that
+        # case too)
+        has_hair = any(
+            (
+                obj.type == "CURVES"
+                and obj.data is not None
+                and obj.data.rna_type.name == "Hair Curves"
+            )
+            or any(
+                ps.settings.type == "HAIR"
+                and ps.settings.render_type == "PATH"
+                for ps in obj.particle_systems
+            )
+            for obj in view_layer.objects
+        )
+        if has_hair:
+            luxcore_scene.Parse(self.camera_cache.props)
+        else:
+            scene_props.Set(self.camera_cache.props)
 
         if utils.is_valid_camera(scene.camera):
             blur_settings = scene.camera.data.luxcore.motion_blur
@@ -402,6 +435,8 @@ class Exporter(object):
 
             if self.material_cache.diff(depsgraph):
                 changes |= Change.MATERIAL
+                # Materials changed: drop the per-material export memo
+                self.object_cache2._mat_memo.clear()
 
             if self.visibility_cache.diff(depsgraph, context):
                 changes |= Change.VISIBILITY
