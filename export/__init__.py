@@ -114,6 +114,12 @@ class Exporter(object):
         # Notes:
         # In final render, context is None
 
+        if view_layer is None:
+            # The viewport path passes context but not view_layer
+            view_layer = (
+                context.view_layer if context is not None else bpy.context.view_layer
+            )
+
         print("[Exporter] Creating session")
         start = time()
         # TODO 2.8 I'm not too happy about this, we shouldn't keep any
