@@ -157,10 +157,20 @@ class Exporter(object):
         # (strands tessellation reads the camera while shapes are parsed).
         # Without hair, fold the camera props into the single full Parse
         # below instead of parsing the scene twice.
+        # Hair can also come from HAIR particle systems on mesh objects
+        # (the strands tessellation needs the camera parsed first in that
+        # case too)
         has_hair = any(
-            obj.type == "CURVES"
-            and obj.data is not None
-            and obj.data.rna_type.name == "Hair Curves"
+            (
+                obj.type == "CURVES"
+                and obj.data is not None
+                and obj.data.rna_type.name == "Hair Curves"
+            )
+            or any(
+                ps.settings.type == "HAIR"
+                and ps.settings.render_type == "PATH"
+                for ps in obj.particle_systems
+            )
             for obj in view_layer.objects
         )
         if has_hair:
