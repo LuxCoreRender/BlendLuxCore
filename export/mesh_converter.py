@@ -115,6 +115,14 @@ def get_ndarray(
     """Get a numpy array from a Blender collection.
 
     If stride == 0, the array is raveled
+
+    dtype is critical: foreach_get only writes the buffer directly when the
+    numpy dtype matches the RNA property's raw type exactly (see
+    foreach_compat_buffer in Blender's bpy_rna.cc): 'f' for PROP_FLOAT,
+    'i' for signed PROP_INT, 'I' for PROP_UNSIGNED int, etc. On mismatch it
+    silently falls back to a per-element Python loop, which is >100x slower
+    on large meshes. Unsigned index props (vertex_index, loops, vertices,
+    material_index) therefore need uint32, not int32.
     """
     count = len(bpy_collection)
     buffer = np.empty(shape=(count, stride if stride else 1), dtype=dtype)
@@ -189,7 +197,10 @@ def extract_mesh_data(obj, depsgraph):
         edge_crease = None
         crease_attr = mesh.attributes.get("crease_edge")
         if crease_attr is not None and crease_attr.domain == "EDGE":
-            edge_verts = get_ndarray(mesh.edges, "vertices", 2, np.int32)
+            # "vertices" is PROP_UNSIGNED: uint32 buffer keeps foreach_get on
+            # the raw buffer path (int32 silently drops to the slow per-element
+            # fallback). compute_submeshes_c forcecasts to int32 on its side.
+            edge_verts = get_ndarray(mesh.edges, "vertices", 2, np.uint32)
             edge_crease = get_ndarray(crease_attr.data, "value", 0, np.float32)
         vert_crease_attr = mesh.attributes.get("crease_vert")
         if (
