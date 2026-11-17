@@ -11,10 +11,10 @@ class LuxCoreNodeShapeTessellate(LuxCoreNodeShape, bpy.types.Node):
     rate: IntProperty(
         name="Rate",
         description=(
-            "Each edge of the source mesh is split into this many segments, "
-            "generating rate^2 triangles per source triangle (flat tessellation)"
+            "Each edge of the source mesh is split into 2^rate segments, "
+            "generating 4^rate triangles per source triangle (flat tessellation)"
         ),
-        default=4,
+        default=2,
         min=1,
         update=utils_node.force_viewport_mesh_update,
     )
