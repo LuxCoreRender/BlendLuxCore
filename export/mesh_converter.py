@@ -18,8 +18,8 @@ Entry points (called from export/__init__.py via the object cache):
 
 - convert(): convert a single object, serially (viewport / live-update path).
 - convert_objects(): batch entry point of the render-export pre-pass. Takes a
-  list of jobs (obj, mesh_key, transform, is_viewport_render, use_instancing,
-  share_points); returns a list of ExportedMesh aligned with the jobs.
+  list of jobs (obj, mesh_key, transform, is_viewport_render, use_instancing);
+  returns a list of ExportedMesh aligned with the jobs.
 
 Both run the same 3-phase pipeline per object:
 
@@ -31,10 +31,10 @@ Both run the same 3-phase pipeline per object:
    varying-data islands (union-find over shared edges with matching UV/normal
    signatures, small-island merge), group triangles by (material, island) and
    gather the per-submesh payloads (points, triangles, normals, UV/color/alpha
-   layers, creases, optional baked transform). With share_points=True all
-   submeshes of an object share one welded point buffer (needed by the C++
-   subdivision envelope); with False each submesh is compacted to the points
-   it uses (saves memory on fragment-heavy meshes).
+   layers, creases, optional baked transform). All submeshes of an object
+   always share one welded point buffer (the root mesh): the C++ subdivision
+   envelope and all shape modifiers (merge on distance, displacement, ...)
+   rely on seeing the whole object's points.
 3. define_submeshes() -- build and insert the meshes into the LuxCore scene,
    batched via Scene.DefineMeshesExt when available (one GIL release + one
    mesh-def mutex acquisition per object), else one DefineMeshExt per submesh.
@@ -50,7 +50,7 @@ mesh mutations internally (mesh-def mutex) and releases the GIL around the
 C++ work, so worker threads are safe. Per-mesh log lines are buffered and
 printed by the main thread so they stay grouped by mesh.
 
-Other knobs: BLC_FORCE_SHARE_POINTS=1, BLC_DEBUG_EXPORT=1, BLC_DEBUG_MESH=1,
+Other knobs: BLC_DEBUG_EXPORT=1, BLC_DEBUG_MESH=1,
 BLC_TIME_STAGES=1 (per-stage timings in the log).
 """
 
@@ -239,7 +239,7 @@ _DEFINE_MESHES_EXT = hasattr(pyluxcore.Scene, "DefineMeshesExt")
 
 
 def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instancing,
-                      share_points=True, log_lines=None):
+                      log_lines=None):
     """Weld points, find varying-data islands, group triangles by
     (material, island) and gather the per-submesh varying data, using the
     C++/TBB implementation in pyluxcore. Returns (payloads, info):
@@ -250,11 +250,6 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     of being printed. The parallel exporter uses this to print the messages
     of each mesh from the main thread, so they stay grouped by mesh.
 
-    share_points: when True (objects with a subdivision shape), all submeshes
-    share one welded point buffer (the C++ subdiv envelope is built over all
-    meshes sharing it). When False, each submesh is compacted to the points it
-    actually uses, which saves a lot of memory on fragment-heavy meshes.
-    Set BLC_FORCE_SHARE_POINTS=1 to force the shared-point path (debug).
     """
     if _compute_submeshes_c is None:
         raise RuntimeError(
@@ -266,8 +261,6 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
     else:
         def emit(msg):
             log_lines.append(log_str(msg))
-    if os.environ.get("BLC_FORCE_SHARE_POINTS"):
-        share_points = True
     # Pass the transform only when it will be applied (not in viewport,
     # not instanced)
     xform = None
@@ -290,7 +283,7 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         xform,
         is_viewport_render,
         use_instancing,
-        share_points,
+        True,  # share_points: submeshes always share the root point buffer
         str(mesh_key),
     )
     emit(f"Exporting '{str(mesh_key)}' - {len(payloads)} submesh(es)")
@@ -385,7 +378,6 @@ def convert(
     use_instancing,
     transform,
     exporter=None,
-    share_points=True,
 ):
     """Convert one object: extract (main thread), compute, define."""
     start_time = time()
@@ -395,7 +387,6 @@ def convert(
 
     payloads, _info = compute_submeshes(
         data, mesh_key, transform, is_viewport_render, use_instancing,
-        share_points=share_points,
     )
 
     duration = time() - start_time
@@ -445,13 +436,13 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         data, job = args
         if data is None:
             return None
-        mesh_key, transform, is_viewport_render, use_instancing, share_points = job[1:]
+        mesh_key, transform, is_viewport_render, use_instancing = job[1:]
         # Buffer this mesh's log messages: they are printed by the main
         # thread in _collect, so the lines of each mesh stay grouped together
         log_lines = []
         payloads, info = compute_submeshes(
             data, mesh_key, transform, is_viewport_render, use_instancing,
-            share_points=share_points, log_lines=log_lines,
+            log_lines=log_lines,
         )
         result = define_submeshes(luxcore_scene, payloads)
         return result, info, log_lines
