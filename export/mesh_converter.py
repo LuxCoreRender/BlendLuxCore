@@ -67,35 +67,7 @@ import pyluxcore
 
 from . import caches
 from .. import utils
-from ..utils import node as utils_node
 from ..utils.log import log, log_str
-
-
-def object_uses_subdiv(obj):
-    """True if any material of the object has a subdiv shape node."""
-    for mat_slot in obj.material_slots:
-        mat = mat_slot.material
-        if mat and mat.luxcore.node_tree and utils_node.has_nodes_multi(
-            mat.luxcore.node_tree, {"LuxCoreNodeShapeSubdiv"}, True
-        ):
-            return True
-    return False
-
-
-def node_tree_has_shape_nodes(node_tree):
-    """True if the node tree contains any shape node (also in pointers)."""
-    if node_tree is None:
-        return False
-    for node in node_tree.nodes:
-        if node.bl_idname.startswith("LuxCoreNodeShape"):
-            return True
-        if node.bl_idname == "LuxCoreNodeTreePointer" and node.node_tree:
-            try:
-                if node_tree_has_shape_nodes(node.node_tree):
-                    return True
-            except RecursionError:
-                return False
-    return False
 
 if _needs_reload:
     import importlib
@@ -419,10 +391,10 @@ def convert(
     if (data := extract_mesh_data(obj, depsgraph)) is None:
         return None
 
-    # Group the submeshes into one Shape (named after the mesh key) unless a
-    # material uses subdiv (subdiv keeps per-submesh shapes for the matslot
-    # resplit)
-    shape_name = None if object_uses_subdiv(obj) else str(mesh_key)
+    # Group the submeshes into one Shape (named after the mesh key) sharing
+    # the root point buffer; shape modifiers (incl. subdiv) then run once per
+    # object on the merged envelope and resplit per submesh on the C++ side
+    shape_name = str(mesh_key)
     payloads, _info = compute_submeshes(
         data, mesh_key, transform, is_viewport_render, use_instancing,
         shape_name=shape_name,
@@ -479,7 +451,7 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         # Buffer this mesh's log messages: they are printed by the main
         # thread in _collect, so the lines of each mesh stay grouped together
         log_lines = []
-        shape_name = None if object_uses_subdiv(job[0]) else str(mesh_key)
+        shape_name = str(mesh_key)
         payloads, info = compute_submeshes(
             data, mesh_key, transform, is_viewport_render, use_instancing,
             log_lines=log_lines, shape_name=shape_name,
