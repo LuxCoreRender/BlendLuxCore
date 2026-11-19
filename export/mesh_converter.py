@@ -347,6 +347,7 @@ def define_submeshes(luxcore_scene, payloads):
             submesh_name=payload.get("submesh_name"),
             points=payload["points"],
             triangles=payload["triangles"],
+            vertex_indices=payload.get("vertex_indices"),
             normals=payload["normals"],
             uvs=payload["uvs"],
             colors=payload["colors"],
