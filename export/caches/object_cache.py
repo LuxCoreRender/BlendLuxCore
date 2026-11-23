@@ -69,49 +69,6 @@ def needs_edge_detector_shape(node_tree):
     return False
 
 
-def uses_subdiv(node_tree):
-    return (
-        node_tree
-        and utils_node.has_nodes_multi(
-            node_tree,
-            {"LuxCoreNodeShapeSubdiv"},
-            True,
-        )
-    )
-
-
-def _shape_prop(scene_props, shape_name, key, default=""):
-    try:
-        return scene_props.Get(
-            "scene.shapes." + shape_name + "." + key
-        ).GetString()
-    except Exception:
-        return default
-
-
-def set_matslot_on_subdiv_shape(scene_props, shape, mat_index):
-    """Set the matslot property on the subdiv shape of a shape chain.
-
-    The chain may end with another shape (e.g. harlequin after subdiv), so walk
-    the chain via the "source" links and set matslot on the subdiv shape itself
-    (that's the shape LuxCore reads matslot from). Falls back to the final
-    shape name if no subdiv shape is found.
-    """
-    name = shape
-    seen = set()
-    while name and name not in seen:
-        seen.add(name)
-        if _shape_prop(scene_props, name, "type") == "subdiv":
-            scene_props.Set(pyluxcore.Property(
-                "scene.shapes." + name + ".matslot", mat_index
-            ))
-            return
-        name = _shape_prop(scene_props, name, "source")
-    scene_props.Set(pyluxcore.Property(
-        "scene.shapes." + shape + ".matslot", mat_index
-    ))
-
-
 def uses_displacement(obj):
     for mat_slot in obj.material_slots:
         mat = mat_slot.material
@@ -127,22 +84,6 @@ def uses_displacement(obj):
                 True,
             )
         ):
-            return True
-    return False
-
-
-def obj_uses_subdiv(obj):
-    """True if any material slot of the object uses a subdivision shape.
-
-    Subdivided objects must keep one shared welded point buffer across all
-    their submeshes: the C++ subdiv envelope is built over all meshes sharing
-    that buffer, so shared edges stay interior (watertight) during
-    subdivision. Other objects can compact each submesh to its own used
-    points, which saves a lot of memory on fragment-heavy meshes.
-    """
-    for mat_slot in obj.material_slots:
-        mat = mat_slot.material
-        if mat and uses_subdiv(mat.luxcore.node_tree):
             return True
     return False
 
@@ -464,7 +405,7 @@ class ObjectCache2:
             # must not be kept past the loop
             jobs.append(
                 (obj.original, mesh_key, transform, is_viewport_render,
-                 use_instancing, obj_uses_subdiv(obj.original))
+                 use_instancing)
             )
             job_obj_keys.append(utils.make_key_from_instance(dg_obj_instance))
 
@@ -872,40 +813,78 @@ class ObjectCache2:
                 use_instancing,
                 transform,
                 exporter,
-                share_points=obj_uses_subdiv(obj.original),
             )
             self.exported_meshes[mesh_key] = exported_mesh
             loaded_from_cache = False
 
         if exported_mesh:
             mat_names = []
-            for idx, mesh_def in enumerate(
-                exported_mesh.mesh_definitions
-            ):
-                shape_name, mat_index = mesh_def[0], mesh_def[1]
-                slot = mesh_def[2] if len(mesh_def) > 2 else mat_index
-                shape = shape_name
+            # Export the materials first, then define the shape chain(s).
+            # All submeshes of the object are grouped in ONE LuxCore Shape
+            # (named after the mesh key, see mesh_converter), so the chain
+            # is defined ONCE per distinct node tree, sourced from that
+            # object Shape; shape modifiers (displacement, merge, tessellate,
+            # subdiv) then run once on the merged envelope and resplit per
+            # submesh on the C++ side. Objects reference MESH names, so a
+            # multi-submesh result is referenced as "<result>i<idx>"
+            # (single submesh: "<result>").
+            node_trees = []
+            for mesh_def in exported_mesh.mesh_definitions:
+                mat_index = mesh_def[1]
                 lux_mat_name, mat_props, node_tree = export_material(
                     obj, mat_index, exporter, depsgraph, is_viewport_render,
                     memo=self._mat_memo,
                 )
                 scene_props.Set(mat_props)
                 mat_names.append(lux_mat_name)
+                node_trees.append(node_tree)
 
-                # Meshes in the cache already have the shapes added.
-                # (This assumes that the instances use the same materials as the original mesh)
-                if node_tree and not loaded_from_cache:
-                    warn_about_missing_uvs(obj, node_tree)
-                    shape = define_shapes(
-                        shape, node_tree, exporter, depsgraph, scene_props
-                    )
-                    # For subdivision shapes the C++ side builds the watertight
-                    # envelope over all submeshes sharing the point buffer and
-                    # splits the result back per material; pass the slot index
-                    if uses_subdiv(node_tree):
-                        set_matslot_on_subdiv_shape(scene_props, shape, slot)
-
-                exported_mesh.mesh_definitions[idx] = [shape, mat_index, slot]
+            grouped = not loaded_from_cache
+            if grouped:
+                multi_submesh = len(exported_mesh.mesh_definitions) > 1
+                n_distinct = len({id(nt) for nt in node_trees if nt is not None})
+                # id(node_tree) -> (input_name, result shape name)
+                chain_results = {}
+                for idx, mesh_def in enumerate(
+                    exported_mesh.mesh_definitions
+                ):
+                    shape_name, mat_index = mesh_def[0], mesh_def[1]
+                    slot = mesh_def[2] if len(mesh_def) > 2 else mat_index
+                    node_tree = node_trees[idx]
+                    shape = shape_name
+                    if node_tree is not None:
+                        key = id(node_tree)
+                        if key not in chain_results:
+                            warn_about_missing_uvs(obj, node_tree)
+                            # Name the chain after the object Shape (the mesh
+                            # key) when there is a single node tree, else after
+                            # the first submesh using this tree (unique names)
+                            input_name = (
+                                str(mesh_key) if n_distinct == 1 else shape_name
+                            )
+                            chain_results[key] = (
+                                input_name,
+                                define_shapes(
+                                    input_name, node_tree, exporter,
+                                    depsgraph, scene_props
+                                ),
+                            )
+                        input_name, result = chain_results[key]
+                        if result != input_name:
+                            # The chain defined new shapes: the result
+                            # submeshes are named "<result>i<idx>" by the
+                            # C++ side (or "<result>" for a single submesh)
+                            shape = (
+                                result
+                                if not multi_submesh
+                                else f"{result}i{idx}"
+                            )
+                        # else: no shape modifier was defined, keep the
+                        # original submesh name
+                    exported_mesh.mesh_definitions[idx] = [shape, mat_index, slot]
+            # else (loaded_from_cache): the cached mesh_definitions already
+            # hold the final shape names (instances reuse the same materials
+            # as the original mesh), nothing to redefine
 
             obj_transform = transform.copy() if use_instancing else None
             obj_id = utils.make_object_id(dg_obj_instance)
@@ -980,7 +959,6 @@ class ObjectCache2:
                                 is_viewport_render,
                                 use_instancing,
                                 transform,
-                                share_points=obj_uses_subdiv(obj),
                             )
 
                             if exported_mesh:
@@ -997,17 +975,26 @@ class ObjectCache2:
                                     if mat:
                                         node_tree = mat.luxcore.node_tree
                                         if node_tree:
-                                            shape = define_shapes(
+                                            result = define_shapes(
                                                 shape,
                                                 node_tree,
                                                 exporter,
                                                 depsgraph,
                                                 scene_props,
                                             )
-                                            # pass the material slot to subdiv shapes
-                                            if uses_subdiv(node_tree):
-                                                set_matslot_on_subdiv_shape(
-                                                    scene_props, shape, slot
+                                            # The chain is sourced from the
+                                            # object Shape (all submeshes
+                                            # grouped): result submeshes are
+                                            # named "<result>i<i>" by the
+                                            # C++ side
+                                            if result != shape:
+                                                n_defs = len(
+                                                    exported_mesh.mesh_definitions
+                                                )
+                                                shape = (
+                                                    result
+                                                    if n_defs == 1
+                                                    else f"{result}i{i}"
                                                 )
 
                                     exported_mesh.mesh_definitions[i] = (
