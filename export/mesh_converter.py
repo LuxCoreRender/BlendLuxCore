@@ -23,20 +23,20 @@ Entry points (called from export/__init__.py via the object cache):
 
 Both run the same 3-phase pipeline per object:
 
-1. extract_mesh_data() -- Blender API -> numpy arrays. Must run in the main
+1. _extract_blender_mesh_data() -- Blender API -> numpy arrays. Must run in the main
    thread (Blender data is not thread-safe); this is why convert_objects()
    extracts serially in the calling thread and only parallelizes phases 2+3.
-2. compute_submeshes() -- the C++/TBB implementation in pyluxcore
+2. _compute_lux_shape() -- the C++/TBB implementation in pyluxcore
    (compute_submeshes_c, GIL released): weld coincident points, split into
    varying-data islands (union-find over shared edges with matching UV/normal
    signatures, small-island merge), group triangles by (material, island) and
    gather the per-submesh payloads (points, triangles, normals, UV/color/alpha
    layers, creases, optional baked transform). All submeshes of an object
-   always share one welded point buffer (the root mesh): the C++ subdivision
+   always share one welded point buffer (the root shape): the C++ subdivision
    envelope and all shape modifiers (merge on distance, displacement, ...)
    rely on seeing the whole object's points.
-3. define_submeshes() -- build and insert the meshes into the LuxCore scene,
-   batched via Scene.DefineMeshesExt when available (one GIL release + one
+3. _define_lux_shape() -- build and insert the meshes into the LuxCore scene,
+   batched via Scene.DefineShapeExt when available (one GIL release + one
    mesh-def mutex acquisition per object), else one DefineMeshExt per submesh.
    The material slot of each triangle is passed as the constant triangle AOV
    MATERIAL_TRI_AOV_INDEX, which the C++ subdiv envelope builder reads to
@@ -55,6 +55,7 @@ BLC_TIME_STAGES=1 (per-stage timings in the log).
 """
 
 import os
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from time import time
@@ -106,7 +107,7 @@ DEFAULT_EXPORT_WORKERS = 8
 
 # https://blenderartists.org/t/\
 # efficient-copying-of-vertex-coords-to-and-from-numpy-arrays/661467/2
-def get_ndarray(
+def _get_ndarray(
     bpy_collection: bpy.types.bpy_prop_collection,
     attr: str,
     stride: int,
@@ -132,7 +133,7 @@ def get_ndarray(
     return buffer
 
 
-def extract_mesh_data(obj, depsgraph):
+def _extract_blender_mesh_data(obj, depsgraph):
     """Read all mesh data from Blender into numpy arrays.
 
     Must run in the main thread (Blender API access). Returns None for
@@ -151,42 +152,42 @@ def extract_mesh_data(obj, depsgraph):
         # Loop: a vertex and an edge
 
         # Loop vertices: for each loop, the index of the mesh vertex it uses
-        loop_vertices = get_ndarray(mesh.loops, "vertex_index", 0, np.uint32)
+        loop_vertices = _get_ndarray(mesh.loops, "vertex_index", 0, np.uint32)
 
         # Points (raw, unwelded)
-        vertex_points = get_ndarray(mesh.vertices, "co", 3, np.float32)
+        vertex_points = _get_ndarray(mesh.vertices, "co", 3, np.float32)
 
         # Per-vertex data of the (possibly split) source vertices
-        vertex_normals = get_ndarray(mesh.vertices, "normal", 3, np.float32)
+        vertex_normals = _get_ndarray(mesh.vertices, "normal", 3, np.float32)
 
         # Per-loop shading normals: corner normals honor flat/smooth faces and
         # custom split normals (fall back to per-vertex normals if unavailable)
         corner_normals = getattr(mesh, "corner_normals", None)
         if corner_normals is not None and len(corner_normals) == len(mesh.loops):
-            loop_normals = get_ndarray(corner_normals, "vector", 3, np.float32)
+            loop_normals = _get_ndarray(corner_normals, "vector", 3, np.float32)
         else:
             loop_normals = vertex_normals[loop_vertices]
 
         # Triangle loop indices
-        triangle_loops = get_ndarray(
+        triangle_loops = _get_ndarray(
             mesh.loop_triangles, "loops", 3, np.uint32
         )
 
         # Material slot index for each triangle
-        loop_triangle_materials = get_ndarray(
+        loop_triangle_materials = _get_ndarray(
             mesh.loop_triangles, "material_index", 1, np.uint32
         ).ravel()
 
         # UV layers, per-loop in Blender
         loop_uvs = [
-            get_ndarray(uv_layer.uv, "vector", 2, np.float32)
+            _get_ndarray(uv_layer.uv, "vector", 2, np.float32)
             for uv_layer in mesh.uv_layers
         ]
 
         # Vertex color attributes
         color_attrs = [
             (
-                get_ndarray(attribute.data, "color", 4, np.float32),
+                _get_ndarray(attribute.data, "color", 4, np.float32),
                 attribute.domain,
             )
             for attribute in mesh.color_attributes
@@ -200,13 +201,13 @@ def extract_mesh_data(obj, depsgraph):
             # "vertices" is PROP_UNSIGNED: uint32 buffer keeps foreach_get on
             # the raw buffer path (int32 silently drops to the slow per-element
             # fallback). compute_submeshes_c forcecasts to int32 on its side.
-            edge_verts = get_ndarray(mesh.edges, "vertices", 2, np.uint32)
-            edge_crease = get_ndarray(crease_attr.data, "value", 0, np.float32)
+            edge_verts = _get_ndarray(mesh.edges, "vertices", 2, np.uint32)
+            edge_crease = _get_ndarray(crease_attr.data, "value", 0, np.float32)
         vert_crease_attr = mesh.attributes.get("crease_vert")
         if (
             vert_crease_attr is not None
             and vert_crease_attr.domain == "POINT"
-            and np.any(get_ndarray(vert_crease_attr.data, "value", 0, np.float32) > 0.0)
+            and np.any(_get_ndarray(vert_crease_attr.data, "value", 0, np.float32) > 0.0)
         ):
             log(
                 "Warning: vertex creases (crease_vert) are not exported "
@@ -233,17 +234,25 @@ _compute_submeshes_c = getattr(pyluxcore, "compute_submeshes_c", None)
 # tri_aov_value, added to pyluxcore): avoids a separate SetMeshTriangleAOV
 # round-trip per submesh (numpy alloc + GIL-held copy + mesh-def mutex)
 _DEFINE_EXT_HAS_TRI_AOV = "tri_aov_index" in (pyluxcore.Scene.DefineMeshExt.__doc__ or "")
+# The group-name kwarg is 'shape_name' on recent pyluxcore (DefineShapeExt),
+# 'submesh_name' on older ones
+_DEFINE_EXT_HAS_SHAPE_NAME = "shape_name" in (pyluxcore.Scene.DefineMeshExt.__doc__ or "")
 # Batch define (one GIL release + one mesh-def lock for all submeshes of an
-# object, instead of one pybind call per submesh)
-_DEFINE_MESHES_EXT = hasattr(pyluxcore.Scene, "DefineMeshesExt")
+# object, instead of one pybind call per submesh): DefineShapeExt on recent
+# pyluxcore, deprecated alias DefineMeshesExt on older ones
+_DEFINE_SHAPE_EXT = hasattr(pyluxcore.Scene, "DefineShapeExt")
+_DEFINE_MESHES_EXT = _DEFINE_SHAPE_EXT or hasattr(pyluxcore.Scene, "DefineMeshesExt")
+# kwarg/key used to group submeshes into one Shape
+_SHAPE_NAME_KWARG = "shape_name" if _DEFINE_EXT_HAS_SHAPE_NAME else "submesh_name"
+_DEFINE_SHAPE_EXT_BATCH = "DefineShapeExt" if _DEFINE_SHAPE_EXT else "DefineMeshesExt"
 
 
-def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instancing,
-                      log_lines=None, shape_name=None):
+def _compute_lux_shape(data, shape_name, transform, is_viewport_render, use_instancing,
+                      log_lines=None):
     """Weld points, find varying-data islands, group triangles by
     (material, island) and gather the per-submesh varying data, using the
     C++/TBB implementation in pyluxcore. Returns (payloads, info):
-    payloads is a list of dicts ready for define_submeshes(), info holds
+    payloads is a list of dicts ready for _define_lux_shape(), info holds
     log/stat data.
 
     log_lines: when a list is passed, log messages are appended to it instead
@@ -255,6 +264,12 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         raise RuntimeError(
             "pyluxcore.compute_submeshes_c is not available in this pyluxcore build"
         )
+
+    if shape_name:
+        shape_name = str(shape_name)
+    else:
+        shape_name = uuid.uuid4()
+
     if log_lines is None:
         def emit(msg):
             log(msg)
@@ -284,14 +299,14 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
         is_viewport_render,
         use_instancing,
         True,  # share_points: submeshes always share the root point buffer
-        str(mesh_key),
+        str(shape_name),
     )
     if shape_name is not None:
         # Group all submeshes of this object into one LuxCore Shape handle
         # (named shape_name) sharing the root point buffer
         for payload in payloads:
-            payload["submesh_name"] = shape_name
-    emit(f"Exporting '{str(mesh_key)}' - {len(payloads)} submesh(es)")
+            payload[_SHAPE_NAME_KWARG] = shape_name
+    emit(f"Exporting '{shape_name}' - {len(payloads)} submesh(es)")
     emit(f"- {info['num_points']} welded points (shared between submeshes), "
          f"from {info['num_raw']} raw vertices")
     emit(f"- {len(data['loop_uvs'])} uv layer(s)" if len(data['loop_uvs']) != 1
@@ -300,13 +315,13 @@ def compute_submeshes(data, mesh_key, transform, is_viewport_render, use_instanc
          else "- 1 color layer")
     if os.environ.get("BLC_TIME_STAGES"):
         st = info.get("stages", {})
-        emit("[BLC-STAGES] " + str(mesh_key) + ": " +
+        emit("[BLC-STAGES] " + str(shape_name) + ": " +
              " ".join(f"{k}={v:.3f}" for k, v in st.items()))
     return payloads, info
 
 
-def define_submeshes(luxcore_scene, payloads):
-    """Define the computed submeshes in the LuxCore scene.
+def _define_lux_shape(luxcore_scene, payloads):
+    """Define the computed shape and its submeshes in the LuxCore scene.
 
     Safe to call from worker threads: pyluxcore serializes the scene mesh
     mutations internally (and releases the GIL around the C++ calls).
@@ -322,7 +337,7 @@ def define_submeshes(luxcore_scene, payloads):
             # of them: set them only on the first submesh. The subdiv
             # envelope builder does not read per-submesh creases, and a
             # single-submesh object is its own first submesh.
-            # The payload dicts are ours (built by compute_submeshes), so
+            # The payload dicts are ours (built by _compute_lux_shape), so
             # mutate them in place instead of copying each one.
             if i != 0:
                 payload["crease_pairs"] = None
@@ -331,7 +346,7 @@ def define_submeshes(luxcore_scene, payloads):
                 payload["tri_aov_index"] = MATERIAL_TRI_AOV_INDEX
                 payload["tri_aov_value"] = float(payload["slot"])
             batch.append(payload)
-        luxcore_scene.DefineMeshesExt(batch)
+        getattr(luxcore_scene, _DEFINE_SHAPE_EXT_BATCH)(batch)
         for payload in payloads:
             mesh_definitions.append((payload["name"], payload["mat"], payload["slot"]))
         return caches.exported_data.ExportedMesh(mesh_definitions)
@@ -344,7 +359,7 @@ def define_submeshes(luxcore_scene, payloads):
             extra["tri_aov_value"] = float(payload["slot"])
         luxcore_scene.DefineMeshExt(
             name=payload["name"],
-            submesh_name=payload.get("submesh_name"),
+            **{_SHAPE_NAME_KWARG: payload.get(_SHAPE_NAME_KWARG)},
             points=payload["points"],
             triangles=payload["triangles"],
             vertex_indices=payload.get("vertex_indices"),
@@ -378,7 +393,7 @@ def define_submeshes(luxcore_scene, payloads):
 
 def convert(
     obj,
-    mesh_key,
+    name,
     depsgraph,
     luxcore_scene,
     is_viewport_render,
@@ -389,16 +404,15 @@ def convert(
     """Convert one object: extract (main thread), compute, define."""
     start_time = time()
 
-    if (data := extract_mesh_data(obj, depsgraph)) is None:
+    if (data := _extract_blender_mesh_data(obj, depsgraph)) is None:
         return None
 
     # Group the submeshes into one Shape (named after the mesh key) sharing
     # the root point buffer; shape modifiers (incl. subdiv) then run once per
     # object on the merged envelope and resplit per submesh on the C++ side
-    shape_name = str(mesh_key)
-    payloads, _info = compute_submeshes(
-        data, mesh_key, transform, is_viewport_render, use_instancing,
-        shape_name=shape_name,
+    shape_name = str(name)
+    payloads, _info = _compute_lux_shape(
+        data, shape_name, transform, is_viewport_render, use_instancing,
     )
 
     duration = time() - start_time
@@ -407,7 +421,7 @@ def convert(
     log(f"Export duration: {duration:.3f}s")
     log("")
 
-    return define_submeshes(luxcore_scene, payloads)
+    return _define_lux_shape(luxcore_scene, payloads)
 
 
 def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
@@ -453,11 +467,11 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
         # thread in _collect, so the lines of each mesh stay grouped together
         log_lines = []
         shape_name = str(mesh_key)
-        payloads, info = compute_submeshes(
-            data, mesh_key, transform, is_viewport_render, use_instancing,
-            log_lines=log_lines, shape_name=shape_name,
+        payloads, info = _compute_lux_shape(
+            data, shape_name, transform, is_viewport_render, use_instancing,
+            log_lines=log_lines,
         )
-        result = define_submeshes(luxcore_scene, payloads)
+        result = _define_lux_shape(luxcore_scene, payloads)
         return result, info, log_lines
 
     def _collect(result_index, fut):
@@ -481,7 +495,7 @@ def convert_objects(jobs, depsgraph, luxcore_scene, exporter=None,
             if debug:
                 print(f"[BLC-DEBUG] extract {job[0].name}", flush=True)
             # Phase 1: extract, serially in the calling (main) thread
-            data = extract_mesh_data(job[0], depsgraph)
+            data = _extract_blender_mesh_data(job[0], depsgraph)
             # Phases 2+3: submit compute+define to the pool
             pending.append((i, pool.submit(_compute_and_define, (data, job))))
             # Keep at most inflight_max objects in flight; collect the oldest
