@@ -8,12 +8,26 @@ class LuxCoreNodeShapeSimplify(LuxCoreNodeShape, bpy.types.Node):
     bl_label = "Simplify"
     bl_width_default = 150
 
-    target: FloatProperty(name="Target", default=25, min=0, max=100, subtype="PERCENTAGE",
-                          update=utils_node.force_viewport_mesh_update)
-    edge_screen_size: FloatProperty(name="Edge Screen Size", default=0, min=0, max=1,
-                                    update=utils_node.force_viewport_mesh_update)
-    preserve_border: BoolProperty(name="Preserve Border", default=False,
-                                  update=utils_node.force_viewport_mesh_update)
+    target: FloatProperty(
+        name="Target",
+        default=25,
+        min=0,
+        max=100,
+        subtype="PERCENTAGE",
+        update=utils_node.force_viewport_mesh_update,
+    )
+    edge_screen_size: FloatProperty(
+        name="Edge Screen Size",
+        default=0,
+        min=0,
+        max=1,
+        update=utils_node.force_viewport_mesh_update,
+    )
+    preserve_border: BoolProperty(
+        name="Preserve Border",
+        default=True,
+        update=utils_node.force_viewport_mesh_update,
+    )
 
     def init(self, context):
         self.add_input("LuxCoreSocketShape", "Shape")
@@ -27,9 +41,13 @@ class LuxCoreNodeShapeSimplify(LuxCoreNodeShape, bpy.types.Node):
     def export_shape(self, exporter, depsgraph, props, base_shape_name):
         definitions = {
             "type": "simplify",
-            "source": self.inputs["Shape"].export_shape(exporter, depsgraph, props, base_shape_name),
+            "source": self.inputs["Shape"].export_shape(
+                exporter, depsgraph, props, base_shape_name
+            ),
             "target": self.target / 100,
             "edgescreensize": self.edge_screen_size,
             "preserveborder": self.preserve_border,
         }
-        return self.create_props(props, definitions, self.make_shape_name(base_shape_name))
+        return self.create_props(
+            props, definitions, self.make_shape_name(base_shape_name)
+        )
